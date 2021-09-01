@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER009             Date 23Nov20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       *                 CTI006             Date 31Mar14               *
       *                 MD022921           Date 13Feb14               *
       *                 CMG003             Date 04Oct12               *
@@ -64,6 +66,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MidasPlus                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
@@ -233,6 +237,9 @@
      IDATALX      DS                           1024                                           CER001
      I                                        1   3 #1CYCO                                    CER001
      I                                        4  13 #1SPAE                                    CER001
+      *                                                                                       CER009
+     IPDATA       DS                           1024                                           CER009
+     I                                        1   3 #1CCY                                     CER009
       *                                                                                       CER043
       ** Local data area for database error details                                           CER043
       *                                                                                       CER043
@@ -859,6 +866,26 @@
      C**********           GOTO DCEXIT                     *QUIT                       CER001 CMG003
      C**********           ENDIF                           *FI                         CER001 CMG003
       **********                                                                       CER001 CMG003
+      ** When CER009 enhancement is installed                                                 CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     CALL 'SD0022'                                                      CER009
+     C                     PARM 'E'       ACTION  1                                           CER009
+     C                     PARM #1CYCD    PDATA                                               CER009
+     C                     PARM *BLANK    W0RTN                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** CASE: PGM.*Return code is *User QUIT requested                                       CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'Y2U9999'                                                     CER009
+     C                     MOVELW0RTN     P0RTN                                               CER009
+     C                     EXSR ZYEXPG                                                        CER009
+     C                     ENDIF                                                              CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C                     MOVEL'Y'       W0DCF                                               CER009
+     C                     GOTO DCEXIT                                                        CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
       * CASE: WRK.Work Return code is End of Program
      C           WUWRTC    IFEQ 'PEND'                     *IF
      C                     MOVEL'USR0790' P0RTN            *Return code
@@ -2480,6 +2507,20 @@
      C           PRTCD     IFEQ *BLANKS                                                       CMG003
      C                     MOVEL'Y'       CMG003                                              CMG003
      C                     ENDIF                                                              CMG003
+      *                                                                                       CER009
+      ** Check if CER009 is enabled                                                           CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY 'POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009  1                                           CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
       *================================================================
      CSR         ZZEXIT    ENDSR
       /EJECT

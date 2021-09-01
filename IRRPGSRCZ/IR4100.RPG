@@ -1,0 +1,176 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Minerva Interface - Build IRMITTPD table')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  IR4100 - Minerva Interface - Build IRMITTPD table based      *
+      *           over Minerva table 300                              *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MMI033 *create     Date 01Jul98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI033 - Minerva Interface                                   *
+      *                                                               *
+     F*****************************************************************
+     FIRM300PDIF  E           K        DISK
+     F            ARCTAB                            KRENAMEARCTAB0
+     FIRMITTPDO   E                    DISK                      A
+      *
+      ** DEFINIZIONE SCHIERE
+      *
+     E                    COV        15  6               COD.CAMPI VARIAB.
+     E                    COF     1   3  5 0             COD.CAMPI FISSI
+     E                    DUP       999  5 0             EVITA CAMPI DUPLI.
+      *
+      ** DEFINIZIONE DS DI COMODO
+      *
+     I$TAB        DS
+     I                                        1  43 CHIAVE
+     I                                       44 160 DATI
+     I                                        5   9 VOCE
+     I                                       10  110SVOCE
+     I                                       20  200DIVI
+     I                                       37 126 CODICI
+      *
+      *
+      *
+      *****************************************************************
+      *               M   A   I   N       L   I   N   E               *
+      *****************************************************************
+      *
+      ** DEFINIZIONE CHIAVE ACCESSO TABELLA X1IN
+      *
+     C           *LIKE     DEFN CHIAVE    KKEY
+     C                     MOVEL'300C'    KKEY
+      *
+     C           KKEY      SETLLARCTAB0
+      *
+     C           *LIKE     DEFN PTVOCE    $VOCE
+     C           *LIKE     DEFN PTSVOC    $SVOC
+     C           *LIKE     DEFN PTDIVI    $DIVI
+      *
+      *
+      ** LETTURA CICLICA DELLA TABELLA X1IN
+      *************************************
+      *
+     C                     DO   *HIVAL
+     C                     READ ARCTAB0                  96
+     C           *IN96     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** SELEZIONA SOLO I RECORD '300C' CHE IDENTIFICANO I CAMPI
+      **    SIGNIFICATIVI PER OGNI VOCE/SOTTOVOCE
+      *
+     C                     MOVELCHIAVE    $TEST   4
+     C           $TEST     IFNE '300C'
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           VOCE      IFEQ *BLANKS
+     C                     ITER
+     C                     ENDIF
+      *
+      ** IMPOSTA CAMPI COMUNI
+      *
+     C                     MOVELVOCE      PTVOCE
+     C                     Z-ADDSVOCE     PTSVOC
+     C                     Z-ADDDIVI      PTDIVI
+      *
+      ** PULIZIA DELLA SCHIERA DEI CODICI GIà REGISTRATI
+      *
+     C           PTVOCE    IFNE $VOCE
+     C           PTSVOC    ORNE $SVOC
+     C           PTDIVI    ORNE $DIVI
+     C                     MOVEA*ZEROS    DUP
+     C                     MOVEACOF       DUP
+     C                     Z-ADD4         W       40
+     C                     MOVELPTVOCE    $VOCE
+     C                     Z-ADDPTSVOC    $SVOC
+     C                     Z-ADDPTDIVI    $DIVI
+      *
+      ** FORZA L'INSERIMENTO DI ALCUNI CAMPI CHE POTREBBERO NON
+      **    ESSERE PREVISTI
+      *
+     C                     DO   3         X
+     C                     MOVELCOF,X     PTCAMP
+     C           DIVI      IFNE 0
+     C                     EXSR CONTR
+     C                     ELSE
+     C                     Z-ADD1         PTDIVI
+     C                     EXSR CONTR
+     C                     Z-ADD2         PTDIVI
+     C                     EXSR CONTR
+     C                     END
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** INSERISCE I CAMPI PREVISTI PER LA VOCE/SOTTOVOCE
+      *
+     C                     MOVEACODICI    COV
+      *
+     C                     DO   15        X       20
+     C           COV,X     IFEQ *BLANKS
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVELCOV,X     PTCAMP
+     C                     Z-ADD1         Z       20
+     C           PTCAMP    LOKUPDUP,Z                    96
+     C           *IN96     IFEQ *OFF
+     C                     MOVELPTCAMP    DUP,W
+     C                     ADD  1         W
+      *
+     C           DIVI      IFNE 0
+     C                     EXSR CONTR
+     C                     ELSE
+     C                     Z-ADD1         PTDIVI
+     C                     EXSR CONTR
+     C                     Z-ADD2         PTDIVI
+     C                     EXSR CONTR
+     C                     END
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+      *
+      *
+      ***************************************************************
+      * CONTR * CONTROLLO ESCLUSIONE CAMPO 277
+      ***************************************************************
+      *
+     C           CONTR     BEGSR
+      *
+     C                     MOVEL'S'       $SCRIV  1
+      *
+     C           PTVOCE    IFEQ 1083
+     C           PTSVOC    ANDEQ26
+     C           PTCAMP    ANDEQ277
+     C                     MOVEL'N'       $SCRIV
+     C                     ENDIF
+      *
+     C           PTVOCE    IFEQ 1017
+     C           PTSVOC    ANDEQ40
+     C           PTCAMP    ANDEQ277
+     C                     MOVEL'N'       $SCRIV
+     C                     ENDIF
+      *
+     C           $SCRIV    IFEQ 'S'
+     C                     WRITEIRMITT                 92
+     C                     ENDIF
+      *
+     C                     ENDSR
+**
+00030  COD. ANAGRAFICO AZIENDALE CLIENTE
+00204  NUMERO CONTO
+00277  COD.ABB. UNIVOCO AZIENDALE

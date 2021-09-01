@@ -1,0 +1,116 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Client Details Extension for Italy')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD4010 - Access to Customer Details Extended File            *
+      *                                                               *
+      *  (c) Finastra International Systems Ltd. 2020                 *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER008  *CREATE    Date 16Aug06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER008 - Base Italian Features Upgrade to MidasPlus          *
+      *                                                               *
+      *****************************************************************
+     FSDCUT1L0IF  E           K        DISK
+      ** Customer details extended file for Italy  - Retrieval index -
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    NARR    1   2 80
+      ** Fields narratives array
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IBLLINE      DS                            264
+     I                                        1 132 BLLIN1
+     I                                      133 264 BLLIN2
+      ** Extended info from Italian Customer details extended file,
+      ** passed as parameter
+      *
+     IPRTLIN      DS                            132
+     I                                        1  50 NARRAT
+     I                                       51  66 FIELD
+      ** DS to define printing line content
+      *
+     ISCSARD    E DSSCSARDPD
+      ** SCSARDD0 - SAR Descriptions record format data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+      *
+      ** Program Start
+      ** Initialize return parameter
+      *
+     C                     MOVEL*OFF      PFAIL
+      *
+      ** Access extended customer record
+      *
+     C           PCUST     CHAINSDCUT1L0             89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ** Set up extended lines
+      ** 1.- First printing line : '004:Redidenza'
+      *
+     C                     MOVEL*BLANKS   PRTLIN
+     C                     MOVELNARR,1    NARRAT
+     C                     MOVELBBA004    FIELD
+     C                     MOVELPRTLIN    BLLIN1
+      *
+      ** 2.- Second printing line : 'RAD Charge Code'
+      *
+     C                     MOVEL*BLANKS   PRTLIN
+     C                     MOVELNARR,2    NARRAT
+     C                     MOVELPRTLIN    BLLIN2
+      *
+      ** Setup return parameter
+      *
+     C                     ELSE
+     C                     MOVEL*ON       PFAIL
+      *
+     C                     ENDIF
+      *
+      ** Return to caller program
+      *
+     C                     RETRN
+      *
+      ** Program End
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Initial Subroutine                                  *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      A@CPY  80
+      *
+      ** Define parameters list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PCUST   6
+     C                     PARM           BLLINE
+     C                     PARM           PFAIL   1
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Finastra International Systems Ltd. 2020
+** NARR : array for fields narratives
+                004: Residenza .................:
+                RAD Charge Code ................:

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD094             Date 29Aug18               *
-      *  Prev Amend No. MD051247           Date 17Jul18               *      
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER008             Date 21Oct20               *
+      *                 CSD094             Date 29Aug18               *
+      *                 MD051247           Date 17Jul18               *      
       *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042407           Date 07Nov16               *
@@ -66,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1                *
+      *  CER008 - Base Italian Features Upgrade to MidasPlus          *
       *  CSD094 - Make Industry and Institution Code Mandatory        *
       *  MD051247 - SP15 CUSD API Issue                               *      
       *  MD040876 - CRS MQ (Recompile)                                *
@@ -223,6 +227,8 @@
      D GPCUSTX       E DS                  EXTNAME(GPCUSTXPD)                                 CGP001
      D                                     PREFIX(G)                                          CGP001
                                                                                               CGP001
+     D IRFXTB        E DS                  EXTNAME(IRFXTBPD)                                  LUC139
+                                                                                              LUC139
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
  
@@ -277,6 +283,11 @@
      D CSD025          S              1                                                       CSD025
      D CSD094          S              1                                                       CSD094
      D***CGL132*          S              1                                         MD034317 MD042407
+     D CER008          S              1                                                       CER008
+     D Wcode           S              6                                                       CER008
+     D*Pkey*****       S             10                                                CER008 LUC139
+     D Pcod            S              3                                                       LUC139
+     D Pkey            S             24                                                       LUC139     
                                                                                               CLE025
      D CSW207          S              1A                                                      CSW207
      D CTI006          S              1A                                                    MD030956
@@ -291,6 +302,7 @@
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUDPV002
+     D SDVALD        E DS                  EXTNAME(SDVALDPD)                                  CER008
  
       *****************************************************************
       /EJECT
@@ -322,6 +334,7 @@
      C                   MOVE      DDCTNB        CUCTNB
      C                   MOVE      DDREID        CUREID
      C/COPY WNCPYSRC,SDCUS2VC01
+     C                   If        CER008 <> 'Y'                                              CER008
      C     CDL013        IFEQ      'N'                                                        CDL013
      C                   MOVE      DDCSTY        CUCSTY
      C                   ENDIF                                                                CDL013
@@ -329,6 +342,47 @@
       ** Validate Customer name and address
       *
       /COPY WNCPYSRC,SDCUDPV004
+                                                                                              CER008
+      ** If CER008 'Italian Features' is installed then Customer                              CER008
+      ** Type is mandatory and must be valid on table BBM                                     CER008
+                                                                                              CER008
+     C                   Else                                                                 CER008
+                                                                                              CER008
+     C                   Movel     *BLANKS       Pkey                                         CER008
+     C                   Movel     DDCSTY        Pkey                                         CER008
+                                                                                              CER008
+     C**********         Call      'AOVALDR0'                                          CER008 LUC139
+     C**********         Parm      '*BLANKS'     Prtcd                                 CER008 LUC139
+     C**********         Parm      '*KEY   '     Poptn                                 CER008 LUC139
+     C**********         Parm      'BBM    '     Wcode                                 CER008 LUC139
+     C**********         Parm                    Pkey                                  CER008 LUC139
+     C*****SDVALD        Parm      SDVALD        DSSDY                                 CER008 LUC139
+     C                   Call      'AOFXTBR0'                                                 LUC139
+     C                   Parm      *BLANKS       Prtcd                                        LUC139
+     C                   Parm      '*KEY   '     Poptn                                        LUC139
+     C                   Parm      'BBM'         Pcod                                         LUC139
+     C                   Parm                    Pkey                                         LUC139
+     C     IRFXTB        Parm      IRFXTB        DSFDY                                        LUC139
+                                                                                              CER008
+     C                   If        Prtcd <> *Blanks                                           CER008
+                                                                                              CER008
+     C                   Movel     'N'           DDCSTYOK                                     CER008
+     C                   Add       1             Idx                                          CER008
+     C                   Movel     'DDCSTY'      FldNamXAr(Idx)                               CER008
+     C                   Move      'XXX0136'     MsgIdXAr(Idx)                                CER008
+                                                                                              CER008
+     C                   Else                                                                 CER008
+                                                                                              CER008
+     C**********         Movel     Pkey          DDCSTY                                CER008 LUC139
+     C**********         Movel     Pkey          CUCSTY                                CER008 LUC139
+     C                   Movel     DDCSTY        CUCSTY                                       LUC139
+                                                                                              CER008
+     C                   Endif                                                                CER008
+                                                                                              CER008
+     C                   Endif                                                                CER008
+                                                                                              CER008
+     C                   Exsr      UpdatErrs                                                  CER008
+                                                                                              CER008
      C                   EXSR      VCCNA1
       /COPY WNCPYSRC,SDCUDPV005
       *
@@ -2306,6 +2360,17 @@
  
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUDPV051
+     C                   Callb     'AOSARDR0'                                                 CER008
+     C                   Parm      *BLANKS       Prtcd                                        CER008
+     C                   Parm      '*VERIFY'     Poptn                                        CER008
+     C                   Parm      'CER008'      Psard                                        CER008
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER008
+                                                                                              CER008
+     C                   If        Prtcd = *Blanks                                            CER008
+     C                   Move      'Y'           CER008                                       CER008
+     C                   Else                                                                 CER008
+     C                   Move      'N'           CER008                                       CER008
+     C                   Endif                                                                CER008
  
      C                   ENDSR
       *****************************************************************

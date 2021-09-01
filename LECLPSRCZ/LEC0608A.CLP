@@ -9,8 +9,12 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1055617          Date 12Nov12              */
+/*       Last Amend No. MD058100           Date 20May21              */
+/*       Prev Amend No. LUC139             Date 22Apr21              */
+/*                      UIT021             DATE 26feb97              */
+/*                      LUC118             Date 13Feb19              */
+/*                      MD046248           Date 27Oct17              */
+/*                      AR1055617          Date 12Nov12              */
 /*                      CLE134             Date 01Aug12              */
 /*                      AR824348           Date 02Sep11              */
 /*                      CER049             Date 06Dec10              */
@@ -37,6 +41,14 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     MD058100 - Rollup of additional BoI onsite fixes at FbMidas  */
+/*     LUC139 - Upgrade UCI Italian Returns                         */
+/*     UIT021 - BOI Monthly Reporting (Italy)                       */
+/*                Used hooks : LEC0608AMP, LEC0608AM1, LEC0608AM2   */
+/*       LUC118 - Upgrade of S21045 to FB Midas 2.1                 */
+/*                 BV Auto transfer of interbranch account balances */
+/*                 BVINTBR;                                         */
+/*                 uses new core hooks LEC0608AM2                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*     AR1055617 - Additional code changes based on code            */
 /*                 review                                           */

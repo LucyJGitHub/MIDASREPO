@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC120             Date 13Feb19               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC120 - Allow frequency 'W' (Weekly) or 'F' (Fortnightly).  *
+      *           Added hooks: LUC120_004, LUC120_005, LUC120_006,    *
+      *                        LUC120_007, LUC120_008                 *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -297,6 +301,8 @@
      C                             and (SUICFR <> 'O') and (SUICFR <>'D')                     CIR018
      C                             and (CIR018 = 'Y')                                         CIR018
                                                                                               CIR007
+      /COPY WNCPYSRC,LUC120_004                                                               LUC120
+                                                                                              LUC120
       **  If switchable feature CIR001 is ON, 'Z' must be a valid                             CIR007
       **    rate change frequency.                                                            CIR007
      C                   IF        (CIR001 = 'Y') AND (SUICFR <> 'Z')                         CIR007
@@ -311,6 +317,8 @@
      C                   Endif                                                                CIR018
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
+      /COPY WNCPYSRC,LUC120_005                                                               LUC120
+                                                                                              LUC120
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
      C                   ELSE                                                                 CIR007
@@ -331,6 +339,8 @@
       **    rate change frequency
       **  But for Caps/Collars/Floors, 'Z' is invalid.                                        CAP055
 
+      /COPY WNCPYSRC,LUC120_006                                                               LUC120
+                                                                                              LUC120
      C     CIR001        IFEQ      'Y'
      C     SUICFR        ANDNE     'Z'
      C     CIR001        ORNE      'Y'
@@ -345,6 +355,9 @@
      C                   MOVE      'Y'           ErrorFound
      C                   Endif                                                                CIR018
      C                   END
+                                                                                              LUC120
+      /COPY WNCPYSRC,LUC120_007                                                               LUC120
+                                                                                              LUC120
      C                   END
      C                   ENDIF                                                                CIR007
      C                   END
@@ -403,6 +416,9 @@
      C                   ELSE                                                                 CIR018
      C                   MOVEL     'N'           CIR018                                       CIR018
      C                   ENDIF                                                                CIR018
+                                                                                              LUC120
+      /COPY WNCPYSRC,LUC120_008                                                               LUC120
+                                                                                              LUC120
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values

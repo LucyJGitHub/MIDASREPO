@@ -26,14 +26,15 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC127             Date 26Mar03               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
-      *  Prev Amend No. CSD009             Date 10Oct00               *
+      *                 CSD009             Date 10Oct00               *
       * Midas DBA 3.03 -----------------------------------------------*
       *                 179732             Date 26Jun00               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC127 - Output PRFC in all cases (Upgrade A66079 to FM2.1)  *
+      *           Addition of hook LUC127_007
+      *           Addition of hook LUC127_008
+      *           Addition of hook LUC127_009      
       *  MD046248 - Finastra Rebranding                               *
       *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
       *           Re-compiled due to changes in module AOPRFMR0.      *
@@ -108,6 +113,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
  
+     D/COPY WNCPYSRC,LUC127_007                                                 LUC127
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -237,6 +243,7 @@
      C*                                                                                     179732
      C                   MOVE      BBACOC        ACOF                                       179732
      C                   MOVE      BBCUST        CUST                                       179732
+     C/COPY WNCPYSRC,LUC127_008                                                   LUC127
      C*
      C                   CALLB     'AOPRFMR0'
      C                   PARM      *BLANKS       RetCode1A
@@ -317,6 +324,7 @@
      C                   PARM                    CustOK
      C                   PARM                    BGN0ST
  
+     C/COPY WNCPYSRC,LUC127_009                                                   LUC127
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

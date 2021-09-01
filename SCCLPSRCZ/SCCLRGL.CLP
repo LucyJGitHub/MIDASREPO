@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL027             Date 04Apr17              */
+/*       Last Amend No. LUC140            Date 24Feb21               */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL027             Date 04Apr17              */
 /*                      MD031966           Date 27Jul15              */
 /*                      CGL158            Date 20Aug14               */
 /*                      CSC056            Date 06Aug12               */
@@ -55,6 +56,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC140 - Upgrade MMI013 to FM2.1                           */
+/*                (MMI013 - Midas Italy Stamp Duty and Account)     */
+/*                Amend core hook SCCLRGL005                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL027 - Shadow Postings and Sufficient Funds Check        */
 /*       MD031966 - BFM GL3572P1 issue                              */

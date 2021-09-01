@@ -9,8 +9,11 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD056889           Date 11Oct20              */
-/*       Prev Amend No. MD055685           Date 24Apr20              */
+/*       Last Amend No. MD058100           Date 20May21              */
+/*       Prev Amend No. LUC139             Date 22Apr21              */
+/*                      UIT021             Date 22Apr21              */
+/*                      MD056889           Date 11Oct20              */
+/*                      MD055685           Date 24Apr20              */
 /*                      MD054799           Date 14Nov19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD021351           Date 06May14              */
@@ -63,6 +66,11 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058100 - Rollup of additional BoI onsite fixes at FbMidas*/
+/*       LUC139 - Upgrade UCI Italian Returns                       */
+/*       UIT021 - BOI Monthly Reporting                             */
+/*                Used Hooks  : LEC0609A01, LEC0609A02, LEC0609A06  */
+/*                Added Hooks : LEC0609A10                          */
 /*       MD056889 - Deliverable Data Split for SDJARFPD              */
 /*       MD055685 - Double posting of Retail Account Debit Balance   */
 /*                  on FCLTYFN and FACHISA. Do not process RSACMTPD  */
@@ -189,6 +197,7 @@
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
              DCL        VAR(&MRPDCL) TYPE(*CHAR) LEN(1)                                 /*MD021605*/
+/*/COPY WNCPYSRC,LEC0609A10                                          */                   /*UIT021*/
   /*         DCLF       FILE(SDJARFPD)        */                               /*CLE040*/ /*CSD028*/
 /**********  DCLF       FILE(SDJARFL0) */                                       /*CSD028**MD056889*/
              DCLF       FILE(SDJARJW1)                                                  /*MD056889*/

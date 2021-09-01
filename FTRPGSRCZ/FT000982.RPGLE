@@ -16,10 +16,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 25Jul11               *
+      *                 STP017             Date 20Nov2004             *
+      *                 ESL038             Date04Oct2004              *
+      *                 EEE058             Date03Apr2003              *
+      *                 241259             Date 28Aug06               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 246723             Date 16Apr07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -32,6 +38,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           STP017, ESL038, EEE058                              *
+      *  STP017 - STP flags: 'Y' = STP, 'N' = Manual.                 *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE058 - Incoming STP Quotation convention of rates          *
+      *  241259 - Calculate instructed and pay amounts correctly.     *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  246723 - If no Spread Set for the currency, Spot Rate was    *
@@ -54,6 +68,8 @@
       * FT Exchange Rate Spread Child.  Key = FX Spread Code + CCY
      FFTXTRDL0  IF   E           K DISK    INFSR(*PSSR)
  
+      * FT FX Quotation convetions                                                            EEE058
+     FFTQUTEPD  IF   E           K DISK    USROPN                                             EEE058
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -128,6 +144,9 @@
      **  Currency details from SDGELRPD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
  
+     **  SAR file                                                                             EEE058
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  EEE058
+                                                                                              EEE058
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -309,7 +328,8 @@
      C                   Select
  
       * Manual rates
-     C                   When      P_STP = 'M'
+     C*****              When      P_STP = 'M'                                                STP017
+     C                   When      P_STP = 'N' Or P_STP = *Blank                              STP017
      C                   Eval      PayBuySpread  = MANBPC
      C                   Eval      PayBuyPoints  = MANBSP
      C                   Eval      PayBuySign    = MANBSN
@@ -318,7 +338,8 @@
      C                   Eval      PaySellSign   = MANSSN
  
       * STP Rates
-     C                   When      P_STP = 'S'
+     C*****              When      P_STP = 'S'                                                STP017
+     C                   When      P_STP = 'Y'                                                STP017
  
       * If no STP rates, use manual
      C                   If        STPBPC = *Zeros  AND
@@ -359,7 +380,8 @@
      C                   Select
  
       * Manual rates
-     C                   When      P_STP = 'M'
+     C*****              When      P_STP = 'M'                                                STP017
+     C                   When      P_STP = 'N' Or P_STP = *Blank                              STP017
      C                   Eval      SettBuySpread  = MANBPC
      C                   Eval      SettBuyPoints  = MANBSP
      C                   Eval      SettBuySign    = MANBSN
@@ -368,7 +390,8 @@
      C                   Eval      SettSellSign   = MANSSN
  
       * STP Rates
-     C                   When      P_STP = 'S'
+     C*****              When      P_STP = 'S'                                                STP017
+     C                   When      P_STP = 'Y'                                                STP017
  
       * If no STP rates, use manual
      C                   If        STPBPC = *Zeros  AND
@@ -437,6 +460,11 @@
      C                   Eval      RetCodeIn = '*NOCALC'
      C                   Return
      C                   Endif
+     C                   Endif                                                                241259
+      *                                                                                       241259
+     C     Wrate         Ifgt      0                                                          241259
+     C                   Z-add     Wrate         Payspot                                      241259
+     C                   Endif                                                                241259
  
      C                   Select
      C                   When      PaySellSpread > 0                            Sell spread %
@@ -457,7 +485,7 @@
  
      C                   Endsl
  
-     C                   Endif
+     C**********         Endif                                                                241259
  
      C                   Endsr
       /EJECT
@@ -498,6 +526,11 @@
      C                   Eval      RetCodeIn = '*NOCALC'
      C                   Return
      C                   Endif
+     C                   Endif                                                                241259
+      *                                                                                       241259
+     C     Wrate         Ifgt      0                                                          241259
+     C                   Z-add     Wrate         SettSpot                                     241259
+     C                   Endif                                                                241259
  
      C                   Select
      C                   When      SettBuySpread > 0                            Buy spread %
@@ -518,7 +551,7 @@
  
      C                   Endsl
  
-     C                   Endif
+     C**********         Endif                                                                241259
  
      C                   Endsr
       /EJECT
@@ -586,6 +619,29 @@
      C                   Eval      RetCodeIn = '*NOCALC'
      C                   Return
      C                   Endif
+      *                                                                                       EEE058
+      * Define Key                                                                            EEE058
+      *                                                                                       EEE058
+     C     KQUTE         KLIST                                                                EEE058
+     C                   KFLD                    FTFCCY                                       EEE058
+     C                   KFLD                    FTTCCY                                       EEE058
+      *                                                                                       EEE058
+      * Check if quotation convention required                                                EEE058
+      *                                                                                       EEE058
+     C                   Eval      W#QFLG = *blanks                                           EEE058
+      *                                                                                       EEE058
+     C                   If        CEUFT1 = 'CEUFT1'                                          EEE058
+     C                   Eval      FTFCCY = P_SettCcy                                         EEE058
+     C                   Eval      FTTCCY = P_PayCcy                                          EEE058
+     C     KQUTE         Chain     @QUTEPD                            90                      EEE058
+     C                   If        *in90 = *off                                               EEE058
+     C                   Eval      W#QFLG = FTCFLG                                            EEE058
+     C                   Else                                                                 EEE058
+     C     *LIKE         DEFINE    FTCFLG        W#QFLG                                       EEE058
+     C                   Eval      W#QFLG = *blanks                                           EEE058
+     C                   Endif                                                                EEE058
+     C                   Endif                                                                EEE058
+      *                                                                                       EEE058
  
      C                   Select
      C                   When      FXCCYI = 'B '
@@ -616,6 +672,78 @@
      C                   Else
      C     SettSpot      Mult (H)  PaySpot       P_Exrate
      C                   Endif
+                                                                                              EEE058
+      * Rate for Funds Transfer is normally > 1                                               EEE058
+     C                   Select                                                               EEE058
+      * If not equal multiply and invert if less than 1                                       EEE058
+     C                   When      SettMD <> PayMD                                            EEE058
+     C     SettSpot      Mult (H)  PaySpot       P_Exrate                                     EEE058
+     C                   If        P_Exrate < 1                                               EEE058
+     C     1             Div  (H)  P_Exrate      P_Exrate                                     EEE058
+     C                   Endif                                                                EEE058
+      * If equal divide the greater by the lesser                                             EEE058
+     C                   When      SettSpot < PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+     C                   When      SettSpot > PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+      * If FX quotation active and quotation for currency pair                                EEE058
+     C                   If        CEUFT1 = 'CEUFT1' and W#QFLG = 'D ' or                     EEE058
+     C                             CEUFT1 = 'CEUFT1' and W#QFLG = 'M '                        EEE058
+                                                                                              EEE058
+      * Calculate rate depending on multiply divide indicators                                EEE058
+     C                   Select                                                               EEE058
+      * From rate multiply , to rate multiply , quoted rate multiply                          EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate divide                            EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate multiply                          EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate divide                            EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate multiply , quoted rate divide                            EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate multiply                          EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate divide                            EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate multiply                          EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+     C     1             Div (H)   P_ExRate      P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
  
      C                   When      SettBuyPoints > 0
  
@@ -659,6 +787,78 @@
      C                   Else
      C     SettSpot      Mult (H)  PaySpot       P_ExRate
      C                   Endif
+                                                                                              EEE058
+      * Rate for Funds Transfer is normally > 1                                               EEE058
+     C                   Select                                                               EEE058
+      * If not equal multiply and invert if less than 1                                       EEE058
+     C                   When      SettMD <> PayMD                                            EEE058
+     C     SettSpot      Mult (H)  PaySpot       P_Exrate                                     EEE058
+     C                   If        P_Exrate < 1                                               EEE058
+     C     1             Div  (H)  P_Exrate      P_Exrate                                     EEE058
+     C                   Endif                                                                EEE058
+      * If equal divide the greater by the lesser                                             EEE058
+     C                   When      SettSpot < PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+     C                   When      SettSpot > PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+      * If FX quotation active and quotation for currency pair                                EEE058
+     C                   If        CEUFT1 = 'CEUFT1' and W#QFLG = 'D ' or                     EEE058
+     C                             CEUFT1 = 'CEUFT1' and W#QFLG = 'M '                        EEE058
+                                                                                              EEE058
+      * Calculate rate depending on multiply divide indicators                                EEE058
+     C                   Select                                                               EEE058
+      * From rate multiply , to rate multiply , quoted rate multiply                          EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate divide                            EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate multiply                          EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate divide                            EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate multiply , quoted rate divide                            EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate multiply                          EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate divide                            EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate multiply                          EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+     C     1             Div (H)   P_ExRate      P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
  
      C                   When      PaySellPoints > 0
  
@@ -673,6 +873,78 @@
      C                   Else
      C     SettSpot      Mult (H)  PaySpot       P_ExRate
      C                   Endif
+                                                                                              EEE058
+      * Rate for Funds Transfer is normally > 1                                               EEE058
+     C                   Select                                                               EEE058
+      * If not equal multiply and invert if less than 1                                       EEE058
+     C                   When      SettMD <> PayMD                                            EEE058
+     C     SettSpot      Mult (H)  PaySpot       P_Exrate                                     EEE058
+     C                   If        P_Exrate < 1                                               EEE058
+     C     1             Div  (H)  P_Exrate      P_Exrate                                     EEE058
+     C                   Endif                                                                EEE058
+      * If equal divide the greater by the lesser                                             EEE058
+     C                   When      SettSpot < PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+     C                   When      SettSpot > PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+      * If FX quotation active and quotation for currency pair                                EEE058
+     C                   If        CEUFT1 = 'CEUFT1' and W#QFLG = 'D ' or                     EEE058
+     C                             CEUFT1 = 'CEUFT1' and W#QFLG = 'M '                        EEE058
+                                                                                              EEE058
+      * Calculate rate depending on multiply divide indicators                                EEE058
+     C                   Select                                                               EEE058
+      * From rate multiply , to rate multiply , quoted rate multiply                          EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate divide                            EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate multiply                          EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate divide                            EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate multiply , quoted rate divide                            EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate multiply                          EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate divide                            EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate multiply                          EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+     C     1             Div (H)   P_ExRate      P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
  
      C                   Endsl
  
@@ -767,6 +1039,78 @@
      C                   Else
      C     SettSpot      Mult (H)  PaySpot       P_ExRate
      C                   Endif
+                                                                                              EEE058
+      * Rate for Funds Transfer is normally > 1                                               EEE058
+     C                   Select                                                               EEE058
+      * If not equal multiply and invert if less than 1                                       EEE058
+     C                   When      SettMD <> PayMD                                            EEE058
+     C     SettSpot      Mult (H)  PaySpot       P_Exrate                                     EEE058
+     C                   If        P_Exrate < 1                                               EEE058
+     C     1             Div  (H)  P_Exrate      P_Exrate                                     EEE058
+     C                   Endif                                                                EEE058
+      * If equal divide the greater by the lesser                                             EEE058
+     C                   When      SettSpot < PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+     C                   When      SettSpot > PaySpot  and                                    EEE058
+     C                             SettMD = PayMD                                             EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+      * If FX quotation active and quotation for currency pair                                EEE058
+     C                   If        CEUFT1 = 'CEUFT1' and W#QFLG = 'D ' or                     EEE058
+     C                             CEUFT1 = 'CEUFT1' and W#QFLG = 'M '                        EEE058
+                                                                                              EEE058
+      * Calculate rate depending on multiply divide indicators                                EEE058
+     C                   Select                                                               EEE058
+      * From rate multiply , to rate multiply , quoted rate multiply                          EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate divide                            EEE058
+      * then settle currency rate / pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Div (H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate multiply                          EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate divide                            EEE058
+      * then settle currency rate * pay currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+      * From rate multiply , to rate multiply , quoted rate divide                            EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate divide   , quoted rate multiply                          EEE058
+      * then pay currency rate / settle currency rate                                         EEE058
+     C                   When      SettMD = 'M' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     PaySpot       Div (H)   SettSpot      P_ExRate                                     EEE058
+      * From rate multiply , to rate divide   , quoted rate divide                            EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+      * Or                                                                                    EEE058
+      * From rate divide   , to rate multiply , quoted rate multiply                          EEE058
+      * then inverse of settle currency rate * pay currency rate                              EEE058
+     C                   When      SettMD = 'M' and PayMD = 'D'                               EEE058
+     C                             and W#QFLG = 'D '                                          EEE058
+     C                             Or                                                         EEE058
+     C                             SettMD = 'D' and PayMD = 'M'                               EEE058
+     C                             and W#QFLG = 'M '                                          EEE058
+     C     SettSpot      Mult(H)   PaySpot       P_ExRate                                     EEE058
+     C     1             Div (H)   P_ExRate      P_ExRate                                     EEE058
+     C                   Endsl                                                                EEE058
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
  
      C                   Endsl
  
@@ -861,6 +1205,27 @@
       *
      C                   Eval      Got_Pay  = 'N'
      C                   Eval      Got_Sett = 'N'
+                                                                                              EEE058
+     C                   IF        CEUFT1 = *BLANKS                                           EEE058
+     C                   CALLB     'AOSARDR0'                                                 EEE058
+     C                   PARM      *BLANKS       @Rtcd                                        EEE058
+     C                   PARM      '*VERIFY'     @Optn                                        EEE058
+     C                   PARM      'CEUFT1'      @Sard             6                          EEE058
+     C     SCSARD        PARM      SCSARD        Dssdy                                        EEE058
+                                                                                              EEE058
+     C                   IF        @Rtcd = *BLANKS                                            EEE058
+     C                   MOVEL     'CEUFT1'      CEUFT1            6                          EEE058
+      *                                                                                       EEE058
+      * Open quotation convention file                                                        EEE058
+      *                                                                                       EEE058
+     C     $$FRST        IFEQ      *BLANKS                                                    EEE058
+     C                   OPEN      FTQUTEPD                                                   EEE058
+     C                   MOVEL     'Y'           $$FRST            1                          EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ELSE                                                                 EEE058
+     C                   MOVEL     '*NRF  '      CEUFT1            6                          EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
  
      C                   Endsr
       *****************************************************************
@@ -896,6 +1261,8 @@
  
       * Initialise program name
      C                   Eval      DBPGM = PsProcPgm
+     C                   Z-add     P_ExRate      WRate            13 8                        241259
+     C                   Z-add     0             P_ExRate                                     241259
  
       *
       * Access Bank details

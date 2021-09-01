@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024065           Date 11Dec13               *
+      *  Last Amend No. LUC140             Date 23Feb21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024065           Date 11Dec13               *
       *                 CGL127AQ           Date 06Aug12               *
       *                 CGL120             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC140 - Upgrade MMI013 Italian Stamp Duty to FM2.1          *
+      *           Addition of hooks LUC140_019 to LUC140_024          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024065 - Series of logs with decimal data error were       *
       *             produced by GLC4114 component                     *
@@ -60,7 +63,9 @@
      F***GLACPML0IP  F     620  1AI     1 DISK                                       CAP204 CGL127AQ
      FACPO1     IP   F  620     1AIDISK    KEYLOC(1)                                        CGL127AQ
      FGETXPD    IS   F  620     1AIDISK    KEYLOC(1)                                        CGL127AQ
+     F/COPY WNCPYSRC,LUC140_019
      FACPO1Z    IS   F  160     1AIDISK    KEYLOC(1)
+     F/COPY WNCPYSRC,LUC140_020
      FACJXH     O    E             DISK
      FACJXD     O    E             DISK
      FACJXT     O    E             DISK
@@ -179,12 +184,14 @@
      I                                590  599 0ACOD                                        CGL127AQ
      I          NS  05                                                                      CGL127AQ
      I*                                                                                     CGL127AQ
+     I/COPY WNCPYSRC,LUC140_021
      IACPO1Z    NS  04    1 CT
      I         OR         1 CZ
      I                                  2    6 0NORE
      I                             P    7   14 0ZZINT
      I                             P   15   16 0ZZDEC
      I          NS  05
+     I/COPY WNCPYSRC,LUC140_022
       ** Short data structure for access programs (200 long)
      C*******************************************************************
      C*                                                                  *
@@ -227,6 +234,7 @@
      C**   ALL FURTHER CALCULATIONS ONLY FOR 'P' OR 'R' TYPE RECORDS
      C     *IN02         IFNE      '1'
      C     *IN03         ANDNE     '1'                                                      CGL127AQ
+     C/COPY WNCPYSRC,LUC140_023
      C                   GOTO      END
      C                   END
      C**
@@ -279,6 +287,7 @@
      C                   ADD       ZZINT         TTOTI            15 0
      C                   ADD       ZZDEC         @TOTD             6 0
      C                   END
+     C/COPY WNCPYSRC,LUC140_024
      C**
      C********************************************************************
      C*                                                                  *

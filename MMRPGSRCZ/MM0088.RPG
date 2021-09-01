@@ -1,0 +1,333 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Loans and Deposits Details')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Money Market Module                                  *
+      *                                                               *
+      *  MM0088 - Money Market Extended Details                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 15Jan21               *
+      *  Prev Amend No. CSC031             Date 11Apr07               *
+      *                 CER009  *CREATE    Date 16Aug06               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CSC031 - Local Time Stamp                                    *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
+      *                                                               *
+      *****************************************************************
+     FMMLDT1L0IF  E           K        DISK
+     F            DLLDT1D0                          KRENAMERTVIDX
+      ** MM deals Index file - Retrieval index
+      *
+     FMM0088DFCF  E                    WORKSTN
+     F                                              KINFDS FILEDS
+      ** Display file - Prefix #0
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IFILEDS      DS
+      ** File feedback data structure used to determine cursor location
+      *
+     I                                      370 370 BINROW
+     I                                      371 371 BINCOL
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure for bank details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure for access programs
+      *
+     IPGMDS     ESDSY2PGDSP
+      ** Program Status Data Structure
+      *
+     IMM0088      DS                           1024
+      ** Relevant fields for MM0088DTA
+      *
+     I                                      101 106 W1DN38
+     I                                      107 108 W1DLTP
+     I                                      109 114 W1CNUM
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Program Start
+      ** Initialise
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRENQ
+      *
+      ** Execute routine to setup return code and exit program
+      *
+     C                     EXSR SRRTRN
+      *****************************************************************
+      *                                                               *
+      *  SRENQ - Routine to handle 'ENQUIRY' action                   *
+      *                                                               *
+      *****************************************************************
+     C           SRENQ     BEGSR
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ *ON
+     C                     ELSE
+      *
+      ** Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      *
+      ** Display and handle screen
+      *
+     C                     EXSR SRSCRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRREC - Routine to access file via retrieve index            *
+      *                                                               *
+      *****************************************************************
+     C           SRREC     BEGSR
+      *
+     C           KDN38     CHAINRTVIDX               89
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRRTRN - Routine to set up return code for calling program   *
+      *                                                               *
+      *****************************************************************
+     C           SRRTRN    BEGSR
+      *
+      ** F12 pressed
+      *
+     C           *INKL     IFEQ *ON
+     C                     MOVE 'USR0790' WWRTRN
+      *
+     C                     ELSE
+      *
+      ** F3 pressed
+      *
+     C           *INKC     IFEQ *ON
+     C                     MOVE 'Y2U9999' WWRTRN
+      *
+     C                     ELSE
+      *
+      ** No errors
+      *
+     C                     MOVE *BLANKS   WWRTRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Terminate program
+      *
+     C                     MOVEL*ON       *INLR
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRDBER - Routine to handle database errors                   *
+      *                                                               *
+      *****************************************************************
+     C           SRDBER    BEGSR
+      *
+      ** Update data area LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  LDA
+      *
+      ** Set on data-base error indicators
+      *
+     C                     MOVEL*ON       *INU7
+     C                     MOVEL*ON       *INU8
+      *
+      ** Dump program
+      *
+     C                     DUMP
+      *
+      ** Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             88
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRSCRN - Routine to handle screen and validation             *
+      *                                                               *
+      *****************************************************************
+     C           SRSCRN    BEGSR
+      *
+      ** Display messages
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     SELEC
+      *
+      ** Display Loan screen
+      *
+     C           W1DLTP    WHEQ 'IP'
+     C           W1DLTP    OREQ 'TI'
+     C           W1DLTP    OREQ 'CL'
+     C           W1DLTP    OREQ 'C1'
+     C           W1DLTP    OREQ 'C2'
+     C           W1DLTP    OREQ 'BP'
+     C           W1DLTP    OREQ 'BD'
+     C           W1DLTP    OREQ 'TB'
+     C           W1DLTP    OREQ 'DA'
+     C           W1DLTP    OREQ 'TA'
+     C                     EXFMTMM0088F0
+      *
+     C                     OTHER
+      *
+      ** Display Deposit screen
+      *
+     C                     EXFMTMM0088F1
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRFTOS - Routine to move file fields to screen fields        *
+      *                                                               *
+      *****************************************************************
+     C           SRFTOS    BEGSR
+      *
+     C                     MOVE PIMOOP    #0MOOP
+     C                     MOVE PIAGCT    #0AGCT
+     C                     MOVE PIAGCL    #0AGCL
+     C                     MOVE PIECBD    #0ECBD
+     C                     MOVE PISBCR    #0SBCR
+     C                     MOVE PISBLW    #0SBLW
+     C                     MOVE PIINSB    #0INSB
+     C                     MOVE PITPPR    #0TPPR
+     C                     MOVE PIPEPR    #0PEPR
+     C                     MOVE PIGLPA    #0GLPA
+     C                     MOVE PIPTRP    #0PTRP
+     C                     MOVE PITPFD    #0TPFD
+     C                     MOVE PIDPIV    #0DPIV
+     C                     MOVE PIEDIV    #0EDIV
+     C                     MOVE PICATC    #0CATC
+     C                     MOVE PITPAC    #0TPAC
+     C                     MOVE PICLRL    #0CLRL
+     C                     MOVE PIACST    #0ACST
+      *
+     C                     MOVE *BLANK    ZFIELD 16
+     C                     MOVE PITEGL    ZFIELD
+     C                     Z-ADD3         ZADEC   10
+     C                     EXSR SREDIT
+     C                     MOVE ZFIELD    #0TEGL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Routine to handle initial processing                *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      A@CPY  80
+      *
+      ** Setup job date/time
+      *
+     C**********           TIME           #0TME   60                                          CSC031
+     C* Standard call to ZATIMZ/G to get time in place of TIME opcode                         CSC031
+     C                     Z-ADD9         #0TME   60                                          CSC031
+     C                     MOVEL#0TME     @#TZ@#                                              CSC031
+     C                     CALL 'ZATIMZ'                                                      CSC031
+     C                     PARM           @#TZ@# 14                                           CSC031
+     C                     MOVEL@#TZ@#    #0TME                                               CSC031
+      *
+      ** Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           MM0088
+     C                     PARM           WWRTRN  7
+      *
+      ** Setup key values using transaction data passed from caller
+      *
+     C           *LIKE     DEFN PIDN38    KDN38
+      *
+     C                     MOVE W1DN38    KDN38
+      *
+      ** Redefine data-base error fields for program
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Use access program AOBANKR0 to retrieve Midas Run Date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If Record Not Found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+      ** Set up Midas Run Date
+      *
+     C                     MOVELBJMRDT    ##MRDT
+      *
+     C                     MOVEL*ON       *IN25
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SREDIT - Insert Decimal points and 0s for numeric fields     *
+      *                                                               *
+      *****************************************************************
+     C           SREDIT    BEGSR
+      *
+     C                     CALL 'ZEDIT'
+     C                     PARM           ZFIELD
+     C                     PARM           ZADEC
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2006

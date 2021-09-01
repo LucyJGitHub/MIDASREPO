@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER009             Date 23Nov20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CER001             Date 25Apr05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 195351             Date 03Oct01               *
@@ -32,6 +34,8 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MidasPlus                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CER001 - LUX Upgrade to MidasPlus                            *
@@ -299,6 +303,8 @@
       * USER: Load detail screen from DBF record
       * CASE: WRK.S01212 is Fix installed
      C           WUMFTS    IFEQ 'Y'                        *IF
+     C                     MOVE 'N'       CE9RUN                                              CER009
+     C                     MOVE 'N'       CE9RET                                              CER009
       * 00/Copy Member SD0311ELDS - Book Details  *
      C*00/Copy Member SD0311E   Load Detail Screen
      C/COPY WNCPYSRC,SD0311ELDS
@@ -483,6 +489,7 @@
       *                                                                                       CER001
       ** Display 2nd screen                                                                   CER001
       *                                                                                       CER001
+     C           CE9RET    IFEQ 'N'                                                           CER009
      C                     EXSR SRSD12                                                        CER001
       *                                                                                       CER001
       ** If F12 was pressed in called program                                                 CER001
@@ -492,6 +499,7 @@
      C                     MOVE 'N'       F12STA                                              CER001
      C                     GOTO DCEXIT                                                        CER001
      C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Display 3rd screen                                                                   CER001
       *                                                                                       CER001
@@ -500,6 +508,27 @@
      C           W0RTN     OREQ 'Y2U9999'                                                     CER001
      C                     MOVE 'N'       F12STA                                              CER001
      C                     ENDIF                                                              CER001
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C                     MOVE 'N'       CE9RET                                              CER009
+     C                     ITER                                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** Display Italian screen                                                               CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE 'Y'       CE9RUN                                              CER009
+     C                     EXSR SRSD14                                                        CER009
+      *                                                                                       CER009
+      ** If F12 was pressed in called program                                                 CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ *BLANKS                                                       CER009
+     C           W0RTN     OREQ 'Y2U9999'                                                     CER009
+     C                     MOVE 'N'       F12STA                                              CER009
+     C                     ENDIF                                                              CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C                     MOVE 'Y'       CE9RET                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Check return code                                                                    CER001
       *                                                                                       CER001
@@ -508,6 +537,35 @@
      C                     ENDDO                                                              CER001
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           CE9RUN    ANDEQ'N'                                                           CER009
+     C                     MOVE 'Y'       F12STA                                              CER009
+     C           F12STA    DOWEQ'Y'                                                           CER009
+      *                                                                                       CER009
+      ** Display Italian screen                                                               CER009
+      *                                                                                       CER009
+     C                     EXSR SRSD14                                                        CER009
+      *                                                                                       CER009
+      ** If F12 was pressed in called program                                                 CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C                     MOVEL'Y'       W0DCF                                               CER009
+     C                     MOVE 'N'       F12STA                                              CER009
+     C                     GOTO DCEXIT                                                        CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ *BLANKS                                                       CER009
+     C           W0RTN     OREQ 'Y2U9999'                                                     CER009
+     C                     MOVE 'N'       F12STA                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** Check return code                                                                    CER009
+      *                                                                                       CER009
+     C                     EXSR SRCKRT                                                        CER009
+      *                                                                                       CER009
+     C                     ENDDO                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
       * CASE: WRK.Window processing requir. is Yes
      C           WUWDPR    IFEQ 'Y'                        *IF
      C                     MOVEL'E'       WUWMAC           WM action code
@@ -1063,6 +1121,22 @@
      C                     ENDIF                                                              CER001
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
+      ** Determine if CER009 is installed                                                     CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   @RTCD                                               CER009
+     C                     PARM '*VERIFY' @OPTN                                               CER009
+     C                     PARM 'CER009'  @KEY                                                CER009
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER009
+      *                                                                                       CER009
+     C           @RTCD     IFEQ *BLANK                                                        CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     MOVE 'N'       CE9RUN  1                                           CER009
+     C                     MOVE 'N'       CE9RET  1                                           CER009
+      *                                                                                       CER009
       *================================================================
      CSR         ZZEXIT    ENDSR
       *                                                                                       CER001
@@ -1089,6 +1163,20 @@
      C                     PARM           #1BKCD                                              CER001
      C                     PARM           W0RTN                                               CER001
      C                     ENDSR                                                              CER001
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SRSD14 - Display Italian Book Code                           *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C           SRSD14    BEGSR                                                              CER009
+     C                     CALL 'SD0314'                                                      CER009
+     C                     PARM 'E'       ACTION                                              CER009
+     C                     PARM           #1BKCD                                              CER009
+     C                     PARM           W0RTN                                               CER009
+     C                     ENDSR                                                              CER009
+      *****************************************************************                       CER009
       *                                                                                       CER001
       /EJECT                                                                                  CER001
       *-------------------------------------------------------------------------              CER001

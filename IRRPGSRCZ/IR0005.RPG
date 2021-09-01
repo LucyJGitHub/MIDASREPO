@@ -1,0 +1,144 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Next day setup extended file program')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR0005 - Next day setup extended file program                *
+      *                                                               *
+      *  Function:  This program will reset ACCNTBXP file fields      *
+      *  (phase(s)) depending on IREMT flag.                          *
+      *                                                               *
+      *  Called By: IRC01 -  Next day setup                           *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. UIT021             Date 31jan97               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  UIT021 - BOI Monthly Reporting                               *
+      *                                                               *
+      *****************************************************************
+     FACCNTBXPUF  E           K        DISK
+      ***  Details Accnt ext. file                         Prefix 'IA'
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+     IIRSTAT    E DSIRSTAT
+      ***  Italian returns - Dtaara
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+      *
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      **** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in Italian Returns dtaara
+      *
+     C           *NAMVAR   DEFN           IRSTAT
+     C                     IN   IRSTAT
+      *
+      ***  Read All accounts to reset fields depending on IREMT value
+      *
+     C                     READ ACCNTBXP                 99
+     C           *IN99     DOWEQ*OFF
+      *
+      ***  Perform monthly processing
+      *
+     C           IREMT     IFEQ 'Y'
+     C           IREMT     OREQ 'S'
+     C           IREMT     OREQ 'T'
+     C           IREMT     OREQ 'M'
+      *
+      ***  Reset to Zero monthly detail fields
+      *
+     C                     Z-ADD0         IADMNC           Amnt debit mvts
+     C                     Z-ADD0         IACMNC           Amnt credit mvts
+     C                     Z-ADD0         IADMCP           Amnt debit mvts Cap
+     C                     Z-ADD0         IACMCP           Amnt credit mvts Cap
+     C                     Z-ADD0         IADMMV           Number debit mvts
+     C                     Z-ADD0         IACMMV           Number credit mvts
+      *
+     C                     Z-ADD0         IANBOP           Number of operations
+      *
+      ***  monthly security movements
+      *
+     C                     Z-ADD0         IADMPP           Debit (Purch price)
+     C                     Z-ADD0         IACMMT           Cr mat and/or Extract
+     C                     Z-ADD0         IACMNM           Cr Not matu./not Extr
+      *
+     C                     ENDIF
+      *
+      ***  Perform quaterly processing
+      *
+     C           IREMT     IFEQ 'Y'
+     C           IREMT     OREQ 'S'
+     C           IREMT     OREQ 'T'
+      *
+      ***  Reset to Zero quaterly detail fields
+      *
+     C                     Z-ADD0         IADQNC           Amnt debit mvts
+     C                     Z-ADD0         IACQNC           Amnt credit mvts
+     C                     Z-ADD0         IADQCP           Amnt debit mvts Cap
+     C                     Z-ADD0         IACQCP           Amnt credit mvts Cap
+     C                     Z-ADD0         IADQMV           Number debit mvts
+     C                     Z-ADD0         IACQMV           Number credit mvts
+      *
+     C                     Z-ADD0         IAOUTB           Maximum Outstanding
+      *                                                    Balance
+     C                     ENDIF
+      *
+      ***  Perform Six-monthly processing
+      *
+     C           IREMT     IFEQ 'Y'
+     C           IREMT     OREQ 'S'
+      *
+      ***  Reset to Zero Six-monthly detail fields
+      *
+     C                     Z-ADD0         IADHNC           Amnt debit mvts
+     C                     Z-ADD0         IACHNC           Amnt credit mvts
+     C                     Z-ADD0         IADHCP           Amnt debit mvts Cap
+     C                     Z-ADD0         IACHCP           Amnt credit mvts Cap
+     C                     Z-ADD0         IADHMV           Number debit mvts
+     C                     Z-ADD0         IACHMV           Number credit mvts
+      *
+     C                     ENDIF
+      *
+      ***  Perform Yearly processing
+      *
+     C           IREMT     IFEQ 'Y'
+      *
+      ***  Reset to Zero Yearly detail fields
+      *
+     C                     Z-ADD0         IADYNC           Amnt debit mvts
+     C                     Z-ADD0         IACYNC           Amnt credit mvts
+     C                     Z-ADD0         IADYCP           Amnt debit mvts Cap
+     C                     Z-ADD0         IACYCP           Amnt credit mvts Cap
+     C                     Z-ADD0         IADYMV           Number debit mvts
+     C                     Z-ADD0         IACYMV           Number credit mvts
+      *
+     C                     ENDIF
+      *
+     C                     UPDATACCNTBDP
+     C                     READ ACCNTBXP                 99
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

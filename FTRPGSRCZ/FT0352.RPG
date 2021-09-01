@@ -15,8 +15,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR918985           Date 05Mar12               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 25Jul11               *
+      *                 MK0556             Date 25May05               *
+      *                 MK0507             Date 07Feb2005             *
+      *                 DJBF02             Date 19Oct2004             *
+      *                 CSD103             Date 10Aug20               *
+      *                 AR918985           Date 05Mar12               *
       *                 AR918975           Date 21Mar12               *
       *                 MD055628           Date 13Apr20               *
       *                 MD046248           Date 27Oct17               *
@@ -75,6 +80,19 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *           - Program crashes after call successful call to     *
+      *             ZVACTBU. Prog ZVACTBU switches on *INLR even when *
+      *             this is no error.  Amend this program to remove   *
+      *             indicator 90 from the CALL command.               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           MK0556, MK0507, DJBF02                              *
+      *  MK0556  - Handle Multiple/divide indicator for external      *
+      *            networks.                                          *
+      *  MK0507 - Execute processing for delivery amount when STP     *
+      *           is on.                                              *
+      *  DJBF02 - Correct Beneficiary validation                      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR918985 - Correct From/To account formatting for MEINFTPD.  *
@@ -176,6 +194,9 @@
       *                                                                   CFT014
       ** ISO Country Codes file                                           CFT014
       *                                                                   CFT014
+     FMEINMVV0IF  E           K        DISK         KCOMIT                                    MK0556
+      * Midas ME Message Routing Extensionen                                                  MK0556
+      *                                                                                       MK0556
      E/COPY FTCPYSRC,SFTSWFTF
      F/COPY WNCPYSRC,FT0352DFPG
       *
@@ -718,6 +739,7 @@
       *  Validate Notified delivery currency                              CEU006
       *                                                                   CEU006
      C           CEU006    IFEQ 'Y'                                       CEU006
+     C           CFT014    OREQ 'Y'                                                           MK0507
      C                     EXSR SRNDCY                                    CEU006
       *                                                                   CEU006
       * If entered and valid                                              CEU006
@@ -2195,7 +2217,12 @@
      C                     PARM           P@IBAN 34                       CFT004
      C                     PARM           DSSDY                           CFT004
       *                                                                   CFT004
-     C           @RTCD     IFEQ *BLANKS                                   CFT004
+     C                     SELEC                                          DJBF02
+     C           @RTCD     WHEQ '      6'                                 DJBF02
+     C           S1ACBK    ANDNE*BLANKS                                   DJBF02
+      * Skip and validate as address                                      DJBF02
+     C           @RTCD     WHEQ *BLANKS                                   DJBF02
+     C********** @RTCD     IFEQ *BLANKS                             CFT004DJBF02
      C           3         OCUR OACCNT                                    CFT004
      C                     MOVE *BLANKS   DSSDY                           CFT004
       *                                                                   CFT004
@@ -2208,7 +2235,8 @@
      C           OACCNT    PARM           DSSDY                           CFT004
      C                     MOVE 'I'       F1BNCT                          CFT004
      C*                                                                   CFT004
-     C                     ELSE                                           CFT004
+     C                     OTHER                                          DJBF02
+     C*********            ELSE                                     CFT004DJBF02
      C*                                                                   CFT004
      C** Return code 1 is not an error in this case as can only validate  CFT004
      C** the beneficiary as an IBAN if the ISO country code is correct.   CFT004
@@ -2235,10 +2263,18 @@
      C                     END                                            CFT004
      C                     EXSR FTSNMS                                    CFT004
      C                     MOVEL'Y'       I1BNC1                          CFT004
-     C                     MOVEL'Y'       E#NOUP                          CFT004
+     C***********          MOVEL'Y'       E#NOUP                          DJBF02CFT004
+     C                     MOVEL'Y'       E#WARN                          DJBF02
+     C                     MOVEL'Y'       E#MSGS                          DJBF02
      C                     ENDIF                                          CFT004
-     C                     ENDIF                                          CFT004
-     C                     GOTO EXBNC1                                    CFT004
+     C                     ENDSL                                          DJBF02
+     C**********           ENDIF                                    CFT004DJBF02
+     C                     SELEC                                          DJBF02
+     C           @RTCD     WHEQ '      6'                                 DJBF02
+     C           S1ACBK    ANDNE*BLANKS                                   DJBF02
+     C                     OTHER                                          DJBF02
+     C**********           GOTO EXBNC1                                    DJBF02CFT004
+     C                     ENDSL                                          DJBF02
      C                     ENDIF                                          CFT004
      C                     ENDIF                                          CFT004
       *                                                                   CFT004
@@ -5051,6 +5087,15 @@
      C           S1PCCY    IFEQ V#BCCY
      C                     Z-ADDSCBUY     DRATE
      C                     MOVELSCMDIN    DMDIN
+      *                                                                                       MK0556
+     C           #EXTRN    IFEQ 'Y'                                                           MK0556
+     C           SCMDIN    IFEQ 'M'                                                           MK0556
+     C                     MOVEL'D'       DMDIN                                               MK0556
+     C                     ELSE                                                               MK0556
+     C                     MOVEL'M'       DMDIN                                               MK0556
+     C                     ENDIF                                                              MK0556
+     C                     ENDIF                                                              MK0556
+      *                                                                                       MK0556
      C                     GOTO EXDRAT
      C                     END
       *
@@ -7687,6 +7732,22 @@
       *  Indicate that set up is complete
       *
      C                     SETON                     50
+      *                                                                                       MK0556
+     C           KINMVV    KLIST                                                              MK0556
+     C                     KFLD           MVNWRK                                              MK0556
+     C                     KFLD           MVMTPY                                              MK0556
+     C                     KFLD           MVSNDK                                              MK0556
+      *                                                                                       MK0556
+     C                     MOVELV#NWRK    MVNWRK                                              MK0556
+     C                     MOVELV#MTPY    MVMTPY                                              MK0556
+     C                     MOVEL*BLANKS   MVSNDK                                              MK0556
+      *                                                                                       MK0556
+     C                     MOVE 'N'       #EXTRN  1                                           MK0556
+     C           KINMVV    CHAIN@INMVV0              90                                       MK0556
+     C           *IN90     IFEQ *OFF                                                          MK0556
+     C           MVMCMG    ANDEQ'Y'                                                           MK0556
+     C                     MOVE 'Y'       #EXTRN                                              MK0556
+     C                     ENDIF                                                              MK0556
       *
       *  Unwind subroutine stack name
       *

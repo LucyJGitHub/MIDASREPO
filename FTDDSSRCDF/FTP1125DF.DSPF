@@ -1,0 +1,910 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FT STP Payment Correspondent General Routes')
+      *****************************************************************
+      *                                                               *
+      *   Midas - Funds Transfer Module                               *
+      *                                                               *
+      *   DSPF/FTP1125DF - FT STP Payment Correspondent General Routes*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *   Last Amend No. MD031937         Date 13Jan15                *
+      *   Prev Amend No. AR856737         Date 13Sep11                *
+      *                  PNL015           Date 30Nov2005              *
+      *                  EEE065  *CREATE  Date 25Apr2004              *
+      * Midas Release 4.01------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *    MD031937 - Upgrade STP enhancements to BF Midas 2.1        *
+      *    AR856737 - Upgrade STP enhancements to Midas Plus level    *
+      *    PNL015 - Redirection to head office BIC                    *
+      *    EEE065 - FT Payment Routing                                *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      *=========================================================================
+     A          R #RCDKEY                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2005')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK
+     A                                      OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '89')
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A                                      CF12(12 'CF12 Previous')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(31 'Invalid: #1BICC')
+     A                                      SETOF(32 'Invalid: #1BICB')
+     A                                      SETOF(33 'Invalid: #1PCCY')
+     A                                      SETOF(34 'Invalid: #1CBIC')
+     A                                      SETOF(35 'Invalid: #1CBIB')
+     A                                      SETOF(99 'Global error flag')
+      *----------------------------------------------------------------
+      *
+     A            ##USR         10A  O  1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10A  H      TEXT('*PROGRAM')
+     A                                  1 13'FTP1125F1'
+     A N25                                  OVRATR
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7A  O  1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10A  O  2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONKY        40A  O  2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6Y 0O  2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  4  2'Action Code  . . . . :'
+     A            #PACTC         1A  O  4 27TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5  2'BIC identifier . . . :'
+     A            #1BICC         8A  B  5 27TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N31                                  DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1BICB         3A  B  5 37TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A N32                                  DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1INS1        30      5 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Pay currency . . . . :'
+     A            #1PCCY         3A  B  6 27TEXT('Payment Currency')
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N33                                  DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  7  2'Pay through BIC. . . :'
+     A            #1CBIC         8A  B  7 27TEXT('Pay Through BIC')
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N34                                  DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1CBIB         3A  B  7 37TEXT('Pay Through BIC branch')
+     A N25                                  OVRDTA
+     A  35                                  DSPATR(RI)
+     A  35                                  DSPATR(PC)
+     A N35                                  DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1INT1        30      7 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            #KCMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #KCMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #RCDDTL1
+      *
+     A                                      TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK
+     A                                      OVERLAY
+     A  86                                  PUTOVR
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF12(12 'Previous')
+     A                                      CF05(05 'Reset.')
+     A  77                                  CF10(10 'Delete.')
+     A                                      ROLLUP(27 'Next page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(28 'ROLLDOWN')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(45 'Invalid: #1RCAU')
+     A                                      SETOF(46 'Invalid: #1RCAC')
+     A                                      SETOF(31 'Invalid: #1CLRC')
+     A                                      SETOF(32 'Invalid: #1CLRB')
+     A                                      SETOF(33 'Invalid: #1UI56')
+     A                                      SETOF(34 'Invalid: #1PROT')
+      * PNL015 Start
+     A                                      SETOF(35 'Invalid: #1EX54')
+     A                                      SETOF(36 'Invalid: #1HOBC')
+      * PNL015 End
+      *-------------------------------------------------------------------------
+      *
+     A            ##USR         10A  O  1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10A  H      TEXT('*PROGRAM')
+     A                                  1 13'FTP1125F2'
+     A N25                                  OVRATR
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7A  O  1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10A  O  2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONDT        40A  O  2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6Y 0O  2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *---------------------------------------------------------------------
+      ****
+     A****        #1BICC         8   H      TEXT('BIC (Bank, Country, & Loc')
+     A****        #1BICB         3   H      TEXT('BIC (Branch Code)')
+     A****        #1PCCY         3   H      TEXT('Payment Currency')
+     A            #1RECI         1   H      TEXT('Record Identifier')
+      *
+      *---------------------------------------------------------------------
+      * Correspondent General Pay Route
+      *
+     A****        #1CBIC         8   H      TEXT('Pay Through BIC')
+     A****        #1CBIB         3   H      TEXT('Pay Through BIC branch')
+     A****        #1RCAU         1   H      TEXT('Receive a/c Used')
+     A****        #1RCAC        35   H      TEXT('Receive a/c Quoted')
+      *
+      *---------------------------------------------------------------------
+      * Main BIC details
+      *
+      *
+      *---------------------------------------------------------------------
+      *
+     A            #1CREG         3   H      TEXT('Clearing Region')
+      *
+     A            #1CTY1         2   H      TEXT('Clearing Country 1')
+     A            #1CTY2         2   H      TEXT('Clearing Country 2')
+     A            #1CTY3         2   H      TEXT('Clearing Country 3')
+     A            #1CTY4         2   H      TEXT('Clearing Country 4')
+     A            #1CTY5         2   H      TEXT('Clearing Country 5')
+      *
+     A            #1CLID        10   H      TEXT('Clearing System Id.')
+      *
+      *---------------------------------------------------------------------
+      *
+      *---------------------------------------------------------------------
+     A            #1BENR         1   H      TEXT('Route for BEN')
+     A            #1BENL        15S 0H      TEXT('BEN Amount - Min')
+     A            #1BENH        15S 0H      TEXT('BEN Amount - Max')
+     A            #1SHAR         1   H      TEXT('Route for SHA')
+     A            #1SHAL        15S 0H      TEXT('SHA Amount - Min')
+     A            #1SHAH        15S 0H      TEXT('SHA Amount - Max')
+     A            #1OURR         1   H      TEXT('Route for OUR')
+     A            #1OURL        15S 0H      TEXT('OUR Amount - Min')
+     A            #1OURH        15S 0H      TEXT('OUR Amount - Max')
+      *---------------------------------------------------------------------
+     A            #1DES1        35   H      TEXT('Description 1')
+     A            #1DES2        35   H      TEXT('Description 2')
+     A            #1DES3        35   H      TEXT('Description 3')
+      *
+      *---------------------------------------------------------------------
+      * Active Dates
+      *
+     A****        #1STAT         1   H      TEXT('Status' )
+     A            #1STDT         5S 0H      TEXT('Start Date')
+     A            #1ENDT         5S 0H      TEXT('End Date')
+      *
+      *---------------------------------------------------------------------
+      * Audit information
+     A            #1AJOB        10   H      TEXT('Job name')
+     A            #1AUSR        10   H      TEXT('User name')
+     A            #1ATIM         6  0H      TEXT('Action Time')
+     A            #1ARDT         7   H      TEXT('Action Date')
+     A            #1AACT         1   H      TEXT('Action Type')
+     A            #1RDNB         5  0H      TEXT('Run day number')
+      *---------------------------------------------------------------------
+     A                                  4  2'Action Code  . . . . :'
+     A            #PACTC         1A  O  4 27TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5  2'BIC identifier . . . :'
+     A            #1BICC         8A  O  5 27TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BICB         3A  O  5 37TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1INS1        30      5 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Pay currency . . . . :'
+     A            #1PCCY         3A     6 27TEXT('Payment Currency')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  2'Pay through BIC. . . :'
+     A            #1CBIC         8A     7 27TEXT('Pay Through BIC')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1CBIB         3A     7 37TEXT('Pay Through BIC branch')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1INT1        30      7 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9  2'Receive A/c ? . . . . .'
+     A            #1RCAU         1   B  9 26TEXT('Receive A/c?')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  45                                  DSPATR(RI)
+     A  45                                  DSPATR(PC)
+     A N75N45                               DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  9 28'Quote:'
+     A            #1RCAC        35   B  9 35TEXT('Receive A/c?')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  46                                  DSPATR(RI)
+     A  46                                  DSPATR(PC)
+     A N75N46                               DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *---------------------------------------------------------------------
+     A                                 11  2'Clearer . . . . . . . .'
+     A            #1CLRC         8   B 11 26TEXT('Clearer Correspondent BIC')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N75N31                               DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1CLRB         3   B 11 36TEXT('Clearer Correspondent BIC Br')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A N75N32                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1INC1        30     11 42TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 12  2'Use in field 56 . . . .'
+     A            #1UI56         1   B 12 26TEXT('Use in Field 56')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N75N33                               DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      * PNL015 Start
+     A                                 13  2'Exclude from 54 default'
+     A            #1EX54         1   B 13 26TEXT('Exclude from 54')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  35                                  DSPATR(RI)
+     A  35                                  DSPATR(PC)
+     A N75N35                               DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * PNL015 End
+      *
+      *
+     A                                 14  2'Prefered route  . . . .'
+     A            #1PROT         1   B 14 26TEXT('Preferential Route')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N75N34                               DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * PNL015 Start
+     A                                 16  2'Head office BIC . . . .'
+     A            #1HOBC         1   B 16 26TEXT('Head Office BIC')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A N75N36                               DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * PNL015 End
+      *---------------------------------------------------------------------
+      * Active Dates
+      *
+     A                                 19  2'Status. . . . . . . . .'
+     A            #1STAT         1   B 19 26TEXT('Status' )
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  40                                  DSPATR(RI)
+     A  40                                  DSPATR(PC)
+     A N75N40                               DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 28'Start date'
+     A            #1STDTA        6   B 19 39TEXT('Start Date')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A N75N41                               DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 47'End date'
+     A            #1ENDTA        6   B 19 56TEXT('End Date')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  42                                  DSPATR(RI)
+     A  42                                  DSPATR(PC)
+     A N75N42                               DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *=========================================================================
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            #ACMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #ACMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A          R #RCDDTL2                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  77                                  CF10(10 'Delete.')
+     A                                      CF12(12 'Previous')
+     A                                      ROLLUP(27 'Next page.')
+     A                                      ROLLDOWN(28 'Previous page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1CTY1')
+     A                                      SETOF(32 'Invalid: #1CTY2')
+     A                                      SETOF(33 'Invalid: #1CTY3')
+     A                                      SETOF(34 'Invalid: #1CTY4')
+     A                                      SETOF(35 'Invalid: #1CTY5')
+     A                                      SETOF(36 'Invalid: #1CREG')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FTP1125F3'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONDT        40      2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *---------------------------------------------------------------------
+      ****
+     A****        #1BICC         8   H      TEXT('BIC (Bank, Country, & Loc')
+     A****        #1BICB         3   H      TEXT('BIC (Branch Code)')
+     A****        #1PCCY         3   H      TEXT('Payment Currency')
+     A            #1RECI         1   H      TEXT('Record Identifier')
+      *
+      *---------------------------------------------------------------------
+      * Correspondent General Pay Route
+      *
+     A****        #1CBIC         8   H      TEXT('Pay Through BIC')
+     A****        #1CBIB         3   H      TEXT('Pay Through BIC branch')
+     A            #1RCAU         1   H      TEXT('Receive a/c Used')
+     A            #1RCAC        35   H      TEXT('Receive a/c Quoted')
+      *
+      *---------------------------------------------------------------------
+      * Main BIC details
+      *
+     A            #1CLRC         8   H      TEXT('Clearer Correspondent BIC')
+     A            #1CLRB         3   H      TEXT('Clearer Correspondent BIC Br')
+     A            #1UI56         1   H      TEXT('Use in Field 56')
+      *
+      *---------------------------------------------------------------------
+      *
+     A            #1CLID        10   H      TEXT('Clearing System Id.')
+      *
+      *---------------------------------------------------------------------
+     A            #1PROT         1   H      TEXT('Preferential Route')
+      *
+      *---------------------------------------------------------------------
+     A            #1BENR         1   H      TEXT('Route for BEN')
+     A            #1BENL        15S 0H      TEXT('BEN Amount - Min')
+     A            #1BENH        15S 0H      TEXT('BEN Amount - Max')
+     A            #1SHAR         1   H      TEXT('Route for SHA')
+     A            #1SHAL        15S 0H      TEXT('SHA Amount - Min')
+     A            #1SHAH        15S 0H      TEXT('SHA Amount - Max')
+     A            #1OURR         1   H      TEXT('Route for OUR')
+     A            #1OURL        15S 0H      TEXT('OUR Amount - Min')
+     A            #1OURH        15S 0H      TEXT('OUR Amount - Max')
+      *---------------------------------------------------------------------
+     A            #1DES1        35   H      TEXT('Description 1')
+     A            #1DES2        35   H      TEXT('Description 2')
+     A            #1DES3        35   H      TEXT('Description 3')
+      *
+      *---------------------------------------------------------------------
+      * Active Dates
+      *
+     A            #1STAT         1   H      TEXT('Status' )
+     A            #1STDT         5S 0H      TEXT('Start Date')
+     A            #1ENDT         5S 0H      TEXT('End Date')
+      *
+      *---------------------------------------------------------------------
+      * Audit information
+     A            #1AJOB        10   H      TEXT('Job name')
+     A            #1AUSR        10   H      TEXT('User name')
+     A            #1ATIM         6  0H      TEXT('Action Time')
+     A            #1ARDT         7   H      TEXT('Action Date')
+     A            #1AACT         1   H      TEXT('Action Type')
+     A            #1RDNB         5  0H      TEXT('Run day number')
+      *---------------------------------------------------------------------
+     A                                  4  2'Action Code  . . . . :'
+     A            #PACTC         1A  O  4 27TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5  2'BIC identifier . . . :'
+     A            #1BICC         8A  O  5 27TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BICB         3A  O  5 37TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1INS1        30      5 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Pay currency . . . . :'
+     A            #1PCCY         3A     6 27TEXT('Payment Currency')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  2'Pay through BIC. . . :'
+     A            #1CBIC         8A     7 27TEXT('Pay Through BIC')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1CBIB         3A     7 37TEXT('Pay Through BIC branch')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1INT1        30      7 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *---------------------------------------------------------------------
+     A                                  9  2'Clearing Countries. . .'
+     A            #1CTY1         2   B  9 26TEXT('Clearing Country 1')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N75N31                               DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1CTY2         2   B  9 29TEXT('Clearing Country 2')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A N75N32                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1CTY3         2   B  9 32TEXT('Clearing Country 3')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N75N33                               DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1CTY4         2   B  9 35TEXT('Clearing Country 4')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N75N34                               DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1CTY5         2   B  9 38TEXT('Clearing Country 5')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  35                                  DSPATR(RI)
+     A  35                                  DSPATR(PC)
+     A N75N35                               DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 11  2'Clearing Region . . . .'
+     A            #1CREG         3   B 11 26TEXT('Clearing Region')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A N75N36                               DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *
+     A*?          #1CLID        10   H      TEXT('Clearing System Id.')
+      *---------------------------------------------------------------------
+     A*=========================================================================
+     A          R #CMDTXT3                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            #BCMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #BCMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A          R #RCDDTL3                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  77                                  CF10(10 'Delete.')
+     A                                      CF12(12 'Previous')
+     A                                      ROLLDOWN(28 'Previous page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(27 'ROLLUP')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1DES*')
+     A                                      SETOF(34 'Invalid: #1BENR')
+     A                                      SETOF(35 'Invalid: #1BENL')
+     A                                      SETOF(36 'Invalid: #1BENH')
+     A                                      SETOF(37 'Invalid: #1SHAR')
+     A                                      SETOF(38 'Invalid: #1SHAL')
+     A                                      SETOF(49 'Invalid: #1SHAH')
+     A                                      SETOF(40 'Invalid: #1OURR')
+     A                                      SETOF(41 'Invalid: #1OURL')
+     A                                      SETOF(42 'Invalid: #1OURH')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FTP1125F3'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONDT        40      2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *---------------------------------------------------------------------
+      ****
+     A****        #1BICC         8   H      TEXT('BIC (Bank, Country, & Loc')
+     A****        #1BICB         3   H      TEXT('BIC (Branch Code)')
+     A****        #1PCCY         3   H      TEXT('Payment Currency')
+     A            #1RECI         1   H      TEXT('Record Identifier')
+      *
+      *---------------------------------------------------------------------
+      * Correspondent General Pay Route
+      *
+     A****        #1CBIC         8   H      TEXT('Pay Through BIC')
+     A****        #1CBIB         3   H      TEXT('Pay Through BIC branch')
+     A            #1RCAU         1   H      TEXT('Receive a/c Used')
+     A            #1RCAC        35   H      TEXT('Receive a/c Quoted')
+      *
+      *---------------------------------------------------------------------
+      * Main BIC details
+      *
+     A            #1CLRC         8   H      TEXT('Clearer Correspondent BIC')
+     A            #1CLRB         3   H      TEXT('Clearer Correspondent BIC Br')
+     A            #1UI56         1   H      TEXT('Use in Field 56')
+      *
+      *---------------------------------------------------------------------
+      *
+     A            #1CREG         3   H      TEXT('Clearing Region')
+      *
+     A            #1CTY1         2   H      TEXT('Clearing Country 1')
+     A            #1CTY2         2   H      TEXT('Clearing Country 2')
+     A            #1CTY3         2   H      TEXT('Clearing Country 3')
+     A            #1CTY4         2   H      TEXT('Clearing Country 4')
+     A            #1CTY5         2   H      TEXT('Clearing Country 5')
+      *
+     A            #1CLID        10   H      TEXT('Clearing System Id.')
+      *
+      *---------------------------------------------------------------------
+     A            #1PROT         1   H      TEXT('Preferential Route')
+      *
+      *---------------------------------------------------------------------
+     A            #1BENL        15S 0H      TEXT('BEN Amount - Min')
+     A            #1BENH        15S 0H      TEXT('BEN Amount - Max')
+     A            #1SHAL        15S 0H      TEXT('SHA Amount - Min')
+     A            #1SHAH        15S 0H      TEXT('SHA Amount - Max')
+     A            #1OURL        15S 0H      TEXT('OUR Amount - Min')
+     A            #1OURH        15S 0H      TEXT('OUR Amount - Max')
+      *---------------------------------------------------------------------
+     A****        #1DES1        35   H      TEXT('Description 1')
+     A****        #1DES2        35   H      TEXT('Description 2')
+     A****        #1DES3        35   H      TEXT('Description 3')
+      *
+      *---------------------------------------------------------------------
+      * Active Dates
+      *
+     A            #1STAT         1   H      TEXT('Status' )
+     A            #1STDT         5S 0H      TEXT('Start Date')
+     A            #1ENDT         5S 0H      TEXT('End Date')
+      *
+      *---------------------------------------------------------------------
+      * Audit information
+     A            #1AJOB        10   H      TEXT('Job name')
+     A****        #1AUSR        10   H      TEXT('User name')
+     A****        #1ATIM         6  0H      TEXT('Action Time')
+     A****        #1ARDT         7   H      TEXT('Action Date')
+     A            #1AACT         1   H      TEXT('Action Type')
+     A            #1RDNB         5  0H      TEXT('Run day number')
+      *---------------------------------------------------------------------
+     A                                  4  2'Action Code  . . . . :'
+     A            #PACTC         1A  O  4 27TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5  2'BIC identifier . . . :'
+     A            #1BICC         8A  O  5 27TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BICB         3A  O  5 37TEXT('BIC Identifier')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1INS1        30      5 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Pay currency . . . . :'
+     A            #1PCCY         3A     6 27TEXT('Payment Currency')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  2'Pay through BIC. . . :'
+     A            #1CBIC         8A     7 27TEXT('Pay Through BIC')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1CBIB         3A     7 37TEXT('Pay Through BIC branch')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1INT1        30      7 43TEXT('BIC Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *---------------------------------------------------------------------
+     A                                  9  2'Description . . . . . .'
+     A            #1DES1        35   B  9 26TEXT('Description 1')
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N75N31                               DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1DES2        35   B 10 26TEXT('Description 2')
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N75N31                               DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1DES3        35   B 11 26TEXT('Description 3')
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N75N31                               DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 14  2'Apply for . . . . .BEN.'
+     A                                 13 30'  Minimum Value '
+     A                                      DSPATR(UL)
+     A                                 13 50'  Maximum Value '
+     A                                      DSPATR(UL)
+     A            #1BENR         1   B 14 26TEXT('Reroute for BEN')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N75N34                               DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1BENLA       16   B 14 30TEXT('BEN Amount - Min')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  35                                  DSPATR(RI)
+     A  35                                  DSPATR(PC)
+     A N75N35                               DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1BENHA       16   B 14 50TEXT('BEN Amount - Max')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A N75N36                               DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15 21'SHA'
+     A            #1SHAR         1   B 15 26TEXT('Reroute for SHA')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  37                                  DSPATR(RI)
+     A  37                                  DSPATR(PC)
+     A N75N37                               DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1SHALA       16   B 15 30TEXT('SHA Amount - Min')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  38                                  DSPATR(RI)
+     A  38                                  DSPATR(PC)
+     A N75N38                               DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1SHAHA       16   B 15 50TEXT('SHA Amount - Max')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  39                                  DSPATR(RI)
+     A  39                                  DSPATR(PC)
+     A N75N39                               DSPATR(UL)
+     A N39                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 16 21'OUR'
+     A            #1OURR         1   B 16 26TEXT('Reroute for OUR')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  40                                  DSPATR(RI)
+     A  40                                  DSPATR(PC)
+     A N75N40                               DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1OURLA       16   B 16 30TEXT('OUR Amount - Min')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A N75N41                               DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1OURHA       16   B 16 50TEXT('OUR Amount - Max')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  42                                  DSPATR(RI)
+     A  42                                  DSPATR(PC)
+     A N75N42                               DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *------------------------------------------------------------------------------
+     A                                 19  2'Last Change Information'
+     A  78                                  DSPATR(ND)
+     A N78                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 20  2'User name.:'
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1AUSR        10     20 14TEXT('User name')
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(ND)
+     A N78                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 20 25'Action Time.:'
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ATIM         6  0  20 39TEXT('Action Time')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(ND)
+     A N78                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 20 48'Action Date'
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ARDT         7     20 60TEXT('Action Date')
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(ND)
+     A N78                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*=========================================================================
+     A          R #CMDTXT4                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            #CCMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #CCMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================

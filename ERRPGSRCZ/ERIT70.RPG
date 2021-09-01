@@ -1,0 +1,180 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Retrieve Accounts extended details')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT70 - Retrieve Accounts extended details                  *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI110             Date 07Oct03               *
+      *                 220517             Date 07Aug03               *
+      *                 MMI100             Date 06Nov02               *
+      *                 MMI033             Date 31Mar99               *
+      *                 UIT021             Date 29JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI110 - Rewrite Numbers calculation. All processing based   *
+      *           over postings history has been moved to ERIT59.     *
+      *           Corresponding lines have been physically deleted    *
+      *           from the present source to improve readibility.     *
+      *  220517 - Calculate numeri from start of year (not from start *
+      *           of quarter)                                         *
+      *  MMI100 - R4.1 Upgrade                                        *
+      *  MMI033 - Midas Italy Puma/2 Extract Change 3                 *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *---------------------------------------------------------------*
+      ***            F I L E S    D E F I N I T I O N               ***
+      *---------------------------------------------------------------*
+      *
+     FREACT1L0IF  E           K        DISK
+      * Accounts Italy extended details file               Prefix 'PQ'
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      ***           A R R A Y S    D E F I N I T I O N              ***
+      *---------------------------------------------------------------*
+     E                    CPY@    1   1 80
+      * Copyright array
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      ***    D A T A    S T R U C T U R E    D E F I N I T I O N    ***
+      *---------------------------------------------------------------*
+      *
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      *
+     I            DS
+     I                                        1   6 KCNUM
+     I                                        7   9 KCCY
+     I                                       10  190KACOD
+     I                                       20  210KACSQ
+     I                                        1  21 WWTREF
+      /EJECT
+      *****************************************************************
+      ***     M A I N L I N E S   -   S T A R T    P R O G R A M    ***
+      *****************************************************************
+      *
+     C                     MOVE EXBRCD    KBRCA   3
+     C                     MOVELEXTREF    WWTREF
+      *
+      ***  Retrieve ACCNTAXP details
+      *
+     C           KACXC     CHAINREACT1L0             81
+     C           *IN81     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'703'     DBASE            ******************
+     C                     MOVEL'REACT1L0'DBFILE           ** DB ERROR 703 **
+     C                     MOVELEXTREF    DBKEY            ******************
+     C                     EXSR #DBERR
+     C                     ENDIF                           - E1
+      *
+      *** Do not over-write existing value with default
+     C           PQMBCD    IFNE 99
+     C                     Z-ADDPQMBCD    ICMBCD           Mobilisation
+     C                     ENDIF
+     C                     Z-ADDPQCATC    ICCATC           Category code CR
+     C                     Z-ADDPQTPAC    ICTPAC           Type of Activity
+     C                     Z-ADDPQCLRL    ICCLRL           Client role CR
+     C                     Z-ADDPQACST    ICACST           Account status CR
+     C                     MOVELPQLNIT    ICLNIT           Line Item Usura Rep.
+     C                     Z-ADDPQTEGL    ICTEGL           Effect. Global Rate
+     C                     Z-ADDPQCMPC    ICCMPC           Com. rate Max. uncov
+      *
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      ***       M A I N L I N E S   -   E N D    P R O G R A M      ***
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR S/R - Initial subroutine                              *
+      *  ----------                                                   *
+      *  Called From : First input Cycle                              *
+      *  Calls       : *PSSR                                          *
+      *  Function    : Receive Entry parameters, prepare LDA          *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           EXTREF 21        Transaction Reference
+     C                     PARM           EXBRCD  3        Branch code
+      *
+      ***  Output parameters
+      *
+     C                     PARM           ICMBCD  20       Mobilisation code
+     C                     PARM           ICCATC 110       Category code CR
+     C                     PARM           ICTPAC  30       Type of Activity
+     C                     PARM           ICCLRL  30       Client role CR
+     C                     PARM           ICACST  30       Account status CR
+     C                     PARM           ICLNIT  7        Line Item Usura Rep.
+     C                     PARM           ICTEGL  83       Effect. Global Rate
+     C                     PARM           ICCMPC  83       Com. rate Max. uncov
+      *
+     C                     PARM           ERROR   1        Return ind.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      ***  Define working fields
+      *
+     C           KACXC     KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+     C                     ENDSR
+     C*================================================================
+      **
+      **  #DBERR      Program-detected exception OR monitored error
+      **              sub-routine.
+      **
+     C*================================================================
+     C           #DBERR    BEGSR
+     C*
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

@@ -22,8 +22,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 25Jul11               *
+      *                 STP030             Date 28Dec04               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -40,6 +43,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied STP030 changes                              *
+      *  STP030 - When Add/Deduct charges <> 'D' charge can           *
+      *           exceed total payment amount.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -492,6 +500,7 @@
       *  use the range chargeable amount as the chargeable amount
      C                   If        X = 1 AND
      C                             Payamt - TierCharge(1) < StartArr(1)
+     C                             And P_ADDC = 'D'                                           STP030
      C                   Eval      TierCharge(1) = TierAmount(1)
      C                   Endif
  

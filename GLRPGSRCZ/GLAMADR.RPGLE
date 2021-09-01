@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. LUC139             Date 21Dec20               *
+      *  Prev Amend No. CER009             Date 13Nov20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
@@ -72,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  260405 - BRT Participation Date of Birth field is missing.   *
@@ -265,6 +269,14 @@
      D**WLTAS***              17     18  0                                                    CGL029
      D  WLTAC                 13     22  0                                                    CGL029
      D  WLTAS                 23     24  0                                                    CGL029
+     D
+     D DataItaly       DS          1024                                                       CER009
+     D  I1CNUM                 1      6                                                       CER009
+     D  I1CCY                  7      9                                                       CER009
+     D  I1ACOD                10     19                                                       CER009
+     D  I1ACSQ                20     21                                                       CER009
+     D  I1BRCA                22     24                                                       CER009
+     D  I1ATYP                25     25                                                       CER009
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -275,6 +287,7 @@
      D CRE015          S              1A   INZ('N')                                           CRE015
      D CRE010          S              1A   INZ('N')                                         MD028970
      D CAP205          S              1A   INZ('N')                                         MD044546
+     D CER009          S              1A   INZ('N')                                           CER009
      D WProcDate       S                   LIKE(BJRDNB)
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
@@ -366,6 +379,9 @@
 
      D InfData       E DS                  EXTNAME(GLAMIFPD) PREFIX(IF_)                    BUG10280
       ** GL Extra Data - Classe 1 Data - File (D/B) format                                  BUG10280
+
+     D ItalyFileFmt  E DS                  EXTNAME(REACT1PD)                                  CER009
+      ** Account Details Ext File - Italian                                                   CER009
      D/COPY WNCPYSRC,GLH00639
 
       **--------------------------------------------------------------------------------------------
@@ -433,6 +449,9 @@
      C                   IF        ULX606='Y'                                                 CER001
      C                   EXSR      GLAMAD2RV                                                  CER001
      C                   ENDIF                                                                CER001
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EXSR      GLAMAD7RV                                                  CER009
+     C                   ENDIF                                                                CER009
      C/COPY WNCPYSRC,GLAMADAC01
       *
      C                   IF        LLN007 = 'Y'                                              LLN022A
@@ -459,6 +478,9 @@
      C                   IF        ULX606='Y'                                                 CER001
      C                   EXSR      GLAMAD2CT                                                  CER001
      C                   ENDIF                                                                CER001
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EXSR      GLAMAD7CT                                                  CER009
+     C                   ENDIF                                                                CER009
 
      C/COPY WNCPYSRC,GLAMADAC03
 
@@ -995,6 +1017,26 @@
      C                   EXSR      *PSSR                                                      CER001
      C                   ENDIF                                                                CER001
       *                                                                  q
+                                                                                              CER009
+      ** Access SAR details file to determine if CER009 feature is installed                  CER009
+                                                                                              CER009
+     C                   CALLB     'AOSARDR0'                                                 CER009
+     C                   PARM      *BLANKS       @RTCD                                        CER009
+     C                   PARM      '*VERIFY'     @OPTN                                        CER009
+     C                   PARM      'CER009'      @SARD                                        CER009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+     C                   IF        @RTCD = *Blanks                                            CER009
+     C                   EVAL      CER009 = 'Y'                                               CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C                   IF        @RTCD <> *BLANKS  AND                                      CER009
+     C                             @RTCD <> '*NRF   '                                         CER009
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CER009
+     C                   Z-ADD     13            DBASE                                        CER009
+     C                   MOVEL     'CER009'      DBKEY                                        CER009
+     C                   EXSR      *PSSR                                                      CER009
+     C                   ENDIF                                                                CER009
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,GLAMADM01
 
@@ -1626,6 +1668,43 @@
       /EJECT                                                                                  CER001
       **********************************************************************                  CER001
      C/COPY WNCPYSRC,GLH00643
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  GLAMAD7RV - Retrieve Account Extension - Italy               *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     GLAMAD7RV     BEGSR                                                                CER009
+                                                                                              CER009
+     C                   EVAL      I1CNUM = DDCUSN                                            CER009
+     C                   EVAL      I1CCY  = DDCCY                                             CER009
+     C                   EVAL      I1ACOD = DDACOD                                            CER009
+     C                   EVAL      I1ACSQ = DDACSQ                                            CER009
+     C                   EVAL      I1BRCA = DDBRCA                                            CER009
+     C                   EVAL      I1ATYP = *Blanks                                           CER009
+     C                   EVAL      RetCodeOut = *Blanks                                       CER009
+                                                                                              CER009
+     C                   CALLB     'GLAMAD7RV'                                                CER009
+     C                   PARM                    RetCodeOut                                   CER009
+     C                   PARM                    DataItaly                                    CER009
+     C                   PARM                    ItalyFileFmt                                 CER009
+                                                                                              CER009
+     C                   ENDSR                                                                CER009
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  GLAMAD7CT - Convert Account Extension to Screen Format       *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     GLAMAD7CT     BEGSR                                                                CER009
+                                                                                              CER009
+     C                   EVAL      RetCodeOut = *Blanks                                       CER009
+     C                   CALLB     'GLAMAD7CT'                                                CER009
+     C                   PARM                    RetCodeOut                                   CER009
+     C                   PARM                    ItalyFileFmt                                 CER009
+     C                   PARM                    RegData                                      CER009
+                                                                                              CER009
+     C                   ENDSR                                                                CER009
       *****************************************************************
       *** Physically deleted array ##OX4 OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)    CSD101
 **  CPY@

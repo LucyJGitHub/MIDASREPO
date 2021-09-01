@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CRE083AD           Date 06Aug12              */
+/*       Last Amend No. LUC141             Date 23Feb21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CRE083AD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CCB016             Date 18Feb08              */
 /*                      CGL061             Date 27Jun06              */
@@ -23,6 +24,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC141 - Scalare                                            */
+/*                WNCPYSRC,LUC141_001                                */
+/*                WNCPYSRC,REC376001                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AD - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CCB016 - CoB Performance Enhancements.                      */
@@ -61,6 +65,7 @@
                           2001')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
+/*/COPY WNCPYSRC,LUC141_001                                          */
              DCLF       FILE(RECAPM)
 /*/COPY WNCPYSRC,REC376001                                           */
 /**/

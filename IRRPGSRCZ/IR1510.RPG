@@ -1,0 +1,88 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR OASI INTERFACE - GUARANTEES')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR1510 - OASI INTERFACE - GUARANTEES                         *
+      *                                                               *
+      *  (C) Copyright Misys 2007                                     *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MMI140             Date 28Feb11               *
+      *                 MMI138             Date 24Mar10               *
+      *                 MMI136             Date 19Dec08               *
+      *                 MMI132             Date 25Mar08               *
+      *                 MMI124  *Create         16FEB07               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011 - Recompiled             *
+      *  MMI138 - PUMA Changes March 2010    - Recompiled             *
+      *  MMI136 - PUMA Changes December 2008 - Recompiled             *
+      *  MMI132 - PUMA Changes March 2008    - Recompiled             *
+      *  MMI124 - OASI changes for Guarantees                         *
+      *                                                               *
+      *****************************************************************
+     FIRPUMAPDUP  E                    DISK
+     FSDCUSTL1IF  E           K        DISK
+     FSDCUT2L0IF  E           K        DISK
+     FSDCTT1L0IF  E           K        DISK
+      *
+     IMK300       DS                             15
+     I                                        7  110LINE
+      *
+     IMK204       DS                             35
+     I                                        1   2 M20401
+      *
+      * Select Guarantees
+      *
+     C           MKUIA     IFEQ '205'
+     C           M20401    ANDEQ'GA'
+      *
+      * OASI requires that fields 011 016 211 refer to guarantor.
+      *
+     C                     MOVELMK308     BBCUST
+      *
+     C           BBCUST    CHAINSDCUSTL1             01
+     C           *IN01     IFEQ *OFF
+     C           BBCNCZ    CHAINSDCTT1L0             02
+     C           *IN02     IFEQ *OFF
+     C                     Z-ADDPEUCTR    MK016
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BBCUST    CHAINSDCUT2L0             03
+     C           *IN03     IFEQ *OFF
+     C                     Z-ADDPCECSG    MK011
+     C                     MOVELPCFCCR    MK211
+     C           PCFCCR    IFEQ *BLANKS
+     C                     MOVELPCFSCD    MK211
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Garanzia Reale (472=1): output Codice Aziendale to field 025
+      * Garanzia Personale (472=2):output Codice Aziendale to field 309
+      *
+     C           MK472     IFEQ 1
+     C                     Z-ADD*ZERO     MK309
+     C                     ELSE
+     C                     Z-ADD*ZERO     MK025
+     C                     ENDIF
+      *
+      * Key fields: 277 (Customer) 058 (Line) 300 (Guarantee)
+      *
+     C                     MOVELMK030     MK277
+     C                     Z-ADDLINE      MK058
+      *
+      * Fixed values - as required by OASI
+      *
+     C                     Z-ADD1         MK302
+     C                     Z-ADD1         MK324
+      *
+     C                     UPDATIRPUMA
+      *
+     C                     ENDIF

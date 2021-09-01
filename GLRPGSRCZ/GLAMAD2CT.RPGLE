@@ -14,17 +14,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC139             Date 21Dec20               *
+      *  Prev Amend No. CER009             Date 13Nov20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 09May06               *
+      *                 CSD027A            Date 09May06               *
       *                 BUG10444           Date 07Feb06               *
       *                 CER001  *CREATE    Date 25Apr05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1 (Recompile)    *
+      *  CER009 - Puma II Upgrade to MidasPlus (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
       *  BUG10444 - Lum sum code not defined due to the wrong         *

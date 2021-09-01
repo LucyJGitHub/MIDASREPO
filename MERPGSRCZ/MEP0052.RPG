@@ -1,0 +1,280 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME STP Repair Beneficiary account if')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0052 - STP Repair Beneficiary account if                  *
+      *            Pay in Message currency                            *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 MKFX01             Date 23Jan06               *
+      *                 ESL038             Date 30Nov2004             *
+      *                 E30004             Date 25Feb2004             *
+      *                 ERN054             Date 16Jul2003             *
+      *                 EEE058             Date 06May2003             *
+      *                 EEE058   *CREATE   Date 11Feb2003             *
+      * Midas Release 4.01 -------------------------------------------*
+      *                                                               *
+      *  Function:  This program places the customer in the field     *
+      *  from a specified account                                     *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2002       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  ESL038 - ING FT STP Development                              *
+      *  E30004 - Change to PCAT Recompile                            *
+      *  ERN054 - Agent message changes (Recompile)                   *
+      *  EEE058 - Default Account indicator                           *
+      *  EEE058 - Incoming STP idenifier is Elixir customer           *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FFTPCATJ1IF  E           K        DISK
+      *
+      *  Customer Accounts table
+      *
+     FFTPCATJ0IF  E           K        DISK
+      *
+      *  Defaults table for accounts
+      *
+     FFTPCATJ3IF  E           K        DISK
+      *
+      *  Defaults table for accounts
+      *
+     FMEINCRL1IF  E           K        DISK                                            STP001
+      *                                                                                       STP001
+      *  Midas ME I.M Control Retrieval index                                                 STP001
+      *                                                                                       STP001
+     FMEINMPL1IF  E           K        DISK                                            STP001
+      *                                                                                       STP001
+      *  Message parts file for currency of payment and amount
+      *                                                                                       STP001
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+      *
+     IPIFDDT      DS
+     I                                        1 256 WRFDDT
+     I                                        6 256 WRTGVL
+     I                                       20  54 ILINE1
+     I                                       20  25 U#CNUA
+     I                                       55 256 IREST
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IPRFDDT      DS
+     I                                        1 256 WIFDDT
+     I                                        6 256 WITGVL
+     I                                        2  19 NACCR
+     I                                        2   7 NCNUM
+     I                                        8  10 NCCY
+     I*****                                  11  14 NACOD                                  MD31937
+     I*****                                  15  16 NACSQ                                  MD31937
+     I*****                                  17  19 NBRCA                                  MD31937
+     I*****                                  20  54 RLINE1                                 MD31937
+     I*****                                  55 256 RREST                                  MD31937
+     I                                       11  20 NACOD                                  MD31937
+     I                                       21  22 NACSQ                                  MD31937
+     I                                       23  25 NBRCA                                  MD31937
+     I                                       26  60 RLINE1                                 MD31937
+     I                                       61 256 RREST                                  MD31937
+     ISCSARD    E DSSCSARDPD
+     I              LCD                             SCLCD
+      *
+      ** Data structure for the Switchable features
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+     ID@ACCT    E DSACCNTAB
+      *
+      * ACCNTABF - Account details record format data structure
+      *
+     IPCRIT     E DSMEGNCRPD
+      * Criteria rule hit
+      *
+     IP9PEXT    E DSFTPEXTP0
+      *
+      * FT PCAT extension details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      * SDCUSTPD - Customer details
+      *
+     IDSCURR    E DSSDCURRPD                                                                  EEE058
+      *                                                                                       EEE058
+      * Data Structures for Currency Definition                                               EEE058
+      *                                                                                       EEE058
+     ID#DTA       DS                            256                                           EEE058
+      *                                                                                       EEE058
+      *  Calling parameter data structure for AOCCYCV0                                        EEE058
+      *                                                                                       EEE058
+      *                                       From Currency & amount                          EEE058
+     I                                        1   3 D#FCCY                                    EEE058
+     I                                    P   4  110D#FAMT                                    EEE058
+      *                                       To Currency & amount                            EEE058
+     I                                       12  14 D#TCCY                                    EEE058
+     I                                    P  15  220D#TAMT                                    EEE058
+      *                                       Rate and multi/div ind.                         EEE058
+     I                                       23  23 D#MDIN                                    EEE058
+     I                                    P  24  368D#RATE                                    EEE058
+      *                            Output     Rate and multi/div ind.                         EEE058
+      *                                       If no in rate                                   EEE058
+     I                                       37  37 O#MDIN                                    EEE058
+     I                                    P  38  508O#RATE                                    EEE058
+      *                                                                                       EEE058
+     I              '0123456789'          C         DIGITS
+     I              'NO ORDERING CUSTOME- C         P50C
+     I              'R ON MT910'
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+     C           *LIKE     DEFN WRTGVL    P#RPP1
+     C           *LIKE     DEFN WITGVL    P#RPP2
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      *  Process field
+      *
+     C                     MOVELP#RPP1    PIFDDT
+     C                     MOVELP#RPP1    PRFDDT
+      *
+     C           KPCAT1    KLIST
+     C                     KFLD           PCRNB1
+     C                     KFLD           PCRNB2
+      *
+     C           KPCAT2    KLIST
+     C                     KFLD           PCIBAN
+      *
+     C           KINMP     KLIST
+     C                     KFLD           MPMSGR
+     C                     KFLD           MPKPRT
+      *
+      *  Get customer details
+      *
+     C                     CALL 'FTP960'
+     C                     PARM *BLANKS   P9RTN   7
+     C                     PARM           P9PEXT
+      *
+     C                     MOVELPXRNB1    PCRNB1
+     C                     MOVELPXRNB2    PCRNB2
+     C           KPCAT1    CHAIN@PCATJ1              90
+      *
+     C           *IN90     IFEQ *ON
+     C                     MOVELPXIBAN    PCIBAN
+     C           KPCAT2    CHAIN@PCATJ0              90
+     C                     ENDIF
+      *
+     C           *IN90     IFEQ *OFF
+      *
+     C                     MOVELPCIBAN    W@CTRY
+     C                     MOVELPCIBAN    W@IBAN
+      *
+      * If Message Currency different from PCAT currency, check
+      * Pay in message currency flag. If set to Y then replace
+      * original IBAN with Default account IBAN
+      *
+     C           PHMSGR    CHAIN@INCRL1              91
+      *                                                                                       STP001
+      * When message not found - skip the rest of processing                                  STP001
+      *                                                                                       STP001
+     C           *IN91     IFEQ *OFF
+      * get part information                                                                  STP001
+     C                     Z-ADDPHMSGR    MPMSGR
+     C                     Z-ADDPHPART    MPKPRT
+      *
+     C           KINMP     CHAIN@INMPL1              91
+      *                                                                                       STP001
+      * When message not found - skip the rest of processing                                  STP001
+     C           *IN91     IFEQ *OFF
+      *
+     C           MPCYCD    IFNE PCBCCY
+      *                                                                                       STP001
+      *
+      * If Pay in message currency flag set to Y, replace original
+      * Beneficiary account with Default account in message currency
+      *
+     C           PCIMCY    IFEQ 'Y'
+     C           GNMTPY    ANDEQ'103'
+      *
+     C                     MOVELPDCA      DSTRAN
+     C                     MOVELTVCCY     W@CCY   3
+      *
+     C           KIDKS     KLIST
+     C                     KFLD           IDKS   12
+     C                     KFLD           BCCY    3
+     C                     MOVELPCIDKS    IDKS      P
+     C                     MOVELW@CCY     BCCY
+      *
+     C           KIDKS     CHAIN@PCATJ3              90
+      *
+     C           *IN90     IFEQ *OFF
+     C                     MOVELPCIBAN    W@CTRY  2
+     C                     MOVELPCIBAN    W@IBAN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           W@CTRY    IFNE 'PL'
+     C           'PL'      CAT  PCIBAN:0  P@IBAN 36 P
+     C                     MOVELP@IBAN    W@IBAN 34 P
+     C                     ENDIF
+     C                     MOVEL'/'       RLINE1    P
+     C           RLINE1    CAT  W@IBAN:0  RLINE1
+      *
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+     C                     ENDIF
+      *
+      *  Exit program
+      *
+     C   U1                DUMP
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2002

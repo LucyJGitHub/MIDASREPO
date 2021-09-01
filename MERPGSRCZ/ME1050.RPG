@@ -16,8 +16,15 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 28Jul11               *
+      *                 247197             Date 21Aug07               *
+      *                 ESL038             Date 30Nov2004             *
+      *                 DJB002             Date 15Nov2004             *
+      *                 EEE058             Date 14Feb2003             *
+      *                 DJB001             Date 16May2002             *
+      *                 CSW220             Date 09Mar20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +40,20 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           247197, ESL038, DJB002, EEE058, DJB001,             *
+      *  247197 - Set the new field FTSTPF = 'Y' for processed records*
+      *           (routed or not). Applied fix 238276.                *
+      *  ESL038 - ING FT STP Development                              *
+      *  DJB002 - Mark rejected from auto generation on delete  OP    *
+      *  EEE058 - Incoming STP                                        *
+      *           Use copy hook ME1050C001                            *
+      *           Use copy hook ME1050DFPG                            *
+      *           Use copy hook ME1050DIPG                            *
+      *           Add copy hook ME1050DB01                            *
+     F*  DJB001 - Mark rejected from auto generation on delete        *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
@@ -114,6 +135,7 @@
      I              FTAACT                          F#AACT
      I              FTRDNB                          F#RDNB
      I              FTM199                          F#M199                                    CSW220
+     I              FTSTPF                          F#STPF                                    247197
       *
      I/COPY WNCPYSRC,ME1050DIPG
       *
@@ -216,6 +238,7 @@
      C           W0ACT     CASEQ'*FT OUT 'SROUT
      C                     CAS            SRACT
      C                     END
+     C/COPY WNCPYSRC,ME1050DB01                                                               EEE058
       *
       *  Unwind subroutine stack name
       *
@@ -288,11 +311,19 @@
       *
      C           FTINFG    IFEQ 'MIN0031'                                 CFT002
      C                     MOVEL*BLANKS   F#INFG                          CFT002
+     C                     MOVEL'MIN0083' F#INFG                          DJB001
      C                     MOVEL*BLANKS   F#IPRF                          CFT002
+     C                     MOVEL*BLANKS   F#OTFG                          DJB001
+     C                     MOVEL*BLANKS   F#OPRF                          DJB001
      C                     MOVEL*BLANKS   F#FRGL                          CFT002
      C                     MOVEL*BLANKS   F#TOGL                          CFT002
      C                     ENDIF                                          CFT002
      C*                                                                   CFT002
+      *                                                                                       247197
+      ** set FTSTPF to 'Y' for processed records (routed or not)                              247197
+      *                                                                                       247197
+     C                     MOVE 'Y'       F#STPF                                              247197
+      *                                                                                       247197
      C  N60                UPDAT@INFTL0
      C   60                WRITE@INFTL0
       *
@@ -382,12 +413,18 @@
       *
      C           FTOTFG    IFEQ 'MIN0031'                                 CFT002
      C           F#IPRF    ANDEQ*BLANKS                                   CFT002
+     C                     MOVEL'MIN0083' F#INFG                          DJB002
      C                     MOVEL*BLANKS   F#OTFG                          CFT002
      C                     MOVEL*BLANKS   F#OPRF                          CFT002
      C                     MOVEL*BLANKS   F#FRGL                          CFT002
      C                     MOVEL*BLANKS   F#TOGL                          CFT002
      C                     ENDIF                                          CFT002
      C*                                                                   CFT002
+      *                                                                                       247197
+      ** set FTSTPF to 'Y' for processed records (routed or not)                              247197
+      *                                                                                       247197
+     C                     MOVE 'Y'       F#STPF                                              247197
+      *                                                                                       247197
      C  N60                UPDAT@INFTL0
      C   60                WRITE@INFTL0
       *

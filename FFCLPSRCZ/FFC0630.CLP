@@ -9,17 +9,21 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC118             Date 13Feb19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*   PREV AMEND NO. S01117             DATE 19MAR90                  */
+/*                  S01117             DATE 19MAR90                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*   LUC118 - Upgrade of S21045 to FB Midas 2.1                      */
+/*            BV Auto transfer of interbranch account balances       */
+/*            BVINTBR; uses new core hooks LUC118_001, LUC118_002    */
 /*   MD046248 - Finastra Rebranding                                  */
 /*   S01117  -  MULTIBRANCHING                                       */
 /*                                                                   */
@@ -37,6 +41,8 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+/*/COPY WNCPYSRC,LUC118_001                                           /*LUC118*/
+
 /**/
 /* SEND MESSAGE TO MRUNQ                                            */
 /**/
@@ -64,6 +70,9 @@
 /* Call FF0630                                                      */
 /**/
              CALL       PGM(FF0630)
+
+/*/COPY WNCPYSRC,LUC118_002                                           /*LUC118*/
+
 /**/
 /*     Database error processing. Send message to MOPERQ & MRUNQ    */
 /**/

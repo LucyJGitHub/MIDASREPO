@@ -1,0 +1,685 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Production Extract - Audit Report')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  ERIT85 - Production Extract - Audit Report                   *
+      *                                                               *
+      *  Function:  This program produce an Full list of all accounts *
+      *             and transactions for which a BOI code has been    *
+      *             allocated during the Close Of Business processing *
+      *                                                               *
+      *  (phase(s)) During End Of Month Processing                    *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139 *Amend      Date 28Apr21               *
+      *                 LUC139             Date 04Jan21               *
+      *                 MMI033             Date 24Mar99               *
+      *                 UIT021             Date 24Jun98               *
+      *                 UIT021             Date 26Feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - ICDECK is now 14 long.                              *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI033 - Midas Italy Puma/2 Extract Change 3 (recompiled)    *
+      *  UIT021 - Bank Of Italy Monthly Reporting (recompiled)        *
+      *  UIT021 - Bank Of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  -------------------------------------------                  *
+      *                                                               *
+      *    20 - Write Currency Code on detail lines            (*ON)  *
+      *    81 - End of file ERITTRL1                           (*ON)  *
+      *    82 - BOI voce/sottovoce code not found              (*ON)  *
+      *    83 - Lokup fails                                    (*OFF) *
+      *    84 - End of files SDCURRXP or SDCTRYXP              (*ON)  *
+      *    97 - Overflow indicator for ERIT85P1                (*ON)  *
+      *                                                               *
+      *    U7 - DATABASE ERROR                                 (*ON)  *
+      *    U8 - PROGRAM  ERROR                                 (*ON)  *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  -------------------------------                              *
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      ***SRZSFL*-*Subroutine*to*register*Printer*File*via*RCF.*********
+      *  TOTCCY - Process total by Currency                           *
+      *  REPORT - Process report lines                                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *  E X T E R N A L   R O U T I N E S                            *
+      *  ---------------------------------                            *
+      *                                                               *
+      ***ZSFILE***-*Set*up*spool*file*numbers*file*********************
+      *  AOCUSTR0 - Access program to access Customer Details         *
+      *  AOBANKR0 - Access program to access Bank Details             *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      ***  BOI Voce/Sottovoce Codes
+      *
+     FERITCDL0IF  E           K        DISK
+      *
+      ***  Italy - Production Extract
+      *
+     FERITTRL1IF  E           K        DISK
+      *
+      ***  Currency Codes Extension file
+      *
+     FSDCRT1L0IF  E           K        DISK
+      *
+      ***  Country Codes Extension file
+      *
+     FSDCTT1L0IF  E           K        DISK
+      *
+     FERIT85P1O   E             97     PRINTER      KINFDS SPOOL1
+     FERIT85AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      /EJECT
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+      *
+      ***  Arrays for UIC Currency Codes and Currency Codes
+      *
+     E                    TUCY      100  3 0
+     E                    TCCY      100  3
+      *
+      ***  Arrays for UIC Country Codes and Country Codes
+      *
+     E                    TUCR      300  3 0
+     E                    TCTR      300  2
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      ***  Array for Copyright
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ***  Data structure to retrieve Origin of Data and Customer Name
+      ***  form 'Origin Application id.' field
+      *
+     I            DS
+     I                                        1  35 ICORAP
+     I                                        1   4 ICOOD1
+     I                                        6  20 ICOOD2
+     I                                        6  11 ICUST
+      *
+      ***  Local data area for database errors.
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                        1 256 DBERR
+      *
+      ***  File Information Data Structure - AU report
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  File Information Data Structure - P1 report
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OVRLIN
+     I                                    B 367 3680CURLIN
+      *
+      ***  DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ***  External DS for Customer Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ***  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      *
+      /EJECT
+      *****************************************************************
+      ***  P R O G R A M     S T A R T
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C                     READ ERITTRD0                 81
+      *
+     C           *IN81     IFEQ '1'                        *B1
+      *
+      ***  If Record not found, write Audit List - No record
+      *
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+      *
+     C                     ELSE                            *X1
+      *
+      ***  If records found :
+      *
+      ***  Save BOI voce/sottovoce code and Currency code
+      *
+     C                     MOVE ICLINI    WWLINI  70
+     C                     MOVE ICUCCY    WWUCCY  30
+      *
+      ***  Move file's fields to report's fields
+      *
+     C                     MOVE ICLINI    RLINI            BOI code
+     C                     MOVE ICUCCY    RUCCY            UIC Currency code
+      *
+      ***  Retreive Currency code
+      *
+     C                     Z-ADD1         I
+     C           ICUCCY    LOKUPTUCY,I                   83
+     C   83                MOVE TCCY,I    RCCY
+     C  N83                MOVE *BLANK    RCCY
+      *
+      ***  Retreive 'Narrative' of BOI voce/sottovoce code
+      *
+     C           WWLINI    CHAINERITCDD0             82
+     C           *IN82     IFEQ '1'                        *B2
+      *
+      ***  If BOI voce/sottovoce code not found, initialise 'Narrative'
+      ***  to blanks
+      *
+     C                     MOVE *BLANKS   RNARR
+     C                     ELSE                            *X2
+     C                     MOVE N2NARR    RNARR
+     C                     ENDIF                           *E2
+      *
+      ***  Seton indicator 20 to write Currency code on detail lines
+      *
+     C                     SETON                     20
+      *
+      ***  Write report header
+      *
+     C                     WRITEERIT85H1
+      *
+      ***  Do until end of file ERITTRL1
+      *
+     C           *IN81     DOWEQ'0'                        *B2
+      *
+     C           ICLINI    IFNE WWLINI                     *B3
+     C           ICUCCY    ORNE WWUCCY
+      *
+      ***  If new BOI voce/sottovoce code or new Currency code,
+      ***  Process total Currency
+      *
+     C                     EXSR TOTCCY
+      *
+     C           ICLINI    IFNE WWLINI                     *B4
+      *
+      ***  If new BOI voce/sottovoce code :
+      *
+      ***  Save BOI voce/sottovoce code
+      *
+     C                     MOVE ICLINI    WWLINI  70
+      *
+      ***  Move file's fields to report's fields
+      *
+     C                     MOVE ICLINI    RLINI            BOI code
+      *
+      ***  Retreive 'Narrative' of BOI voce/sottovoce code
+      *
+     C           WWLINI    CHAINERITCDD0             82
+     C           *IN82     IFEQ '1'                        *B5
+      *
+      ***  If BOI voce/sottovoce code not found, initialise 'Narrative'
+      ***  to blanks
+      *
+     C                     MOVE *BLANKS   RNARR
+     C                     ELSE                            *X5
+     C                     MOVE N2NARR    RNARR
+     C                     ENDIF                           *E5
+      *
+      ***  Seton indicator 20 to write Currency code on detail lines
+      *
+     C                     SETON                     20
+      *
+      ***  Write report header
+      *
+     C                     WRITEERIT85H1
+      *
+     C                     ENDIF                           *E4
+      *
+     C                     ENDIF                           *E3
+      *
+      ***  Process report lines
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record
+      *
+     C                     READ ERITTRD0                 81
+      *
+     C                     ENDDO                           *E2
+      *
+      ***  Process last total by currency
+      *
+     C           WWTCCY    IFGE 0                          *B1
+      *
+      ***  Initialise report's field to 'D'
+      *
+     C                     MOVE 'D'       RDCCCY           D/C ind.tot.ccy
+     C                     ELSE                            *X1
+      *
+      ***  Initialise report's field to 'C' and prepare Amount
+      *
+     C                     MOVE 'C'       RDCCCY           D/C ind.tot.ccy
+     C                     MULT -1        WWTCCY
+     C                     ENDIF                           *E1
+      *
+      ***  Format total amount for currency
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WWTCCY    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTOCCY           Total amount for ccy
+      *
+      ***  If there is not enough space on the physical page for this format
+      *
+     C           OVRLIN    SUB  CURLIN    WRKPAG  40
+     C           WRKPAG    IFLE 6                          *B1
+      *
+      ***  Signal artificial overflow
+      *
+     C                     SETON                     97
+      *
+      ***  Print page header
+      *
+     C                     WRITEERIT85H1
+      *
+     C                     ENDIF                           *E1
+      *
+      ***  Write total by currency
+      *
+     C                     WRITEERIT85T1
+      *
+      ***  Write end of report
+      *
+     C                     WRITEERIT85E1
+      *
+     C                     ENDIF                           *E1
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      ***  P R O G R A M     E N D
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By : Main processing                                  *
+      *                                                               *
+      *  Calls : *PSSR    - Program Error Processing Subroutine       *
+      *          AOCUSTR0 - Access program to access Customer Details *
+      *          ZSEDIT   - Edit an Amount                            *
+      *                                                               *
+      *****************************************************************
+     C           REPORT    BEGSR
+      *
+      ***  Move file's fields to report's fields
+      *
+     C                     MOVE ICOOD1    ROOD1            Origin of data
+     C                     MOVE ICOOD2    ROOD2            Origin of data
+      *
+     C**********           MOVE ICDECK    RDECK            Decision key   LUC139
+     C                     MOVELICDECK    RDECK            Decision key   LUC139
+      *
+     C                     MOVE ICUCTR    RUCTR            UIC Country code
+      *
+      ***  Retreive Country code
+      *
+     C                     Z-ADD1         I
+     C           ICUCTR    LOKUPTUCR,I                   83
+     C   83                MOVE TCTR,I    RCTR
+     C  N83                MOVE *BLANK    RCTR
+      *
+     C                     MOVELICCUST    RCUST            Customer name
+      *
+      ***  Access SDCUSTPD to retrieve Customer Details
+      *
+     C                     MOVE RCUST     @KEY1   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1   6
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRCUST     DBKEY     P
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF                           - E1
+      *
+     C                     MOVELBBCRNM    RCRNM            Customer report name
+      *
+      ***  Format 'Amount in original currency' field
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ICBVFX    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RBVFX            Amount in orig. Ccy
+      *
+     C           ICCRDR    IFEQ 'D'                        *B1
+      *
+      ***  If Debit, Initialise report's field to 'D' and add amount to
+      ***  total currency
+      *
+     C                     MOVE 'D'       RCRDR            Debit/credit ind.
+     C                     ADD  ICBVFX    WWTCCY           Total ccy
+     C                     ELSE                            *X1
+      *
+      ***  If Credit, Initialise report's field to 'C' and sub amount to
+      ***  total currency
+      *
+     C                     MOVE 'C'       RCRDR            Debit/credit ind.
+     C                     SUB  ICBVFX    WWTCCY           Total ccy
+     C                     ENDIF                           *E1
+      *
+     C                     MOVE ICCPAC    RCPAC            Compl.accounting item
+      *
+      ***  If there is not enough space on the physical page for this format
+      *
+     C           OVRLIN    SUB  CURLIN    WRKPAG  40
+     C           WRKPAG    IFLE 7                          *B1
+      *
+      ***  Signal artificial overflow
+      *
+     C                     SETON                     97
+      *
+      ***  Print page header
+      *
+     C                     WRITEERIT85H1
+      *
+      ***  Seton indicator 20 to write currency code on detail line
+      *
+     C                     SETON                     20
+      *
+     C                     ENDIF                           *E1
+      *
+      ***  Write detail line
+      *
+     C                     WRITEERIT85D1
+      *
+      ***  Setof indicator 20 not to write currency code for next details
+      ***  for currency
+      *
+     C                     SETOF                     20
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  TOTCCY - Process Total by Currency                           *
+      *                                                               *
+      *  Called By : Main processing                                  *
+      *                                                               *
+      *  Calls : *PSSR    - Program Error Processing Subroutine       *
+      *          ZSEDIT   - Edit an Amount                            *
+      *                                                               *
+      *****************************************************************
+     C           TOTCCY    BEGSR
+      *
+     C           WWTCCY    IFGE 0                          *B1
+      *
+      ***  Initialise report's field to 'D'
+      *
+     C                     MOVE 'D'       RDCCCY           D/C ind.tot.ccy
+     C                     ELSE                            *X1
+      *
+      ***  Initialise report's field to 'C' and prepare Amount
+      *
+     C                     MOVE 'C'       RDCCCY           D/C ind.tot.ccy
+     C                     MULT -1        WWTCCY
+     C                     ENDIF                           *E1
+      *
+      ***  Format total amount for currency
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WWTCCY    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTOCCY           Total amount for ccy
+      *
+      ***  If there is not enough space on the physical page for this format
+      *
+     C           OVRLIN    SUB  CURLIN    WRKPAG  40
+     C           WRKPAG    IFLE 6                          *B1
+      *
+      ***  Signal artificial overflow
+      *
+     C                     SETON                     97
+      *
+      ***  Print page header
+      *
+     C                     WRITEERIT85H1
+      *
+     C                     ENDIF                           *E1
+      *
+      ***  Write total by currency
+      *
+     C                     WRITEERIT85T1
+      *
+      ***  Save new Currency code
+      *
+     C                     MOVE ICUCCY    WWUCCY  30
+      *
+      ***  Move file's fields to report's fields
+      *
+     C                     MOVE ICUCCY    RUCCY            UIC Currency code
+      *
+      ***  Retreive Currency code
+      *
+     C                     Z-ADD1         I
+     C           ICUCCY    LOKUPTUCY,I                   83
+     C   83                MOVE TCCY,I    RCCY
+     C  N83                MOVE *BLANK    RCCY
+      *
+      ***  Reset Total currency
+      *
+     C                     Z-ADD0         WWTCCY
+     C                     MOVE *BLANK    WWDCCC
+      *
+      ***  Seton indicator 20 to write currency code on detail line
+      *
+     C                     SETON                     20
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *                                                               *
+      *  Calls : SRZSFL   - Register Printer File via RCF.            *
+      *          AOBANKR0 - Access program to access Bank Details     *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           #JMRDT  7        Run date
+     C                     PARM           #JURPT 53        Rpt Title
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ***  Prepare LDA:
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'ERIT85'  DBPGM
+      *
+      ***  Access Bank details via access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C           @RTCD     IFNE *BLANK                     - B1
+     C                     MOVEL'BANK'    DBKEY     P
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+      ***  Record Printer file ERIT85AU on*RCF*
+      *
+     C**                   Z-ADDSFNUMU    ZSNUM
+     C**                   MOVELSFILEU    SFILE
+      *
+     C**                   EXSR SRZSFL
+      *
+      ***  Record Printer file ERIT85P1 on RCF
+      *
+     C**                   Z-ADDSFNUM1    ZSNUM
+     C**                   MOVELSFIL1     SFILE
+      *
+     C**                   EXSR SRZSFL
+      *
+      ***  Initialise work fields
+      *
+     C                     Z-ADD0         WWTCCY 160       Total by ccy
+     C                     MOVE *BLANK    WWDCCC  1        D/C ind.tot.ccy
+     C                     Z-ADD2         ZDECS            Nb dec.for ZSEDIT
+     C                     MOVE 'J'       ZECODE           Edit cd for ZSEDIT
+      *
+      ***  Initialise arrays fot UIC Currency Codes and Currency Codes
+      *
+     C                     Z-ADD0         I       30
+     C           *IN84     DOWEQ'0'                        *B1
+     C                     READ SDCRT1L0                 84
+     C           *IN84     IFEQ '0'                        *B2
+     C                     ADD  1         I
+     C                     Z-ADDPBUCCY    TUCY,I
+     C                     MOVE PBCYCD    TCCY,I
+     C                     ENDIF                           *E2
+     C                     ENDDO                           *E1
+      *
+      ***  Initialise arrays fot UIC Country Codes and Country Codes
+      *
+     C                     Z-ADD0         I       30
+     C                     SETOF                     84
+     C           *IN84     DOWEQ'0'                        *B1
+     C                     READ SDCTT1L0                 84
+     C           *IN84     IFEQ '0'                        *B2
+     C                     ADD  1         I
+     C                     Z-ADDPEUCTR    TUCR,I
+     C                     MOVE PECNCD    TCTR,I
+     C                     ENDIF                           *E2
+     C                     ENDDO                           *E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRZSFL - Subroutine to register Printer File via RCF.        *
+      *                                                               *
+      *  Called by : INIT - Program initialisation                    *
+      *                                                               *
+      *  Calls : ZSFILE - Set up spool file numbers file              *
+      *                                                               *
+     C*****************************************************************
+      *
+     C**         SRZSFL    BEGSR
+      *
+     C**                   CALL 'ZSFILE'
+     C**                   PARM           @RSEQ   5
+     C**                   PARM           @RENT   3
+     C**                   PARM           SFILE  10
+     C**                   PARM           ZSNUM   60
+     C**                   PARM *BLANK    ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C**         ZSERR     IFEQ 'Y'                        *B1
+     C**                   SETON                     U7U8LR
+     C**                   RETRN
+     C**                   ENDIF                           *E1
+      *
+     C**                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Called by : Main processing                                  *
+      *              REPORT - Process report lines                    *
+      *              TOTCCY - Process total by Currency               *
+      *                                                               *
+      *  Calls : None                                                 *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     *B1
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ENDIF                           *E1
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3
+      *****************************************************************
+      /EJECT
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

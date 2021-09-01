@@ -1,0 +1,423 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR EXTRACT CUSTOMERS TO IRCUSTPD')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR1100 - EXTRACT CUSTOMERS TO IRCUSTPD                       *
+      *                                                               *
+      *  Called By: IRC1000 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MMI058             Date 09Aug99               *
+      *                 MMI033 *CREATE     Date 12Oct98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI058 - Changes for SECETI Interface                        *
+      *  MMI033 - Midas Italy Puma/2 Extract Change 3                 *
+      *                                                               *
+      *****************************************************************
+     FIR1100PDIP  E                    DISK
+     FIRFXTBL1IF  E           K        DISK                                                   MMI058
+     FSDBCT1L0IF  E           K        DISK                                                   MMI058
+     FSDCTT1L0IF  E           K        DISK                                                   MMI058
+     FIRCUSTPDO   F      80            DISK                      A
+      *
+     IIRSTAT    E DSIRSTAT
+      *
+      * SELECT CUSTOMERS LIVE, OR DELETED IN THE PREVIOUS 100 DAYS
+      *
+     C           BBDTDL    IFEQ 0
+     C           BBDTDL    ORGT LIMIT
+      *
+      * OUTPUT HEADER RECORD
+      *
+     C                     EXCPTHDR
+      *                                                                                       MMI058
+      * If Customer has a Parent, retrieve the following information:                         MMI058
+      *  - UIC Country Code of Parent                                                         MMI058
+      *  - SAE (Sottogruppo Attivita' economica) of Parent                                    MMI058
+      *  - Fiscal Code of Parent                                                              MMI058
+      *                                                                                       MMI058
+     C                     MOVE *ZEROS    PAR065  3                                           MMI058
+     C                     MOVE *ZEROS    PAR091  3                                           MMI058
+     C                     MOVE *BLANKS   PAR359 16                                           MMI058
+     C           BBPCNB    IFNE *BLANKS                                                       MMI058
+     C                     CALL 'IR1110'                                                      MMI058
+     C                     PARM           BBPCNB                                              MMI058
+     C                     PARM           PAR065                                              MMI058
+     C                     PARM           PAR091                                              MMI058
+     C                     PARM           PAR359                                              MMI058
+     C                     END                                                                MMI058
+      *
+      ** CAMPO 011 * SOTTOGRUPPO ATTIVITA' ECONOMICA CLIENTE
+      *
+     C                     MOVE '011'     M1CODC  3
+     C                     MOVE *BLANKS   M1VALC 60
+     C                     MOVELPCECSG    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 012 * RAMO ATTIVITA' ECONOMICA CLIENTE
+      *
+     C                     MOVE '012'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCECBC    M1VALC
+     C                     EXCPTDET
+      *                                                                                       MMI058
+      ** CAMPO 015 * PROVINCIA DELLA CONTROPARTE                                              MMI058
+      *                                                                                       MMI058
+     C                     MOVE '015'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+      *                                                                                       MMI058
+     C           KEYTAB    KLIST                                                              MMI058
+     C                     KFLD           WTAB    3                                           MMI058
+     C                     KFLD           WCOD   18                                           MMI058
+     C                     MOVEL'BBK'     WTAB                                                MMI058
+     C                     MOVELPCPROV    WCOD                                                MMI058
+     C           KEYTAB    CHAINIRFXTBL1             59                                       MMI058
+     C  N59                MOVE F0PNAR    WRK05   5                                           MMI058
+     C   59                MOVE '00000'   WRK05                                               MMI058
+     C                     MOVELWRK05     M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 016 * STATO DELLA CONTROPARTE                                                  MMI058
+      *                                                                                       MMI058
+     C                     MOVE '016'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+      *                                                                                       MMI058
+     C           BBBNBI    IFEQ 'Y'
+      *                                                                                       MMI058
+     C           BBCOLC    CHAINSDCTT1L0             59                                       MMI058
+     C  N59                MOVELPEUCTR    M1VALC                                              MMI058
+     C   59                MOVEL'000'     M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+     C                     ELSE
+      *                                                                                       MMI058
+     C           BBCNCZ    CHAINSDCTT1L0             59                                       MMI058
+     C  N59                MOVELPEUCTR    M1VALC                                              MMI058
+     C   59                MOVEL'000'     M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+     C                     END
+      *                                                                                       MMI058
+      ** CAMPO 028 * TIPO OPERATORE CREDITIZIO                                                MMI058
+      *                                                                                       MMI058
+     C                     MOVE '028'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+      *                                                                                       MMI058
+     C                     MOVEL'000'     M1VALC                                              MMI058
+     C           BBBNBI    IFEQ 'Y'                                                           MMI058
+     C                     MOVEL'002'     M1VALC                                              MMI058
+     C                     ENDIF                                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *
+      ** CAMPO 030 * CODICE ANAGRAFICO AZIENDALE
+      *
+     C                     MOVE '030'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCCUST    M1VALC
+     C                     EXCPTDET
+      *                                                                                       MMI058
+      ** CAMPO 031 * CODICE AZIENDA DI CREDITO CONTROPARTE                                    MMI058
+      *                                                                                       MMI058
+     C                     MOVE '031'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+      *                                                                                       MMI058
+     C           PCECSG    IFEQ 770                                                           MMI058
+     C           PCECSG    OREQ 771                                                           MMI058
+     C                     MOVELPCFIID    M1VALC                                              MMI058
+     C                     ENDIF                                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 033 * CODICE PARTECIPAZIONE                                                    MMI058
+      *                                                                                       MMI058
+     C                     MOVE '033'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVELPCFSCD    M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 065 * STATO DELLA CASA MADRE                                                   MMI058
+      *                                                                                       MMI058
+     C                     MOVE '065'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVELPAR065    M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 091 * SOTTOGRUPPO ATTIVITA' ECONOMICA DELLA CASA MADRE                         MMI058
+      *                                                                                       MMI058
+     C                     MOVE '091'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVELPAR091    M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 106 * CLIENTE INCAGLIATO                                                       MMI058
+      *                                                                                       MMI058
+     C                     MOVE '106'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C           PCDBCD    IFEQ 1                                                             MMI058
+     C                     MOVEL'1'       M1VALC                                              MMI058
+     C                     ELSE                                                               MMI058
+     C                     MOVEL'0'       M1VALC                                              MMI058
+     C                     END                                                                MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 119 * CLIENTE IN SOFFERENZA                                                    MMI058
+      *                                                                                       MMI058
+     C                     MOVE '119'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C           PCDBCD    IFEQ 2                                                             MMI058
+     C                     MOVEL'1'       M1VALC                                              MMI058
+     C                     ELSE                                                               MMI058
+     C                     MOVEL'0'       M1VALC                                              MMI058
+     C                     END                                                                MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 125 * DIGIT CONTROLLANTE CONTROLLATA                                           MMI058
+      *                                                                                       MMI058
+     C                     MOVE '125'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C           PCCONS    IFEQ 0                                                             MMI058
+     C                     MOVEL'0'       M1VALC                                              MMI058
+     C                     ELSE                                                               MMI058
+     C                     MOVEL'1'       M1VALC                                              MMI058
+     C                     END                                                                MMI058
+     C                     EXCPTDET                                                           MMI058
+      *
+      ** CAMPO 201 * CAG CAPOGRUPPO
+      *
+     C                     MOVE '201'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELBBPCNB    M1VALC
+     C                     EXCPTDET
+      *                                                                                       MMI058
+      ** CAMPO 203 * NDG AGGREGAZIONE PER C.R.                                                MMI058
+      *                                                                                       MMI058
+     C                     MOVE '203'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     Z-ADDPCCUCR    WRK13  130                                          MMI058
+     C                     MOVELWRK13     M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *
+      ** CAMPO 205 * NATURA DEL CREDITO
+      *
+     C                     MOVE '205'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+      *
+     C           BBCSTY    IFEQ 'C'
+     C                     MOVEL'1'       M1VALC
+     C                     ELSE
+     C                     MOVEL'0'       M1VALC
+     C                     ENDIF
+      *
+     C                     EXCPTDET
+      *
+      ** CAMPO 211 * CODICE FISCALE / PARTITA IVA
+      *
+     C                     MOVE '211'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVEL*BLANKS   WRK16  16
+     C           BBCNCZ    IFEQ 'IT'
+     C           BBCSTY    IFEQ 'F'
+     C           PCFCCR    IFNE *BLANK
+     C                     MOVELPCFCCR    WRK16
+     C                     ELSE
+     C                     MOVE PCFSCD    WRK16
+     C                     END
+     C*********************END                                                                MMI058
+     C***********BBCSTY    IFEQ 'G'                                                           MMI058
+     C                     ELSE                                                               MMI058
+     C           PCFSCD    IFNE 0
+     C                     MOVE PCFSCD    WRK16
+     C                     ELSE
+     C                     MOVELPCFCCR    WRK16
+     C                     END
+     C                     END
+     C                     MOVELWRK16     M1VALC
+     C                     END
+     C                     EXCPTDET
+      *
+      ** CAMPO 212 * CODICE CENTRALE RISCHI CLIENTE
+      *
+     C                     MOVE '212'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCCUCR    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 213 * DENOMINAZIONE NORMALIZZATA CLIENTE
+      *
+     C                     MOVE '213'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCCRNM    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 214 * DESCRIZIONE SEDE LEGALE CLIENTE
+      *
+     C                     MOVE '214'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELBBCRTN    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 215 * CODICE SEDE LEGALE CLIENTE
+      *
+     C                     MOVE '215'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCHLCD    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 216 * NUMERO ISCRIZIONE C.C.I.A.A.
+      *
+     C                     MOVE '216'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCCCCN    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 218 * CODICE ABI ISTITUZIONE CREDITIZIA
+      *
+     C                     MOVE '218'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELPCFIID    WRK03   3
+     C           WRK03     IFEQ '000'
+     C                     MOVE PCFIID    WRK06   6
+     C                     MOVELWRK06     M1VALC
+     C                     ENDIF
+     C                     EXCPTDET
+      *
+      ** CAMPO 234 * DENOMINAZIONE AZIENDALE CLIENTE 1^ ZONA
+      *
+     C                     MOVE '234'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELBBCNA1    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 235 * DENOMINAZIONE AZIENDALE CLIENTE 2^ ZONA
+      *
+     C                     MOVE '235'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     MOVELBBCNA2    M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 236 * DENOMINAZIONE AZIENDALE CLIENTE 3^ ZONA
+      *
+     C                     MOVE '236'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C                     EXCPTDET
+      *
+      ** CAMPO 237 * CODICE TIPOLOGIA CLIENTE
+      *
+     C                     MOVE '237'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C***********          MOVELPCDBCD    M1VALC                                              MMI058
+     C           PCDBCD    IFEQ 0                                                             MMI058
+     C                     MOVEL'0'       M1VALC                                              MMI058
+     C                     ELSE                                                               MMI058
+     C                     MOVEL'1'       M1VALC                                              MMI058
+     C                     END                                                                MMI058
+     C                     EXCPTDET
+      *
+      ** CAMPO 238 * COD. SPORTELLO
+      *
+     C                     MOVE '238'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C***********          MOVEL'01600'   M1VALC                                              MMI058
+     C           BBBRCD    CHAINSDBCT1L0             59                                       MMI058
+     C  N59                MOVELPAORSP    M1VALC                                              MMI058
+     C   59                MOVEL'00000'   M1VALC                                              MMI058
+     C                     EXCPTDET
+      *
+      ** CAMPO 240 * CLIENTE RELATIVO AD UNA COOBBLIGAZIONE
+      *
+     C                     MOVE '240'     M1CODC
+     C                     MOVE *BLANKS   M1VALC
+     C***********          MOVEL'0'       M1VALC
+     C                     MOVELPCCRTP    M1VALC                                              MMI058
+     C                     EXCPTDET
+      *                                                                                       MMI058
+      ** CAMPO 295 * TIPOLOGIA CONTROPARTE PER RISCHI DI MERCATO                              MMI058
+      *                                                                                       MMI058
+     C                     MOVE '295'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVEL'0'       M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 341 * DIGIT CONTROPARTE PER BILANCIO                                           MMI058
+      *                                                                                       MMI058
+     C                     MOVE '341'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVEL'0'       M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 359 * CODICE FISCALE DELLA CAPOGRUPPO                                          MMI058
+      *                                                                                       MMI058
+     C                     MOVE '359'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVELPAR359    M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 363 * TIPOLOGIA DI POSIZIONE 'XY'                                              MMI058
+      *                                                                                       MMI058
+     C                     MOVE '363'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C           BBPCNB    IFEQ *BLANKS                                                       MMI058
+     C                     MOVEL'11'      M1VALC                                              MMI058
+     C                     ELSE                                                               MMI058
+     C                     MOVEL'41'      M1VALC                                              MMI058
+     C                     ENDIF                                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *                                                                                       MMI058
+      ** CAMPO 962 * RAPPORTO DI COLLEGAMENTO                                                 MMI058
+      ** NB: il codice campo 962 non e' codificato nel dizionario                             MMI058
+      **     Banca d'Italia ma è stato richiesto da Seceti per                                MMI058
+      **     valorizzare la tabella di corredo 20                                             MMI058
+      *                                                                                       MMI058
+     C                     MOVE '962'     M1CODC                                              MMI058
+     C                     MOVE *BLANKS   M1VALC                                              MMI058
+     C                     MOVEL'BAB'     WTAB                                                MMI058
+     C                     MOVELPCCONS    WCOD                                                MMI058
+     C           KEYTAB    CHAINIRFXTBL1             59                                       MMI058
+     C  N59                MOVELF0PNAR    WRK02   2                                           MMI058
+     C   59                MOVE '00'      WRK02                                               MMI058
+     C                     MOVELWRK02     M1VALC                                              MMI058
+     C                     EXCPTDET                                                           MMI058
+      *
+     C                     END
+      *
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial subroutine                                  *
+      *  ------                                                       *
+      *  Called By : At Program Start                                 *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           IRSTAT
+     C                     IN   IRSTAT
+     C           IREMD     SUB  100       LIMIT   50
+      *
+     C                     MOVE '101'     M1CUIA  3
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+     OIRCUSTPDEADD             HDR
+     O                                    2 'FT'
+     O                                    8 '00000'
+     O                                   11 '00'
+     O                                   13 '0'
+     O                                   15 '0'
+     O                                   17 '0'
+     O                                   23 'K1030'
+      *
+     O        EADD             DET
+     O                         M1CUIA     3
+     O                         M1CODC     7
+     O                         M1VALC    68

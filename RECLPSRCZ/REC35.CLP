@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031950           Date 17Jun15              */
+/*       Last Amend No. LUC118             Date 13Feb19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031950           Date 17Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC118 - Upgrade of S21045 to FB Midas 2.1                 */
+/*                 BV Auto transfer of interbranch account balances */
+/*                 BVINTBR; uses new core hooks REC35001, REC35003  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031950 - Recompiled due to changed PF/CUSEXZ1.           */
 /*       LN0316  - PROGRAM TRIES TO DELETE AN OVERRIDE THAT         */

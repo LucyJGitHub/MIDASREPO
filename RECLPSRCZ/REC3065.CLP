@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1012196          Date 14Jan13              */
+/*       Last Amend No. LUC140             Date 24Feb21              */
+/*       Prev Amend No. MD035660           Date 15May19              */
+/*                      MD046248           Date 27Oct17              */
+/*                      AR1012196          Date 14Jan13              */
 /*                      CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27658           Date 13May10              */
@@ -38,6 +40,13 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC140 - Upgrade MMI013 to FM2.1                            */
+/*                (MMI013 - Midas Italy RE Stamp Duty and Account)   */
+/*                Amendment of hooks REC3065MPE, REC3065001.         */
+/*       MD035660 - No fee settlement postings in retail history file*/
+/*                  Utility to create postings to GEXZPPD with        */
+/*                  discrepant amount.                               */
+/*                - Applied fix for MD-53040.                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1012196 - GE-TX postings is not included in postings      */
 /*                   file merge. Reverse BUG27658. (CHILD:AR1012197) */
@@ -189,6 +198,13 @@
                           FMTOPT(*MAP *DROP)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(GOTO +
                           CMDLBL(EXIT1))
+/**/                                                                                    /*MD035660*/
+               CHKOBJ     OBJ(GEXZPPD) OBJTYPE(*FILE)                                   /*MD035660*/
+               MONMSG     MSGID(CPF0000)                                                /*MD035660*/
+               CHGVAR     VAR(&FRF) VALUE('GEXZPPD')                                    /*MD035660*/
+               CPYF       FROMFILE(&FRF) TOFILE(&TOF) MBROPT(*ADD) FMTOPT(*MAP +
+                            *DROP)                                                      /*MD035660*/
+               MONMSG     MSGID(CPF0000)                                                /*MD035660*/
              ENDDO
 /**/
              IF         COND(%SST(&MMOD 2 1) = 'Y') THEN(DO)
@@ -456,5 +472,8 @@ EXIT3:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 ENDCL:
+/**/                                                                                    /*MD035660*/
+             CLRPFM     FILE(GEXZPPD)                                                   /*MD035660*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD035660*/
 /**/
              ENDPGM

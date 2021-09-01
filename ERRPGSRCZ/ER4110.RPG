@@ -1,0 +1,254 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IN-HOUSE - 201 AND 701')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  ER4110 - MINERVA INTERFACE - IN-HOUSE - 201 AND 701          *
+      *                                                               *
+      *  Called By: ERC4110 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Misys IBS - 2002                               *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 04Jan21               *
+      *  Prev Amend No. MMI140             Date 28Feb11               *
+      *                 MMI138             Date 24Mar10               *
+      *                 MBV002             Date 09Oct07               *
+      *                 MMI136             Date 19Dec08               *
+      *                 MMI132             Date 25Mar08               *
+      *                 MMI123             Date 29Jan07               *
+      *                 MMI122             Date 31May06               *
+      *                 MMI120             Date 27Jun05               *
+      *                 MMI117             Date 21Jan05               *
+      *                 MMI115             Date 23Mar04               *
+      *                 MMI108             Date 10Jul03               *
+      *                 MMI106             Date 21Feb03               *
+      *                 MMI104             Date 21Jan03               *
+      *                 MMI100             Date 05Nov02               *
+      *                 MMI093             Date 04Mar02               *
+      *                 MMI091             Date 27Dec01               *
+      *                 190269             Date 21Feb01               *
+      *                 MMI080             Date 03Jan01               *
+      *                 AG0001             Date 08Oct98               *
+      *                 MMI033  *CREATE    Date 08Oct98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011 - Recompiled             *
+      *  MMI138 - PUMA Changes March 2010    - Recompiled             *
+      *  MBV002 - HVB Milan - First 15 chars of field 204 to be unique*
+      *  MMI136 - PUMA Changes December 2008 - Recompiled             *
+      *  MMI132 - PUMA Changes March 2008                             *
+      *  MMI123 - PUMA Changes January 2007  - Recompiled             *
+      *  MMI122 - PUMA Changes May 2006                               *
+      *  MMI120 - Complete CR2005            - Recompiled             *
+      *  MMI117 - CR2005                     - Recompiled             *
+      *  MMI115 - PUMA Changes March 2004    - Recompiled             *
+      *  MMI108 - PUMA Changes June 2003  - complete MMI104           *
+      *  MMI106 - PUMA Changes January 2003  - Recompiled             *
+      *  MMI104 - Puma field codes increased to 5 digits.             *
+      *  MMI100 - R4.1 Upgrade - renamed from IR4110 to ER4110        *
+      *  MMI093 - Rewritten                                           *
+      *  MMI091 - PUMA Changes December 2001                          *
+      *  190269 - Do not output field 018 for FT 1063.02 and 1063.11  *
+      *           if it is zero.                                      *
+      *  MMI080 - PUMA Changes December 2000                          *
+      *  AG0001 - IRPUMAPD changed                                    *
+      *  MMI033 - Minerva Interface                                   *
+      *                                                               *
+      *****************************************************************
+     FIRPUMAPDIP  E                    DISK
+     FIRMITBPDIF  E                    DISK
+     FIRMITTPDIF  E           K        DISK
+     FIRMIHOPDO   F      80            DISK                      A
+      *
+     E**********          SC1      7000  1                                MMI122
+     E                    SC1      9999  1                                MMI122
+     E                    SC2        60  1
+      *
+     E***********         COD       999  3                                MMI108
+     E**********          COD       999  5 0                        MMI108MMI132
+     E**********          DA        999  5 0                              MMI132
+     E**********          LUN       999  5 0                              MMI132
+     E                    COD      9999  5 0                              MMI132
+     E                    DA       9999  5 0                              MMI132
+     E                    LUN      9999  5 0                              MMI132
+      *
+     IDSPUMA    E DSIRPUMAPD
+      *
+     I            DS
+     I************                            1   5 WFIELD                MMI108
+     I************                            3   5 WFLDID                MMI108
+     I                                        1  10 WHFLDI                MMI108
+     I                                        1   2 WH01                  MMI108
+     I                                        2   60WH02                  MMI108
+     I                                        3   50WH03                  MMI108
+      *                                                                   MBV002
+     I            DS                                                      MBV002
+     I                                        1  35 WRK204                MBV002
+     I                                        1   4 WK0104                MBV002
+     I                                        6  20 WK0620                MBV002
+      *
+      *****************************************************************
+      *               M   A   I   N       L   I   N   E               *
+      *****************************************************************
+      *
+     C                     MOVEA*BLANKS   SC1
+     C                     MOVEADSPUMA    SC1,1
+      *
+     C           MKUIA     IFEQ '201'
+     C           MKUIA     OREQ '701'
+     C                     EXSR OUTPUT
+     C                     END
+      *
+      *****************************************************************
+      * OUTPUT - WRITE ONE FT TO OUTPUT FILE                          *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      * Write Header
+      *
+     C                     MOVE *OFF      *IN10
+     C           MK001     IFEQ 1083
+     C           MK002     ANDEQ26
+     C           MK001     OREQ 1017
+     C           MK002     ANDEQ40
+     C                     MOVE *ON       *IN10
+     C                     ENDIF
+      *
+     C                     EXCPTTESTA
+      *
+      * Write a record for each required field
+      *
+     C           KIRMIT    CHAINIRMITT               01
+     C           *IN01     DOWEQ*OFF
+      *
+     C                     MOVE 'Y'       OUTFLD  1
+      *
+      * Excluded fields
+      *
+     C           PTCAMP    IFLT 4
+     C                     MOVE 'N'       OUTFLD
+     C                     ENDIF
+      *
+      * Retrieve field contents
+     C                     Z-ADD1         X       40
+     C**********           MOVE PTCAMP    WFLDID                          MMI108
+     C********** WFLDID    LOKUPCOD,X                    02               MMI108
+     C           PTCAMP    LOKUPCOD,X                    02               MMI108
+     C           *IN02     IFEQ *OFF
+     C                     MOVE 'N'       OUTFLD
+     C                     ENDIF
+     C**********           MOVELCOD,X     M1CODC  30                      MMI108
+     C                     MOVE COD,X     M1CODC  50                      MMI108
+      *
+     C                     MOVEA*BLANKS   SC2
+     C                     Z-ADDDA,X      Z       50
+     C                     MOVEASC1,Z     SC2,1
+     C           1         ADD  LUN,X     Z
+     C                     MOVEA*BLANKS   SC2,Z
+     C                     MOVEASC2       M1VALC 60
+      *                                                                   MBV002
+      * If first characters of field 204 are GLAC then remove them        MBV002
+      *                                                                   MBV002
+     C           PTCAMP    IFEQ 204                                       MBV002
+     C                     MOVE MK204     WRK204                          MBV002
+     C           WK0104    IFEQ 'GLAC'                                    MBV002
+     C                     MOVELWK0620    M1VALC                          MBV002
+     C                     ENDIF                                          MBV002
+     C                     MOVE BLK45     M1VALC                          MBV002
+     C                     ENDIF                                          MBV002
+      *
+      * Do not output field 018 for FT 1063.02 and 1063.11, if zero
+      *
+     C           MK001     IFEQ 1063
+     C           MK002     IFEQ 02
+     C           MK002     OREQ 11
+     C********** WFLDID    IFEQ '018'                                     MMI108
+     C           PTCAMP    IFEQ 18                                        MMI108
+     C           MK018     ANDEQ*ZERO
+     C                     MOVE 'N'       OUTFLD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Output field
+      *
+     C           OUTFLD    IFEQ 'Y'
+     C                     EXCPTDETT
+     C                     ENDIF
+      *
+     C           KIRMIT    READEIRMITT                   01
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * *INZSR * OPERAZIONI INIZIALI                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** DEFINIZIONE CHIAVE PER IRMITTPD
+      *
+     C           KIRMIT    KLIST
+     C                     KFLD           MK001
+     C                     KFLD           MK002
+     C                     KFLD           MK003
+      *
+      ** APERTURA FILE E PULIZIA SCHIERE
+      *
+     C*********            MOVEA*BLANKS   COD                             MMI108
+     C                     MOVEA*ZEROS    DA
+     C                     MOVEA*ZEROS    LUN
+      *
+     C                     Z-ADD1         X
+      *
+      ** CARICA LE SCHIERE CON LE DESCRIZIONI DEI CAMPI DEL FILE
+      *
+     C                     DO   *HIVAL
+     C                     READ WHPUF                    91
+     C           *IN91     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C************         MOVELWHFLDI    WFIELD                          MMI108
+     C************         MOVE WFLDID    COD,X                           MMI108
+     C           WH01      IFEQ 'MK'                                      MMI108
+     C                     Z-ADDWH03      COD,X                           MMI108
+     C                     ELSE                                           MMI108
+     C                     Z-ADDWH02      COD,X                           MMI108
+     C                     ENDIF                                          MMI108
+     C                     Z-ADDWHIBO     DA,X
+     C                     Z-ADDWHFLDB    LUN,X
+     C                     ADD  1         X
+     C                     ENDDO
+      *                                                                   MBV002
+     C                     MOVE *BLANKS   BLK45  45                       MBV002
+      *
+     C                     ENDSR
+      *
+     OIRMIHOPDEADD             TESTA
+     O                                    2 'FT'
+     O                         MK001      8
+     O                         MK002     11
+     O                         MK003     13
+     O                                   15 '0'
+     O                                   17 '0'
+     O********                           23 'K1030'                       MMI104
+     O********         10                29 'K2204'                       MMI104
+     O********        N10                29 'K2277'                       MMI104
+     O                                   25 'K100030'                     MMI104
+     O                 10                33 'K200204'                     MMI104
+     O                N10                33 'K200277'                     MMI104
+      *
+     O        EADD             DETT
+     O                         MKUIA      3
+     O*********                M1CODC     7                               MMI104
+     O*********                M1VALC    68                               MMI104
+     O*********                           6 '00'                    MMI104MMI108
+     O                         M1CODC     9                               MMI104
+     O                         M1VALC    70                               MMI104

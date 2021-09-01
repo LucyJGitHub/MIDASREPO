@@ -12,8 +12,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055785           Date 20May20               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. Bug14762(CER009)   Date 13Nov20               *
+      *                 MD036688           Date 19Oct16               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
@@ -193,6 +196,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UIC Italian returns upgrade to FM2.1                *
+      *  BUG14762 - Database error in ERREPORT job during COB run as  *
+      *             record was not found in REACTXPD (CER009)         *
+      *    CER009 - Puma II Upgrade to FM2.1                          *
+      *  MD036688 - Discreprancy in report between FB Midas and       *
+      *             Midas Plus.  FB Midas has excluded previous       *
+      *             posting dates with forward values                 *
+      *           - Reversed fix MD028392                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
@@ -1953,6 +1964,37 @@
      C/COPY WNCPYSRC,GLH00527
      C                   ENDIF
 
+     C     BGIRIN        IFEQ      'Y'                                                      BUG14762
+     C     CER009        ANDEQ     'Y'                                                      BUG14762
+      *                                                                                     BUG14762
+     C     KITACT        KLIST                                                              BUG14762
+     C                   KFLD                    PQCNUM                                     BUG14762
+     C                   KFLD                    PQCCY                                      BUG14762
+     C                   KFLD                    PQACOD                                     BUG14762
+     C                   KFLD                    PQACSQ                                     BUG14762
+     C                   KFLD                    PQBRCA                                     BUG14762
+      *                                                                                     BUG14762
+     C                   MOVE      CNUM          PQCNUM                                     BUG14762
+     C                   MOVE      CCY           PQCCY                                      BUG14762
+     C                   Z-ADD     ACOD          PQACOD                                     BUG14762
+     C                   Z-ADD     ACSQ          PQACSQ                                     BUG14762
+     C                   MOVE      BRCA          PQBRCA                                     BUG14762
+      *                                                                                     BUG14762
+     C     KITACT        CHAIN     REACT1D0                           64                    BUG14762
+      *                                                                                     BUG14762
+     C     *IN64         IFEQ      *ON                                                      BUG14762
+     C                   Z-ADD     99            PQMBCD                                     BUG14762
+     C                   MOVE      *ZEROS        PQCATC                                     BUG14762
+     C                   MOVE      *ZEROS        PQTPAC                                     BUG14762
+     C                   MOVE      *ZEROS        PQCLRL                                     BUG14762
+     C                   MOVE      *ZEROS        PQACST                                     BUG14762
+     C                   Z-ADD     *ZEROS        PQUNDT                                     BUG14762
+     C                   MOVE      *BLANKS       PQLNIT                                       LUC139
+     C                   Z-ADD     *ZEROS        PQTEGL                                       LUC139
+     C                   Z-ADD     *ZEROS        PQCMPC                                       LUC139
+     C                   WRITE     REACT1D0                                                 BUG14762
+     C                   ENDIF                                                              BUG14762
+     C                   ENDIF                                                              BUG14762
      C/COPY WNCPYSRC,GL0600C005
 
       ** Processing Postings
@@ -2929,6 +2971,17 @@
      C     P@VL01        ANDEQ     'Y'
      C                   MOVE      'Y'           IMBLNC
      C                   ENDIF
+
+     C                   MOVE      'N'           CER009            1            BUG14762
+     C                   CALL      'AOSARDR0'                                   BUG14762
+     C                   PARM      *BLANKS       @RTCD                          BUG14762
+     C                   PARM      '*VERIFY'     @OPTN                          BUG14762
+     C                   PARM      'CER009'      WSARD                          BUG14762
+     C     SCSARD        PARM      SCSARD        DSFDY                          BUG14762
+                                                                                BUG14762
+     C     @RTCD         IFEQ      *BLANK                                       BUG14762
+     C                   MOVE      'Y'           CER009                         BUG14762
+     C                   ENDIF                                                  BUG14762
 
      C     ENDFST        ENDSR
       *****************************************************************

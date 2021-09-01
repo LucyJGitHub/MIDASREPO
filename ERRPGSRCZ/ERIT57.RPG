@@ -1,0 +1,328 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Fidi Plurimi (Multicustomer Facilities)')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERIT57 - Fidi Plurimi (Multicustomer Facilities)             *
+      *                                                               *
+      *  (c) Copyright MISYS 2008                                     *
+      *                                                               *
+      *  Last Amend No. MDSC035979         Date 22Sep21               *
+      *  Prev Amend No. MD058100           Date 20May21               *
+      *               . LUC139             Date 04Jan21               *
+      *                 MMI137   *Rewrite  Date 08Jul09               *
+      *                 HVBMIL             Date 06Feb09               *
+      *                 MMI135   *Create   Date 01Dec08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MDSC035979 - UCI-AG from SP8 to FM 2021.B RPG Development    *
+      *               Issues.                                         *
+      *             - Rename EREXTRL5 to EREXTRL6                     *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI137 - Rewritten to exclude from Multicustomer processing  *
+      *           Facilities that are defined as Multicustomer but    *
+      *           are not currently utilised by other customers.      *
+      *           Also, if a Multicustomer Facility is defined as a   *
+      *           Pool Facility (i.e. field 109 is = 1), then it      *
+      *           should be extracted with the normal CAUA method but *
+      *           it should be split across the various customers     *
+      *           that are utilising the facility.                    *
+      *                                                               *
+      *  HVBMIL - Replace FCLTYL3 with HVB specific file FCLTYBIL.    *
+      *  MMI135 - Fidi Plurimi.                                       *
+      *                                                               *
+      *****************************************************************
+     FEREXTRPDUP  E                    DISK
+      *Main ER Extract file
+     FXXFCT1L0UF  E           K        DISK                      A
+      *Extended Facilities file
+     F***FCLTYL3 IF  E           K        DISK                                                HVBMIL
+     FFCLTYBILIF  E           K        DISK                                                   HVBMIL
+      *Facilities master file
+     FXXCLT1L0IF  E           K        DISK
+      *Extended Facilities file
+     F***EREXTRL5UF  E           K        DISK                      A
+     F**********     EREXTRF0                          KRENAMEEREXTRF5
+     FEREXTRL6UF  E           K        DISK                      A
+     F            EREXTRF0                          KRENAMEEREXTRF6
+      *ER Extract file - Facilities only
+     FSDCUSTL0IF  E           K        DISK
+      *Customers file
+     FSDCURRL1IF  E           K        DISK
+      *Currencies file
+      *
+     I            DS
+     I                                        1  21 NWTREF
+     I                                        1   6 NWFCUS
+     I                                        7   90EXFACT
+     I                                       10  110NWFCNO
+      *
+     I            DS
+     I                                        1  24 PRLKCD
+     I                                       18  18 WFI003
+     I                                       19  24 WRIPA
+      *
+     I            DS
+     I                                        1  21 EXTREF
+     I                                       13  15 CHKREP
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  M A I N L I N E                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      * Process all loans and participations purchased where the
+      * facility customer is different from the loan customer.
+      *
+     C           EXLOTD    IFEQ 'LEN'
+     C           EXLOTD    OREQ 'PPU'
+      *
+     C           EXFCUS    IFNE *BLANKS
+     C           EXFCUS    ANDNEEXCUST
+     C           EXFACT    ANDNE*ZERO
+     C           EXFCNO    ANDNE*ZERO
+     C           EXAMNT    ANDNE*ZERO
+     C           CHKREP    ANDNE'REP'
+      *
+      * Check if this loan will be extracted
+      *
+     C                     CALL 'ERIT62'
+     C                     PARM           EXLOTD           Input
+     C                     PARM           EXDECK           Input
+     C                     PARM           EXDRCR           Input
+     C                     PARM *ZERO     RTLINI  70       Output
+     C                     PARM *ZERO     RTRESV  20       Output
+     C                     PARM *ZERO     RTCPAC  70       Output
+     C                     PARM *BLANK    RTCOMP 15        Output
+     C                     PARM *BLANKS   ERROR   1        Return
+      *
+      * If the loan is going to be extracted, access Facility details
+      *
+     C           RTLINI    IFNE *ZERO
+      *
+     C                     MOVE EXFCUS    PRCNUM
+     C                     MOVE EXFACT    PRFACT
+     C                     MOVE EXFCNO    PRFCNO
+     C           KFAC      CHAINFCLTYFMF             01
+     C           KFAC      CHAINXXFCT1L0             02
+      *
+      * If the Facility is defined as Multicustomer and is a Pool
+      * Facility (field 109 is 1) then process utilisation.
+      *
+     C           *IN01     IFEQ *OFF
+     C           *IN02     ANDEQ*OFF
+     C           MCSI      ANDEQ'Y'
+      *
+     C           PRLNTP    IFEQ '1'
+     C                     EXSR PROCES
+      *
+      * If the Facility is defined as Multicustomer and is not a
+      * Pool Facility then assign a RIPA code to it (if not
+      * already assigned).
+      *
+     C                     ELSE
+      *
+     C           WRIPA     IFEQ *BLANKS
+      *
+     C                     ADD  1         PROG
+     C                     MOVE PROG      WRIPA
+      *
+     C           FCCY      IFEQ 'EUR'
+     C                     MOVE '1'       WFI003
+     C                     ELSE
+     C                     MOVE '2'       WFI003
+     C                     ENDIF
+      *
+     C                     UPDATLEFCT1D0
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PROCES -  Process a utilisation                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      * Retrieve additional sold amount and add to part sold amount
+      *
+     C                     MOVELEXTREF    PFLNRF
+     C           PFLNRF    CHAINXXCLT1L0             01
+     C           EXCCYC    CHAINSDCURRL1             01
+     C                     Z-ADD1000      FACTOR  51
+     C                     DO   A6NBDP
+     C                     DIV  10        FACTOR
+     C                     ENDDO
+     C           PFPSAM    MULT FACTOR    PSAMFC 308
+     C                     ADD  EXMARA    PSAMFC
+      *
+      * Convert loan amount and sold amount to facility currency
+      *
+     C                     Z-ADDEXAMNT    CPAMFC 308
+     C           FCCY      IFNE EXCCYC
+     C           A6MDIN    IFEQ 'D'
+     C                     DIV  A6SPRT    CPAMFC    H
+     C                     DIV  A6SPRT    PSAMFC    H
+     C                     ELSE
+     C                     MULT A6SPRT    CPAMFC    H
+     C                     MULT A6SPRT    PSAMFC    H
+     C                     ENDIF
+     C           FCCY      CHAINSDCURRL1             01
+     C           A6MDIN    IFEQ 'D'
+     C                     MULT A6SPRT    CPAMFC    H
+     C                     MULT A6SPRT    PSAMFC    H
+     C                     ELSE
+     C                     DIV  A6SPRT    CPAMFC    H
+     C                     DIV  A6SPRT    PSAMFC    H
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Convert part sold amount from ER format (3 decimals) to
+      * Midas format.
+      *
+     C           FCCY      CHAINSDCURRL1             01
+     C                     Z-ADD1000      FACTOR
+     C                     DO   A6NBDP
+     C                     DIV  10        FACTOR
+     C                     ENDDO
+     C                     DIV  FACTOR    PSAMFC    H
+      *
+      * Save key fields of original facility
+      *
+     C                     MOVE EXFCUS    SVFCUS  6
+     C                     MOVE EXFCNO    SVFCNO  20
+      *
+      * Determine dummy facility to be reported under the name of
+      * the loan counterparty.
+      *
+     C                     MOVE EXCUST    PRCNUM
+     C           KFAC      CHAINFCLTYFMF             01
+     C           *IN01     DOWEQ*OFF
+     C                     ADD  1         PRFCNO
+     C           KFAC      CHAINFCLTYFMF             01
+     C                     ENDDO
+     C                     MOVE PRCNUM    NWFCUS  6
+     C                     MOVE PRFCNO    NWFCNO  20
+      *
+      * Amend loan details to refer to the dummy facility.
+      *
+     C                     MOVE NWFCUS    EXFCUS
+     C                     MOVE NWFCNO    EXFCNO
+     C                     UPDATEREXTRF0
+      *
+      * Retrieve original facility on ER extract file.
+      *
+     C                     MOVE SVFCUS    EXFCUS
+     C                     MOVE SVFCNO    EXFCNO
+     C********** KEREX     CHAINEREXTRF5             01                                   MDSC035979
+     C           KEREX     CHAINEREXTRF6             01                                   MDSC035979
+      *
+      * Reduce granted amount by amount of loan.
+      *
+     C           *IN01     IFEQ *OFF
+     C                     SUB  CPAMFC    EXAMNT    H
+     C**********           UPDATEREXTRF5                                                  MDSC035979
+     C                     UPDATEREXTRF6                                                  MDSC035979
+     C                     ENDIF
+      *
+      * Write the dummy facility to the ER extract file - if not
+      * already present - with same details as original facility
+      * except for customer-related fields and granted amount.
+      *
+     C                     MOVE NWFCUS    EXFCUS
+     C                     MOVE NWFCNO    EXFCNO
+     C                     MOVE NWTREF    EXTREF
+     C********** KEREX     CHAINEREXTRF5             01                                   MDSC035979
+     C           KEREX     CHAINEREXTRF6             01                                   MDSC035979
+      *
+     C           *IN01     IFEQ *ON
+     C                     MOVE NWFCUS    EXCUST
+     C                     Z-ADDCPAMFC    EXAMNT    H
+     C           EXCUST    CHAINSDCUSTL0             01
+     C                     MOVE BBBNBI    EXBNBI
+     C                     MOVE BBCUST    EXCUST
+     C                     MOVE BBBFIC    EXCTPY
+     C                     MOVE BBCOLC    EXCUCC
+     C                     MOVE BBCSSN    EXCSSN
+     C                     MOVE BBCRNM    EXCRNM
+     C                     MOVE BBCNCZ    EXCNCZ
+     C                     MOVE *BLANKS   EXPCNB
+     C                     MOVE *BLANKS   EXPRCC
+      *
+     C           BBPCNB    IFNE *BLANKS
+     C           BBPCNB    CHAINSDCUSTL0             01
+     C                     MOVE BBCUST    EXPCNB
+     C                     MOVE BBCOLC    EXPRCC
+     C                     ENDIF
+      *
+     C**********           WRITEEREXTRF5                                                  MDSC035979
+     C                     WRITEEREXTRF6                                                  MDSC035979
+      *
+      * If new facility already on file then increase its granted
+      * amount.
+      *
+     C                     ELSE
+     C                     ADD  CPAMFC    EXAMNT    H
+     C**********           UPDATEREXTRF5                                                  MDSC035979
+     C                     UPDATEREXTRF6                                                  MDSC035979
+     C                     ENDIF
+      *
+      * Update other banks share on original facility extension file.
+      *
+     C           PSAMFC    IFNE *ZERO
+     C                     MOVE SVFCUS    PRCNUM
+     C                     MOVE SVFCNO    PRFCNO
+     C                     SUB  PSAMFC    PREXPO    H
+     C                     UPDATLEFCT1D0
+     C                     ENDIF
+      *
+      * Write the dummy facility to the extension file. If already
+      * present, increase its other banks share amount.
+      *
+     C                     MOVE NWFCUS    PRCNUM
+     C                     MOVE NWFCNO    PRFCNO
+     C           KFAC      CHAINXXFCT1L0             02
+      *
+     C           *IN02     IFEQ *ON
+     C                     Z-ADDPSAMFC    PREXPO    H
+     C                     WRITELEFCT1D0
+     C                     ELSE
+     C                     ADD  PSAMFC    PREXPO    H
+     C                     UPDATLEFCT1D0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR -  Initial processing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     Z-ADD1         PROG    60
+      *
+     C           KFAC      KLIST
+     C                     KFLD           PRCNUM
+     C                     KFLD           PRFACT
+     C                     KFLD           PRFCNO
+      *
+     C           KEREX     KLIST
+     C                     KFLD           EXFCUS
+     C                     KFLD           EXFACT
+     C                     KFLD           EXFCNO
+      *
+     C                     ENDSR

@@ -30,8 +30,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254109             Date 01Jun20               *
-      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *  Last Amend No. MD058099           Date 21Apr21               *
+      *  Prev Amend No. LUC139             Date 23Dec20               *
+      *                 BUG14313           Date 21Oct20               *
+      *                 254109             Date 01Jun20               *
+      *                 AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
@@ -153,6 +156,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058099 - Event code not found on insert                    *
+      *           - USR9843 & USR9845 are being set on Authorise      *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1                *
+      *  BUG14313 - Italian Enhancement and API ECM Clash on Customer *
+      *             Details API (CER008/CER009 Upgrade to MidasPlus)  *
+      *             CER009 - Puma II                                  *
+      *             CER008 - Base Italian Features                    *
       *  254109 - Introduce new err msgs; one for the 'D' action code *
       *           and another one for 'C' and 'R' action codes ( when *
       *           CSD007 feauture is switched on) just to indicate the*
@@ -469,6 +479,13 @@
       *                                                                                       CFT050
       ** Country codes                                                                        CFT050
      FSDCTRYL3  IF   E           K DISK    INFSR(*PSSR)                                       CFT050
+                                                                                            BUG14313
+      ** Customer Extension - Italian Details                                               BUG14313
+     FSDCUT1L0  IF   E           K DISK    INFSR(*PSSR)                                     BUG14313
+     F                                     PREFIX(A_)                                       BUG14313
+                                                                                            BUG14313
+      ** Customer Extension - PUMA Details                                                  BUG14313
+     FSDCUT2L0  IF   E           K DISK    INFSR(*PSSR)                                     BUG14313
 
       *****************************************************************
       ** +--------------------------------------+
@@ -614,6 +631,13 @@
      D TranInPrim    E DS                  EXTNAME(SDCUPRPD)                                  CFT050
      D                                     PREFIX(D)                                          CFT050
      D TranInSeco    E DS                  EXTNAME(SDCUSEPD)                                  CFT050
+                                                                                            BUG14313
+      ** Italian Details in File Format                                                     BUG14313
+     D CuIt1FilFmt   E DS                  EXTNAME(SDCUT1PD)                                BUG14313
+     D                                     PREFIX(A_)                                       BUG14313
+                                                                                            BUG14313
+      ** PUMA Details in File Format                                                        BUG14313
+     D CuIt2FilFmt   E DS                  EXTNAME(SDCUT2PD)                                BUG14313
 
      D RUNDAT          DS
      D  @MBIN                 13     13
@@ -728,6 +752,9 @@
      D WCOLC           S              2A                                                      CGL157
      D @PCTRT          S              2A                                                      CGL157
      D @PCTRR          S              2A                                                      CGL157
+     D CER008          S              1A    inz('N')                                        BUG14313
+     D CER009          S              1A    inz('N')                                        BUG14313
+                                                                                            BUG14313     
      D @WCDS1          DS           200
      D   WDS1000               1    200
      D   WDS1001               1      1
@@ -1386,6 +1413,19 @@
      C**********         IF        PAccMde = 'A'                                     CSD031 BUG13525
      C**********         EXSR      SROvrFlds                                         CSD031 BUG13525
      C**********         ENDIF                                                       CSD031 BUG13525
+                                                                                            BUG14313
+      ** Retrieve Italian Details                                                           BUG14313
+                                                                                            BUG14313
+     C                   IF        CER008 = 'Y'                                             BUG14313
+     C                   EXSR      SRRtvCuIt1                                               BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Retrieve PUMA Details                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        CER009 = 'Y'                                             BUG14313
+     C                   EXSR      SRRtvCuIt2                                               BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
      C/COPY WNCPYSRC,SDCUSDIC07
       *
       * Return
@@ -4196,6 +4236,8 @@
      C                   CLEAR                   CueuFilFmt                                   CSD079
      C                   CLEAR                   CuibfFilFmt                                  CSD079
      C                   CLEAR                   CtnmFilFmt                                AR1086546
+     C                   CLEAR                   CuIt1FilFmt                                BUG14313
+     C                   CLEAR                   CuIt2FilFmt                                BUG14313
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKCUST
      C**********         MOVEL     'Y'           PUpdYN                              CSD031 BUG13525
@@ -4877,6 +4919,84 @@
       *****************************************************************                    AR1086546
       /EJECT                                                                               AR1086546
       *****************************************************************                    AR1086546
+      *                                                               *                     BUG14313
+      *  SRRTVCUIT1 - Retrieve Italian Details                        *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SRRtvCuIt1    BEGSR                                                              BUG14313
+                                                                                            BUG14313
+      ** Access Italian Details                                                             BUG14313
+                                                                                            BUG14313
+     C                   MOVEL     DDCUSN        BBCUST                                     BUG14313
+     C     BBCUST        CHAIN     SDCUT1L0                           56                    BUG14313
+     C                   IF        DDACTN = 'I'                                             BUG14313
+                                                                                            BUG14313
+      ** If Insert Record Found - Error                                                     BUG14313
+                                                                                            BUG14313
+     C                   IF        *IN56 = *OFF                                             BUG14313
+     C                   MOVEL     'N'           OKCUST                                     BUG14313
+     C                   ADD       1             Ix                                         BUG14313
+     C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                             BUG14313
+     C                   MOVEL     'USR9842'     MsgIdArr(Ix)                               BUG14313
+     C                   ENDIF                                                              BUG14313
+      *****                                                                        BUG14313 MD058099
+      ** If Delete, Amend or Enquire                                               BUG14313 MD058099
+      *****                                                                        BUG14313 MD058099
+     C*****              ELSE                                                      BUG14313 MD058099
+      *****                                                                        BUG14313 MD058099
+      ** If Live Record not Found - Error                                          BUG14313 MD058099
+      *****                                                                        BUG14313 MD058099
+     C***** IN56         IFEQ      *ON                                             BUG14313 MD058099
+     C*****              MOVEL     'N'           OKCUST                            BUG14313 MD058099
+     C*****              ADD       1             Ix                                BUG14313 MD058099
+     C*****              MOVEL     'DDCUSN'      FldNameArr(Ix)                    BUG14313 MD058099
+     C*****              MOVEL     'USR9843'     MsgIdArr(Ix)                      BUG14313 MD058099
+     C*****              ENDIF                                                     BUG14313 MD058099
+                                                                                            BUG14313
+     C                   ENDIF                                                              BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      *  SRRTVCUIT2 - Retrieve PUMA Details                           *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SRRtvCuIt2    BEGSR                                                              BUG14313
+                                                                                            BUG14313
+      ** Access Italian Details                                                             BUG14313
+                                                                                            BUG14313
+     C                   MOVEL     DDCUSN        PCCUST                                     BUG14313
+     C     PCCUST        CHAIN     SDCUT2L0                           57                    BUG14313
+     C                   IF        DDACTN = 'I'                                             BUG14313
+                                                                                            BUG14313
+      ** If Insert Record Found - Error                                                     BUG14313
+                                                                                            BUG14313
+     C                   IF        *IN57 = *OFF                                             BUG14313
+     C                   MOVEL     'N'           OKCUST                                     BUG14313
+     C                   ADD       1             Ix                                         BUG14313
+     C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                             BUG14313
+     C                   MOVEL     'USR9844'     MsgIdArr(Ix)                               BUG14313
+     C                   ENDIF                                                              BUG14313
+      *****                                                                        BUG14313 MD058099
+      ** If Delete, Amend or Enquire                                               BUG14313 MD058099
+      *****                                                                        BUG14313 MD058099
+     C*****              ELSE                                                      BUG14313 MD058099
+      *****                                                                        BUG14313 MD058099
+      ** If Live Record not Found - Error                                          BUG14313 MD058099
+      *****                                                                        BUG14313 MD058099
+     C***** IN57         IFEQ      *ON                                             BUG14313 MD058099
+     C*****              MOVEL     'N'           OKCUST                            BUG14313 MD058099
+     C*****              ADD       1             Ix                                BUG14313 MD058099
+     C*****              MOVEL     'DDCUSN'      FldNameArr(Ix)                    BUG14313 MD058099
+     C*****              MOVEL     'USR9845'     MsgIdArr(Ix)                      BUG14313 MD058099
+     C*****              ENDIF                                                     BUG14313 MD058099
+                                                                                            BUG14313
+     C                   ENDIF                                                              BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
+      *****************************************************************                     BUG14313
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
@@ -4965,6 +5085,8 @@
      C                   PARM                    TranInPrim                                   CFT050
      C                   PARM                    TranInSeco                                   CFT050
      C                   PARM                    TranInMT3X                                   CFT050
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+     C                   PARM                    CuIt2FilFmt                                BUG14313
       *
       * OK - Action code
      C                   PARM                    OKACTN            1
@@ -5394,6 +5516,48 @@
      C                   ELSE                                                                 CSD079
      C                   MOVEL     'N'           WUPMSC                                       CSD079
      C                   ENDIF                                                                CSD079
+                                                                                            BUG14313
+      ** Check if enhancement CER008 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER008'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER008'                                        BUG14313
+     C                   EVAL      DBASE  = 925                                             BUG14313
+     C                   EXSR      *PSSR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER008 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER008 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Check if enhancement CER009 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER009'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER009'                                        BUG14313
+     C                   EVAL      DBASE  = 926                                             BUG14313
+     C                   EXSR      *PSSR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+      *                                                                                     BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER009 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER009 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
                                                                                               CSD031
       ** Check if CSD037 is enabled.                                                          CSD031
                                                                                               CSD031

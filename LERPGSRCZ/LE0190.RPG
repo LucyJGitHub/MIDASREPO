@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. BUG14649(CER009)   Date 17Nov20               *
+      *                 CER009             Date 17Nov20               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055733           Date 03Jul20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
@@ -193,6 +196,10 @@
 0011 F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1                *
+      *  BUG14649 - Pressing F12 Exits the Enquiry activity in Loan   *
+      *             Details Enquiry (CER009)                          *
+      *  CER009 - PUMA II Upgrade to MP                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
@@ -1601,6 +1608,57 @@
      C*                                                       /S01408/
      C/COPY WNCPYSRC,LE0190CCP2
      C*                                                       /S01408/
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           *IN38     IFNE *ON                                                           CER009
+     C           *IN39     ANDNE*ON                                                           CER009
+     C           *IN78     ANDNE*ON                                                           CER009
+     C           *IN79     ANDNE*ON                                                           CER009
+     C           *IN80     ANDNE*ON                                                           CER009
+     C           *IN81     ANDNE*ON                                                           CER009
+     C           *INKA     ANDNE*ON                                                           CER009
+     C           *INKC     ANDNE*ON                                                           CER009
+     C           *INKH     ANDNE*ON                                                           CER009
+     C           *INKL     ANDNE*ON                                                           CER009
+     C           *INKN     ANDNE*ON                                                           CER009
+     C           *INKP     ANDNE*ON                                                           CER009
+     C           *INKQ     ANDNE*ON                                                           CER009
+     C           *INKT     ANDNE*ON                                                           CER009
+     C           LNRFW     ANDEQSLNREF                                                      BUG14649
+     C                     CALL 'LE0193'                                                      CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C**********           PARM LNRF      PLNRF   60                                          CER009
+     C                     PARM LNRF      PLNRF   6                                           CER009
+     C                     PARM CCY       PCCY    3                                           CER009
+     C                     PARM           P@INKC  1                                           CER009
+     C                     PARM           P@INKL  1                                           CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+      *                                                                                       CER009
+     C           P@INKC    IFEQ 'Y'                                                           CER009
+     C                     MOVE *ON       *INKC                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           P@INKL    IFEQ 'Y'                                                           CER009
+     C**********           MOVE *ON       *INKL                                      CER009 BUG14649
+     C                     MOVE 'Y'       WFIRST                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** Returned error from LE0193 do DBERR                                                  CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+     C                     MOVE *ON       *INU7                                               CER009
+     C                     MOVE *ON       *INU8                                               CER009
+     C                     MOVEL'LE0193'  DBPGM                                               CER009
+     C                     MOVEL901       DBASE                                               CER009
+     C                     MOVELPLNRF     DBKEY                                               CER009
+     C                     GOTO END                                                           CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
 0556 C***40*****           GOTO DETAIL                                                        CLE134
 0557 C**********           SETON                     40                                       CLE134
      C           @FIRST    IFEQ 'Y'                                                           CLE134
@@ -4635,6 +4693,26 @@
      C           PRTCD     IFEQ *BLANKS                                                       CLE134
      C                     MOVE 'Y'       CLE134                                              CLE134
      C                     ENDIF                                                              CLE134
+      *                                                                                       CER009
+      ** Determine if PUMA II Upgrade to MidasPlus feature is installed                       CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009  1                                           CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009                                              CER009
+     C                     ELSE                                                               CER009
+     C           PRTCD     IFNE '*NRF'                                                        CER009
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER009
+     C                     Z-ADD900       DBASE                                               CER009
+     C                     MOVEL'CER009'  DBKEY                                               CER009
+     C                     EXSR *PSSR                                                         CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
       **********                                                                   BUG12928 BUG13017
       ***Access*SAR details file to determine if CAS005 is switched on             BUG12928 BUG13017
       **********                                                                   BUG12928 BUG13017

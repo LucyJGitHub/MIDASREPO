@@ -1,0 +1,251 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Lending Processing')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - ITaly                    *
+      *                                                               *
+      *  ERIT65 - Lending Processing                                  *
+      *                                                               *
+      *  Called By: RPG/ERIT60                                        *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI140             Date 08Mar11               *
+      *                 MMI120             Date 27Jun05               *
+      *                 MMI117             Date 17Jan05               *
+      *                 MMI115             Date 25Mar04               *
+      *                 MMI110             Date 06Oct03               *
+      *                 MMI100             Date 10Jun03               *
+      *                 214823             Date 04Mar03               *
+      *                 200277             Date 22Nov01               *
+      *                 200160             Date 14Nov01               *
+      *                 192459             Date 23Apr01               *
+      *                 MMI075             Date 09AUG00               *
+      *                 MMI033             Date 28JUN99               *
+      *                 MMI033             Date 31Mar99               *
+      *                 UIT021             Date 29Jan97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA changes February 2011 and Usura changes.       *
+      *  MMI120 - Complete CR2005                                     *
+      *  MMI117 - CR2005                                              *
+      *  MMI115 - Tassi Attivi. Output Interest Rate to field 950 and *
+      *           not just spread. Also, make sure 247 is future.     *
+      *  MMI110 - Rewrite Numbers calculation. All processing based   *
+      *           over loan history has been moved to ERIT58. The     *
+      *           corresponding lines have been physically deleted    *
+      *           from the present source to improve readibility.     *
+      *  MMI100 - Do not include interest payments in field 636 639   *
+      *  214823 - Field 247 to contain next repayment date, either    *
+      *           from loan details of from repayment schedule. If    *
+      *           none available, default to maturity date.           *
+      *  200277 - Puma field 661 is not zero when loan has not        *
+      *           matured in the current month                        *
+      *  200160 - Call Loans: number of months must be 1.             *
+      *  192459 - Calculate number of installments matured.           *
+      *  MMI075 - Midas Italy Puma/2 : re-writed                      *
+      *  MMI033 - Midas Italy Puma/2 change x pool loans              *
+      *  MMI033 - Midas Italy Puma/2 Extract Change 3                 *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FXXCLT1L0IF  E           K        DISK
+     F* LE - Italy Extension File
+     FCLOANLB IF  E           K        DISK                               MMI033
+     FMLOAN   IF  E           K        DISK                               MMI033
+     F            CLOANHHF                          KIGNORE               ER0336
+     F            CLOANCLF                          KRENAMEMLOANCLF
+     F            CLOANCKF                          KIGNORE               ER0336
+     F            CLOANZ1F                          KIGNORE               ER0336
+     FERLVENL0IF  E           K        DISK                               214823
+      *
+      *===============================================================*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+     C                     EXSR #INIT
+      **=================================================================
+     C***********          MOVELEXTREF    KDLNO   60                      MMI033
+     C                     MOVELEXTREF    WDLNO   6                       MMI033
+     C                     MOVE WDLNO     KDLNO   6                       MMI033
+     C                     MOVE WDLNO     KDLNN   60
+      *
+     C           KDLNO     CHAINXXCLT1L0             80
+     C           *IN80     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'651'     DBASE            ******************
+     C                     MOVEL'XXCLT1L0'DBFILE           ** DB ERROR 651 **
+     C                     MOVELKDLNN     DBKEY            ******************
+     C                     EXSR #DBERR
+     C                     ELSE                            - X2
+     C                     MOVE PFMOOP    ICMOOP
+     C                     MOVE PFAGCT    ICAGCT
+     C                     MOVE PFAGCL    ICAGCL
+     C                     MOVE PFECBD    ICECBD
+     C                     MOVE PFSBCR    ICSBCR
+     C                     MOVE PFINSB    ICINSB
+     C                     MOVE PFTPPR    ICTPPR
+     C                     MOVE PFPEPR    ICPEPR
+     C                     MOVE PFGLPA    ICGLPA
+     C                     MOVE PFPTRP    ICPTRP
+     C                     MOVE PFTPFD    ICTPFD
+     C                     MOVE PFSBLW    ICSBLW
+     C                     MOVE PFDPIV    ICDPIV
+     C                     MOVE PFEDIV    ICEDIV
+     C                     MOVE PFCATC    ICCATC
+     C                     MOVE PFTPAC    ICTPAC
+     C                     MOVE PFCLRL    ICCLRL
+     C                     MOVE PFACST    ICACST
+     C                     MOVE PFLNIT    ICLNIT
+     C                     MOVE PFTEGL    ICTEGL
+     C                     MOVE PFCMPC    ICCMPC
+     C                     MOVE PFPSAM    ICPSAM                          MMI117
+     C                     Z-ADDPFUNDT    ICUNDT                          MMI120
+      *                                                                   MMI033
+     C********** PFTEGL    IFEQ *ZERO                               MMI033MMI140
+     C**********           Z-ADD*ZERO     RTSP                            MMI115
+     C                     Z-ADD*ZERO     INTR                            MMI115
+     C           KNULN     CHAINCLOANLB              80                   MMI033
+     C           *IN80     IFEQ *ON                                       MMI033
+     C           KNULH     CHAINMLOAN                80                   MMI033
+     C                     ENDIF                                          MMI033
+     C**********           Z-ADDRTSP      ICTEGL                          MMI115
+     C**********           Z-ADDINTR      ICTEGL                    MMI115MMI140
+     C**********           ENDIF                                          MMI140
+      *                                                                   MMI033
+      *                                                                   MMI033
+     C                     MOVEL'D'       #SDFMT                          MMI033
+     C*                                                                   214823
+     C* Field 247 - Next Repayment Date                                   214823
+     C*                                                                   214823
+     C***********          Z-ADDNRPD      #SDAYN                    MMI033214823
+     C                     Z-ADDMDAT      #SDAYN                          214823
+     C           LNRF      CHAINERLVENL0             02                   214823
+     C           *IN02     DOWEQ*OFF                                      214823
+     C           ETYP2     IFEQ 'R1'                                      214823
+     C           EDAT      ANDGTXXENDQ                                    MMI115
+     C           ETYP2     OREQ 'M1'                                      214823
+     C           EDAT      ANDGTXXENDQ                                    MMI115
+     C                     Z-ADDEDAT      #SDAYN                          214823
+     C                     LEAVE                                          214823
+     C                     ENDIF                                          214823
+     C           LNRF      READEERLVENL0                 02               214823
+     C                     ENDDO                                          214823
+      *                                                                   MMI033
+     C                     CALL 'ZA0140'                                  MMI033
+     C                     PARM           #SDAYN  50                      MMI033
+     C                     PARM           #SDFMT  1                       MMI033
+     C                     PARM           #SDATE  60                      MMI033
+     C                     PARM           #SDATA  7                       MMI033
+     C                     PARM           #SRTN   1                       MMI033
+     C                     PARM           #SDAT8  80                      MMI033
+     C                     MOVEL#SDAT8    ICOPDT                          MMI033
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     RETRN
+      **=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine
+      **
+      *----------------------------------------------------------------
+     C           #INIT     BEGSR
+      *----------------------------------------------------------------
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      ** Parameters received/transfered to Main Component:
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C***********          PARM           EXLOTD  6        Lot descriptor MMI033
+     C                     PARM           EXLOTD  3        Lot descriptor MMI033
+     C                     PARM           EXBRCD  3        Branch code    MMI033
+     C                     PARM           EXTREF 21        Transaction reference
+     C                     PARM           XXENDQ  50       End of Month   MMI115
+      *  Output Parameters
+     C                     PARM           ICMOOP  10       Motivation of operati
+     C                     PARM           ICAGCT  30       Agricultural credit
+     C                     PARM           ICAGCL  30       Agricultural law
+     C                     PARM           ICECBD  20       Economical branch des
+     C                     PARM           ICSBCR  10       Subsidized credit ind
+     C                     PARM           ICSBLW  3        Law for Subsidized CC
+     C                     PARM           ICINSB  10       Subsidized int. expor
+     C                     PARM           ICTPPR  60       Type of product
+     C                     PARM           ICPEPR  60       Personal. of operatio
+     C                     PARM           ICGLPA  10       Global/Partial oper.
+     C                     PARM           ICPTRP  30       Priority risk code p.
+     C                     PARM           ICTPFD  10       Op. with third party
+     C                     PARM           ICDPIV  50       Destination province
+     C                     PARM           ICEDIV  3        Economic destination
+     C                     PARM           ICCATC 110       Category code CR
+     C                     PARM           ICTPAC  30       Type of activity
+     C                     PARM           ICCLRL  30       Client role CR
+     C                     PARM           ICACST  30       Account status CR
+     C                     PARM           ICLNIT  7        Line item usura repor
+     C                     PARM           ICTEGL  83       Effective global rate
+     C                     PARM           ICCMPC  83       Com. rate max unc.bal
+     C                     PARM           ICOPDT  80       Next Payment DaMMI033
+     C                     PARM           ICPSAM 130                      MMI117
+     C                     PARM           ICUNDT  50                      MMI120
+     C                     PARM           ERROR   1
+     C*
+     C           KNULN     KLIST                                          MMI033
+     C                     KFLD           EXBRCD                          MMI033
+     C                     KFLD           KDLNO                           MMI033
+      *                                                                   MMI033
+     C                     MOVEL'A'       WCDT    1                       MMI033
+      *                                                                   MMI033
+     C           KNULH     KLIST                                          MMI033
+     C                     KFLD           KDLNO                           MMI033
+     C                     KFLD           WCDT                            MMI033
+      *                                                                   MMI033
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+      *================================================================
+      **
+      **  #DBERR      DATA BASE ERROR
+      **
+      *----------------------------------------------------------------
+     C           #DBERR    BEGSR
+      *----------------------------------------------------------------
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      **
+     C                     ENDSR
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

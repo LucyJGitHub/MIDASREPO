@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR804863           Date 10Dec12               *
+      *  Last Amend No. LUC139             Date 08Jan21               *
+      *  Prev Amend No. CER009             Date 17Nov20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR804863           Date 10Dec12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1 (Recompile)    *
+      *  CER009 - PUMA II Upgrade to MP (Recompile)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR804863 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Pass      *

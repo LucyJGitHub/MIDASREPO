@@ -1,0 +1,77 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR REDUCE NUMBERS FOR PARTICIPATIONS SOLD')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR4020 - REDUCE NUMBERS FOR PARTICIPATIONS SOLD              *
+      *                                                               *
+      *  Called By: IRC4000 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Misys 2009                                     *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 13Jan21               *
+      *                 MMI140             Date 28Feb11               *
+      *                 261936 *Create     Date 17Sep09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011                          *
+      *  261936 - Fields 6001 and 6003 on main loan should be         *
+      *           reduced by corresponding fields of parts sold.      *
+      *                                                               *
+      *****************************************************************
+     FERITTRPDIP  E           K        DISK
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FMLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCLF                          KRENAMEMLOANCLF
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FIRPUMAL0UF  E           K        DISK
+      *
+     IICORAP      DS                             35
+     I                                        1   4 ICOR01
+     I                                        6  11 ICOR06
+      *                                                                   215253
+      * Process only Participations Sold                                  215253
+      *                                                                   215253
+     C           ICOR01    IFEQ 'LEPS'                                    215253
+      *
+      * Access loan details (which could be either on live or on
+      * matured loans file) to obtain reference of original loan.
+      *
+     C           ICOR06    CHAINCLOANCLF             01
+     C           *IN01     IFEQ *ON
+     C           ICOR06    CHAINMLOANCLF             01
+     C                     ENDIF
+      *
+      * Access extract record for main loan and reduce its fields
+      * 6001 (Interest) and 6003 (Numeri) by corresponding fields
+      * of participation sold.
+      *
+     C           *IN01     IFEQ *OFF
+      *
+     C                     MOVELOLNO      MK277     P
+     C           MK277     CHAINIRPUMAL0             02
+      *
+     C           *IN02     IFEQ *OFF
+     C                     SUB  IC6001    M06001
+     C                     SUB  ICNCCL    M06003
+     C                     SUB  ICCPCL    M06003
+     C                     Z-ADDM06001    MK954                           MMI140
+     C           M06003    MULT 100       MK955                           MMI140
+     C                     SUB  ICPNCD    M09478                          MMI140
+     C                     UPDATIRPUMA
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF

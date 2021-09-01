@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD027065           Date 22Sep20               *      
+      *  Last Amend No. LUC116             Date 21Jan19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD027065           Date 22Sep20               *      
       *                 MD053093           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
       *                 MD039655           Date 03Sep19               *
@@ -84,6 +85,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC116 - Facility Expiry and Last Availability Dates -       *
+      *             Until Further Notice                              *
+      *             Amendment of core hook LEH01208                   *
+      *             Addition of hook LUC116_001                       *
+      *             Addition of hook LUC116_002                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
@@ -1389,6 +1395,7 @@
       *
       ** Check if Expiry Date is a Holiday
      C     DDDTEXOK      IFNE      'N'
+     C/COPY WNCPYSRC,LUC116_001
      C*****DDDTEX        ANDNE     DAYSV                                                     BUG4351
      C                   MOVEL     DDFCCY        ZCCY
      C                   CALLB     'ZCHKH'
@@ -1410,6 +1417,7 @@
      C                   ENDIF                                                              BUG22020
      C**********         MOVEL     'Y'           W#WARN            1                         BUG4351
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC116_002
      C                   ENDIF
       *
      C**********         MOVE      DDDTEX        DAYSV             6                         BUG4351

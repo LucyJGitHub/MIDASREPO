@@ -1,0 +1,1201 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Italy - VOCI 4000 - 5000')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERIT94 - ER Italy - VOCI 4000 - 5000                         *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 28Apr21               *
+      *                 206388             Date 07Jun02               *
+      *                 204013             Date 18Mar02               *
+      *                 MMI089                  05Oct01               *
+      *                 196660                  09Aug01               *
+      *                 MMI075                  09AUG00               *
+      *                 MMI033                  15SET98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  206388 - Only process branches that are included in Bank of  *
+      *           Italy Reporting                                     *
+      *                                                               *
+      *  204013 - Errors on Account-level extraction: only debit ba-  *
+      *           lances are extracted.                               *
+      *           Also, force a few values according to Bank of Italy *
+      *           rules.                                              *
+      *                                                               *
+      *  MMI089 - Various improvements:                               *
+      *              - Report, removed                                *
+      *              - Replace use of 'CRR' table                     *
+      *              - Removed subroutines never called               *
+      *              - Remove parameters and use ICD instead          *
+      *              - Comments                                       *
+      *              - Tidying up program                             *
+      *                                                               *
+      *  196660 - Foreign Currency amounts multiplied by 100.         *
+      *                                                               *
+      *****************************************************************
+     FAUAPOSV1IP  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSDBANKL1IF  E           K        DISK
+     F*                                             KINFSR *PSSR
+     FSDCRT1L0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FERICDRPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSDCURRPDIF  E                    DISK
+     F                                              KINFSR *PSSR
+     FERITACL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSDCUSTL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FERCURRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FEREXTRL3IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSDBCT1L0IF  E                    DISK                               206388
+     F                                              KINFSR *PSSR          206388
+     FERITTRPDO   E                    DISK
+     F                                              KINFSR *PSSR
+      *===============================================================*
+      *
+     E                    SCY       100  3   CCS     1 0
+      *
+     E                    CCI       100  1   CUI     3 0
+      *
+     E                    VS4      2000 10 0 VD4    21
+      *
+     E                    VS5      2000 10 0 VD5    21
+      * Quarter entry array
+     E                    PER         4  1
+      * Narrative breakdown
+     E                    NAR        30  1
+      * Selected branched
+     E                    BRA       999  3
+      *
+     IAPOSTPDF    01
+      ***  Primary file : Level break definition
+      *
+     I                                              ACOD  L1
+      *
+     IGLACPHPF    01
+      ***  Primary file : Level break definition
+      *
+     I                                              ACOD  L1
+      *
+      * Account code breakdown
+     ICAMPOV      DS
+     I                                        1   40$ACOD
+     I                                        5  110$VODIN
+     I                                       12  130$VSDIN
+     I                                       14  14 $VSDPE
+     I                                       15  210$VOCIN
+     I                                       22  230$VSCIN
+     I                                       24  24 $VSCPE
+     I                                       25  250$TRATE
+      *
+      * Date format 7char (ddMMMyy)
+     IBJMRDT      DS                              7
+     I                                        3   5 BJMONT
+      *
+     ILDA        UDS                            256
+      ***  Local data area for data base error
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I                                      132 183 DBLOT
+      *****************************************************************
+      ***                    M A I N L I N E S                      ***
+      *****************************************************************
+      *
+      *  This is a RPG cycle program and it uses level checks to
+      *  trigger the different phases:
+      *    - PERL1, to decide whether the account code must be included or not
+      *    - ELAB, for 'Conto Economico' extration
+      *    - ELAB52, for the other account codes
+      *    - TOTL1, writing extrated info to ERITTRPD
+      *
+      *****************************************************************
+     C   L1                EXSR PERL1
+     C   L1 52             EXSR ELAB52
+     C      51             EXSR ELAB
+     CL1    51             EXSR TOTL1
+     CL1    52             EXSR TOTL1
+      *
+      *****************************************************************
+      *  Currency IN/OUT                                              *
+      *  The subroutine checks whether the currency from AUAPOSV1     *
+      *  is a IN or OUT currency for reporting purposes               *
+      *****************************************************************
+      *
+     C           PERL2     BEGSR
+      *
+      *
+      * It is needed only if not 'Conto Economico'
+     C           CCY       IFEQ '   '
+     C                     MOVELBJCYCD    CCY
+     C                     END
+      *
+      * Decide if it is a IN currency or not
+      *
+     C                     Z-ADD1         X
+     C           CCY       LOKUPSCY,X                    26
+     C                     Z-ADDCCS,X     C       10
+     C                     ADD  1         C       10
+     C           CCI,X     IFEQ 'Y'
+     C           CCY       OREQ 'EUR'
+     C                     MOVEL'1'       $IN     1
+     C                     ELSE
+     C                     MOVEL'2'       $IN
+     C                     END
+      *
+     C                     Z-ADDCUI,X     $UIC    30
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Account code selection                                       *
+      *  The RPG cycle goes through the AUAPOSV1 file and reads all   *
+      *  the records. The level check is on ACOD and then triggers the*
+      *  TOTL1 totalling function. PERL1 is called every time a record*
+      *  is read and then the ACOD is checked to see whether it is a  *
+      *  'Conto Economico' or not. Then it calls the relevant subrou- *
+      *  tine by means of setting on/off indicators 51/52             *
+      *****************************************************************
+      *
+     C           PERL1     BEGSR
+      *
+     C                     Z-ADD0         X4      40
+     C                     Z-ADD0         X5      40
+     C                     Z-ADD0         A11C   152
+     C                     Z-ADD0         A12C   152
+     C                     Z-ADD0         A21C   152
+     C                     Z-ADD0         A22C   152
+     C                     Z-ADD0         A11D   152
+     C                     Z-ADD0         A12D   152
+     C                     Z-ADD0         A21D   152
+     C                     Z-ADD0         A22D   152
+     C                     MOVEL*ZERO     CAMPOV
+     C                     SETOF                     51
+      *
+      * Check whether the account code is in the 400k array
+     C                     SETOF                     53
+     C                     Z-ADD1         X
+     C           ACOD      LOKUPVS4,X                    52
+     C   52                DO
+     C                     MOVE VD4,X     CAMPOV
+     C           $VSDPE    LOKUPPER                      53
+     C  N53      $VSCPE    LOKUPPER                      53
+     C   53                Z-ADDX         X4
+     C   53                SETON                     51
+     C                     END
+      *
+      * Check whether the account code is in the 500k array
+     C                     SETOF                     53
+     C                     Z-ADD1         X
+     C           ACOD      LOKUPVS5,X                    52
+     C   52                DO
+     C                     MOVE VD5,X     CAMPOV
+     C           $VSDPE    LOKUPPER                      53
+     C  N53      $VSCPE    LOKUPPER                      53
+     C   53                Z-ADDX         X5
+     C   53                SETON                     51
+     C                     END
+      *
+      * Proceed only if the account code has been found in 400k or 500k
+     C           *IN51     IFEQ *ON                                       MMI089
+      * Use the 'Conto Economico' indicator to determine which routine to call
+     C           ACSC      IFEQ 'EX'                                      MMI089
+     C           ACSC      OREQ 'IN'                                      MMI089
+     C                     MOVE *ON       *IN51                           MMI089
+     C                     MOVE *OFF      *IN52                           MMI089
+     C                     ELSE                                           MMI089
+     C                     MOVE *ON       *IN52                           MMI089
+     C                     MOVE *OFF      *IN51                           MMI089
+     C                     ENDIF                                          MMI089
+      *                                                                   MMI089
+     C                     ENDIF                                          MMI089
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Customer residency                                           *
+      *  The amount breakdown requires the Resident indicator         *
+      *****************************************************************
+      *
+     C           PERL3     BEGSR
+      *
+     C                     Z-ADD0         CIMPO  150
+     C                     Z-ADD0         $R      10
+      *
+     C                     MOVE CNUM      $CNUM   6
+      *
+     C           $CNUM     CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '0'                        - B3
+     C           BBCOLC    IFEQ VDICCD                     Internal Ctry code
+     C                     Z-ADD1         $R               Resident
+     C                     ELSE
+     C                     Z-ADD2         $R               FOREIGNER
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  'Conto Economico' calculations                               *
+      *  The information from AUAPOSV1 is used to determine where to  *
+      *  sum the posting amounts.                                     *
+      *****************************************************************
+      *
+     C           ELAB      BEGSR
+      *                                                                   206388
+      * Branch selected ?                                                 206388
+      *                                                                   206388
+     C           BRCA      LOKUPBRA                      02               206388
+      *
+      * Process only if the posting matches the base currency
+      *
+     C           CCY       IFEQ BJCYCD
+     C           SPOS      ANDNE'  GE-XB'
+     C           PSTD      ANDGTBJPEYD
+     C           *IN02     ANDEQ*ON                                       206388
+      *
+      * Determine whether it is resident or not
+     C                     EXSR PERL3
+      *
+      * Divide according to Base Ccy Decimal Places
+      *
+     C           PSTA      DIV  DIVBC     IMPO2  152                      196660
+      *
+      * For XF Postings, extract currency from the narrative
+      *
+     C           SPOS      IFEQ '  GE-XF'
+     C                     MOVELPNAR      WRK23  23
+     C                     MOVE WRK23     CCY
+     C                     EXSR PNARC
+     C                     END
+      *
+      * Determine if IN/OUT currency
+      *
+     C                     EXSR PERL2
+      *
+      * Add posting amount to totalling fields
+      *
+     C           DRCR      IFEQ 0
+     C                     EXSR ELABC
+     C                     ELSE
+     C                     EXSR ELABD
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Currency from narrative field                                *
+      *  Extract the currency used from the narrative for XF postings *
+      *****************************************************************
+      *
+     C           PNARC     BEGSR
+      *
+     C                     MOVEAPNAR      NAR
+     C                     Z-ADD31        X
+      * Run a backward check in the narrative field
+     C                     DO   15
+     C                     SUB  1         X
+     C           NAR,X     COMP ' '                      79
+     C           *IN79     IFEQ *OFF                                      MMI089
+     C                     SUB  8         X                               MMI089
+     C                     MOVELNAR,X     CCY                             MMI089
+     C                     LEAVE                                          MMI089
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Process non 'Conto Economico' postings                       *
+      *  The postings are not used: the account code comes from the   *
+      *  posting file and is used to access EREXTRL3 containing       *
+      *  accounts with non zero balances                              *
+      *****************************************************************
+      *
+     C           ELAB52    BEGSR
+      *
+      * Find the accounts
+     C                     MOVELACOD      $DEK
+     C           KEYEX     CHAINEREXTRL3             66
+      *
+     C           *IN66     DOWEQ*OFF
+      *                                                                   206388
+      * Branch selected ?                                                 206388
+      *                                                                   206388
+     C           EXBRCD    LOKUPBRA                      02               206388
+     C           *IN02     IFEQ *ON                                       206388
+      *
+     C                     MOVELEXCCYC    CCY
+     C                     MOVELEXCUST    CNUM
+      *
+     C                     EXSR ELABSP
+     C                     ENDIF                                          206388
+      *
+     C           KEYEX     READEEREXTRL3                 66
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  ELABSP                                                       *
+      *****************************************************************
+      *
+     C           ELABSP    BEGSR
+      * Residence
+     C                     EXSR PERL3
+      * IN/OUT currency
+     C                     EXSR PERL2
+      *
+      * Currency conversion
+     C           EXAMNT    DIV  1000      IMPO   153
+     C           CCY       CHAINERCURRL1             80
+     C           VRMDIN    IFEQ 'M'
+     C           IMPO      MULT VRSPRT    IMPO2     H
+     C                     ELSE
+     C           IMPO      DIV  VRSPRT    IMPO2     H
+     C                     END
+      *
+      * Set up credit/debit
+     C                     Z-ADD1         @@RAT1 138
+     C                     MOVE 'M'       @@MDI1  1
+     C                     Z-ADDEXDRCR    DRCR
+      *
+      * Add to totalling fields
+      *
+     C           DRCR      IFEQ 0
+     C                     EXSR ELABC
+     C                     ELSE
+     C                     EXSR ELABD
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  Credit accumulation                                          *
+      *  The postings or the amounts from the balances file are       *
+      *  accumulated                                                  *
+      *****************************************************************
+      *
+     C           ELABC     BEGSR
+      *
+     C           $R        IFEQ 1
+      *
+     C           $IN       IFEQ '1'
+     C                     ADD  IMPO2     A11C
+     C                     ELSE
+     C                     ADD  IMPO2     A12C
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           $IN       IFEQ '1'
+     C                     ADD  IMPO2     A21C
+     C                     ELSE
+     C                     ADD  IMPO2     A22C
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Debit accumulation                                           *
+      *  The postings or the amounts from the balances file are       *
+      *  accumulated                                                  *
+      *****************************************************************
+      *
+     C           ELABD     BEGSR
+      *
+      * Resident
+     C           $R        IFEQ 1
+      *
+      * In/Out currency
+     C           $IN       IFEQ '1'
+     C                     ADD  IMPO2     A11D
+     C                     ELSE
+     C                     ADD  IMPO2     A12D
+     C                     END
+      *
+      * Not resident
+     C                     ELSE
+      *
+      * In/Out currency
+     C           $IN       IFEQ '1'
+     C                     ADD  IMPO2     A21D
+     C                     ELSE
+     C                     ADD  IMPO2     A22D
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Totalling function                                           *
+      *****************************************************************
+      *
+     C           TOTL1     BEGSR
+      *
+     C                     Z-ADD0         $11    152
+     C                     Z-ADD0         $12    152
+     C                     Z-ADD0         $21    152
+     C                     Z-ADD0         $22    152
+     C                     MOVEL$CNUM     ICCUST
+      *
+      * There is a 400k value
+      *
+     C           X4        IFNE 0
+      *
+     C                     MOVELVS4,X4    CAMPOV
+     C                     MOVE VD4,X4    CAMPOV
+      *
+      * Conto economico: output net balance
+     C           *IN51     IFEQ *ON
+     C                     EXSR GESX4T
+     C                     ENDIF
+      *
+      * Other: output separately debits and credits
+     C           *IN52     IFEQ *ON
+     C                     EXSR GESX4
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * There is a 500k value
+      *
+     C           X5        IFNE 0
+      *
+     C           A11C      SUB  A11D      $11
+     C           A12C      SUB  A12D      $12
+     C           A21C      SUB  A21D      $21
+     C           A22C      SUB  A22D      $22
+      *
+     C                     MOVELVS5,X5    CAMPOV
+     C                     MOVE VD5,X5    CAMPOV
+      *
+      * Field 11 only
+     C           $11       IFNE 0
+      *
+     C           $11       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $11       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $11       ICBVLR
+     C                     END
+      * Build field ICCOMP
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0101'    $KEY1  10
+     C                     MOVEL'RIN'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL$KEY3     ICCOMP
+      * Build field ICORAP
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY4     ICORAP
+      *
+     C                     Z-ADD1         ICCYDG
+     C                     Z-ADD1         ICRSDG
+     C                     Z-ADD242       ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     WRITEERITTRD0
+     C                     END
+      *
+     C                     END
+      *
+      * Field 12 only
+     C           $12       IFNE 0
+      *
+     C           $12       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $12       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $12       ICBVLR
+     C                     END
+      * Build field ICCOMP
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0102'    $KEY1  10
+     C                     MOVEL'ROU'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL$KEY3     ICCOMP
+      * Build field ICORAP
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY4     ICORAP
+      *
+     C                     Z-ADD2         ICCYDG
+     C                     Z-ADD1         ICRSDG
+     C                     Z-ADD1         ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     WRITEERITTRD0
+     C                     END
+      *
+     C                     END
+      *
+      * Field 21 only
+     C           $21       IFNE 0
+      *
+     C           $21       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $21       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $21       ICBVLR
+     C                     END
+      * Build field ICCOMP
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0201'    $KEY1  10
+     C                     MOVEL'NIN'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL$KEY3     ICCOMP
+      * Build field ICORAP
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY4     ICORAP
+      *
+     C                     Z-ADD1         ICCYDG
+     C                     Z-ADD2         ICRSDG
+     C                     Z-ADD242       ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     WRITEERITTRD0
+     C                     END
+      *
+     C                     END
+      *
+      * Field 22 only
+     C           $22       IFNE 0
+      *
+     C           $22       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $22       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $22       ICBVLR
+     C                     END
+      * Field ICCOMP
+     C                     MOVEL$ACOD     $KEY1  10        Financial instit.
+     C                     MOVE '0202'    $KEY1  10        Financial instit.
+     C                     MOVEL'NOU'     $KEY2   5        Financial instit.
+     C                     MOVE '02'      $KEY2   5        Financial instit.
+     C                     MOVEL$KEY1     $KEY3  15        Financial instit.
+     C                     MOVE $KEY2     $KEY3  15        Financial instit.
+     C                     MOVEL$KEY3     ICCOMP           Financial instit.
+      * Field ICORAP
+     C                     MOVEL'GLAC '   $KEY4  20        Financial instit.
+     C                     MOVE $KEY3     $KEY4  20        Financial instit.
+     C                     MOVEL$KEY4     ICORAP           Financial instit.
+      *
+     C                     Z-ADD2         ICCYDG
+     C                     Z-ADD2         ICRSDG
+     C                     Z-ADD1         ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     WRITEERITTRD0
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  GESTX4T                                                      *
+      *****************************************************************
+      *
+     C           GESX4T    BEGSR
+      *
+     C                     MOVEL*BLANK    $KEY1
+     C           A11C      SUB  A11D      $11
+     C           A12C      SUB  A12D      $12
+     C           A21C      SUB  A21D      $21
+     C           A22C      SUB  A22D      $22
+      *
+     C                     EXSR GESX4W
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  GESTX4                                                       *
+      *****************************************************************
+      *
+     C           GESX4     BEGSR
+      *
+     C                     MOVEL*BLANK    $KEY1            FINANCIAL IN
+      *
+      * Debit side
+      *
+     C                     Z-ADDA11C      $11    152
+     C                     Z-ADDA12C      $12    152
+     C                     Z-ADDA21C      $21    152
+     C                     Z-ADDA22C      $22    152
+      *
+     C                     EXSR GESX4W
+      *                                                                   204013
+      * Credit side                                                       204013
+      *                                                                   204013
+     C                     Z-SUBA11D      $11                             204013
+     C                     Z-SUBA12D      $12                             204013
+     C                     Z-SUBA21D      $21                             204013
+     C                     Z-SUBA22D      $22                             204013
+     C                     EXSR GESX4W                                    204013
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Totals for 400k                                              *
+      *  Write results to ERITTRPD                                    *
+      *****************************************************************
+      *
+     C           GESX4W    BEGSR
+      *
+      * Field 11 only
+     C           $11       IFNE 0
+      *
+     C           $11       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $11       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $11       ICBVLR
+     C                     ENDIF
+      *
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0101'    $KEY1  10
+     C                     MOVEL'INR'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY3     ICCOMP
+      *
+     C                     MOVEL$KEY4     ICORAP
+     C                     Z-ADD1         ICRSDG
+     C                     Z-ADD1         ICCYDG
+     C                     Z-ADD242       ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     EXSR FORCE                                     204013
+     C                     WRITEERITTRD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Build field 12 only
+     C           $12       IFNE 0
+      *
+     C           $12       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $12       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $12       ICBVLR
+     C                     END
+      *
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0102'    $KEY1  10
+     C                     MOVEL'OUR'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL$KEY3     ICCOMP
+      *
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY4     ICORAP
+      *
+     C                     Z-ADD1         ICRSDG
+     C                     Z-ADD2         ICCYDG
+     C                     Z-ADD1         ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     EXSR FORCE                                     204013
+     C                     WRITEERITTRD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Build field 21 only
+     C           $21       IFNE 0
+      *
+     C           $21       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $21       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $21       ICBVLR
+     C                     ENDIF
+      *
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0201'    $KEY1  10
+     C                     MOVEL'INN'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL$KEY3     ICCOMP
+      *
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY4     ICORAP
+      *
+     C                     Z-ADD2         ICRSDG
+     C                     Z-ADD1         ICCYDG
+     C                     Z-ADD242       ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     EXSR FORCE                                     204013
+     C                     WRITEERITTRD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Build field 22
+     C           $22       IFNE 0
+      *
+     C           $22       IFGT 0
+     C                     MOVEL$VODIN    ICLINI
+     C                     MOVE $VSDIN    ICILIN
+     C           100       MULT $22       ICBVLR
+     C                     ELSE
+     C                     MOVEL$VOCIN    ICLINI
+     C                     MOVE $VSCIN    ICILIN
+     C           -100      MULT $22       ICBVLR
+     C                     ENDIF
+      * Build ICCOMP
+     C                     MOVEL$ACOD     $KEY1  10
+     C                     MOVE '0202'    $KEY1  10
+     C                     MOVEL'OUN'     $KEY2   5
+     C                     MOVE '02'      $KEY2   5
+     C                     MOVEL$KEY1     $KEY3  15
+     C                     MOVE $KEY2     $KEY3  15
+     C                     MOVEL$KEY3     ICCOMP
+      * Build ICORAP
+     C                     MOVEL'GLAC '   $KEY4  20
+     C                     MOVE $KEY3     $KEY4  20
+     C                     MOVEL$KEY4     ICORAP
+      *
+     C                     Z-ADD2         ICRSDG
+     C                     Z-ADD2         ICCYDG
+     C                     Z-ADD1         ICUCCY
+      *
+     C           ICLINI    IFNE 0
+     C                     EXSR FORCE                                     204013
+     C                     WRITEERITTRD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************   204013
+      *  FORCE - Force output fields according to Bank of Italy rules *   204013
+      *****************************************************************   204013
+     C           FORCE     BEGSR                                          204013
+     C*                                                                   204013
+     C* MK001 = Voce   MK100 = Sottovoce Effettiva                        204013
+     C*                                                                   204013
+     C                     MOVELICLINI    MK001   50                      204013
+     C                     MOVE ICILIN    MK100   20                      204013
+     C*                                                                   204013
+     C           MK001     IFEQ 4021                                      204013
+     C           MK100     ANDEQ10                                        204013
+     C           MK001     OREQ 4145                                      204013
+     C           MK100     ANDEQ22                                        204013
+     C           MK001     OREQ 4166                                      204013
+     C           MK100     ANDEQ22                                        204013
+     C                     Z-ADD2         ICCYDG                          204013
+     C                     Z-ADD1         ICUCCY                          204013
+     C                     ENDIF                                          204013
+     C*                                                                   204013
+     C           MK001     IFEQ 4021                                      204013
+     C           MK100     ANDEQ18                                        204013
+     C           MK001     OREQ 4021                                      204013
+     C           MK100     ANDEQ22                                        204013
+     C           MK001     OREQ 4025                                      204013
+     C           MK100     ANDEQ32                                        204013
+     C           MK001     OREQ 4071                                      204013
+     C           MK001     OREQ 4075                                      204013
+     C           MK001     OREQ 4166                                      204013
+     C           MK100     ANDEQ18                                        204013
+     C           MK001     OREQ 4185                                      204013
+     C           MK001     OREQ 4855                                      204013
+     C           MK100     ANDEQ04                                        204013
+     C           MK001     OREQ 4855                                      204013
+     C           MK100     ANDEQ12                                        204013
+     C                     Z-ADD1         ICCYDG                          204013
+     C                     Z-ADD242       ICUCCY                          204013
+     C                     Z-ADD1         ICRSDG                          204013
+     C                     ENDIF                                          204013
+     C*                                                                   204013
+     C           MK001     IFEQ 4143                                      204013
+     C           MK100     ANDEQ06                                        204013
+     C                     Z-ADD2         ICCYDG                          204013
+     C                     Z-ADD1         ICUCCY                          204013
+     C                     Z-ADD2         ICRSDG                          204013
+     C                     ENDIF                                          204013
+     C*                                                                   204013
+     C                     ENDSR                                          204013
+      *                                                                   204013
+      *****************************************************************
+      *  INIT  - Initial processing (called by RPG Logic Cycle)       *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      * Access Bank Details
+      *
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAINSDBANKL1             80
+      *
+      * Run only if quarter end
+      *
+     C                     SELEC
+      *
+     C           BJMONT    WHEQ 'MAR'
+     C           BJMONT    OREQ 'SEP'
+     C                     MOVEA'MQ**'    PER
+      *
+     C           BJMONT    WHEQ 'JUN'
+     C                     MOVEA'MQS*'    PER
+      *
+     C           BJMONT    WHEQ 'DEC'
+     C                     MOVEA'MQSA'    PER
+      *
+     C                     OTHER
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSL
+      *
+     C           'IT'      CHAINERICDRPD             80
+      *
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'IT'      DBKEY
+     C                     MOVEL'ERICDRPD'DBFILE           ***************
+     C                     MOVE '2'       DBASE     P      * DB ERROR 02 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      * Load currency information into array
+      *
+     C                     READ SDCURRPD                 30
+      *
+     C                     Z-ADD0         X       40
+      *
+     C           *IN30     DOWEQ'0'                        - B1
+      *
+     C                     ADD  1         X
+     C                     MOVELA6CYCD    SCY,X
+     C                     Z-ADDA6NBDP    CCS,X
+     C                     MOVELA6INCY    CCI,X
+      *
+      * Read currency info from Puma extension file
+     C           A6CYCD    CHAINSDCRT1L0             80
+      *
+     C           *IN80     IFEQ *OFF
+     C                     MOVE PBUCCY    CUI,X
+     C                     ELSE
+     C                     MOVELA6CYCD    DBKEY
+     C                     MOVEL'SDCRT1L0'DBFILE           ***************
+     C                     MOVE '3'       DBASE     P      * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+     C                     READ SDCURRPD                 30
+      *
+     C                     END
+      *                                                                   206388
+      * Load array of selected branches                                   206388
+      *                                                                   206388
+     C                     Z-ADD0         X       40                      206388
+     C                     READ SDBCT1L0                 30               206388
+     C           *IN30     DOWEQ*OFF                                      206388
+     C           PAINCL    IFEQ 'Y'                                       206388
+     C                     ADD  1         X                               206388
+     C                     MOVELPABRCD    BRA,X                           206388
+     C                     ENDIF                                          206388
+     C                     READ SDBCT1L0                 30               206388
+     C                     ENDDO                                          206388
+      *                                                                   206388
+      * If no branches selected, leave program                            206388
+      *                                                                   206388
+     C           X         IFEQ *ZERO                                     206388
+     C                     MOVE *ON       *INLR                           206388
+     C                     RETRN                                          206388
+     C                     ENDIF                                          206388
+      *
+      * Set up keys and vars
+     C           KCHAN     KLIST
+     C                     KFLD           CCY
+     C                     KFLD           PSTD
+      *
+     C           KEYEX     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           $LOT
+     C                     KFLD           $DEK
+      *
+     C                     MOVEL'GLA'     $LOT    3
+     C                     MOVEL*BLANKS   $DEK   14
+      *
+      * Determine Divisor for Base Currency
+      *
+     C           BJCYCD    CHAINERCURRL1             80
+     C                     Z-ADD1         DIVBC   40
+     C***********          DO   A6NBDP                                    204013
+     C                     DO   VRNBDP                                    204013
+     C                     MULT 10        DIVBC
+     C                     ENDDO
+      *
+     C                     Z-ADD0         XZ      40
+     C                     Z-ADD0         YZ      40
+      *
+      * Read the account codes
+     C                     EXSR $READ
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  Read account codes info                                      *
+      *  Load all account codes satisfying the 400k or 500k condition *
+      *****************************************************************
+      *
+     C           $READ     BEGSR
+      *
+     C                     READ ERITACL1                 30
+      *
+      * Setup temp variables
+     C                     MOVEL*ZERO     CAMPOV
+      *
+      * Loop through the file: only one value for range will be detected|
+      *
+     C           *IN30     DOWEQ'0'
+      *
+      * Reset temp variables
+     C                     Z-ADD0         TROVD   10
+     C                     Z-ADD0         TROVC   10
+      *
+      * 400000-499999: Debit side
+      *
+     C                     SELEC
+      *
+     C           N3RBND    WHGE 400000
+     C           N3RBND    ANDLE499999
+     C                     MOVELN3RBND    $VODIN
+     C                     MOVE N3RBED    $VSDIN
+     C                     MOVE 'S'       $VSDPE
+      *
+     C           N3CPND    WHGE 400000
+     C           N3CPND    ANDLE499999
+     C                     MOVELN3CPND    $VODIN
+     C                     MOVE N3CEND    $VSDIN
+     C                     MOVE N3CRND    $VSDPE
+      *
+     C           N3CP1D    WHGE 400000
+     C           N3CP1D    ANDLE499999
+     C                     MOVELN3CP1D    $VODIN
+     C                     MOVE N3CE1D    $VSDIN
+     C                     MOVE N3CR1D    $VSDPE
+      *
+     C           N3CP2D    WHGE 400000
+     C           N3CP2D    ANDLE499999
+     C                     MOVELN3CP2D    $VODIN
+     C                     MOVE N3CE2D    $VSDIN
+     C                     MOVE N3CR2D    $VSDPE
+      *
+     C                     OTHER
+      * Dummy flag to stop copy
+     C                     Z-ADD1         TROVD
+     C                     ENDSL
+      *
+      * 400000-499999: Credit side
+      *
+     C                     SELEC
+      *
+     C           N3RBNC    WHGE 400000
+     C           N3RBNC    ANDLE499999
+     C                     MOVELN3RBNC    $VOCIN
+     C                     MOVE N3RBEC    $VSCIN
+     C                     MOVE 'S'       $VSCPE
+      *
+     C           N3CPNC    WHGE 400000
+     C           N3CPNC    ANDLE499999
+     C                     MOVELN3CPNC    $VOCIN
+     C                     MOVE N3CENC    $VSCIN
+     C                     MOVE N3CRNC    $VSCPE
+      *
+     C           N3CP1C    WHGE 400000
+     C           N3CP1C    ANDLE499999
+     C                     MOVELN3CP1C    $VOCIN
+     C                     MOVE N3CE1C    $VSCIN
+     C                     MOVE N3CR1C    $VSCPE
+      *
+     C           N3CP2C    WHGE 400000
+     C           N3CP2C    ANDLE499999
+     C                     MOVELN3CP2C    $VOCIN
+     C                     MOVE N3CE2C    $VSCIN
+     C                     MOVE N3CR2C    $VSCPE
+      *
+     C                     OTHER
+      * Dummy flag to stop copy
+     C                     Z-ADD1         TROVC
+     C                     ENDSL
+      *
+      * Dump values in the array, if found any
+      *
+     C           TROVD     IFEQ 0
+     C           TROVC     OREQ 0
+      *
+      * Move values for 400000-499999 range
+     C                     ADD  1         XZ
+     C                     MOVE N3ACOD    $ACOD
+     C                     MOVE N3LIRK    $TRATE
+      *
+     C                     MOVELCAMPOV    VS4,XZ
+     C                     MOVE CAMPOV    VD4,XZ
+     C                     MOVEL*ZERO     CAMPOV
+      *
+     C                     ENDIF
+      *
+      * Reset temp variables
+     C                     Z-ADD0         TROVD
+     C                     Z-ADD0         TROVC
+      *
+      * 500000-599999: Debit side
+      *
+     C                     SELEC
+      *
+     C           N3RBND    WHGE 500000
+     C           N3RBND    ANDLE599999
+     C                     MOVELN3RBND    $VODIN
+     C                     MOVE N3RBED    $VSDIN
+     C                     MOVE 'Q'       $VSDPE
+      *
+     C           N3CPND    WHGE 500000
+     C           N3CPND    ANDLE599999
+     C                     MOVELN3CPND    $VODIN
+     C                     MOVE N3CEND    $VSDIN
+     C                     MOVE N3CRND    $VSDPE
+      *
+     C           N3CP1D    WHGE 500000
+     C           N3CP1D    ANDLE599999
+     C                     MOVELN3CP1D    $VODIN
+     C                     MOVE N3CE1D    $VSDIN
+     C                     MOVE N3CR1D    $VSDPE
+      *
+     C           N3CP2D    WHGE 500000
+     C           N3CP2D    ANDLE599999
+     C                     MOVELN3CP2D    $VODIN
+     C                     MOVE N3CE2D    $VSDIN
+     C                     MOVE N3CR2D    $VSDPE
+      *
+     C                     OTHER
+      * Dummy flag to stop copy
+     C                     Z-ADD1         TROVD
+     C                     ENDSL
+      *
+      * 500000-599999: Credit side
+      *
+     C                     SELEC
+      *
+     C           N3RBNC    WHGE 500000
+     C           N3RBNC    ANDLE599999
+     C                     MOVELN3RBNC    $VOCIN
+     C                     MOVE N3RBEC    $VSCIN
+     C                     MOVE 'Q'       $VSCPE
+      *
+     C           N3CPNC    WHGE 500000
+     C           N3CPNC    ANDLE599999
+     C                     MOVELN3CPNC    $VOCIN
+     C                     MOVE N3CENC    $VSCIN
+     C                     MOVE N3CRNC    $VSCPE
+      *
+     C           N3CP1C    WHGE 500000
+     C           N3CP1C    ANDLE599999
+     C                     MOVELN3CP1C    $VOCIN
+     C                     MOVE N3CE1C    $VSCIN
+     C                     MOVE N3CR1C    $VSCPE
+      *
+     C           N3CP2C    WHGE 500000
+     C           N3CP2C    ANDLE599999
+     C                     MOVELN3CP2C    $VOCIN
+     C                     MOVE N3CE2C    $VSCIN
+     C                     MOVE N3CR2C    $VSCPE
+      *
+     C                     OTHER
+      * Dummy flag to stop copy
+     C                     Z-ADD1         TROVC
+     C                     ENDSL
+      *
+      * Dump values in the array, if found any
+      *
+     C           TROVD     IFEQ 0
+     C           TROVC     OREQ 0
+      *
+     C                     ADD  1         YZ
+     C                     MOVE N3ACOD    $ACOD
+     C                     MOVE N3LIRK    $TRATE
+      *
+     C                     MOVELCAMPOV    VS5,YZ
+     C                     MOVE CAMPOV    VD5,YZ
+     C                     MOVEL*ZERO     CAMPOV
+      *
+     C                     ENDIF
+      *
+     C                     READ ERITACL1                 30
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Send return code 'Y2U0004' to control program to identify
+      *  that a database error has occurred
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR

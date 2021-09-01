@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *  Last Amend No. MD058540           Date 24Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057049           Date 03Nov20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD047719           Date 24Jul18               *
@@ -157,6 +158,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058540 - Removed excess parameters when calling ZAVSPRRATE *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *
@@ -2331,10 +2333,10 @@
      C                   PARM                    DDCCY
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    BNDCSP
-      ** Action code                                                                          CDL033
-     C                   PARM                    DDACTN                                       CDL033
-      ** Called from confirmation screen?                                                     CDL033
-     C                   PARM                    PCONF                                        CDL033
+      ***Action*code                                                                 MD058540 CDL033
+     C**********         PARM                    DDACTN                              MD058540 CDL033
+      ***Called*from confirmation screen?                                            MD058540 CDL033
+     C**********         PARM                    PCONF                               MD058540 CDL033
 
       /COPY WNCPYSRC,MMLDNIV038
 

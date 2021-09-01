@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *  Last Amend No. MD058540           Date 24Aug21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD031031           Date 24Feb15               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
@@ -1593,6 +1595,8 @@
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidREPO
      C                   PARM      'Y'           RepoFlag          1
+      ** Called from confirmation screen?                                                   MD058540
+     C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMREPOC021
 
      C                   ENDSR

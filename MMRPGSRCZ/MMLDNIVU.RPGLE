@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. MD056313           Date 21Sep20               *
+      *  Last Amend No. MD058540           Date 24Aug21               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 MD056313           Date 21Sep20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
@@ -139,6 +140,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD057049 - Move value of IKRRAT to HKRRAT                    *
       *  MD056313 - Deal settlement not validated during authorize    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -2523,6 +2525,8 @@
      C                   PARM                    ValidDeal
      C*******************PARM      'N'           RepoFlag          1                          CAP087
      C                   PARM                    RepoFlag          1                          CAP087
+      ** Called from confirmation screen?                                                   MD058540
+     C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMLDNIXC04
       *                                                                                       CDL016
       * If errors bypass Screen 2 validation                                                  CDL016

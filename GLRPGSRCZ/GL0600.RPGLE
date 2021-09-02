@@ -13,7 +13,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. LUC139             Date 07Jan21               *
-      *  Prev Amend No. Bug14762(CER009)   Date 13Nov20               *
+      *  Prev Amend No. BUG4762(CER009)   Date 13Nov20                *
       *                 MD036688           Date 19Oct16               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055785           Date 20May20               *
@@ -199,7 +199,7 @@
       *  LUC139 - UIC Italian returns upgrade to FM2.1                *
       *  BUG14762 - Database error in ERREPORT job during COB run as  *
       *             record was not found in REACTXPD (CER009)         *
-      *    CER009 - Puma II Upgrade to FM2.1                          *
+      *  CER009 - Puma II Upgrade to FM2.1                            *
       *  MD036688 - Discreprancy in report between FB Midas and       *
       *             Midas Plus.  FB Midas has excluded previous       *
       *             posting dates with forward values                 *

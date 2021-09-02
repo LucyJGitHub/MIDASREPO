@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. BUG7555            Date 16Feb21               *
+      *  Last Amend No. MD058498           Date 31Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 BUG7555            Date 16Feb21               *
       *                 AR921987           Date 23Mar12               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -108,6 +109,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058498 - Two cover screens are not displayed in routed     *
+      *             incoming payments. Jump to the end of subroutine  *
+      *             EScrn_D if CSW209 is OFF so cover screens are     *
+      *             displayed if CSW209 is ON.                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  BUG7555 - When an incoming message is routed to incoming     *
@@ -5568,7 +5573,9 @@
      C                   EVAL      WScrn = 'F'                                             BUG14494A
      C                   ENDIF                                                             BUG14494A
       *                                                                                       CER001
+     C                   IF        CSW209 <> 'Y'                                            MD058498
      C                   GOTO      EScrn_D                                      CFT014
+     C                   ENDIF                                                              MD058498
      C                   ENDIF                                                  CFT014
       *                                                                                       CSW209
       ** Display Cover message if SWIFT 2009 is ON                                            CSW209

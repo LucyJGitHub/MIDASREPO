@@ -1,20 +1,21 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas DL BASE RATES UPDATE')                          */
-/********************************************************************/
-/*                                                                  */
-/*        Midas     - Dealing Module                            */
-/*                                                                  */
-/*       DLC0605 - BASE RATE CHANGES UPDATE                         */
-/*                                                                  */
+/*EXI    TEXT('Midas DL BASE RATES UPDATE')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       DLC0605 - BASE RATE CHANGES UPDATE                          */
+/*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*                                                                   */
+/*       Last Amend No. MD058708           Date 31Aug21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAS009             Date 04May04              */
+/*                      CAS009             Date 04May04              */
 /* Midas Release 4.01.03 --------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -22,10 +23,12 @@
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      E22196             Date 20Jun90              */
 /*                      E250               Date 01Mar90              */
-/*                      S01117                  DATE  13/07/89      */
-/*                      S01194                  DATE  18/04/89      */
-/*                                                                  */
-/*------------------------------------------------------------------*/
+/*                      S01117             DATE 13/07/89             */
+/*                      S01194             DATE 18/04/89             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD058708 - Add recovery process for file DLLIBEPD           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
 /*       P01101 - SDBANKL1 cannot be opened from DL0250 because this */
@@ -49,9 +52,9 @@
              DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
 /**DCL*VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number * *S01117 /*E250*/
 /*/COPY WNCPYSRC,DLC0605001                                          */
- 
+
 /**********  CHGVAR     VAR(&RSEQ) VALUE('     ')             /*S01117/*E250*/
- 
+
                                                                                           /*CAS009*/
 /* Declare the variables CAS009 */                                                        /*CAS009*/
                                                                                           /*CAS009*/
@@ -62,6 +65,7 @@
              DCL        VAR(&CAS009) TYPE(*CHAR) LEN(1)                                   /*CAS009*/
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                    /*CAS009*/
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CAS009*/
+             DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD058708*/
                                                                                           /*CAS009*/
 /* Setup system prefix variable from SDSTAT data area. */                                 /*CAS009*/
                                                                                           /*CAS009*/
@@ -79,7 +83,17 @@
              CHGVAR     VAR(&CAS009) VALUE('N')                                           /*CAS009*/
              IF         COND(&RTCD *EQ '       ') +
                           THEN(CHGVAR VAR(&CAS009) VALUE('Y'))                            /*CAS009*/
- 
+                                                                                        /*MD058708*/
+/** Check if CDL102 is enabled */                                                       /*MD058708*/
+                                                                                        /*MD058708*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD058708*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD058708*/
+             CHGVAR     VAR(&SARD) VALUE('CDL102')                                      /*MD058708*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                   /*MD058708*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD058708*/
+                CHGVAR     VAR(&CDL102) VALUE('Y')                                      /*MD058708*/
+             ENDDO                                                                      /*MD058708*/
+
 /*   BASE RATE CHANGES                                        */
              SNDPGMMSG  MSG('BASE RATE CHANGES') TOMSGQ(MRUNQ) +
                         MSGTYPE(*INFO)
@@ -98,6 +112,14 @@
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                 /*CAS009*/
              ENDDO                                                                        /*CAS009*/
                                                                                           /*CAS009*/
+             IF         COND(&CDL102 *EQ 'Y') THEN(DO)                                  /*MD058708*/
+                DLTF       FILE(XDLLIBEPD)                                              /*MD058708*/
+                MONMSG     MSGID(CPF2105)                                               /*MD058708*/
+                CPYF       FROMFILE(DLLIBEPD) TOFILE(&DPLIB/XDLLIBEPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD058708*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD058708*/
+             ENDDO                                                                      /*MD058708*/
+                                                                                        /*MD058708*/
 /*********** OVRDBF     FILE(TABLE) TOFILE(TABDLEE)                   /*S01194*/
 /*********** OVRDBF     FILE(TABLE2) TOFILE(TABDLEI)                  /*S01194*/
              OVRDBF     FILE(SDBANKL1) SHARE(*NO)                     /*P01101*/
@@ -129,6 +151,21 @@
                              FILE(MMEIRDPD))                                              /*CAS009*/
                ENDDO                                                                      /*CAS009*/
              ENDDO                                                                        /*CAS009*/
+                                                                                        /*MD058708*/
+             IF         COND(&CDL102 *EQ 'Y') THEN(DO)                                  /*MD058708*/
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                             /*MD058708*/
+                   DLTF       FILE(XDLLIBEPD)                                           /*MD058708*/
+                   MONMSG     MSGID(CPF2105)                                            /*MD058708*/
+                ENDDO                                                                   /*MD058708*/
+                IF         COND(%SWITCH(XXXXXX1X) *OR +
+                             %SWITCH(XXXXXXX1)) THEN(DO)                                /*MD058708*/
+                   CPYF       FROMFILE(XDLLIBEPD) TOFILE(DLLIBEPD) +
+                                MBROPT(*REPLACE)                                        /*MD058708*/
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                                FILE(DLLIBEPD))                                         /*MD058708*/
+               ENDDO                                                                    /*MD058708*/
+             ENDDO                                                                      /*MD058708*/
+                                                                                        /*MD058708*/
 /*   ERROR MESSAGES                                          */
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
                 SNDPGMMSG  MSG('JOB TERMINATED-DATABASE IN ERROR') +

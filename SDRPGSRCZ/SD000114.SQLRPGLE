@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058182           Date 25May21               *
+      *  Lats Amend No. MD058708           Date 31Aug21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
       *                 MD058138           Date 18May21               *
       *                 MD058106           Date 18May21               *
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058708 - SD001110P2 does not reflect BC specific changes   *
+      *             (base rate code and ARR parameters). Add Base     *
+      *             Rate Code field in extract file.                  *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Pass a Control Date to   *
@@ -418,7 +422,8 @@
      C*********NIDT, NRPD, REPT, ADDI, BLRT,                                                  CDL102
      C+        NIDT, NRPD, REPT, SLID, ADDI, BLRT,                                            CDL102
      C+        RFRR, CALM, BADJ, FLOR, LBDY,
-     C+        LODY, OPSH, RRDP, DBAV
+     C*********LODY, OPSH, RRDP, DBAV                                                       MD058708
+     C+        LODY, OPSH, RRDP, DBAV, BRTT                                                 MD058708
      C+ from CLOANCL
      C+ where RECI = 'D' and VDAT < :BJDNWD
      C+   and BLRT = 'Y' and CALM <> 'MANL'
@@ -429,7 +434,8 @@
      C*********NIDT,   NRPD,   REPT,   ADDI,   ROBLRT,                                 CLE172 CDL102
      C+        NIDT,   NRPD,   REPT,   SLID,   ADDI,   ROBLRT,                                CDL102
      C+        RORFRR, ROCALM, ROBADJ, ROFLOR, ROLBDY,                                        CLE172
-     C+        ROLODY, ROOPSH, RORRDP, RODBAV                                                 CLE172
+     C*********ROLODY, ROOPSH, RORRDP, RODBAV                                        CLE172 MD058708
+     C+        ROLODY, ROOPSH, RORRDP, RODBAV, BRTT                                         MD058708
      C+ from LEROBLPD                                                                         CLE172
      C+ left join CLOANCL                                                                     CLE172
      C+ on ROLNRF = LNRF                                                                      CLE172
@@ -447,6 +453,7 @@
      C+ select digits(a.HNDA38), a.HNDVSD,                                                    CDL102
      C+        a.HNBLRT, a.HNRFRR, a.HNCALM, a.HNBADJ, a.HNFLOR,                              CDL102
      C+        a.HNLBDY, a.HNLODY, a.HNOPSH, a.HNRRDP, a.HNDBAV                               CDL102
+     C+      , a.HNBSRT                                                                     MD058708
      C+ from MMDEAMPP a                                                                       CDL102
      C+ where a.HNDS38 in                                                                     CDL102
      C+       (select max(b.HNDS38)                                                           CDL102
@@ -464,7 +471,8 @@
      C+        CCY,  VDAT, MDAT,                                                              CDL102
      C+        NIDT, 0, 0, SLID, JFLID,                                                       CDL102
      C+        DLBLRT, DLRFRR, DLCALM, DLBADJ, DLFLOR,                                        CDL102
-     C+        DLLBDY, DLLODY, DLOPSH, DLRRDP, DLDBAV                                         CDL102
+     C*********DLLBDY, DLLODY, DLOPSH, DLRRDP, DLDBAV                                CDL102 MD058708
+     C+        DLLBDY, DLLODY, DLOPSH, DLRRDP, DLDBAV, DLBRTT                               MD058708
      C+ from DLBCAMPD                                                                         CDL102
      C+ inner join DEALSDC                                                                    CDL102
      C+ on DLDLNO = DLNO                                                                      CDL102
@@ -479,7 +487,8 @@
      C+        CCY,  VDAT, MDAT,                                                              CDL102
      C+        NIDT, 0, 0, SLID, JFLID,                                                       CDL102
      C+        BLRT, RFRR, CALM, BADJ, FLOR,                                                  CDL102
-     C+        LBDY, LODY, OPSH, RRDP, DBAV                                                   CDL102
+     C*********LBDY, LODY, OPSH, RRDP, DBAV                                          CDL102 MD058708
+     C+        LBDY, LODY, OPSH, RRDP, DBAV, BRTT                                           MD058708
      C+ from DEALSDC                                                                          CDL102
      C+ where RECI = 'D' and VDAT < :BJDNWD                                                   CDL102
      C+   and BLRT = 'Y' and CALM <> 'MANL'                                                   CDL102

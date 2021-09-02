@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 18Mar2004             *
+      *                 EEE065   *CREATE   Date 18Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -470,7 +470,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   END                                                    FI
- 
+
       * Define key
      C     KMTAGL1       Klist                                                  IF
      C                   Kfld                    EFMTAG                         IF
@@ -489,7 +489,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
       * Define key
      C     KMSTCV1       Klist                                                  IF
      C                   Kfld                    MKTEST                         IF
@@ -975,7 +975,7 @@
       *================================================================
       * Move @MSTVV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     MVMTAG        #1MTAG
      C                   MOVEL     MVTEST        #1TEST
      C                   MOVEL     MVTSTD        #1TSTD
@@ -983,7 +983,7 @@
      C                   MOVEL     MVDES2        #1DES2
      C                   MOVEL     MVDES3        #1DES3
      C                   MOVEL     MVRECI        #1RECI
- 
+
      C                   MOVEL     MVAJOB        #1AJOB                         Job name
      C                   MOVEL     MVAACT        #1AACT                         Action Type
      C                   Z-ADD     MVRDNB        #1RDNB                         Run day number
@@ -1001,11 +1001,11 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1MTAG
      C                   MOVEL     *Blanks       #1TEST
      C                   MOVEL     *BLANKS       #1TSTD
- 
+
      C                   MOVEL     P2MTAG        #1MTAG
      C                   MOVEL     P2TEST        #1TEST
      C                   MOVEL     P2TSTD        #1TSTD
@@ -1482,9 +1482,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

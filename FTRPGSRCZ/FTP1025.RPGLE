@@ -17,7 +17,7 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
       *                 Djb003             Date 18mar2005             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -464,7 +464,7 @@
      C                   END                                                    FI
       *
      C                   If        #1lccy <> *blanks                            IF
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -489,10 +489,10 @@
      C                   Endif
       *
      C                   Endif                                                  FI
- 
+
      C     KBICD1        Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
- 
+
       * Define key
      C     KBICD         Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
@@ -501,7 +501,7 @@
      C                   Clear                   #1Ins1
      C                   Clear                   #1Ins2
      C                   Clear                   #1Ins3
- 
+
      C                   Eval      BDBICC = #1BICC
      C                   Eval      BDBICB = #1BICB
       * Get data
@@ -519,7 +519,7 @@
      C                   Eval      ZAMSDA = #1BICB + #1BICB
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
      C                   When      Not %Found and #1BICB = *blanks
      C                   Eval      BDBICB = 'XXX'
      C     KBICD         Chain     @BICDL2                                      IF
@@ -1041,7 +1041,7 @@
       *================================================================
       * Move @LcorV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     bdbicc        #1bicc
      C                   MOVEL     bdbicb        #1bicb
      C                   MOVEL     bdlccy        #1lccy
@@ -1053,7 +1053,7 @@
      C                   MOVEL     bdDES1        #1DES1
      C                   MOVEL     bdDES2        #1DES2
      C                   MOVEL     bdDES3        #1DES3
- 
+
      C                   MOVEL     bdAJOB        #1AJOB                         Job name
      C                   MOVEL     bdAACT        #1AACT                         Action Type
      C                   Z-ADD     bdRDNB        #1RDNB                         Run day number
@@ -1071,11 +1071,11 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1Bicc
      C                   MOVEL     *Blanks       #1Bicb
      C                   MOVEL     *Blanks       #1lccy
- 
+
      C                   MOVEL     P2Bicc        #1Bicc
      C                   MOVEL     P2Bicb        #1Bicb
      C                   MOVEL     P2Lccy        #1Lccy
@@ -1551,9 +1551,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 18Mar2004             *
+      *                 EEE065   *CREATE   Date 18Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -480,7 +480,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   END                                                    FI
- 
+
       * Define key
      C     KMTAGL1       Klist                                                  IF
      C                   Kfld                    EFMTAG                         IF
@@ -504,7 +504,7 @@
       * BIC Identifier
      C                   Eval      #1INS1 = *blanks
      C                   If        #1BICC <> *Blanks                            IF
- 
+
       * Define key
      C     KBICD         Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
@@ -680,7 +680,7 @@
      C                   Eval      *In31 = *On
      C                   Movel     'Y'           W0DCF
      C                   Endif
- 
+
       * Define key
      C     KMSTVV1       Klist                                                  IF
      C                   Kfld                    MVMTAG                         IF
@@ -1055,7 +1055,7 @@
       *================================================================
       * Move @MSTRV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     MSBICC        #1BICC
      C                   MOVEL     MSBICB        #1BICB
      C                   MOVEL     MSLVPA        #1LVPA
@@ -1068,7 +1068,7 @@
      C                   MOVEL     MSDER2        #1DER2
      C                   MOVEL     MSDER3        #1DER3
      C                   MOVEL     *BLANKS       #1INS1
- 
+
      C                   MOVEL     MSAJOB        #1AJOB                         Job name
      C                   MOVEL     MSAACT        #1AACT                         Action Type
      C                   Z-ADD     MSRDNB        #1RDNB                         Run day number
@@ -1096,13 +1096,13 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1BICC
      C                   MOVEL     *Blanks       #1BICB
      C                   MOVEL     *Blanks       #1LVPA
      C                   MOVEL     *Blanks       #1REGP
      C                   MOVEL     *BLANKS       #1INS1
- 
+
      C                   MOVEL     P2BICC        #1BICC
      C                   MOVEL     P2BICB        #1BICB
      C                   MOVEL     P2LVPA        #1LVPA
@@ -1632,9 +1632,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

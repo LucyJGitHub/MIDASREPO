@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -799,8 +799,8 @@
       * Move @PcExV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
- 
+
+
      C                   Eval      #1IBAN  = PCIBAN
      C                   Eval      #1RNB1  = PCRNB1
      C                   Eval      #1RNB2  = PCRNB2
@@ -824,7 +824,7 @@
      C                   Eval      #1PENR  = PCPENR
      C                   Eval      #1ASTS  = PCASTS
      C                   Eval      #1CUST  = PCCUST
- 
+
      C                   MOVEL     pcAJOB        #1AJOB                         Job name
      C                   MOVEL     pcAUSR        #1AUSR                         User name
      C                   Z-ADD     pcATIM        #1ATIM                         Action Time

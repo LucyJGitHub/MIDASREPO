@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -508,7 +508,7 @@
       *
      C                   If        #1CyCd <> *blanks                            IF
      C                             and #1CyCd <> 'ALL'
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -777,7 +777,7 @@
      C                   Endif
       *
      C                   If        #1qccy <> *blanks                            IF
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -837,7 +837,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM1A
       * Cheque amount must be greater than0
       *
@@ -878,7 +878,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM2A
       * Cheque amount must be greater than0
       *
@@ -919,7 +919,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM3A
       * Cheque amount must be greater than0
       *
@@ -960,7 +960,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM4A
       * Cheque amount must be greater than0
       *
@@ -1001,7 +1001,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM5A
       * Cheque amount must be greater than0
       *
@@ -1042,7 +1042,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM6A
       * Cheque amount must be greater than0
       *
@@ -1083,7 +1083,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM7A
       * Cheque amount must be greater than0
       *
@@ -1124,7 +1124,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM8A
       * Cheque amount must be greater than0
       *
@@ -1314,7 +1314,7 @@
      C                   Eval      ArrDlr(##Ptr) = #1Dlr9
       * Validate
      C                   For       ##ptr = 1 to 9
- 
+
       * Dealer rate and amount not valid
      C                   If        ArrDlr(##ptr) = 'Y'
      C                             and Arrlimit(##Ptr) <> 0
@@ -1326,7 +1326,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
       * Dealer rate and spread set not valid
      C                   If        ArrDlr(##ptr) = 'Y'
      C                             and ArrSpread(##Ptr) <> *blanks
@@ -1338,7 +1338,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
       * Duplicate Dealer rates
      C                   If        ArrDlr(##ptr) = 'Y'
      C                             and ArrDlr(##Ptr+1) = 'Y'
@@ -1350,7 +1350,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
       * Limit amount ascending
      C                   If        ArrLimit(##ptr) <> 0
      C                             and Arrlimit(##Ptr) >=
@@ -1364,7 +1364,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
       * Limit amount and spread mandatory if set non blank
      C                   If        ArrLimit(##ptr) = 0
      C                             and Arrlimit(##Ptr+1) <> 0
@@ -1379,7 +1379,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
       * Limit amount and spread mandatory if next is dealer rate
      C                   If        ArrLimit(##ptr) = 0
      C                             and Arrdlr(##Ptr+1) = 'Y'
@@ -1394,7 +1394,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   Endfor
       *
       *
@@ -1744,7 +1744,7 @@
       *================================================================
       * Move @FxGpV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     GPSNBR        #1SNBR
      C                   MOVEL     GPGPCD        #1GPCD
      C                   MOVEL     GPSTPR        #1STPR
@@ -1780,7 +1780,7 @@
      C                   MOVEL     gpDES1        #1DES1
      C                   MOVEL     gpDES2        #1DES2
      C                   MOVEL     gpDES3        #1DES3
- 
+
      C                   MOVEL     gpAJOB        #1AJOB                         Job name
      C                   MOVEL     gpAACT        #1AACT                         Action Type
      C                   Z-ADD     gpRDNB        #1RDNB                         Run day number
@@ -1789,7 +1789,7 @@
      C                   Z-ADD     gpATIM        #1ATIM                         Action Time
       * Hold existing record image
      C                   MOVEL     @1DBRC        #1DBRC
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -1810,7 +1810,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM1A
       * Cheque amount must be greater than0
       *
@@ -1827,7 +1827,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM2A
       * Cheque amount must be greater than0
       *
@@ -1844,7 +1844,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM3A
       * Cheque amount must be greater than0
       *
@@ -1861,7 +1861,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM4A
       * Cheque amount must be greater than0
       *
@@ -1878,7 +1878,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM5A
       * Cheque amount must be greater than0
       *
@@ -1895,7 +1895,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM6A
       * Cheque amount must be greater than0
       *
@@ -1912,7 +1912,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM7A
       * Cheque amount must be greater than0
       *
@@ -1929,7 +1929,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:7     #1LAM8A
       * Cheque amount must be greater than0
       *
@@ -1944,12 +1944,12 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1Snbr
      C                   MOVEL     *Blanks       #1Gpcd
      C                   MOVEL     *Blanks       #1Stpr
      C                   MOVEL     *Blanks       #1CyCd
- 
+
      C                   MOVEL     P2Snbr        #1Snbr
      C                   MOVEL     P2Gpcd        #1Gpcd
      C                   MOVEL     P2Stpr        #1Stpr
@@ -2567,9 +2567,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

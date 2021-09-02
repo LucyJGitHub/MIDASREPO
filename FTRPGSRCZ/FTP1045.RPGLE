@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -440,9 +440,9 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   END                                                    FI
- 
+
      C                   If        #1CNCD <> *blanks
- 
+
       * Get currency details
       *
      C                   CALL      'AOCTRYR0'                           9090
@@ -948,7 +948,7 @@
       *================================================================
       * Move @RCTYV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     RCCNCD        #1CNCD
      C                   MOVEL     RcMinp        #1Minp
      C                   MOVEL     RcRpti        #1Rpti
@@ -956,7 +956,7 @@
      C                   MOVEL     RcDes1        #1DES1
      C                   MOVEL     RcDes2        #1DES2
      C                   MOVEL     RcDes3        #1DES3
- 
+
      C                   MOVEL     RcAJOB        #1AJOB                         Job name
      C                   MOVEL     RcAACT        #1AACT                         Action Type
      C                   Z-ADD     RcRDNB        #1RDNB                         Run day number
@@ -967,7 +967,7 @@
      C                   MOVEL     @1DBRC        #1DBRC
       * Get description data
      C                   If        #1CNCD <> *blanks
- 
+
       * Get currency details
       *
      C                   CALL      'AOCTRYR0'                           9090
@@ -990,9 +990,9 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1CNCD
- 
+
      C                   MOVEL     P2CNCD        #1CNCD
       * USER: Initialise key screen
       * Option Name
@@ -1443,9 +1443,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

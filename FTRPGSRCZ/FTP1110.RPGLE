@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -873,22 +873,22 @@
       * Move @CcutV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     ccRECI        #1RECI
- 
+
      C                   MOVEL     ccCyCd        #1CyCd
      C                   MOVEL     ccNwrk        #1Nwrk
      C*****              MOVEL     ccBseg        #1Bseg                                       STP499
      C                   MOVEL     ccGPCD        #1GPCD                                       STP499
      C                   MOVEL     ccMtpy        #1Mtpy
- 
+
      C                   MOVEL     ccIdoc        #1Idoc
      C                   MOVEL     ccIcut        #1Icut
- 
+
      C                   MOVEL     ccDES1        #1DES1
      C                   MOVEL     ccDES2        #1DES2
      C                   MOVEL     ccDES3        #1DES3
- 
+
      C                   MOVEL     ccAJOB        #1AJOB                         Job name
      C                   MOVEL     ccAUSR        #1AUSR                         User name
      C                   Z-ADD     ccATIM        #1ATIM                         Action Time

@@ -18,7 +18,7 @@
       *                 PNL014             Date 08dec2005             *
       *                 MM0505             Date 04May2005             *
       *                 ESL038             Date 18Jan2005             *
-      *                 EEE065             Date 15Jun2004             *
+      *                 EEE065   *CREATE   Date 15Jun2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -141,7 +141,7 @@
      D S#Tseq          S                   Like(MsTseq)
       *
      D MVDATE          S              5P 0                                                    MM0505
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -155,9 +155,9 @@
       *
      C                   Clear                   P0Rtn
      C                   MOVEL     'Validate'    W0PREF
- 
+
      C                   Exsr      SrInit
- 
+
      C                   Select
                                                                                               ESL038
       * See if Services Regulated Payment                                                     ESL038
@@ -166,16 +166,16 @@
       * See if Regulated Payment
      C                   When      P0Action = 'REG'
      C                   Exsr      SrREGr
- 
+
       * See if STP route
      C                   When      P0Action = 'STP'
      C                   Exsr      SrSTPr
- 
+
       * See if LVP route
      C                   When      P0Action = 'LVP'
      C                   Exsr      SrLVPr
      C                   Endsl
- 
+
       * Exit, do not close down
      C                   Return
       *
@@ -360,44 +360,44 @@
      C     KMstrV1r      Reade     @MStrV1                                90
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
       * Process record read
      C                   Exsr      SrVReq
- 
+
       * Save previous setting
      C                   Eval      S#Mtag = MsMtag
      C                   Eval      S#Tseq = MsTseq
- 
+
      C     KMstrV1r      Reade     @MStrV1                                90
       * Leave if end of set
      C                   If        *In90 = *On
- 
+
       * If last condition is false then set to fail
      C                   If        W#Valid = 'False'
      C                   Eval      MoRegF = 'N'
      C                   Endif
      C                   Leave
      C                   Endif
- 
+
       * Tag has changed and previous condition is false
      C                   If        W#Valid = 'False'
      C                             and S#Mtag <> MsMtag
      C                   Eval      MoRegF = 'N'
      C                   Leave
      C                   Endif
- 
+
       * Tag is the same and first character is the same
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) = %subst(MsTseq:1:1)
      C*********          Eval      MoRegF = 'N'
      C                   Endif
- 
+
       * Tag is the same and first character is not
      C                   If        W#Valid = 'True'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
- 
+
       * Read until tag changes or end of set
      C                   Dou       *In90 = *On
      C                             or  S#Mtag <> MsMtag
@@ -408,14 +408,14 @@
      C                   Endif
      C                   Enddo
      C                   Endif
- 
+
       * Tag is the same and new set then start with True
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
      C                   Eval      W#Valid = 'True'
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
      C                   Endif
@@ -497,44 +497,44 @@
      C     KMstrV1r      Reade     @MStrV1                                90
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
       * Process record read
      C                   Exsr      SrVReq
- 
+
       * Save previous setting
      C                   Eval      S#Mtag = MsMtag
      C                   Eval      S#Tseq = MsTseq
- 
+
      C     KMstrV1r      Reade     @MStrV1                                90
       * Leave if end of set
      C                   If        *In90 = *On
- 
+
       * If last condition is false then set to fail
      C                   If        W#Valid = 'False'
      C                   Eval      MoStpF = 'N'
      C                   Endif
      C                   Leave
      C                   Endif
- 
+
       * Tag has changed and previous condition is false
      C                   If        W#Valid = 'False'
      C                             and S#Mtag <> MsMtag
      C                   Eval      MoStpF = 'N'
      C                   Leave
      C                   Endif
- 
+
       * Tag is the same and first character is the same
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) = %subst(MsTseq:1:1)
      C******             Eval      MoStpF = 'N'
      C                   Endif
- 
+
       * Tag is the same and first character is not
      C                   If        W#Valid = 'True'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
- 
+
       * Read until tag changes or end of set
      C                   Dou       *In90 = *On
      C                             or  S#Mtag <> MsMtag
@@ -545,14 +545,14 @@
      C                   Endif
      C                   Enddo
      C                   Endif
- 
+
       * Tag is the same and new set then start with True
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
      C                   Eval      W#Valid = 'True'
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
      C                   Endsl
@@ -621,44 +621,44 @@
      C     KMstrV1r      Reade     @MStrV1                                90
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
       * Process record read
      C                   Exsr      SrVReq
- 
+
       * Save previous setting
      C                   Eval      S#Mtag = MsMtag
      C                   Eval      S#Tseq = MsTseq
- 
+
      C     KMstrV1r      Reade     @MStrV1                                90
       * Leave if end of set
      C                   If        *In90 = *On
- 
+
       * If last condition is false then set to fail
      C                   If        W#Valid = 'False'
      C                   Eval      MoLvpF = 'N'
      C                   Endif
      C                   Leave
      C                   Endif
- 
+
       * Tag has changed and previous condition is false
      C                   If        W#Valid = 'False'
      C                             and S#Mtag <> MsMtag
      C                   Eval      MoLvpF = 'N'
      C                   Leave
      C                   Endif
- 
+
       * Tag is the same and first character is the same
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) = %subst(MsTseq:1:1)
      C*********          Eval      MoLvpF = 'N'
      C                   Endif
- 
+
       * Tag is the same and first character is not
      C                   If        W#Valid = 'True'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
- 
+
       * Read until tag changes or end of set
      C                   Dou       *In90 = *On
      C                             or  S#Mtag <> MsMtag
@@ -669,14 +669,14 @@
      C                   Endif
      C                   Enddo
      C                   Endif
- 
+
       * Tag is the same and new set then start with True
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
      C                   Eval      W#Valid = 'True'
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
      C                   Endif
@@ -734,41 +734,41 @@
      C     KMstrV1r      Reade     @MStrV1                                90
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
       * Process record read
      C                   Exsr      SrVReq
- 
+
       * Save previous setting
      C                   Eval      S#Mtag = MsMtag
      C                   Eval      S#Tseq = MsTseq
- 
+
      C     KMstrV1r      Reade     @MStrV1                                90
       * Leave if end of set
      C                   If        *In90 = *On
- 
+
       * If last condition is false then set to fail
      C                   If        W#Valid = 'False'
      C                   Endif
      C                   Leave
      C                   Endif
- 
+
       * Tag has changed and previous condition is false
      C                   If        W#Valid = 'False'
      C                             and S#Mtag <> MsMtag
      C                   Leave
      C                   Endif
- 
+
       * Tag is the same and first character is the same
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) = %subst(MsTseq:1:1)
      C                   Endif
- 
+
       * Tag is the same and first character is not
      C                   If        W#Valid = 'True'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
- 
+
       * Read until tag changes or end of set
      C                   Dou       *In90 = *On
      C                             or  S#Mtag <> MsMtag
@@ -779,14 +779,14 @@
      C                   Endif
      C                   Enddo
      C                   Endif
- 
+
       * Tag is the same and new set then start with True
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
      C                   Eval      W#Valid = 'True'
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
      C                   Endif
@@ -839,41 +839,41 @@
      C     KMstrV1r      Reade     @MStrV1                                90
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
       * Process record read
      C                   Exsr      SrVReq
- 
+
       * Save previous setting
      C                   Eval      S#Mtag = MsMtag
      C                   Eval      S#Tseq = MsTseq
- 
+
      C     KMstrV1r      Reade     @MStrV1                                90
       * Leave if end of set
      C                   If        *In90 = *On
- 
+
       * If last condition is false then set to fail
      C                   If        W#Valid = 'False'
      C                   Endif
      C                   Leave
      C                   Endif
- 
+
       * Tag has changed and previous condition is false
      C                   If        W#Valid = 'False'
      C                             and S#Mtag <> MsMtag
      C                   Leave
      C                   Endif
- 
+
       * Tag is the same and first character is the same
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) = %subst(MsTseq:1:1)
      C                   Endif
- 
+
       * Tag is the same and first character is not
      C                   If        W#Valid = 'True'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
- 
+
       * Read until tag changes or end of set
      C                   Dou       *In90 = *On
      C                             or  S#Mtag <> MsMtag
@@ -884,14 +884,14 @@
      C                   Endif
      C                   Enddo
      C                   Endif
- 
+
       * Tag is the same and new set then start with True
      C                   If        W#Valid = 'False'
      C                             and S#Mtag = MsMtag
      C                             and %subst(S#Tseq:1:1) <> %subst(MsTseq:1:1)
      C                   Eval      W#Valid = 'True'
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
      C                   Endif
@@ -1030,7 +1030,7 @@
                                                                                               ESL038
      C                   When      MsTest = 'EUROPE'
      C                             Or MsTest = 'NOT EUROPE'
- 
+
       * Get branch details
       *
      C                   CALL      'AOBRCHR0'                           9090
@@ -1045,7 +1045,7 @@
      C                   Eval      O2Data1 = %Subst(A8Btid:1:8) +
      C                                       %Subst(A8Btid:10:3)
      C                   Endif
- 
+
      C                   Eval      O2Data2 = MoDstr
      C                   Eval      O2Data3 = MoAcbr
      C                   When      MsTest = 'BIC IBAN'

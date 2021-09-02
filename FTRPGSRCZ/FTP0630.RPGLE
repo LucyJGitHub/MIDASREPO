@@ -14,7 +14,7 @@
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 PNL015             Date 01Dec2005             *
       *                 PNL014             Date 07Dec2005             *
-      *                 EEE065             Date 21Sep2004             *
+      *                 EEE065   *CREATE   Date 21Sep2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -85,7 +85,7 @@
      D  P1Bicc                             Like(McBicc)
      D  P1Bicb                             Like(McBicb)
      D  P1Pccy                             Like(McPccy)
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -98,12 +98,12 @@
      C                   Clear                   P0Rtn
      C                   MOVEL     'Reset '      W0PREF
      C                   Exsr      SrInit
- 
+
       *
       *  If key passed then only clear that else clear all
       *
      C                   If        P1Bicc <> *blanks
- 
+
      C                   Eval      McBicc = P1Bicc
      C                   Eval      McBicb = P1Bicb
      C                   Eval      McPccy = P1Pccy
@@ -115,9 +115,9 @@
      C                   Exsr      SrClear
      C                   Endif
      C                   Endif
- 
+
      C                   If        P1Bicc = *blanks
- 
+
      C                   Eval      McBicc = *Blanks
      C                   Eval      McBicb = *Blanks
      C                   Eval      McPccy = *Blanks
@@ -153,7 +153,7 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrClear'     @STK(Q)
- 
+
      C                   Eval      MpBicc = McBicc
      C                   Eval      MpBicb = McBicb
      C                   Eval      MpPccy = McPccy

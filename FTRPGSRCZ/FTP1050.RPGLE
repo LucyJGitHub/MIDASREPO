@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -802,13 +802,13 @@
       * Move @QSTSV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     qsRECI        #1RECI
- 
+
      C                   MOVEL     qsSTAT        #1STAT
      C                   MOVEL     qsAkey        #1Akey
      C                   MOVEL     qsDesc        #1Desc
- 
+
      C                   MOVEL     qsAJOB        #1AJOB                         Job name
      C                   MOVEL     qsAUSR        #1AUSR                         User name
      C                   Z-ADD     qsATIM        #1ATIM                         Action Time

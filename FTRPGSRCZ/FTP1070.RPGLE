@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -795,20 +795,20 @@
       * Move @FXSPV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     fxRECI        #1RECI
- 
+
      C                   MOVEL     FXSSET        #1SSET
      C                   MOVEL     FXUPDF        #1UPDF
      C                   Z-add     FXSBPC        #1SBPC
      C                   MOVEL     FXSBSN        #1SBSN
      C                   Z-add     FXSSPC        #1SSPC
      C                   MOVEL     FXSSSN        #1SSSN
- 
+
      C                   MOVEL     fxDES1        #1DES1
      C                   MOVEL     fxDES2        #1DES2
      C                   MOVEL     fxDES3        #1DES3
- 
+
      C                   MOVEL     fxAJOB        #1AJOB                         Job name
      C                   MOVEL     fxAUSR        #1AUSR                         User name
      C                   Z-ADD     fxATIM        #1ATIM                         Action Time
@@ -829,7 +829,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:8     #1Sbpca
      C                   Endif
       *
@@ -842,7 +842,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:8     #1Sspca
      C                   Endif
       *

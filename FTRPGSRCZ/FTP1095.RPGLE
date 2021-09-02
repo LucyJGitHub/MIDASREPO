@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -740,7 +740,7 @@
      C                   Move      #1icuta       #1icut
      C                   Eval      ##hour = #1icut / 100
      C                   Move      #1icut        ##minute
- 
+
      C                   If        ##hour > 23 or ##minute > 59
      C                   Clear                   #1icut
      C                   SETON                                        9946      *
@@ -749,7 +749,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
       *
@@ -778,7 +778,7 @@
      C                   Move      #1ocuta       #1ocut
      C                   Eval      ##hour = #1ocut / 100
      C                   Move      #1ocut        ##minute
- 
+
      C                   If        ##hour > 23 or ##minute > 59
      C                   Clear                   #1ocut
      C                   SETON                                        9948      *
@@ -787,7 +787,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
       *
@@ -870,7 +870,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1COMAA
       * Cheque amount must be greater than0
       *
@@ -912,7 +912,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1OcMAA
       * Cheque amount must be greater than0
       *
@@ -954,7 +954,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1FxlaA
       * Cheque amount must be greater than0
       *
@@ -996,7 +996,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1OxlaA
       * Cheque amount must be greater than0
       *
@@ -1414,7 +1414,7 @@
       *================================================================
       * Move @PcExV1 fields to screen
       *================================================================
- 
+
      C                   Eval      #1Iban =  PcIban
       *                  Eval      #1RNB1 =  PcRNB1
       *                  Eval      #1RNB2 =  PcRNB2
@@ -1438,7 +1438,7 @@
      C                   Eval      #1PENR  =  pcPENR
      C                   Eval      #1ASTS  =  pcASTS
      C                   Eval      #1CUST  =  pcCUST
- 
+
      C                   MOVEL     pcAJOB        #1AJOB                         Job name
      C                   MOVEL     pcAACT        #1AACT                         Action Type
      C                   Z-ADD     pcRDNB        #1RDNB                         Run day number
@@ -1456,7 +1456,7 @@
      C                   If        #1ocut > 0
      C                   Move      #1ocut        #1oCuta
      C                   Endif
- 
+
      C                   Clear                   #1ComAA
      C                   If        #1COMA > 0
      C                   Eval      W3Fld15 = #1coma * 100
@@ -1466,7 +1466,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1COMAA
       * Cheque amount must be greater than0
       *
@@ -1480,12 +1480,12 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1OcMAA
       * Cheque amount must be greater than0
       *
      C                   Endif
- 
+
      C                   Clear                   #1fxlAA
      C                   If        #1fxlA > 0
      C                   Eval      W3Fld15 = #1fxla * 100
@@ -1495,7 +1495,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1fxlAA
       * Cheque amount must be greater than0
       *
@@ -1509,7 +1509,7 @@
      C                   PARM      2             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     11            Subst     W3OUT21:10    #1OxlAA
       * Cheque amount must be greater than0
       *
@@ -1522,9 +1522,9 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1Iban
- 
+
      C                   MOVEL     P2Iban        #1Iban
       * USER: Initialise key screen
       * Option Name
@@ -2027,9 +2027,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

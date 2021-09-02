@@ -13,7 +13,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 ESL038             Date 25Nov04               *
+      *                 ESL038   *CREATE   Date 25Nov04               *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -154,9 +154,9 @@
      D  O2rnbr                35     68
      D  O2rnb1                35     50
      D  O2rnb2                51     68
- 
+
       * Parameters for ZALIGN/ZEDIT
- 
+
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZALIGNOK        S              1
@@ -337,7 +337,7 @@
       * Refresh data after change
       *****************************************************************
      C     Refresh       BEGSR
- 
+
      C                   Eval      PCIBAN = SPCIB
      C                   Eval      PCRNB1 = SPCAT
      C                   Move      SPCAT         PCRNB2
@@ -393,7 +393,7 @@
      C                   Eval      SBTYP  = PCBTYP
      C                   Eval      SSPRT  = PCSPRT
      C                   Eval      SIMCY  = PCIMCY
- 
+
       * Set status
      C                   Select
      C                   When      PCAsts = 'I'
@@ -405,7 +405,7 @@
      C                   Other
      C                   Eval      SASTD = *blanks
      C                   Endsl
- 
+
      C                   Exsr      Setnarrative
      C                   Endif
      C                   Endif
@@ -416,7 +416,7 @@
       * Set screen narratives for commissions and FX Rates
       *****************************************************************
      C     SetNarrative  BEGSR
- 
+
      C                   Select
      C                   When      P#COMI = 'I'
      C                   Eval      SCOMN = 'Individual'
@@ -426,7 +426,7 @@
      C                   Eval      SCOMI = 'S'
      C                   Eval      SCOMN = 'Standard  '
      C                   Endsl
- 
+
      C                   Select
      C                   When      P#FXRI = 'I'
      C                   Eval      SFXRN = 'Dealer    '
@@ -519,9 +519,9 @@
       *
      C                   Endif
      C                   Endif
- 
+
       * If payment reference then compare message reference and update data
- 
+
      C                   If        I@Pref <> *blanks
      C                   Call      'FTP960'
      C                   Parm      *blanks       P@RTN             7
@@ -547,7 +547,7 @@
       *
      C     P@RTCD        IFEQ      *BLANKS
       *
- 
+
       * Get PCAT data
      C     KPCIban       Chain     @PCATJ0
      C                   If        Not %Found
@@ -591,7 +591,7 @@
      C                   Eval      SBTYP  = PCBTYP
      C                   Eval      SSPRT  = PCSPRT
      C                   Eval      SIMCY  = PCIMCY
- 
+
       * Set status
      C                   Select
      C                   When      PCAsts = 'I'
@@ -603,15 +603,15 @@
      C                   Other
      C                   Eval      SASTD = *blanks
      C                   Endsl
- 
+
      C                   Exsr      Setnarrative
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       *
      C                   If        PXRNB1 = *blanks and PXIBAN = *blanks
      C     35            Subst(p)  I@CUS:1       SPCIB
@@ -734,7 +734,7 @@
       **   If data selected then show on screen
       *
      C                   If        P0RTN = 'PTC0020'
- 
+
      C                   Eval      PCIBAN = O2IBAN
      C                   Eval      PCRNB1 = O2RNB1
      C                   Eval      PCRNB2 = O2RNB2
@@ -784,7 +784,7 @@
      C                   Eval      SBTYP  = PCBTYP
      C                   Eval      SSPRT  = PCSPRT
      C                   Eval      SIMCY  = PCIMCY
- 
+
       * Set status
      C                   Select
      C                   When      PCAsts = 'I'
@@ -796,7 +796,7 @@
      C                   Other
      C                   Eval      SASTD = *blanks
      C                   Endsl
- 
+
      C                   Exsr      Setnarrative
      C                   Endif
      C                   Endif
@@ -915,21 +915,21 @@ anne C                             and PCIMCY <> 'Y'
       *
       * Currency found
      C                   If        @RTCD = *blanks
- 
+
       * Convert screen rate to decimal rate for update
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   MOVE      I@EAMT        ZFIELD
      C                   EVAL      ZADEC = A6NBDP
      C                   EVAL      ZADIG = 13 - A6NBDP
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM                    ZALIGNOK
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
      C                   PARM                    ZAFLD
- 
+
      C                   If        ZALIGNOK = *blanks
      C                   MOVE      ZFIELD        D#FAMT
      C                   Eval      MPCYCD = I@ECCY
@@ -1241,7 +1241,7 @@ anne C                             and PCIMCY <> 'Y'
      C                   Eval      SBTYP  = PCBTYP
      C                   Eval      SSPRT  = PCSPRT
      C                   Eval      SIMCY  = PCIMCY
- 
+
       * Set status
      C                   Select
      C                   When      PCAsts = 'I'
@@ -1253,9 +1253,9 @@ anne C                             and PCIMCY <> 'Y'
      C                   Other
      C                   Eval      SASTD = *blanks
      C                   Endsl
- 
+
      C                   Exsr      Setnarrative
- 
+
       * Check currency against pay currency if set
      C                   If        I@CCY <> *blanks and
      C                             I@CCY <> PCBCCY
@@ -1312,7 +1312,7 @@ anne C                             and PCIMCY <> 'Y'
      C                   Eval      SBTYP  = PCBTYP
      C                   Eval      SSPRT  = PCSPRT
      C                   Eval      SIMCY  = PCIMCY
- 
+
       * Set status
      C                   Select
      C                   When      PCAsts = 'I'
@@ -1324,7 +1324,7 @@ anne C                             and PCIMCY <> 'Y'
      C                   Other
      C                   Eval      SASTD = *blanks
      C                   Endsl
- 
+
      C                   Exsr      Setnarrative
      C                   Endif
      C                   Endif
@@ -1340,19 +1340,19 @@ anne C                             and PCIMCY <> 'Y'
      C                   EXSR      ZASNMS
      C                   Eval      ##NoError = 'Y'
      C                   Endif
- 
+
       * Transaction type is blank and pension default to 1740
      C                   If        STTYP =  *blanks and
      C                             SPENF = 'Y'
      C                   Eval      STTYP = '1740'
      C                   Endif
- 
+
       * Transaction type is blank then default to 1730
      C                   If        STTYP =  *blanks and
      C                             SPENF <> 'Y'
      C                   Eval      STTYP = '1730'
      C                   Endif
- 
+
       * Transaction type must be blank, 0000 1730 or 1740
      C                   If        STTYP <> *blanks and
      C                             STTYP <> '0000'  and
@@ -1363,7 +1363,7 @@ anne C                             and PCIMCY <> 'Y'
      C                   EXSR      ZASNMS
      C                   Eval      ##NoError = 'Y'
      C                   Endif
- 
+
       * Transaction type must be blank, 0000 1730 or 1740
      C                   If        STTYP <> '1740' and
      C                             SPENF = 'Y'
@@ -1372,7 +1372,7 @@ anne C                             and PCIMCY <> 'Y'
      C                   EXSR      ZASNMS
      C                   Eval      ##NoError = 'Y'
      C                   Endif
- 
+
       * If no error but account closed then error message
      C                   If        PCASTS = 'C' and ##NoError <> 'Y'
      C                   SETON                                        51
@@ -1380,7 +1380,7 @@ anne C                             and PCIMCY <> 'Y'
      C                   EXSR      ZASNMS
      C                   Eval      ##NoError = 'Y'
      C                   Endif
- 
+
       * If no error but invalid data   then error message
      C                   If        PCASTS = 'E' and ##NoError <> 'Y'
      C                   SETON                                        51

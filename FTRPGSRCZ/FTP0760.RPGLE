@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 19Mar2004             *
+      *                 EEE065   *CREATE   Date 19Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -874,7 +874,7 @@
       * Move @MSTVV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     MVRECI        #1RECI
      C                   MOVEL     MVMTAG        #1MTAG
      C                   MOVEL     MVTEST        #1TEST
@@ -882,7 +882,7 @@
      C                   MOVEL     MVDES1        #1DES1
      C                   MOVEL     MVDES2        #1DES2
      C                   MOVEL     MVDES3        #1DES3
- 
+
      C                   MOVEL     MVAJOB        #1AJOB                         Job name
      C                   MOVEL     MVAUSR        #1AUSR                         User name
      C                   Z-ADD     MVATIM        #1ATIM                         Action Time

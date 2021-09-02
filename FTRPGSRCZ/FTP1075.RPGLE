@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -610,7 +610,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   If        #1Updf = 'R'
      C                   If        #1Sbsn <> '+' and #1Sbsn <> '-'
      C                   SETON                                        9933      *
@@ -620,7 +620,7 @@
      C                   EXSR      ZASNMS
      C                   Endif
      C                   Endif
- 
+
      C                   If        #1Updf = 'R'
      C                   If        #1Sssn <> '+' and #1Sssn <> '-'
      C                   SETON                                        9935      *
@@ -668,7 +668,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:8     #1Sbpca
       *
      C                   Endif
@@ -711,7 +711,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:8     #1Sspca
       *
      C                   Endif
@@ -1050,7 +1050,7 @@
       *================================================================
       * Move @FxSpV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     FxSset        #1Sset
      C                   MOVEL     FxUpdf        #1Updf
      C                   MOVEL     FxSbpc        #1Sbpc
@@ -1061,7 +1061,7 @@
      C                   MOVEL     FxDes1        #1DES1
      C                   MOVEL     FxDes2        #1DES2
      C                   MOVEL     FxDes3        #1DES3
- 
+
      C                   MOVEL     FxAJOB        #1AJOB                         Job name
      C                   MOVEL     FxAACT        #1AACT                         Action Type
      C                   Z-ADD     FxRDNB        #1RDNB                         Run day number
@@ -1084,7 +1084,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:8     #1Sbpca
      C                   Endif
       *
@@ -1097,7 +1097,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     14            Subst     W3OUT21:8     #1Sspca
      C                   Endif
       *
@@ -1122,9 +1122,9 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1Sset
- 
+
      C                   MOVEL     P2Sset        #1Sset
       * USER: Initialise key screen
       * Option Name
@@ -1581,9 +1581,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

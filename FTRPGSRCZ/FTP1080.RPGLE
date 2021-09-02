@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -822,55 +822,55 @@
       * Move @FxGpV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     GpRECI        #1RECI
- 
+
      C                   MOVEL     GpSnbr        #1Snbr
      C                   MOVEL     GpGpCd        #1GpCd
      C                   MOVEL     GpStpr        #1Stpr
      C                   MOVEL     GpCyCd        #1CyCd
      C                   MOVEL     GpQccy        #1Qccy
- 
+
      C                   MOVEL     GpLAM1        #1LAM1
      C                   MOVEL     GpFXS1        #1FXS1
      C                   MOVEL     GpDLR1        #1DLR1
- 
+
      C                   MOVEL     GpLAM2        #1LAM2
      C                   MOVEL     GpFXS2        #1FXS2
      C                   MOVEL     GpDLR2        #1DLR2
- 
+
      C                   MOVEL     GpLAM3        #1LAM3
      C                   MOVEL     GpFXS3        #1FXS3
      C                   MOVEL     GpDLR3        #1DLR3
- 
+
      C                   MOVEL     GpLAM4        #1LAM4
      C                   MOVEL     GpFXS4        #1FXS4
      C                   MOVEL     GpDLR4        #1DLR4
- 
+
      C                   MOVEL     GpLAM5        #1LAM5
      C                   MOVEL     GpFXS5        #1FXS5
      C                   MOVEL     GpDLR5        #1DLR5
- 
+
      C                   MOVEL     GpLAM6        #1LAM6
      C                   MOVEL     GpFXS6        #1FXS6
      C                   MOVEL     GpDLR6        #1DLR6
- 
+
      C                   MOVEL     GpLAM7        #1LAM7
      C                   MOVEL     GpFXS7        #1FXS7
      C                   MOVEL     GpDLR7        #1DLR7
- 
+
      C                   MOVEL     GpLAM8        #1LAM8
      C                   MOVEL     GpFXS8        #1FXS8
      C                   MOVEL     GpDLR8        #1DLR8
- 
+
      C                   MOVEL     GpLAM9        #1LAM9
      C                   MOVEL     GpFXS9        #1FXS9
      C                   MOVEL     GpDLR9        #1DLR9
- 
+
      C                   MOVEL     GpDES1        #1DES1
      C                   MOVEL     GpDES2        #1DES2
      C                   MOVEL     GpDES3        #1DES3
- 
+
      C                   MOVEL     GpAJOB        #1AJOB                         Job name
      C                   MOVEL     GpAUSR        #1AUSR                         User name
      C                   Z-ADD     GpATIM        #1ATIM                         Action Time

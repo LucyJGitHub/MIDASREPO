@@ -18,7 +18,7 @@
       *                 MM0505             Date 04May2005             *
       *                 Djb004             Date 18Mar2005             *
       *                 DJBF03             Date 15Nov2004             *
-      *                 EEE065             Date 15Jun2004             *
+      *                 EEE065   *CREATE   Date 15Jun2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -179,7 +179,7 @@
      D DIGITS          C                   CONST('0123456789')
      D CASHP           C                   CONST('OTHR/HB POOLING')                           HVB003
       *
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -195,9 +195,9 @@
       *
      C                   Clear                   P0Rtn
      C                   MOVEL     'Validate'    W0PREF
- 
+
      C                   Exsr      SrInit
- 
+
       * Verify depending on test
      C                   Select
       * EQUAL
@@ -230,15 +230,15 @@
       * VALDATE                                                                               MM0505
       * KNR                                                                                   MM0505
       * NORMAL                                                                                MM0505
- 
+
       * EQUAL
      C                   When      MsTest = 'EQUAL'
      C                   Exsr      SrEqual
- 
+
       * EMPTY
      C                   When      MsTest = 'EMPTY'
      C                   Exsr      SrEmpty
- 
+
       * NOT EMPTY
      C                   When      MsTest = 'NOT EMPTY'
      C                   Exsr      SrEmpty
@@ -247,7 +247,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * NOT USED
      C                   When      MsTest = 'NOT USED'
       * LIST
@@ -317,7 +317,7 @@
       * ACCOUNT
      C                   When      MsTest = 'ACCOUNT'
      C                   Exsr      SrAccount
- 
+
       * CODE xx
      C                   When      MsTest = 'CODE AT'
      C                             or MsTest = 'CODE AU'
@@ -333,11 +333,11 @@
      C                             or MsTest = 'CODE PT'
      C                             or MsTest = 'CODE SC'
      C                   Exsr      SrCodeXX
- 
+
       * IBAN
      C                   When      MsTest = 'IBAN'
      C                   Exsr      SrIBAN
- 
+
       * IBANREGN
      C                   When      MsTest = 'IBANREGN'
      C                   Exsr      SrIBAN
@@ -357,7 +357,7 @@
      C                   Eval      P0rtn = 'False'
      C                   Endif
      C                   Endif
- 
+
       * IBANCTRY
      C                   When      MsTest = 'IBANCTRY'
      C                   Exsr      SrIBAN
@@ -372,7 +372,7 @@
       * IBANPL                                                                                Djb004
      C                   When      MsTest = 'IBANPL'                                          Djb004
      C                   Exsr      SrIBANPL                                                   Djb004
- 
+
                                                                                               MM0505
       * IBANEE                                                                                MM0505
      C                   When      MsTest = 'IBANEE'                                          MM0505
@@ -396,7 +396,7 @@
       * QUOTE
      C                   When      MsTest = 'QUOTE'
      C                   Exsr      SrQuote
- 
+
       * BIC IBAN
      C                   When      MsTest = 'BIC IBAN'
      C                   Exsr      SrBic
@@ -404,11 +404,11 @@
      C                   Eval      P2Data1 = P3Data1
      C                   Exsr      SrIBAN
      C                   Endif
- 
+
       * EUROPE
      C                   When      MsTest = 'EUROPE'
      C                   Exsr      SrEurope
- 
+
       * NOT EUROPE
      C                   When      MsTest = 'NOT EUROPE'
      C                   Exsr      SrEurope
@@ -417,12 +417,12 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * BBAN(xx) where xx is AT BE DE DK FI FR GB HU IT NL NO SE SW
      C                   When      %subst(MsTest:1:5) = 'BBAN('
      C                             And %subst(MsTest:8:1) = ')'
      C                   Exsr      SrBBAN
- 
+
       * VALDATE
      C                   When      MsTest = 'VALDATE'
       *
@@ -433,7 +433,7 @@
      C                   Else
      C                   Eval      P0rtn = 'True'
      C                   Endif
- 
+
      C                   Else
      C                   Eval      P0rtn = 'True'
       *
@@ -450,9 +450,9 @@
      C                   Exsr      SrTarget                                                   HVB003
                                                                                               HVB003
                                                                                               HVB003
- 
+
      C                   Endsl
- 
+
       * Exit, do not close down
      C                   Return
       *
@@ -547,7 +547,7 @@
      C                   When      #Idx = 4
      C                   Eval      W#0035A = P2Data4
      C                   Endsl
- 
+
      C                   If        W#0035A <> *blanks
       * Find first blanks character
      C                   Movel     *blanks       ##001             1
@@ -566,9 +566,9 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
      C                   Endif
- 
+
       * If false exist
      C                   If        P0rtn = 'False'
      C                   Leave
@@ -613,7 +613,7 @@
      C                   When      #Idx = 4
      C                   Eval      W#0035A = P2Data4
      C                   Endsl
- 
+
       * Check for / then second / extract data in between
      C                   If        W#0035A <> *blanks
      C                             and %subst(W#0035A:1:1) = '/'
@@ -632,14 +632,14 @@
      C                   Endif
       *
      C                   Enddo
- 
+
       * If not / or position is 2 then next bit of data
      C                   If        ##001 <> '/'
      C                             or Z# = 2
      C                             or Z# > 10
      C                   Iter
      C                   Endif
- 
+
      C                   Eval      Wq3 = Z# - 2
      C                   Eval      W#0035S = %Subst(W#0035A:2:Wq3)
       * Search for string
@@ -650,9 +650,9 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
      C                   Endif
- 
+
       * If false exist
      C                   If        P0rtn = 'False'
      C                   Leave
@@ -694,7 +694,7 @@
      C                   Eval      BDBICC = %subst(P2Data1:1:8)
      C                   Eval      BDBICB = %subst(P2Data1:9:3)
      C                   Endif
- 
+
      C                   If        BDBICB = *blanks
      C                   Eval      BDBICB = 'XXX'
      C                   Endif
@@ -785,7 +785,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 16 Numeric
      C                   When      MsTstD = '/16N'
      C                   Eval      W#0016A = %subst(P2Data1:2:16)
@@ -796,7 +796,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 24 Numeric
      C                   When      MsTstD = '/24N'
      C                   Eval      W#0024A = %subst(P2Data1:2:24)
@@ -807,7 +807,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
      C                   Endsl
      C                   Endif
       *
@@ -868,7 +868,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 6 Numeric
       * Australian Bank State Branch (BSB) coode
       * Irish National Clearing code (NSC)
@@ -886,7 +886,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 7 Numeric
       * Greek Hellenic Bank Identification code
      C                   When      MsTest = 'CODE GR'
@@ -898,7 +898,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 8 Numeric
       * German Bankleitzahl
       * Portuguese National Clearing code (NIB)
@@ -912,7 +912,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 9 Numeric
       * Canadian Payments Association Payment Routing Number
      C                   When      MsTest = 'CODE CC'
@@ -924,7 +924,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 8 or 9 Numeric
       * Spanish Domestic Interbanking Code
      C                   When      MsTest = 'CODE ES'
@@ -943,7 +943,7 @@
      C                   Eval      P0rtn = 'False'
      C                   Endif
      C                   Endif
- 
+
       * 10 Numeric
       * Italian Domestic Identification code
      C                   When      MsTest = 'CODE IT'
@@ -955,7 +955,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
       * 11 Numeric
       * Indian Financial System code (IFSC)
      C                   When      MsTest = 'CODE IN'
@@ -967,7 +967,7 @@
      C                   Else
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
      C                   Endsl
      C                   Endif
       *
@@ -1016,19 +1016,19 @@
      C                   If        Not %Found
      C                   Eval      P0rtn = 'False'
      C                   Else
- 
+
      C                   Eval      O#IBAN = %Subst(P2Data1:2:34)
      C                   Call      'AOIBANR5'
      C                   Parm      *blanks       P@Rtcd            7
      C                   Parm                    O#IBAN           34
- 
+
       * If not blank then invalid
      C                   If        P@Rtcd <> *blanks
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -1556,19 +1556,19 @@
      C                   If        Not %Found
      C                   Eval      P0rtn = 'False'
      C                   Else
- 
+
      C                   Eval      O#IBAN = A4ISOC + 'XX' + %Subst(P2Data1:2:30)
      C                   Call      'AOIBANR5'
      C                   Parm      *blanks       P@Rtcd            7
      C                   Parm                    O#IBAN           34
- 
+
       * If not blank then invalid
      C                   If        P@Rtcd <> *blanks and P@Rtcd = '5'
      C                   Eval      P0rtn = 'False'
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -1709,7 +1709,7 @@
      C     EXINIT        TAG
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
       * Define key
      C     KBicdL2       Klist                                                  IF
      C                   Kfld                    BDBICC                         IF

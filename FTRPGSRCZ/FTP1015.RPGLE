@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -459,10 +459,10 @@
      C                   EXSR      ZASNMS
      C                   END                                                    FI
       *
- 
+
      C     KBICD1        Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
- 
+
       * Define key
      C     KBICD         Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
@@ -471,7 +471,7 @@
      C                   Clear                   #1Ins1
      C                   Clear                   #1Ins2
      C                   Clear                   #1Ins3
- 
+
      C                   Eval      BDBICC = #1BICC
      C                   Eval      BDBICB = #1BICB
       * Get data
@@ -489,7 +489,7 @@
      C                   Eval      ZAMSDA = #1BICB + #1BICB
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
      C                   When      Not %Found and #1BICB = *blanks
      C                   Eval      BDBICB = 'XXX'
      C     KBICD         Chain     @BICDL2                                      IF
@@ -719,7 +719,7 @@
      C                   EXSR      ZASNMS
      C                   Else
      C                   Move      #1pdnba       #1pdnb
- 
+
      C                   If        #1pdnb < 0 or #1Pdnb > 31
      C                   Clear                   #1pdnb
      C                   SETON                                        9936      *
@@ -728,7 +728,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
       *
@@ -858,7 +858,7 @@
      C                   EXSR      ZASNMS
      C                   Else
      C                   Move      #1pdnba       #1pdnb
- 
+
      C                   If        #1acsq = '00'
      C                   SETON                                        9941      *
       * Send message '*Value required'
@@ -866,7 +866,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
       *
@@ -1275,7 +1275,7 @@
       *================================================================
       * Move @BcorV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     bdbicc        #1bicc
      C                   MOVEL     bdbicb        #1bicb
      C                   MOVEL     bdorst        #1orst
@@ -1296,7 +1296,7 @@
      C                   MOVEL     bdDES1        #1DES1
      C                   MOVEL     bdDES2        #1DES2
      C                   MOVEL     bdDES3        #1DES3
- 
+
      C                   MOVEL     bdAJOB        #1AJOB                         Job name
      C                   MOVEL     bdAACT        #1AACT                         Action Type
      C                   Z-ADD     bdRDNB        #1RDNB                         Run day number
@@ -1349,10 +1349,10 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1Bicc
      C                   MOVEL     *Blanks       #1Bicb
- 
+
      C                   MOVEL     P2Bicc        #1Bicc
      C                   MOVEL     P2Bicb        #1Bicb
       * USER: Initialise key screen
@@ -1849,9 +1849,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

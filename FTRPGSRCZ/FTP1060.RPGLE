@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -842,9 +842,9 @@
       * Move @RBRCV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     RbRECI        #1RECI
- 
+
      C                   MOVEL     RbBRCH        #1BRCH
      C                   MOVEL     RbSTPF        #1STPF
      C                   MOVEL     RbRREG        #1RREG
@@ -852,11 +852,11 @@
      C                   MOVEL     Rbnbnw        #1nbnw
      C                   MOVEL     Rbpmth        #1pmth
      C                   MOVEL     Rbcust        #1cust
- 
+
      C                   MOVEL     rbDES1        #1DES1
      C                   MOVEL     rbDES2        #1DES2
      C                   MOVEL     rbDES3        #1DES3
- 
+
      C                   MOVEL     rbAJOB        #1AJOB                         Job name
      C                   MOVEL     rbAUSR        #1AUSR                         User name
      C                   Z-ADD     rbATIM        #1ATIM                         Action Time

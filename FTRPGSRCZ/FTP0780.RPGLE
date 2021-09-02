@@ -13,7 +13,7 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 STP666             Date 22Apr2004             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -840,23 +840,23 @@
       * Move @CLRCV2 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     CLRECI        #1RECI
- 
+
      C                   MOVEL     CLCUST        #1CUST
      C                   MOVEL     CLBICC        #1BICC
      C                   MOVEL     CLBICB        #1BICB
      C                   MOVEL     CLBBBC        #1BBBC
      C                   MOVEL     CLBBCB        #1BBCB
      C                   MOVEL     CLQUTE        #1QUTE
- 
+
      C                   Eval      #1Bic = #1Bicc + '-' + #1Bicb
      C                   Eval      #1BBic = #1Bbbc + '-' + #1Bbcb
- 
+
      C                   MOVEL     CLDES1        #1DES1
      C                   MOVEL     CLDES2        #1DES2
      C                   MOVEL     CLDES3        #1DES3
- 
+
      C                   MOVEL     CLAJOB        #1AJOB                         Job name
      C                   MOVEL     CLAUSR        #1AUSR                         User name
      C                   Z-ADD     CLATIM        #1ATIM                         Action Time

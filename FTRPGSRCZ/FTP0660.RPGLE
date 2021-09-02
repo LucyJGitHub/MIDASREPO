@@ -17,7 +17,7 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
       *                 PNL014             Date 07Dec2005             *
-      *                 EEE065             Date 05Apr2004             *
+      *                 EEE065   *CREATE   Date 05Apr2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -480,16 +480,16 @@
       * BIC Identifier
      C                   Eval      #1INT1 = *blanks
      C                   If        #1RBIC <> *Blanks                            IF
- 
+
       * Define key
      C     KBICD         Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
      C                   Kfld                    BDBICB                         IF
- 
+
       * Define key
      C     KBICD1        Klist                                                  IF
      C                   Kfld                    BDBICC                         IF
- 
+
       * Set key
      C                   Eval      BDBICC = #1RBIC
      C                   Eval      BDBICB = #1RBIB
@@ -567,7 +567,7 @@
      C                   Eval      ZAMSDA = #1RBIB + #1RBIB
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
      C                   When      Not %Found and #1RBIB = *blanks
      C                   Eval      BDBICB = 'XXX'
      C     KBICD         Chain     @BICDL2                                      IF
@@ -895,7 +895,7 @@
      C                   Eval      *In34 = *On
      C                   Movel     'Y'           W0DCF
      C                   Endif
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -940,7 +940,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1BENLA
       *
      C     #1BENL        IFLT      0                                            IF
@@ -990,7 +990,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1BENHA
       * Cheque amount must be greater than0
      C     #1BENH        IFLE      0                                            IF
@@ -1065,7 +1065,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1ShaLA
       *
      C     #1ShaL        IFLT      0                                            IF
@@ -1115,7 +1115,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1ShaHA
       * Cheque amount must be greater than0
      C     #1ShaH        IFLE      0                                            IF
@@ -1164,7 +1164,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1OurLA
       *
      C     #1OurL        IFLT      0                                            IF
@@ -1214,7 +1214,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1OurHA
       * Cheque amount must be greater than0
      C     #1OurH        IFLE      0                                            IF
@@ -1421,9 +1421,9 @@
      C                   MOVEL     W0Account     ZAMSDA
      C                   EXSR      ZASNMS
      C                   Endsl
- 
+
      C                   Endif
- 
+
       * Account currency must equal payment currency
      C                   If        W0Ccy <> #1PCCY
       * Send message 'Invalid account'
@@ -1442,7 +1442,7 @@
      C                   SUB       1             Q
       *
      CSR                 ENDSR
- 
+
      C/EJECT
       *================================================================
       *                                                               *
@@ -1517,7 +1517,7 @@
      C                   Eval      *In99 = *On
      C                   Movel     'Y'           W0DCF
      C                   Endif
- 
+
       * Minimum value must not be greater than maximum
      C                   If        #1Benl <> 0 and #1Benh <> 0
      C                             and #1Benl > #1Benh
@@ -1529,7 +1529,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
       * Minimum value must not be greater than maximum
      C                   If        #1Shal <> 0 and #1Shah <> 0
      C                             and #1Shal > #1Shah
@@ -1541,7 +1541,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
       * Minimum value must not be greater than maximum
      C                   If        #1Ourl <> 0 and #1Ourh <> 0
      C                             and #1Ourl > #1Ourh
@@ -1553,7 +1553,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -1907,16 +1907,16 @@
       *================================================================
       * Move @MSCRV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     MRBICC        #1BICC
      C                   MOVEL     MRBICB        #1BICB
      C                   MOVEL     *BLANKS       #1INS1
      C                   MOVEL     *BLANKS       #1INT1
- 
+
      C                   EVAL      #1PCCY    =   MRPCCY
- 
+
      C                   EVAL      #1RECI    =   MRRECI
- 
+
      C                   EVAL      #1RBIC    =   MRRBIC
      C                   EVAL      #1RBIB    =   MRRBIB
      C                   EVAL      #1COVR    =   MRCOVR
@@ -1951,7 +1951,7 @@
      C                   Eval      #1TSHL    =   MrTSHL                                       PNL014
       *---------------------------------------------------------------------                  PNL014
                                                                                               PNL014
- 
+
      C                   MOVEL     MRAJOB        #1AJOB                         Job name
      C                   MOVEL     MRAACT        #1AACT                         Action Type
      C                   Z-ADD     MRRDNB        #1RDNB                         Run day number
@@ -2014,14 +2014,14 @@
       *
      C                   MOVEL     W2DATE        #1ENDTA
      C                   Endif
- 
+
      C                   Clear                   #1BENLA
      C                   Clear                   #1BENHA
      C                   Clear                   #1SHALA
      C                   Clear                   #1SHAHA
      C                   Clear                   #1OURLA
      C                   Clear                   #1OURHA
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -2039,7 +2039,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1BENLA
      C                   Endif
       *
@@ -2053,7 +2053,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1BENHA
      C                   Endif
       *
@@ -2066,7 +2066,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1SHALA
      C                   Endif
       *
@@ -2080,7 +2080,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1SHAHA
      C                   Endif
       *
@@ -2093,7 +2093,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1OURLA
      C                   Endif
       *
@@ -2107,7 +2107,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:6     #1OURHA
      C                   Endif
       *================================================================
@@ -2118,11 +2118,11 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1BICC
      C                   MOVEL     *Blanks       #1BICB
      C                   MOVEL     *BLANKS       #1INS1
- 
+
      C                   MOVEL     P2BICC        #1BICC
      C                   MOVEL     P2BICB        #1BICB
      C                   MOVEL     P2PCCY        #1PCCY
@@ -2199,7 +2199,7 @@
      C                   Z-ADD     #1ATIM        MRATIM                         Action Time
       *
      C                   EVAL      MRPCCY    =   #1PCCY
- 
+
      C                   EVAL      MRRBIC    =   #1RBIC
      C                   EVAL      MRRBIB    =   #1RBIB
      C                   EVAL      MRCOVR    =   #1COVR
@@ -2234,7 +2234,7 @@
      C                   Eval      MrTSHL    =   #1TSHL                                       PNL014
       *---------------------------------------------------------------------                  PNL014
                                                                                               PNL014
- 
+
      C                   MOVEL     'D'           MRRECI                         Record Identifi
      C                   MOVEL     ##JOB         MRAJOB                         Job name
      C                   MOVEL     ##USR         MRAUSR                         User name
@@ -2343,7 +2343,7 @@
      C                   Eval      MrTSHL    =   #1TSHL                                       PNL014
       *---------------------------------------------------------------------                  PNL014
                                                                                               PNL014
- 
+
      C                   MOVEL     #1RECI        MRRECI                         Record Identifi
      C                   MOVEL     #1AJOB        MRAJOB                         Job name
      C                   MOVEL     #1AACT        MRAACT                         Action Type
@@ -2523,7 +2523,7 @@
      C                   Eval      MrTSHL    =   #1TSHL                                       PNL014
       *---------------------------------------------------------------------                  PNL014
                                                                                               PNL014
- 
+
      C                   MOVEL     #1RECI        MRRECI                         Record Identifi
      C                   MOVEL     #1AJOB        MRAJOB                         Job name
      C                   MOVEL     #1AACT        MRAACT                         Action Type
@@ -2723,9 +2723,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

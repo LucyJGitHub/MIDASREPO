@@ -19,7 +19,7 @@
       *                 PNL012             Date 16Sep05               *
       *                 235224             Date 02Aug05               *
       *                 233571             Date 29Jun05               *
-      *                 ESL038             Date 09Dec2004             *
+      *                 ESL038   *CREATE   Date 09Dec2004             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -63,7 +63,7 @@
       *  Data structure for compilation  - Copyright insertion
       *
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
      D CMD@            S             80    DIM(1) CTDATA PERRCD(1)
       *
       *  Array of QCMDEXC commands
@@ -316,7 +316,7 @@
      C                   MOVE      'N'           PNL004                                       PNL004
      C                   ENDIF                                                                PNL004
       *                                                                                       PNL004
- 
+
      C     FIL001        IFEQ      *BLANKS
       *
       *  Override file FTMSCPV1 to share(*NO)

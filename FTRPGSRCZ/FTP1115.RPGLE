@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -494,7 +494,7 @@
      C                   END                                                    FI
       *
      C                   If        #1cycd <> *blanks                            IF
- 
+
       * Get currency details
       *
      C                   CALL      'AOCURRR0'                           9090
@@ -519,7 +519,7 @@
      C                   Endif
       *
      C                   Endif                                                  FI
- 
+
      C*****              If        #1Bseg <> *blanks                            IF            STP499
      C*****KBsegV1       Klist                                                  FI            STP499
      C*****              Kfld                    SxBseg                         FI            STP499
@@ -541,9 +541,9 @@
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
      C                   Endif                                                  FI
- 
+
      C                   If        #1nwrk <> *blanks                            IF
- 
+
       * Get currency details
       *
      C                   CALL      'AONWRKR0'                           9090
@@ -568,10 +568,10 @@
      C                   Endif
       *
      C                   Endif                                                  FI
- 
- 
+
+
      C                   If        #1Mtpy <> *blanks                            IF
- 
+
       * Get currency details
       *
      C                   CALL      'AOMTPYR0'                           9090
@@ -596,7 +596,7 @@
      C                   Endif
       *
      C                   Endif                                                  FI
- 
+
       *
       *================================================================
      CSR   BFEXIT        ENDSR
@@ -761,7 +761,7 @@
      C                   Move      #1icuta       #1icut
      C                   Eval      ##hour = #1icut / 100
      C                   Move      #1icut        ##minute
- 
+
      C                   If        ##hour > 23 or ##minute > 59
      C                   Clear                   #1icut
      C                   SETON                                        9932      *
@@ -770,7 +770,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
       *
@@ -1111,7 +1111,7 @@
       *================================================================
       * Move @CcutV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     ccCyCd        #1CyCd
      C*****              MOVEL     ccBseg        #1Bseg                                       STP499
      C                   MOVEL     ccGPCD        #1GPCD                                       STP499
@@ -1122,7 +1122,7 @@
      C                   MOVEL     ccDES1        #1DES1
      C                   MOVEL     ccDES2        #1DES2
      C                   MOVEL     ccDES3        #1DES3
- 
+
      C                   MOVEL     ccAJOB        #1AJOB                         Job name
      C                   MOVEL     ccAACT        #1AACT                         Action Type
      C                   Z-ADD     ccRDNB        #1RDNB                         Run day number
@@ -1144,13 +1144,13 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1CyCd
      C*****              MOVEL     *Blanks       #1Bseg                                       STP499
      C                   MOVEL     *Blanks       #1GPCD                                       STP499
      C                   MOVEL     *Blanks       #1Nwrk
      C                   MOVEL     *Blanks       #1Mtpy
- 
+
      C                   MOVEL     P2CyCd        #1CyCd
      C*****              MOVEL     P2Bseg        #1Bseg                                       STP499
      C                   MOVEL     P2GPCD        #1GPCD                                       STP499
@@ -1223,13 +1223,13 @@
      C                   MOVEL     #1Nwrk        ccNwrk
      C                   MOVEL     #1Mtpy        ccMtpy
      C                   MOVEL     #1Idoc        ccIdoc
- 
+
      C                   If        #1Icut >= 0
      C                   Eval      ccIcut = #1icut
      C                   Else
      C                   Eval      ccIcut = -1
      C                   Endif
- 
+
      C                   MOVEL     #1DES1        ccDES1
      C                   MOVEL     #1DES2        ccDES2
      C                   MOVEL     #1DES3        ccDES3
@@ -1297,14 +1297,14 @@
       *
       * Move non-key fields to @CcutV0
      C                   MOVEL     #1Idoc        ccIdoc
- 
- 
+
+
      C                   If        #1Icut >= 0
      C                   Eval      ccIcut = #1icut
      C                   Else
      C                   Eval      ccIcut = -1
      C                   Endif
- 
+
      C                   MOVEL     #1DES1        ccDES1
      C                   MOVEL     #1DES2        ccDES2
      C                   MOVEL     #1DES3        ccDES3
@@ -1449,14 +1449,14 @@
       *
       * Move non-key fields to @CcutV0
      C                   MOVEL     #1Idoc        ccIdoc
- 
- 
+
+
      C                   If        #1Icut >= 0
      C                   Eval      ccIcut = #1icut
      C                   Else
      C                   Eval      ccIcut = -1
      C                   Endif
- 
+
      C                   MOVEL     #1DES1        ccDES1
      C                   MOVEL     #1DES2        ccDES2
      C                   MOVEL     #1DES3        ccDES3
@@ -1652,9 +1652,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 21Oct2004             *
+      *                 EEE065   *CREATE   Date 21Oct2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -71,7 +71,7 @@
       *
       * Data Structures used by Access Programs
       *
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -83,7 +83,7 @@
      C                   Clear                   P0Rtn
      C                   Movel     'Extract'     W0PREF
      C                   Exsr      SrInit
- 
+
      C                   Exsr      SrBicPlus
       * Exit
      C                   Return
@@ -102,23 +102,23 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrBicPlus'   @STK(Q)
- 
+
       * Check if Bic Diectory
      C     KBicpV0       Klist
      C                   Kfld                    BIKEY
- 
+
      C                   Clear                   BIKEY
- 
+
      C     KBicpV0       Setll     @BicpV0
      C                   Read      @BicpV0                                90
       * If found continue and read whole file
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
      C     KBicpV0       Chain     @BSchV0
      C                   If        Not %Found
      C                   Clear                   @BSchV0
- 
+
      C                   Eval      BSBIC   = BiBIC                              BIC Code
      C                   Eval      BSKEY   = BiKEY                              Key
      C                   Eval      BSSTYP  = BiSTYP                             Subtype
@@ -127,10 +127,10 @@
      C                   Eval      BSNATI  = BiNATI                             National ID
      C                   Eval      BSACTD  = BiACTD                             Activation Date
      C                   Eval      BSDCTD  = BiDCTD                             Deactivation Date
- 
+
      C                   Write     @BSchV0
      C                   Else
- 
+
      C                   Eval      BSBIC   = BiBIC                              BIC Code
      C                   Eval      BSKEY   = BiKEY                              Key
      C                   Eval      BSSTYP  = BiSTYP                             Subtype
@@ -139,14 +139,14 @@
      C                   Eval      BSNATI  = BiNATI                             National ID
      C                   Eval      BSACTD  = BiACTD                             Activation Date
      C                   Eval      BSDCTD  = BiDCTD                             Deactivation Date
- 
+
      C                   Update    @BSchV0
      C                   Endif
- 
+
      C                   Read      @BicpV0                                90
      C                   Enddo
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *

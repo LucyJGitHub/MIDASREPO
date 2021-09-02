@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -1056,7 +1056,7 @@
       *================================================================
       * Move @CLRCV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     CLCUST        #1CUST
      C                   MOVEL     CLBICC        #1BICC
      C                   MOVEL     CLBICB        #1BICB
@@ -1067,7 +1067,7 @@
      C                   MOVEL     CLDES1        #1DES1
      C                   MOVEL     CLDES2        #1DES2
      C                   MOVEL     CLDES3        #1DES3
- 
+
      C                   MOVEL     CLAJOB        #1AJOB                         Job name
      C                   MOVEL     CLAACT        #1AACT                         Action Type
      C                   Z-ADD     CLRDNB        #1RDNB                         Run day number
@@ -1103,13 +1103,13 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1CUST
      C                   MOVEL     *Blanks       #1BICC
      C                   MOVEL     *BLANKS       #1BICB
      C                   MOVEL     *Blanks       #1BBBC
      C                   MOVEL     *BLANKS       #1BBCB
- 
+
      C                   MOVEL     P2CUST        #1CUST
      C                   MOVEL     P2BICC        #1BICC
      C                   MOVEL     P2BICB        #1BICB
@@ -1591,9 +1591,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

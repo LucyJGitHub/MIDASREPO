@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 19Mar2004             *
+      *                 EEE065   *CREATE   Date 19Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -880,7 +880,7 @@
       * Move @MSTRV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     MSRECI        #1RECI
      C                   MOVEL     MSBICC        #1BICC
      C                   MOVEL     MSBICB        #1BICB
@@ -890,11 +890,11 @@
      C                   MOVEL     MSTSEQ        #1TSEQ
      C                   MOVEL     MSTEST        #1TEST
      C                   MOVEL     MSTSTD        #1TSTD
- 
+
      C                   MOVEL     MSDER1        #1DER1
      C                   MOVEL     MSDER2        #1DER2
      C                   MOVEL     MSDER3        #1DER3
- 
+
      C                   MOVEL     MSAJOB        #1AJOB                         Job name
      C                   MOVEL     MSAUSR        #1AUSR                         User name
      C                   Z-ADD     MSATIM        #1ATIM                         Action Time

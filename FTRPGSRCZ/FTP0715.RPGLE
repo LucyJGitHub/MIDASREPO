@@ -29,8 +29,8 @@
       *                 Djb005             Date 22Mar2005             *
       *                 ESL044             Date 18Jan2005             *
       *                 ESL038             Date 18Jan2005             *
-      *                 EEE065 *Amend      Date 25Nov2004             *
-      *                 EEE065             Date 09Apr2004             *
+      *                 EEE065             Date 25Nov2004             *
+      *                 EEE065   *CREATE   Date 09Apr2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -253,10 +253,10 @@
      D DsLv3Route    E DS                  EXTNAME(FTMROTP0)
      D                                     Prefix(Lv3)
      D                                     Occurs(20)
- 
+
      D DsStarLda       DS           256
      D  DataBit                1    256
- 
+
      D DsChargeDet     DS           256
      D                                     Occurs(20)
      D C#SChargeCode                       Like(MPSCHC)
@@ -478,14 +478,14 @@
      D W#Valid         S              1
      D W#Kird          S              8                                                       PNL013
       ** Fields from transaction
- 
+
      D W#ChargeCode    S                   Like(MPSCHC)
      D W#ChargeRate    S                   Like(MPSCHR)
      D W#ChargeMin     S                   Like(MPSCHL)
      D W#ChargeMax     S                   Like(MPSCHH)
- 
+
      D W#ChargeAmt     S                   Like(MoPyam)
- 
+
      D PayAmt          S             13P 0
      D PayCcy          S              3A
      D SettAmt         S             13P 0
@@ -495,7 +495,7 @@
      D STP             S              1A
      D ChargesDR       S             12S 0
      D AddDeduct       S              1A
- 
+
       * Types of Route to check
      D RouteReg        S              1A
      D RouteLVP        S              1A
@@ -541,22 +541,22 @@
       *                                                                                       PNL014
       *
      D MVDATE          S              5P 0                                                    MM0505
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D Digits          S             10    Inz('1234567890')                                  ESL044
      D LCase           S             26    Inz('abcdefghijklmnopqrstuvwxyz')                  ESL044
      D UCase           S             26    Inz('ABCDEFGHIJKLMNOPQRSTUVWXYZ')                  ESL044
       *
       **  Charge on each tier
      D TierCharge      S             13    DIM(11)
- 
+
       **  Chargeable Amount on each tier
      D TierAmount      S             13    DIM(11)
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -576,10 +576,10 @@
       *                                                                                       PNL013
       **  Reset work field                                                                    PNL013
      C                   Eval      ExBenBank = *Blanks                                        PNL013
- 
+
       * level 1 information
      C                   Exsr      SrInfol1
- 
+
                                                                                               ESL044
       * Test for Customer Specific Routes                                                     ESL044
      C                   If        P0Rtn  <> 'Route'                                          ESL044
@@ -615,7 +615,7 @@
       * Test for Regulated Services Route                                                     ESL044
      C                   If        P0Rtn  <> 'Route'                                          ESL044
      C                   Exsr      SrRegServices                                              ESL044
- 
+
       * Test for Regulated Route
      C                   If        P0Rtn  <> 'Route'
      C                   Exsr      SrRegulated
@@ -634,7 +634,7 @@
                                                                                               PNL014
      C                   Enddo                                                                PNL014
                                                                                               PNL014
- 
+
       * If routed and no settlement method, then default is 08
      C                   If        P0Rtn  = 'Route' and MOSETT = *blanks
      C                   Eval      MoSett = '08'
@@ -652,13 +652,13 @@
      C                   Eval      MoBenb = ExBenBank                                         PNL013
       *                  Eval      MoAcbr = ExBenBank                                         MM1705
      C                   Endif                                                                PNL013
- 
+
      C     ExNoRoute     Tag                                                                  ESL044
       * Set *Lda
      C                   In        DsStarLda
      C                   Eval      DataBit = P2Parm
      C                   Out       DsStarLda
- 
+
      C                   If        LUC112 = 'Y'                                               LUC112
       *                                                                                       LUC112
       ** Scan instruction code for code ending in FP for Faster Payment                       LUC112
@@ -688,7 +688,7 @@
      C                   EndIf                                                                LUC112
      C                   EndIf                                                                LUC112
       *                                                                                       LUC112
- 
+
       * Exit
      C                   Seton                                        Lr
      C                   Return
@@ -707,10 +707,10 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrInfol1'    @STK(Q)
- 
+
      C                   Eval      W#BTBI = MoBtbi
      C                   Clear                   MOBTBI
- 
+
      C                   Clear                   P2PCOR
      C                   Clear                   P2Bicc
      C                   Clear                   P2Bicb
@@ -767,16 +767,16 @@
       *
       * Get SWIFT Authentication
      C                   Clear                   O2Parm
- 
+
       * If branch is blank then set default
- 
+
      C                   Select
      C                   When      O2Brca = *blanks  and IcDbrc = *blanks
      C                   Eval      O2Brca = 'MBB'
      C                   Other
      C                   Eval      O2Brca = ICDBrc
      C                   Endsl
- 
+
      C                   Eval      O2type = 'S'
       *  What has been input, Pay Through? Beneficiary Bank
       *
@@ -995,14 +995,14 @@
      C                   If        %subst(MoBenb:1:8) <> *blanks And
      C                             %subst(MoBenb:9:3) = *blanks
       *
- 
+
      C     KBSchV1       Klist
      C                   KFld                    BsKey
- 
+
      C     KBSchV2p      Klist
      C                   KFld                    BsCntc
      C                   KFld                    BsNati
- 
+
      C     KBSchV2r      Klist
      C                   KFld                    BsCntc
       *
@@ -1044,7 +1044,7 @@
      C                   Endif
      C                   Endsl
      C                   Endif
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -1095,7 +1095,7 @@
       *
      C                   Goto      ExNCont1
      C                   Endif
- 
+
      C     KMscrV2       Reade     @MscrV2                                90
      C                   Enddo
      C                   Endif
@@ -1158,7 +1158,7 @@
      C                   Goto      ExNCont1
      C                   Endif
      C                   Endif
- 
+
      C     KMscrV2       Reade     @MscrV2                                90
      C                   Enddo
      C                   Endif
@@ -1213,7 +1213,7 @@
      C                   Goto      ExNCont1
      C                   Endif
      C                   Endif
- 
+
      C     KMscrV2       Reade     @MscrV2                                90
      C                   Enddo
      C                   Endif
@@ -1318,7 +1318,7 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
       * Check correspondent for payment
      C                   Exsr      SrCorDate
                                                                                               PNL014
@@ -1326,11 +1326,11 @@
      C                   If        W#Valid = 'Y'                                              PNL014
      C                   Exsr      SrCorTime                                                  PNL014
      C                   Endif                                                                PNL014
- 
+
      C                   If        W#Valid = 'Y'
- 
+
      C                   Exsr      SrCorCheck
- 
+
       * Check for direct send
      C                   If        W#Valid = 'Y' and Lv1SwAut = *blanks
      C                   Eval      O2SBicc = %subst(MoPthr:1:8)
@@ -1343,16 +1343,16 @@
      C                   Eval      W#Valid = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   If        W#Valid = 'Y'
      C                   Eval      DsTopSTPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse1
      C                   Else
- 
+
       * Not found Analyse routing
      C                   Exsr      SrNotFound1
      C                   Endif
@@ -1365,20 +1365,20 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
- 
+
+
       * Check correspondent for payment
      C                   Exsr      SrCorDate
- 
+
      C                   If        W#Valid = 'Y'
- 
+
      C                   Exsr      SrCorCheck
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
      C                   If        W#Valid = 'Y'                                              PNL014
      C                   Exsr      SrCorTime                                                  PNL014
      C                   Endif                                                                PNL014
- 
+
       * Check for direct send
      C                   If        W#Valid = 'Y' and Lv1SwAut = *blanks
      C                   Eval      O2SBicc = %subst(MoBenb:1:8)
@@ -1391,16 +1391,16 @@
      C                   Eval      W#Valid = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   If        W#Valid = 'Y'
      C                   Eval      DsTopSTPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse1
      C                   Else
- 
+
       * Not found Analyse routing
      C                   Exsr      SrNotFound1
      C                   Endif
@@ -1413,18 +1413,18 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
      C                   If        W#Valid = 'Y'
- 
+
       * Set Preferential indicator
      C                   Eval      Lv1McPcor = McPcor
      C                   Eval      Lv1McPnbr = McPnbr
- 
+
       * Analyse routing
      C                   Exsr      SrReDirect2
      C                   Else
- 
+
       * Not found Analyse routing
      C                   Exsr      SrNotFound1
      C                   Endif
@@ -1461,26 +1461,26 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrCorCheck'  @STK(Q)
- 
+
       * Check dates
      C                   Exsr      SrCorDate
- 
+
       * Test for convention
      C                   Clear                   W#Convention
      C                   If        W#Valid = 'Y'
      C                   Clear                   W#CompConv
- 
+
       * Set up convention to check
      C                   Eval      W#CompConv = McS71a
- 
+
      C                   Exsr      SrConvention
      C                   Endif
- 
+
       * Test for Direct Payment
      C                   If        W#Valid = 'Y'
      C                   Exsr      SrCorDirect
      C                   Endif
- 
+
       * Test for Payment Range
      C                   If        W#Valid = 'Y'
      C                   Exsr      SrCorRange
@@ -1540,7 +1540,7 @@
      C                             and McEndt > 0 and McEndt < WuRdnb
      C                   Eval      W#Valid = 'Y'
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -1815,9 +1815,9 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrCorRange'  @STK(Q)
- 
+
       *  Look at amounts against convention
- 
+
      C                   Select
      C                   When      MoDtch = 'SHA' or MoDtch = *blanks
       * Is amount within range
@@ -1907,7 +1907,7 @@
      C                             and MpEndt > 0 and MpEndt < WuRdnb
      C                   Eval      W#Valid = 'Y'
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -1963,7 +1963,7 @@
      C                             and MpEndt > 0 and MpEndt < WuRdnb
      C                   Eval      W#Valid = 'Y'
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -2146,7 +2146,7 @@
      C                   Eval      W#Valid = 'Y'
      C                   Endsl
      C                   Endsl
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -2216,7 +2216,7 @@
      C                   Eval      W#Valid = 'Y'
      C                   Endsl
      C                   Endsl
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -2412,7 +2412,7 @@
      C                             and MrEndt > 0 and MrEndt < WuRdnb
      C                   Eval      W#Valid = 'Y'
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -2468,7 +2468,7 @@
      C                             and MrEndt > 0 and MrEndt < WuRdnb
      C                   Eval      W#Valid = 'Y'
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *
@@ -2586,7 +2586,7 @@
      C     KMsgrV1p      Reade     @MsgrV1                                90                  ESL038
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
      C***                Exsr      SrPayDat1                                                  ESL038
      C                   Exsr      SrPayDat1g                                                 ESL038
                                                                                               ESL038
@@ -2628,7 +2628,7 @@
      C                                             + MgRcAc                                   ESL038
      C                   Eval      DstPrefer(####T) = MgProt                                  ESL038
      C                   Endif
- 
+
      C**** KMscpV1p      Reade     @MscpV1                                90                  ESL038
      C     KMsgrV1p      Reade     @MsgrV1                                90                  ESL038
      C                   Enddo
@@ -2661,7 +2661,7 @@
      C     KMsgrV1p      Reade     @MsgrV1                                90                  ESL038
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
      C***                Exsr      SrPayDat1                                                  ESL038
      C                   Exsr      SrPayDat1g                                                 ESL038
                                                                                               ESL038
@@ -2700,18 +2700,18 @@
      C                   Leave
      C                   Endif
      C                   Enddo
- 
+
      C                   If        MoRccr <> *blanks
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C**** KMscpV1p      Reade     @MscpV1                                90                  ESL038
      C     KMsgrV1p      Reade     @MsgrV1                                90                  ESL038
      C                   Enddo
      C                   Endif
      C                   Endif
- 
+
       * If not receiver then select one
      C                   If        MoRccr = *blanks and ####T <> 0
       *
@@ -2820,7 +2820,7 @@
      C                   Eval      MpCbib = MpBicb
       *
      C     KMscpV1       Chain     @MscpV1
- 
+
      C                   Exsr      SrPayDate
      C                   If        W#Valid = 'Y'
      C                   Exsr      SrPayCopt
@@ -2857,7 +2857,7 @@
      C                   Exsr      SrAccount
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
@@ -2868,20 +2868,20 @@
      C                   Exsr      SrAccount
      C                   Eval      MoDmac    = McDacr
      C                   Endif
- 
+
       * Check Payment convention and Amounts
      C                   Exsr      SrCheckPay1
- 
+
       * Only proceed if Ok
      C                   If        W#Valid = 'Y'
- 
+
      C                   Eval      RouteSet = 'Y'
      C                   Eval      RouteGen = 'Y'
      C                   Eval      RouteLVP = 'N'
      C                   Eval      RouteReg = 'N'
      C                   Eval      RouteOur = 'N'
      C                   Eval      RouteService = 'N'
- 
+
       * Calculate charge for route
      C                   If        MpSchc <> *blanks or MpSchr <> 0
      C                   Eval      W#ChargeCode = MpSchc
@@ -2900,7 +2900,7 @@
      C                   Eval      C#SChargeMin  = W#ChargeMin
      C                   Eval      C#SChargeMax  = W#ChargeMax
      C                   Eval      C#SChargeAmt  = W#ChargeAmt
- 
+
      C                   Eval      W#ChargeCode = Mclchc
      C                   Eval      W#ChargeRate = Mclchr
      C                   Eval      W#ChargeMin  = Mclchh
@@ -2911,30 +2911,30 @@
      C                   Eval      C#lChargeMin  = W#ChargeMin
      C                   Eval      C#lChargeMax  = W#ChargeMax
      C                   Eval      C#lChargeAmt  = W#ChargeAmt
- 
+
       * Fill routing information on charge
      C                   Eval      MoStdc = C#SChargeCode
      C                   Eval      MoStda = C#SChargeAmt
      C                   Eval      MoLvpc = C#lChargeCode
      C                   Eval      MoLvpa = C#lChargeAmt
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
      C                   Exsr      SrSTProute
- 
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Endif
- 
+
      C                   When      W#Valid <> 'Y'
       *
       *  Return information
@@ -2954,20 +2954,20 @@
      C                   Eval      W0Account = McDacr
      C                   Exsr      SrAccount
      C                   Eval      MoDmac    = McDacr
- 
+
       * Check Payment convention and Amounts
      C                   Exsr      SrCheckPay1
- 
+
       * Only proceed if Ok
      C                   If        W#Valid = 'Y'
- 
+
      C                   Eval      RouteSet = 'Y'
      C                   Eval      RouteGen = 'Y'
      C                   Eval      RouteLVP = 'N'
      C                   Eval      RouteReg = 'N'
      C                   Eval      RouteOur = 'N'
      C                   Eval      RouteService = 'N'
- 
+
       * Calculate charge for route
      C                   Eval      W#ChargeCode = McSchc
      C                   Eval      W#ChargeRate = McSchr
@@ -2979,7 +2979,7 @@
      C                   Eval      C#SChargeMin  = W#ChargeMin
      C                   Eval      C#SChargeMax  = W#ChargeMax
      C                   Eval      C#SChargeAmt  = W#ChargeAmt
- 
+
      C                   Eval      W#ChargeCode = Mclchc
      C                   Eval      W#ChargeRate = Mclchr
      C                   Eval      W#ChargeMin  = Mclchh
@@ -2990,19 +2990,19 @@
      C                   Eval      C#lChargeMin  = W#ChargeMin
      C                   Eval      C#lChargeMax  = W#ChargeMax
      C                   Eval      C#lChargeAmt  = W#ChargeAmt
- 
+
       * Fill routing information on charge
      C                   Eval      MoStdc = C#SChargeCode
      C                   Eval      MoStda = C#SChargeAmt
      C                   Eval      MoLvpc = C#lChargeCode
      C                   Eval      MoLvpa = C#lChargeAmt
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
@@ -3010,12 +3010,12 @@
      C                   Endif
       * Test for STP and LVP Route
      C                   EXsr      SrSTProute
- 
- 
+
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Endif
- 
- 
+
+
      C                   Endsl
       *
      C                   Endsl
@@ -3053,7 +3053,7 @@
      C                   Eval      Lv1McBicc = %subst(MoPthr:1:8)
      C                   Eval      Lv1McBicb = %subst(MoPthr:9:3)
      C                   Eval      Lv1McPccy = MoPccy
- 
+
       * Check for direct send
      C                   If        Lv1SwAut = *blanks
      C                   Eval      O2SBicc = %subst(MoPthr:1:8)
@@ -3066,7 +3066,7 @@
      C                   Eval      Lv1Swaut = '*Indir'
      C                   Endif
      C                   Endif
- 
+
       *
      C                   If        Lv1Swaut = *blanks
      C                   Eval      Lv1McCtyp = 'SWIFTKEY'
@@ -3086,7 +3086,7 @@
      C                   Eval      Lv1McBicc = %subst(MoBenb:1:8)
      C                   Eval      Lv1McBicb = %subst(MoBenb:9:3)
      C                   Eval      Lv1McPccy = MoPccy
- 
+
       * Check for direct send
      C                   If        Lv1SwAut = *blanks
      C                   Eval      O2SBicc = %subst(MoPthr:1:8)
@@ -3099,7 +3099,7 @@
      C                   Eval      Lv1Swaut = '*Indir'
      C                   Endif
      C                   Endif
- 
+
       * Change type depending on Authentication
      C                   If        Lv1Swaut = *blanks
      C                   Eval      Lv1McCtyp = 'SWIFTKEY'
@@ -3178,7 +3178,7 @@
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
      C                   If        W#Valid = 'Y'                                              PNL014
@@ -3201,7 +3201,7 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
       * Check for Swift key
      C                   Eval      O2SBicc = MpCbic
      C                   Eval      O2SBicb = MpCbib
@@ -3209,9 +3209,9 @@
      C                   Call      'FTP0700'
      C                   Parm                    O2RTN             7
      C                   Parm                    O2Parm                         Incoming dat
- 
+
      C                   Exsr      SrCorDate
- 
+
      C                   If        W#Valid = 'Y' and McCtyp = 'ACCOUNT'
      C                             or
      C                             O2Rtn = *blanks and MpC53a <> *blanks
@@ -3231,7 +3231,7 @@
      C                   Clear                   MoIntr
      C                   Eval      MoRccr = MpC54c + MpC54b
      C                   Eval      MoDstr = MpCbic + MpCbib
- 
+
      C                   Select
       * If correspondent with special routing
      C                   When      W#Valid = 'N' and O2Rtn = *blanks
@@ -3252,19 +3252,19 @@
      C                   Endif                                                                PNL015
                                                                                               PNL015
      C                   Eval      MoSett = MpStmt
- 
+
       * If correspondent with special routing
      C                   When      W#Valid = 'Y' and O2Rtn = *blanks
      C                   Eval      MoDstr = MpCBic + MpCbib
      C                   Eval      MoSett = MpStmt
- 
+
       * Default to account settlement method
      C                   If        McCtyp = 'ACCOUNT' and W#Valid = 'Y'
      C                             and MoSett = *blanks
      C                   Eval      MoSett = McStmt
      C                   Endif
      C                   Endsl
- 
+
      C                   Eval      MoIntr = MpC56c + MpC56b
      C                   Eval      MoAcbr = MoBenb
      C                   Eval      Mor910 = Mpr910
@@ -3278,7 +3278,7 @@
      C                   Exsr      SrAccount
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
@@ -3289,7 +3289,7 @@
      C                   Eval      W0Account = McDacr
      C                   Eval      MoCthr = McDacr
      C                   Exsr      SrAccount
- 
+
       * Same bank same country
      C                   If        %subst(MoDstr:1:6) = %subst(BBCsid:1:6)
      C                             or Lv1Swaut <> *blanks
@@ -3301,25 +3301,25 @@
      C                   Eval      MoCvrr = 'N'
      C                   Eval      MoSncr = *blanks
      C                   Else
- 
+
       * Different
- 
+
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
      C                   Endif
      C                   Eval      MoSncr = MpC53c + MpC53b
- 
+
      C                   Eval      MoRccr = '?'
- 
+
       * If routed then identify receiver's correspondent
      C                   If        MoRccr = '?'
      C                   Exsr      SrRecCorr
      C                   Endif
- 
+
      C                   If        Mcr910 <> 'Y'
      C                   Eval      Mor910 = 'N'
      C                   Eval      MoCvrr = 'Y'
@@ -3327,15 +3327,15 @@
      C                   Eval      Mor910 = 'Y'
      C                   Eval      MoCvrr = 'N'
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
- 
+
       * Increment preferential figures
      C                   If        Lv1McPcor = 'Y' and MpPcor ='Y'
      C******             Eval      MpPnbr = MpPnbr + 1
      C                   Endif
- 
+
       * Calculate charge for route
      C                   If        MpSchc <> *blanks or MpSchr <> 0
      C                   Eval      W#ChargeCode = MpSchc
@@ -3354,7 +3354,7 @@
      C                   Eval      C#SChargeMin  = W#ChargeMin
      C                   Eval      C#SChargeMax  = W#ChargeMax
      C                   Eval      C#SChargeAmt  = W#ChargeAmt
- 
+
      C                   Eval      W#ChargeCode = Mclchc
      C                   Eval      W#ChargeRate = Mclchr
      C                   Eval      W#ChargeMin  = Mclchh
@@ -3365,29 +3365,29 @@
      C                   Eval      C#lChargeMin  = W#ChargeMin
      C                   Eval      C#lChargeMax  = W#ChargeMax
      C                   Eval      C#lChargeAmt  = W#ChargeAmt
- 
+
       * Fill routing information on charge
      C                   Eval      MoStdc = C#SChargeCode
      C                   Eval      MoStda = C#SChargeAmt
      C                   Eval      MoLvpc = C#lChargeCode
      C                   Eval      MoLvpa = C#lChargeAmt
- 
+
      C                   Select
       * If LVP Check
      C                   When      McLVPa = 'Y' and McLVPt > MoPYAM
      C                             and MpSLvp = 'Y'
- 
+
       * Test for convention
      C                   Clear                   W#Convention
      C                   If        W#Valid = 'Y'
      C                   Clear                   W#CompConv
- 
+
       * Set up convention to check
      C                   Eval      W#CompConv = McQ71a
- 
+
      C                   Exsr      SrConvention
      C                   Endif
- 
+
       * Set flags
      C                   Eval      RouteSet = 'Y'
      C                   Eval      RouteGen = 'N'
@@ -3395,21 +3395,21 @@
      C                   Eval      RouteReg = 'N'
      C                   Eval      RouteOur = 'N'
      C                   Eval      RouteService = 'N'
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
      C                   Exsr      SrSTProute
- 
+
       * IF not LVP switch off and loop
      C                   If        MoLVPF <> 'Y' or W#Valid = 'N'
      C                             and McLVPA = 'Y'
@@ -3427,7 +3427,7 @@
      C                   Iter
      C                   Endif
      C                   Other
- 
+
       * Test for STP
      C                   Eval      RouteSet = 'Y'
      C                   Eval      RouteGen = 'Y'
@@ -3435,13 +3435,13 @@
      C                   Eval      RouteReg = 'N'
      C                   Eval      RouteOur = 'N'
      C                   Eval      RouteService = 'N'
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
@@ -3449,21 +3449,21 @@
      C                   Endif
      C                   Exsr      SrSTProute
      C                   Endsl
- 
+
       * Check Payment convention and Amounts if not LVP
      C                   If        MoLVPF <> 'Y' and McLVPa = 'Y'
      C                             Or W#Valid = 'N' and McLVPA <> 'Y'
      C                   Exsr      SrCheckPay1
      C                   Endif
- 
+
       * Only proceed if Ok
      C                   If        W#Valid = 'Y'
- 
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Eval      DsLv1PayCorr = DsPayCorr
      C                   Eval      DsLv1PayCord = DsSTPCorr
      C                   Eval      DsLv1Route = MROTDS
- 
+
      C                   Else
      C     ####P         Occur     DsLv1PayCorr
      C                   Clear                   DsLv1PayCorr
@@ -3475,9 +3475,9 @@
      C                   Clear                   DsChargeDet
      C                   Eval      ####P = ####P - 1
      C                   Endif
- 
+
      C                   Endif
- 
+
      C**** KMscpV1p      Reade     @MscpV1                                90                  PNL014
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Enddo
@@ -3489,7 +3489,7 @@
      C                   Endif
       *
      C                   Eval      W#Select = 'N'
- 
+
       * Set to first route found
      C     1             Occur     DsLv1PayCorr
      C     1             Occur     DsLv1PayCord
@@ -3506,12 +3506,12 @@
      C     ####S         Occur     DsLv1PayCord
      C     ####S         Occur     DsLv1Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc1McLVPa = 'Y' and Lc1McLVPt > MoPYAM
      C                             and Lv1McPcor = 'Y'  and Lv1MpPcor = 'Y'
       *
      C                   Eval      W#Lv1McPnbr =   Lv1McPnbr
- 
+
       * Set to 1 if 0
      C                   If        W#Lv1McPnbr = 0
      C                   Eval      W#Lv1McPnbr = 1
@@ -3532,7 +3532,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
       *
       *  Check for LVP Agreement routing
@@ -3543,7 +3543,7 @@
      C     ####S         Occur     DsLv1PayCord
      C     ####S         Occur     DsLv1Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc1McLVPa = 'Y' and Lc1McLVPt > MoPYAM
       *
      C                   Eval      DsPayCorr   =   DsLv1PayCorr
@@ -3557,7 +3557,7 @@
      C                   Eval      P2Cbib = MpCbib
      C                   Leave
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
       *
@@ -3572,12 +3572,12 @@
      C     ####S         Occur     DsLv1PayCord
      C     ####S         Occur     DsLv1Route
      C     ####S         Occur     DsChargeDet
- 
+
       * BEN Payments
      C                   If        Lv1MpPbCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv1McPnbr =   Lv1McSpBn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv1McPnbr = 0
      C                   Eval      W#Lv1McPnbr = 1
@@ -3598,12 +3598,12 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
       * SHA Payments
      C                   If        Lv1MpPsCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv1McPnbr =   Lv1McSpSn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv1McPnbr = 0
      C                   Eval      W#Lv1McPnbr = 1
@@ -3624,12 +3624,12 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
       * OUR Payments
      C                   If        Lv1MpPoCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv1McPnbr =   Lv1McSpOn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv1McPnbr = 0
      C                   Eval      W#Lv1McPnbr = 1
@@ -3650,7 +3650,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
       *
@@ -3663,11 +3663,11 @@
      C     ####S         Occur     DsLv1PayCord
      C     ####S         Occur     DsLv1Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lv1MpPcor = 'Y'
       * Calculate percentage, if less leave
      C                   Eval      W#Lv1McPnbr =   Lv1McPnbr
- 
+
       * Set to 1 if 0
      C                   If        W#Lv1McPnbr = 0
      C                   Eval      W#Lv1McPnbr = 1
@@ -3687,9 +3687,9 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
- 
+
       * If not selected then
      C                   If        W#Select <> 'Y'
      C     1             Do        ####P         ####S             5 0
@@ -3697,7 +3697,7 @@
      C     ####S         Occur     DsLv1PayCord
      C     ####S         Occur     DsLv1Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lv1MpPcor <> 'Y'
      C                   Eval      DsPayCorr   =   DsLv1PayCorr
      C                   Eval      MROTDS      =   DsLv1Route
@@ -3705,9 +3705,9 @@
      C                   Leave
      C                   Endif
      C                   Enddo
- 
+
      C                   Endif
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -3759,7 +3759,7 @@
      C                   Eval      %subst(McBicc:5:2) = '??'
      C     KMsccV1       Chain     @MsccV1
      C                   Endsl
- 
+
      C                   If        %Found
      C                   Exsr      SrCorDate
                                                                                               PNL014
@@ -3768,9 +3768,9 @@
      C                   Exsr      SrCorTime                                                  PNL014
      C                   Endif                                                                PNL014
                                                                                               PNL014
- 
+
      C                   If        W#Valid = 'Y'
- 
+
       * Check for Account Routing
      C                   Exsr      SrLkUpAcct1
      C                   Endif
@@ -3869,7 +3869,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C     KMscrV2       Reade     @MscrV2                                90
      C                   Enddo
      C                   Endif
@@ -3915,9 +3915,9 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
       *  Check for Authentication
- 
+
      C                   Exsr      SrCorDate
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
@@ -3926,10 +3926,10 @@
      C                   Endif                                                                PNL014
                                                                                               PNL014
      C                   If        W#Valid = 'Y'
- 
+
      C                   Exsr      SrCorCheck
      C                   Endif
- 
+
      C                   If        W#Valid = 'Y'
       *
       *Reset top information
@@ -3942,7 +3942,7 @@
      C                   Parm                    O2Parm                         Incoming dat
       *
      C                   Eval      Lv1RrtSwaut = O2Rtn
- 
+
       *  Routing depending on Account Type
      C                   Select
      C                   When      %Found and McCtyp = 'ACCOUNT'
@@ -4008,13 +4008,13 @@
      C                   Exsr      SrAccount
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
      C                   Endif
      C                   Eval      MoSncr = MpC53c + MpC53b
- 
+
       * Same bank same country
       ******
      C******             If        %subst(MoDstr:1:6) = %subst(BBCsid:1:6)
@@ -4025,18 +4025,18 @@
      C******             Eval      MoCthr    = *blanks
      C******             Eval      MoCvrr = 'N'
      C******             Endif
- 
+
      C                   Else
      C                   Eval      W0Account = McDacr
      C                   Exsr      SrAccount
      C                   Eval      MoDmac    = McDacr
      C                   Endif
- 
+
       * If routed then identify receiver's correspondent
      C                   If        MoRccr = '?'
      C                   Exsr      SrRecCorr
      C                   Endif
- 
+
       * Set up route allowed
      C                   Eval      RouteSet = 'Y'
      C                   Eval      RouteGen = 'N'
@@ -4046,16 +4046,16 @@
      C                   Eval      RouteService = 'N'
       * Check Payment convention and Amounts - LVP
      C                   Exsr      SrCheckPay3
- 
+
       * Test for STP and LVP Route
      C                   If        W#Valid = 'Y'
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
@@ -4063,7 +4063,7 @@
      C                   Endif
      C                   Exsr      SrSTProute
      C                   Endif
- 
+
      C                   Select
      C                   When      W#Valid = 'Y' and MoLVPF <> 'Y'
      C                             Or
@@ -4083,29 +4083,29 @@
      C                   Endif
      C                   When      W#Valid = 'Y' and MoLVPF = 'Y'
       * LVP route
- 
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Endsl
- 
+
       * SWIFTKey rounting
      C                   When      %Found and McCtyp <> 'ACCOUNT'
      C                             and Lv1RrtSwaut = *blanks
- 
+
       * If replace BIC then overwrite beneficiary bank
      C                   If        MrRplc = 'Y'
      C                   Eval      Mobenb = MrBicc + MrBicb
      C                   Endif
- 
+
      C                   Exsr      SrAnalyse1
       * Benef rounting
      C                   When      %Found and McCtyp <> 'ACCOUNT'
      C                             and Lv1RrtSwaut <> *blanks
- 
+
       * If replace BIC then overwrite beneficiary bank
      C                   If        MrRplc = 'Y'
      C                   Eval      Mobenb = MrBicc + MrBicb
      C                   Endif
- 
+
      C                   Exsr      SrAnalyse1
      C                   Endsl
      C                   Endif
@@ -4190,17 +4190,17 @@
      C                   Endif
       *
      C                   Enddo
- 
+
       * Still no routing so now check for LVP Routing
      C                   If        P0Rtn  <> 'Route'
      C                   Exsr      SrLVP
- 
+
       * Still no routing so now check for currency country re-route
      C                   If        P0Rtn  <> 'Route'
       *
       * Get currency country re-direction
      C                   Exsr      SrReDirect2
- 
+
      C                   Endif
      C                   Endif
       *
@@ -4235,7 +4235,7 @@
      C                   Eval      McPccy = NxtMcPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
@@ -4243,11 +4243,11 @@
      C                   Exsr      SrCorTime                                                  PNL014
      C                   Endif                                                                PNL014
                                                                                               PNL014
- 
+
      C                   If        W#Valid = 'Y'
- 
+
      C                   Exsr      SrCorCheck
- 
+
       * Check for direct send
      C                   If        W#Valid = 'Y' and Lv1SwAut = *blanks
      C                   Eval      O2SBicc = %subst(McBicc:1:8)
@@ -4260,9 +4260,9 @@
      C                   Eval      W#Valid = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   If        W#Valid = 'Y'
      C                   Eval      DsNxtSTPCorr = DsSTPCorr
       *
@@ -4327,7 +4327,7 @@
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Iter
      C                   Endif
- 
+
       * Check for authentication key
      C                   Clear                   DsLevel2
      C                   Clear                   DsLv2STPCorr
@@ -4341,7 +4341,7 @@
      C                   Parm                    O2Parm                         Incoming dat
       *
      C                   Eval      Lv2Swaut = O2Rtn
- 
+
       *
       * SWIFT Authentication found try routing
      C                   If        Lv2SwAut = *blanks
@@ -4354,7 +4354,7 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
@@ -4363,9 +4363,9 @@
      C                   Endif                                                                PNL014
                                                                                               PNL014
      C                   If        W#Valid = 'Y'
- 
+
      C                   Exsr      SrCorCheck
- 
+
       * Check for direct send
      C                   If        W#Valid = 'Y' and Lv1SwAut = *blanks
      C                   Eval      O2SBicc = %subst(McBicc:1:8)
@@ -4378,7 +4378,7 @@
      C                   Eval      W#Valid = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv2STPCorr = DsSTPCorr
      C                   Else
@@ -4386,9 +4386,9 @@
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Iter
      C                   Endif
- 
+
      C                   Else
- 
+
       * Check for direct send
      C                   Eval      O2SBicc = %subst(MpCBic:1:8)
      C                   Exsr      SrCheckSWAUTN
@@ -4396,14 +4396,14 @@
      C                   If        W#DirectSW = 'Y'
      C                   Eval      Lv2DirectSW = W#DirectSW
      C                   Else
- 
+
       * Inhibited routing, read next
      C**** KMscpV1p      Reade     @MscpV1                                90                  PNL014
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Iter
      C                   Endif
- 
- 
+
+
       * Not found Set basic details
      C                   Eval      Lv2McBicc = MpCBic
      C                   Eval      Lv2McBicb = MpCBib
@@ -4413,13 +4413,13 @@
       * Check for payment routing
      C                   Exsr      SrRoute2
      C                   Endif
- 
+
      C                   If        P0Rtn  = 'Route'
      C                   Eval      P0Rtn  = 'Route'
      C                   Leave
- 
+
      C                   Endif
- 
+
      C**** KMscpV1p      Reade     @MscpV1                                90                  PNL014
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Enddo
@@ -4456,7 +4456,7 @@
      C                   Eval      MpCbib = Lv2McBicb
       *
      C     KMscpV1       Chain     @MscpV1
- 
+
      C                   Exsr      SrPayDate
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
@@ -4488,7 +4488,7 @@
      C                   Exsr      SrAccount
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
@@ -4499,7 +4499,7 @@
      C                   Exsr      SrAccount
      C                   Eval      MoDmac    = McDacr
      C                   Endif
- 
+
       * Set up route allowed
      C                   Eval      RouteSet = 'Y'
      C                   Eval      RouteGen = 'N'
@@ -4509,16 +4509,16 @@
      C                   Eval      RouteService = 'N'
       * Check Payment convention and Amounts - LVP
      C                   Exsr      SrCheckPay3
- 
+
       * Test for STP and LVP Route
      C                   If        W#Valid = 'Y'
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
@@ -4526,7 +4526,7 @@
      C                   Endif
      C                   Exsr      SrSTProute
      C                   Endif
- 
+
      C                   Select
      C                   When      W#Valid = 'Y' and MoLVPF <> 'Y'
      C                             Or
@@ -4538,7 +4538,7 @@
      C                   Eval      RouteReg = 'N'
      C                   Eval      RouteOur = 'N'
      C                   Eval      RouteService = 'N'
- 
+
       * Check Payment convention and Amounts - not LVP
      C                   Exsr      SrCheckPay3
      C                   If        W#Valid = 'Y'
@@ -4548,11 +4548,11 @@
      C                   Endif
      C                   When      W#Valid = 'Y' and MoLVPF = 'Y'
       * LVP route
- 
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Goto      ExRoute2
      C                   Endsl
- 
+
      C                   Endif
       *
       *  Clear data occurs if correspondent data
@@ -4600,7 +4600,7 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
      C                   If        W#Valid = 'Y' and McCtyp = 'ACCOUNT'
       *
@@ -4616,7 +4616,7 @@
      C                   Clear                   MoSett
      C                   Clear                   MoIntr
      C                   Eval      MoRccr = MpC54c + MpC54b
- 
+
      C                   Select
       * If LVP and serial then leave
      C                   When      McLVPa = 'Y' and McLVPt > MoPYAM
@@ -4625,7 +4625,7 @@
      C                   When      Lv1Swaut = *blanks and MpSerp <> 'Y'
      C                   Eval      MoDstr = Lv2McBicc + Lv2McBicb
      C                   Endsl
- 
+
      C                   Eval      MoIntr = MpC56c + MpC56b
      C                   Eval      MoAcbr = MoBenb
      C                   Eval      MoCvrr = MpC53r
@@ -4638,19 +4638,19 @@
      C                   Exsr      SrAccount
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
      C                   Endif
      C                   Eval      MoSncr = MpC53c + MpC53b
      C                   Else
- 
+
       * Cover required ?
      C                   Eval      W0Account = McDacr
      C                   Eval      MoCthr = McDacr
      C                   Exsr      SrAccount
- 
+
       * Same bank same country
      C                   If        %subst(MoDstr:1:6) = %subst(BBCsid:1:6)
      C                             or Lv1Swaut <> *blanks
@@ -4660,34 +4660,34 @@
      C                   Eval      MoCvrr = 'N'
      C                   Eval      MoSncr = *blanks
      C                   Else
- 
+
       * Different
- 
+
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
      C                   Endif
      C                   Eval      MoSncr = MpC53c + MpC53b
- 
+
      C                   Eval      MoRccr = '?'
- 
+
       * If routed then identify receiver's correspondent
      C                   If        MoRccr = '?'
      C                   Exsr      SrRecCorr
      C                   Endif
- 
+
      C                   Eval      MoCvrr = 'Y'
      C                   Endif
      C                   Endif
- 
+
       * Increment preferential figures
      C                   If        Lv2McPcor = 'Y' and MpPcor ='Y'
      C*****              Eval      MpPnbr = MpPnbr + 1
      C                   Endif
- 
+
       * Calculate charge for route
      C                   If        MpSchc <> *blanks or MpSchr <> 0
      C                   Eval      W#ChargeCode = MpSchc
@@ -4706,7 +4706,7 @@
      C                   Eval      C#SChargeMin  = W#ChargeMin
      C                   Eval      C#SChargeMax  = W#ChargeMax
      C                   Eval      C#SChargeAmt  = W#ChargeAmt
- 
+
      C                   Eval      W#ChargeCode = Mclchc
      C                   Eval      W#ChargeRate = Mclchr
      C                   Eval      W#ChargeMin  = Mclchh
@@ -4717,13 +4717,13 @@
      C                   Eval      C#lChargeMin  = W#ChargeMin
      C                   Eval      C#lChargeMax  = W#ChargeMax
      C                   Eval      C#lChargeAmt  = W#ChargeAmt
- 
+
       * Fill routing information on charge
      C                   Eval      MoStdc = C#SChargeCode
      C                   Eval      MoStda = C#SChargeAmt
      C                   Eval      MoLvpc = C#lChargeCode
      C                   Eval      MoLvpa = C#lChargeAmt
- 
+
      C                   Select
       * If LVP Check
      C                   When      McLVPa = 'Y' and McLVPt > MoPYAM
@@ -4737,7 +4737,7 @@
      C                   Eval      RouteService = 'N'
       * Check Payment convention and Amounts - LVP
      C                   Exsr      SrCheckPay3
- 
+
       * IF not LVP switch off and loop
      C                   If        MoLVPF <> 'Y'
      C                             and McLVPA = 'Y'
@@ -4753,13 +4753,13 @@
      C                   Eval      RouteReg = 'N'
      C                   Eval      RouteOur = 'N'
      C                   Eval      RouteService = 'N'
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
@@ -4767,14 +4767,14 @@
      C                   Endif
      C                   Exsr      SrSTProute
      C                   Endsl
- 
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Eval      DsLv2PayCorr = DsPayCorr
      C                   Eval      DsLv2PayCord = DsSTPCorr
      C                   Eval      DsLv2Route = MROTDS
- 
+
      C                   Endif
- 
+
      C**** KMscpV1p      Reade     @MscpV1                                90                  PNL014
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Enddo
@@ -4786,7 +4786,7 @@
      C                   Endif
       *
      C                   Eval      W#Select = 'N'
- 
+
       * Set to first route found
      C     1             Occur     DsLv2PayCorr
      C     1             Occur     DsLv2PayCord
@@ -4802,12 +4802,12 @@
      C     ####S         Occur     DsLv2PayCord
      C     ####S         Occur     DsLv2Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc2McLVPa = 'Y' and Lc2McLVPt > MoPYAM
      C                             and Lv2McPcor = 'Y'  and Lv2MpPcor = 'Y'
       *
      C                   Eval      W#Lv2McPnbr =   Lv2McPnbr
- 
+
       * Set to 1 if 0
      C                   If        W#Lv2McPnbr = 0
      C                   Eval      W#Lv2McPnbr = 1
@@ -4828,7 +4828,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
       *
       *  Check for LVP Agreement routing
@@ -4839,7 +4839,7 @@
      C     ####S         Occur     DsLv2PayCord
      C     ####S         Occur     DsLv2Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc2McLVPa = 'Y' and Lc2McLVPt > MoPYAM
       *
      C                   Eval      DsPayCorr   =   DsLv2PayCorr
@@ -4853,7 +4853,7 @@
      C                   Eval      P2Cbib = MpCbib
      C                   Leave
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
       *
@@ -4868,12 +4868,12 @@
      C     ####S         Occur     DsLv2PayCord
      C     ####S         Occur     DsLv2Route
      C     ####S         Occur     DsChargeDet
- 
+
       * BEN Payments
      C                   If        Lv2MpPbCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv2McPnbr =   Lv2McSpBn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv2McPnbr = 0
      C                   Eval      W#Lv2McPnbr = 1
@@ -4894,12 +4894,12 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
       * SHA Payments
      C                   If        Lv2MpPsCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv2McPnbr =   Lv2McSpSn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv2McPnbr = 0
      C                   Eval      W#Lv2McPnbr = 1
@@ -4920,12 +4920,12 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
       * OUR Payments
      C                   If        Lv2MpPoCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv2McPnbr =   Lv2McSpOn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv2McPnbr = 0
      C                   Eval      W#Lv2McPnbr = 1
@@ -4946,7 +4946,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
       *
@@ -4959,11 +4959,11 @@
      C     ####S         Occur     DsLv2PayCord
      C     ####S         Occur     DsLv2Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lv2MpPcor = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv2McPnbr =   Lv2McPnbr
- 
+
       * Set to 1 if 0
      C                   If        W#Lv2McPnbr = 0
      C                   Eval      W#Lv2McPnbr = 1
@@ -4983,9 +4983,9 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
- 
+
       * If not selected then
      C                   If        W#Select <> 'Y'
      C     1             Do        ####P         ####S             5 0
@@ -4993,7 +4993,7 @@
      C     ####S         Occur     DsLv2PayCord
      C     ####S         Occur     DsLv2Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lv2MpPcor <> 'Y'
      C                   Eval      DsPayCorr   =   DsLv2PayCorr
      C                   Eval      MROTDS      =   DsLv2Route
@@ -5001,9 +5001,9 @@
      C                   Leave
      C                   Endif
      C                   Enddo
- 
+
      C                   Endif
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -5062,7 +5062,7 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
@@ -5072,17 +5072,17 @@
                                                                                               PNL014
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv3STPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse3
      C                   Endif
- 
+
       * Still no routing so now check for currency country re-route
      C                   If        P0Rtn  <> 'Route'
       *
       * Get currency country re-direction
      C                   Exsr      SrReDirect3
- 
+
      C                   Endif
       * Clear routing allowed
      C                   If        RouteLvp <> 'Y'
@@ -5168,7 +5168,7 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
                                                                                               PNL014
       * Check correspondent time related information                                          PNL014
@@ -5178,7 +5178,7 @@
                                                                                               PNL014
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv3STPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse3
      C                   Endif
@@ -5321,9 +5321,9 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
- 
+
      C                   Select
       * If not valid then next
      C                   When      W#Valid = 'N'
@@ -5348,12 +5348,12 @@
      C                   Clear                   MoIntr
      C                   Eval      MoRccr = MpC54c + MpC54b
      C                   Eval      MoDstr = MpCbic + MpCbib
- 
+
       * Save service
      C                   If        RouteService = 'Y'
      C                   Eval      MoPvas = MpCbib
      C                   Endif
- 
+
       * If SWIFT Authentication then send to bank with cover
      C                   Select
       * Service routing
@@ -5398,13 +5398,13 @@
                                                                                               PNL015
      C                   Eval      MoSett = McStmt
      C                   Endsl
- 
+
      C                   Eval      MoIntr = MpC56c + MpC56b
      C                   If        MoIntr = *blanks and MoPthr <> *blanks
      C                             and MoPthr <> MoDstr
      C                   Eval      MoIntr = MoPthr
      C                   Endif
- 
+
      C                   Eval      MoAcbr = MoBenb
      C                   Eval      MoCvrr = MpC53r
      C                   Eval      Mor910 = Mpr910
@@ -5417,19 +5417,19 @@
      C                   Exsr      SrAccount
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
      C                   Endif
      C                   Eval      MoSncr = MpC53c + MpC53b
      C                   Else
- 
+
       * Cover required ?
      C                   Eval      W0Account = McDacr
      C                   Eval      MoCthr = McDacr
      C                   Exsr      SrAccount
- 
+
       * Same bank same country
      C                   If        %subst(MoDstr:1:6) = %subst(BBCsid:1:6)
      C                             or Lv1Swaut <> *blanks
@@ -5440,25 +5440,25 @@
      C                   Eval      Mor910 = 'N'
      C                   Eval      MoSncr = *blanks
      C                   Else
- 
+
       * Different
- 
+
      C                   Eval      MpC53C = %subst(BBCSID:1:8)                  FI
      C                   Eval      MpC53B = %subst(BBCSID:9:3)                  FI
- 
+
       * If blank set to XXX
      C                   If        MpC53B = *blanks and MpC53c <> *blanks
      C                   Eval      MpC53B = 'XXX'
      C                   Endif
      C                   Eval      MoSncr = MpC53c + MpC53b
- 
+
      C                   Eval      MoRccr = '?'
- 
+
       * If routed then identify receiver's correspondent
      C                   If        MoRccr = '?'
      C                   Exsr      SrRecCorr
      C                   Endif
- 
+
      C                   If        Mcr910 <> 'Y'
      C                   Eval      Mor910 = 'N'
      C                   Eval      MoCvrr = 'Y'
@@ -5466,16 +5466,16 @@
      C                   Eval      Mor910 = 'Y'
      C                   Eval      MoCvrr = 'N'
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
- 
+
       * Check Payment convention and Amounts
      C                   Exsr      SrCheckPay3
- 
+
       * Only proceed if Ok
      C                   If        W#Valid = 'Y'
- 
+
       * Calculate charge for route
      C                   If        MpSchc <> *blanks or MpSchr <> 0
      C                   Eval      W#ChargeCode = MpSchc
@@ -5494,7 +5494,7 @@
      C                   Eval      C#SChargeMin  = W#ChargeMin
      C                   Eval      C#SChargeMax  = W#ChargeMax
      C                   Eval      C#SChargeAmt  = W#ChargeAmt
- 
+
      C                   Eval      W#ChargeCode = Mclchc
      C                   Eval      W#ChargeRate = Mclchr
      C                   Eval      W#ChargeMin  = Mclchh
@@ -5505,35 +5505,35 @@
      C                   Eval      C#lChargeMin  = W#ChargeMin
      C                   Eval      C#lChargeMax  = W#ChargeMax
      C                   Eval      C#lChargeAmt  = W#ChargeAmt
- 
+
       * Fill routing information on charge
      C                   Eval      MoStdc = C#SChargeCode
      C                   Eval      MoStda = C#SChargeAmt
      C                   Eval      MoLvpc = C#lChargeCode
      C                   Eval      MoLvpa = C#lChargeAmt
- 
+
       * If Account with bank same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoAcbr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * If Destination same as Intermediary then clear
      C                   If        MoIntr <> *blanks and
      C                             MoIntr = MoDstr
      C                   Clear                   MoIntr
      C                   Endif
- 
+
       * Test for STP and LVP Route
      C                   EXsr      SrSTProute
- 
+
       * Set up route information if valid
      C                   If        RouteReg = 'Y' and MoRegF = 'Y'
      C                             Or
      C                             RouteLVP = 'Y' and MoLVPF = 'Y'
      C                             Or
      C                             RouteLVP <> 'Y' and RouteREG <> 'Y'
- 
+
      C                   Eval      P0Rtn  = 'Route'
      C                   Eval      DsLv3PayCorr = DsPayCorr
      C                   Eval      DsLv3PayCord = DsSTPCorr
@@ -5562,9 +5562,9 @@
      C                   Clear                   DsChargeDet
      C                   Eval      ####P = ####P - 1
      C                   Endif
- 
+
      C                   Endsl
- 
+
      C**** KMscpV1p      Reade     @MscpV1                                90                  PNL014
      C     KMscpV2r      Reade     @MscpV2                                90                  PNL014
      C                   Enddo
@@ -5576,7 +5576,7 @@
      C                   Endif
       *
      C                   Eval      W#Select = 'N'
- 
+
       * Set to first route found
      C     1             Occur     DsLv3PayCorr
      C     1             Occur     DsLv3PayCord
@@ -5593,12 +5593,12 @@
      C     ####S         Occur     DsLv3PayCord
      C     ####S         Occur     DsLv3Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc3McRegP = 'Y' and Lc3McRegT >= MoPYAM
      C                             and Lv3McPcor = 'Y'  and Lv3MpPreg = 'Y'
       *
      C                   Eval      W#Lv3McPrnb =   Lv3McPrnb
- 
+
       * Set to 1 if 0
      C                   If        W#Lv3McPrnb = 0
      C                   Eval      W#Lv3McPrnb = 1
@@ -5619,15 +5619,15 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
- 
+
      C                   Endif
       *
       *  Regulated route no preferential
      C                   If        RouteReg = 'Y' and W#Select <> 'Y'
      C                   Eval      W#Select = 'Y'
- 
+
       * Set to first route found
      C     1             Occur     DsLv3PayCorr
      C     1             Occur     DsLv3PayCord
@@ -5687,12 +5687,12 @@
      C     ####S         Occur     DsLv3PayCord
      C     ####S         Occur     DsLv3Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc3McLVPa = 'Y' and Lc3McLVPt >= MoPYAM
      C                             and Lv3McPcor = 'Y'  and Lv3MpPlvp = 'Y'
       *
      C                   Eval      W#Lv3McPlnb =   Lv3McPlnb
- 
+
       * Set to 1 if 0
      C                   If        W#Lv3McPlnb = 0
      C                   Eval      W#Lv3McPlnb = 1
@@ -5713,7 +5713,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
       *
@@ -5725,7 +5725,7 @@
      C     ####S         Occur     DsLv3PayCord
      C     ####S         Occur     DsLv3Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lc3McLVPa = 'Y' and Lc3McLVPt >= MoPYAM
       *
      C                   Eval      DsPayCorr   =   DsLv3PayCorr
@@ -5739,7 +5739,7 @@
      C                   Eval      P2Cbib = MpCbib
      C                   Leave
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
      C                   Endif
@@ -5755,12 +5755,12 @@
      C     ####S         Occur     DsLv3PayCord
      C     ####S         Occur     DsLv3Route
      C     ####S         Occur     DsChargeDet
- 
+
       * BEN Payments
      C                   If        Lv3MpPbCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv3McPnbr =   Lv3McSpBn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv3McPnbr = 0
      C                   Eval      W#Lv3McPnbr = 1
@@ -5781,12 +5781,12 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
       * SHA Payments
      C                   If        Lv3MpPsCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv3McPnbr =   Lv3McSpSn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv3McPnbr = 0
      C                   Eval      W#Lv3McPnbr = 1
@@ -5807,12 +5807,12 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
       * OUR Payments
      C                   If        Lv3MpPoCr = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv3McPnbr =   Lv3McSpOn
- 
+
       * Set to 1 if 0
      C                   If        W#Lv3McPnbr = 0
      C                   Eval      W#Lv3McPnbr = 1
@@ -5833,7 +5833,7 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
      C                   Endif
       *
@@ -5846,11 +5846,11 @@
      C     ####S         Occur     DsLv3PayCord
      C     ####S         Occur     DsLv3Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lv3MpPcor = 'Y'
       *                  Calculate percentage, if less leave
      C                   Eval      W#Lv3McPnbr =   Lv3McPnbr
- 
+
       * Set to 1 if 0
      C                   If        W#Lv3McPnbr = 0
      C                   Eval      W#Lv3McPnbr = 1
@@ -5870,9 +5870,9 @@
      C                   Leave
      C                   Endif
      C                   Endif
- 
+
      C                   Enddo
- 
+
       * If not selected then
      C                   If        W#Select <> 'Y'
      C     1             Do        ####P         ####S             5 0
@@ -5880,7 +5880,7 @@
      C     ####S         Occur     DsLv3PayCord
      C     ####S         Occur     DsLv3Route
      C     ####S         Occur     DsChargeDet
- 
+
      C                   If        Lv3MpPcor <> 'Y'
      C                   Eval      DsPayCorr   =   DsLv3PayCorr
      C                   Eval      MROTDS      =   DsLv3Route
@@ -5888,9 +5888,9 @@
      C                   Leave
      C                   Endif
      C                   Enddo
- 
+
      C                   Endif
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -6026,9 +6026,9 @@
       *
      C                   ADD       1             Q
      C                   MOVEL     'SrCheckServ' @STK(Q)
- 
+
      C                   Eval      W#Valid = 'N'
- 
+
      C                   Eval      ####S = 1
      C     1             Do        4
      C                   If        MpCbib = %Subst(SingleService:####S:3)
@@ -6037,7 +6037,7 @@
      C                   Endif
      C                   Add       3             ####S
      C                   Enddo
- 
+
      C                   Eval      ####S = 1
      C     1             Do        4
      C                   If        MpCbib = %Subst(Lv1BdAdds:####S:3)
@@ -6067,17 +6067,17 @@
       *
      C                   ADD       1             Q
      C                   MOVEL     'SrCheckPay1' @STK(Q)
- 
+
       * Test for convention
      C                   Clear                   W#Convention
      C                   Clear                   W#CompConv
      C                   Eval      W#Valid = 'Y'
- 
+
       * Set up convention to check
      C                   Eval      W#CompConv = McS71a
- 
+
      C                   Exsr      SrConvention
- 
+
      C                   Select
       * Convention not Ok
      C                   When      W#Convention <> 'Ok'
@@ -6087,7 +6087,7 @@
       * If a normal payment then check is within boundary
       *
      C                   If        W#Valid = 'Y'
- 
+
      C                   Select
      C                   When      MoDtch = 'SHA' or MoDtch = *blanks
       * Is amount within range
@@ -6145,9 +6145,9 @@
       *
      C                   ADD       1             Q
      C                   MOVEL     'SRCheckSWATN'@STK(Q)
- 
+
      C                   Eval      W#DirectSW = 'N'
- 
+
       * Check if null connected BICs are allowed for currency country
      C                   Eval      MdPccy = MoPccy
      C                   Eval      MDCtry = %subst(O2SBicc:5:2)
@@ -6160,7 +6160,7 @@
      C     KMscyV1       Chain     @MSCYV1
      C                   Endif
      C                   Endif
- 
+
       * If Found,are they allowed?
       *    Regulated Payments and LVPs must be defined
      C                   If        %Found
@@ -6174,7 +6174,7 @@
      C                   Eval      W#DirectSW = 'Y'
      C                   Endif
      C                   Else
- 
+
       * Default is Ok
      C                   Eval      W#DirectSW = 'Y'
      C                   Endif
@@ -6197,9 +6197,9 @@
       *
      C                   ADD       1             Q
      C                   MOVEL     'SRCheckSWAUT'@STK(Q)
- 
+
      C                   Eval      W#DirectSW = 'N'
- 
+
       * Check if null connected BICs are allowed for currency country
      C                   Eval      MdPccy = MoPccy
      C                   Eval      MDCtry = %subst(O2SBicc:5:2)
@@ -6212,7 +6212,7 @@
      C     KMscyV1       Chain     @MSCYV1
      C                   Endif
      C                   Endif
- 
+
       * If Found,are they allowed?
       *    Regulated Payments and LVPs must be defined
      C                   If        %Found
@@ -6226,7 +6226,7 @@
      C                   Eval      W#DirectSW = 'Y'
      C                   Endif
      C                   Else
- 
+
       * Default is Ok
      C                   Eval      W#DirectSW = 'Y'
      C                   Endif
@@ -6264,23 +6264,23 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
- 
+
      C                   If        W#Valid = 'N'
- 
+
      C                   Clear                   DsSTPCorr
      C                   Eval      McS71a  = 'ALL'
      C                   Eval      McBicc = %subst(MoDstr:1:8)
      C                   Eval      McBicb = %subst(MoDstr:9:3)
      C                   Eval      W#Valid = 'Y'
- 
+
      C                   Endif
- 
+
       * Test for convention
      C                   Clear                   W#Convention
      C                   Clear                   W#CompConv
- 
+
       * Set up convention to check
      C                   Select
      C                   When      RouteLvp = 'Y'
@@ -6292,9 +6292,9 @@
      C                   Other
      C                   Eval      W#CompConv = McS71a
      C                   Endsl
- 
+
      C                   Exsr      SrConvention
- 
+
      C                   Select
       * Convention not Ok
      C                   When      W#Convention <> 'Ok'
@@ -6328,7 +6328,7 @@
      C                   If        W#Valid = 'Y' and RouteOur = 'Y'
      C                             Or
      C                             W#Valid = 'Y' and RouteGen = 'Y'
- 
+
      C                   Select
      C                   When      MoDtch = 'SHA' or MoDtch = *blanks
       * Is amount within range
@@ -6416,21 +6416,21 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv3STPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse3
      C                   Endif
- 
+
       * Still no routing so now check for currency country re-route
      C                   If        P0Rtn  <> 'Route'
       *
       * Get currency country re-direction
      C                   Exsr      SrReDirect3
- 
+
      C                   Endif
       * Clear routing allowed
      C                   Clear                   RouteSet
@@ -6439,15 +6439,15 @@
      C                   Clear                   RouteReg
      C                   Clear                   RouteOur
      C                   Clear                   RouteService
- 
+
       * If no route then try value added services
      C                   If        P0Rtn  <> 'Route'
       *
       * Process generic routing for Value Added Services
      C                   Exsr      SrServices
- 
+
      C                   Endif
- 
+
       * If no route and Our direct then do Our processing
      C                   If        P0Rtn  <> 'Route' and IcOurD = 'L'                         ESL038
      C                   Exsr      SrLVP                                                      ESL044
@@ -6461,7 +6461,7 @@
       *
       * Process generic routing for OUR
      C                   Exsr      SrOur
- 
+
      C                   Endif
       *
       *  Unwind subroutine stack name
@@ -6514,21 +6514,21 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv3STPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse3
      C                   Endif
- 
+
       * Still no routing so now check for currency country re-route
      C                   If        P0Rtn  <> 'Route'
       *
       * Get currency country re-direction
      C                   Exsr      SrReDirect3
- 
+
      C                   Endif
       * Clear routing allowed
      C                   Clear                   RouteSet
@@ -6588,21 +6588,21 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv3STPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse3
      C                   Endif
- 
+
       * Still no routing so now check for currency country re-route
      C                   If        P0Rtn  <> 'Route'
       *
       * Get currency country re-direction
      C                   Exsr      SrReDirect3
- 
+
      C                   Endif
       * Clear routing allowed
      C                   Clear                   RouteSet
@@ -7019,11 +7019,11 @@
      C                   Eval      McPccy = MoPccy
       *
      C     KMsccV1       Chain     @MsccV1
- 
+
      C                   Exsr      SrCorDate
      C                   If        W#Valid = 'Y'
      C                   Eval      DsLv3STPCorr = DsSTPCorr
- 
+
       * Analyse routing
      C                   Exsr      SrAnalyse3
      C                   Endif
@@ -7060,7 +7060,7 @@
       *
      C                   ADD       1             Q
      C                   MOVEL     'SRChkSrvMbrS'@STK(Q)
- 
+
      C                   Eval      W##StdService = 'N'                                        ESL038
                                                                                               ESL038
      C     KLcsdL3       Klist                                                                ESL038
@@ -7307,7 +7307,7 @@
      C                   If        W##StdPvas = 'TBL'                                         HVB003
      C                   Eval      W##StdService = 'Y'                                        HVB003
      C                   Endif                                                                HVB003
- 
+
      C                   Endif                                                                ESL038
       *
       *  Unwind subroutine stack name
@@ -7331,7 +7331,7 @@
       *
      C                   ADD       1             Q
      C                   MOVEL     'SRSTPRoute'  @STK(Q)
- 
+
      C                   Select
      C                   When      RouteSet = 'Y' and RouteReg = 'Y'                          ESL044
      C                             and RouteService = 'Y'                                     ESL044
@@ -7582,9 +7582,9 @@
      C                   Endif
      C                   Other
      C                   Endsl
- 
+
      C                   Endif
- 
+
       * Account currency must equal payment currency
      C                   If        W0Ccy <> MoPCCY
      C                   Endif
@@ -7592,9 +7592,9 @@
       *  If account them get customer SWIFT Address
       *
      C                   If        MoCthr <> *blanks
- 
+
      C                   Movel(p)  W0Cnum        P@Key1
- 
+
      C                   Call      'AOCUSTR0'
      C                   PARM      *blanks       P@RTCD            7            B:Return code
      C                   PARM      '*KEY'        P@OPTN            7            I:Option
@@ -7616,7 +7616,7 @@
      C                   SUB       1             Q
       *
      CSR                 ENDSR
- 
+
      C/EJECT
       *****************************************************************
       *                                                               *
@@ -7653,12 +7653,12 @@
      C                   Other
       *
       *  Call FT Charge calculation program
- 
+
       * Always send transaction rate to charge calculation.
      C                   If        CHTRCY = 'Y'
      C                   Eval      ChgExch   =  MoRate
      C                   Endif
- 
+
      C                   Eval      ChargeCde = W#ChargeCode
      C                   Eval      SettAmt = MoSmam
      C                   If        SettAmt = 0
@@ -7670,9 +7670,9 @@
      C                   Eval      ChgCcy  = MoPccy
      C                   Eval      STP     = 'N'
      C                   Eval      AddDeduct = 'A'
- 
+
       * If charges in transaction currency flag = 'Y'
- 
+
      C                   CALLB     'FT000981'
      C                   PARM      *Blanks       RetCodeOut        7
      C                   PARM                    PayAmt
@@ -7689,7 +7689,7 @@
      C                   PARM                    ChgableAmt       13 0
      C                   PARM                    TierCharge
      C                   PARM                    TierAmount
- 
+
       *================================================================
       * Process return
      C                   If        RetCodeOut = *blanks
@@ -7767,9 +7767,9 @@
      C                   Eval      W#ValueDate = ZSDatc                                       PNL014
      C                   Eval      MoCDat = ZSDatc                                            PNL014
      C                   Endsl                                                                PNL014
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN
@@ -7844,7 +7844,7 @@
      C                   Parm      '*VERIFY'     P@OPTN
      C                   Parm      'LUC112'      P@SARD            6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        P@RTCD = *Blanks
      C                   Movel     'Y'           LUC112            1
      C                   Else

@@ -13,7 +13,7 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 PNL014             Date 07Dec2005             *
-      *                 EEE065             Date 30Mar2004             *
+      *                 EEE065   *CREATE   Date 30Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -262,7 +262,7 @@
      C                   KFLD                    MRBICC
      C                   KFLD                    MRBICB
      C                   KFLD                    MRPCCY
- 
+
      C     KPOS          KLIST
      C                   KFLD                    MRBICC
      C                   KFLD                    MRBICB
@@ -274,7 +274,7 @@
      C                   MOVEL     #2PCCY        MRPCCY
      C                   MOVEL     #2RBIC        MRRBIC
      C                   MOVEL     #2RBIB        MRRBIB
- 
+
      C     KPOS          SETLL     @MSCRV1
      C     KRST          READE     @MSCRV1                              8782    *82=EOF
       * Save previous selector values
@@ -929,12 +929,12 @@
       * Move @MSCRV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     MRRECI        #1RECI
      C                   MOVEL     MRBICC        #1BICC
      C                   MOVEL     MRBICB        #1BICB
      C                   MOVEL     MRPCCY        #1PCCY
- 
+
       *---------------------------------------------------------------------
       * Correspondent Payment Re-Route
      C                   Eval      #1RBIC    =   MRRBIC
@@ -975,7 +975,7 @@
      C                   Eval      #1STDT    =   MRSTDT
      C                   Eval      #1ENDT    =   MRENDT
       *---------------------------------------------------------------------
- 
+
      C                   MOVEL     MRAJOB        #1AJOB                         Job name
      C                   MOVEL     MRAUSR        #1AUSR                         User name
      C                   Z-ADD     MRATIM        #1ATIM                         Action Time

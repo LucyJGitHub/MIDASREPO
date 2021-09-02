@@ -18,8 +18,8 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
       *                 STP994             Date 09Apr2005             *
-      *                 ESL038 (*Amend)    Date 29Nov2004             *
-      *                 EEE058             Date 11Feb2003             *
+      *                 ESL038             Date 29Nov2004             *
+      *                 EEE058   *CREATE   Date 11Feb2003             *
       * Midas Release 4.01 -------------------------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -99,7 +99,7 @@
      D ##Country       S              2
      D DIGITS          C                   CONST('0123456789')
       *
- 
+
      D D#DTA           DS           256
       *
       *  Calling parameter data structure for AOCCYCV0
@@ -142,7 +142,7 @@
      D O2ChgDS12                    100
      D O2ChgDS13                    100
      D O2ChgDS14                    100
- 
+
       * This data structure is used to populate the O2Parm data structure
      D O2SubDS         DS           100
      D O2Tag                          5A
@@ -153,20 +153,20 @@
      D  O2Amta                       14A
      D  O2ChrgEqv                    13S 0
      D  O2ChrgEqva                   14A
- 
+
      DO3Parm           DS            30
      D O3Cnbkr                        8A
      D O3Bookc                             Like(O_BOKC)
      D O3Subtp                             Like(O_PYST)
- 
+
      D/EJECT
       *****************************************************************
- 
+
      I@INDTS2       01
      I@IN35S2       02
      I/EJECT
       *****************************************************************
- 
+
       * Defintion of incoming data
       *
       *
@@ -180,7 +180,7 @@
      C                   Parm                    O1Parm
      C                   Parm                    O2Parm
      C                   Parm                    O3Parm
- 
+
       * Get bank details to determine base currency
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
@@ -240,7 +240,7 @@
       *
      C                   Eval      DSMSGR = O1MSGR
      C                   Eval      DSPART = O1KPRT
- 
+
      C                   For       ctr = 1 to 14
      C                   Select
       * Tag TRFCM (transfer commission)
@@ -291,7 +291,7 @@
      C                   Exsr      Unpack
      C                   Eval      Ary(ctr) = O2SubDs
      C                   Clear                   O2SubDS
- 
+
      C                   Endfor
       *
      C                   Movea     Ary           O2Parm
@@ -317,7 +317,7 @@
      C                   PARM      '*F*T*SPT'    W0ACT             8
      C     D#DTA         PARM      D#DTA         O#DTA           256
       *
- 
+
      C                   If        O#RTN = *blanks
      C                   Eval      O2ChrgEqv    = D#TAMT
      C                   EndIf
@@ -332,14 +332,14 @@
       * SrUnpack - unpack data from file record                       *
       *****************************************************************
      C     Unpack        Begsr
- 
+
      C                   Move      *off          *in01
      C                   Move      *off          *in02
      C                   Eval      DSMSEQ = *Blanks                                         AR856737
       * See if the tag exists
      C     KIndts2a      Setll     Meindts2
      C     KIndts2b      Chain     Meindts2
- 
+
      C                   If        %Found
       * Test for '/CODE/nnnnn' format
      C                   If        %Subst(DTMFLD:1:6) = '/CODE/'
@@ -381,7 +381,7 @@
       * Do Base Currency Equivalent calculation
       *
      C                   EXSR      CalcBaseEquiv
- 
+
      C                   Endif
      C                   Endif
       *
@@ -417,7 +417,7 @@
      C                   If        ZRTN = *blanks
      C                   MOVE      ZAFLD         @@Out
      C                   Endif
- 
+
      C                   Endif
       *
      C                   Endsr
@@ -434,7 +434,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C                   Move      W3out21       @@Outa
      C                   Endsr
       *****************************************************************
@@ -471,16 +471,16 @@
       * SrExtTagDta - Get non-charge tag data                         *
       *****************************************************************
      C     SrExtTagDta   Begsr
- 
+
      C                   Move      *off          *in01
      C                   Move      *off          *in02
      C                   Clear                   ##Value                                      STP994
      C                   Eval      DSMSEQ = *Blanks                                         AR856737
       * See if the tag exists
- 
+
      C     KIndts2a      Setll     Meindts2
      C     KIndts2b      Reade     Meindts2
- 
+
      C                   If        %Found
      C*****              Clear                   ##Value                                      STP994
      C                   Select
@@ -490,7 +490,7 @@
      C                   Eval      ##Value = %Subst(DSMF35:1:8)
      C                   Endsl
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
 **CTDATA CPY@

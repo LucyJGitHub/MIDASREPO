@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 26Sep2011             *
-      *                 EEE065             Date  4Apr2005             *
+      *                 EEE065   *CREATE   Date  4Apr2005             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -1014,7 +1014,7 @@
       *================================================================
       * Move @LCSDV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     lcCLID        #1CLID
      C                   MOVEL     lcCYCD        #1CYCD
      C                   MOVEL     lcDESC        #1DESC
@@ -1045,7 +1045,7 @@
      C                   MOVEL     lcINCT        #1INCT
      C                   MOVEL     lcAUCT        #1AUCT
      C                   MOVEL     lcTNOT        #1TNOT
- 
+
       * Hold existing record image
      C                   MOVEL     @1DBRC        #1DBRC
       *
@@ -1057,10 +1057,10 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1CLID
      C                   MOVEL     *Blanks       #1CYCD
- 
+
      C                   MOVEL     P2CLID        #1CLID
      C                   MOVEL     P2CYCD        #1CYCD
       * USER: Initialise key screen
@@ -1491,9 +1491,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

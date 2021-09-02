@@ -18,9 +18,9 @@
       *                 MM0505             Date 04May2005             *
       *                 Djb004             Date 18Mar2005             *
       *                 ESL038             Date 01Dec2004             *
-      *                 EEE065 *Amend      Date 25Nov2004             *
+      *                 EEE065             Date 25Nov2004             *
       *                 DJBF15             Date 18Nov2004             *
-      *                 EEE065  *Amend     Date 04Nov2004             *
+      *                 EEE065             Date 04Nov2004             *
       *                 EEE065  *Create    Date 09Apr2004             *
       *                                                               *
       *---------------------------------------------------------------*
@@ -322,10 +322,10 @@
       *
       *
      D/EJECT
- 
+
      I@INDTS2       01
      I@IN35S2       02
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -410,7 +410,7 @@
      C                   Select
       * Mt191 mapping
      C                   When      PMtpy = '191'
- 
+
      C                   If        P57 <> *Blanks
      C                   Eval      DSTRAN = P57
      C                   Select
@@ -420,10 +420,10 @@
      C                   Eval      #1Pthr = TMLIN1
      C                   Endsl
      C                   Endif
- 
+
      C                   Eval      DSTRAN = P58
      C                   Eval      #1Benb = TMLIN1
- 
+
       * Check if the same BIC
      C                   If        %subst(#1Benb:1:8) = %subst(#1Pthr:1:8)
      C                             and %subst(#1Benb:9:3) = %subst(#1Pthr:9:3)
@@ -437,12 +437,12 @@
      C                             and %subst(#1Pthr:9:3) = 'XXX'
      C                   Eval      #1Pthr = *blanks
      C                   Endif
- 
+
       * Normal mapping
      C                   Other
      C                   If        P57 <> *Blanks
      C                   Eval      DSTRAN = P57
- 
+
      C                   Select
       * Clearing code
      C                   When      %Subst(TMLIN1:1:2) = '//'
@@ -755,7 +755,7 @@
      C                             and *In31 = *Off
      C                   Eval      #1PCCY = #1SMCY
      C                   Endif                                                  FI
- 
+
       * Validate Details of charge
      C                   If        #1DTCH <> *blanks
      C                             and #1DTCH <> 'OUR'
@@ -769,7 +769,7 @@
      C                   MOVEL     #1DTCH        ZAMSDA
      C                   EXSR      ZASNMS
      C                   Endif                                                  FI
- 
+
       * Validate Pay Through
      C                   If        #1PTHR <> *blanks
      C                   Eval      W#PTHR = 'Y'
@@ -778,7 +778,7 @@
      C                   Eval      W#PTHR = *Blanks
      C                   Eval      #1PTHR = W#BICC
      C                   Endif
- 
+
       * Validate Beneficiary
      C                   If        #1BENB <> *blanks
      C                   Eval      W#BENB = 'Y'
@@ -787,10 +787,10 @@
      C                   Eval      W#BENB = *Blanks
      C                   Eval      #1BENB = W#BICC
      C                   Endif
- 
+
       * Validate country
      C                   If        #1BENC <> *blanks
- 
+
       * Get currency details
       *
      C                   CALL      'AOCTRYR0'                           9090
@@ -816,7 +816,7 @@
      C                   Endif                                                  FI
      C                   Endif                                                  FI
      C                   Endif                                                  FI
- 
+
      C                   Eval      BiKey = %subst(#1Benb:1:8)
      C     KBicPV0       Chain     @BicpV0
       * Validate country
@@ -837,7 +837,7 @@
      C                   Endif
       *
       * If settlement currency valid then check amount if entered
- 
+
      C                   Eval      #1SMAM = 0
      C                   If        *In31 = *Off
       * Get currency details
@@ -884,7 +884,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:7     #1SMAMA
       *
      C     #1SMAM        IFLE      0                                            IF
@@ -901,7 +901,7 @@
       *
       *
       * If pay currency valid then check amount if entered
- 
+
      C                   Eval      #1PYAM = 0
      C                   If        *In31 = *Off
       * Get currency details
@@ -948,7 +948,7 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:7     #1PYAMA
       *
      C     #1PYAM        IFLE      0                                            IF
@@ -1011,7 +1011,7 @@
      C                   PARM      8             W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     15            Subst     W3OUT21:7     #1RATEA
       *
      C     #1RATE        IFLE      0                                            IF
@@ -1085,7 +1085,7 @@
      C                   IF        *In99 = '0'
      C                   EXSR      SRXVAL
      C                   END
- 
+
       * Validate Clearing Code
      C                   If        CFT007 = 'Y' and *In99 = '0'
      C                             and #1CLCD <> *Blanks
@@ -1167,7 +1167,7 @@
       *
      C                   Endif
      C                   Endif                                                                ESL038
- 
+
       * Validate Receivers Correspondent
      C                   If        #1RCCO <> *blanks and #1RCCO <> '*'
      C                   Eval      W#RCCO = 'Y'
@@ -1176,7 +1176,7 @@
      C                   Eval      W#RCCO = *Blanks
      C                   Eval      #1RCCO = W#BICC
      C                   Endif
- 
+
       * Validate Destination/Receiver
      C                   If        #1DSTO <> *blanks
      C                   Eval      W#DSTO = 'Y'
@@ -1185,7 +1185,7 @@
      C                   Eval      W#DSTO = *Blanks
      C                   Eval      #1DSTO = W#BICC
      C                   Endif
- 
+
       * Validate Intermediary
      C                   If        #1INTO <> *blanks and #1INTO <> '*'
      C                   Eval      W#INTO = 'Y'
@@ -1194,7 +1194,7 @@
      C                   Eval      W#INTO = *Blanks
      C                   Eval      #1INTO = W#BICC
      C                   Endif
- 
+
       * Validate A/c With Institution
      C                   If        #1ACBO <> *blanks
      C                   Eval      W#ACBO = 'Y'
@@ -1203,7 +1203,7 @@
      C                   Eval      W#ACBO = *Blanks
      C                   Eval      #1ACBO = W#BICC
      C                   Endif
- 
+
       * Validate Destination A/c
      C                   If        #1DMAO <> *blanks
      C                   Eval      W#DMAO = 'Y'
@@ -1211,7 +1211,7 @@
      C                   Exsr      SrAccount
      C                   Eval      W#DMAO = *Blanks
      C                   Endif
- 
+
       * Validate Cover Required
      C                   If        #1CVRO <> *blanks and #1CVRO <> 'Y' and
      C                             #1CVRO <> 'N'
@@ -1222,7 +1222,7 @@
      C                   MOVEL     'FTUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   Endif
- 
+
       * Validate Cover Through
      C                   If        #1CVRO = 'Y'
      C                   If        #1CTHO = *Blanks
@@ -1292,7 +1292,7 @@
      C                   Endif                                                                PNL014
      C                   Endif                                                                PNL014
                                                                                               PNL014
- 
+
       * Bypass ref file checks if error already detected
      C   99              GOTO      DBEXIT
       *
@@ -1659,9 +1659,9 @@
      C                   MOVEL     W0Account     ZAMSDA
      C                   EXSR      ZASNMS
      C                   Endsl
- 
+
      C                   Endif
- 
+
       * Account currency must equal payment currency
      C                   If        W0Ccy <> #1PCCY
       * Send message 'Invalid account'
@@ -1685,7 +1685,7 @@
      C                   SUB       1             Q
       *
      CSR                 ENDSR
- 
+
      C/EJECT
       *================================================================
       *                                                               *
@@ -1719,7 +1719,7 @@
      C*********          If        Not %Found
      C                   Eval      MoBenb = #1Benb
      C*********          Endif
- 
+
      C                   Eval      MoBenc = #1Benc
      C                   Eval      MoSncr = #1Sncr
      C                   Eval      MoSnco = #1Snco
@@ -1824,9 +1824,9 @@
      C                   Eval      #1Pccy = MoPccy
      C                   Eval      #1Pyam = MoPyam
      C                   Eval      #1Pthr = MoPthr
- 
+
      C                   Eval      BiKey = %subst(#1Benb:1:8)
- 
+
       * Only fill is not a BIC Plus key
      C     KBicPV0       Chain     @BicPV0
      C                   Select
@@ -1837,7 +1837,7 @@
      C                   Other
      C                   Eval      #1Benb = MoBenb
      C                   Endsl
- 
+
      C                   Eval      #1Benc = MoBenc
      C                   Eval      #1Sncr = MoSncr
      C                   Eval      #1Snco = MoSnco
@@ -1939,9 +1939,9 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     10            Subst     W3OUT21:12    #1RTAT
- 
+
      C                   Else
      C                   Eval      #1RTCD = MOStdC
       *
@@ -1954,9 +1954,9 @@
      C                   PARM      A6NBDP        W3DECS            1 0          I:No of decimals
      C                   PARM      *blanks       W3ECODE           1            I:Edit Code
      C                   PARM                    W3OUT21          21            O:Return value
- 
+
      C     10            Subst     W3OUT21:12    #1RTAT
- 
+
      C                   Endif
      C                   Endif
       *
@@ -2398,7 +2398,7 @@
      C                   Parm      '*VERIFY'     P@OPTN
      C                   Parm      'CFT007'      P@SARD            6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        P@RTCD = *Blanks
      C                   Movel     'Y'           CFT007            1
      C                   Else

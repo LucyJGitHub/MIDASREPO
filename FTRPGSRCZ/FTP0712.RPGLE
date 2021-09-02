@@ -12,8 +12,8 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065 *Amend      Date 23Nov2004             *
-      *                 EEE065             Date 22Sep2004             *
+      *                 EEE065             Date 23Nov2004             *
+      *                 EEE065   *CREATE   Date 22Sep2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -86,7 +86,7 @@
      D  P3Line3               71    105
      D  P3Line4              106    140
      D  P3Line5              141    175
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -103,7 +103,7 @@
      C                   Clear                   P3parm
      C                   MOVEL     P2Parm        W0PREF
      C                   Exsr      SrInit
- 
+
      C                   If        P1Option = 'BICPLUS'
      C                   Exsr      SrBicPlus
      C                   Endif
@@ -124,7 +124,7 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrBicPlus'   @STK(Q)
- 
+
      C                   If        %Subst(P2Line1:1:1) <> '/'
      C                   Eval      BiKey  = %subst(P2Line1:1:8)
      C                   Eval      BDBICC = %subst(P2Line1:1:8)
@@ -134,7 +134,7 @@
      C                   Eval      BDBICC = %subst(P2Line2:1:8)
      C                   Eval      BDBICB = %subst(P2Line2:9:3)
      C                   Endif
- 
+
       * Check if Bic Diectory
      C                   If        BDBICB = *blanks
      C                   Eval      BDBICB = 'XXX'
@@ -149,7 +149,7 @@
      C                   Endif
      C                   Goto      ExBicPlus
      C                   Endif
- 
+
       * Check if Bic Plus Key
      C     KBicPl0       Chain     @BicPPd
       * If found format depending on account line

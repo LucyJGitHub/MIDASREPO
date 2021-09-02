@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date  4Apr2005             *
+      *                 EEE065   *CREATE   Date  4Apr2005             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -790,10 +790,10 @@
       * Move @LCSDV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     LCCLID        #1CLID
      C                   MOVEL     LCCYCD        #1CYCD
- 
+
      C                   MoveL     LCSETA        #1SETA
       *
      C                   Z-Add     2             @@CDP

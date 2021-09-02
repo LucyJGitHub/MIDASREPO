@@ -13,7 +13,7 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 PNL014             Date 07Dec2005             *
-      *                 EEE065             Date 30Mar2004             *
+      *                 EEE065   *CREATE   Date 30Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -234,7 +234,7 @@
      C                   PARM      '*KEY   '     P@OPTN            7            I:Option
      C                   PARM      #2PCCY        P@CCY             3            I:Currency
      C     DSCURR        PARM      *BLANKS       DSSDY
- 
+
      C                   If        P@RTCD <> *blanks
      C                   Eval      W#Sel_Pos = *blanks
      C                   SETON                                        33        *
@@ -251,7 +251,7 @@
      C                             and #2CTYP <> 'ACCOUNT'
      C                             and #2CTYP <> 'BENEF'
      C                             and #2CTYP <> 'SWIFTKEY'
- 
+
      C                   Eval      W#Sel_Pos = *blanks
      C                   SETON                                        34        *
       * Send message 'Pay Currency not valid'
@@ -970,12 +970,12 @@
       * Move @MSCCV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     MCRECI        #1RECI
      C                   MOVEL     MCBICC        #1BICC
      C                   MOVEL     MCBICB        #1BICB
      C                   MOVEL     MCPCCY        #1PCCY
- 
+
      C                   Eval      #1CTYP    =   MCCTYP
      C                   Eval      #1CTRY    =   MCCTRY
      C                   Eval      #1PCOR    =   MCPCOR
@@ -1060,7 +1060,7 @@
      C                   Eval      #1RREF    =   MCRREF                                       PNL014
                                                                                               PNL014
       *---------------------------------------------------------------------
- 
+
      C                   MOVEL     MCAJOB        #1AJOB                         Job name
      C                   MOVEL     MCAUSR        #1AUSR                         User name
      C                   Z-ADD     MCATIM        #1ATIM                         Action Time
@@ -1084,7 +1084,7 @@
    2 C                   If        %Found
      C                   Eval      #1INS1 = BDINS1
    2xC                   Else
- 
+
    3 C                   If        %Subst(#1BICC:1:4) = '????' and
      C                             %Subst(#1BICC:7:2) = '??' and
      C                             #1BICB = '???'

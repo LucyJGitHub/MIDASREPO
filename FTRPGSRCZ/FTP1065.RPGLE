@@ -16,7 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 15Jul2011             *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -965,7 +965,7 @@
       *================================================================
       * Move @RBrcV1 fields to screen
       *================================================================
- 
+
      C                   MOVEL     RbBrch        #1Brch
      C                   MOVEL     RbStpf        #1Stpf
      C                   MOVEL     RbRREG        #1RREG
@@ -977,7 +977,7 @@
      C                   MOVEL     RbDes1        #1DES1
      C                   MOVEL     RbDes2        #1DES2
      C                   MOVEL     RbDes3        #1DES3
- 
+
      C                   MOVEL     RbAJOB        #1AJOB                         Job name
      C                   MOVEL     RbAACT        #1AACT                         Action Type
      C                   Z-ADD     RbRDNB        #1RDNB                         Run day number
@@ -1013,9 +1013,9 @@
       * Initialise key screen
       *================================================================
      C                   MOVEL     P1ACTC        #PACTC                         Action Code
- 
+
      C                   MOVEL     *Blanks       #1Brch
- 
+
      C                   MOVEL     P2Brch        #1Brch
       * USER: Initialise key screen
       * Option Name
@@ -1475,9 +1475,9 @@
      C                   EXSR      SRERR
      C                   END
       *
- 
+
       **?Get Funds Transfer ICD
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN

@@ -12,7 +12,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065             Date 16Nov2004             *
+      *                 EEE065   *CREATE   Date 16Nov2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -825,15 +825,15 @@
       * Move @BcorV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     BdRECI        #1RECI
- 
+
      C                   MOVEL     BDBICC        #1BICC
      C                   MOVEL     BDBICB        #1BICB
      C                   MOVEL     BDORST        #1ORST
      C                   MOVEL     BDOMAN        #1OMAN
      C                   MOVEL     BDOMTH        #1OMTH
- 
+
      C                   Eval      #1PSTI = BDPSTI
      C                   Eval      #1FREQ = BDFREQ
      C                   Eval      #1PDNB = BDPDNB
@@ -843,17 +843,17 @@
      C                   Eval      #1ACST = BDACST
      C                   Eval      #1ACCD = BDACCD
      C                   Eval      #1ACSQ = BDACSQ
- 
+
      C                   Eval      #1Bic = #1Bicc + '-' + #1Bicb
- 
+
      C                   MOVEL     BDINS1        #1INS1
      C                   MOVEL     BDINS2        #1INS2
      C                   MOVEL     BDINS3        #1INS3
- 
+
      C                   MOVEL     BDDES1        #1DES1
      C                   MOVEL     BDDES2        #1DES2
      C                   MOVEL     BDDES3        #1DES3
- 
+
      C                   MOVEL     BDAJOB        #1AJOB                         Job name
      C                   MOVEL     BDAUSR        #1AUSR                         User name
      C                   Z-ADD     BDATIM        #1ATIM                         Action Time

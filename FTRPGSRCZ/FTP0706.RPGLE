@@ -14,7 +14,7 @@
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 ESL044             Date 20Jan2005             *
       *                 ESL038             Date 01Dec2004             *
-      *                 EEE065             Date 21Oct2004             *
+      *                 EEE065   *CREATE   Date 21Oct2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -83,7 +83,7 @@
      D  P3BENB                 1     11
       * O : Beneficiary country
      D  P3BENC                12     13
- 
+
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -101,7 +101,7 @@
      C                   Exsr      SrInit
      C                   Movel     'Y'           First             1
      C                   Endif
- 
+
       * If not IBAN BIC Search                                                                ESL044
      C                   If        P2Iban <> 'Y'                                              ESL044
      C                   Exsr      SrBicPlus
@@ -287,15 +287,15 @@
       *
      C                   ADD       1             Q                 5 0
      C                   MOVEL     'SrBicPlus'   @STK(Q)
- 
+
       * Check if Bic Directory
      C     KBschV2       Klist
      C                   Kfld                    BSCntc
      C                   Kfld                    BSNati
- 
+
      C                   Clear                   P3Parm
      C                   Eval      P0Rtn = '*Nrf'
- 
+
      C                   Select
      C                   When      %Subst(P2ClCD:1:4) = '//BL'
      C                   Eval      BsCntc = 'DE'
@@ -313,28 +313,28 @@
      C                   Eval      P0Rtn = '*Nsee'
      C                   Goto      ExBicPlus
      C                   Endsl
- 
+
      C     KBschV2       Setll     @BschV2
      C     KBschV2       Reade     @BschV2                                90
       * If found continue and read whole file
      C                   If        *In90 = *Off
      C                   Dou       *In90 = *On
- 
+
      C                   If        BsBic <> *blanks
      C                   Eval      P3Benb = BsBIC                                BIC Code
      C                   Eval      P0Rtn = '*FBic'
      C                   Leave
      C                   Endif
- 
+
      C                   If        BsBic = *blanks
      C                   Eval      P3Benb = BsKey                                BIC Code
      C                   Eval      P0Rtn = '*FBkey'
      C                   Endif
- 
+
      C     KBschV2       Reade     @BschV2                                90
      C                   Enddo
      C                   Endif
- 
+
       *
       *  Unwind subroutine stack name
       *

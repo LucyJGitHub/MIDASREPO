@@ -13,8 +13,8 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 PNL015             Date 01Dec2005             *
-      *                 EEE065 *Amend      Date 25Nov2004             *
-      *                 EEE065             Date 31Mar2004             *
+      *                 EEE065             Date 25Nov2004             *
+      *                 EEE065   *CREATE   Date 31Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
@@ -265,7 +265,7 @@
      C                   KFLD                    MPBICC
      C                   KFLD                    MPBICB
      C                   KFLD                    MPPCCY
- 
+
      C     KPOS          KLIST
      C                   KFLD                    MPBICC
      C                   KFLD                    MPBICB
@@ -277,7 +277,7 @@
      C                   MOVEL     #2PCCY        MPPCCY
      C                   MOVEL     #2CBIC        MPCBIC
      C                   MOVEL     #2CBIB        MPCBIB
- 
+
      C     KPOS          SETLL     @MSCPV1
      C     KRST          READE     @MSCPV1                              8782    *82=EOF
       * Save previous selector values
@@ -931,12 +931,12 @@
       * Move @MSCPV1 fields to subfile
       *================================================================
      C                   MOVEL     *BLANK        #1SEL
- 
+
      C                   MOVEL     MPRECI        #1RECI
      C                   MOVEL     MPBICC        #1BICC
      C                   MOVEL     MPBICB        #1BICB
      C                   MOVEL     MPPCCY        #1PCCY
- 
+
       *---------------------------------------------------------------------
       * Correspondent Payment Re-Route
      C                   Eval      #1CBIC    =   MPCBIC
@@ -1015,7 +1015,7 @@
      C                   Eval      #1TSIS8   =   %Subst(MpTsIs:1:8)                           PNL014
                                                                                               PNL014
       *---------------------------------------------------------------------
- 
+
      C                   MOVEL     MPAJOB        #1AJOB                         Job name
      C                   MOVEL     MPAUSR        #1AUSR                         User name
      C                   Z-ADD     MPATIM        #1ATIM                         Action Time

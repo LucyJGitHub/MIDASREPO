@@ -695,6 +695,7 @@
      F/COPY WNCPYSRC,GL0600FFPG
      FREACX1PD  IF   E           K DISK
      F                                     COMMIT
+     FREACT1L0  UF A E           K DISK                                                     BUG14762
      FREOUTLPD  O    F   47        DISK    EXTIND(*INU4)
      F                                     COMMIT
      FSTMTAH    UF A E             DISK    COMMIT                                           MD038510

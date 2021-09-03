@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR1042753          Date 25Jan17               *
-      *  Prev Amend No. UUC103             Date 20Oct20               *
+      *  Last Amend No. MD058751           Date 03Sep21               *
+      *  Prev Amend No. AR1042753          Date 25Jan17               *
+      *                 UUC103             Date 20Oct20               *
       *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 CMG008             Date 20Feb20               *
@@ -57,6 +58,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *             CAR UUC103. Alphanumeric batch numbers not checked*
+      *             correctly.                                        *
+      *             Hook GLH00428 amended.                              *
       *  AR1042753 - Exclude posting with blank GLOTTP for FT0325     *
       *              processing. (Child: AR1042754)                   *
       *              Applied for MD-41622.                            *

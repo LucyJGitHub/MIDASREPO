@@ -9,8 +9,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. LUC118             Date 13Feb19             */
-/*       Prev Amend No. MD020934           Date 11May19              */     
+/*       Last Amend No. LUC118             Date 13Feb19              */
+/*       Prev Amend No. MD020934           Date 11May19              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      258994             Date 16Mar09              */
@@ -46,7 +46,7 @@
 /*       MD020934 - COB component LERC135 failed due to CDL045.    */
 /*                  Amend length of field &EXTLIB from 8 to 10 to  */
 /*                  avoid truncated library name which causes error*/
-/*                  - applied for MD-53322                         */    
+/*                  - applied for MD-53322                         */
 /*       MD046248 - Finastra Rebranding                            */
 /*       258994 - Must check job switches before calling MXC0490   */
 /*       CDL045 - Copy out Account Keys file to Extract library    */
@@ -81,7 +81,7 @@
 /*           PGM                                                   */ /*E14224*/
 /************PGM        PARM(&TYPE)                           *E14224* *S01189*/
              PGM        PARM(&TYPE &CNAM &CSEQ)                       /*S01189*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -94,7 +94,7 @@
 /*           DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(256)      *S01179E16870*/
 /************DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(128)*/  /*E16870 S01502*/
              DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(133)           /*S01502*/
- 
+
 /************DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)               * *S01117*/
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                /*S01117*/
              DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)                 /*E14224*/
@@ -110,22 +110,22 @@
              DCL        VAR(&SEKEY) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&SEKEY2) TYPE(*CHAR) LEN(10)                                  /*CDL045*/
 /**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/   
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
                                                                                           /*CDL045*/
 /* Define parameters used in AOSVALR0 to retrieve system value                            /*CDL045*/
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CDL045*/
                                                                                           /*CDL045*/
 /*/COPY WNCPYSRC,SEC0610002                                          */
- 
+
 /*           RCVDTAARA  DTAARA(MMOD)                                *  *S01179*/
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                    /*S01179*/
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MEM) VALUE('SEC0610  - Generate +
                           Accounting Entries')
- 
+
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
 /**/                                                                  /*CMX001*/
 /**  Check if Meridian export is installed                   */       /*CMX001*/
@@ -138,7 +138,7 @@
              IF         COND(&RTCD = '       ') +
                  THEN(CHGVAR VAR(&CMX001) VALUE('Y'))                 /*CMX001*/
                                                                       /*CMX001*/
- 
+
 /**/                                                                                      /*CDL045*/
 /*   Check if CDL045 is installed   */                                                    /*CDL045*/
 /**/                                                                                      /*CDL045*/
@@ -178,19 +178,19 @@
                                                                                           /*CDL045*/
 /*/COPY WNCPYSRC,SEC0610006                                          */
 /*     RESET SWITCHES                                               */
- 
+
 /************IF*********COND(%SST(&MMOD 3 1) = 'Y') THEN(CHGJOB +  E23408*/
 /*************************SWS(10000000))                           E23408*/
- 
+
 /*  SET ON U1 IF RETAIL II OR INTEREST ON ACCOUNTS INSTALLED      *E23408*/
- 
+
              IF         COND((%SST(&MMOD 16 1) = 'Y')     +
                           *OR (%SST(&MMOD 23 1) = 'Y'))   +
                           THEN(CHGJOB SWS(10000000))             /*E23408*/
              ELSE (CHGJOB     SWS(00000000))
- 
+
 /*   CLEAR O/P FILES */
- 
+
              IF         COND(&TYPE *EQ '1') THEN(DO)                  /*E16663*/
              CLRPFM     FILE(GESTHH)
              CLRPFM     FILE(GESTPD)
@@ -202,18 +202,18 @@
              CLRPFM     FILE(GEST1ZZ)                                 /*E16663*/
              OVRDBF     FILE(GEST) TOFILE(GEST1)                      /*E16663*/
              ENDDO                                                    /*E16663*/
- 
+
 /*   CALL SE2445 TO SUPPRESS BOOK CODES/INVESTMENT TYPES ON SEKEY  */ /*E34692*/
 /*              IF NECESSARY                                       */ /*E34692*/
              CALL       PGM(SE2445)                                   /*E34692*/
- 
+
 /*/COPY WNCPYSRC,SEC0610003                                          */
 /*   CALL PROGRAM                        */
- 
+
 /************CALL       PGM(SE2450)                                  * *S01117*/
              CALL       PGM(SE2450) PARM(&RSEQ)                       /*S01117*/
 /*/COPY WNCPYSRC,SEC0610004                                          */
- 
+
              IF         COND(&TYPE *EQ '5') THEN(DLTOVR FILE(GEST))   /*E16663*/
                                                                       /*CMX001*/
              IF         COND(&CMX001 = 'Y') THEN(DO)                  /*CMX001*/
@@ -243,7 +243,7 @@
 /*  IF A/C KEYS MISSING CHECK D/SESTAT WHETHER TO CONTINUE OR NOT  */
 /*****HALT*MESSAGE*&*CONTROL*IS*HANDLED*BY*EODRUN****************      *S01189*/
 /*  CALL CB0175 TO HALT COB RUN                                        *S01189*/
- 
+
              IF         COND(%SWITCH(XXX1XXX0)) THEN(DO)
 /*              RCVDTAARA  DTAARA(SESTAT)                           *  *S01179*/
                 RTVDTAARA  DTAARA(SESTAT) RTNVAR(&SESTAT)             /*S01179*/

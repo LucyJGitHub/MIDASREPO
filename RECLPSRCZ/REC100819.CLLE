@@ -38,11 +38,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ &MODE)
- 
+
              DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5 0)
              DCL        VAR(&MODE)   TYPE(*CHAR) LEN(3)
- 
+
              DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
              DCL        VAR(&CMXMBR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JRNID) TYPE(*CHAR) LEN(10) +
@@ -62,18 +62,18 @@
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*260134*/
              DCL        VAR(&STEXT) TYPE(*CHAR) LEN(50)                                   /*260134*/
 
-/*/COPY WNCPYSRC,LUC140_004                 */ /*LUC140*/
- 
+/*/COPY WNCPYSRC,LUC140_004                 */                                            /*LUC140*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
              SNDPGMMSG  MSG('REC100819 - COB Top Account Zero +
                           Balancing/Sweeping') TOMSGQ(MRUNQ)
 /*                                                                                        /*260134*/
@@ -84,11 +84,11 @@
                           *CAT &CSEQA)                                                    /*260134*/
              SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('S') +
                           TEXT(&STEXT)                                                    /*260134*/
- 
+
              CHGVAR     VAR(&CMXMBR) VALUE('M' *CAT &MODE)
- 
+
 /* Files updated */
- 
+
              CHGVAR     VAR(&FILE01) VALUE('GLPSTTPD')
              CHGVAR     VAR(&FILE02) VALUE('GLPSTZSPD')
              CHGVAR     VAR(&FILE03) VALUE('REICSLPD')
@@ -97,10 +97,10 @@
              CHGVAR     VAR(&FILE06) VALUE('RECMHLPD')
              CHGVAR     VAR(&FILE07) VALUE('REZSHLPD')
              CHGVAR     VAR(&FILE08) VALUE('RECMEXPD')
- 
+
 /* If restart */
 /* Component Journalling End */
- 
+
              CHGVAR     VAR(&STAT) VALUE(' ')
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
              IF         COND(&STAT *EQ 'Y') THEN(DO)
@@ -113,23 +113,23 @@
                           &CNAM &CSEQ)                                                    /*260134*/
              IF         COND(&ERROR = 'Y') THEN(GOTO CMDLBL(ABNOR))
              ENDDO
- 
+
 /* Component Journalling Start */
- 
+
              CALL       PGM(REC100998) PARM(&JRNID &FILE01 &FILE02 +
                           &FILE03 &FILE04 &FILE05 &FILE06 &FILE07 +
                           &FILE08 &FILE09 &FILE10 &ERROR)
              IF         COND(&ERROR = 'Y') THEN(GOTO CMDLBL(ABNOR))
- 
+
 /* Flag as run */
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Start commitment control */
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF0000)
- 
+
 /** Merge all postings from ACPO1 and GLACPOL0 to single file GLACPML0 */                 /*CAP204*/
                                                                                           /*CAP204*/
              CLRPFM     FILE(GLACPMPD)                                                 /*BUG27417A*/
@@ -137,19 +137,19 @@
              CPYF       FROMFILE(ACPO1) TOFILE(GLACPMPD) +
                           MBROPT(*REPLACE) RCDFMT(APOSTPDF)                               /*CAP204*/
              MONMSG    (CPF2817) CMPDTA(CPF2869)                                          /*CAP204*/
-/*/COPY WNCPYSRC,LUC140_005                 */ /*LUC140*/
+/*/COPY WNCPYSRC,LUC140_005                 */                                            /*LUC140*/
                                                                                           /*CAP204*/
              CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) +
                           MBROPT(*ADD) RCDFMT(APOSTPDF)                                   /*CAP204*/
              MONMSG    (CPF2817) CMPDTA(CPF2869)                                          /*CAP204*/
-/*/COPY WNCPYSRC,LUC140_010                 */ /*LUC140*/
+/*/COPY WNCPYSRC,LUC140_010                 */                                            /*LUC140*/
                                                                                           /*CAP204*/
              CPYF       FROMFILE(ACPO1) TOFILE(GLACRMPD) +
                           MBROPT(*REPLACE) RCDFMT(APOSTRAF)                               /*CAP204*/
              MONMSG    (CPF2817) CMPDTA(CPF2869)                                          /*CAP204*/
                                                                                           /*CAP204*/
 /* Overrides */
- 
+
              IF         COND(&MODE = 'ASC') THEN(DO)
              OVRDBF     FILE(RECMHDL3) TOFILE(RECMHDL4)
 /**********  OVRDBF     FILE(ACPO1) TOFILE(GECXL4) */                                     /*CAP204*/
@@ -161,36 +161,36 @@
 /**********  OVRDBF     FILE(GLACPML0) TOFILE(ACPO5)                 */         /*CAP204 AR1001994*/
              OVRDBF     FILE(ACPO1) TOFILE(ACPO5)                                      /*AR1001994*/
              ENDDO
- 
+
              OVRDBF     FILE(RECMEXPD) MBR(&CMXMBR)
- 
+
              OVRDBF     FILE(GLAPNAPD) SHARE(*NO)
- 
+
              OVRDBF     FILE(GECXPD) TOFILE(GLPSTTPD) SHARE(*NO)
              OVRDBF     FILE(GLAPSTZS) TOFILE(GLPSTZSPD) SHARE(*NO)
- 
+
 /* COB Top Account Zero Balancing/Sweeping */
 /*=========================================*/
- 
+
              CALL       PGM(RE101401) PARM(&MODE)
- 
+
 /* Abnormal ending: */
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              RCLACTGRP  ACTGRP(*ELIGIBLE)
- 
+
 /* Normal ending: */
 /*================*/
- 
+
 NORMAL:
 /* End commitment control */
              ENDCMTCTL
- 
+
 /* Component Journalling End */
- 
+
 /**********  CALL       PGM(REC100999) PARM(&JRNID 'N' ' ' &FILE01 +
                           &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
                           &FILE07 &FILE08 &FILE09 &FILE10 &ERROR)      */                 /*260134*/
@@ -199,7 +199,7 @@ NORMAL:
                           &FILE07 &FILE08 &FILE09 &FILE10 &ERROR +
                           &CNAM &CSEQ)                                                    /*260134*/
              IF         COND(&ERROR = 'Y') THEN(GOTO CMDLBL(ABNOR))
- 
+
 /* Flag as completed */
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
@@ -211,28 +211,28 @@ NORMAL:
                           *CAT &CSEQA)                                                    /*260134*/
              SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
                           TEXT(&STEXT)                                                    /*260134*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 /* Abnormal ending: */
 /*==================*/
- 
+
 ABNOR:
              ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
              RCLACTGRP  ACTGRP(*ELIGIBLE)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
 /* End commitment control */
- 
+
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
 /* Component Journalling End */
- 
+
 /**********  CALL       PGM(REC100999) PARM(&JRNID 'Y' 'C' &FILE01 +
                           &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
                           &FILE07 &FILE08 &FILE09 &FILE10 &ERROR)      */                 /*260134*/
@@ -257,16 +257,16 @@ ABNOR:
                           TEXT(&STEXT)                                                    /*260134*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*260134*/
              ENDDO                                                                        /*260134*/
- 
+
 /* Report an error */
- 
+
              CHGVAR     VAR(&MEM) VALUE('REC100819 - COB Top Account +
                           Zero Balancing/Sweeping FAILED')
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
              SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
 ENDPGM:
              ENDPGM

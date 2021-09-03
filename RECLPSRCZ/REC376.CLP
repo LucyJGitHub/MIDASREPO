@@ -65,9 +65,9 @@
                           2001')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
-/*/COPY WNCPYSRC,LUC141_001                                          */
+/*/COPY WNCPYSRC,LUC141_001                                          */                   /*LUC141*/
              DCLF       FILE(RECAPM)
-/*/COPY WNCPYSRC,REC376001                                           */
+/*/COPY WNCPYSRC,REC376001                                           */                   /*LUC141*/
 /**/
 /*  FOLLOWING CHECK IS DONE TO AVOID RUN OF PROGRAM IF NO INTEREST  */
 /*  PROCESSING IS REQUIRED : FILE RECAPM IS EMPTY                   */

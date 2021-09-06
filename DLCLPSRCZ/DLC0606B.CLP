@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058555           Date 12Aug21              */
-/*       Prev Amend No. CER050             Date 16Jun19              */
+/*       Last Amend No. MD058708           Date 31Aug21              */
+/*       Prev Amend No. MD058555           Date 12Aug21              */
+/*                      CER050             Date 16Jun19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CRE105             Date 03Mar15              */
@@ -88,7 +89,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD058555 - Accrual amount is wrong                          */
+/*       MD058708 - Remove clearing of extract file DLLIBEPD such    */
+/*                  that the rate not processed during 1st run will  */
+/*                  still be applied to the deal. This is applicable */
+/*                  for deals with calc method NCCR and SARR.        */
+/*       MD058555 - Process DLLIBPED only once during cob            */
 /*       CER050 - Annualised Percentage Rate                         */
 /*       MD020934 - COB component LERC135 failed due to CDL045.      */
 /*                  Amend length of field &EXTLIB from 8 to 10 to    */
@@ -1422,9 +1427,9 @@
                MONMSG     MSGID(CPF0000)                                                  /*CDL013*/
              ENDDO                                                                        /*CDL013*/
           ENDDO                                                                           /*CDL013*/
-          IF         COND(&CDL102 *EQ 'Y' *AND %SWITCH(XXXXXX00)) THEN(DO)              /*MD058555*/
-             CLRPFM FILE(DLLIBEPD)                                                      /*MD058555*/
-          ENDDO                                                                         /*MD058555*/
+/*********IF         COND(&CDL102 *EQ 'Y' *AND %SWITCH(XXXXXX00)) THEN(DO)     /*MD058555 MD058708*/
+/**********  CLRPFM FILE(DLLIBEPD)                                    */       /*MD058555 MD058708*/
+/*********ENDDO                                                       */       /*MD058555 MD058708*/
                                                                                           /*CER050*/
           IF         COND(&CER050 *EQ 'Y') THEN(DO)                                       /*CER050*/
              CALL       PGM(DL6011)                                                       /*CER050*/

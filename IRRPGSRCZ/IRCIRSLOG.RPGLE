@@ -45,7 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -135,6 +135,11 @@
 
      D CIRSFilFmt    E DS                  EXTNAME(DEALSDG)
      D CIRSXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                  CLE025
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Ours)                       CIR020
+     D CurrScnBlrt1    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Theirs)                     CIR020
+     D CurrScnBlrt2    DS            50                                                       CIR020
+                                                                                              CIR020
 
      D CIRSScnFmt    E DS                  EXTNAME(IRCIRSPD)
 
@@ -254,6 +259,10 @@
      C                   PARM                    CIRSXFilFmt                                  CLE025
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CIRSScnFmt
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
      C                   PARM                    PSTS
 
      C                   IF        RetCodeOut <> *Blanks

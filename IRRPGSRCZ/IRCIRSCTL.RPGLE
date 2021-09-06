@@ -112,7 +112,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -396,6 +396,16 @@
      D*WBDCLeg2**************327    356                                                221576 CLE025
      D WBDCLeg1              278    307                                                       CLE025
      D WBDCLeg2              342    371                                                       CLE025
+      *                                                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D TranScnBlrt1    DS            50                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D TranScnBlrt2    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Ours)                       CIR020
+     D CurrScnBlrt1    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Theirs)                     CIR020
+     D CurrScnBlrt2    DS            50                                                       CIR020
+                                                                                         CIR020
 
      D ValidDeal     E DS                  EXTNAME(IRVCIRSPD)
       * Valid Deals layout
@@ -966,6 +976,28 @@
 
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A   INZ('Y')
+     D  OKUBLRT                       1A   INZ('Y')                                           CIR020
+     D  OKURFRR                       1A   INZ('Y')                                           CIR020
+     D  OKUCALM                       1A   INZ('Y')                                           CIR020
+     D  OKUBADJ                       1A   INZ('Y')                                           CIR020
+     D  OKUFLOR                       1A   INZ('Y')                                           CIR020
+     D  OKULBDY                       1A   INZ('Y')                                           CIR020
+     D  OKULODY                       1A   INZ('Y')                                           CIR020
+     D  OKUOPSH                       1A   INZ('Y')                                           CIR020
+     D  OKURRDP                       1A   INZ('Y')                                           CIR020
+     D  OKUBDAV                       1A   INZ('Y')                                           CIR020
+     D  OKURTKN                       1A   INZ('Y')                                           CIR020
+     D  OKTBLRT                       1A   INZ('Y')                                           CIR020
+     D  OKTRFRR                       1A   INZ('Y')                                           CIR020
+     D  OKTCALM                       1A   INZ('Y')                                           CIR020
+     D  OKTBADJ                       1A   INZ('Y')                                           CIR020
+     D  OKTFLOR                       1A   INZ('Y')                                           CIR020
+     D  OKTLBDY                       1A   INZ('Y')                                           CIR020
+     D  OKTLODY                       1A   INZ('Y')                                           CIR020
+     D  OKTOPSH                       1A   INZ('Y')                                           CIR020
+     D  OKTRRDP                       1A   INZ('Y')                                           CIR020
+     D  OKTBDAV                       1A   INZ('Y')                                           CIR020
+     D  OKTRTKN                       1A   INZ('Y')                                           CIR020
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -2308,6 +2340,10 @@
       *                                                                                       185057
       * Current Deal in Screen Format                                                         185057
      C                   PARM                    DealScnfmt                                   185057
+      ** CIRS LIBOR OURS field in Screen Format                                               CIR020
+     C                   PARM                    TranScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format                                             CIR020
+     C                   PARM                    TranScnBlrt2                                 CIR020
 
      C                   ENDSR
       *****************************************************************
@@ -2449,6 +2485,10 @@
       * OUTPUTS                                                                 CAP011
       * (Current) Deal in screen format                                         CAP011
      C                   PARM                    DealScnfmt                     CAP011
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
       * Deal Status                                                             CAP011
      C                   PARM                    DDSTS                          CAP011
                                                                                 CAP011
@@ -3680,6 +3720,10 @@
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+      ** CIRS LIBOR OURS field in Screen Format                                               CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format                                             CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
       * Deal Status
      C                   PARM                    DDSTS            24
 
@@ -3696,6 +3740,14 @@
      C                   PARM                    DealScnfmt
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
+      ** CIRS LIBOR OURS field in Screen Format (New)                                         CIR020
+     C                   PARM                    TranScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format (New)                                       CIR020
+     C                   PARM                    TranScnBlrt2                                 CIR020
+      ** CIRS LIBOR OURS field in Screen Format (Current)                                     CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format (Current)                                   CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
 
       * OUTPUTS
       * Field OK flags (DS) from/to caller

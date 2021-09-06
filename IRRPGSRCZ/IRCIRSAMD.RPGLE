@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas IR Cross ccy IRS amend processing')              *
+/*EXI *  TEXT('Midas IR Cross ccy IRS amend processing')
       *****************************************************************
       *                                                               *
       *  Midas - FRA/IRS Dealing Module                               *
@@ -62,7 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -214,6 +214,62 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D*
+      ** NEW CIRS Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D TranScnBlrt1    DS                                                                     CIR020
+     D  D1BLRT                        1A                                                      CIR020
+     D  D1RFRR                       10A                                                      CIR020
+     D  D1CALM                        4A                                                      CIR020
+     D  D1BADJ                       13A                                                      CIR020
+     D  D1FLOR                       13A                                                      CIR020
+     D  D1LBDY                        2A                                                      CIR020
+     D  D1LODY                        2A                                                      CIR020
+     D  D1OPSH                        1A                                                      CIR020
+     D  D1RRDP                        2A                                                      CIR020
+     D  D1DBAV                        1A                                                      CIR020
+     D  D1RTKN                        1A                                                      CIR020
+      ** NEW CIRS Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D TranScnBlrt2    DS                                                                     CIR020
+     D  D2BLRT                        1A                                                      CIR020
+     D  D2RFRR                       10A                                                      CIR020
+     D  D2CALM                        4A                                                      CIR020
+     D  D2BADJ                       13A                                                      CIR020
+     D  D2FLOR                       13A                                                      CIR020
+     D  D2LBDY                        2A                                                      CIR020
+     D  D2LODY                        2A                                                      CIR020
+     D  D2OPSH                        1A                                                      CIR020
+     D  D2RRDP                        2A                                                      CIR020
+     D  D2DBAV                        1A                                                      CIR020
+     D  D2RTKN                        1A                                                      CIR020
+                                                                                              CIR020
+      ** CURRENT CIRS Backward-Looking Rate Screen Fields (Ours)                              CIR020
+     D CurrScnBlrt1    DS                                                                     CIR020
+     D  @1BLRT                        1A                                                      CIR020
+     D  @1RFRR                       10A                                                      CIR020
+     D  @1CALM                        4A                                                      CIR020
+     D  @1BADJ                       13A                                                      CIR020
+     D  @1FLOR                       13A                                                      CIR020
+     D  @1LBDY                        2A                                                      CIR020
+     D  @1LODY                        2A                                                      CIR020
+     D  @1OPSH                        1A                                                      CIR020
+     D  @1RRDP                        2A                                                      CIR020
+     D  @1DBAV                        1A                                                      CIR020
+     D  @1RTKN                        1A                                                      CIR020
+                                                                                              CIR020
+      ** CURRENT CIRS Backward-Looking Rate Screen Fields (Theirs)                            CIR020
+     D CurrScnBlrt2    DS                                                                     CIR020
+     D  @2BLRT                        1A                                                      CIR020
+     D  @2RFRR                       10A                                                      CIR020
+     D  @2CALM                        4A                                                      CIR020
+     D  @2BADJ                       13A                                                      CIR020
+     D  @2FLOR                       13A                                                      CIR020
+     D  @2LBDY                        2A                                                      CIR020
+     D  @2LODY                        2A                                                      CIR020
+     D  @2OPSH                        1A                                                      CIR020
+     D  @2RRDP                        2A                                                      CIR020
+     D  @2DBAV                        1A                                                      CIR020
+     D  @2RTKN                        1A                                                      CIR020
+                                                                                              CIR020
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -362,9 +418,32 @@
 
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A
+     D  OKUBLRT                       1A                                                      CIR020
+     D  OKURFRR                       1A                                                      CIR020
+     D  OKUCALM                       1A                                                      CIR020
+     D  OKUBADJ                       1A                                                      CIR020
+     D  OKUFLOR                       1A                                                      CIR020
+     D  OKULBDY                       1A                                                      CIR020
+     D  OKULODY                       1A                                                      CIR020
+     D  OKUOPSH                       1A                                                      CIR020
+     D  OKURRDP                       1A                                                      CIR020
+     D  OKUDBAV                       1A                                                      CIR020
+     D  OKURTKN                       1A                                                      CIR020
+     D  OKTBLRT                       1A                                                      CIR020
+     D  OKTRFRR                       1A                                                      CIR020
+     D  OKTCALM                       1A                                                      CIR020
+     D  OKTBADJ                       1A                                                      CIR020
+     D  OKTFLOR                       1A                                                      CIR020
+     D  OKTLBDY                       1A                                                      CIR020
+     D  OKTLODY                       1A                                                      CIR020
+     D  OKTOPSH                       1A                                                      CIR020
+     D  OKTRRDP                       1A                                                      CIR020
+     D  OKTDBAV                       1A                                                      CIR020
+     D  OKTRTKN                       1A                                                      CIR020
 
       ** Overall Transaction status, to be passed back to calling program
      D AmendOK         S              1A
+     D CIR020          S              1A                                                      CIR020
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -388,6 +467,13 @@
       **  Compare fields with amended values.
      C
      C                   EXSR      COMPFLDS
+                                                                                              CIR020
+      *                                                                                       CIR020
+      **                                                                                      CIR020
+      *                                                                                       CIR020
+     C                   IF        (CIR020 = 'Y') AND (SBLRT = 'Y')                           CIR020
+     C                   EXSR      CMPLIBFL                                                   CIR020
+     C                   ENDIF                                                                CIR020
 
       *  If any errors were found:
       *    Set Amendments OK Indicator to 'N'
@@ -1004,6 +1090,296 @@
      C** + all Settlement Fields
      C*
      C     COMPTRANS9    ENDSR
+      *****************************************************************                       CIR020
+      /EJECT                                                                                  CIR020
+      *****************************************************************                       CIR020
+      *                                                               *                       CIR020
+      * CMPLIBFL  - Compare certain fields on the current deal with   *                       CIR020
+      *             those amended (LIBOR)                             *                       CIR020
+      *                                                               *                       CIR020
+      * CALLS             - None                                      *                       CIR020
+      *                                                               *                       CIR020
+      * CALLED BY  MAIN                                               *                       CIR020
+      *                                                               *                       CIR020
+      * FLDS USED         -                                           *                       CIR020
+      *                                                               *                       CIR020
+      *****************************************************************                       CIR020
+     C     CMPLIBFL      BEGSR                                                                CIR020
+                                                                                              CIR020
+      ** ------------- **                                                                     CIR020
+      *   ( O U R S )   *                                                                     CIR020
+      ** ------------- **                                                                     CIR020
+      *-----------------------------------------*                                             CIR020
+      * Backward Looking Rate Flag              *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1BLRT        IFNE      @1BLRT                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1BLRT'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5000'                                CIR020
+     C                   EVAL      OKUBLRT         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Risk Free Rate                          *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1RFRR        IFNE      @1RFRR                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1RFRR'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5001'                                CIR020
+     C                   EVAL      OKURFRR         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Calculation Method                      *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1CALM        IFNE      @1CALM                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1CALM'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5002'                                CIR020
+     C                   EVAL      OKUCALM         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Benchmark Adjustment                    *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1BADJ        IFNE      @1BADJ                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1BADJ'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5003'                                CIR020
+     C                   EVAL      OKUBADJ         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Floor                                   *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1FLOR        IFNE      @1FLOR                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1FLOR'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5004'                                CIR020
+     C                   EVAL      OKUFLOR         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Lookback Days                           *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1LBDY        IFNE      @1LBDY                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1LBDY'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5005'                                CIR020
+     C                   EVAL      OKULBDY         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Lockout Days                            *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1LODY        IFNE      @1LODY                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1LODY'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5006'                                CIR020
+     C                   EVAL      OKULODY         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Observation Period Shift                *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1OPSH        IFNE      @1OPSH                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1OPSH'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5007'                                CIR020
+     C                   EVAL      OKUOPSH         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Rate Rounding Decimal Place             *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1RRDP        IFNE      @1RRDP                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1RRDP'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5008'                                CIR020
+     C                   EVAL      OKURRDP         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Daily Basis for Average                 *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1DBAV        IFNE      @1DBAV                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1DBAV'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5009'                                CIR020
+     C                   EVAL      OKUDBAV         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Rates Known Flag                        *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D1RTKN        IFNE      @1RTKN                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D1RTKN'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5009'                                CIR020
+     C                   EVAL      OKURTKN         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+      ** --------------- **                                                                   CIR020
+      *  ( T H E I R S )  *                                                                   CIR020
+      ** --------------- **                                                                   CIR020
+      *-----------------------------------------*                                             CIR020
+      * Backward Looking Rate Flag              *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2BLRT        IFNE      @2BLRT                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2BLRT'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5000'                                CIR020
+     C                   EVAL      OKTBLRT         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Risk Free Rate                          *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2RFRR        IFNE      @2RFRR                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2RFRR'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5001'                                CIR020
+     C                   EVAL      OKTRFRR         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Calculation Method                      *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2CALM        IFNE      @2CALM                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2CALM'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5002'                                CIR020
+     C                   EVAL      OKTCALM         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Benchmark Adjustment                    *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2BADJ        IFNE      @2BADJ                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2BADJ'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5003'                                CIR020
+     C                   EVAL      OKTBADJ         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Floor                                   *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2FLOR        IFNE      @2FLOR                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2FLOR'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5004'                                CIR020
+     C                   EVAL      OKTFLOR         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Lookback Days                           *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2LBDY        IFNE      @2LBDY                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2LBDY'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5005'                                CIR020
+     C                   EVAL      OKTLBDY         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Lockout Days                            *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2LODY        IFNE      @2LODY                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2LODY'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5006'                                CIR020
+     C                   EVAL      OKTLODY         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Observation Period Shift                *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2OPSH        IFNE      @2OPSH                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2OPSH'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5007'                                CIR020
+     C                   EVAL      OKUOPSH         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Rate Rounding Decimal Place             *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2RRDP        IFNE      @2RRDP                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2RRDP'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5008'                                CIR020
+     C                   EVAL      OKTRRDP         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Daily Basis for Average                 *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2DBAV        IFNE      @2DBAV                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2DBAV'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5009'                                CIR020
+     C                   EVAL      OKTDBAV         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+      *-----------------------------------------*                                             CIR020
+      * Rates Known Flag                        *                                             CIR020
+      *-----------------------------------------*                                             CIR020
+      *                                                                                       CIR020
+      ** This field is NOT AMENDABLE.                                                         CIR020
+      *                                                                                       CIR020
+     C     D2RTKN        IFNE      @2RTKN                                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'D2RTKN'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx)   = 'MMA5010'                                CIR020
+     C                   EVAL      OKTRTKN         = 'N'                                      CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDSR                                                                CIR020
+
+
       *****************************************************************
       /EJECT                                                              AU
       *****************************************************************
@@ -1220,6 +1596,14 @@
       *
       * Current Deal in file format
      C                   PARM                    DealFilFmt
+      ** CIRS LIBOR OURS field in Screen Format (New)                                         CIR020
+     C                   PARM                    TranScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format (New)                                       CIR020
+     C                   PARM                    TranScnBlrt2                                 CIR020
+      ** CIRS LIBOR OURS field in Screen Format (Current)                                     CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format (Current)                                   CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
       *
       * OUTPUTS
       *

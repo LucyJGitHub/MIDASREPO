@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG11376           Date 11May06               *
+      *                 BUG11376           Date 11May06               *
       *                 CDL038             Date 10May05               *
       *                 BUG6472            Date 20Apr05               *
       *                 CDL028             Date 07Feb05               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11376-Remove the incorrect declaration of STDDECLARE      *
       *  CDL038 - Extended Deal Sub Type                              *
@@ -142,54 +144,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FRA/IRS standard declares
      D***/COPY IRCPYSRC,STDDECLARE                                                          BUG11376
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @NAR            S             40    DIM(2) CTDATA PERRCD(1)
- 
+
      D @EI             S              1    DIM(60)
- 
+
      D CPBKTxt         S             17    DIM(2) PERRCD(1) CTDATA                            186458
       ** Array for counterparty and broker fields narratives                                  186458
                                                                                               186458
@@ -199,13 +201,13 @@
                                                                                               186458
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SWITCHABLE FEATURE DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  186458
       ** External DS for Midas Modules Details                                                186458
                                                                                               186458
@@ -214,14 +216,14 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
      D IRCIRS        E DS                  EXTNAME(IRCIRSPD)
      D IRECIRS       E DS                  EXTNAME(IRECIRSPD)
- 
+
      D                 DS
      D  DDFOTX                 1     40
      D  DDSIDN                10     15
- 
+
       ** CFFEEDL0 key                                                                         186458
      D  WCFKY          DS            16                                                       186458
      D  WTST1                  1      8                                                       186458
@@ -251,7 +253,7 @@
                                                                                               CAS008
       ** Variables defined for CAS008                                                         CAS008
      D CAS008          S              1A                                                      CAS008
- 
+
      D CLE025          S              1A                                                      CLE025
                                                                                               CLE025
       ** +--------------------------------------+

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054957           Date 11Dec19               *
-      *  Prev Amend No. AR933170           Date 07Jun13               *      
+      *  Last Amend No. MD058556           Date 16Aug21               *
+      *  Prev Amend No. MD054957           Date 11Dec19               *
+      *                 AR933170           Date 07Jun13               *      
       *                 CSD103             Date 10Aug20               *
       *                 MD057061           Date 03Nov20               *
       *                 MD046248           Date 27Oct17               *
@@ -74,6 +75,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
+      *             behavior.                                         *
+      *           - Recompile all objects affected by AR933170.       *
       *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
       *             DDFOID as parameters. (Child: AR933171)           *      

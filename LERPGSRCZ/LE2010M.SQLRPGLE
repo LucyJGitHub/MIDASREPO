@@ -3700,14 +3700,6 @@
                                                                                             MD041126
      C                   Z-ADD     P#REASON      P#RSCOD                                    MD041126
       *
-     C                   PARM      MQOPEN        P#CID             9 0
-     C                   PARM      W#HCONN       P#HCONN           9 0
-     C                   PARM                    MQOD
-     C                   PARM      OOOUT         P#OPTS            9 0
-     C                   PARM      *ZERO         P#HOBJ            9 0
-     C                   PARM      *ZERO         P#CCODE           9 0
-     C                   PARM      *ZERO         P#RSCOD           9 0
-      *
       **  MQOPEN failed
       *
      C     P#RSCOD       IFNE      RCNONE

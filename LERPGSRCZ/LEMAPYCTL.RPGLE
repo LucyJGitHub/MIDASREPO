@@ -58,6 +58,7 @@
       *                 CAP077  *CREATE    Date 17Jul02               *
       *                                                               *
       *---------------------------------------------------------------*
+      *                                                               *
       *  243329 - If no defined settlement details entered, default   *
       *           payment settlement details of the loan if PTYP is   *
       *           66, 67, 69, or 72. Pattern fix 242348.              *
@@ -65,7 +66,7 @@
       *         - Applied for MD020027.                               *
       *  MD020027 - Pay Settlement details are not defaulted from     *
       *             original part sold transactions.  Added defaulting*
-      *             of pay/receipt settlement during insert.          *      *                                                               *
+      *             of pay/receipt settlement during insert.          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

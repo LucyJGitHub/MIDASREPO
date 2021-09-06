@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -253,7 +255,16 @@
      D CrDlScnFmt    E DS                  EXTNAME(IRCIRSPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
-
+      *                                                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D TranScnBlrt1    DS            50                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D TranScnBlrt2    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Ours)                       CIR020
+     D CurrScnBlrt1    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Theirs)                     CIR020
+     D CurrScnBlrt2    DS            50                                                       CIR020
+                                                                                              CIR020
      D NwDlFilFmt    E DS                  EXTNAME(IRVCIRSPD)
       * New Deal in File Format
      D  RXREC                716    784
@@ -1945,6 +1956,10 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
       *
       * Deal Status
      C                   PARM                    DDSTS            24
@@ -2697,6 +2712,10 @@
       *                                                                                       185057
       * Current Deal in Screen Format                                                         185057
      C                   PARM                    CrDlScnFmt                                   185057
+      ** CIRS LIBOR OURS field in Screen Format                                               CIR020
+     C                   PARM                    TranScnBlrt1                                 CIR020
+      ** CIRS LIBOR THEIRS field in Screen Format                                             CIR020
+     C                   PARM                    TranScnBlrt2                                 CIR020
      C*
      C* For each warning error code set up in IRC schedule screens,
      C* set up message to be sent to the screen

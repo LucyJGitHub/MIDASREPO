@@ -236,14 +236,14 @@
       * Customer marketing codes                                                              EEE058
      FSDCMRKL0  IF   E           K DISK    INFSR(*PSSR)                                       EEE058
                                                                                               EEE058
-     FMEBICPV0  IF   E           K DISK
-     F                                     INFSR(*PSSR)
-      * RTV : BIC Plus data
- 
+     FMEBICPV0  IF   E           K DISK                                                       EEE058
+     F                                     INFSR(*PSSR)                                       EEE058
+      * RTV : BIC Plus data                                                                   EEE058
+
      FMEBICDL2  IF   E           K DISK
      F                                     INFSR(*PSSR)
       * RTV : BIC Directory
- 
+
      FMEINMVV0  IF   E           K DISK                                                       STP997
       * Midas ME Message Routing Extensionen                                                  STP997
       *                                                                                       STP997
@@ -6005,16 +6005,16 @@ L011 D P               S              3P 0
      C                   Eval      BASMD = ZMDI2                                              241259
      C                   Endif                                                                241259
      C                   Endif                                                                241259
-      *
-     C                   CALLB     'ZCONVZ1'
-     C                   PARM                    INPAMT           15 0
-     C                   PARM                    CVTRAT           13 8
-     C                   PARM                    BASMD             1
-     C                   PARM                    FRMCCY            3
-     C                   PARM                    TOCCY             3
-     C                   PARM                    FRMDEC            1 0
-     C                   PARM                    TODEC             1 0
-     C                   PARM                    OUTAMT           15 0
+      *                                                                                       241259
+     C                   CALLB     'ZCONVZ1'                                                  241259
+     C                   PARM                    INPAMT           15 0                        241259
+     C                   PARM                    CVTRAT           13 8                        241259
+     C                   PARM                    BASMD             1                          241259
+     C                   PARM                    FRMCCY            3                          241259
+     C                   PARM                    TOCCY             3                          241259
+     C                   PARM                    FRMDEC            1 0                        241259
+     C                   PARM                    TODEC             1 0                        241259
+     C                   PARM                    OUTAMT           15 0                        241259
 
      C                   ENDSR
 
@@ -6027,17 +6027,17 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Check_STP     BEGSR
- 
+
      C     KBicdL2       Klist
      C                   Kfld                    BDBICC
      C                   Kfld                    BDBICB
- 
+
      C     KBicpV0       Klist
      C                   Kfld                    BIKEY
       *
- 
+
      C                   Move      'Y'           STP_Cond          1
      C                   Move      *Blanks       @@CTRY            2
       *
@@ -6074,11 +6074,11 @@ L011 D P               S              3P 0
      C                   Eval      STP_Cond = 'N'
      C                   Endif
      C                   Endif
- 
- 
+
+
       * If BIC Found check if Country has IBAN, if yes validate
      C                   If        STP_Cond = 'Y'
- 
+
      C                   CALL      'AOCTRYR0'                                                 CFT017
      C                   PARM      *BLANKS       PRTCD             7                          CFT017
      C                   PARM      '*KEY   '     POPTN             7                          CFT017
@@ -6087,7 +6087,7 @@ L011 D P               S              3P 0
       *                                                                                       CFT017
      C                   If        PRTCD = *Blanks
      C                             and A4BBAN <> 0
- 
+
      C     1             SUBST     O_BNC1:1      U#0001            1
      C     U#0001        IFEQ      '/'
      C     34            SUBST(P)  O_BNC1:2      P@IBAN
@@ -6099,19 +6099,19 @@ L011 D P               S              3P 0
      C                   Call      'AOIBANR5'                           90      CFT004
      C                   Parm      *Blanks       @Rcode            7            CFT004
      C                   Parm                    P@IBAN           34            CFT004
- 
+
      C     *In90         Ifeq      *On                                          CFT004
      C     @Rcode        orne      *Blanks                                      CFT004
      C                   Eval      STP_Cond = 'N'
      C                   Endif
      C                   Endif
      C                   Endif
- 
- 
+
+
      C                   Eval      STP = STP_Cond
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       * ChkEuro - Check If Euro currencies
       *****************************************************************

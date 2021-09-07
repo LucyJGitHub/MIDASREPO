@@ -35,37 +35,36 @@
       *  STP001 - Allow N in Destination Country                      *
       *  ESL038 - ING STP Development                                 *
       *  ERN054 - Agency message changes                              *
-      *  CFT009 - Funds Transfer Fees and Charge Development          *
       *                                                               *
       *****************************************************************
       * Maintenance display file
      FFTP00326DFCF   E             WORKSTN SFILE(FT326S1:SFLRRN)
- 
+
       * Customer default maintenance database file
      FFTPYCGV0  UF A E           K DISK    Commit Infds(PyDs) InFsr(PySr)
      FFTPYCGV1  IF A E           K DISK    RENAME(FTPYCGD0:FTREAD)
- 
+
       * Transaction type file
      FFTTRNTL0  IF   E           K DISK
- 
+
       * Deal sub-type file
      FFDDTSTL1  IF   E           K DISK
- 
+
       * Customer grouping file
      FSDCGRPL0  IF   E           K DISK
- 
+
       * Payment codes file
      FFTPCHGL0  IF   E           K DISK
- 
+
       * Payment date offset file
      FFTPDOCL0  IF   E           K DISK
- 
+
       * FX Spread Code
      FFTXTRHL0  IF   E           K DISK
- 
+
      FACSTATV0  IF   E           K DISK
       * Account Location and Types file
- 
+
      FFTLOOKV0  IF   E           K DISK
       *
       *  FT Look Up searches
@@ -88,22 +87,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -113,7 +112,7 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -141,22 +140,22 @@
      D  KeySV          S              1A   DIM(20)
      D  Idx            S              5  0
      D  KeysComb       S              1
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D  Reload         S              1
      D  ValidOK        S              1
- 
+
      DMSGDS            DS
      D  Msgid                  1      7
      D  Msgf                   8     17    Inz('FTUSRMSG')
      D  Msglib                18     27    Inz('*LIBL')
      D  MsgDta                28    283    Inz(' ')
      D  MsgRel               284    288    Inz('*SAME')
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -167,27 +166,27 @@
       *
      D PyDS            DS
      D  PyStatus         *Status
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** External data structure for customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Network details
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
- 
+
       ** External data structure for message type details
      D SDMTPY        E DS                  EXTNAME(SDMTPYPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -197,16 +196,16 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D* @Optn                              Like(@RTCD)
      D  #Kyst                              Like(@RTCD)
- 
+
      D  Inv_Code       S              1
      D  SelRcd         S              1
- 
+
      D PyLocked        S              1
      D ReturnPt        S              6
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -214,44 +213,44 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Dow       *Inkc = *Off
- 
+
      C                   If        PyLocked = 'Y'
      C                   Eval      PyLocked = 'N'
      C                   Eval      Reload   = 'Y'
      C                   Eval      Sflsel = ' '
      C                   Endif
- 
+
      C                   If        Reload = 'Y'
      C                   Exsr      Clr@Sf
      C                   Exsr      Load@Sf
      C                   Endif
- 
+
       * Display subfile data
      C                   Write     MsgCtl
      C  N30              Write     Blk326
      C                   Write     FT326T1
      C                   Exfmt     FT326C1
- 
+
       *?Clear old messages
      C                   CALL      'ZA0250'
- 
- 
+
+
      C                   Select
- 
+
       *?When positioner changed, reload subfile
      C                   When      *In60
      C                   Exsr      Clr@Sf
      C                   Exsr      Load@Sf
- 
+
       *?F9 pressed : Add Record
      C                   When      *InkI  = *On
      C                   Eval      #Act   = 'I'
@@ -260,28 +259,28 @@
      C                   Eval      *In50  = *Off
      C                   Eval      *In51  = *Off
      C                   Eval      *In57  = *Off
- 
+
       *?Clear Screen Data
      C                   Exsr      Clr_Dta
- 
+
      C                   Exsr      DtlRcd
- 
+
      C                   Other
- 
+
       *?Sfldsp = 30.  ie records exist, then can process
      C                   If        *In30 = *On
      C                   Exsr      Prc@Sf
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?End *INKC
      C                   Enddo
- 
+
      C                   Commit
- 
+
      C                   Eval      *Inlr = *On
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -313,28 +312,28 @@
       *                                                               *
       *****************************************************************
      C     Load@sf       Begsr
- 
+
      C     *Loval        Setll     FTPYCGV1
- 
+
       *?Read Records into Subfile
      C                   Read      FTPYCGV1                               32
      C                   Dow       *In32 = *Off
- 
+
       *?Select Records
      C                   Eval      SelRcd = 'Y'
- 
+
      C                   If        Sbranch <> *Blanks
      C                   If        Branch <> Sbranch
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Scustom <> *Blanks
      C                   If        Custom <> Scustom
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Scsgrcd <> *Blanks
      C                   If        Csgrcd <> Scsgrcd
      C                   Eval      SelRcd = 'N'
@@ -346,84 +345,84 @@
      C                   Eval      SelRcd = 'N'                                               URGIND
      C                   Endif                                                                URGIND
      C                   Endif                                                                URGIND
- 
+
      C                   If        Scurrcy <> *Blanks
      C                   If        Currcy <> Scurrcy
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Strntyp <> *Blanks
      C                   If        Trntyp <> Strntyp
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Strsbty <> *Blanks
      C                   If        Trsbty <> Strsbty
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Snetwrk <> *Blanks
      C                   If        Netwrk <> SNetwrk
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Spaytyp <> *Blanks
      C                   If        Paytyp <> Spaytyp
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Smsgtyp <> *Blanks
      C                   If        Smsgtyp<> Smsgtyp
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Sstmtmd <> *Blanks
      C                   If        Stmtmd <> Sstmtmd
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Sdractp <> *Blanks
      C                   If        Dractp <> Sdractp
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Scractp <> *Blanks
      C                   If        Cractp <> Scractp
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Saddded <> *Blanks
      C                   If        Addded <> Saddded
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Sfxtran <> *Blanks
      C                   If        Fxtran <> Sfxtran
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        Stdctry <> *Blanks
      C                   If        TdCtry <> Stdctry
      C                   Eval      SelRcd = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        SelRcd = 'Y'
      C                   Eval      Sflrrn = Sflrrn + 1
      C                   Write     FT326S1
      C                   Endif
- 
+
      C                   Read      FTPYCGV1                               32
      C                   Enddo
       *
@@ -434,7 +433,7 @@
      C                   Eval      Msgid = 'GEN0001'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -447,23 +446,23 @@
       *                                                               *
       *****************************************************************
      C     Prc@Sf        Begsr
- 
+
       *?Set switch not to reload subfile
      C                   Eval      ReLoad = 'N'
- 
+
       *
       *?Read subfile for any subfile select records
      C                   Eval      *In33 = *Off
      C                   Readc     FT326S1                                33
      C                   Dow       *In33 = *Off
- 
+
      C     SflRrn        Chain     FT326S1                            44
      C                   Eval      *In43 = *Off
      C                   Update    FT326S1
- 
+
      C                   Setoff                                         1012
      C                   Select
- 
+
       *?Change current record
      C                   When      SflSel = 'A'
      C                   Eval      #Act = 'A'
@@ -472,13 +471,13 @@
      C     KeyL0         Chain     FTPYCGV0                           97
      C                   IF        Not *IN97
      C                   Exsr      MovFil2
- 
+
      C                   Exsr      DtlRcd
      C                   ENDIF
- 
+
       *?Delete current record
      C                   When      SflSel = 'D'
- 
+
      C                   Eval      #Act = 'D'
      C                   EVAL      *In48 = *On
      C                   Eval      *In49 = *On
@@ -487,12 +486,12 @@
      C                   Exsr      MovFil2
      C                   Exsr      DtlRcd
      C                   EVAL      *In48 = *Off
- 
+
       *
       *?Enquire on current record
      C                   When      SflSel = 'E'
      C                   Eval      #Act = 'E'
- 
+
      C                   Eval      *In49 = *On
      C                   Eval      *In50 = *On
      C                   EVAL      *In48 = *On
@@ -500,7 +499,7 @@
      C                   Exsr      MovFil2
      C                   Exsr      DtlRcd
      C                   EVAL      *In48 = *Off
- 
+
       *?If subfile select != A/D or E then Error Message
      C                   Other
      C     SflSel        Ifne      *BLANK
@@ -529,24 +528,24 @@
       *                                                               *
       *****************************************************************
      C     DtlRcd        Begsr
- 
+
      C                   Eval      *In10 = *Off
      C                   Eval      *In12 = *Off
- 
+
      C                   Eval      *In44 = *Off
- 
+
       *?Loop until some valid action taken
      C                   Dow       Not *IN03 and Not *In10 and Not *In12
- 
+
      C                   IF        SflSel = 'D'
      C                   Eval      *In44 = *On
      C                   ELSE
      C                   Eval      *In44 = *Off
      C                   Endif
- 
+
      C                   Write     MsgCtl
      C                   Exfmt     FT326X1
- 
+
       *?Setof display indicators
      C                   Eval      *In51 = *Off
      C                   Eval      *In52 = *Off
@@ -574,17 +573,17 @@
      C                   Eval      *In74 = *Off
      C                   Eval      *In75 = *Off
      C                   Eval      *In76 = *Off
- 
+
       *?Clear old messages
      C                   CALL      'ZA0250'
- 
+
      C                   Exsr      Quest_Proc
      C                   If        CodeQuery = 'Y'
      C                   Eval      ValidOK = 'N'
      C                   Else
      C                   Eval      ValidOK = 'Y'
      C                   EndIf
- 
+
      C                   If        *In09 = *On Or SflSel = 'A'
      C                   If        *In12 = *Off
      C                             and CodeQuery <> 'Y'
@@ -593,13 +592,13 @@
      C                   Eval      ValidOK = 'N'
      C                   EndIf
      C                   Endif
- 
+
       *?All*validated OK.**Seton F10 Confirm.********************
- 
+
      C                   IF        ValidOK = 'Y'
- 
+
      C                   Select
- 
+
      C                   When      SflSel = *Blank
      C                   Exsr      MovFil
      C                   Write     FTPYCGD0
@@ -607,7 +606,7 @@
      C     *Loval        Setll     FTPYCGV0
      C                   Eval      Reload = 'Y'
      C                   EVAL      *In12 = *On
- 
+
      C                   When      SflSel = 'A'
      C     KeyL0         Chain     FTPYCGV0                           97
      C                   Exsr      MovFil
@@ -618,22 +617,22 @@
      C                   Commit
      C     *loval        Setll     FTPYCGV0
      C                   EVAL      *In12 = *On
- 
+
      C     SflRrn        Chain     FT326S1                            97
      C                   Eval      SflSel = *Blanks
      C                   Exsr      MovFil
      C                   Update    FT326S1
- 
- 
+
+
      C                   When      SflSel = 'D' and *IN10 = *On
      C     KeyL0W        Delete    FTPYCGV0                           97
      C                   Eval      Reload = 'Y'
      C                   Eval      SflSel = *Blanks
- 
+
      C                   Endsl
- 
+
      C                   Endif
- 
+
      C                   If        *In12
      C     SflRrn        Chain     FT326S1                            97
      C                   If        SflSel = 'E' or SflSel = 'A'
@@ -644,13 +643,13 @@
      C                   Endif
      C                   Update    FT326S1
      C                   Endif
- 
+
      C                   If        *In10
      C                   Leave
      C                   Endif
- 
+
      C                   Enddo
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -663,154 +662,154 @@
       *                                                               *
       *****************************************************************
      C     Quest_Proc    Begsr
- 
+
       *? Set up code query variable.
- 
+
      C                   Move      *Blanks       CodeQuery         1
- 
+
       *? Transaction type.
- 
+
      C                   If        WTrntyp <> *Blanks
      C     '?'           Scan      WTrntyp                                96
- 
+
      C                   If        *In96
      C                   Eval      CodeQuery = 'Y'
      C                   CallB     'FT000970'
      C                   Parm                    WTrnTyp
      C     '?'           Scan      WTrnTyp                                96
- 
+
      C                   If        *IN96
      C                   Eval      WTrnTyp = *Blanks
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       *?Validate Codes.
- 
+
      C                   If        WSwstch  <> *Blanks
      C                   Eval      PYCHCD   =  WSwstch
      C                   Exsr      Code_Qry
      C                   Eval      WSwstch  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WSwprch  <> *Blanks
      C                   Eval      PYCHCD   =  WSwprch
      C                   Exsr      Code_Qry
      C                   Eval      WSwprch  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WMischg  <> *Blanks
      C                   Eval      PYCHCD   =  WMischg
      C                   Exsr      Code_Qry
      C                   Eval      WMischg  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WCorChg  <> *Blanks
      C                   Eval      PYCHCD   =  WCorChg
      C                   Exsr      Code_Qry
      C                   Eval      WCorChg  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WChchrg  <> *Blanks
      C                   Eval      PYCHCD   =  WChchrg
      C                   Exsr      Code_Qry
      C                   Eval      WChchrg  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WMisch1  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch1
      C                   Exsr      Code_Qry
      C                   Eval      WMisch1  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WFxchcc  <> *Blanks
      C                   Eval      PYCHCD   =  WFxchcc
      C                   Exsr      Code_Qry
      C                   Eval      WFxchcc  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WTxchcd  <> *Blanks
      C                   Eval      PYCHCD   =  WTxchcd
      C                   Exsr      Code_Qry
      C                   Eval      WTxchcd  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WMisch2  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch2
      C                   Exsr      Code_Qry
      C                   Eval      WMisch2  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WCabchc  <> *Blanks
      C                   Eval      PYCHCD   =  WCabchc
      C                   Exsr      Code_Qry
      C                   Eval      WCabchc  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WAdvchg  <> *Blanks
      C                   Eval      PYCHCD   =  WAdvchg
      C                   Exsr      Code_Qry
      C                   Eval      WAdvchg  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WMisch3  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch3
      C                   Exsr      Code_Qry
      C                   Eval      WMisch3  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WTrcmch  <> *Blanks
      C                   Eval      PYCHCD   =  WTrcmch
      C                   Exsr      Code_Qry
      C                   Eval      WTrcmch  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WTelchg  <> *Blanks
      C                   Eval      PYCHCD   =  WTelchg
      C                   Exsr      Code_Qry
      C                   Eval      WTelchg  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WMisch4  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch4
      C                   Exsr      Code_Qry
      C                   Eval      WMisch4  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WColchg  <> *Blanks
      C                   Eval      PYCHCD   =  WColchg
      C                   Exsr      Code_Qry
      C                   Eval      WColchg  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WMisch5  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch5
      C                   Exsr      Code_Qry
      C                   Eval      WMisch5  =  PYCHCD
      C                   Endif
- 
+
      C                   If        WDedchg  <> *Blanks
      C                   Eval      PYCHCD   =  WDedchg
      C                   Exsr      Code_Qry
      C                   Eval      WDedchg  =  PYCHCD
      C                   Endif
- 
+
       *?Other codes (FX Spread Set)
      C                   If        WFxspst  <> *Blanks
      C                   Eval      SPRCOD   =  WFxspst
      C                   Exsr      Qry_Spread
      C                   Eval      WFxspst  =  SPRCOD
      C                   Endif
- 
+
       *?Other codes (Payment Date Offset)
      C                   If        WPdofcd  <> *Blanks
      C                   Eval      PYDTOC   =  WPdofcd
      C                   Exsr      Qry_Offset
      C                   Eval      WPdofcd  =  PYDTOC
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -823,7 +822,7 @@
       *                                                               *
       *****************************************************************
      C     Validate      Begsr
- 
+
       *?Validate Branch
      C                   Select
       *?Branch code cannot be blanks
@@ -834,16 +833,16 @@
      C******             Eval      ValidOK = 'N'
      C******             Exsr      SndMsg
       ******
- 
+
      C                   Other
- 
+
       *?Branch code must valid
      C                   CallB     'AOBRCHR0'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm                    WBranch
      C                   Parm                    DSFDY
- 
+
      C                   If        @Rtcd <> *Blanks
      C                   Eval      Msgid   = 'FTF3140'
      C                   Eval      MsgDta  = WBranch
@@ -851,21 +850,21 @@
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?Validate Customer.  If entered, it must contain either a valid customer
       *? number or customer shortname.
      C                   Select
      C                   When      WCustom <> *Blanks
- 
+
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm                    WCustom
      C                   Parm      *Blanks       #KYST
      C     SDCUST        Parm      *Blanks       DSSDY
- 
+
       * Database error ?
      C                   If        @Rtcd <> *Blanks
      C                   Eval      Msgid   = 'FTF3141'
@@ -873,19 +872,19 @@
      C                   Eval      *in52   = *On
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
- 
+
      C                   Else
      C                   Eval      WCustom = BBCUST
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?Validate transaction type.
       *? This is an optional field.  If entered, the transaction type must exist
       *?  on the transaction type table.
      C                   Select
      C                   When      WTrntyp <> *Blanks
- 
+
      C     '?'           Scan      WTrntyp                                96
      C                   If        *In96
      C                   CallB     'FT000970'
@@ -900,25 +899,25 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?Validate transaction sub-type.
       *? This is an optional field. If entered, this field must be a valid deal
       *?  sub-type and may only be entered if the transaction type has been entered,
       *?  otherwise it is prohibited.
       *?  If the transaction sub-type has been entered, ensure that the combination of
       *?  transaction type and transaction sub-type is a valid entry on FDDTSTL1.
- 
+
      C                   Select
      C                   When      WTrsbty <> *Blanks
- 
+
      C                   CallB     'AODLSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm                    WTrsbty
      C                   Parm      *Blanks       Dsfdy
- 
+
      C                   If        @Rtcd <> *Blanks
      C                   Eval      Msgid   = 'FTF3143'
      C                   Eval      MsgDta  = WTrsbty
@@ -926,14 +925,14 @@
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C                   If        WTrntyp = *Blanks
      C                   Eval      Msgid   = 'FTF3144'
      C                   Eval      *in54   = *On
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C     KeyDeal       Chain     FDDTSTL1                           97
      C                   If        *In97
      C                   Eval      Msgid   = 'FTF3145'
@@ -942,13 +941,13 @@
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?Validate Customer grouping code.
       *? This is an optional field.  If entered it must be a valid customer grouping code.
       *? Group set code must be '1'.
- 
+
      C                   Select
      C                   When      WCsgrcd <> *Blanks
       *
@@ -965,9 +964,9 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?Validate Urgent Indicator.                                                            URGIND
      C                   Select                                                               URGIND
      C                   When          (WUrgFlg <> 'N') And (WUrgFlg <> 'U')                  URGIND
@@ -987,7 +986,7 @@
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
      C                   Endsl
- 
+
       *?Validate Currency.  This is an optional field.  If entered it must be
       *? a valid currency code.
      C                   Select
@@ -998,7 +997,7 @@
      C                   Parm      '*KEY   '     @Optn
      C                   Parm                    WCurrcy
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        @Rtcd <> *Blanks
      C                   Eval      Msgid   = 'FTF3148'
      C                   Eval      MsgDta  = WCurrcy
@@ -1006,9 +1005,9 @@
      C                   Eval      ValidOK = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C                   Endsl
- 
+
       *?Validate Network.  This is an optional field.  If entered it must be
       *? a valid Network code.
      C                   Select
@@ -1019,7 +1018,7 @@
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      Wnetwrk       PNetwrk           6
      C     SDNWRK        Parm      *blanks       DSSDY
- 
+
      C     '?'           Scan      WNetwrk
      C                   Select
      C                   When      %Found
@@ -1037,9 +1036,9 @@
      C                   Exsr      SndMsg
      C                   Eval      Msgf = SvMsgf
      C                   Endsl
- 
+
      C                   Endsl
- 
+
       *?Validate Msg Types.  This is an optional field.  If entered it must be
       *? a valid Msg Type.
      C                   Select
@@ -1050,7 +1049,7 @@
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      WMsgtyp       PMsgtyp           3
      C     SDMTPY        Parm      *blanks       DSSDY
- 
+
      C     '?'           Scan      WMsgtyp
      C                   Select
      C                   When      %Found
@@ -1068,9 +1067,9 @@
      C                   Exsr      SndMsg
      C                   Eval      Msgf = SvMsgf
      C                   Endsl
- 
+
      C                   Endsl
- 
+
       *?Validate FX Transaction indicator
      C                   Select
      C                   When      WFxtran = *Blanks
@@ -1100,7 +1099,7 @@
      C                   Exsr      SndMsg                                                     URGIND
      C                   Eval      Msgf = SvMsgf                                              URGIND
      C                   Endsl                                                                URGIND
- 
+
       *?Validate FX Transaction indicator
      C                   Select
      C                   When      WTdCtry = *Blanks
@@ -1117,7 +1116,7 @@
      C                   Exsr      SndMsg
      C                   Eval      Msgf = SvMsgf
      C                   Endsl
- 
+
       *?Validate Credit Account indicator
      C                   Select
      C                   When      WCractp = *Blanks
@@ -1134,7 +1133,7 @@
      C                   Eval      Msgf = SvMsgf
      C                   Endif
      C                   Endsl
- 
+
       *?Validate Debit Account indicator
      C                   Select
      C                   When      WDractp = *Blanks
@@ -1151,7 +1150,7 @@
      C                   Eval      Msgf = SvMsgf
      C                   Endif
      C                   Endsl
- 
+
       *?Validate Add/Deduct indicator
      C                   Select
      C                   When      WAddded = *Blanks
@@ -1165,7 +1164,7 @@
      C                   Exsr      SndMsg
      C                   Eval      Msgf = SvMsgf
      C                   Endsl
- 
+
       *?Validate Settlement method indicator
      C                   Select
      C                   When      WStmtmd = *Blanks
@@ -1200,7 +1199,7 @@
      C                   Exsr      SndMsg
      C                   Eval      Msgf = SvMsgf
      C                   Endsl
- 
+
       *?Ensure that the data entered is unique.  Required only on insert
      C                   If        *In09
      C     KeyL0W        Setll     FTPYCGV1                               96
@@ -1226,9 +1225,9 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
       *?Validate Codes.  Must exist on the payment code file.
- 
+
      C                   If        WSwstch  <> *Blanks
      C                   Eval      PYCHCD   =  WSwstch
      C                   Exsr      Get_PayCode
@@ -1241,7 +1240,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WSwprch  <> *Blanks
      C                   Eval      PYCHCD   =  WSwprch
      C                   Exsr      Get_PayCode
@@ -1254,7 +1253,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WMischg  <> *Blanks
      C                   Eval      PYCHCD   =  WMischg
      C                   Exsr      Get_PayCode
@@ -1267,7 +1266,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WCorChg  <> *Blanks
      C                   Eval      PYCHCD   =  WCorChg
      C                   Exsr      Get_PayCode
@@ -1280,7 +1279,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WChchrg  <> *Blanks
      C                   Eval      PYCHCD   =  WChchrg
      C                   Exsr      Get_PayCode
@@ -1293,7 +1292,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WMisch1  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch1
      C                   Exsr      Get_PayCode
@@ -1306,7 +1305,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WFxchcc  <> *Blanks
      C                   Eval      PYCHCD   =  WFxchcc
      C                   Exsr      Get_PayCode
@@ -1319,7 +1318,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WTxchcd  <> *Blanks
      C                   Eval      PYCHCD   =  WTxchcd
      C                   Exsr      Get_PayCode
@@ -1332,7 +1331,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WMisch2  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch2
      C                   Exsr      Get_PayCode
@@ -1345,7 +1344,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WCabchc  <> *Blanks
      C                   Eval      PYCHCD   =  WCabchc
      C                   Exsr      Get_PayCode
@@ -1358,7 +1357,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WAdvchg  <> *Blanks
      C                   Eval      PYCHCD   =  WAdvchg
      C                   Exsr      Get_PayCode
@@ -1371,7 +1370,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WMisch3  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch3
      C                   Exsr      Get_PayCode
@@ -1384,7 +1383,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WTrcmch  <> *Blanks
      C                   Eval      PYCHCD   =  WTrcmch
      C                   Exsr      Get_PayCode
@@ -1397,7 +1396,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WTelchg  <> *Blanks
      C                   Eval      PYCHCD   =  WTelchg
      C                   Exsr      Get_PayCode
@@ -1410,7 +1409,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WMisch4  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch4
      C                   Exsr      Get_PayCode
@@ -1423,7 +1422,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WColchg  <> *Blanks
      C                   Eval      PYCHCD   =  WColchg
      C                   Exsr      Get_PayCode
@@ -1436,7 +1435,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WMisch5  <> *Blanks
      C                   Eval      PYCHCD   =  WMisch5
      C                   Exsr      Get_PayCode
@@ -1449,7 +1448,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
      C                   If        WDedchg  <> *Blanks
      C                   Eval      PYCHCD   =  WDedchg
      C                   Exsr      Get_PayCode
@@ -1462,7 +1461,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
       *?Other codes (FX Spread Set)
      C                   If        WFxspst  <> *Blanks
      C                   Eval      SPRCOD   =  WFxspst
@@ -1476,7 +1475,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
       *?Other codes (Payment Date Offset)
      C                   If        WPdofcd  <> *Blanks
      C                   Eval      PYDTOC   =  WPdofcd
@@ -1490,7 +1489,7 @@
      C                   Exsr      SndMsg
      C                   Endif
      C                   Endif
- 
+
       *?Customer group codes and customer details are mutually exclusive
      C                   If        WCsgrcd <> *Blanks and
      C                             WCustom <> *Blanks
@@ -1500,7 +1499,7 @@
      C                   Eval      ValidOK  = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
       *?Ensure that the data entered will form a valid combination
       *
      C                   Do        SearchNbr     Idx
@@ -1663,9 +1662,9 @@
      C                   Eval      ValidOK  = 'N'
      C                   Exsr      SndMsg
      C                   Endif
- 
- 
- 
+
+
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1678,7 +1677,7 @@
       *                                                               *
       *****************************************************************
      C     Clr_Dta       Begsr
- 
+
      C                   Eval      WBranch = *Blanks
      C                   Eval      WCustom = *Blanks
      C                   Eval      WTrnTyp = *Blanks
@@ -1716,7 +1715,7 @@
      C                   Eval      WMisCh5 = *Blanks
      C                   Eval      WDedChg = *Blanks
      C                   Eval      WUrgFlg = *Blanks                                          URGIND
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1729,7 +1728,7 @@
       *                                                               *
       *****************************************************************
      C     MovFil2       Begsr
- 
+
      C                   Eval      WBranch   =   Branch
      C                   Eval      WCustom   =   Custom
      C                   Eval      WTrnTyp   =   TrnTyp
@@ -1768,7 +1767,7 @@
      C                   Eval      WMisCh5   =   MisCh5
      C                   Eval      WDedChg   =   DedChg
      C                   Eval      WUrgFlg   =   UrgFlg                                       URGIND
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1781,7 +1780,7 @@
       *                                                               *
       *****************************************************************
      C     MovFil        Begsr
- 
+
      C                   Eval       Branch   =  WBranch
      C                   Eval       Custom   =  WCustom
      C                   Eval       TrnTyp   =  WTrnTyp
@@ -1819,7 +1818,7 @@
      C                   Eval       MisCh5   =  WMisCh5
      C                   Eval       DedChg   =  WDedChg
      C                   Eval       UrgFlg   =  WUrgFlg                                       URGIND
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1832,15 +1831,15 @@
       *                                                               *
       *****************************************************************
      C     Get_PayCode   Begsr
- 
+
      C                   Eval      Inv_Code = *Blank
- 
- 
+
+
      C     PYCHCD        Setll     FTPCHGL0                               97
      C                   If        Not *In97
      C                   Eval      Inv_Code = 'Y'
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1853,9 +1852,9 @@
       *                                                               *
       *****************************************************************
      C     Code_Qry      Begsr
- 
+
      C     '?'           Scan      PYCHCD                                 96
- 
+
      C                   If        *In96
      C                   Eval      CodeQuery = 'Y'
      C                   CallB     'FT000940'
@@ -1864,9 +1863,9 @@
      C                   If        *IN96
      C                   Eval      PYCHCD = *Blanks
      C                   EndIf
- 
+
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1879,21 +1878,21 @@
       *                                                               *
       *****************************************************************
      C     Qry_Spread    Begsr
- 
+
      C     '?'           Scan      SPRCOD                                 96
- 
+
      C                   If        *In96
      C                   Eval      CodeQuery = 'Y'
      C                   CallB     'FT000950'
      C                   Parm                    SPRCOD
      C     '?'           Scan      SPRCOD                                 96
- 
+
      C                   If        *In96
      C                   Eval      SPRCOD = *Blanks
      C                   EndIf
- 
+
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1906,21 +1905,21 @@
       *                                                               *
       *****************************************************************
      C     Qry_Offset    Begsr
- 
+
      C     '?'           Scan      PYDTOC                                 96
- 
+
      C                   If        *In96
      C                   Eval      CodeQuery = 'Y'
      C                   CallB     'FT000960'
      C                   Parm                    PYDTOC
      C     '?'           Scan      PYDTOC                                 96
- 
+
      C                   If        *In96
      C                   Eval      PYDTOC = *Blanks
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -1933,14 +1932,14 @@
       *                                                               *
       *****************************************************************
      C     Get_Offset    Begsr
- 
+
      C                   Eval      Inv_Code = *Blank
- 
+
      C     PYDTOC        Setll     FTPDOCL0                               97
      C                   If        Not *In97
      C                   Eval      Inv_Code = 'Y'
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       *                                                               *
@@ -1952,14 +1951,14 @@
       *                                                               *
       *****************************************************************
      C     Get_Spread    Begsr
- 
+
      C                   Eval      Inv_Code = *Blank
- 
+
      C     SPRCOD        Setll     FTXTRHL0                               97
      C                   If        Not *In97
      C                   Eval      Inv_Code = 'Y'
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       *                                                               *
@@ -2022,9 +2021,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   Eval      #WrkSt = PsJobName
      C                   Eval      #Pgm = PsProcPgm
       *
@@ -2042,9 +2041,9 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Eval      ReLoad = 'Y'
- 
+
      C     KeyL0         Klist
      C                   Kfld                    BRANCH
      C                   Kfld                    CUSTOM
@@ -2062,7 +2061,7 @@
      C                   Kfld                    FXTRAN
      C                   Kfld                    TdCtry
      C                   Kfld                    UrgFlg                                       URGIND
- 
+
      C     KeyL0W        Klist
      C                   Kfld                    WBRANCH
      C                   Kfld                    WCUSTOM
@@ -2080,20 +2079,20 @@
      C                   Kfld                    WFXTRAN
      C                   Kfld                    WTdCtry
      C                   Kfld                    WUrgFlg                                      URGIND
- 
+
       * Key list for deal type / sub-type combination
      C     KeyDeal       Klist
      C                   Kfld                    WTrntyp
      C                   Kfld                    WTrsbty
- 
- 
+
+
       * Group Set Code key list
      C     KeyGroup      Klist
      C                   Kfld                    D6SNBR
      C                   Kfld                    WCsgrcd
- 
+
      C                   Eval      D6SNBR = '1'
- 
+
       *
       * Set Searches
       *               1 BRANCH
@@ -2152,16 +2151,16 @@
      C                   Movea     Search20      Search#(5)
      C                   Endif
       *
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

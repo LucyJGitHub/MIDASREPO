@@ -13,17 +13,16 @@
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
       *                 PNL015             Date 01Dec2005             *
-      *                 EEE065             Date 25Nov2004             *
+      *                 PNL014             Date 07Dec2005             *
       *                 EEE065   *CREATE   Date 31Mar2004             *
       * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
-      *  PNL015 - Redirection to head office BIC                      *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
       *  PNL015 - Redirection to head office BIC                      *
       *  PNL014 - Time Sensitive Payments                             *
-      *  EEE065 - Allow Foreign BICs                                  *
       *  EEE065 - FT Payment Routing                                  *
       *                                                               *
       *****************************************************************

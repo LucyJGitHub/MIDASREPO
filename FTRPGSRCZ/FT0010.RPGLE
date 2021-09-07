@@ -1982,7 +1982,7 @@ e1   C                   ENDIF                                                  
       *
      C     P#RATE        IFNE      *ZERO
      C                   Z-ADD     P#RATE        ZCRSRT                         Cross Ccy Exch
-      ** If switchable feature installed
+      ** If switchable feature installed                                                      CEUFT1
       ** and either the settle or pay currencies are OUT                                      CEUFT1
 b1   C     CEUFT1        IFEQ      'Y'                                                        CEUFT1
      C     TYPE(2)       ANDEQ     'OT'                                                       CEUFT1

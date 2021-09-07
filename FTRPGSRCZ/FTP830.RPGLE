@@ -22,7 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
       *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
       *  ERN054 - Agency message changes                              *
       *                                                               *

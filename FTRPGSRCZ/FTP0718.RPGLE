@@ -28,6 +28,7 @@
       *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
       *             Renamed QQDFAC field in SDBRCHPD                  *
       *  MM2302 - Add check for Urgent message                        *
+      *  CRC001 - Change O@KNR to CHAR for chain to SDCUSTY1          *
       *  PNL014 - Time Sensitive Payments                             *
       *  MM0505 - Add Value Date to Routing                           *
       *  ESL038 - Conversion to use general routing for 54            *

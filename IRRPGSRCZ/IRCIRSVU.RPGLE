@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058556           Date 16Aug21               *
-      *  Prev Amend No. MD053572           Date 29May19               *
+      *  Last Amend No. MD058492           Date 06Aug21               *
+      *  Prev Amend No. MD058556           Date 16Aug21               *
+      *                 MD053572           Date 29May19               *
       *                 MD049387           Date 19Jan18               *
       *                 MD047859           Date 19Sep17               *
       *                 AR933170           Date 19Jun13               *      
@@ -114,6 +115,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058492 - Condition fix MD-57437 so as it will be executed  *
+      *             if action is not Reject.                          *
       *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
       *             behavior.                                         *
       *           - Recompile all objects affected by AR933170.       *
@@ -6351,6 +6354,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       ** Resulting Principal amount should be greater than 0                                MD057437
      C                   IF        NewPrinAmt <= 0 AND                                      MD057437
      C                             PValType = 'P'                                           MD057437
+     C                             AND ACTRJ <> 'Y'                                         MD058492
      C                   EVAL      Idx = Idx + 1                                            MD057437
      C                   EVAL      MsgIDArr(Idx) = '5049480'                                MD057437
       *                                                                                     MD057437

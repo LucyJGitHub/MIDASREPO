@@ -120,7 +120,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  CER073D - Upgrade of EML014 to FB2.1 SP21                    *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP21.                   *
       *      EML014 - AnaCredit Reporting Enhancement                 *
       *  CER076   - Update to KWG § 24c interface specification       *
       *             (BaFin version 3.3)                               *

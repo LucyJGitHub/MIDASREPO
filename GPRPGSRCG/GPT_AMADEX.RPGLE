@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057523           Date 17Feb21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD026161           Date 04Apr14               *
       *                 AR658311           Date 15Oct10               *
       *                 CER059             Date 19Jul10               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057523 - GOC0090 00001 failure in COB. (Recompile)         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

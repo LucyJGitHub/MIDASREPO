@@ -14,13 +14,15 @@
       *        are made to DL9005, this program should also           *
       *        be reviewed.                                           *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054140           Date 27Aug19               *
+      *  Last Amend No. MD058598           Date 17Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054140           Date 27Aug19               *
       *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058598 - Correct access to SCSARDPD                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054140 - APR rate is blanked out after amendment on        *
@@ -99,7 +101,8 @@
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Module Details
       *
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)
+     D*SCSARD***     E DS                  EXTNAME(SCSARDPD)                                MD058598
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD058598
      D  LCDSAR       E                     EXTFLD(LCD)
       * Switchable features details
       *
@@ -245,7 +248,8 @@
      C/exec SQL
      C+ select *
      C+ into :SCSARD
-     C+ from SCSARDPD
+     C**from*SCSARDPD                                                                       MD058598
+     C+ from SCSRDJW0                                                                       MD058598
      C+ where SARN = 'CER050'
      C/end-exec
 
@@ -402,7 +406,8 @@
      C/exec SQL
      C+ select *
      C+ into :SCSARD
-     C+ from SCSARDPD
+     C**from*SCSARDPD                                                                       MD058598
+     C+ from SCSRDJW0                                                                       MD058598
      C+  where SARN = 'CDL009'
      C/end-exec
 
@@ -415,7 +420,8 @@
      C/exec SQL
      C+ select *
      C+ into :SCSARD
-     C+ from SCSARDPD
+     C**from*SCSARDPD                                                                       MD058598
+     C+ from SCSRDJW0                                                                       MD058598
      C+  where SARN = 'CGL031'
      C/end-exec
 
@@ -430,7 +436,8 @@
      C/exec SQL
      C+ select *
      C+ into :SCSARD
-     C+ from SCSARDPD
+     C**from*SCSARDPD                                                                       MD058598
+     C+ from SCSRDJW0                                                                       MD058598
      C+  where SARN = 'CER048'
      C/end-exec
 
@@ -445,7 +452,8 @@
      C/exec SQL
      C+ select *
      C+ into :SCSARD
-     C+ from SCSARDPD
+     C**from*SCSARDPD                                                                       MD058598
+     C+ from SCSRDJW0                                                                       MD058598
      C+  where SARN = 'CER054'
      C/end-exec
 

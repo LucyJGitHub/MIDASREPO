@@ -7012,14 +7012,6 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    DealScnfmt
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
-      ** CIRS LIBOR OURS field in Screen Format (New)                                         CIR020
-     C                   PARM                    TranScnBlrt1                                 CIR020
-      ** CIRS LIBOR THEIRS field in Screen Format (New)                                       CIR020
-     C                   PARM                    TranScnBlrt2                                 CIR020
-      ** CIRS LIBOR OURS field in Screen Format (Current)                                     CIR020
-     C                   PARM                    CurrScnBlrt1                                 CIR020
-      ** CIRS LIBOR THEIRS field in Screen Format (Current)                                   CIR020
-     C                   PARM                    CurrScnBlrt2                                 CIR020
 
       * OUTPUTS
       * Field OK flags (DS) from/to caller

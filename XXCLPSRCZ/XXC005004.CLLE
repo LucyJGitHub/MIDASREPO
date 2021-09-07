@@ -1,0 +1,101 @@
+000100210907                            /*********************************************************************/
+000101210907/*STD    CLPBASEMOD                                                  */
+000102210907/*EXI    TEXT('Midas XX TAB001 upload to XXACHOMTD')                 */
+000103210907/*********************************************************************/
+000104210907/*                                                                   */
+000105210907/*       Midas - General Ledger Module                               */
+000106210907/*                                                                   */
+000107210907/*       XXC005004 - Midas XX TAB001 upload to XXACHOMTD             */
+000108210907/*                                                                   */
+000109210907/*       (c) Finastra International Limited 2021                     */
+000110210907/*                                                                   */
+000111210907/*       Last Amend No. DRI005  *CREATE    Date 13Apr21              */
+000112210907/*                                                                   */
+000113210907/*********************************************************************/
+000114210907/*                                                                   */
+000115210907/*       DRI005 - HO and EDW Extracts                                */
+000116210907/*                                                                   */
+000117210907/*********************************************************************/
+000118210907             PGM
+000119210907
+000120210907             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+000121210907                          Limited 2021')
+000122210907             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+000123210907             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+000124210907             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+000125210907             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+000126210907             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+000127210907             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+000128210907             DCL        VAR(&DRI005) TYPE(*CHAR) LEN(1)
+000129210907             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+000130210907
+000131210907             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+000132210907             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+000133210907
+000134210907/**/
+000135210907/*    Global monitor message                                         */
+000136210907/**/
+000137210907             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+000139210907
+000140210907             SNDPGMMSG  MSG('XXC005004 - Midas XX TAB001 upload to XXACHOMTD') TOMSGQ(MRUNQ)
+000142210907
+000143210907/**/
+000144210907             CHGJOB     SWS(00000000)
+000145210907/**/
+000146210907
+000147210907/* Retrieve Zone prefix                                                            */
+000148210907             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+000149210907
+000150210907             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+000151210907             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+000152210907/**/
+000153210907/* Check if DRI005 is ON */
+000154210907/**/
+000155210907             CHGVAR     VAR(&PRTCD) VALUE('       ')
+000156210907             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+000157210907             CHGVAR     VAR(&PSARD) VALUE('DRI005')
+000158210907             CHGVAR     VAR(&DRI005) VALUE('N')
+000159210907
+000160210907             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+000161210907
+000162210907             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+000163210907                CHGVAR     VAR(&DRI005) VALUE('Y')
+000164210907             ENDDO
+000165210907
+000166210907/* Process only if DRI005 is ON */
+000167210907
+000168210907             IF         COND(&DRI005 *EQ 'Y') THEN(DO)
+000169210907
+000170210907/*    Upload TAB001TD details to XXACHOMTD */
+000171210907                CPYF       FROMFILE(TAB001) TOFILE(&DPLIB/TAB001TD) MBROPT(*REPLACE) +
+000172210907                             FMTOPT(*NOCHK)
+000173210907                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(&DPLIB/TAB001TD))
+000175210907
+000176210907                CALL       PGM(XX005007)
+000177210907
+000178210907/**/
+000179210907/*    Database error processing                                      */
+000180210907/**/
+000181210907                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+000182210907                   RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+000183210907                   CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+000184210907                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOMSGQ(MOPERQ MRUNQ)
+000186210907                ENDDO
+000187210907
+000188210907             ENDDO
+000189210907
+000190210907
+000191210907             GOTO       CMDLBL(ENDPGM)
+000192210907
+000193210907 ABNOR:
+000194210907             CHGJOB     SWS(XXXXXX11)
+000195210907
+000196210907/* Abnormal termination */
+000197210907
+000198210907             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program XXC005004 ended +
+000199210907                          abnormally - see job log') TOMSGQ(MOPERQ)
+000200210907             MONMSG     MSGID(CPF0000 MCH0000)
+000201210907
+000202210907 ENDPGM:
+000203210907             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited 2021')
+000205210907             ENDPGM

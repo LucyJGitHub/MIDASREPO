@@ -17,10 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1067493 *CREATE  Date 12Dec12               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. AR1067493 *CREATE  Date 12Dec12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  AR1067493 - COBOP Upgrade programs amendment                 *
       *                                                               *
       *****************************************************************
@@ -29,12 +31,28 @@
       /free
 
        Exec SQL
-        label on column GPMENUPD
+       // Start MD056561                                                                    MD056561
+       //label*on*column*GPMENUPD**********************************************             MD056561
+        label on column GPMNUCTD
+       // End MD056561                                                                      MD056561
         ( MIACOB text is 'Phase ''G'' Restricted?');
 
        Exec SQL
-        label on column GPMENUPD
+       // Start MD056561                                                                    MD056561
+       //label*on*column*GPMENUPD**********************************************             MD056561
+        label on column GPMNUCTD
+       // End MD056561                                                                      MD056561
         ( MIACOB is 'Phs ''G'' Rstrct?');
+
+       // Start MD056561                                                                    MD056561
+       Exec SQL
+        label on column GPMNUBTD
+        ( MIACOB text is 'Phase ''G'' Restricted?');
+
+       Exec SQL
+        label on column GPMNUBTD
+        ( MIACOB is 'Phs ''G'' Rstrct?');
+       // End MD056561                                                                      MD056561
 
        Exec SQL
         label on column GZSFMENUPD

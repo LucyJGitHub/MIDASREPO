@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023043A          Date 27Nov13               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023043A          Date 27Nov13               *
       *                 AR1094271          Date 11Mar13               *
       *                 AR1095441          Date 11Mar13               *
       *                 CGP017             Date 06Aug12               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023043A - Encounters an error upon switch-ON of CSW213     *
       *              (Recompile)                                      *
@@ -43,15 +45,15 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      F******T_SECDATL1UF A E           K DISK    INFSR(*PSSR) COMMIT(D_COM)            BG6438 BG7655
      F******                               USROPN                                      BG6438 BG7655
       ******                                                                           BG6438 BG7655
      D*****Z_MACBRDD     E DS                  EXTNAME(MACBRDD)                        BG6438 BG7655
                                                                                        BG6438 BG7655
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -68,27 +70,27 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
- 
- 
+
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
- 
- 
+
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -97,34 +99,37 @@
      C     TRGEVENT      IFEQ      '2'
      C                   MOVEL     *BLANK        I#AIMG
      C                   ENDIF
- 
+
      C                   MOVEL     O#ZONE        I#ZONE                         * ERROR MESSAGE
      C                   MOVEL     'Y'           I#TRAP
- 
+
       * Determine updates
- 
+
      C                   EXSR      DET_UPDATES
- 
+
      C                   MOVEL     'B'           I#BFAF
      C                   DO        2
- 
+
      C     P_Before      IFEQ      'Y'
      C     I#BFAF        ANDEQ     'B'
      C     P_After       OREQ      'Y'
      C     I#BFAF        ANDEQ     'A'
      C     PFLNAME       CASEQ     'MACBRDD '    GLOB_MACBRDD
      C     PFLNAME       CASEQ     'MUSERDD '    GLOB_MUSERDD
-     C     PFLNAME       CASEQ     'SFMENUPD'    GLOB_SFMENUPD
+     C*****PFLNAME       CASEQ     'SFMENUPD'    GLOB_SFMENUPD                              MD056561
+     C     PFLNAME       CASEQ     'SFMNUCTD'    GLOB_SFMENUPD                              MD056561
+     C     PFLNAME       CASEQ     'SFMNUBTD'    GLOB_SFMENUPD                              MD056561
+     C     PFLNAME       CASEQ     'SFMNUXTD'    GLOB_SFMENUPD                              MD056561
      C     PFLNAME       CASEQ     'SFRAURPA'    GLOB_SFRAURPA                             AR1094271
      C     PFLNAME       CASEQ     'SFRAAUPA'    GLOB_SFRAAUPA                             AR1094271
      C                   ENDCS
      C                   ENDIF
- 
+
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       * Global Updates - Valid action Codes for User/Branch/Item
@@ -189,7 +194,7 @@
       * Determine Updates
       *****************************************************************
      C     DET_UPDATES   BEGSR
- 
+
      C                   CALL      'GPDETGUPD'
      C                   PARM                    I#ZONE           10
      C                   PARM      PFLNAME       I#FILE           10
@@ -197,7 +202,7 @@
      C                   PARM                    I#AIMG
      C                   PARM      'N'           P_Before          1
      C                   PARM      'N'           P_After           1
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -205,19 +210,19 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
       ******                                                                           BG6438 BG7655
       **Open for commit?                                                               BG6438 BG7655
      C******             CALL      'GPCOPN4COM'                                        BG6438 BG7655
      C******             PARM                    D_COM             1                   BG6438 BG7655
      C******             OPEN      T_SECDATL1                                          BG6438 BG7655
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

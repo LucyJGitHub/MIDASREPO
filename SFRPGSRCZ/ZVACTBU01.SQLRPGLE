@@ -27,10 +27,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD022997           Date 23Oct13               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD022997           Date 23Oct13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD022997 - Customer being filtered was not displayed on the  *
       *             main list view of CUSD maintenance                *
       *                                                               *
@@ -50,10 +52,10 @@
       *
       *****************************************************************
       *
-     FSFMENUL0  IF   E           K DISK
-     FGPMENUL0  IF   E           K DISK    INFSR(*PSSR)
-     F                                     USROPN
-     F                                     RENAME(SFMENUD0:GPMENUD0)
+     F*SFMENUL0* IF   E           K DISK                                                    MD056561
+     F*GPMENUL0* IF   E           K DISK    INFSR(*PSSR)                                    MD056561
+     F**********                           USROPN                                           MD056561
+     F**********                           RENAME(SFMENUD0:GPMENUD0)                        MD056561
       *
       ** EXTERNAL DATA AREA OF MENU ITEM REQUESTED
      D ZMITEM          DS
@@ -90,16 +92,15 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
      I*
-     ISFMENUD0
-     I              MIAAC10                     MIAA10
+     I*SFMENUD0*                                                                            MD056561
+     I**********    MIAAC10                     MIAA10                                      MD056561
       *
-     IGPMENUD0
-     I              MIAAC10                     MIAA10
-
+     I*GPMENUD0*                                                                            MD056561
+     I**********    MIAAC10                     MIAA10                                      MD056561
       *
      C     CSD031        IFEQ      'Y'
      C     *INU1         ANDEQ     *ON
-     C                   OPEN      GPMENUL0
+     C**********         OPEN      GPMENUL0                                                 MD056561
      C                   ENDIF
       *
      C     *DTAARA       DEFINE                  ZMITEM
@@ -127,7 +128,7 @@
       *
      C     CSD031        IFEQ      'Y'
      C     *INU1         ANDEQ     *ON
-     C                   CLOSE     GPMENUL0
+     C**********         CLOSE     GPMENUL0                                                 MD056561
      C                   ENDIF
       *
      C                   SETON                                        LR

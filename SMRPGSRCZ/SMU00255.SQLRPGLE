@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1067493 *CREATE  Date 12Dec12               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. AR1067493 *CREATE  Date 12Dec12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1067493 - COBOP Upgrade programs amendment                 *
       *                                                               *
@@ -27,12 +29,12 @@
      D Recursive       S              1
       /free
        EXEC SQL
-        label on column SFMENUPD
+        label on column SFMNUCTD
         ( MIACOB text is 'Phase ''G'' Restricted?');
 
-       EXEC SQL
-        label on column SFMENUPD
-        ( MIACOB is 'Phs ''G'' Rstrct?');
+      *EXEC*SQL                                                                             MD056561
+      **label*on*column*SFMENUPD                                                            MD056561
+      **(*MIACOB*is*'Phs*''G''*Rstrct?');                                                   MD056561
 
                  Return;
       /EJECT

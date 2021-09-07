@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD049728 *CREATE   Date 12Mar18               *
+      *  Last Amend No. MD056561           Date 31Aug20               * 
+      *  Prev Amend No. MD049728 *CREATE   Date 12Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD049728 - CGL002 Initialization program to insert Action    *
       *             code O                                            *
       *                                                               *
@@ -42,7 +44,8 @@
 
      D RECCNT          S              2  0
      D PERMM         E DS                  EXTNAME(MITB_PERMM)
-     D SFMNU         E DS                  EXTNAME(SFMENUPD)
+     D*SFMNU***      E DS                  EXTNAME(SFMENUPD)                                MD056561
+     D SFMNU         E DS                  EXTNAME(SFMNUJW0)                                MD056561
      D  ACTION               158    167
      D  MIAC1                158    158
      D  MIAC2                159    159
@@ -73,7 +76,8 @@
        EXEC SQL
         Declare SFcursor cursor for
         Select *
-        from SFMENUPD
+       //**from*SFMENUPD                                                                  //MD056561
+        from SFMNUCTD                                                                     //MD056561
         where MIINDX = :StrippedINDX;
 
        EXEC SQL
@@ -111,7 +115,8 @@
              Else;
                ACTION = %REPLACE (ActionCode : ACTION : MIAAC : 1);
                EXEC SQL
-                 Update SFMENUPD set
+          //     Update SFMENUPD set                                                      //MD056561
+                 Update SFMNUCTD set                                                      //MD056561
                    MIAAC1 = :MIAC1,
                    MIAAC2 = :MIAC2,
                    MIAAC3 = :MIAC3,

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -57,9 +59,9 @@
       * DSP: Midas SC Switchable features by menu items
       *
      F***SCSARIL2IF**E           K        DISK                           UC                   CSF002
-     FGPMTXTL3  IF   E           K DISK    USROPN
-     F                                     INFDS(INFDS1)
-     F                                     INFSR(*PSSR)
+     F*GPMTXTL3* IF   E           K DISK    USROPN                                          MD056561
+     F**********                           INFDS(INFDS1)                                    MD056561
+     F**********                           INFSR(*PSSR)                                     MD056561
       * RSQ : Midas SC Switchable menu items
       *
      F*SCSARDL1IF**E***********K        DISK                           UC      CSC007
@@ -167,6 +169,7 @@
       * Avail if feature present?
      D  ZA0004                 1      1
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
+     D GPMTXT        E DS                  EXTNAME(GPMTXJW0)                                MD056561
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -232,9 +235,24 @@
       ** Menu Item Short Code                                                                 CSF002
       *                                                                                       CSF002
      C                   MOVEL     #2SNAM        MISNAM
+     C/EXEC SQL                                                                             MD056561
+     C+ close ACursor                                                                       MD056561
+     C/END-EXEC                                                                             MD056561
+                                                                                            MD056561
       * 82=EOF
      C********** KPOS      SETLL@SARIL2              82    *                                  CSF002
-     C     KPOS          SETLL     GPMTXTD0                           82        *
+     C*****KPOS          SETLL     GPMTXTD0                           82        *           MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ declare ACursor insensitive scroll cursor for                                       MD056561
+     C+ select * from GPMTXJW0                                                              MD056561
+     C+ where MIDEL <> 'Y' and MISNAM >= :MISNAM                                            MD056561
+     C+ order by MISNAM                                                                     MD056561
+     C/END-EXEC                                                                             MD056561
+                                                                                            MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ open ACursor                                                                        MD056561
+     C/END-EXEC                                                                             MD056561
+                                                                                            MD056561
       * 82=EOF
      C     KRST          KLIST
      C**********           KFLD           ADSARN           Switchable Feat                    CSF002
@@ -254,7 +272,14 @@
      C     *IN82         OREQ      *OFF
      C     *IN38         ANDEQ     *ON
      C     *IN36         ANDEQ     *ON
-     C                   READ      GPMTXTL3                               82
+     C**********         READ      GPMTXTL3                               82                MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ fetch next from ACursor into :GPMTXT                                                MD056561
+     C/END-EXEC                                                                             MD056561
+     C                   If        SQLCODE = 100                                            MD056561
+     C                   seton                                            82                MD056561
+     C                   Endif                                                              MD056561
+                                                                                            MD056561
      C     2             SUBST     MIINDX:1      WZONE             2
      C**********         MOVEL     WZONE         WZONEN            3 0                      MD055681
      C**********         MOVEL     WZONEN        WZONEA            2                        MD055681
@@ -304,8 +329,14 @@
      C**N82*****           READP@SARIL2                  90*                                  CSF002
      C**N82*****           READ @SARIL2                  90*                                  CSF002
      C     *IN82         IFEQ      *OFF
-     C                   READP     GPMTXTL3                               90    *
-     C                   READ      GPMTXTL3                               90    *
+     C**********         READP     GPMTXTL3                               90    *           MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ fetch prior from ACursor into :GPMTXT                                               MD056561
+     C/END-EXEC                                                                             MD056561
+     C**********         READ      GPMTXTL3                               90    *           MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ fetch next from ACursor into :GPMTXT                                                MD056561
+     C/END-EXEC                                                                             MD056561
      C                   ENDIF
      C                   END
       *
@@ -387,14 +418,22 @@
      C     *IN82         OREQ      *OFF
      C     *IN38         ANDEQ     *ON
      C     *IN36         ANDEQ     *ON
-     C                   READ      GPMTXTL3                               82
+     C**********         READ      GPMTXTL3                               82                MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ fetch next from ACursor into :GPMTXT                                                MD056561
+     C/END-EXEC                                                                             MD056561
+     C                   If        SQLCODE = 100                                            MD056561
+     C                   seton                                            82                MD056561
+     C                   Endif                                                              MD056561
+                                                                                            MD056561
      C     2             SUBST     MIINDX:1      WZONE             2
-     C                   MOVEL     WZONE         WZONEN            3 0
-     C                   MOVEL     WZONEN        WZONEA            2
+     C**********         MOVEL     WZONE         WZONEN            3 0                      MD056555
+     C**********         MOVEL     WZONEN        WZONEA            2                        MD056555
      C                   MOVE      *OFF          *IN38
-     C     WZONE         IFEQ      WZONEA
-     C                   MOVE      *ON           *IN38
-     C                   ENDIF
+     C*****WZONE         IFEQ      WZONEA                                                   MD056555
+     C**********         MOVE      *ON           *IN38                                      MD056555
+     C**********         ENDIF                                                              MD056555
+     C                   TESTN                   WZONE                38                    MD056555
      C                   MOVE      MIINDX        KINDX
      C                   MOVE      #2SARN        KSARN
      C     KRST          CHAIN     SCSARIL4                           36
@@ -670,7 +709,17 @@
      C*
      C** Move Synon work fields into parameters
      C*
-     C     WUSNAM        CHAIN     GPMTXTL3                           37
+     C*****WUSNAM        CHAIN     GPMTXTL3                           37                    MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ SELECT *                                                                            MD056561
+     C+ into :GPMTXT                                                                        MD056561
+     C+ from GPMTXJW0                                                                       MD056561
+     C+ where MISNAM = :WUSNAM and MIDEL <> 'Y'                                             MD056561
+     C/END-EXEC                                                                             MD056561
+     C                   Setoff                                       37                    MD056561
+     C                   If        SQLCODE = 100                                            MD056561
+     C                   Seton                                        37                    MD056561
+     C                   Endif                                                              MD056561
      C     2             SUBST     MIINDX:1      WZONE             2
      C                   MOVEL     WZONE         WZONEN            3 0
      C                   MOVEL     WZONEN        WZONEA            2
@@ -1460,7 +1509,7 @@
       * Open files
      C                   OPEN      SC3060M#
      C**********           OPEN SCSARIL2                                                      CSF002
-     C                   OPEN      GPMTXTL3
+     C**********         OPEN      GPMTXTL3                                                 MD056561
      C*********************OPEN SCSARDL1                                        CSC007
      C**********         OPEN      SCSARSL1                                                 MD055681
      C**********           OPEN SCSARIL0                                                      CSF002

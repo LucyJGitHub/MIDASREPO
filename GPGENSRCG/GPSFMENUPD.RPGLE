@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048501           Date 08Nov17               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048501           Date 08Nov17               *
       *                 MD023266           Date 07Nov13               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048501 - Internal failure on call to GPFIXGDT              *
       *  MD023266 - Dumps in CGL135 and CGL146 Switch-On (Recompile)  *
@@ -36,7 +38,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZSFMENUL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSFMENUPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -45,9 +47,11 @@ O    F                                     USROPN
 O
 O    D Z_SFMENUPD    E DS                  EXTNAME(GZSFMENUPD)
 O    D G_SFMENUPD    E DS                  EXTNAME(GZSFMENUPD) PREFIX(G_)
- 
+     D SFMENU          DS                                                                   MD056561
+     D  XINDX                 11     20                                                     MD056561
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -56,7 +60,11 @@ O    D G_SFMENUPD    E DS                  EXTNAME(GZSFMENUPD) PREFIX(G_)
      C                   PARM                    I#TRAP            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
+     C                   PARM                    I#FILE           10                        MD056561
 O
+      * If file is bespoke or core, perform normal process                                  MD056561
+     C     I#FILE        IFEQ      'SFMNUCTD'                                               MD056561
+     C     I#FILE        OREQ      'SFMNUBTD'                                               MD056561
 O     * Global File Updates
 O
 O    C     I#BFAF        IFEQ      'B'
@@ -93,9 +101,31 @@ O    C                   ELSE
 O    C                   WRITE     W_SFMENUD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
+     C                   ENDIF                                                              MD056561
+                                                                                            MD056561
+      * If file is extension                                                                MD056561
+     C     I#FILE        IFEQ      'SFMNUXTD'                                               MD056561
+O     * only consider 'update after'                                                        MD056561
+O                                                                                           MD056561
+O    C     I#BFAF        IFNE      'B'                                                      MD056561
+O                                                                                           MD056561
+O    C                   MOVEL     I#AIMG        SFMENU                                     MD056561
+O    C                   MOVEL     XINDX         MIINDX                                     MD056561
+Z    C                   MOVEL     I#ZONE        MIZONE                                     MD056561
+                                                                                            MD056561
+O    C     K_GZSFMENUL1  CHAIN     SFMENUD0                           99                    MD056561
+      * Update                                                                              MD056561
+O    C     *IN99         IFEQ      *OFF                                                     MD056561
+O    C                   UPDATE    SFMENUD0                                                 MD056561
+O    C                   ENDIF                                                              MD056561
+                                                                                            MD056561
+O    C                   ENDIF                                                              MD056561
+O    C                   ENDIF                                                              MD056561
+                                                                                            MD056561
+     C                   SETON                                        LR                    MD056561
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -114,7 +144,7 @@ O
 O    C     K_GZSFMENUL1  KLIST
 O    C                   KFLD                    MIZONE
 O    C                   KFLD                    MIINDX
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -122,15 +152,15 @@ O    C                   KFLD                    MIINDX
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -145,10 +175,10 @@ O    C                   KFLD                    MIINDX
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

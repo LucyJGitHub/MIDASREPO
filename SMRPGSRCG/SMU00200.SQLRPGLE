@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD020108 *CREATE   Date 18Apr13               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD020108 *CREATE   Date 18Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD020108 - Permissions Patch                                 *
       *                                                               *
       *****************************************************************
@@ -98,7 +100,8 @@
 
              If MPrmCount < 1;
                 Exec SQL
-                Update GPMTXTPD
+       //*******Update*GPMTXTPD*************************************************            MD056561
+                Update GPMTXCTD
                        set MIDEL = 'Y'
                        where MIINDX = :NPINDX;
              EndIf;

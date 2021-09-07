@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 CCB020             Date 06Aug12               *
       *                 AR989143           Date 13Jun12               *
       *                 CBF005             Date 04Jul11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *         - Add additional checking if action is allowed in     *
@@ -134,7 +136,8 @@
       ** +--------------------------------------+
 
      DDSSDY          E DS
-     DMENU           E DS                  EXTNAME(SFMENUPD)
+     D*MENU*****      E DS                  EXTNAME(SFMENUPD)                               MD056561
+     DMENU           E DS                  EXTNAME(SFMNUJW0)                                MD056561
 
      DZMITEM         E DS                  EXTNAME(ZMITEM)
 

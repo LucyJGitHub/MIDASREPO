@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056561           Date 31Aug20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD030791           Date 26Sep14              */
 /*                      MD019885           Date 04Apr14              */
 /*                      AR883210           Date 21Dec11              */
@@ -18,6 +19,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD030791 - Bridge optioni SPRF fail during system setup     */
@@ -120,19 +122,26 @@ CHECK:
                           COMMIT(*NONE)
 
 /** Menu items; populate SMBFMNPD but only with active menu items. */
-             CPYF       FROMFILE(SFMENUJ0) TOFILE(SMBFMNPD) +
-                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
-             CPYF       FROMFILE(GPMENUJ0) TOFILE(SMBFMNPD) +
-                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+/**********  CPYF       FROMFILE(SFMENUJ0) TOFILE(SMBFMNPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP) */                        /*MD056561*/
+             CPYF       FROMFILE(SFMNUJW1) TOFILE(SMBFMNPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD056561*/
+/**********  CPYF       FROMFILE(GPMENUJ0) TOFILE(SMBFMNPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP) */                            /*MD056561*/
+             CPYF       FROMFILE(GPMNUJW1) TOFILE(SMBFMNPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)                               /*MD056561*/
 /** Retrieve menu item description from GPMTXTPD. */
              CHGVAR     VAR(&STMSTR) VALUE('update SMBFMNPD a set +
                           a.MIINAR =')
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
 /**********  CHGVAR     VAR(&STMSTR) VALUE('(select b.MIINAR from +
                           GPMTXTPD b where a.MIINDX = b.MIINDX)') */                    /*AR883210*/
-             CHGVAR     VAR(&STMSTR) VALUE('VALUE((select b.MIINAR +
+/**********  CHGVAR     VAR(&STMSTR) VALUE('VALUE((select b.MIINAR +
                           from GPMTXTPD b where a.MIINDX = +
-                          b.MIINDX), '' '')')                                           /*AR883210*/
+                          b.MIINDX), '' '')') */                              /*AR883210**MD056561*/
+             CHGVAR     VAR(&STMSTR) VALUE('VALUE((select b.MIINAR +
+                          from GPMTXJW0 b where a.MIINDX = +
+                          b.MIINDX), '' '')')                                           /*MD056561*/
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
@@ -162,9 +171,12 @@ CHECK:
                           COMMIT(*NONE)
 
 /** Update description from GPMTXTPD. */
+/**********  CHGVAR     VAR(&STMSTR) VALUE('update SMBFACPD a set +
+                          a.ACINAR = (select b.MIINAR from +
+                          GPMTXTPD b where') */                                         /*MD056561*/
              CHGVAR     VAR(&STMSTR) VALUE('update SMBFACPD a set +
                           a.ACINAR = (select b.MIINAR from +
-                          GPMTXTPD b where')
+                          GPMTXJW0 b where')                                            /*MD056561*/
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*CLEAR')
              CHGVAR     VAR(&STMSTR) VALUE('a.ACINDX = b.MIINDX)')
              CALL       PGM(UTWRTSQL) PARM(&STMSTR '*WRITE')

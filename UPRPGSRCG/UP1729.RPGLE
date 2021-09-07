@@ -13,14 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256038 *CREATE     Date 23Feb05               *
-      *                 xxxxxx             Date ddmmmyy               *
+      *                 256038 *CREATE     Date 23Feb05               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD046248 - Finastra Rebranding                               *
       *  256038 - This program will check validity of data in         *
       *           T_GRMENU* files.  Also delete the shortname from    *
@@ -61,14 +62,14 @@
      F                                     RENAME(T_GRMENUL:GMUL3F) PREFIX(I_)
       *  RTV:  Menu items by Hierarchy Id, Parent, Link Id. Link Id in descending order.
       *
-     FGPMTXTL0  IF   E           K DISK    INFSR(*PSSR)
+     F*GPMTXTL0* IF   E           K DISK    INFSR(*PSSR)                                    MD056561
       *  RTV:  Global Menu Item Text by Unique Code
       *
      FGZSFMENUL0IF   E           K DISK    INFSR(*PSSR) PREFIX(Z_)
       *  RTV:  Menu Master Data by Unique Code
       *
-     FGPMENUL0  IF   E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(SFMENUD0:GPMENUD0) PREFIX(G_)
+     F*GPMENUL0* IF   E           K DISK    INFSR(*PSSR)                                    MD056561
+     F**********                           RENAME(SFMENUD0:GPMENUD0) PREFIX(G_)             MD056561
       *  RTV:  Global Menu Master Data by Unique Code
       *
      FT_USERMENUUF   E             DISK    INFSR(*PSSR)
@@ -920,17 +921,32 @@
       *                                                                         with *SS or *SN
       * Menucode not starting with *SS nor *SN is menu item unique code.
       * The menu item unique code should exist in GPGMTXTPD.
-     C     MLMENUCODE    CHAIN     GPMTXTL0                           30        Rec not found
-     C                   IF        *IN30 = *ON OR
-     C                             (*IN30 = *OFF AND
-     C                             MIDEL  = 'Y')
+     C*****MLMENUCODE    CHAIN     GPMTXTL0                           30        Rec not founMD056561
+     C                   CALL      'GPAOGMTXR0'                                             MD056561
+     C                   PARM                    MLMENUCODE                                 MD056561
+     C                   PARM      *BLANKS       PRTCD             7                        MD056561
+     C                   Setoff                                       30                    MD056561
+     C                   If        PRTCD  <> *blanks                                        MD056561
+     C                   Seton                                        30                    MD056561
+     C                   Endif                                                              MD056561
+     C**********         IF        *IN30 = *ON OR                                           MD056561
+     C**********                   (*IN30 = *OFF AND                                        MD056561
+     C**********                   MIDEL  = 'Y')                                            MD056561
+     C                   IF        *IN30 = *ON                                              MD056561
      C                   EVAL      SEID            = 'LK24MCGTXT'
      C                   EXSR      OpLinkEMsg
      C                   ENDIF
       *
       * The menu item unique code starting with *G should exist in GPMENUPD.
      C                   IF        %SUBST(MLMENUCODE:1:2) = '*G'
-     C     MLMENUCODE    CHAIN     GPMENUL0                           30        Rec not found
+     C*****MLMENUCODE    CHAIN     GPMENUL0                           30        Rec not founMD056561
+     C                   CALL      'GPAOGMNUR0'                                             MD056561
+     C                   PARM                    MLMENUCODE                                 MD056561
+     C                   PARM      *BLANKS       PRTCD             7                        MD056561
+     C                   Setoff                                       30                    MD056561
+     C                   If        PRTCD  <> *blanks                                        MD056561
+     C                   Seton                                        30                    MD056561
+     C                   Endif                                                              MD056561
      C                   IF        *IN30 = *ON
      C                   EVAL      SEID            = 'LK25MCGPMU'
      C                   EXSR      OpLinkEMsg

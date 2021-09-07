@@ -28,8 +28,9 @@
      F*****************************************************************
      F********************************************************************
      F*                                                                  *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
      F*                                                                  *
      F********************************************************************
      F*                                                                  *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF002 - Global Processing SPF changes                       *
@@ -76,7 +78,7 @@
      FSCSARPL1  IF   E           K DISK
       * RTV : Midas SC Switchable f - initialisation pgm
       *
-     FGPMTXTL0  IF   E           K DISK
+     F*GPMTXTL0* IF   E           K DISK                                                    MD056561
       ** Global menu item by Unique Code                                                      CSF002
       *                                                                                       CSF002
      FSC3010P1  O    E             PRINTER OFLIND(*IN97)
@@ -124,6 +126,7 @@
      D P@CMPN        E DS                  EXTNAME(CBCMPNPD)
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
+     D GPMTXT        E DS                  EXTNAME(GPMTXJW0)                                MD056561
      I*
      I* Description     : Copyright notice for inclusion in all programs
      I*
@@ -740,7 +743,17 @@
      C     W0EOFD        OREQ      '1'
      C********** KRSD      READE@SARIL1                  90*                                  CSF002
      C     KRSD          READE     SCSARID0                               90
-     C     ADINDX        CHAIN     GPMTXTL0                           11
+     C*****ADINDX        CHAIN     GPMTXTL0                           11                    MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ SELECT *                                                                            MD056561
+     C+ into :GPMTXT                                                                        MD056561
+     C+ from GPMTXJW0                                                                       MD056561
+     C+ where MIINDX = :ADINDX                                                              MD056561
+     C/END-EXEC                                                                             MD056561
+     C                   Setoff                                       11                    MD056561
+     C                   If        SQLCODE = 100                                            MD056561
+     C                   Seton                                        11                    MD056561
+     C                   Endif                                                              MD056561
       * Transfer error indicator to EOF flag
      C                   MOVEL     *IN90         W0EOFD            1
       * Quit if no record read

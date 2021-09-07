@@ -17,14 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG13587 *CREATE   Date 20Apr07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG13587 - Zone file built over file in global layer         *
@@ -45,12 +47,12 @@
      F**********                           INFSR(*PSSR)                                     MD055681
       *
       * GP Global Menu Item Text
-     FGPMTXTL0  IF   E           K DISK    PREFIX(A_)
-     F                                     INFSR(*PSSR)
+     F*GPMTXTL0* IF   E           K DISK    PREFIX(A_)                                      MD056561
+     F**********                           INFSR(*PSSR)                                     MD056561
       *
       * GP Zonal Menu Master
-     FSFMENUL0  IF   E           K DISK    PREFIX(B_)
-     F                                     INFSR(*PSSR)
+     F*SFMENUL0* IF   E           K DISK    PREFIX(B_)                                      MD056561
+     F**********                           INFSR(*PSSR)                                     MD056561
       *
       * Zonal Extract File for List View
      FSFMNUEXPD O    E             DISK    USROPN
@@ -123,6 +125,10 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
 
+     D SFMENU        E DS                  EXTNAME(SFMNUJW0)                                MD056561
+     D                                     PREFIX(B_)                                       MD056561
+     D GPMTXT        E DS                  EXTNAME(GPMTXJW0)                                MD056561
+     D                                     PREFIX(A_)                                       MD056561
       *---------------------------------------------------------------
       ** Mainline Processing
       *---------------------------------------------------------------
@@ -153,18 +159,32 @@
       * For the Switchable Feature and Menu Index capture the Menu Shortname and
       * Description
       *
-     C     ADINDX        CHAIN     GPMTXTL0
+     C*****ADINDX        CHAIN     GPMTXTL0                                                 MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ SELECT *                                                                            MD056561
+     C+ into :GPMTXT                                                                        MD056561
+     C+ from GPMTXJW0                                                                       MD056561
+     C+ where MIINDX = :ADINDX                                                              MD056561
+     C/END-EXEC                                                                             MD056561
       *
-     C                   IF        %FOUND(GPMTXTL0)
+     C**********         IF        %FOUND(GPMTXTL0)                                         MD056561
+     C                   If        SQLCODE = 0                                              MD056561
       *
      C                   EVAL      MISNAM = A_MISNAM
      C                   EVAL      MIINAR = A_MIINAR
      C                   EVAL      MISARN = ABSARN
       *
       *
-     C     A_MIINDX      CHAIN     SFMENUL0
+     C*****A_MIINDX      CHAIN     SFMENUL0                                                 MD056561
+     C/EXEC SQL                                                                             MD056561
+     C+ SELECT *                                                                            MD056561
+     C+ into :SFMENU                                                                        MD056561
+     C+ from SFMNUJW0                                                                       MD056561
+     C+ where MIINDX = :A_MIINDX                                                            MD056561
+     C/END-EXEC                                                                             MD056561
       *
-     C                   IF        %FOUND(SFMENUL0)
+     C**********         IF        %FOUND(SFMENUL0)                                         MD056561
+     C                   IF        SQLCODE = 0                                              MD056561
       *
      C                   EVAL      MIINDX = B_MIINDX
      C                   EVAL      ALLOWACT = B_MIAAC1 + B_MIAAC2 + B_MIAAC3 +

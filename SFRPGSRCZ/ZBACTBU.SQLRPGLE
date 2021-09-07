@@ -31,8 +31,9 @@
       *  Any changes made to this program may also need to be         *
       *  incorporated in ZVACTBU.                                     *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
-      *  Prev Amend No. AR867641           Date 20Nov11               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 AR867641           Date 20Nov11               *
       *                 CBF005  *REWRITE   Date 04Jul11               *
       *                 262308             Date 27Oct09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *         - Remove checking and processing for CSC011 (24x7)    *
       *  AR867641 - BFMidas Drop2 build compilation issues            *
@@ -93,10 +95,10 @@
       *              2 = ACTION CODE NOT VALID FOR USER/MENU ITEM/BRANCH
       *
       *****************************************************************
-     FSFMENUL0  IF   E           K DISK
-     FGPMENUL0  IF   E           K DISK    INFSR(*PSSR)
-     F                                     USROPN
-     F                                     RENAME(SFMENUD0:GPMENUD0)
+     F*SFMENUL0* IF   E           K DISK                                                    MD056561
+     F*GPMENUL0* IF   E           K DISK    INFSR(*PSSR)                                    MD056561
+     F**********                           USROPN                                           MD056561
+     F**********                           RENAME(SFMENUD0:GPMENUD0)                        MD056561
       *
      D ARR             S              1    DIM(6)
 
@@ -118,11 +120,11 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
       *
-     ISFMENUD0
-     I              MIAAC10                     MIAA10
+     I*SFMENUD0*                                                                            MD056561
+     I**********    MIAAC10                     MIAA10                                      MD056561
       *
-     IGPMENUD0
-     I              MIAAC10                     MIAA10
+     I*GPMENUD0*                                                                            MD056561
+     I**********    MIAAC10                     MIAA10                                      MD056561
       *
      C     *ENTRY        PLIST
      C                   PARM                    ZACTN             1
@@ -133,7 +135,7 @@
       *
      C     CSD031        IFEQ      'Y'
      C     *INU1         ANDEQ     *ON
-     C                   OPEN      GPMENUL0
+     C**********         OPEN      GPMENUL0                                                 MD056561
      C                   ENDIF
       *
      C                   SETOFF                                       9697
@@ -215,7 +217,7 @@
       *
      C     CSD031        IFEQ      'Y'
      C     *INU1         ANDEQ     *ON
-     C                   CLOSE     GPMENUL0
+     C**********         CLOSE     GPMENUL0                                                 MD056561
      C                   ENDIF
       *
      C                   RETURN

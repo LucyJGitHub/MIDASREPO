@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
-/*XBI *  OVRDBF FILE(QTMENU) TOFILE(GPMENUPD)                         *
+/**** *  OVRDBF FILE(QTMENU) TOFILE(GPMENUPD)                         *                     MD056561
+/*XBI *  OVRDBF FILE(QTMENU) TOFILE(GPMNUJW0)                         *                     MD056561
 /*XBI *  OVRDBF FILE(MIQT_PERMM) TOFILE(MITB_PERMM)                   *
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Generate Permission Mapping')
@@ -13,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD019885 *CREATE   Date 04Apr14               *
+      *  Last Amend No. MD056561           Date 31Aug20               *
+      *  Prev Amend No. MD019885 *CREATE   Date 04Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD  *
       *  MD019885 - Permission Upload Interface                       *
       *           - Applied for MD026157                              *
       *                                                               *
@@ -40,7 +43,8 @@
      D LowerCase       S              1    DIM(26) CTDATA PERRCD(26)
      D UpperCase       S              1    DIM(26) CTDATA PERRCD(26)
       *
-     D MENU          E DS                  EXTNAME(GPMENUPD)
+     D*MENU*****     E DS                  EXTNAME(GPMENUPD)                                MD056561
+     D MENU          E DS                  EXTNAME(GPMNUJW0)                                MD056561
      D BFPM          E DS                  EXTNAME(MITB_PERMM)
       *
       *
@@ -150,7 +154,8 @@
            Exec SQL
             Select count(*)
               into :Counter
-              from GPMTXTPD b, T_GRMENUG c, T_GRMENUL d
+       //*****from*GPMTXTPD*b,*T_GRMENUG*c,*T_GRMENUL d*************************************MD056561
+              from GPMTXJW0 b, T_GRMENUG c, T_GRMENUL d
              where b.MIINDX   = d.MLMENUCODE
                and d.MLPARENT = c.MGID
                and b.MIINDX   = :PMINDX;
@@ -286,7 +291,8 @@
                     set PMARTD =
                         (select concat(trim(c.MGNAME),
                                 concat('_',trim(b.MIINAR)))
-                           from GPMTXTPD b, T_GRMENUG c, T_GRMENUL d
+       //******************from*GPMTXTPD*b,*T_GRMENUG*c,*T_GRMENUL*d***********             MD056561
+                           from GPMTXJW0 b, T_GRMENUG c, T_GRMENUL d
                           where b.MIINDX = :PMINDX
                             and d.MLMENUCODE = :PMINDX
                             and d.MLPARENT = c.MGID)
@@ -298,7 +304,8 @@
                 Exec SQL
                  Update MIQT_PERMM
                     set PMARTD = (select trim(MIINAR)
-                                    from GPMTXTPD where MIINDX = :PMINDX)
+       //***************************from*GPMTXTPD*where*MIINDX*=*:PMINDX)******             MD056561
+                                    from GPMTXJW0 where MIINDX = :PMINDX)
                   where PMINDX = :PMINDX
                     and PMACTC = :PMACTC;
        EndIf;

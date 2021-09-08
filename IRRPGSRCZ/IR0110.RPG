@@ -1,0 +1,1181 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR UIC Control Postings Extract Report')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas ABS - BOI Returns                                      *
+      *                                                               *
+      *  IR0110   - UIC Control Postings Extract Report               *
+      *                                                               *
+      *  Function:  This report shows all the accounting entries that *
+      *             have been allocated a causale code for UIC        *
+      *             purposes.                                         *
+      *                                                               *
+      *  (phase(s)) Automatically, during Close of Business           *
+      *             Automatically, during Month-End                   *
+      *             On request, during Close of Business              *
+      *             On request, during Input Cycle                    *
+      *                                                               *
+      *  Called By: IRC0110                                           *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MWL051             Date 16Dec98               *
+      *                 RS0001             Date 02Dec98               *
+      *                 UIT021             Date 12Feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MWL051 - Print File not OPEN                                 *
+      *  RS0001 - Overflow error while processing #UCAUP subroutine.  *
+      *  UIT021 - BOI Monthly Reporting                               *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *                                                               *
+      *  10 - Output daily postings title                             *
+      *  11 - Output monthly postings title                           *
+      *  12 - Output previous month's postings title                  *
+      *                                                               *
+      *  15 - Output relative record number                           *
+      *  20 - Lira/non-lira (on/off)                                  *
+      *  25 - Debit/credit (on/off)                                   *
+      *                                                               *
+      *  30 - Currency amounts output with no decimal places          *
+      *  31 - Currency amounts output with one decimal place          *
+      *  32 - Currency amounts output with two decimal places         *
+      *  33 - Currency amounts output with three decimal places       *
+      *                                                               *
+      *  70 - End of Lira Postings file                               *
+      *  80 - End of Non-Lira Postings file                           *
+      *                                                               *
+      *  LR -  End processing                                         *
+      *  U7 -  Data-base error control                                *
+      *  U8 -  Data-base error control                                *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  *PSSR  -  Error subroutine                                   *
+      *  #UINIT -  Initial processing                                 *
+      *  #URCFA -  Register the AU Printer file via RCF               *
+      *  #URCFP -  Register the P1 Printer file via RCF               *
+      *  #UDCTL -  Report Detail Control Processing                   *
+      *  #ULIRA -  Lira Detail Processing                             *
+      *  #UNLIR -  Non-Lira Detail Processing                         *
+      *  #UCAUP -  Causale Total Processing                           *
+      *  #UCCYP -  Currency Total Processing                          *
+      *  #UNCCY -  New Currency Total Processing                      *
+      *  #UCKOV -  Check for Report Overflow                          *
+      *  CNVCCY -  Convert Currency Amount to Lira Amount             *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      ***  Postings detail file - Lira                  Prefix 'IB'
+      *
+     FIRDPSTL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Postings detail file - Non-Lira              Prefix 'IB'
+      *
+     FIRDPSTL1IF  E           K        DISK         KINFSR *PSSR
+     F            IRAPOSD0                          KRENAMEIRAPOSD1
+      *
+     FIR0110P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+     FIR0110AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+      *
+     E/COPY ZSRSRC,ZPOWERZ1
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ***  Rename non-lira file fields
+      *
+     IIRAPOSD1
+     I              IBCNUM                          ICNUM
+     I              IBCCY                           ICCY
+     I              IBACOD                          IACOD
+     I              IBACSQ                          IACSQ
+     I              IBPSTD                          IPSTD
+     I              IBVALD                          IVALD
+     I              IBPNAR                          IPNAR
+     I              IBPSTA                          IPSTA
+     I              IBDRCR                          IDRCR
+     I              IBSPOS                          ISPOS
+     I              IBBRCA                          IBRCA
+     I              IBRIND                          IRIND
+     I              IBATYP                          IATYP
+     I              IBPRIN                          IPRIN
+     I              IBPRFC                          IPRFC
+     I              IBACSC                          IACSC
+     I              IBDLRF                          IDLRF
+     I              IBPREF                          IPREF
+     I              IBOTRF                          IOTRF
+     I              IBOTST                          IOTST
+     I              IBOTTP                          IOTTP
+     I              IBBOKC                          IBOKC
+     I              IBNITM                          INITM
+     I              IBTRCY                          ITRCY
+     I              IBSTYP                          ISTYP
+     I              IBORBR                          IORBR
+     I              IBSPRT                          ISPRT
+     I              IBAKEY                          IAKEY
+     I              IBLRNL                          ILRNL
+     I              IBRENR                          IRENR
+     I              IBCAUC                          ICAUC
+     I              IBRRN                           IRRN
+      *
+      ***  Local data area for database errors
+      *
+     IWLDA      E DSLDA                         256
+      *
+      ***  Data Area giving Installation Control Details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ***  Program data structure.
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      ***  DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ***  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  External DS for Currency Details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ***  File Information Data Structure - P1 report
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OVFLIN
+     I                                    B 367 3680PRTLIN
+      *
+      ***  File Information Data Structure - AU report
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      /EJECT
+      *****************************************************************
+      *          P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ***  Initial subroutine
+      *
+     C                     EXSR #UINIT
+      *
+      ***  If extract records exist, perform detail control processing
+      *
+     C           *IN70     IFEQ '0'                           B1
+     C           *IN80     OREQ '0'
+     C                     EXSR #UDCTL
+     C                     END                                E1
+      *
+      ***  Return to calling program
+      *
+     C                     Z-ADD4         #RQDLN                          RS0001
+     C                     EXSR #UCKOV
+     C                     WRITERPTEND                 70
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *          P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #UCKOV -  CHECK FOR REPORT OVERFLOW                          *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UDCTL - Report Detail Control Processing        *
+      *              #ULIRA - Lira Detail Processing                  *
+      *              #UNLIR - Non-Lira Detail Processing              *
+      *              #UCAUP - Causale Total Processing                *
+      *              #UCCYP - Currency Total Processing               *
+      *              *PSSR  - Error Handling Subroutine               *
+      *****************************************************************
+     C           #UCKOV    BEGSR
+      *
+      ***  Calculate number of available lines on current page
+      ***  (ie. difference between overflow line and current print line)
+      ***  If number of available lines is less than number of required
+      ***  lines, output headers
+      *
+     C           OVFLIN    SUB  PRTLIN    #AVLIN  30
+      *
+     C           #AVLIN    IFLT #RQDLN                        B1
+     C                     WRITEPAGHDR
+     C                     WRITESUBHDR
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UDCTL -  REPORT DETAIL CONTROL PROCESSING                   *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : MAIN   - Main Control Processing                 *
+      *                                                               *
+      *  CALLS     : #ULIRA - Lira Detail Processing                  *
+      *              #UNLIR - Non-Lira Detail Processing              *
+      *              #UCKOV - Check for Report Overflow               *
+      *****************************************************************
+     C           #UDCTL    BEGSR
+      *
+      ***  Repeat processing until end of file detected on both lira
+      ***  and non-lira postings files
+      *
+     C           *IN70     DOWEQ'0'                           B1
+     C           *IN80     OREQ '0'
+      *
+      ***  If end of file has been detected on lira postings file
+      ***  Or end of file has not been detected on non-lira postings
+      ***  file and lira branch is greater than non-lira branch
+      ***     Print headers and 'No Lira Details to Report' for
+      ***     the non-lira branch
+      ***  Else
+      ***     Process lira records
+      *
+     C           *IN70     IFEQ '1'                           B2
+     C           *IN80     OREQ '0'
+     C           IBBRCA    ANDGTIBRCA
+      *
+     C                     MOVELIBRCA     RBRCA
+     C                     MOVE '1'       *IN20
+      *
+     C                     WRITEPAGHDR
+     C                     WRITESUBHDR
+     C                     WRITENOLIRA
+     C                     ELSE                               X2
+     C                     EXSR #ULIRA
+     C                     END                                E2
+      *
+      ***  If there are further non-lira records to be processed
+      ***     If all lira records have been processed
+      ***     Or the next lira record to be processed has a branch
+      ***     code greater than that on the next non-lira record
+      ***     to be posted
+      ***        Process non-lira records
+      *
+     C           *IN80     IFEQ '0'                           B2
+      *
+     C           IBRCA     IFLT IBBRCA
+     C           IBRCA     ANDGTRBRCA
+      *
+      ***  Move accumulated branch debit and credit totals to output
+      ***  fields and print branch totals checking for overflow
+      ***  Reset branch total accumulators
+      *
+     C                     MOVE #BRDAC    RBRDT2
+     C                     MOVE #BRCAC    RBRCT2
+      *
+     C           *IN70     IFEQ '1'                           B4
+     C           *IN80     ANDEQ'1'
+     C                     Z-ADD6         #RQDLN  30
+     C                     ELSE                               X4
+     C                     Z-ADD2         #RQDLN
+     C                     END                                E4
+     C                     EXSR #UCKOV
+      *
+     C                     WRITEBRNTOT
+      *
+     C                     Z-ADD0         #BRDAC
+     C                     Z-ADD0         #BRCAC
+     C                     Z-ADD0         RBRND
+     C                     Z-ADD0         RBRNC
+      *
+     C                     END                                E3
+      *
+     C           *IN70     IFEQ '1'                           B3
+     C           IBRCA     ORLT IBBRCA
+     C                     EXSR #UNLIR
+     C                     END                                E3
+      *
+     C                     END                                E2
+      *
+      ***  Move accumulated branch debit and credit totals to output
+      ***  fields and print branch totals checking for overflow
+      ***  Reset branch total accumulators
+      *
+     C                     MOVE #BRDAC    RBRDT2
+     C                     MOVE #BRCAC    RBRCT2
+      *
+     C           *IN70     IFEQ '1'                           B2
+     C           *IN80     ANDEQ'1'
+     C                     Z-ADD6         #RQDLN  30
+     C                     ELSE                               X2
+     C                     Z-ADD2         #RQDLN
+     C                     END                                E2
+     C                     EXSR #UCKOV
+      *
+     C                     WRITEBRNTOT
+      *
+     C                     Z-ADD0         #BRDAC
+     C                     Z-ADD0         #BRCAC
+     C                     Z-ADD0         RBRND
+     C                     Z-ADD0         RBRNC
+      *
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #ULIRA - LIRA DETAIL PROCESSING                              *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UDCTL - Report Detail Control Processing        *
+      *                                                               *
+      *  CALLS     : #UCAUP - Causale Total Processing                *
+      *              *PSSR  - Error Handling Subroutine               *
+      *              #UCKOV - Check for Report Overflow               *
+      *****************************************************************
+     C           #ULIRA    BEGSR
+      *
+      ***  Set on indicators to output 'LIRA' on subheading line
+      ***  and to output total amounts with two currency decimal places
+      ***  Initialise totals control fields and print headers
+      *
+     C                     MOVE '1'       *IN20
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '1'       *IN32
+     C                     MOVE '0'       *IN33
+      *
+     C                     MOVELIBBRCA    RBRCA
+     C                     Z-ADDIBCAUC    RCAUC
+      *
+     C                     WRITEPAGHDR
+     C                     WRITESUBHDR
+      *
+      ***  Repeat processing until end of file or change of branch
+      ***  detected
+      *
+     C           *IN70     DOWEQ'0'                           B1
+     C           IBBRCA    ANDEQRBRCA
+      *
+      ***  If causale code has changed
+      ***     Perform causale total processing
+      ***     If branch code is unchanged
+      ***        Print headers to force page throw
+      *
+     C           IBCAUC    IFNE RCAUC                         B2
+     C                     EXSR #UCAUP
+     C           IBBRCA    IFEQ RBRCA                         B3
+     C                     WRITEPAGHDR
+     C                     WRITESUBHDR
+     C                     END                                E3
+     C                     END                                E2
+      *
+      ***  Check if retail.
+      *
+     C           IBATYP    IFEQ 'R'                           B2
+     C                     MOVE '(R)'     RATYP
+     C                     ELSE                               X2
+     C                     MOVE *BLANK    RATYP
+     C                     END                                E2
+      *
+      ***  Check if resident
+      *
+     C           IBRENR    IFEQ 'R'                           B2
+     C                     MOVE 'Yes'     RRENR
+     C                     ELSE                               X2
+     C                     MOVE 'No '     RRENR
+     C                     END                                E2
+      *
+      ***  Set up output fields for next detail line
+      ***  If debit/credit indicator is '0' output posting amount
+      ***  as a debit, otherwise output it as a credit
+      *
+     C                     MOVE IBCCY     RCCY
+     C                     Z-ADDIBCAUC    RCAUC
+     C                     Z-ADDIBRRN     RRRN
+      *
+     C           IBDRCR    IFEQ 0                             B2
+     C                     MOVE '1'       *IN25
+     C                     MOVE IBPSTA    RDAMT2
+     C                     ELSE                               X2
+     C                     MOVE '0'       *IN25
+     C                     MOVE IBPSTA    RCAMT2
+     C                     END                                E2
+      *
+     C                     MOVELIBCNUM    RCNUM
+     C                     Z-ADDIBACOD    RACOD
+     C                     Z-ADDIBACSQ    RACSQ
+     C                     MOVE IBPNAR    RPNAR
+      *
+      ***  Print lira detail line checking for overflow and
+      ***  accumulate totals
+      *
+     C                     Z-ADD3         #RQDLN
+     C                     EXSR #UCKOV
+      *
+     C                     WRITELIRDTL
+      *
+     C           IBDRCR    IFEQ 0                             B2
+     C                     ADD  IBPSTA    #CADAC 150
+     C                     ADD  IBPSTA    #LNDAC 150
+     C                     ADD  IBPSTA    #BRDAC 150
+     C                     ADD  1         RCAND
+     C                     ADD  1         RLNND
+     C                     ADD  1         RBRND
+     C                     ELSE                               X2
+     C                     ADD  IBPSTA    #CACAC 150
+     C                     ADD  IBPSTA    #LNCAC 150
+     C                     ADD  IBPSTA    #BRCAC 150
+     C                     ADD  1         RCANC
+     C                     ADD  1         RLNNC
+     C                     ADD  1         RBRNC
+     C                     END                                E2
+      *
+      ***  Read next record from Lira Postings file
+      *
+     C                     READ IRDPSTL0                 70
+      *
+     C           PENT      IFNE 'ALL'
+     C           *IN70     ANDEQ*OFF
+     C           IBBRCA    ANDEQPENT
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+     C                     ENDDO                              E1
+      *
+      ***  At end of file or change of branch, perform causale
+      ***  total processing
+      *
+     C                     EXSR #UCAUP
+      *
+      ***  Move accumulated lira debit and credit totals to output
+      ***  fields and print lira totals checking for overflow
+      ***  Reset lira total accumulators
+      *
+     C                     MOVE #LNDAC    RLNDT2
+     C                     MOVE #LNCAC    RLNCT2
+      *
+     C                     Z-ADD6         #RQDLN
+     C                     EXSR #UCKOV
+      *
+     C                     WRITELNLTOT
+      *
+     C                     Z-ADD0         #LNDAC
+     C                     Z-ADD0         #LNCAC
+     C                     Z-ADD0         RLNND
+     C                     Z-ADD0         RLNNC
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UNLIR - NON-LIRA DETAIL PROCESSING                          *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UDCTL - Report Detail Control Processing        *
+      *                                                               *
+      *  CALLS     : #UNCCY - New Currency Processing                 *
+      *              #UCAUP - Causale Total Processing                *
+      *              #UCCYP - Currency Total Processing               *
+      *              #UCKOV - Check for Report Overflow               *
+      *              CNVCCY - Convert Currency Amount to Lira         *
+      *              *PSSR  - Error Handling Subroutine               *
+      *****************************************************************
+     C           #UNLIR    BEGSR
+      *
+      ***  Set off indicator to output 'NON-LIRA' on subheading line
+      ***  Perform new currency processing to determine currency decimal
+      ***  places and set up output amount field indicators accordingly
+      ***  Initialise totals control fields and print headers
+      *
+     C                     MOVE '0'       *IN20
+      *
+     C                     EXSR #UNCCY
+      *
+     C                     MOVELIBRCA     RBRCA
+     C                     MOVE ICCY      RCCY
+     C                     Z-ADDICAUC     RCAUC
+      *
+     C                     WRITEPAGHDR
+     C                     WRITESUBHDR
+      *
+      ***  Repeat processing until end of file or change of branch code
+      ***  detected
+      *
+     C           *IN80     DOWEQ'0'                           B1
+     C           IBRCA     ANDEQRBRCA
+      *
+      ***  If causale code has changed
+      ***     Perform causale total processing
+      *
+     C           ICAUC     IFNE RCAUC                         B2
+     C                     EXSR #UCAUP
+     C                     END                                E2
+      *
+      ***  If currency code has changed
+      ***     If causale total processing has not been performed
+      ***        Perform causale total processing
+      ***     Perform currency total processing
+      ***     If branch code is unchanged
+      ***        Perform new currency processing
+      ***        Print headers to force page throw
+      *
+     C           ICCY      IFNE RCCY                          B2
+     C           ICAUC     IFEQ RCAUC                         B3
+     C                     EXSR #UCAUP
+     C                     END                                E3
+     C                     EXSR #UCCYP
+     C           IBRCA     IFEQ RBRCA                         B3
+     C                     EXSR #UNCCY
+     C                     WRITEPAGHDR
+     C                     WRITESUBHDR
+     C                     END                                E3
+     C                     END                                E2
+      *
+      ***  Check if retail.
+      *
+     C           IATYP     IFEQ 'R'                           B2
+     C                     MOVE '(R)'     RATYP
+     C                     ELSE                               X2
+     C                     MOVE *BLANK    RATYP
+     C                     END                                E2
+      *
+      ***  Check if resident
+      *
+     C           IRENR     IFEQ 'R'                           B2
+     C                     MOVE 'Yes'     RRENR
+     C                     ELSE                               X2
+     C                     MOVE 'No '     RRENR
+     C                     END                                E2
+      *
+      ***  Set up output fields for next detail line
+      ***  If debit/credit indicator is '0' output posting amount
+      ***  as a debit, otherwise output it as a credit
+      ***  Also, output amount taking currency decimal places into
+      ***  account
+      *
+     C                     MOVE ICCY      RCCY
+     C                     Z-ADDICAUC     RCAUC
+     C                     Z-ADDIRRN      RRRN
+      *
+     C           IDRCR     IFEQ 0                             B2
+     C                     MOVE '1'       *IN25
+     C           A6NBDP    IFEQ 0                             B3
+     C                     MOVE IPSTA     RDAMT0
+     C                     ELSE                               X3
+     C           A6NBDP    IFEQ 1                             B4
+     C                     MOVE IPSTA     RDAMT1
+     C                     ELSE                               X4
+     C           A6NBDP    IFEQ 2                             B5
+     C                     MOVE IPSTA     RDAMT2
+     C                     ELSE                               X5
+     C                     MOVE IPSTA     RDAMT3
+     C                     END                                E5
+     C                     END                                E4
+     C                     END                                E3
+     C                     ELSE                               X2
+     C                     MOVE '0'       *IN25
+     C           A6NBDP    IFEQ 0                             B3
+     C                     MOVE IPSTA     RCAMT0
+     C                     ELSE                               X3
+     C           A6NBDP    IFEQ 1                             B4
+     C                     MOVE IPSTA     RCAMT1
+     C                     ELSE                               X4
+     C           A6NBDP    IFEQ 2                             B5
+     C                     MOVE IPSTA     RCAMT2
+     C                     ELSE                               X5
+     C                     MOVE IPSTA     RCAMT3
+     C                     END                                E5
+     C                     END                                E4
+     C                     END                                E3
+     C                     END                                E2
+      *
+     C                     MOVELICNUM     RCNUM
+     C                     Z-ADDIACOD     RACOD
+     C                     Z-ADDIACSQ     RACSQ
+     C                     MOVE IPNAR     RPNAR
+      *
+      ***  Print non-lira detail line checking for overflow
+      *
+     C                     Z-ADD3         #RQDLN
+     C                     EXSR #UCKOV
+      *
+     C                     WRITENLIDTL
+      *
+      ***  Convert posting amount to lira and accumulate totals
+      ***  (accumulate non-lira and branch totals in lira)
+      *
+     C                     Z-ADDIPSTA     #AMTI  150
+     C                     EXSR CNVCCY
+      *
+     C           IDRCR     IFEQ 0                             B2
+     C                     ADD  IPSTA     #CADAC
+     C                     ADD  IPSTA     #CYDAC 150
+     C                     ADD  #NLLA     #LNDAC
+     C                     ADD  #NLLA     #BRDAC
+     C                     ADD  1         RCAND
+     C                     ADD  1         RCYND
+     C                     ADD  1         RLNND
+     C                     ADD  1         RBRND
+     C                     ELSE                               X2
+     C                     ADD  IPSTA     #CACAC
+     C                     ADD  IPSTA     #CYCAC 150
+     C                     ADD  #NLLA     #LNCAC
+     C                     ADD  #NLLA     #BRCAC
+     C                     ADD  1         RCANC
+     C                     ADD  1         RCYNC
+     C                     ADD  1         RLNNC
+     C                     ADD  1         RBRNC
+     C                     END                                E2
+      *
+      ***  Read next record from Non-Lira Postings file
+      *
+     C                     READ IRDPSTL1                 80
+      *
+     C           PENT      IFNE 'ALL'
+     C           *IN80     ANDEQ*OFF
+     C           IBRCA     ANDEQPENT
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+      *
+     C                     ENDDO                              E1
+      *
+      ***  At end of file or change of branch, perform
+      **** causale and currency total processing
+      *
+     C                     EXSR #UCAUP
+     C                     EXSR #UCCYP
+      *
+      ***  Move accumulated non-lira debit and credit totals to output
+      ***  fields and print non-lira totals checking for overflow
+      ***  Reset non-lira total accumulators
+      *
+     C                     MOVE #LNDAC    RLNDT2
+     C                     MOVE #LNCAC    RLNCT2
+      *
+     C                     Z-ADD6         #RQDLN
+     C                     EXSR #UCKOV
+      *
+     C                     WRITELNLTOT
+      *
+     C                     Z-ADD0         #LNDAC
+     C                     Z-ADD0         #LNCAC
+     C                     Z-ADD0         RLNND
+     C                     Z-ADD0         RLNNC
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  CNVCCY - CONVERT CURRENCY AMOUNT TO LIRA AMOUNT              *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY   #UNLIR - Non-Lira Detail Processing              *
+      *                                                               *
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+      *                                                               *
+      *  Input   - #AMTI    15,0   Input currency amount              *
+      *                                                               *
+      *  Output  - #NLLA    15,0   Lira amount                        *
+      *                                                               *
+      *  Uses    - A6NBDP    1,0   Currency decimal places            *
+      *          - A6SPRT   13,7   Spot rate                          *
+      **         - A6MDIN    1     Multiply/divide indicator          *
+      *****************************************************************
+     C           CNVCCY    BEGSR
+      *
+      ***  Initialise output field
+      *
+     C                     Z-ADD*ZEROS    #NLLA  150
+      *
+      ***  If input currency has the same number of decimal places as
+      ***  lira (2), calculate lira amount by multiplying/
+      ***  dividing input currency amount by spot rate depending on
+      ***  multiply/divide indicator
+      *
+     C           A6NBDP    IFEQ 2                             B1
+      *
+     C           A6MDIN    IFEQ 'D'                           B2
+     C           #AMTI     DIV  A6SPRT    #NLLA     H
+     C                     ELSE                               X2
+     C           #AMTI     MULT A6SPRT    #NLLA     H
+     C                     END                                E2
+      *
+      ***  Otherwise, (decimal places differ), calculate difference
+      ***  in decimal places to use as power array index
+      ***  Calculate lira amount by multiplying input amount by
+      ***  power array entry and then multiplying/dividing result
+      ***  depending on multiply/divide indicator
+      *
+     C                     ELSE                               X1
+      *
+     C           2         SUB  A6NBDP    #PI     10
+     C                     ADD  4         #PI
+      *
+      ***  If lira decimal places less than input currency decimal
+      ***  paces
+      *
+     C           POWER,#PI IFLT 1                             B2
+      *
+     C           #AMTI     MULT POWER,#PI #15X3  153
+      *
+     C           A6MDIN    IFEQ 'D'                           B3
+     C           #15X3     DIV  A6SPRT    #NLLA     H
+     C                     ELSE                               X3
+     C           #15X3     MULT A6SPRT    #NLLA     H
+     C                     END                                E3
+      *
+      ***  Otherwise (lira decimal places greater than input
+      ***  currency decimal places)
+      *
+     C                     ELSE                               X2
+      *
+     C           #AMTI     MULT POWER,#PI #AMTI
+      *
+     C           A6MDIN    IFEQ 'D'                           B3
+     C           #AMTI     DIV  A6SPRT    #NLLA     H
+     C                     ELSE                               X3
+     C           #AMTI     MULT A6SPRT    #NLLA     H
+     C                     END                                E3
+      *
+     C                     END                                E2
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UCAUP - CAUSALE TOTAL PROCESSING                            *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #ULIRA - Lira Detail Processing                  *
+      *              #UNLIR - Non-Lira Detail Processing              *
+      *                                                               *
+      *  CALLS     : #UCKOV - Check for Report Overflow               *
+      *****************************************************************
+     C           #UCAUP    BEGSR
+      *
+      ***  Move accumulated debit and credit totals to required output
+      ***  fields - amounts are in lira if *IN20 is on
+      *
+     C           *IN20     IFEQ '1'                           B1
+     C                     MOVE #CADAC    RCADT2
+     C                     MOVE #CACAC    RCACT2
+     C                     ELSE                               X1
+     C           A6NBDP    IFEQ 0                             B2
+     C                     MOVE #CADAC    RCADT0
+     C                     MOVE #CACAC    RCACT0
+     C                     ELSE                               X2
+     C           A6NBDP    IFEQ 1                             B3
+     C                     MOVE #CADAC    RCADT1
+     C                     MOVE #CACAC    RCACT1
+     C                     ELSE                               X3
+     C           A6NBDP    IFEQ 2                             B4
+     C                     MOVE #CADAC    RCADT2
+     C                     MOVE #CACAC    RCACT2
+     C                     ELSE                               X4
+     C                     MOVE #CADAC    RCADT3
+     C                     MOVE #CACAC    RCACT3
+     C                     END                                E4
+     C                     END                                E3
+     C                     END                                E2
+     C                     END                                E1
+      *
+      ***  Check for overflow, write currency totals, and reset
+      ***  currency debit and credit accumulators
+      *
+     C           *IN20     IFEQ '1'                           B1
+     C***********          Z-ADD8         #RQDLN                          RS0001
+     C                     Z-ADD9         #RQDLN                          RS0001
+     C                     ELSE                               X1
+     C***********          Z-ADD4         #RQDLN                          RS0001
+     C                     Z-ADD5         #RQDLN                          RS0001
+     C                     END                                E1
+      *
+     C                     EXSR #UCKOV
+      *
+     C                     WRITECAUTOT
+      *
+     C                     Z-ADD0         #CADAC
+     C                     Z-ADD0         #CACAC
+     C                     Z-ADD0         RCAND
+     C                     Z-ADD0         RCANC
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UCCYP - CURRENCY TOTAL PROCESSING                           *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY   #UNLIR - Non-Lira Detail Processing              *
+      *                                                               *
+      *  CALLS       #UCKOV - Check for Report Overflow               *
+      *****************************************************************
+     C           #UCCYP    BEGSR
+      *
+      ***  Move accumulated debit and credit totals to required output
+      ***  fields
+      *
+     C           A6NBDP    IFEQ 0                             B1
+     C                     MOVE #CYDAC    RCYDT0
+     C                     MOVE #CYCAC    RCYCT0
+     C                     ELSE                               X1
+     C           A6NBDP    IFEQ 1                             B2
+     C                     MOVE #CYDAC    RCYDT1
+     C                     MOVE #CYCAC    RCYCT1
+     C                     ELSE                               X2
+     C           A6NBDP    IFEQ 2                             B3
+     C                     MOVE #CYDAC    RCYDT2
+     C                     MOVE #CYCAC    RCYCT2
+     C                     ELSE                               X3
+     C                     MOVE #CYDAC    RCYDT3
+     C                     MOVE #CYCAC    RCYCT3
+     C                     END                                E3
+     C                     END                                E2
+     C                     END                                E1
+      *
+      ***  Check for overflow, write currency totals, and reset
+      ***  currency debit and credit accumulators
+      *
+     C                     Z-ADD4         #RQDLN
+     C                     EXSR #UCKOV
+      *
+     C                     WRITECCYTOT
+      *
+     C                     Z-ADD0         #CYDAC
+     C                     Z-ADD0         #CYCAC
+     C                     Z-ADD0         RCYND
+     C                     Z-ADD0         RCYNC
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  #UNCCY - NEW CURRENCY PROCESSING                             *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UNLIR   - Non-Lira Detail Processing            *
+      *                                                               *
+      *  CALLS     : *PSSR    - Error Handling Subroutine             *
+      *              AOCURRR0 - Pgm to access Currency Details file   *
+      *****************************************************************
+     C           #UNCCY    BEGSR
+      *
+      ***  Access Currency Details file for currency decimal places
+      ***  and set indicators to output amounts on non-lira detail,
+      ***  and causale and currency total lines accordingly
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM ICCY      @KEY2   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B2
+     C                     Z-ADD1         WWBASE           ****************
+     C                     MOVEL'SDCURRPD'WWBFIL           * DB ERROR 001 *
+     C                     MOVELICCY      WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+      *
+     C           A6NBDP    IFEQ 0                             B1
+     C                     MOVE '1'       *IN30
+     C                     ELSE                               X1
+     C           A6NBDP    IFEQ 1                             B2
+     C                     MOVE '1'       *IN31
+     C                     ELSE                               X2
+     C           A6NBDP    IFEQ 2                             B3
+     C                     MOVE '1'       *IN32
+     C                     ELSE                               X3
+     C                     MOVE '1'       *IN33
+     C                     END                                E3
+     C                     END                                E2
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #UINIT - Initial processing                                  *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : Main processing                                  *
+      *                                                               *
+      *  CALLS     : *PSSR    - Error Handling Subroutine             *
+      *              AOBANKR0 - Pgm to access Bank details file       *
+      *****************************************************************
+     C           #UINIT    BEGSR
+      *
+      ***  Receive parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RPTTYP  1
+     C                     PARM           RRNREQ  1
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+      *
+      ***  Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+      *
+      ***  Define keys
+     C           *LIKE     DEFN IBBRCA    KBRCA
+     C           *LIKE     DEFN IBCCY     KCCY
+     C           *LIKE     DEFN IBCAUC    KCAUC
+      *
+     C           KITL      KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCAUC
+      *
+     C           KDEV      KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCCY
+     C                     KFLD           KCAUC
+      *
+      ***  Set up keys according to RCF parameters (branch)
+     C                     MOVE *LOVAL    KBRCA
+     C                     MOVE *LOVAL    KCCY
+     C                     MOVE *LOVAL    KCAUC
+     C           PENT      IFNE 'ALL'
+     C                     MOVE PENT      KBRCA
+     C                     END
+      *
+      ***  Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ***  Set up indicators to condition output of daily, monthly
+      ***  or previous month's postings title and output of relative
+      ***  record number
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+      *
+     C           RPTTYP    IFEQ 'D'                           B1
+     C                     MOVE '1'       *IN10
+     C                     ELSE                               X1
+     C           RPTTYP    IFEQ 'M'                           B2
+     C                     MOVE '1'       *IN11
+     C                     ELSE                               X2
+     C                     MOVE '1'       *IN12
+     C                     END                                E2
+     C                     END                                E1
+      *
+     C           RRNREQ    IFEQ 'Y'                           B1
+     C                     MOVE '1'       *IN15
+     C                     ELSE                               X1
+     C                     MOVE '0'       *IN15
+     C                     END                                E1
+      *
+      ***  Access Bank details via access program
+      ***  (database error handling done in access program)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ***  Ensure audit report is recorded by RCF
+      *
+     C                     MOVE *BLANKS   WRCFAU  1
+     C                     EXSR #URCFA
+      *
+      ***  Read first record from lira and non-lira postings
+      ***  files
+     C           KITL      SETLLIRDPSTL0
+     C           KDEV      SETLLIRDPSTL1
+      *
+     C                     READ IRDPSTL0                 70
+     C                     READ IRDPSTL1                 80
+      *
+     C           PENT      IFNE 'ALL'
+     C           *IN70     IFEQ *OFF
+     C           IBBRCA    IFNE PENT
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN80     IFEQ *OFF
+     C           IBRCA     IFNE PENT
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  If no records exist, print header and 'No Details to Report'
+      *
+      ***  Ensure report spool file is recorded by RCF                    MWL051
+      *                                                                   MWL051
+     C                     EXSR #URCFP                                    MWL051
+     C*                                                                   MWL051
+     C           *IN70     IFEQ '1'                           B1
+     C           *IN80     ANDEQ'1'
+     C                     WRITEHEADAU
+     C                     WRITENORCDS
+     C*******              ELSE                               X1          MWL051
+      *                                                                   MWL051
+      ***  Ensure report spool file is recorded by RCF                    MWL051
+      *                                                                   MWL051
+     C********             EXSR #URCFP                                    MWL051
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #URCFP - Register the P1 Printer file via RCF                *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UINIT                                           *
+      *                                                               *
+      *  CALLS     : ZSFILE                                           *
+      *****************************************************************
+     C           #URCFP    BEGSR
+      *
+     C                     OPEN IR0110P1
+      *
+      ***  Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+     C           ZSERR     IFEQ 'Y'                           B1
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #URCFA - Register the AU Printer file via RCF                *
+      *  -------                                                      *
+      *                                                               *
+      *  CALLED BY : #UINIT, *PSSR                                    *
+      *                                                               *
+      *  CALLS     : ZSFILE                                           *
+      *****************************************************************
+     C           #URCFA    BEGSR
+      *
+      ***  Ensure audit report is recorded by RCF
+      *
+     C           WRCFAU    IFNE 'Y'                           B1
+     C                     MOVE 'Y'       WRCFAU
+      *
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     MOVELSFILEU    SFILE
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'                           B2
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                                E2
+      *
+     C                     END                                E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           WWBASE    IFEQ *ZERO                         B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+      *
+      ***  Set up indicators to condition output of daily, monthly
+      ***  or previous month's postings title
+      *
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+      *
+     C           RPTTYP    IFEQ 'D'                           B2
+     C                     MOVE '1'       *IN10
+     C                     ELSE                               X2
+     C           RPTTYP    IFEQ 'M'                           B3
+     C                     MOVE '1'       *IN11
+     C                     ELSE                               X3
+     C                     MOVE '1'       *IN12
+     C                     END                                E3
+     C                     END                                E2
+     C                     END                                E1
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+      ***  Print header and error message
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+      ***  Ensure audit report is recorded by RCF
+      *
+     C                     EXSR #URCFA
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

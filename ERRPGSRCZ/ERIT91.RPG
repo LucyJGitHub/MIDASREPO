@@ -1,0 +1,341 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER I.C.D. Maintenance')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  ERIT91 - I.C.D. Maintenance                                  *
+      *                                                               *
+      *  Function:  This program maintain the ER I.C.D                *
+      *                                                               *
+      *  (phase(s)) Input cycle                                       *
+      *                                                               *
+      *  (c) Copyright Midas-Kapiti International 1997.               *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021  *Create    Date 13JAN97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+     F*****************************************************************
+     F*
+     FERITICL1IF  E           K        DISK
+     F            ERITICD0                          KRENAMEERITICD1
+     F*
+     FERITICL0UF  E           K        DISK
+     F                                              KCOMIT
+      *                                European reporting I.C.D For Italy
+     FERICDRL1IF  E           K        DISK
+      *                                European reporting I.C.D
+     FERIT91DFCF  E                    WORKSTN
+     E*****************************************************************
+     E                    CPY@    1   1 80
+     I*****************************************************************
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+     I* PROGRAM DATA STRUCTURE
+     IPGMDS     ESDSY2PGDSP
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I***
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     C**************************************************************************
+     C* MAIN PROCESSING                                                        *
+     C**************************************************************************
+     C* CALL INIT SUBROUTINE
+     C**************************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           #RETRN  2
+     C*
+     C                     EXSR INIT                       INITIATION
+     C*
+     C                     EXSR MAIN
+     C*
+     C** END OF PGM
+     C                     MOVE '1'       *INLR
+     C                     ROLBK
+     C*
+     C                     RETRN
+     C**************************************************************************
+     C** MAIN - MAIN SUBROUTINE
+     C**************************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C* DO WHILE NOT F3 OR F12 PRESSED
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+     C*
+     C           *IN40     IFEQ '0'                        - B2
+     C           *LOVAL    SETLLERITICL1
+     C                     READ ERITICL1                 80
+     C*
+     C           *IN80     IFEQ '1'                        - B3
+     C                     MOVEL'ERITICL1'DBFILE
+     C                     MOVE N1ICCD    DBKEY
+     C                     MOVEL'002'     DBASE
+     C                     MOVE 'ER'      #RETRN
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C**
+     C** Access I.C.D. file to retireve the user country code for print
+     C**
+     C           N1ICCD    CHAINERICDRL1             87
+     C           *IN87     IFEQ '1'                        - B3
+     C                     MOVEL'ERICDRL1'DBFILE
+     C                     MOVE N1ICCD    DBKEY
+     C                     MOVEL'004'     DBASE
+     C                     MOVE 'ER'      #RETRN
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C                     MOVE N1ICCD    DDUCCD
+     C                     MOVE N1LERP    DDLERP
+     C                     MOVE N1CORD    DDCORD
+     C                     MOVE N1PRRV    DDPRRV
+     C                     END                             - E2
+     C*
+     C                     WRITEERIT91C0
+     C                     EXFMTERIT91FM
+     C*
+     C** CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** ENTER HAS BEEN PRESSED
+     C           *IN45     IFEQ '0'                        - B2
+     C                     MOVE '1'       *IN40
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C*
+     C** VALIDATE DDLERP FOR Y/N, DEFAULT N
+     C*
+     C           *IN71     IFEQ *ON                        - B3
+     C           DDLERP    IFEQ *BLANKS                    - B4
+     C                     MOVE 'N'       DDLERP
+     C                     ENDIF                           - E4
+     C           DDLERP    IFNE 'Y'                        - B4
+     C           DDLERP    ANDNE'N'
+     C                     MOVE '1'       *IN60
+     C                     MOVE 'ERL9107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+     C*
+     C** VALIDATE DDCORD
+     C                     MOVELDDCORD    NNCORD  20
+     C                     MOVELDDCORD    TEST3   30
+     C                     MOVELTEST3     ALPH2   2
+     C           DDCORD    IFNE ALPH2                      - B3
+     C                     MOVE '1'       *IN61
+     C                     MOVEL'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X3
+     C           NNCORD    IFLT 1                          - B4
+     C           NNCORD    ORGT 99
+     C                     MOVE '1'       *IN61
+     C                     MOVEL'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C** VALIDATE DDPRRV
+     C                     MOVELDDPRRV    NNPRRV  20
+     C                     MOVELDDPRRV    TEST3   30
+     C                     MOVELTEST3     ALPH2   2
+     C           DDPRRV    IFNE ALPH2                      - B4
+     C                     MOVE '1'       *IN62
+     C                     MOVEL'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X4
+     C           NNPRRV    IFLT 1                          - B5
+     C           NNPRRV    ORGT 99
+     C                     MOVE '1'       *IN62
+     C                     MOVEL'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C** NO ERROR...
+     C           *IN60     IFEQ '0'                         - B3
+     C           *IN61     ANDEQ'0'
+     C           *IN62     ANDEQ'0'
+     C*
+     C           N1ICCD    CHAINERITICL0             80
+     C*
+     C           *IN80     IFEQ '1'                         - B4
+     C                     MOVEL'ERITICL0'DBFILE
+     C                     MOVE N1ICCD    DBKEY
+     C                     MOVEL'003'     DBASE
+     C                     MOVE 'ER'      #RETRN
+     C                     EXSR *PSSR
+     C                     END                              - E4
+     C*
+     C                     MOVE DDLERP    N1LERP
+     C                     MOVE DDCORD    N1CORD
+     C                     MOVE DDPRRV    N1PRRV
+     C*
+     C                     Z-ADDBJRDNB    N1LCD
+     C                     MOVE 'A'       N1TYLC
+     C                     UPDATERITICD0
+     C                     COMIT
+     C                     END                                - E3
+     C*
+     C                     END                                - E2
+     C*
+     C** SETUP RETURN CODE
+     C           *INKC     IFEQ '1'                           - B2
+     C                     MOVE '03'      #RETRN
+     C                     ITER
+     C                     END                                - E2
+     C*
+     C** SETUP RETURN CODE
+     C           *IN12     IFEQ '1'                           - B2
+     C                     MOVE '12'      #RETRN
+     C                     ITER
+     C                     END                                - E2
+     C*
+     C** SETUP RETURN CODE
+     C           *IN45     IFEQ '0'                           - B2
+     C           *IN60     ANDEQ'0'
+     C           *IN61     ANDEQ'0'
+     C           *IN62     ANDEQ'0'
+     C                     MOVE '  '      #RETRN
+     C                     MOVE '1'       *IN12
+     C                     ITER
+     C                     END                                - E2
+     C*
+     C**************************************************************************
+     C** F5 HAS BEEN PRESSED : REFRESH PROCESSING
+     C**************************************************************************
+     C           *IN05     IFEQ '1'                           - B2
+     C*
+     C                     MOVE N1LERP    DDLERP
+     C                     MOVE N1CORD    DDCORD
+     C                     MOVE N1PRRV    DDPRRV
+     C                     MOVEA'000'     *IN,60
+     C*
+     C                     END                                - E2
+     C*
+     C                     END                                - E1
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* INITIAL ROUTINE                                                        *
+     C**************************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C           ACTION    IFEQ 'E'                           - B1
+     C                     MOVE '1'       *IN50
+     C                     END                                - E1
+     C*
+     C*   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'ERUSRMSG'PMSGF  10
+     C*
+     C*   Fill in fields for subroutine ZASNMS
+     C                     MOVEL'ERIT91'  ZAPGM  10        Message queue
+     C                     MOVEL'ERUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'ERIT91'  DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVE 'ER'      #RETRN
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           BGCSLN    IFEQ 'Y'
+     C                     MOVE *ON       *IN71
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C****************************************************************
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+     C****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C**   message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C**
+     C**   Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - PROGRAM ERROR HANDLING ROUTINE                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY -                                                *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+     C*****************************************************************
+      *
+      /EJECT
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

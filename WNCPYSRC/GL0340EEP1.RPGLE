@@ -20,7 +20,7 @@
       */OMITEND                                                                               LUC140
      D ARGP            S              1    DIM(28) CTDATA PERRCD(28)                          LUC140
      D ARLT            S             29    DIM(28) CTDATA PERRCD(1)                           LUC140
-     D POST            S             16    DIM(6) CTDATA PERRCD(1)                            LUC140
+     D POST            S             16    DIM(7) CTDATA PERRCD(1)                            LUC140
      D ARNP            S              6  0 DIM(28)                                            LUC140
      D BRNP            S              6  0 DIM(28)                                            LUC140
      D ARTI            S             15  0 DIM(28)                                            LUC140

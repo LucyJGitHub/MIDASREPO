@@ -1,0 +1,1281 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Decision table Account codes')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  ERIT30R - Decision table Account codes maintenance           *
+      *                                                               *
+      *  Called By: ERIT30  - Decision table Account codes            *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1999           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021 *CREATE     DATE 25Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting (Change Ctrl 4).    *
+      *           Add Insert, Amend, Enquiry function.                *
+      *                                                               *
+      *****************************************************************
+     FERITCDL0IF  E           K        DISK         KINFSR *PSSR
+      ** BOI Voce/Sottovoce Codes                    Prefix 'N2'
+      *
+     FERITACL0UF  E           K        DISK                      A
+      ** ER Decision Table - A/C code - Italy Prefix 'N3'
+      *                      Update index
+     F            ERITACD0                          KRENAMEUPERITAC
+     F                                              KINFSR *PSSR
+      *
+     FERITACL1IF  E           K        DISK         KINFSR *PSSR
+      ** ER Decision Table - A/C code - Italy Prefix 'N3'
+      *                      Retrieval index
+      *
+      ** Display File
+     FERIT30R#CF  E                    WORKSTN
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       05      F5 PRESSED REDISPLAY THE SCREEN
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       22      DELETE MODE
+      *       30      REDISPLAY THE SCREEN
+      *       50      AT LEAST ONE FIELD IN ERROR
+      *       90      CHAIN TO XXXXXXXX FAILED
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      **  Data structure for access objects, long data structure.
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structure used for access objects
+      *
+      *  External DS for CCY Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External DS for Account codes
+     ISDACOD    E DSSDACODPD
+      *
+     C/EJECT
+      *****************************************************************
+      *
+      **   Parameters list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C**********           PARM           WACOD   4
+     C                     PARM           WACOD  10
+     C                     PARM           WACTN   1
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ*ON                        - B1
+      *
+      **   If error write messages
+      *
+     C           *IN50     IFEQ *ON                        - B2
+     C                     WRITE#MSGCTL
+     C                     ENDIF                           - E2
+      *
+     C                     EXFMTSCREEN
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ*ON       EXIT
+     C           *IN05     CASEQ*ON       RESET
+     C           *IN12     CASEQ*ON       PREV
+     C           *IN10     CASEQ*ON       DELETE
+     C           WACTN     CASEQ'E'       END
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDDO                           - E1
+      *
+      **   Exit from program
+      *
+     C                     EXSR END
+      *
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * DELETE RECORD
+      *****************************************************************
+     C           DELETE    BEGSR
+      *
+      ** Delete record or logically delete record
+      *
+     C                     CLOSEERITACL0
+     C                     OPEN ERITACL0
+     C*********            MOVE WACOD     KACOD   4
+     C                     MOVE WACOD     KACOD  10
+     C           KACOD     CHAINERITACL0             90
+     C           *IN90     IFEQ *OFF                       - B1
+     C                     DELETUPERITAC
+     C                     EXSR END
+     C                     ENDIF                           - E1
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **   Only do first time through
+      *
+     C           *IN01     IFEQ '0'                        - B1
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Use access program AOBANKR0 to retrieve Last Update Date
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error in access program, exit via *PSSR subroutine
+     C           @RTCD     IFNE *BLANKS                    - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'FTM001R' DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                            - X2
+      *
+      ** Set up Midas Run Date Number & Runday No.
+     C                     MOVELBJMRDT    ##MRDT
+     C                     ENDIF                           - E2
+      *
+      *  Call Access program to obtain number of decimal places
+      *  in base currency
+      *
+     C                     MOVELBJCYCD    @KEY1
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @KEY1   3
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        - B2
+     C                     SETON                       U7U8
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E2
+      *
+     C                     MOVE *ON       *IN01
+      *
+      *----------------------------------------------------------------
+     C           WACTN     IFEQ 'D'                        - B2
+     C                     MOVE *ON       *IN22
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN20
+     C                     ENDIF                           - E2
+      *
+     C           WACTN     IFEQ 'E'                        - B2
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN20
+     C                     ENDIF                           - E2
+      *
+     C           WACTN     IFEQ 'A'                        - B2
+     C                     MOVE *ON       *IN21
+     C                     ENDIF                           - E2
+      *
+     C           WACTN     IFNE 'I'                        - B2
+     C                     CLOSEERITACL0
+     C                     OPEN ERITACL0
+     C                     MOVE WACOD     KACOD
+     C           KACOD     CHAINERITACL1             90
+     C           *IN90     IFEQ *ON                        - B3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'ERITAC'  DBFILE    P      *DB ERROR 003 *
+     C                     MOVE KACOD     DBKEY     P      ***************
+     C                     MOVEL'FTM001R 'DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E3
+     C                     ELSE                            - X2
+     C                     MOVE 'I'       N3TYLC
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+     C                     EXSR FILL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  FILL      - FILL SCREEN FIELDS                               *
+      *                                                               *
+      *  Called by - INIT   Processing                                *
+      *                                                               *
+      *****************************************************************
+     C           FILL      BEGSR
+      *
+     C                     MOVE *BLANKS   S2ACOD
+     C                     MOVE *BLANKS   S2RBND
+     C                     MOVE *BLANKS   S2RBED
+     C                     MOVE *BLANKS   S2RBNC
+     C                     MOVE *BLANKS   S2RBEC
+     C                     MOVE *BLANKS   S2CPND
+     C                     MOVE *BLANKS   S2CEND
+     C                     MOVE *BLANKS   S2CRND
+     C                     MOVE *BLANKS   S2CPNC
+     C                     MOVE *BLANKS   S2CENC
+     C                     MOVE *BLANKS   S2CRNC
+     C                     MOVE *BLANKS   S2CP1D
+     C                     MOVE *BLANKS   S2CE1D
+     C                     MOVE *BLANKS   S2CR1D
+     C                     MOVE *BLANKS   S2CP1C
+     C                     MOVE *BLANKS   S2CE1C
+     C                     MOVE *BLANKS   S2CR1C
+     C                     MOVE *BLANKS   S2CP2D
+     C                     MOVE *BLANKS   S2CE2D
+     C                     MOVE *BLANKS   S2CR2D
+     C                     MOVE *BLANKS   S2CP2C
+     C                     MOVE *BLANKS   S2CE2C
+     C                     MOVE *BLANKS   S2CR2C
+     C                     MOVE *BLANKS   S2DUR
+     C                     MOVE *BLANKS   S2CCMT
+     C                     MOVE *BLANKS   S2CCMD
+     C                     MOVE *BLANKS   S2ANAG
+     C                     MOVE *BLANKS   S2LIRK
+     C                     MOVE *BLANKS   S2TRIT
+     C                     MOVE *BLANKS   S2TPCH
+      *
+     C           WACTN     IFEQ 'A'                        - B1
+     C           WACTN     OREQ 'D'
+     C           WACTN     OREQ 'E'
+     C                     MOVE N3ACOD    S2ACOD
+     C                     MOVE N3RBND    S2RBND
+     C                     MOVE N3RBED    S2RBED
+     C                     MOVE N3RBNC    S2RBNC
+     C                     MOVE N3RBEC    S2RBEC
+     C                     MOVE N3CPND    S2CPND
+     C                     MOVE N3CEND    S2CEND
+     C                     MOVE N3CRND    S2CRND
+     C                     MOVE N3CPNC    S2CPNC
+     C                     MOVE N3CENC    S2CENC
+     C                     MOVE N3CRNC    S2CRNC
+     C                     MOVE N3CP1D    S2CP1D
+     C                     MOVE N3CE1D    S2CE1D
+     C                     MOVE N3CR1D    S2CR1D
+     C                     MOVE N3CP1C    S2CP1C
+     C                     MOVE N3CE1C    S2CE1C
+     C                     MOVE N3CR1C    S2CR1C
+     C                     MOVE N3CP2D    S2CP2D
+     C                     MOVE N3CE2D    S2CE2D
+     C                     MOVE N3CR2D    S2CR2D
+     C                     MOVE N3CP2C    S2CP2C
+     C                     MOVE N3CE2C    S2CE2C
+     C                     MOVE N3CR2C    S2CR2C
+      *
+     C                     MOVE N3DUR     S2DUR
+     C                     MOVE N3CCMT    S2CCMT
+     C                     MOVE N3ANAG    S2ANAG
+     C                     MOVE N3CCMD    S2CCMD
+     C                     MOVE N3TRIT    S2TRIT
+     C                     MOVE N3TPCH    S2TPCH
+     C                     MOVE N3LIRK    S2LIRK
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      **   Clear the program message queue and call SR/INIT to retrieve
+      **   the last committed data from the extension file.
+      *
+     C                     EXSR CLEAR
+     C                     WRITE#MSGCTL
+     C                     EXSR INIT
+      *
+      **   Reset all error indicators
+      *
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *OFF      *IN98
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVEA'00000000'*IN,68
+     C                     MOVEA'00000000'*IN,76
+     C                     MOVEA'000000'  *IN,84
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+     C                     CLOSEERITACL0
+     C                     OPEN ERITACL0
+     C                     MOVE S2ACOD    KACOD
+     C           KACOD     CHAINERITACL0             90
+      *
+     C                     MOVE S2ACOD    N3ACOD
+     C                     MOVE S2RBND    N3RBND
+     C                     MOVE S2RBED    N3RBED
+     C                     MOVE S2RBNC    N3RBNC
+     C                     MOVE S2RBEC    N3RBEC
+     C                     MOVE S2CPND    N3CPND
+     C                     MOVE S2CEND    N3CEND
+     C                     MOVE S2CRND    N3CRND
+     C                     MOVE S2CPNC    N3CPNC
+     C                     MOVE S2CENC    N3CENC
+     C                     MOVE S2CRNC    N3CRNC
+     C                     MOVE S2CP1D    N3CP1D
+     C                     MOVE S2CE1D    N3CE1D
+     C                     MOVE S2CR1D    N3CR1D
+     C                     MOVE S2CP1C    N3CP1C
+     C                     MOVE S2CE1C    N3CE1C
+     C                     MOVE S2CR1C    N3CR1C
+     C                     MOVE S2CP2D    N3CP2D
+     C                     MOVE S2CE2D    N3CE2D
+     C                     MOVE S2CR2D    N3CR2D
+     C                     MOVE S2CP2C    N3CP2C
+     C                     MOVE S2CE2C    N3CE2C
+     C                     MOVE S2CR2C    N3CR2C
+      *
+     C                     MOVE S2DUR     N3DUR
+     C                     MOVE S2CCMT    N3CCMT
+     C                     MOVE S2ANAG    N3ANAG
+     C                     MOVE S2CCMD    N3CCMD
+     C                     MOVE S2TRIT    N3TRIT
+     C                     MOVE S2TPCH    N3TPCH
+     C                     MOVE S2LIRK    N3LIRK
+     C                     Z-ADDBJRDNB    N3LCD
+     C           WACTN     IFEQ 'A'
+     C                     MOVE 'A'       N3TYLC
+     C                     ENDIF
+     C           WACTN     IFEQ 'I'
+     C                     MOVE 'I'       N3TYLC
+     C                     ENDIF
+      *
+     C           *IN90     IFEQ *ON                        - B1
+      *
+      ** IF INDICATOR 90 IS ON THEN NO RECORD CURRENTLY EXISTS
+      ** SO NEED TO WRITE A NEW RECORD
+     C                     WRITEUPERITAC
+     C                     EXSR END
+      *
+     C                     ELSE                            - X1
+      ** RECORD CURRENTLY EXISTS SO NEED TO UPDATE
+      *
+     C                     UPDATUPERITAC
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+     C           WACTN     IFNE 'D'                        - B1
+      *
+     C                     MOVE *OFF      *IN99
+     C                     MOVE *ON       *IN30
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVEA'00000000'*IN,68
+     C                     MOVEA'00000000'*IN,76
+     C                     MOVEA'000000'  *IN,84
+      *
+      ** VALIDATION OF SCREEN FIELDS.
+      *
+     C                     EXSR SRVAL
+      *
+      ** IF THERE IS AN ERROR IN ANY OF THE FIELDS THEN NEED TO
+      ** REDISPLAY THE SCREEN AND SEND ALL ERROR MESSAGES
+      *
+     C           *IN30     IFEQ *ON                        - B2
+      *
+      ** NO ERRORS SO UPDATE THE EXTENSION FILE
+      *
+     C                     EXSR UPDAT
+     C                     ELSE                            - X3
+     C                     MOVE *ON       *IN50
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL  - Validation subroutine                               *
+      *                                                               *
+      * Called By:   Valid                                            *
+      *****************************************************************
+     C           SRVAL     BEGSR
+      *
+      ** Access Account codes file via access program
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM S2ACOD    @OACCD  4
+     C                     PARM S2ACOD    @OACCD 10
+     C                     PARM           SDACOD
+      *
+     C           @RTCD     IFNE *BLANK                     - B1
+     C                     MOVEL'ITE3001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN60
+     C                     MOVE *OFF      *IN30
+     C                     ELSE                            - X1
+     C           '?'       SCAN S2ACOD    WRESUL  10     87
+     C           *IN87     IFEQ *ON                        - B2
+     C                     MOVELA5ACCD    S2ACOD
+     C                     MOVE *OFF      *IN30
+     C                     END                             - E2
+     C           A5TOIN    IFEQ 'Y'                        - B2
+     C                     MOVEL'ITE3001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN60
+     C                     MOVE *OFF      *IN30
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           WACTN     IFEQ 'I'                        - B1
+      *
+      ** Already exists on file
+     C**********           MOVE S2ACOD    XXACOD  4
+     C                     MOVE S2ACOD    XXACOD 10
+     C           XXACOD    CHAINERITACL1             90
+     C           *IN90     IFEQ '0'                        - B2
+     C                     MOVEL'ITE3002' ZAMSID
+     C                     MOVE *ON       *IN60
+     C                     MOVE *OFF      *IN30
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** DEBIT BOI CODE VALIDATION
+      *
+      ** Check if fully numeric
+     C           S2RBND    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2RBND
+     C                     END                             - E1
+      *
+     C           S2RBND    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2RBND    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN61
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2RBND
+     C                     END                             - E1
+     C                     END                             - E1
+      *
+     C           S2RBND    IFNE *ZEROS                     - B1
+     C                     MOVE S2RBND    KEY1    70
+     C           KEY1      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN61
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2RBED    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2RBED
+     C                     END                             - E1
+      *
+     C           S2RBED    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2RBED    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN62
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2RBED
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** CREDIT BOI CODE VALIDATION
+      *
+     C           S2RBNC    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2RBNC
+     C                     END                             - E1
+      *
+     C           S2RBNC    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2RBNC    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN63
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2RBNC
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2RBNC    IFNE *ZEROS                     - B1
+     C                     MOVE S2RBNC    KEY2    70
+     C           KEY2      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN63
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2RBEC    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2RBEC
+     C                     END                             - E1
+      *
+     C           S2RBEC    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2RBEC    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN64
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2RBEC
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** COMPL. DEBIT BOI CODE VALIDATION
+      *
+      ** Line 1 Debit
+      ** Check if fully numeric
+     C           S2CPND    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CPND
+     C                     END                             - E1
+      *
+     C           S2CPND    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2CPND    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN65
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CPND
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2CPND    IFNE *ZEROS                     - B1
+     C                     MOVE S2CPND    KEY3    70
+     C           KEY3      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN65
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CEND    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CEND
+     C                     END                             - E1
+      *
+     C           S2CEND    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CEND    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN66
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CEND
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if equal 'M' 'Q' 'S' 'A'
+     C           S2CRND    IFEQ *BLANKS                    - B1
+     C           S2CRND    OREQ 'M'                        - B2
+     C           S2CRND    OREQ 'Q'
+     C           S2CRND    OREQ 'S'
+     C           S2CRND    OREQ 'A'
+     C                     MOVE S2CRND    N3CRND
+     C                     ELSE                            - X2
+     C                     MOVE *ON       *IN67
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+      *
+      ** COMPL. CREDIT BOI CODE VALIDATION
+      *
+      ** Line 1 Credit
+      ** Check if fully numeric
+     C           S2CPNC    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CPNC
+     C                     END                             - E1
+      *
+     C           S2CPNC    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2CPNC    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN68
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CPNC
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2CPNC    IFNE *ZEROS                     - B1
+     C                     MOVE S2CPNC    KEY3    70
+     C           KEY3      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN68
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CENC    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CENC
+     C                     END                             - E1
+      *
+     C           S2CENC    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CENC    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN69
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CENC
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if equal 'M' 'Q' 'S' 'A'
+     C           S2CRNC    IFEQ *BLANKS                    - B1
+     C           S2CRNC    OREQ 'M'                        - B2
+     C           S2CRNC    OREQ 'Q'
+     C           S2CRNC    OREQ 'S'
+     C           S2CRNC    OREQ 'A'
+     C                     MOVE S2CRNC    N3CRNC
+     C                     ELSE                            - X2
+     C                     MOVE *ON       *IN70
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+      *
+      ** Line 2 Debit
+      ** Check if fully numeric
+     C           S2CP1D    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CP1D
+     C                     END                             - E1
+      *
+     C           S2CP1D    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2CP1D    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN71
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CP1D
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2CP1D    IFNE *ZEROS                     - B1
+     C                     MOVE S2CP1D    KEY3    70
+     C           KEY3      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN71
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CE1D    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CE1D
+     C                     END                             - E1
+      *
+     C           S2CE1D    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CE1D    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN72
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CE1D
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if equal 'M' 'Q' 'S' 'A'
+     C           S2CR1D    IFEQ *BLANKS                    - B1
+     C           S2CR1D    OREQ 'M'                        - B2
+     C           S2CR1D    OREQ 'Q'
+     C           S2CR1D    OREQ 'S'
+     C           S2CR1D    OREQ 'A'
+     C                     MOVE S2CR1D    N3CR1D
+     C                     ELSE                            - X2
+     C                     MOVE *ON       *IN73
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ** Line 2 Credit
+      ** Check if fully numeric
+     C           S2CP1C    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CP1C
+     C                     END                             - E1
+      *
+     C           S2CP1C    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2CP1C    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN74
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CP1C
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2CP1C    IFNE *ZEROS                     - B1
+     C                     MOVE S2CP1C    KEY3    70
+     C           KEY3      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN74
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CE1C    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CE1C
+     C                     END                             - E1
+      *
+     C           S2CE1C    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CE1C    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN75
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CE1C
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if equal 'M' 'Q' 'S' 'A'
+     C           S2CR1C    IFEQ *BLANKS                    - B1
+     C           S2CR1C    OREQ 'M'                        - B2
+     C           S2CR1C    OREQ 'Q'
+     C           S2CR1C    OREQ 'S'
+     C           S2CR1C    OREQ 'A'
+     C                     MOVE S2CR1C    N3CR1C
+     C                     ELSE                            - X2
+     C                     MOVE *ON       *IN76
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ** Line 3 Debit
+      ** Check if fully numeric
+     C           S2CP2D    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CP2D
+     C                     END                             - E1
+      *
+     C           S2CP2D    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2CP2D    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN77
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CP2D
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2CP2D    IFNE *ZEROS                     - B1
+     C                     MOVE S2CP2D    KEY3    70
+     C           KEY3      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN77
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CE2D    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CE2D
+     C                     END                             - E1
+      *
+     C           S2CE2D    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CE2D    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN78
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CE2D
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if equal 'M' 'Q' 'S' 'A'
+     C           S2CR2D    IFEQ *BLANKS                    - B1
+     C           S2CR2D    OREQ 'M'                        - B2
+     C           S2CR2D    OREQ 'Q'
+     C           S2CR2D    OREQ 'S'
+     C           S2CR2D    OREQ 'A'
+     C                     MOVE S2CR2D    N3CR2D
+     C                     ELSE                            - X2
+     C                     MOVE *ON       *IN79
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ** Line 3 Credit
+      ** Check if fully numeric
+     C           S2CP2C    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CP2C
+     C                     END                             - E1
+      *
+     C           S2CP2C    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     MOVE S2CP2C    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN80
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CP2C
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           S2CP2C    IFNE *ZEROS                     - B1
+     C                     MOVE S2CP2C    KEY3    70
+     C           KEY3      CHAINERITCDL0             90
+      *
+      ** BOI code must exist
+     C           *IN90     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN80
+     C                     MOVE *OFF      *IN30
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CE2C    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CE2C
+     C                     END                             - E1
+      *
+     C           S2CE2C    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CE2C    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN81
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CE2C
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if equal 'M' 'Q' 'S' 'A'
+     C           S2CR2C    IFEQ *BLANKS                    - B1
+     C           S2CR2C    OREQ 'M'                        - B2
+     C           S2CR2C    OREQ 'Q'
+     C           S2CR2C    OREQ 'S'
+     C           S2CR2C    OREQ 'A'
+     C                     MOVE S2CR2C    N3CR2C
+     C                     ELSE                            - X2
+     C                     MOVE *ON       *IN82
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ** Validation if fully numeric
+     C           S2DUR     IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2DUR
+     C                     END                             - E1
+      *
+     C           S2DUR     IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD1         ZADIG
+     C                     MOVE S2DUR     ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN83
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2DUR
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CCMT    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CCMT
+     C                     END                             - E1
+      *
+     C           S2CCMT    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CCMT    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN84
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CCMT
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2CCMD    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2CCMD
+     C                     END                             - E1
+      *
+     C           S2CCMD    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2CCMD    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN85
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2CCMD
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2ANAG    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2ANAG
+     C                     END                             - E1
+      *
+     C           S2ANAG    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2ANAG    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN86
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2ANAG
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2LIRK    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2LIRK
+     C                     END                             - E1
+      *
+     C           S2LIRK    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD1         ZADIG
+     C                     MOVE S2LIRK    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN87
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2LIRK
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2TRIT    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2TRIT
+     C                     END                             - E1
+      *
+     C           S2TRIT    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2TRIT    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN88
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ERB3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2TRIT
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Validation if fully numeric
+     C           S2TPCH    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    S2TPCH
+     C                     END                             - E1
+      *
+     C           S2TPCH    IFNE *ZEROS                     - B1
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     MOVE S2TPCH    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN89
+     C                     MOVE *OFF      *IN30
+     C                     MOVE 'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - E2
+     C                     MOVE ZFIELD    S2TPCH
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE             *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'ERUSRMSG'ZAMSGF
+     C                     ENDIF
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+** CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1999

@@ -1,0 +1,389 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER OUTSOURCING - 205')                           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  ER4140 - MINERVA INTERFACE - OUTSOURCING - 205               *
+      *                                                               *
+      *  Called By: ERC4130 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 04Jan21               *
+      *  Prev Amend No. MMI140             Date 28Feb11               *
+      *                 MMI138             Date 24Mar10               *
+      *                 MMI136             Date 19Dec08               *
+      *                 MMI132             Date 25Mar08               *
+      *                 MMI123             Date 29Jan07               *
+      *                 MMI122             Date 31May06               *
+      *                 MMI120             Date 27Jun05               *
+      *                 MMI117             Date 03Jan05               *
+      *                 MMI115             Date 23Mar04               *
+      *                 225425             Date 03Mar04               *
+      *                 MMI108             Date 10Jul03               *
+      *                 MMI106             Date 21Feb03               *
+      *                 MMI104             Date 21Jan03               *
+      *                 MMI100             Date 05Nov02               *
+      *                 MMI093             Date 04Mar02               *
+      *                 MMI091             Date 27Dec01               *
+      *                 190269             Date 21Feb01               *
+      *                 MMI080             Date 03Jan01               *
+      *                 AG0001             Date 08Oct98               *
+      *                 MMI033  *CREATE    Date 08Oct98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011 - Recompiled             *
+      *  MMI138 - PUMA Changes March 2010    - Recompiled             *
+      *  MMI136 - PUMA Changes December 2008 - Recompiled             *
+      *  MMI132 - PUMA Changes March 2008                             *
+      *  MMI123 - PUMA Changes January 2007  - RECOMPILED ONLY        *
+      *  MMI122 - PUMA Changes May 2006                               *
+      *  MMI120 - Complete CR2005            - Recompiled             *
+      *  MMI117 - CR 2005                                             *
+      *  MMI115 - PUMA Changes March 2004    - Recompiled             *
+      *  225425 - Replace 'MARGINI' with Facility Reference.          *
+      *  MMI108 - PUMA Changes June 2003  - complete MMI104           *
+      *  MMI106 - PUMA Changes January 2003  - Recompiled             *
+      *  MMI104 - Puma field codes increased to 5 digits.             *
+      *  MMI100 - R4.1 Upgrade - renamed from IR4140 to ER4140        *
+      *  MMI093 - Rewritten                                           *
+      *  MMI091 - PUMA Changes December 2001                          *
+      *  190269 - Wrong start position for subfield PUMATR of 204;    *
+      *           Do not output items with FT = zero.                 *
+      *  MMI080 - PUMA Changes December 2000                          *
+      *  AG0001 - IRPUMAPD changed                                    *
+      *  MMI033 - Minerva Interface                                   *
+      *                                                               *
+      *****************************************************************
+     FIRPUMAPDIP  E                    DISK
+     FIRMITBPDIF  E                    DISK
+     FIRMITTPDIF  E           K        DISK
+     FIRFCLTPDIF  E           K        DISK
+     FIRGUARPDIF  E           K        DISK
+     FIRM25OPDO   F      80            DISK                      A
+      *
+     E**********          SC1      7000  1                                MMI122
+     E                    SC1      9999  1                                MMI122
+     E                    SC2        60  1
+      *
+     E***********         COD       999  3                                MMI108
+     E**********          COD       999  5 0                        MMI108MMI132
+     E**********          DA        999  5 0                              MMI132
+     E**********          LUN       999  5 0                              MMI132
+     E                    COD      9999  5 0                              MMI132
+     E                    DA       9999  5 0                              MMI132
+     E                    LUN      9999  5 0                              MMI132
+      *
+     IDSPUMA    E DSIRPUMAPD
+      *
+     I            DS
+     I************                            1   5 WFIELD                MMI108
+     I************                            3   5 WFLDID                MMI108
+     I                                        1  10 WHFLDI                MMI108
+     I                                        1   2 WH01                  MMI108
+     I                                        2   60WH02                  MMI108
+     I                                        3   50WH03                  MMI108
+      *
+     I            DS
+     I                                        1  35 WRK204
+     I                                       17  18 PUMATR
+      *
+      *****************************************************************
+      *               M   A   I   N       L   I   N   E               *
+      *****************************************************************
+      *
+     C                     MOVEA*BLANKS   SC1
+     C                     MOVEADSPUMA    SC1,1
+     C                     MOVE MK204     WRK204
+      *
+     C           MKUIA     IFEQ '205'
+     C           MK472     ANDNE1
+      *
+     C           PUMATR    IFNE 'TR'
+     C           MK001     ANDNE*ZERO
+     C           PUMATR    OREQ 'TR'
+     C           MK001     ANDEQ9125
+     C                     EXSR OUTPUT
+     C                     END
+      *
+     C                     END
+      *
+      *****************************************************************
+      * OUTPUT - WRITE ONE FT TO OUTPUT FILE                          *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      * Write Header
+     C                     EXCPTTESTA
+      * Write a record for each required field
+      *
+     C           KIRMIT    CHAINIRMITT               01
+     C           *IN01     DOWEQ*OFF
+      *
+     C                     MOVE 'Y'       OUTFLD  1
+      *
+      * Excluded fields
+      *
+     C           PTCAMP    IFLT 4
+     C           PTCAMP    OREQ 39
+     C           PTCAMP    OREQ 25
+     C           PTCAMP    OREQ 563                                       MMI117
+     C           PTCAMP    OREQ 650
+     C           PTCAMP    OREQ 5308                                      MMI117
+     C           PTCAMP    OREQ 5310                                      MMI117
+     C                     MOVE 'N'       OUTFLD
+     C                     ENDIF
+      *
+     C           MK001     IFEQ 9323
+     C           MK001     OREQ 9541
+     C           MK001     OREQ 9543
+     C           MK001     OREQ 9641
+     C           MK001     OREQ 9125
+     C           PTCAMP    IFEQ 093
+     C           PTCAMP    OREQ 094
+     C           PTCAMP    OREQ 086
+     C           PTCAMP    OREQ 277
+     C                     MOVE 'N'       OUTFLD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Retrieve field contents
+     C                     Z-ADD1         X       40
+     C**********           MOVE PTCAMP    WFLDID                          MMI108
+     C********** WFLDID    LOKUPCOD,X                    02               MMI108
+     C           PTCAMP    LOKUPCOD,X                    02               MMI108
+     C           *IN02     IFEQ *OFF
+     C                     MOVE 'N'       OUTFLD
+     C                     ENDIF
+     C**********           MOVELCOD,X     M1CODC  30                      MMI108
+     C                     MOVE COD,X     M1CODC  50                      MMI108
+      *
+     C                     MOVEA*BLANKS   SC2
+     C                     Z-ADDDA,X      Z       50
+     C                     MOVEASC1,Z     SC2,1
+     C           1         ADD  LUN,X     Z
+     C                     MOVEA*BLANKS   SC2,Z
+     C                     MOVEASC2       M1VALC 60
+      *
+      * Output field
+     C           OUTFLD    IFEQ 'Y'
+     C                     EXCPTDETT
+     C                     ENDIF
+      *
+      * Repeat value of 277 into field 477
+      *
+     C           PTCAMP    IFEQ 204
+     C                     MOVE '477'     M1CODC
+     C                     MOVELMK277     M1VALC
+     C                     EXCPTDETT
+     C                     ENDIF
+      *
+     C           KIRMIT    READEIRMITT                   01
+     C                     ENDDO
+      *
+      * After all fields have been output, process fields 025 and 039
+      *
+     C           MK001     IFNE 9125
+     C                     EXSR FI039
+     C           MK001     IFNE 9641
+     C                     EXSR FI025
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * FI039  * WRITE FIELDS 039                                     *
+      *****************************************************************
+      *
+     C           FI039     BEGSR
+      *
+     C           MK277     CHAINIRFCLTPD             50
+      *
+      * MARGINI
+     C           *IN50     IFEQ *ON
+     C                     MOVELMK277     IFREF                           225425
+     C           MK001     IFEQ 9541
+     C           MK001     OREQ 9641
+     C**********           EXCPTFIL39C                                    225425
+     C                     EXCPTFIL277                                    225425
+     C                     ELSE
+     C**********           EXCPTFIL39B                                    225425
+     C                     EXCPTFIL39                                     225425
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN50     DOWEQ*OFF
+      *
+     C           MK001     IFEQ 9541
+     C           MK001     OREQ 9641
+     C                     EXCPTFIL277
+     C                     ELSE
+     C                     EXCPTFIL39
+     C                     ENDIF
+      *
+     C           MK277     READEIRFCLTPD                 50
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * FI025  * WRITE FIELDS 025 - 650                               *
+      *****************************************************************
+      *
+     C           FI025     BEGSR
+      *
+     C           MK277     CHAINIRGUARPD             50
+      *
+     C           *IN50     DOWEQ*OFF
+     C                     EXCPTFIL025
+     C           MK277     READEIRGUARPD                 50
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * *INZSR * OPERAZIONI INIZIALI                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** DEFINIZIONE CHIAVE PER IRMITTPD
+      *
+     C           KIRMIT    KLIST
+     C                     KFLD           MK001
+     C                     KFLD           MK002
+     C                     KFLD           MK003
+      *
+      ** APERTURA FILE E PULIZIA SCHIERE
+      *
+     C*********            MOVEA*BLANKS   COD                             MMI108
+     C                     MOVEA*ZEROS    DA
+     C                     MOVEA*ZEROS    LUN
+      *
+     C                     Z-ADD1         X
+      *
+      ** CARICA LE SCHIERE CON LE DESCRIZIONI DEI CAMPI DEL FILE
+      *
+     C                     DO   *HIVAL
+     C                     READ WHPUF                    91
+     C           *IN91     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C************         MOVELWHFLDI    WFIELD                          MMI108
+     C************         MOVE WFLDID    COD,X                           MMI108
+     C           WH01      IFEQ 'MK'                                      MMI108
+     C                     Z-ADDWH03      COD,X                           MMI108
+     C                     ELSE                                           MMI108
+     C                     Z-ADDWH02      COD,X                           MMI108
+     C                     ENDIF                                          MMI108
+     C                     Z-ADDWHIBO     DA,X
+     C                     Z-ADDWHFLDB    LUN,X
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+     OIRM25OPDEADD             TESTA
+     O                                    2 'FT'
+     O                         MK001      8
+     O                         MK002     11
+     O                         MK003     13
+     O                                   15 '0'
+     O                                   17 '0'
+     O********                           23 'K1030'                       MMI104
+     O********                           29 'K1204'                       MMI104
+     O********                           35 'K1204'                       MMI104
+     O                                   25 'K100030'                     MMI104
+     O                                   33 'K100204'                     MMI104
+     O                                   41 'K100477'                     MMI104
+      *
+     O        EADD             DETT
+     O                         MKUIA      3
+     O*********                M1CODC     7                               MMI104
+     O*********                M1VALC    68                               MMI104
+     O*********                           6 '00'                    MMI104MMI108
+     O                         M1CODC     9                               MMI104
+     O                         M1VALC    70                               MMI104
+      *
+     O        EADD             FIL39
+     O                         MKUIA      3
+     O********                            7 '039'                         MMI104
+     O********                 IFREF     23                               MMI104
+     O                                    9 '00039'                       MMI104
+     O                         IFREF     25                               MMI104
+      *
+     O        EADD             FIL277
+     O                         MKUIA      3
+     O********                            7 '277'                         MMI104
+     O********                 IFREF     23                               MMI104
+     O                                    9 '00277'                       MMI104
+     O                         IFREF     25                               MMI104
+      ********                                                            225425
+     O********EADD             FIL39B                                     225425
+     O********                 MKUIA      3                               225425
+     O********                            7 '039'                         MMI104
+     O********                            9 '00039'                 MMI104225425
+     O********                           23 'MARGINI'                     225425
+      ********                                                            225425
+     O********EADD             FIL39C                                     225425
+     O********                 MKUIA      3                               225425
+     O********                            7 '277'                         MMI104
+     O********                            9 '00277'                 MMI104225425
+     O********                           23 'MARGINI'                     225425
+      *
+     O        EADD             FIL025
+     O                         MKUIA      3
+     O********                            7 '025'                         MMI104
+     O********                 IGCOL     11                               MMI104
+     O                                    9 '00025'                       MMI104
+     O                         IGCOL     13                               MMI104
+      *
+     O        EADD             FIL025
+     O                         MKUIA      3
+     O********                            7 '650'                         MMI104
+     O********                 IGREF     23                               MMI104
+     O                                    9 '00650'                       MMI104
+     O                         IGREF     25                               MMI104
+      *
+     O        EADD             FIL025
+     O                         MKUIA      3
+     O********                            7 '093'                         MMI104
+     O********                 IGSTG     11                               MMI104
+     O                                    9 '00093'                       MMI104
+     O                         IGSTG     13                               MMI104
+      *
+     O        EADD             FIL025
+     O                         MKUIA      3
+     O********                            7 '094'                         MMI104
+     O********                 IGSTE     11                               MMI104
+     O                                    9 '00094'                       MMI104
+     O                         IGSTE     13                               MMI104
+      *
+     O        EADD             FIL025
+     O                         MKUIA      3
+     O********                            7 '086'                         MMI104
+     O********                 IG086     10                               MMI104
+     O                                    9 '00086'                       MMI104
+     O                         IG086     12                               MMI104
+      *                                                                   MMI117
+     O        EADD             FIL025                                     MMI117
+     O                         MKUIA      3                               MMI117
+     O                                    9 '00563'                       MMI117
+     O                         IG563     13                               MMI117
+      *                                                                   MMI117
+     O        EADD             FIL025                                     MMI117
+     O                         MKUIA      3                               MMI117
+     O                                    9 '05308'                       MMI117
+     O                         IG308     26                               MMI117
+      *                                                                   MMI117
+     O        EADD             FIL025                                     MMI117
+     O                         MKUIA      3                               MMI117
+     O                                    9 '05310'                       MMI117
+     O                         IG310     26                               MMI117

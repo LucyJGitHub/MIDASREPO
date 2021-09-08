@@ -1,0 +1,77 @@
+      *****************************************************************
+      *                                                               *
+      *  ZINTPL - Standard Subroutine to Perform Straight Line        *
+      *           Interpolation of a Rate.                            *
+      *                                                               *
+      *  NOTE: Rate Input fields are defined as 13,9 to allow         *
+      *        Interpolation of Interest Rates, Exchange Rates or     *
+      *        Discount Factors.                                      *
+      *                                                               *
+      *  Input:  ZINDAT ( 5,0) Near Date                              *
+      *          ZIBDAT ( 5,0) Broken Date                            *
+      *          ZIFDAT ( 5,0) Far Date                               *
+      *          ZINRAT (13,9) Near Rate                              *
+      *          ZIFRAT (13,9) Far Rate                               *
+      *                                                               *
+      *  Output: ZIBRAT (13,9) Broken Rate                            *
+      *                                                               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   Last Amend No LUC139              Date 11Jan21              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   LUC139 - Upgrade UCI Italian Returns                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZINTPL    BEGSR                           *** ZINTPL ***
+      *
+      ***  Initialise Fields.
+      *
+     C                     Z-ADDZINDAT    ZINDAT  50
+     C                     Z-ADDZIBDAT    ZIBDAT  50
+     C                     Z-ADDZIFDAT    ZIFDAT  50
+     C                     Z-ADDZINRAT    ZINRAT 139
+     C                     Z-ADDZIFRAT    ZIFRAT 139
+     C                     Z-ADD0         ZIBRAT 139
+      *
+      ***  To interpolate by straight line, all that is required is to
+      ***  add to the Near Rate a proportion of the difference between
+      ***  the Near Rate and the Far Rate.
+      ***
+      ***                    Broken Date - Near Date
+      ***  Increment Date = -------------------------
+      ***                     Far Date - Near Rate
+      ***
+      ***  Increment Rate = (Far Rate - Near Rate) * Increment Date
+      ***
+      ***  Broken Rate = Near Rate + Increment Rate
+      *
+      ***  First set up the Increment Rate with the difference between
+      ***  the Near Rate and the Far Rate.
+      *
+     C           ZIFRAT    SUB  ZINRAT    ZIIRAT 139
+      *
+      ***  Then calculate the proportion of the period from the Near
+      ***  Date to the Far Date that equates to the Broken Date.
+      *
+     C           ZIBDAT    SUB  ZINDAT    ZIXDAT  50
+     C           ZIFDAT    SUB  ZINDAT    ZIYDAT  50
+     C           ZIXDAT    DIV  ZIYDAT    ZIIDAT  99
+      *
+      ***  Now the Proportion of the period can be applied to the
+      ***  differential of the Rates to give the Increment Rate.
+      *
+     C                     MULT ZIIDAT    ZIIRAT
+      *
+      ***  And finally the Increment Rate can be added to the Near Rate
+      ***  to give the Broken Rate.
+      *
+     C           ZINRAT    ADD  ZIIRAT    ZIBRAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************

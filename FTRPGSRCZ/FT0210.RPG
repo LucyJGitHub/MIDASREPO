@@ -10,8 +10,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 25Jul11               *
+      *                 ESL038             Date 16Feb05               *
+      *                 EEE065             Date 05Oct04               *
+      *                 244500             Date 30Jan07               *
+      *                 197392             Date 27Mar02               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CAP212             Date 15Sep14               *
       *                 CFT120             Date 28Sep12               *
@@ -116,6 +122,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied ESL038 and EEE065                           *
+      *  ESL038 - Funds Transfer STP Enhancements                     *
+      *           Hooks: FT0210FFPG FT0210CCP3 FT0210CP12             *
+      *  EEE065 - FT Payment Routing                                  *
+      *           Hooks: FT0210C003 FT0210C005 FT0210FFPG             *
+      *  244500 - Because of Increased ACOD length MOVEL field BNC1   *
+      *  197392 - Associated Customer processing revised as follows:  *
+      *           For Outgoing Payment, Associated Customer will be:  *
+      *              - Ordering Customer, if valid. Otherwise,        *
+      *              - MT100 Customer, if valid. Otherwise,           *
+      *              - Ordering Bank, if valid. Otherwise,            *
+      *              - value obtained from original processing.       *
+      *           For Incoming Payment, Associated Customer will be:  *
+      *              - Beneficiary customer if valid. Otherwise,      *
+      *              - value obtained from original processing.       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CSW220 - SWIFT Changes 2020                                  *
@@ -397,6 +420,10 @@
      F            ACCNTACF                          KIGNORE
      FACNUMA  IF  E           K        DISK
      F            ACCNTABF                          KRENAMEACNUMAF
+      *                                                                                       197392
+     FSDCUSTL7IF  E           K        DISK                                                   197392
+      ** Customer details file - keyed by SWIFT ID                                            197392
+      *                                                                                       197392
      FFPKEYDD O   E                    DISK                      A
      FFPKEYZZ O   E                    DISK                      A
      FACKEY   IF  E           K        DISK                               094407
@@ -433,6 +460,7 @@
      F* 19   FIRST CYCLE                                                  S01117
      F*
      F* 21-25 WORKING INDICATORS                                          S01117
+      * 29   CHAIN fail to SDCUSTL7                                                           197392
      F*                                                                   S01117
      F* 30   TRAILER ERROR
      F*
@@ -3675,7 +3703,24 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0210CP40                                           S01408
      C*                                                                   S01408
+     C                     MOVE *BLANKS   W#ORDC  6                                           197392
+     C                     MOVE *BLANKS   W#ORDB  6                                           197392
+     C                     MOVE *BLANKS   OPASOC  6                                           197392
+      *                                                                                       197392
      C                     MOVE SMCY      CCCY
+      *                                                                                       197392
+     C           ORCT      IFEQ 'C'                                                           197392
+     C                     MOVELORC1      W#ORDC                                              197392
+     C                     ELSE                                                               197392
+     C           ORCT      IFEQ 'R'                                                           197392
+     C           ORCT      OREQ 'P'                                                           197392
+     C                     MOVE ORCT      PRT1T                                               197392
+ JM  C                     MOVELORC1      PRT1                                                197392
+     C                     EXSR SETTLE                                                        197392
+     C                     MOVELCNUM      W#ORDC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
      C                     MOVE ORBT      PRT1T
      C*********************MOVELORBK      PRT1                            S01117
      C**********           MOVE *BLANKS   WRK15  15                                    S01117 CGL029
@@ -3701,6 +3746,30 @@
      C                     ENDIF                                                              CFT032
      C                     ENDIF                                                              CFT032
      C                     EXSR SETTLE
+      *                                                                                       197392
+      ** If no 6-digit customer number was obtained from the Ordering                         197392
+      ** Customer, save the customer number obtained from the Ordering                        197392
+      ** Bank.                                                                                197392
+      *                                                                                       197392
+     C           W#ORDC    IFEQ *BLANKS                                                       197392
+     C                     MOVELCNUM      W#ORDB                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
+      ** Check which of the Ordering Customer, MT100 Customer and                             197392
+      ** Ordering Bank has valid 6-digit customer and move it into                            197392
+      ** the OPASOC variable for checking in the WRIT subroutine.                             197392
+      *                                                                                       197392
+     C           W#ORDC    IFNE *BLANKS                                                       197392
+     C                     MOVELW#ORDC    OPASOC                                              197392
+     C                     ELSE                                                               197392
+     C           ODMT      IFNE *BLANKS                                                       197392
+     C                     MOVELODMT      OPASOC                                              197392
+     C                     ELSE                                                               197392
+     C           W#ORDB    IFNE *BLANKS                                                       197392
+     C                     MOVELW#ORDB    OPASOC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0210CP41                                           S01408
      C*                                                                   S01408
@@ -5378,6 +5447,8 @@
      C                     MOVE '01'      ACSQX
      C                     MOVE BRCA      BRCHX                           S01117
      C                     ELSE
+      *                                                                                       197392
+     C                     MOVE *BLANKS   IPASOC  6                                           197392
       *                                                                   CFT004
       *** If CFT004 is on and the beneficiary field contains an IBAN      CFT004
       *                                                                   CFT004
@@ -5398,6 +5469,7 @@
      C                     Z-ADDS4ACOD    ACODX                           CFT004
      C                     Z-ADDS4ACSQ    ACSQX                           CFT004
      C                     MOVE S4BRCA    BRCHX                           CFT004
+     C                     MOVELS4CNUM    IPASOC                                              197392
      C                     ELSE                                           CFT004
      C                     MOVELBIBAN     WKEY             ***************CFT004
      C                     MOVE 'AOIBANR4'WFILE            * DB ERROR 30 *CFT004
@@ -5410,6 +5482,30 @@
      C/COPY WNCPYSRC,FT0210CP44                                           S01408
      C*                                                                   S01408
      C                     MOVE PCCY      CCCY
+      *                                                                                       197392
+     C           BNCT      IFEQ 'C'                                                           197392
+     C                     MOVELBNC1      IPASOC                                              197392
+     C                     ELSE                                                               197392
+      *                                                                                       197392
+     C           BNCT      IFEQ 'S'                                                           197392
+     C                     MOVELBNC1      W#BENE 12                                           197392
+     C           W#BENE    CHAINSDCUSTL7             29                                       197392
+     C           *IN29     IFEQ '0'                                                           197392
+     C                     MOVELBBCUST    IPASOC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ELSE                                                               197392
+      *                                                                                       197392
+     C           BNCT      IFEQ 'R'                                                           197392
+     C           BNCT      OREQ 'P'                                                           197392
+     C                     MOVE BNCT      PRT1T                                               197392
+     C***************      MOVE BNC1      PRT1                                         197392 244500
+     C                     MOVELBNC1      PRT1                                         197392 244500
+     C                     EXSR SETTLE                                                        197392
+     C                     MOVELCNUM      IPASOC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
      C                     MOVE ACBT      PRT1T
      C*********************MOVELACBK      PRT1                            S01117
      C                     MOVE *BLANKS   WRK15                           S01117
@@ -9759,6 +9855,16 @@
      C                     MOVE *BLANKS   WKASOC  6                                           CSD027
      C           *IN01     IFEQ '1'                                       051400
      C           *IN02     OREQ '1'                                       051400
+      *                                                                                       197392
+     C           *IN01     IFEQ '1'                                                           197392
+     C           OPASOC    ANDNE*BLANKS                                                       197392
+     C                     MOVELOPASOC    WKASOC                                              197392
+     C                     ELSE                                                               197392
+     C           *IN02     IFEQ '1'                                                           197392
+     C           IPASOC    ANDNE*BLANKS                                                       197392
+     C                     MOVELIPASOC    WKASOC                                              197392
+     C                     ELSE                                                               197392
+      *                                                                                       197392
      C           ADDC      IFEQ 'A'                                       051400
      C***********          MOVELSTLAC     FPASOC                    051400164670
      C                     MOVELSTLAC     WKASOC                          164670
@@ -9768,6 +9874,10 @@
      C                     MOVELPAYAC     WKASOC                          164670
      C                     END                                            051400
      C                     END                                            051400
+      *                                                                                       197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
      C                     END                                            051400
       *                                                                   051400
       * Cheques are processed by Settlement Account                       051400

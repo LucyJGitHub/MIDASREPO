@@ -1,0 +1,441 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR Next Month Postings Extract')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas ABS - Italian Returns Module                           *
+      *                                                               *
+      *  IR0106   - Next Month Postings Extract                       *
+      *                                                               *
+      *  Function:  This program extracts the accounting entries      *
+      *             generated for the next month.                     *
+      *                                                               *
+      *  (phase(s)) Automatically, during Close of Month              *
+      *             This program is called when the End of Month      *
+      *             Indicator from IRSTAT is equal to 'M' or 'X'      *
+      *                                                               *
+      *  Called By: IRC0106 - Next Month Postings Extract             *
+      *                                                               *
+      *  (c) Copyright Midas-Kapiti International 1997.               *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. 211141             Date 28Oct02               *
+      *                 MMI063             Date 26Oct99               *
+      *                 UIT021                  10FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  211141 - Avoid duplicate key error after 1 million postings  *
+      *  MMI063 - Antilaundering version 7 - Extract all postings,    *
+      *           even if Causale is zero.                            *
+      *  UIT021 - Bank Of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *         03      Database error accessing IRSTAT.              *
+      *         11      Controls reading of IRMPSTL2/IRPMPCL2.        *
+      *         50      No records on LF/IRMPSTL2.                    *
+      *         51      No records on LF/IRPMPCL2.                    *
+      *         89      End of file for PF/IRAPOSPD                   *
+      *         99      Value returned from SR/ZALIGN not numeric.    *
+      *         U7U8    Database error.                               *
+      *         LR      Terminates program.                           *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *         #UINIT - Initial processing.                          *
+      *         #UDETL - Detail processing.                           *
+      *         #UPOST - Process Next Month's Postings.               *
+      *         ZALIGN - Standard subroutine                          *
+      *         *PSSR  - Error processing.                            *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      * Postings file                               Prefix 'IB'
+     FIRAPOSPDIF  E                    DISK         KINFSR *PSSR
+      *
+      * Previous month Postings file
+     F***IRPMPCL2IF  E           K        DISK         KINFSR *PSSR       211141
+     FIRPMPCPDIF  E                    DISK         KINFSR *PSSR          211141
+     F            IRAPOSD0                          KRENAMEIRPMPCDF
+      *
+      * Monthly Postings file
+     F***IRMPSTL2IF  E           K        DISK         KINFSR *PSSR       211141
+     FIRMPSTPDIF  E                    DISK         KINFSR *PSSR          211141
+     F            IRAPOSD0                          KRENAMEIRMPSTDF
+      *
+      * Next month Postings file
+     FIRNMPSPDO   E                    DISK         KINFSR *PSSR
+     F            IRAPOSD0                          KRENAMEIRNMPSDF
+      *
+     FSDBCT1L0IF  E           K        DISK
+      *Branch Codes                    Rtv Index           Prefix PA.
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    XBRC       99  3
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZALIGNZ1
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Rename Previous postings file
+     IIRPMPCDF
+     I              IBCNUM                          PCNUM
+     I              IBCCY                           PCCY
+     I              IBACOD                          PACOD
+     I              IBACSQ                          PACSQ
+     I              IBPSTD                          PPSTD
+     I              IBVALD                          PVALD
+     I              IBPNAR                          PPNAR
+     I              IBPSTA                          PPSTA
+     I              IBDRCR                          PDRCR
+     I              IBSPOS                          PSPOS
+     I              IBBRCA                          PBRCA
+     I              IBRIND                          PRIND
+     I              IBATYP                          PATYP
+     I              IBPRIN                          PPRIN
+     I              IBPRFC                          PPRFC
+     I              IBACSC                          PACSC
+     I              IBDLRF                          PDLRF
+     I              IBPREF                          PPREF
+     I              IBOTRF                          POTRF
+     I              IBOTST                          POTST
+     I              IBOTTP                          POTTP
+     I              IBBOKC                          PBOKC
+     I              IBNITM                          PNITM
+     I              IBTRCY                          PTRCY
+     I              IBSTYP                          PSTYP
+     I              IBORBR                          PORBR
+     I              IBSPRT                          PSPRT
+     I              IBAKEY                          PAKEY
+     I              IBLRNL                          PLRNL
+     I              IBRENR                          PRENR
+     I              IBCAUC                          PCAUC
+     I              IBRRN                           PRRN
+      *
+      ** Rename Monthly postings file
+     IIRMPSTDF
+     I              IBCNUM                          MCNUM
+     I              IBCCY                           MCCY
+     I              IBACOD                          MACOD
+     I              IBACSQ                          MACSQ
+     I              IBPSTD                          MPSTD
+     I              IBVALD                          MVALD
+     I              IBPNAR                          MPNAR
+     I              IBPSTA                          MPSTA
+     I              IBDRCR                          MDRCR
+     I              IBSPOS                          MSPOS
+     I              IBBRCA                          MBRCA
+     I              IBRIND                          MRIND
+     I              IBATYP                          MATYP
+     I              IBPRIN                          MPRIN
+     I              IBPRFC                          MPRFC
+     I              IBACSC                          MACSC
+     I              IBDLRF                          MDLRF
+     I              IBPREF                          MPREF
+     I              IBOTRF                          MOTRF
+     I              IBOTST                          MOTST
+     I              IBOTTP                          MOTTP
+     I              IBBOKC                          MBOKC
+     I              IBNITM                          MNITM
+     I              IBTRCY                          MTRCY
+     I              IBSTYP                          MSTYP
+     I              IBORBR                          MORBR
+     I              IBSPRT                          MSPRT
+     I              IBAKEY                          MAKEY
+     I              IBLRNL                          MLRNL
+     I              IBRENR                          MRENR
+     I              IBCAUC                          MCAUC
+     I              IBRRN                           MRRN
+      *
+      ** Irstat data area
+     IIRSTTD    E DSIRSTAT
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Country Details
+     ISDCTRY    E DSSDCTRYPD
+      *
+      ** External DS for Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** External DS for Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** Initial Processing
+     C                     EXSR #UINIT
+      *
+      ** Detail Processing
+     C                     EXSR #UDETL
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE    : #UDETL                                       *
+      *  FUNCTION      : DETAIL PROCESSING                            *
+      *                                                               *
+      *  CALLED BY     : MAIN PROCESSING                              *
+      *  CALLS         : ZALIGN                                       *
+      *                  #UPOST                                       *
+      *                                                               *
+     C*****************************************************************
+     C           #UDETL    BEGSR
+      *
+      ** Initial read of Account Master file.
+     C                     READ IRAPOSPD                 89
+      *
+      ** Process all valid records on file.
+     C           *IN89     DOWEQ'0'                        - B1
+      *
+      ** Test whether posting is a manual payment (if the last six
+      ** positions on SPOS are numeric), do not process any manual
+      ** postings.
+     C                     MOVE IBSPOS    WWSPOS
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVELWWSPOS    ZFIELD
+     C                     Z-ADD6         ZADIG
+     C                     Z-ADD0         ZADEC
+      *
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        - B2
+      *
+      ** value date is after IR end of month date.
+     C           IBVALD    IFGT IREMD                      - B3
+      *
+      * check if it's an existing branch
+      *
+     C                     Z-ADD1         I
+     C           IBBRCA    LOKUPXBRC                     32
+      *
+      ** Set up the postings flag on DTAARA/IRSTAT, and calculate the
+      ** relative record number and Lira/Foreign
+      ** currency field for output to IRNMPSPD, only if the posting
+      ** record has a Causale code allocated.
+     C********** IBCAUC    IFNE 0                          - B4           MMI063
+     C********** *IN32     ANDEQ*ON                                       MMI063
+     C*                                                                   MMI063
+     C           *IN32     IFEQ *ON                        - B4           MMI063
+     C                     EXSR #UPOST
+      *
+      ** Write the record
+     C                     WRITEIRNMPSDF
+     C                     END                             - E4
+      *
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Read next record
+     C                     READ IRAPOSPD                 89
+     C                     END                             - E1
+      *
+      ** Update data area
+     C                     OUT  IRSTTD
+      *
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      *  SUBROUTINE : #UPOST                                             *
+      *  FUNCTION   : Output Next Month's postings                       *
+      *                                                                  *
+      *  CALLED BY  : DETAIL                                             *
+      *  CALLS      :                                                    *
+      *                                                                  *
+     C********************************************************************
+     C           #UPOST    BEGSR
+      *
+      ** Set up the relative record number of the first posting to be
+      ** written to IRNMPSPD.
+      ** Access the last record on the monthly postings file, if no
+      ** record found access the previous month's postings file.
+      *
+      ** Only perform this process once.
+     C           *IN11     IFEQ '0'                        - B1
+     C                     MOVE '1'       *IN11
+      *
+      ** Set up the postings flag on DTAARA/IRSTAT.
+     C                     MOVE 'Y'       IRPSTI
+      *
+     C                     Z-ADD0         WIBRRN  60
+      *
+      ** Retrieve the last RRN from the current month
+      *
+     C********** *HIVAL    SETLLIRMPSTL2                                  211141
+     C**********           READPIRMPSTL2                 50               211141
+     C           *HIVAL    SETLLIRMPSTPD                                  211141
+     C                     READPIRMPSTPD                 50               211141
+      *
+     C           *IN50     IFEQ '0'                        - B2
+     C                     Z-ADDMRRN      WIBRRN
+      *
+     C                     ELSE                            - X2
+      ** If no records on the monthly postings file
+      ** Retrieve the last RRN from the previous  month
+      *
+     C********** *HIVAL    SETLLIRPMPCL2                                  211141
+     C**********           READPIRPMPCL2                 51               211141
+     C           *HIVAL    SETLLIRPMPCPD                                  211141
+     C                     READPIRPMPCPD                 51               211141
+      *
+      ** If record found on the previous month's postings file
+     C           *IN51     IFEQ '0'                        - B3
+      *
+     C                     Z-ADDPRRN      WIBRRN
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           IBRRN     IFEQ 999999                     - B1
+     C                     Z-ADD0         WIBRRN
+     C                     END                             - E1
+     C                     ADD  1         WIBRRN
+     C                     Z-ADDWIBRRN    IBRRN
+      *
+      ** Postings without Lira/non-lira code
+     C           IBLRNL    IFEQ *BLANK                     - B1
+     C           IBLRNL    OREQ *ZERO
+     C           IBCCY     IFEQ BJLCCY                     - B2
+     C                     MOVE 'L'       IBLRNL
+     C                     ELSE                            - X2
+     C                     MOVE 'F'       IBLRNL
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE     : #UINIT                                      *
+      *  FUNCTION       : INITIAL PROCESSING                          *
+      *                                                               *
+      *  CALLED BY      : MAIN PROCESSING                             *
+      *  CALLS          :    -                                        *
+      *                                                               *
+     C*****************************************************************
+     C           #UINIT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Access Bank details via access program
+      ** (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Access Data Area IRSTAT
+     C           *NAMVAR   DEFN IRSTAT    IRSTTD
+     C           *LOCK     IN   IRSTTD                 03
+      *
+      ** DB Error if no record found
+     C           *IN03     IFEQ '1'                        - B1
+     C                     MOVE '01'      WWBASE           ************
+     C                     MOVE 'IRSTAT'  WWBFIL           * DBERR 01 *
+     C                     MOVEL'DTAARA'  WWBKEY           ************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      *
+      * ACCESS BRANCHES EXTENTION TO SETUP TABLE
+      *
+     C                     Z-ADD1         I       20
+      *
+     C                     READ SDBCT1L0                 32
+      *
+     C           *IN32     DOWEQ'0'                        - B1
+     C           PAINCL    IFEQ 'Y'                        - B2
+     C                     MOVE PABRCD    XBRC,I
+     C                     ADD  1         I
+     C                     ENDIF                           - E2
+     C                     READ SDBCT1L0                 32
+     C                     ENDDO                           - E1
+      *
+      ** set up work field to test for manual postings and set up
+      ** work fields which calculate the relative record number on
+      ** IRNMPSPD.
+     C                     MOVE *BLANKS   WWSPOS  6
+     C                     Z-ADD0         WWRRN   60
+     C                     Z-ADD0         WWPRRN  60
+     C                     Z-ADD0         WWMRRN  60
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *    ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.     *
+      *                                                               *
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+      *****************************************************************
+**  CPY@
+(c) Copyright Midas-Kapiti International Ltd. 1997.

@@ -1,0 +1,412 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Guarantees Extraction')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas -  European Reporting - Italy                          *
+      *                                                               *
+      *  ERIT75 - Guarantees Extraction                               *
+      *                                                               *
+      *  Called By: ERC0702 - Interface to FRS component              *
+      *                                                               *
+      *  (C) Copyright Misys-IBS 2002                                 *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139 *Amend      Date 16Mar21               *
+      *                 LUC139             Date 04Jan21               *
+      *                 MMI117             Date 10Jan05               *
+      *                 216416             Date 31Mar03               *
+      *                 MMI096 *rewritten       17Jun02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Set EXDECK = 14A                                    *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI117 - CR 2005 - Added field 563 (Stato Rapporto).         *
+      *  216416 - Swap fields 564 and 304 in work field ICGUTP.       *
+      *  MMI096 - Rewrite Guarantees extraction.                      *
+      *                                                               *
+      *****************************************************************
+      *
+     FGTEESGT IF  E                    DISK
+     FLEGTT1L0IF  E           K        DISK
+     FXXFCT1L0IF  E           K        DISK
+     FERICDRL1IF  E           K        DISK
+     FSDCURRL1IF  E           K        DISK
+     FSDCRT1L0IF  E           K        DISK
+     FSDBCT1L0IF  E           K        DISK
+     FSDCTT1L0IF  E           K        DISK
+     FSDCUT2L0IF  E           K        DISK
+     FSDCUT1L0IF  E           K        DISK
+     FSDCUSTL1IF  E           K        DISK
+     FERITTRPDO   E           K        DISK
+      *
+      ** Italian Returns Data Area
+     IIRSTAT    E DSIRSTAT
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+     IIRFXTB    E DSIRFXTBPD                                              MMI080
+     IDSSDY     E DSDSSDY                                                 MMI080
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+      *
+     IDSNUMB      DS
+     I                                        1   6 CNUM
+     I                                        7  11 FCLN02
+     I                                       12  140GUSN
+      *
+     IDSCOL       DS                             40
+     I                                       36  360COL472
+     I                                       37  390COL564
+     I                                       40  400COL304
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAINLINE                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+      ** Process all Guarantees in the system
+      *
+     C                     READ GTEESGT                  LR
+     C           *INLR     DOWEQ*OFF
+     C                     EXSR SELECT
+     C           SEL       IFEQ 'Y'
+     C                     EXSR OUTPUT
+     C                     ENDIF
+     C                     READ GTEESGT                  LR
+     C                     ENDDO
+      *
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SELECT -  Decide if the guarantee is to be extracted          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SELECT    BEGSR
+      *
+     C                     MOVE 'N'       SEL     1
+      *
+      * Guarantee must be live on end of month
+      *
+     C           RECI      IFEQ 'D'
+     C           STTD      ANDLEIREMD
+     C           EDDT      ANDGEIREMD
+      *
+      * Guarantee must be linked to a Facility
+      *
+     C                     MOVELFCLN      FCLN01  1
+     C           FCLN01    IFEQ 'F'
+      *
+      * Branch must be included in Bank of Italy reporting
+      *
+     C           BRCA      CHAINSDBCT1L0             01
+     C           *IN01     IFEQ *OFF
+     C           PAINCL    ANDEQ'Y'
+      *
+     C           KEYGUA    CHAINLEGTT1L0             02
+     C           *IN02     IFEQ *OFF
+      *
+      * Collateral Code must be defined on decision table
+      *
+     C           XPCOLC    CAT  'GA':0    EXDECK    P
+      *
+     C                     CALL 'ERIT62'
+     C                     PARM 'GAR'     EXLOTD  3        Input
+     C                     PARM           EXDECK 14        Input
+     C                     PARM *ZERO     EXDRCR  10       Input
+     C                     PARM *ZERO     RTLINI  70       Output
+     C                     PARM *ZERO     RXRESV  20       Output
+     C                     PARM *ZERO     RXCPAC  70       Output
+     C                     PARM *BLANK    RXCOMP 15        Output
+     C                     PARM *BLANKS   ERROR   1        Return
+      *
+     C           ERROR     IFNE 'Y'
+     C           RTLINI    ANDNE*ZERO
+      *
+     C                     MOVE 'Y'       SEL
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OUTPUT -  Format output fields and write a record to the      *
+      *           Italian Returns extract file                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+     C                     CLEARERITTRD0
+      *
+      * Reporting Code (Voce/Sottovoce)
+      *
+     C                     Z-ADDRTLINI    ICLINI
+      *
+      * Collateral Code
+      *
+     C                     MOVE XPCOLC    ICCOCD
+      *
+     C                     MOVELXPCOLC    WKEY      P                  189157
+     C                     CALL 'AOFXTBR0'                             189157
+     C                     PARM '*BLANKS' WRTCD   7                    189157
+     C                     PARM '*KEY   ' WOPTN   7                    189157
+     C                     PARM 'COL'     FIELD   3                    189157
+     C                     PARM           WKEY   18                    189157
+     C           IRFXTB    PARM *BLANKS   DSSDY                        189157
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE F0PNAR    DSCOL
+     C********** COL564    MULT 10        ICGUTP                          216416
+     C**********           ADD  COL304    ICGUTP                          216416
+     C           COL304    MULT 1000      ICGUTP                          216416
+     C                     ADD  COL564    ICGUTP                          216416
+     C                     Z-ADDCOL472    ICGURP
+     C                     ENDIF
+      *
+      * Codice Sportello
+      *
+     C                     MOVE PAORSP    ICORSP
+     C                     MOVE PAORPR    ICORPR
+     C                     MOVE PAORPA    ICORPA
+      *
+      * Amount in Original Currency (2 decimals)
+      *
+     C           CCY       CHAINSDCURRL1             03
+      *
+     C           *IN03     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELCCY       DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD100       FACTOR  41
+     C                     DO   A6NBDP
+     C                     DIV  10        FACTOR
+     C                     ENDDO
+     C           TAMT      MULT FACTOR    ICBVFX
+      *
+      * Amount in Reporting Currency
+      *
+     C           CCY       IFEQ VDCCYC
+     C                     Z-ADDICBVFX    ICBVLR
+     C                     ELSE
+     C                     EXSR CNVCCY                                 es
+     C                     ENDIF
+      *
+      * Sign (Debit)
+      *
+     C                     MOVE 'D'       ICCRDR
+      *
+      * UIC Currency Code
+      *
+     C                     Z-ADD*ZERO     ICUCCY
+      *
+     C           CCY       CHAINSDCRT1L0             04
+     C           *IN04     IFEQ *OFF
+     C                     Z-ADDPBUCCY    ICUCCY
+     C                     ENDIF
+      *
+      * Customer Guaranteed - and related data
+      *
+     C                     MOVELCNUM      ICCUST
+      *
+     C                     MOVELCNUM      BBCUST
+     C           BBCUST    CHAINSDCUT2L0             05
+     C           *IN05     IFEQ *OFF
+     C                     Z-ADDPCCONS    ICCONS
+     C                     Z-ADDPCECSG    ICECSG
+     C                     Z-ADDPCECBC    ICECBC
+     C                     Z-ADDPCPRCT    ICPRCT
+     C                     ENDIF
+     C           BBCUST    CHAINSDCUT1L0             06
+     C           *IN06     IFEQ *OFF
+     C                     MOVE BBA004    ICRSDG
+     C                     ENDIF
+     C           BBCUST    CHAINSDCUSTL1             07
+     C           *IN07     IFEQ *OFF
+     C           BBCNCZ    CHAINSDCTT1L0             08
+     C           *IN08     IFEQ *OFF
+     C                     MOVELPEUCTR    ICUCTR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Guarantor - and related data
+      *
+     C                     MOVELGBCN      ICGUAR
+      *
+     C                     MOVELICGUAR    ICLKCU
+     C                     MOVELGBCN      BBCUST
+     C           BBCUST    CHAINSDCUSTL1             09
+     C           *IN09     IFEQ *OFF
+     C           BBPCNB    ANDNE*BLANK
+     C                     MOVELBBPCNB    ICLKCU
+     C                     ENDIF
+      *
+      * Guarantee Number
+      *
+     C                     MOVE FCLN      FCLN02
+     C                     MOVELDSNUMB    ICGUNB
+     C*
+     C           'GUAR'    CAT  DSNUMB:1  ICORAP
+     C*
+     C                     MOVE CNUM      ICFCUS
+     C                     MOVELFCLN02    ICFACT
+     C                     MOVE FCLN02    ICFCNO
+     C*
+     C* Operation Date and Value Date
+     C*
+     C                     CALL 'ZA0140'
+     C                     PARM           STTD    50
+     C                     PARM 'D'       #SDFMT  1
+     C                     PARM           #SDATE  60
+     C                     PARM           #SDATA  7
+     C                     PARM           #SRTN   1
+     C                     PARM           ICOPDT
+     C                     Z-ADDICOPDT    ICSTRD
+      *                                                                   MMI117
+      * Stato Rapporto                                                    MMI117
+      *                                                                   MMI117
+     C                     Z-ADDXP563     ICACST                          MMI117
+     C*
+     C* Access Facility extension to retrieve Deliberating Entity
+     C*
+     C           KEYFAC    CHAINXXFCT1L0             12
+     C           *IN12     IFEQ *OFF
+     C                     MOVE PRDECD    ICDECD
+     C                     ENDIF
+      *
+      ** Record type and sequence (Abacus requirements)
+      *
+     C                     Z-ADD5         ICRTYP
+     C                     ADD  1         LASTSQ
+     C                     Z-ADDLASTSQ    ICSQCT
+     C                     WRITEERITTRD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CNVCCY - Convert amount from Original Currency to Reporting   *
+      *          Currency.                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CNVCCY    BEGSR
+      *
+      * Original to Base
+      *
+     C           A6MDIN    IFEQ 'M'
+     C           ICBVFX    MULT A6SPRT    OUTAMT 248H
+     C                     ELSE
+     C           ICBVFX    DIV  A6SPRT    OUTAMT    H
+     C                     ENDIF
+      *
+      * Base to Reporting
+      *
+     C           VDMDIN    IFEQ 'D'
+     C           OUTAMT    MULT VDSPRT    ICBVLR    H
+     C                     ELSE
+     C           OUTAMT    DIV  VDSPRT    ICBVLR    H
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Initial Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           KEYGUA    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           FCLN
+     C                     KFLD           GUSN
+      *
+     C           KEYFAC    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           ICFACT
+     C                     KFLD           ICFCNO
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *** Retrieve DTAARA for reporting date and last sequence nbr
+     C*
+     C           *NAMVAR   DEFN           IRSTAT
+     C                     IN   IRSTAT
+      *
+     C                     Z-ADDIRSQCT    LASTSQ  60
+      *
+      **  Access ER ICD to retrieve Reporting Currency
+      *
+     C           'IT'      CHAINERICDRL1             10
+     C           *IN10     IFEQ *ON                        B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE
+     C                     MOVEL'ERICDRL1'DBFILE
+     C                     MOVEL'IT'      DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+      * Rettrieve data of Reporting Currency
+      *
+     C           VDCCYC    CHAINSDCURRL1             11
+     C           *IN11     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELVDCCYC    DBKEY
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    VDSPRT 138       Spot rate
+     C                     MOVE A6MDIN    VDMDIN  1        Mult/Div Ind
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *

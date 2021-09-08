@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  MD055446           Date 04Apr20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. LUC139             Date 23Nov20               *
+      *  Prev Amend No. BUG14313(CER008/9) Date 21Oct20               *
+      *                 MD055446           Date 04Apr20               *
+      *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -72,6 +74,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns Upgrade to FM2.1                *
+      *  BUG14313 - Italian Enhancement and API ECM Clash on Customer *
+      *             Details API (CER008/CER009 upgrade to MidasPlus)  *
+      *             CER009 - Puma II                                  *
+      *             CER008 - Base Italian Features                    *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -258,6 +265,13 @@
       ** Currency/Time of Netting Details                                                  AR1086546
      D CtnmFilFmt    E DS                  EXTNAME(SDVCTNMPD)                              AR1086546
                                                                                               CGP001
+      ** Italian Details in file format                                                     BUG14313
+     D CuIt1FilFmt   E DS                  EXTNAME(SDCUT1PD)                                BUG14313
+     D IT_BBCUST     E                     EXTFLD(BBCUST)                                   BUG14313
+                                                                                            BUG14313
+      ** Puma Details in file format                                                        BUG14313
+     D CuIt2FilFmt   E DS                  EXTNAME(SDCUT2PD)                                BUG14313
+                                                                                            BUG14313
       * Customer - Screen Formats
      D CuPrim        E DS                  EXTNAME(SDCUPRPD)
      D CuCuxc        E DS                  EXTNAME(SDCUXCPD)                                  CGL132
@@ -270,6 +284,8 @@
      D CuBrtx        E DS                  EXTNAME(SDCUBRPD)
      D CuPriv        E DS                  EXTNAME(SDCUPBPD)
      D                                     PREFIX(A_)
+     D CurCuIt1      E DS                  EXTNAME (SDCUS1PD)                                 LUC139
+     D CurCuIt2      E DS                  EXTNAME (SDCUS2PD)                                 LUC139
                                                                                               CGL132
       ** FATCA Customer Details in file format                                                CGL132
      D CrFaFilFmt    E DS                  EXTNAME(SDFTCSPD)                                  CGL132
@@ -492,6 +508,8 @@
      D CDL025          S              1A   inz('N')                                        AR1086546
      D CGL132          S              1A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
+     D CER008          S              1A                                                    BUG14313
+     D CER009          S              1A                                                    BUG14313
                                                                                               CSD079
       ** For date conversion                                                                  CSD079
      D ##DOB           DS                                                                     CSD079
@@ -665,6 +683,18 @@
      C                   EXSR      SCN_CTNM                                                AR1086546
      C                   ENDIF                                                             AR1086546
                                                                                            AR1086546
+      ** Set Italian Details Screen Fields                                                  BUG14313
+                                                                                            BUG14313
+     C                   IF        CER008 = 'Y'                                             BUG14313
+     C                   EXSR      SrScn_It                                                 BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Set PUMA Details Screen Fields                                                     BUG14313
+                                                                                            BUG14313
+     C                   IF        CER009 = 'Y'                                             BUG14313
+     C                   EXSR      SrScn_Puma                                               BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
      C                   ENDIF                                                                CSD079
       *
       * Return
@@ -2408,6 +2438,8 @@
      C                   MOVEL     *BLANK        TranInTicd                                   CSD079
      C                   MOVEL     *BLANK        TranInCtnm                                AR1086546
      C                   MOVEL     ##ACTN        DDACTN
+     C                   MOVEL     *BLANKS       CurCuIt1                                     CER008
+     C                   MOVEL     *BLANKS       CurCuIt2                                     CER009
      C/COPY WNCPYSRC,SDH00694
 
       *
@@ -3176,6 +3208,14 @@
       ** Numbered A/c Indicator                                                               CSD079
                                                                                               CSD079
      C                   EVAL      DDNAIN = E6NAIN                                            CSD079
+                                                                                              CSD079
+      ** Settlement Branch                                                                    CSD079
+                                                                                              CSD079
+     C                   EVAL      DDSBCH = E6SBCH                                            CSD079
+                                                                                              CSD079
+      ** Settlement Currency                                                                  CSD079
+                                                                                              CSD079
+     C                   EVAL      DDSCCY = E6SCCY                                            CSD079
                                                                                               CSD079
       ** Profit Centre                                                                        CSD079
                                                                                               CSD079
@@ -4246,6 +4286,83 @@
      C                   ENDSR                                                             AR1086546
       *****************************************************************                    AR1086546
       /EJECT                                                                                  CSD079
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      *  SRSCN_IT - Italian Details to Screen                         *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SRScn_It      BEGSR                                                              BUG14313
+     C                   EVAL      DDTA004  = BBA004                                        BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
+      *****************************************************************                     BUG14313
+      *                                                               *                     BUG14313
+      *  SRSCN_PUMA - PUMA Details to Screen                          *                     BUG14313
+      *                                                               *                     BUG14313
+      *****************************************************************                     BUG14313
+     C     SRScn_Puma    BEGSR                                                              BUG14313
+                                                                                            BUG14313
+     C                   MOVE      PCCONS        DDTCONS                                    BUG14313
+                                                                                            BUG14313
+     C                   IF        PCCONS <> 0                                              BUG14313
+     C                   MOVE      PCCPTY        DDTCPTY                                    BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   MOVE      *BLANKS       DDTCPTY                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        PCECSG <> *ZERO                                          BUG14313
+     C                   MOVE      PCECSG        DDTECSG                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        DDTA004 = '1'                                            BUG14313
+     C                   EVAL      DDTABI  = %SUBST(PCFIID:4:5)                             BUG14313
+     C                   EVAL      DDTABIK = %SUBST(PCFIID:9:1)                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   MOVE      PCFIID        DDTFIID                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   MOVE      PCDBCD        DDTDBCD                                    BUG14313
+     C                   MOVE      PCECBC        DDTECBC                                    BUG14313
+                                                                                            BUG14313
+     C                   IF        PCPRCT <> *ZERO                                          BUG14313
+     C                   MOVE      PCPRCT        DDTPRCT                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   MOVE      PCPROV        DDTPROV                                    BUG14313
+                                                                                            BUG14313
+     C                   IF        PCCNTP <> *ZERO                                          BUG14313
+     C                   MOVE      PCCNTP        DDTCNTP                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        PCFSCD <> *ZERO                                          BUG14313
+     C                   MOVE      PCFSCD        DDTFSCD                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   MOVE      PCBNTP        DDTBNTP                                    BUG14313
+                                                                                            BUG14313
+     C                   IF        PCCUCR <> *ZERO                                          BUG14313
+     C                   MOVE      PCCUCR        DDTCUCR                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   MOVE      PCCRTP        DDTCRTP                                    BUG14313
+     C                   MOVE      PCCRNM        DDTCRNM                                    BUG14313
+     C                   MOVE      PCFCCR        DDTFCCR                                    BUG14313
+                                                                                            BUG14313
+     C                   IF        PCHLCD <> *ZERO                                          BUG14313
+     C                   MOVEL     PCHLCD        DDTHLCD                                    BUG14313
+     C                   MOVE      PCHLCD        DDTHLCK                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   MOVE      PCCCCN        DDTCCCN                                    BUG14313
+     C                   MOVE      PCCPPT        DDTCPPT                                    BUG14313
+     C                   MOVE      PCBRPR        DDTBRPR                                    BUG14313
+     C                   MOVE      PCCCCL        DDTCCCL                                      LUC139
+     C                   MOVE      PCCURF        DDTCURF                                      LUC139
+                                                                                            BUG14313
+     C                   ENDSR                                                              BUG14313
+      *****************************************************************                     BUG14313
+      /EJECT                                                                                BUG14313
       *****************************************************************
       * *INZSR - INITIAL PROCESSING                                   *
       *****************************************************************
@@ -4282,6 +4399,8 @@
      C                   PARM                    CueuFilFmt                                   CSD079
      C                   PARM                    CuibfFilFmt                                  CSD079
      C                   PARM                    CtnmFilFmt                                AR1086546
+     C                   PARM                    CuIt1FilFmt                                BUG14313
+     C                   PARM                    CuIt2FilFmt                                BUG14313
                                                                                               CSD079
       ** Global Customer X-Reference                                                          CGP001
      C                   PARM                    GCustFilFmt                                  CGP001
@@ -4332,6 +4451,8 @@
      C                   PARM                    PCrsdS                                       CGL157
                                                                                               CGL157
      C                   PARM                    CuBrtxCent                                 MD055446
+     C                   PARM                    CurCuIt1                                     LUC139
+     C                   PARM                    CurCuIt2                                     LUC139
      C/COPY WNCPYSRC,SDCUSDNC02
 
       *
@@ -4897,6 +5018,50 @@
      C                   MOVEL     'N'           CER050                                       CER050
      C                   END                                                                  CER050
       *                                                                                       CER050
+      ** Check if enhancement CER008 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER008'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS                                         BUG14313
+     C                             AND  PRTCD <> '*NRF   '                                  BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER008'                                        BUG14313
+     C                   EVAL      DBASE  = 912                                             BUG14313
+     C                   EXSR      *PSSR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER008 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER008 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+      ** Check if enhancement CER009 is on                                                  BUG14313
+                                                                                            BUG14313
+     C                   CALLB     'AOSARDR0'                                               BUG14313
+     C                   PARM      *BLANKS       PRTCD                                      BUG14313
+     C                   PARM      '*VERIFY'     POPTN                                      BUG14313
+     C                   PARM      'CER009'      PSARD                                      BUG14313
+     C     SCSARD        PARM      SCSARD        DSFDY                                      BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD <> *BLANKS                                         BUG14313
+     C                             AND  PRTCD <> '*NRF   '                                  BUG14313
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      BUG14313
+     C                   EVAL      DBKEY  = 'CER009'                                        BUG14313
+     C                   EVAL      DBASE  = 913                                             BUG14313
+     C                   EXSR      *PSSR                                                    BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
+     C                   IF        PRTCD = *BLANKS                                          BUG14313
+     C                   EVAL      CER009 = 'Y'                                             BUG14313
+     C                   ELSE                                                               BUG14313
+     C                   EVAL      CER009 = 'N'                                             BUG14313
+     C                   ENDIF                                                              BUG14313
+                                                                                            BUG14313
      C                   ENDSR
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD046339           Date 28May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 AR402776           Date 20Dec12               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046339 - Projected account movements were not reversed     *
+      *             after changing OPAY's settlement type.            *
+      *             Make settlement type field unamendable when       *
+      *             action is AMEND.                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
@@ -426,7 +431,7 @@
      C*****LVL1*         ANDEQ     'Y'                                             BUG12862 AR402776
      C*****@SSTTP        ANDEQ     '0'                                             BUG24776 AR402776
      C*****OPIN*         ANDNE     'Y'                                             BUG24776 AR402776
-     C     AUIN          ANDEQ     'Y'                                                      AR402776
+     C*****AUIN*         ANDEQ     'Y'                                             AR402776 MD046339
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SSTTP'
      C                   EVAL      MsgIDArr(Idx)   = 'MMA0571'

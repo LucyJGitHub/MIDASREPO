@@ -15,8 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. BUG14470(CER009)   Date 23Nov20               *
+      *                 CER009             Date 23Nov20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 MD030956           Date 09Oct14               *
       *                 MD028343           Date 10Jul14               *
       *                 CER059             Date 19Jul10               *
@@ -71,6 +74,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  BUG14470 - Error on F12 in account code european reporting   *
+      *             Italy enquiry (CER009)                            *
+      *  CER009 - PUMA II Upgrade to MidasPlus                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
@@ -231,6 +238,11 @@
      I                                       11  17 #1RTRN                                    CER001
      I                                       18  18 #1TOIN                                    CER001
      I                                       19  19 #1ACTY                                    CER001
+     IDATAIT      DS                           1024                                           CER009
+     I                                        1  10 I1ACCD                                    CER009
+     I                                       11  17 I1RTRN                                    CER009
+     I                                       18  18 I1TOIN                                    CER009
+     I                                       19  19 I1ACTY                                    CER009
      I*
      I/COPY WNCPYSRC,SD0031EIPG
      I*
@@ -1226,6 +1238,38 @@
      C                     ENDIF                                                              CER001
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
+      ** Call Account Codes Screen - Italian if CER009 is on                                  CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE #1ACCD    I1ACCD                                              CER009
+      *                                                                                       CER009
+     C                     CALL 'SD0042'                                                      CER009
+     C                     PARM           RTCODE                                              CER009
+     C                     PARM 'E'       ACTION                                              CER009
+     C                     PARM           DATAIT                                              CER009
+     C                     PARM           W0RTN                                               CER009
+      *                                                                                       CER009
+      ** If F12 was pressed                                                                   CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+     C           W0RTN     OREQ 'USR0563'                                                     CER009
+     C           W0RTN     OREQ 'Y2U0004'                                                     CER009
+     C                     MOVE 'Y'       W0DCF                                               CER009
+     C           W0RTN     IFEQ 'USR0790'                                                   BUG14470
+     C                     MOVE *BLANKS   W0RTN                                             BUG14470
+     C                     ENDIF                                                            BUG14470
+     C                     GOTO DCEXIT                                                        CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** If F3 was pressed                                                                    CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'Y2U9999'                                                     CER009
+     C                     MOVE W0RTN     P0RTN                                               CER009
+     C                     EXSR ZYEXPG                                                        CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C***********          CALL 'WIND01'                                  S01212
      C                     CALL 'WN0010'                                  S01212
      C*********************PARM           ##PGM            Program        S01212
@@ -2921,6 +2965,20 @@
      C                     MOVE 'N'       CGL165                                              CGL165
      C                     ENDIF                                                              CGL165
       *                                                                                       CGL165
+      ** Determine if CER009 is installed                                                     CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   P@RTCD                                              CER009
+     C                     PARM '*VERIFY' P@OPTN                                              CER009
+     C                     PARM 'CER009'  P@SARD                                              CER009
+     C           DSSARD    PARM *BLANKS   DSFDY                                               CER009
+      *                                                                                       CER009
+     C           P@RTCD    IFEQ *BLANK                                                        CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C/COPY WNCPYSRC,SD0031EC10
       *================================================================
      CSR         ZZEXIT    ENDSR

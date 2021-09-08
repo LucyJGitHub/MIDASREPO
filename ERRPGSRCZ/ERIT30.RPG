@@ -1,0 +1,1515 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Decision table Account codes')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  ERIT30   - Decision table Account codes                      *
+      *                                                               *
+      *  Function:  This program maintain the decision table for the  *
+      *             account code. For each Midas account codes, they  *
+      *             can define a debit and/or credit rubric number.   *
+      *                                                               *
+      *  (phase(s)) Input cycle                                       *
+      *                                                               *
+      *  Called By: RPG/ER0020                                        *
+      *                                                               *
+      *  Copyright Midas-Kapiti International 1997.                   *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021             DATE 25Jun99               *
+      *                 MMI033             Date 26Mar99               *
+      *                 UIT021  *Create    Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting (Change Ctrl 4).    *
+      *           Add Insert, Amend, Enquiry function.                *
+      *  MMI033 : Midas Italy Puma/2 Extract Change 3                 *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  05     - Key F5                                              *
+      *  09     - mode 'ADD' 'AMEND'                                  *
+      *  10     - Selection record                                    *
+      *  12     - Key F12                                             *
+      *  15     - Non display indicator key F9                        *
+      *  16     - Display narrative F9 F12                            *
+      *  20     - Error field DSSELE                                  *
+      *  23     - Error field DSACOD                                  *
+      *  24     - Error field DSDEBI                                  *
+      *  25     - Error field DSCRED                                  *
+      *  26     - Error field DSCPDB                                  *
+      *  27     - Error field DSCPCR                                  *
+      *  28     - Error field DSDEBE                                  *   MMI033
+      *  29     - Error field DSCREE                                  *   MMI033
+      *  30     - SFLEND/ROLLUP                                       *
+      *  32     - Read subfile                                        *
+      *  35     - ROLLUP                                              *
+      *  45     - ENTER key                                           *
+      *  63     - SFLNXTCHG                                           *
+      *  80     - SFLDSPCTL                                           *
+      *  81     - SFLDSP                                              *
+      *  82     - Access file                                         *
+      *  88     - Access file                                         *
+      *  90     - Selection record                                    *
+      *                                                               *
+      *  U7U8   -  Database error.                                    *
+      *  LR     -  Terminates program.                                *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  INIT   - Initial Subroutine                                  *
+      *  MAIN   - Main subroutine                                     *
+      *  SRF9   - F9 pressed                                          *
+      *  SRCHCK - Subroutine to check if changes in subfile           *
+      *  SRVAL  - Validation subroutine                               *
+      *  INISFL - Initialize subfile                                  *
+      *  LOASFE - Load subfile                                        *
+      *  LOASF9 - Load subfile when F9 has been pressed               *
+      *  SELEC  - Selection for the record read                       *
+      *  CALLEN - calculate the lenght of narrative input             *
+      *  PRESS  - S/R move the appropriate values into field wwaid    *
+      *           depending on which function key has been pressed.   *
+      *  ZASNMS - Send message to program's message queue             *
+      *  *PSSR  - Error subroutine                                    *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+     FERITCDL1IF  E           K        DISK         KINFSR *PSSR
+      ** BOI Voce/Sottovoce Codes                    Prefix 'N2'
+      *
+     F*ERITACL0UF*E***********K********DISK         KCOMIT       A        MMI033
+     F*RITACL0UF  E***********K********DISK                      A        UIT021
+      ** ER Decision Table - A/C code - Italy Prefix 'N3'
+      *                      Update index
+     F************ERITACD0                          KRENAMEUPERITAC       UIT021
+     F************                                  KINFSR *PSSR          UIT021
+      *
+     FERITACL1IF  E           K        DISK         KINFSR *PSSR
+      ** ER Decision Table - A/C code - Italy Prefix 'N3'
+      *                      Retrieval index
+     FERIT30DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ERIT30S1
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    ARR        25  1               ARRAY FOR LENGHT
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Account codes
+     ISDACOD    E DSSDACODPD
+      *
+     I            DS
+     I                                        1  25 DHNARA
+     I                                       26  26 DHTYPE
+     I                                       28  34 DHDEBI
+     I                                       35  36 DHDEBE                MMI033
+     I                                       37  43 DHCRED                MMI033
+     I                                       44  45 DHCREE                MMI033
+     I                                       46  52 DHCPDB                MMI033
+     I                                       53  59 DHCPCR                MMI033
+     I                                        1  59 SELEC1                MMI033
+      *
+     I            DS
+     I                                        1  25 WWNARA
+     I                                       26  26 WWTYPE
+     I                                       28  34 WWDEBI
+     I                                       35  36 WWDEBE                MMI033
+     I                                       37  43 WWCRED                MMI033
+     I                                       44  45 WWCREE                MMI033
+     I                                       46  52 WWCPDB                MMI033
+     I                                       53  59 WWCPCR                MMI033
+     I                                        1  59 SELEC2                MMI033
+      *
+     IZMUSER      DS                             17
+     I                                       11  13 BRCH
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** Execute initial processing
+     C                     EXSR INIT
+      *
+      ** Execute main processing
+     C                     EXSR MAIN
+      *
+      ** Setup return code
+     C           *INKC     IFEQ '1'
+     C                     MOVE '3'       #RETRN
+     C                     END
+      *
+      ** End of program
+     C                     MOVE '1'       *INLR
+     C                     ROLBK
+      *
+     C                     RETRN
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main subroutine                                     *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** 'ADD MODE' on first cycle
+     C           *IN09     IFNE '1'                        - B1
+     C********             MOVE *ON       *IN15                           UIT021
+     C                     MOVE *OFF      *IN16                           UIT021
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C                     Z-ADD1         RRN
+     C                     END                             - E1
+      *
+      ** Do while not F3 or F12 pressed
+     C           *INKC     DOWEQ'0'                        - B1
+     C           *IN12     ANDEQ'0'
+      *
+     C                     MOVE SELEC1    SELEC2
+      *
+      ** Reset F9 indicator
+     C                     MOVE '0'       *IN16
+      *
+      ** Write subfile
+     C           *IN09     IFNE '1'                        - B2
+      *
+     C                     WRITEERIT30C0                   BOTTOM
+     C                     EXFMTERIT30C1                   SUBFILE
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** WHICH KEY HAS BEEN PRESSED ?
+     C                     EXSR PRESS
+      *
+      ** ROLLUP HAS BEEN PRESSED
+     C           WWAID     IFEQ 'UP'                       - B3
+     C                     Z-ADDWWRRN     RRN
+     C                     EXSR LOASFE
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+      *
+      ** F9 HAS BEEN PRESSED
+     C           *IN09     IFEQ '1'                        - B2
+      *
+     C           BJSBRC    IFNE *BLANKS
+      ** validate action codes for user
+     C                     CALL 'ZVACTU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM           ERR     10
+     C                     ELSE
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C                     ENDIF
+      *
+      ** If action code invalid for user send a message
+     C           ERR       IFNE *ZEROS
+     C                     MOVE '1'       *IN63
+     C                     MOVE '0'       *IN09
+     C                     MOVE 'ITE3005' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     MOVEL'ADD MODE'ZAMSDA
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C                     EXSR SRF9
+     C                     MOVE *BLANKS   DSSELE                          UIT021
+     C                     MOVE *OFF      *IN09                           UIT021
+      *
+     C                     MOVE SELEC1    SELEC2
+      *
+     C           *INKC     IFEQ '1'                        - B3
+     C                     MOVE '0'       *IN16
+     C                     END                             - E3
+     C                     END
+     C                     END                             - E2
+      *
+      ** ENTER HAS BEEN PRESSED
+     C           *IN45     IFEQ '0'                        - B2
+     C           *IN16     ANDEQ'0'
+      *
+     C           *IN45     IFEQ '0'                        - B3
+     C           DHACOD    ANDNEWWACOD
+     C           *IN45     OREQ '0'
+     C           SELEC1    ANDNESELEC2
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+     C                     Z-ADD1         RRN
+     C                     END                             - E3
+      *
+      ** Check if changes in subfile
+     C                     EXSR SRCHCK
+      *
+     C                     END                             - E2
+      *
+      ** F5 HAS BEEN PRESSED : REFRESH PROCESSING ==> REBUILD SUBFILE
+      ** OR BACK FROM F9 SCREEN WITH F9 OR F12
+     C                     MOVE *BLANKS   IN16
+     C           *IN05     IFEQ '1'                        - B2
+     C           *IN16     OREQ '1'
+     C                     MOVE 'Y'       IN16    1
+     C                     MOVE '0'       *IN16
+     C                     MOVE *BLANKS   DHACOD
+     C                     MOVE *BLANKS   DHNARA
+     C                     MOVE *BLANKS   DHTYPE
+     C                     MOVE *BLANKS   DHDEBI
+     C                     MOVE *BLANKS   DHCRED
+     C                     MOVE *BLANKS   DHCPDB
+     C                     MOVE *BLANKS   DHCPCR
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+     C                     Z-ADD1         RRN
+     C                     MOVE *BLANKS   IN16
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRF9   - SUBROUTINE EXECUTED IF F9 PRESSED                   *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           SRF9      BEGSR                                          UIT021
+      *
+     C*********************MOVE '1'       *IN16                           UIT021
+      *
+     C*********************EXSR INISFL                                    UIT021
+     C*********************EXSR LOASF9                                    UIT021
+     C*********************Z-ADD1         RRN                             UIT021
+      *
+     C************INKC*****DOWEQ'0'                        - B1           UIT021
+     C************IN12*****ANDEQ'0'                                       UIT021
+      *
+      ** Write subfile 'F9'
+     C*********************WRITEERIT30C0                   BOTTOM         UIT021
+     C*********************EXFMTERIT30C1                   SUBFILE        UIT021
+      *
+      ** Clear messages from program message queue
+     C*********************CALL 'Y2CLMSC'                                 UIT021
+     C*********************PARM ##PGM     ZAPGM  10                       UIT021
+     C*********************PARM '*SAME'   ZAPGRL  5                       UIT021
+      *
+      ** F9 pressed once again = F12 is seton
+     C************IN09*****IFEQ '1'                        - B2           UIT021
+     C*********************MOVE '1'       *IN12                           UIT021
+     C*********************MOVE '0'       *IN09                           UIT021
+     C*********************END                             - E2           UIT021
+      *
+      ** ENTER has been pressed on 'F9' screen
+     C************IN45*****IFEQ '0'                        - B2           UIT021
+     C*********************READCERIT30S1                 32               UIT021
+      *
+     C************IN32*****DOWEQ'0'                        - B3           UIT021
+      *
+     C*********************MOVE '0'       *IN15                           UIT021
+     C*********************MOVE '0'       *IN21                           UIT021
+     C*********************MOVE '0'       *IN23                           UIT021
+     C*********************MOVE '0'       *IN24                           UIT021
+     C*********************MOVE '0'       *IN25                           UIT021
+     C*********************MOVE '0'       *IN26                           UIT021
+     C*********************MOVE '0'       *IN27                           UIT021
+     C*********************MOVE '0'       *IN63                           UIT021
+      *
+     C                     CALL 'ERIT30R'                                 UIT021
+     C                     PARM *BLANKS   W0RTN   7                       UIT021
+     C                     PARM           WACOD  10                       UIT021
+     C                     PARM 'I'       WACTN   1                       UIT021
+     C***********DSACOD    IFNE *BLANKS                    - B4           UIT021
+      *
+      ** Access Account codes file via access program
+     C*********************CALL 'AOACODR0'                                UIT021
+     C*********************PARM *BLANKS   @RTCD   7                       UIT021
+     C*********************PARM '*KEY   ' @OPTN   7                       UIT021
+     C*********************PARM DSACOD    @OACCD  4                       UIT021
+     C*********************PARM           SDACOD                          UIT021
+      *
+     C***********@RTCD*****IFNE *BLANK                     - B5           UIT021
+     C*********************MOVE '1'       *IN23                           UIT021
+     C*********************MOVE '1'       *IN63                           UIT021
+     C*********************MOVEL'ITE3001' ZAMSID                          UIT021
+     C*********************EXSR ZASNMS                                    UIT021
+     C*********************MOVE *BLANKS   DSNARA                          UIT021
+     C*********************MOVE *BLANKS   DSTYPE                          UIT021
+     C*********************ELSE                            - X5           UIT021
+     C***********'?'*******SCAN DSACOD    WRESUL  10     87               UIT021
+     C************IN87*****IFEQ *ON                        - B6           UIT021
+     C*********************MOVELA5ACCD    DSACOD                          UIT021
+     C*********************MOVE '1'       *IN63                           UIT021
+     C*********************MOVE '1'       *IN21                           UIT021
+     C*********************END                             - E6           UIT021
+     C***********A5TOIN****IFEQ 'Y'                        - B6           UIT021
+     C*********************MOVE '1'       *IN23                           UIT021
+     C*********************MOVE '1'       *IN63                           UIT021
+     C*********************MOVEL'ITE3001' ZAMSID                          UIT021
+     C*********************EXSR ZASNMS                                    UIT021
+     C*********************MOVE *BLANKS   DSNARA                          UIT021
+     C*********************MOVE *BLANKS   DSTYPE                          UIT021
+     C*********************ELSE                            - X6           UIT021
+     C*********************MOVE A5ACCN    DSNARA                          UIT021
+     C*********************MOVE A5ACTY    DSTYPE                          UIT021
+     C*********************END                             - E6           UIT021
+     C*********************END                             - E5           UIT021
+     C*********************END                                            UIT021
+      *                                                                   UIT021
+     C*********************ELSE                            - X4           UIT021
+      *                                                                   UIT021
+     C***********DSDEBI****IFNE *BLANKS                    - B5           UIT021
+     C***********DSDEBE****ORNE *BLANKS                                   MMI033 UIT021
+     C***********DSCRED****ORNE *BLANKS                                   UIT021
+     C***********DSCREE****ORNE *BLANKS                                   MMI033 UIT021
+     C***********DSCPDB****ORNE *BLANKS                                   UIT021
+     C***********DSCPCR****ORNE *BLANKS                                   UIT021
+     C*********************MOVE '1'       *IN23                           UIT021
+     C*********************MOVE '1'       *IN63                           UIT021
+     C*********************MOVEL'ITE3004' ZAMSID                          UIT021
+     C*********************EXSR ZASNMS                                    UIT021
+     C*********************END                             - E5           UIT021
+     C*********************END                             - E4           UIT021
+      *
+      ** Already exists on file
+     C*********************MOVE DSACOD    XXACOD                          UIT021
+     C***********XXACOD****CHAINERITACL1             88                   UIT021
+     C************IN88*****IFEQ '0'                        - B4           UIT021
+     C*********************MOVE '1'       *IN23                           UIT021
+     C*********************MOVE '1'       *IN63                           UIT021
+     C*********************MOVEL'ITE3002' ZAMSID                          UIT021
+     C*********************EXSR ZASNMS                                    UIT021
+     C*********************END                             - E4           UIT021
+      *
+      ** Validate input fields
+     C*********************EXSR SRVAL                                     UIT021
+      *
+      ** No errors
+     C************IN23*****IFEQ '0'                        - B4           UIT021
+     C************IN24*****ANDEQ'0'                                       UIT021
+     C************IN25*****ANDEQ'0'                                       UIT021
+     C************IN26*****ANDEQ'0'                                       UIT021
+     C************IN27*****ANDEQ'0'                                       UIT021
+     C************IN21*****ANDEQ'0'                                       UIT021
+     C***********DSACOD****ANDNE*BLANKS                                   UIT021
+     C*********************CLEARUPERITAC                                  MMI033 UIT021
+     C*********************MOVE DSACOD    N3ACOD                          UIT021
+     C*********************MOVE DSDEBI    N3RBND                          UIT021
+     C*********************MOVE DSDEBE    N3RBED                          MMI033 UIT021
+     C*********************MOVE DSCRED    N3RBNC                          UIT021
+     C*********************MOVE DSCREE    N3RBEC                          MMI033 UIT021
+     C*********************MOVE DSCPDB    N3CPND                          UIT021
+     C*********************MOVE DSCPCR    N3CPNC                          UIT021
+     C*********************Z-ADDBJRDNB    N3LCD                           UIT021
+     C*********************MOVE 'I'       N3TYLC                          UIT021
+     C*********************WRITEUPERITAC                                  UIT021
+      *
+      ** write done then proctect record
+     C*********************MOVE '1'       *IN15                           UIT021
+      *
+     C*********************COMIT                                          MMI033 UIT021
+     C*********************END                             - E4           UIT021
+      *
+     C*********************UPDATERIT30S1                                  UIT021
+     C*********************MOVE '0'       *IN15                           UIT021
+     C*********************MOVE '0'       *IN23                           UIT021
+     C*********************MOVE '0'       *IN24                           UIT021
+     C*********************MOVE '0'       *IN25                           UIT021
+     C*********************MOVE '0'       *IN26                           UIT021
+     C*********************MOVE '0'       *IN27                           UIT021
+     C*********************MOVE '0'       *IN63                           UIT021
+     C*********************MOVE '0'       *IN21                           UIT021
+      *
+      ** Read next changed record
+     C*********************READCERIT30S1                 32               UIT021
+      *
+     C*********************ENDDO                           - E3           UIT021
+     C*********************END                             - E2           UIT021
+      *
+      ** Refresh on F9 screen
+     C************IN05*****IFEQ '1'                        - B2           UIT021
+     C*********************EXSR INISFL                                    UIT021
+     C*********************EXSR LOASF9                                    UIT021
+     C*********************Z-ADD1         RRN                             UIT021
+     C*********************END                             - E2           UIT021
+      *
+     C*********************END                             - E1           UIT021
+      *
+     C************IN12*****IFEQ '1'                                       UIT021
+     C*********************MOVE '0'       *IN12                           UIT021
+     C*********************END                                            UIT021
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHCK - Subroutine to check if changes in subfile           *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           SRCHCK    BEGSR
+      *
+      ** Retrieve all changed records
+     C                     READCERIT30S1                 32
+      *
+     C           *IN32     DOWEQ'0'                        - B1
+      *
+      ** Validation on record subfile
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+      *
+     C           DSSELE    IFNE 'D'                        - B2
+     C           DSSELE    ANDNE'A'                                       UIT021
+     C           DSSELE    ANDNE'E'                                       UIT021
+     C           DSSELE    ANDNE*BLANKS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3003' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** validate action codes for user if selection is not blank
+      ** and equal to 'D'
+     C           DSSELE    IFEQ 'D'
+     C           DSSELE    OREQ 'A'                                       UIT021
+     C           DSSELE    OREQ 'E'                                       UIT021
+     C           BJSBRC    IFNE *BLANKS
+      ** validate action codes for user
+     C                     CALL 'ZVACTU'
+     C                     PARM DSSELE    ZACTN   1
+     C                     PARM           ERR     10
+     C                     ELSE
+     C                     CALL 'ZVACTBU'
+     C                     PARM DSSELE    ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C                     ENDIF
+      *
+      ** If action code invalid for user send a message
+     C           ERR       IFNE *ZEROS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'ITE3005' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     MOVELDSSELE    ZAMSDA
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END                             - E2
+      *
+      ** Validate input fields
+     C                     EXSR SRVAL
+      *
+      ** No errors
+     C           *IN20     IFEQ '0'                        - B2
+     C           *IN24     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C           *IN26     ANDEQ'0'
+     C           *IN27     ANDEQ'0'
+      *
+      ** If no error and 'D' selected ==> Delete in file
+     C           DSSELE    IFEQ 'D'                        - B3
+     C                     CALL 'ERIT30R'                                 UIT021
+     C                     PARM '       ' W0RTN   7                       UIT021
+     C                     PARM DSACOD    WACOD  10                       UIT021
+     C                     PARM DSSELE    WACTN   1                       UIT021
+     C                     MOVE *BLANKS   DSSELE
+     C*********************MOVE DSACOD    XXACOD  4
+     C***********XXACOD****CHAINERITACL0             88                   UIT021
+     C************IN88*****IFEQ '0'                        - B4           UIT021
+     C*********************DELETUPERITAC                                  UIT021
+     C*********************MOVE '1'       *IN15                           UIT021
+     C*********************END                             - E4           UIT021
+     C                     ELSE                            - X3
+      *
+     C           DSSELE    IFEQ 'A'                        - B3           UIT021
+     C           DSSELE    OREQ 'E'                                       UIT021
+     C                     CALL 'ERIT30R'                                 UIT021
+     C                     PARM '       ' W0RTN   7                       UIT021
+     C                     PARM DSACOD    WACOD  10                       UIT021
+     C                     PARM DSSELE    WACTN   1                       UIT021
+     C                     MOVE *BLANKS   DSSELE                          UIT021
+     C                     END                                            UIT021
+      *
+      ** Upadte file and subfile
+     C*********************MOVE DSACOD    XXACOD  4                       UIT021
+     C***********XXACOD****CHAINERITACL0             88                   UIT021
+     C************IN88*****IFEQ '0'                        - B4           UIT021
+     C*********************MOVE DSDEBI    N3RBND                          UIT021
+     C*********************MOVE DSDEBE    N3RBED                          MMI033
+     C*********************MOVE DSCRED    N3RBNC                          UIT021
+     C*********************MOVE DSCREE    N3RBEC                          MMI033
+     C*********************MOVE DSCPDB    N3CPND                          UIT021
+     C*********************MOVE DSCPCR    N3CPNC                          UIT021
+     C*********************Z-ADDBJRDNB    N3LCD                           UIT021
+     C*********************MOVE 'A'       N3TYLC                          UIT021
+     C*********************UPDATUPERITAC                                  UIT021
+     C*********************END                             - E4           UIT021
+     C                     END                             - E3
+     C*********************COMIT                                          MMI033
+     C                     END                             - E2
+      *
+     C                     UPDATERIT30S1
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+      *
+      ** Read next changed record
+     C                     READCERIT30S1                 32
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL  - Validation subroutine                               *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           SRVAL     BEGSR
+      *
+      ** DEBIT BOI CODE VALIDATION
+      *
+      ** Check if fully numeric
+     C           DSDEBI    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    DSDEBI
+     C                     END                             - E1
+      *
+     C           DSDEBI    IFNE *ZEROS                     - B1
+     C                     MOVELDSDEBI    TEST8   80
+     C                     MOVELTEST8     ALPH7   7
+     C           DSDEBI    IFNE ALPH7                      - B2
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           DSDEBI    IFNE *ZEROS                     - B1
+     C           *IN24     ANDEQ'0'
+     C                     MOVE DSDEBI    KEY1    70
+     C           KEY1      CHAINERITCDL1             82
+      *
+      ** BOI code must exist
+     C           *IN82     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *                                                                   MMI033
+      ** Check if fully numeric                                           MMI033
+     C           DSDEBE    IFEQ *BLANKS                    - B1           MMI033
+     C                     MOVE *ZEROS    DSDEBE                          MMI033
+     C                     END                             - E1           MMI033
+      *                                                                   MMI033
+     C           DSDEBE    IFNE *ZEROS                     - B1           MMI033
+     C                     MOVELDSDEBE    TEST8   80                      MMI033
+     C                     MOVELTEST8     ALPH2   2                       MMI033
+     C           DSDEBE    IFNE ALPH2                      - B2           MMI033
+     C                     MOVE '1'       *IN28                           MMI033
+     C                     MOVE '1'       *IN63                           MMI033
+     C                     MOVEL'ITE3006' ZAMSID                          MMI033
+     C                     EXSR ZASNMS                                    MMI033
+     C                     END                             - E2           MMI033
+     C                     END                             - E1           MMI033
+      *
+      ** CREDIT BOI CODE VALIDATION
+      *
+      ** Validation if fully numeric
+     C           DSCRED    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    DSCRED
+     C                     END                             - E1
+      *
+     C           DSCRED    IFNE *ZEROS                     - B1
+     C                     MOVELDSCRED    TEST8   80
+     C                     MOVELTEST8     ALPH7   7
+     C           DSCRED    IFNE ALPH7                      - B2
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           DSCRED    IFNE *ZEROS                     - B1
+     C           *IN25     ANDEQ'0'                        - B1
+     C                     MOVE DSCRED    KEY2    70
+     C           KEY2      CHAINERITCDL1             82
+      *
+      ** BOI code must exist
+     C           *IN82     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           DSCREE    IFEQ *BLANKS                    - B1           MMI033
+     C                     MOVE *ZEROS    DSCREE                          MMI033
+     C                     END                             - E1           MMI033
+      *                                                                   MMI033
+     C           DSCREE    IFNE *ZEROS                     - B1           MMI033
+     C                     MOVELDSCREE    TEST8   80                      MMI033
+     C                     MOVELTEST8     ALPH2   2                       MMI033
+     C           DSCREE    IFNE ALPH2                      - B2           MMI033
+     C                     MOVE '1'       *IN28                           MMI033
+     C                     MOVE '1'       *IN63                           MMI033
+     C                     MOVEL'ITE3006' ZAMSID                          MMI033
+     C                     EXSR ZASNMS                                    MMI033
+     C                     END                             - E2           MMI033
+     C                     END                             - E1           MMI033
+      *                                                                   MMI033
+      ** COMPL. DEBIT BOI CODE VALIDATION
+      *
+      ** Check if fully numeric
+     C           DSCPDB    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    DSCPDB
+     C                     END                             - E1
+      *
+     C           DSCPDB    IFNE *ZEROS                     - B1
+     C                     MOVELDSCPDB    TEST8   80
+     C                     MOVELTEST8     ALPH7   7
+     C           DSCPDB    IFNE ALPH7                      - B2
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           DSCPDB    IFNE *ZEROS                     - B1
+     C           *IN26     ANDEQ'0'
+     C                     MOVE DSCPDB    KEY3    70
+     C           KEY3      CHAINERITCDL1             82
+      *
+      ** BOI code must exist
+     C           *IN82     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** COMPL. CREDIT BOI CODE VALIDATION
+      *
+      ** Validation if fully numeric
+     C           DSCPCR    IFEQ *BLANKS                    - B1
+     C                     MOVE *ZEROS    DSCPCR
+     C                     END                             - E1
+      *
+     C           DSCPCR    IFNE *ZEROS                     - B1
+     C                     MOVELDSCPCR    TEST8   80
+     C                     MOVELTEST8     ALPH7   7
+     C           DSCPCR    IFNE ALPH7                      - B2
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C           DSCPCR    IFNE *ZEROS                     - B1
+     C           *IN27     ANDEQ'0'                        - B1
+     C                     MOVE DSCPCR    KEY4    70
+     C           KEY4      CHAINERITCDL1             82
+      *
+      ** BOI code must exist
+     C           *IN82     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN63
+     C                     MOVEL'ITE3010' ZAMSID           BOI RUBRIC
+     C                     EXSR ZASNMS
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INISFL - Initialize subfile                                  *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           INISFL    BEGSR
+      *
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     WRITEERIT30C1
+     C                     MOVE '1'       *IN80
+     C                     Z-ADD0         RRN     40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LOASFE - Load subfile                                        *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           LOASFE    BEGSR
+      *
+      ** If Selection field reset to blank by user ==> select all records
+     C           SELEC1    IFNE SELEC2                     - B1
+     C           DHNARA    ANDEQ*BLANKS
+     C           DHTYPE    ANDEQ*BLANKS
+     C           DHDEBI    ANDEQ*BLANKS
+     C           DHCRED    ANDEQ*BLANKS
+     C           DHCPDB    ANDEQ*BLANKS
+     C           DHCPCR    ANDEQ*BLANKS
+     C                     MOVE SELEC1    SELEC2
+     C                     END                             - B2
+      *
+      ** Reset work fields if position field change after selection
+     C           DHACOD    IFNE WWACOD                     - B1
+     C           DHNARA    IFNE *BLANKS                    - B2
+     C           DHTYPE    ORNE *BLANKS
+     C           DHCRED    ORNE *BLANKS
+     C           DHDEBI    ORNE *BLANKS
+     C           DHCPDB    ORNE *BLANKS
+     C           DHCPCR    ORNE *BLANKS
+     C                     MOVE *BLANKS   WWNARA
+     C                     MOVE *BLANKS   WWTYPE
+     C                     MOVE *BLANKS   WWCRED
+     C                     MOVE *BLANKS   WWDEBI
+     C                     MOVE *BLANKS   WWCPDB
+     C                     MOVE *BLANKS   WWCPCR
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Init screen line number
+     C                     Z-ADD0         WWCPT   20
+      *
+      ** Account code selected
+     C           DHACOD    IFNE *BLANKS                    - B1
+     C           DHACOD    SETLLERITACL1
+     C                     ELSE
+     C           *LOVAL    SETLLERITACL1
+     C                     END                             - E1
+      *
+      ** Name selected
+     C           DHNARA    IFNE *BLANKS                    - B1
+     C                     EXSR CALLEN
+     C                     END                             - E1
+      *
+      ** Rollup pressed
+     C           WWAID     IFEQ 'UP'                       - B1
+     C                     MOVELWWSAV2    DUSELE 10
+     C           DUSELE    SETLLERITACL1
+     C                     END                             - E1
+      *
+      ** Read record
+     C                     READ ERITACL1                 30
+      *
+      ** Load subfile
+     C                     MOVE '0'       *IN63
+      *
+     C           *IN30     DOWEQ'0'                        - B1
+     C           WWCPT     ANDLT14
+      *
+     C                     MOVE N3ACOD    DSACOD
+     C                     MOVE N3RBND    DSDEBI
+     C                     MOVE N3RBED    DSDEBE                          MMI033
+     C                     MOVE N3RBNC    DSCRED
+     C                     MOVE N3RBEC    DSCREE                          MMI033
+     C                     MOVE N3CPND    DSCPDB
+     C                     MOVE N3CPNC    DSCPCR
+      *
+     C                     MOVE *BLANKS   DSSELE
+      *
+      ** Access Account codes file via access program
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DSACOD    @OACCD 10
+     C                     PARM           SDACOD
+      *
+     C           @RTCD     IFEQ *BLANK                     - B2
+      *
+      ** Take not-title only
+     C           A5TOIN    IFEQ 'Y'                        - B3
+     C                     GOTO NEXT
+     C                     END                             - E3
+      *
+     C                     MOVE A5ACCN    DSNARA
+     C                     MOVE A5ACTY    DSTYPE
+     C                     ELSE                            - X2
+     C                     MOVE *BLANKS   DSNARA
+     C                     MOVE *BLANKS   DSTYPE
+     C                     END                             - E2
+      *
+      ** Selection has been entered and not coming from F9
+     C           SELEC1    IFNE *BLANKS                    - B2
+     C           IN16      ANDEQ*BLANKS
+      *
+      ** Record read selected or not ???
+     C           DHNARA    IFNE *BLANKS                    - B3
+     C                     MOVE '0'       *IN90
+     C           DHNARA:I  SCAN A5ACCN                   90
+     C                     END                             - E3
+      *
+     C                     MOVE '0'       *IN10
+     C                     EXSR SELEC
+     C           *IN10     IFEQ '1'                        - B3
+      *
+      ** Load fields
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ** Write in subfile
+     C                     WRITEERIT30S1
+      *
+     C                     END                             - E3
+      *
+     C                     ELSE                            - X2
+      *
+      ** Load fields
+     C                     ADD  1         RRN        81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ** Write in subfile
+     C                     WRITEERIT30S1
+      *
+     C                     END                             - E2
+      *
+      ** Read next record
+     C           NEXT      TAG
+     C                     READ ERITACL1                 30
+     C                     MOVELN3ACOD    WWSAV2 10
+      *
+     C                     END                             - E1
+      *
+     C                     MOVELDHACOD    WWACOD
+     C                     Z-ADDRRN       WWRRN   40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LOASF9 - Load subfile when F9 has been pressed               *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           LOASF9    BEGSR
+      *
+     C                     MOVE '0'       *IN63
+      *
+      ** Init screen line number
+     C                     Z-ADD1         CPT     20
+      *
+      ** Load Subfile
+     C           CPT       DOWLE30                         - B1
+      *
+     C                     MOVE *BLANKS   DSACOD
+     C                     MOVE *BLANKS   DSNARA
+     C                     MOVE *BLANKS   DSTYPE
+     C                     MOVE *BLANKS   DSDEBI
+     C                     MOVE *BLANKS   DSDEBE                          MMI033
+     C                     MOVE *BLANKS   DSCRED
+     C                     MOVE *BLANKS   DSCREE                          MMI033
+     C                     MOVE *BLANKS   DSCPDB
+     C                     MOVE *BLANKS   DSCPCR
+      *
+      ** Load fields
+     C                     ADD  1         RRN        81
+     C                     ADD  1         CPT              SCREEN LINE MBR
+      *
+      ** Write in subfile
+     C                     WRITEERIT30S1
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SELEC  - SELECTION FOR THE RECORD READ                       *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           SELEC     BEGSR
+      *
+      ** Narrative selected
+     C           DHNARA    IFNE *BLANKS                    - B1
+     C           *IN90     IFEQ '1'                        - B2
+      *
+     C           DHTYPE    IFEQ *BLANKS                    - B3
+     C           DHDEBI    ANDEQ*BLANKS
+     C           DHCRED    ANDEQ*BLANKS
+     C           DHCPDB    ANDEQ*BLANKS
+     C           DHCPCR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+      *
+     C           DHTYPE    IFNE *BLANKS                    - B3
+     C           DHTYPE    IFEQ DSTYPE                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHDEBI    IFNE *BLANKS                    - B3
+     C           DHDEBI    IFEQ DSDEBI                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHDEBE    IFNE *BLANKS                    - B3           MMI033
+     C           DHDEBE    IFEQ DSDEBE                     - B4           MMI033
+     C                     MOVE '1'       *IN10                           MMI033
+     C                     ELSE                            - X4           MMI033
+     C                     MOVE '0'       *IN10                           MMI033
+     C                     GOTO ENDSEL                                    MMI033
+     C                     END                             - E4           MMI033
+     C                     END                             - E3           MMI033
+      *                                                                   MMI033
+     C           DHCRED    IFNE *BLANKS                    - B3
+     C           DHCRED    IFEQ DSCRED                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHCREE    IFNE *BLANKS                    - B3           MMI033
+     C           DHCREE    IFEQ DSCREE                     - B4           MMI033
+     C                     MOVE '1'       *IN10                           MMI033
+     C                     ELSE                            - X4           MMI033
+     C                     MOVE '0'       *IN10                           MMI033
+     C                     GOTO ENDSEL                                    MMI033
+     C                     END                             - E4           MMI033
+     C                     END                             - E3           MMI033
+      *                                                                   MMI033
+     C           DHCPDB    IFNE *BLANKS                    - B3
+     C           DHCPDB    IFEQ DSCPDB                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHCPCR    IFNE *BLANKS                    - B3
+     C           DHCPCR    IFEQ DSCPCR                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+      *
+      ** Type selected
+     C           DHTYPE    IFNE *BLANKS                    - B1
+     C           DHTYPE    IFEQ DSTYPE                     - B2
+      *
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHDEBI    ANDEQ*BLANKS
+     C           DHDEBE    ANDEQ*BLANKS                                   MMI033
+     C           DHCRED    ANDEQ*BLANKS
+     C           DHCREE    ANDEQ*BLANKS                                   MMI033
+     C           DHCPDB    ANDEQ*BLANKS
+     C           DHCPCR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+      *
+     C           DHDEBI    IFNE *BLANKS                    - B3
+     C           DHDEBI    IFEQ DSDEBI                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *                                                                   MMI033
+     C           DHDEBE    IFNE *BLANKS                    - B3           MMI033
+     C           DHDEBE    IFEQ DSDEBE                     - B4           MMI033
+     C                     MOVE '1'       *IN10                           MMI033
+     C                     ELSE                            - X4           MMI033
+     C                     MOVE '0'       *IN10                           MMI033
+     C                     GOTO ENDSEL                                    MMI033
+     C                     END                             - E4           MMI033
+     C                     END                             - E3           MMI033
+      *
+     C           DHCRED    IFNE *BLANKS                    - B3
+     C           DHCRED    IFEQ DSCRED                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHCREE    IFNE *BLANKS                    - B3           MMI033
+     C           DHCREE    IFEQ DSCREE                     - B4           MMI033
+     C                     MOVE '1'       *IN10                           MMI033
+     C                     ELSE                            - X4           MMI033
+     C                     MOVE '0'       *IN10                           MMI033
+     C                     GOTO ENDSEL                                    MMI033
+     C                     END                             - E4           MMI033
+     C                     END                             - E3           MMI033
+      *                                                                   MMI033
+     C           DHCPDB    IFNE *BLANKS                    - B3
+     C           DHCPDB    IFEQ DSCPDB                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHCPCR    IFNE *BLANKS                    - B3
+     C           DHCPCR    IFEQ DSCPCR                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+      *
+      ** Rubric Debit selected
+     C           DHDEBI    IFNE *BLANKS                    - B1
+     C           DHDEBI    IFEQ DSDEBI                     - B2
+      *
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHTYPE    ANDEQ*BLANKS
+     C           DHDEBE    ANDEQ*BLANKS                                   MMI033
+     C           DHCRED    ANDEQ*BLANKS
+     C           DHCREE    ANDEQ*BLANKS                                   MMI033
+     C           DHCPDB    ANDEQ*BLANKS
+     C           DHCPCR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+      *                                                                   MMI033
+     C           DHDEBE    IFNE *BLANKS                    - B3           MMI033
+     C           DHDEBE    IFEQ DSDEBE                     - B4           MMI033
+     C                     MOVE '1'       *IN10                           MMI033
+     C                     ELSE                            - X4           MMI033
+     C                     MOVE '0'       *IN10                           MMI033
+     C                     GOTO ENDSEL                                    MMI033
+     C                     END                             - E4           MMI033
+     C                     END                             - E3           MMI033
+      *
+     C           DHCRED    IFNE *BLANKS                    - B3
+     C           DHCRED    IFEQ DSCRED                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *                                                                   MMI033
+     C           DHCREE    IFNE *BLANKS                    - B3           MMI033
+     C           DHCREE    IFEQ DSCREE                     - B4           MMI033
+     C                     MOVE '1'       *IN10                           MMI033
+     C                     ELSE                            - X4           MMI033
+     C                     MOVE '0'       *IN10                           MMI033
+     C                     GOTO ENDSEL                                    MMI033
+     C                     END                             - E4           MMI033
+     C                     END                             - E3           MMI033
+      *
+     C           DHCPDB    IFNE *BLANKS                    - B3
+     C           DHCPDB    IFEQ DSCPDB                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHCPCR    IFNE *BLANKS                    - B3
+     C           DHCPCR    IFEQ DSCPCR                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+      *
+      ** Rubric credit selected
+     C           DHCRED    IFNE *BLANKS                    - B1
+     C           DHCRED    IFEQ DSCRED                     - B2
+      *
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHTYPE    ANDEQ*BLANKS
+     C           DHDEBI    ANDEQ*BLANKS
+     C           DHCPDB    ANDEQ*BLANKS
+     C           DHCPCR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+      *
+     C           DHCPDB    IFNE *BLANKS                    - B3
+     C           DHCPDB    IFEQ DSCPDB                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C           DHCPCR    IFNE *BLANKS                    - B3
+     C           DHCPCR    IFEQ DSCPCR                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      ** Rubric Compl. Debit selected
+     C           DHCPDB    IFNE *BLANKS                    - B1
+     C           DHCPDB    IFEQ DSCPDB                     - B2
+      *
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHTYPE    ANDEQ*BLANKS
+     C           DHCPCR    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+      *
+     C           DHCPCR    IFNE *BLANKS                    - B3
+     C           DHCPCR    IFEQ DSCPCR                     - B4
+     C                     MOVE '1'       *IN10
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN10
+     C                     GOTO ENDSEL
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+     C                     GOTO ENDSEL
+     C                     END                             - E1
+      *
+      ** Rubric Compl. Credit selected
+     C           DHCPCR    IFNE *BLANKS                    - B1
+     C           DHCPCR    IFEQ DSCPCR                     - B2
+      *
+     C           DHNARA    IFEQ *BLANKS                    - B3
+     C           DHTYPE    ANDEQ*BLANKS
+     C           DHCPDB    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+     C                     END                             - E1
+     C           ENDSEL    TAG
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CALLEN - SUBROUTINE CALCULATE THE LENGHT OF NARRATIVE INPUT  *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           CALLEN    BEGSR
+      *
+     C                     MOVEADHNARA    ARR
+     C                     Z-ADD25        I       20
+      *
+     C           ARR,I     DOWEQ*BLANKS
+     C                     SUB  1         I
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRESS  - S/R MOVE THE APPROPRIATE VALUES INTO FIELD WWAID    *
+      *           DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.   *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           PRESS     BEGSR
+      *
+     C                     MOVE '  '      WWAID
+      *
+      ** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C           *IN45     IFEQ '0'
+     C                     MOVE 'RA'      WWAID   2
+     C                     END
+      *
+      ** If F3
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      WWAID
+     C                     END
+      *
+      ** If F12
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      WWAID
+     C                     END
+      *
+      ** If ROLLUP pressed
+     C           *IN35     IFEQ '1'
+     C                     MOVE 'UP'      WWAID
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Initial Subroutine                                  *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           INIT      BEGSR
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+      *
+      ** Copyright
+     C                     MOVEACPY@      CPY@@   1
+      *
+      ** Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           #RETRN  1
+     C                     PARM           CTRY    2
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** 'User country code' must be in the title of display file
+     C                     MOVE CTRY      PARCTR
+      *
+     C                     MOVE '0'       *IN
+      *
+     C           BJSBRC    IFNE *BLANKS
+      ** validate action codes for user
+     C                     CALL 'ZVACTU'
+     C                     PARM ACTION    ZACTN   1
+     C                     PARM           ERR     10
+     C                     ELSE
+     C                     CALL 'ZVACTBU'
+     C                     PARM ACTION    ZACTN
+     C                     PARM           BRCH
+     C                     PARM           ERR
+     C                     ENDIF
+      *
+      ** If action code invalid for user send a message
+     C           ERR       IFNE *ZEROS
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN15
+     C                     MOVE 'ITE3005' ZAMSID
+     C                     MOVEL'ERUSRMSG'PMSGF
+     C                     MOVELACTION    ZAMSDA
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      ** Processing mode : if 'E' enquiry seton indicator.
+      ** Indicator must protect and non-display the 'Action' subfile
+      ** field, protect all subfiel detail fields and the F9 key
+     C           ACTION    IFEQ 'E'
+     C                     MOVE '1'       *IN15
+     C                     END
+      *
+      ** Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'ERUSRMSG'PMSGF  10
+      *
+      ** Fill in fields for subroutine ZASNMS
+     C                     MOVEL'ERIT30'  ZAPGM  10        Message queue
+     C                     MOVEL'ERUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'WWBFIL           ***************
+     C                     MOVEL'ERIT30'  WWBKEY           * DBERROR 001 *
+     C                     Z-ADD001       WWBASE           ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      ** Initialise working fields
+     C                     MOVE *BLANKS   DHDEBI
+     C                     MOVE *BLANKS   DHCRED
+     C                     MOVE *BLANKS   WWDEBI
+     C                     MOVE *BLANKS   WWCRED
+     C                     MOVE *BLANKS   WWCPDB
+     C                     MOVE *BLANKS   WWCPCR
+      *
+     C                     MOVE *BLANKS   DHACOD
+     C                     MOVE *BLANKS   WWACOD 10
+      *
+      ** Setup 'ADD' or 'AMEND' mode
+     C                     READ ERITACL1                 88
+     C           *IN88     IFEQ '1'
+     C                     MOVE '1'       *IN09
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE             *
+      *                                                               *
+      * Called By:   Program                                          *
+      * Calls:                                                        *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      ** Message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO                      - B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END                             - E1
+      *
+      **  Update data area LDA.
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE 'E'       #RETRN
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

@@ -1,0 +1,1537 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail Stamp Duty Report')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *                                                               *
+      ***REM004 - Retail Stamp Duty Report                            *   LUC140
+      *  XX1404 - Retail Stamp Duty Report                            *   LUC140
+      *                                                               *
+      *  Function:  This program produces the stamp duty report       *
+      *             either automatically during COB or on request     *
+      *             during input cycle.                               *
+      *                                                               *
+      ***Called By: RECM004 -                                         *   LUC140
+      *  Called By: XXC1404 -                                         *   LUC140
+      *                                                               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC140             Date 24Feb21               *
+      *  Prev Amend No. 171296             Date 24NOV99               *
+      *                 MMI013  *CREATE    Date 27MAR98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *  171296 - Stamp duty amount not corredt if current month is   *
+      *           'October'. ''BM' fied must be defined as (2,0)      *
+      *  MMI013 - Midas Italy Retail Stamp Duty and Account Charges   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N  O F  I N D I C A T O R S                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  I N D E X  O F  S U B R O U T I N E S                        *
+      *                                                               *
+      *  #MINIT - Initialisation subroutine                           *
+      *  #MMAIN - Main processing subroutine                          *
+      *  #MEXIT - Return to calling program subroutine                *
+      *  #MFRQD - Retrieve Stamp Duty frequency                       *
+      *  #MFRQ2 - Retrieve Stamp Duty frequency                       *
+      *  #MCALC - Calculate Stamp Duty  due                           *
+      *  #MPROC - Calculate Stamp Duty Tax amount                     *
+      *  #MREPT - Print fields for report                             *
+      *  #MCHKO - Check for overflow                                  *
+      *  #MDVAL - Check if account opened within Charging period      *
+      *  #MMCAL - Calculate no. months stamp duty to be levied        *
+      *  #MCALO - Calc Amt Stamp duty according to freq date          *
+      *  #MCALN - Calculate amount Stamp duty according to frequency  *
+      *  #MSUBT - Subtotals                                           *
+      *  #MTOTS - Zeroise Stamp Duty frequency totals and add to total*
+      *  #MTOTC - Zeroise Stamp Duty code totals and add to total     *
+      *  #AUDIT - Audit Report  Subroutine                            *
+      *  #PRNTSR- Print fields for report                             *
+      *  #PRNTSD- Print Stamp duty Code fields for report             *
+      *  #PRNTSF- Print Stamp duty Freq fields for report             *
+      *  #LOADSR- Load Currency details to array                      *
+      *   *PSSR - Error Control Subroutine                            *
+      *                                                               *
+      *****************************************************************
+     FACCNT   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FSDCURRL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      * Currency Codes file
+      *
+     F*********RESDCDV0IF  E           K        DISK                      LUC140
+     FXXSDCDV0IF  E           K        DISK                               LUC140
+     F                                              KINFSR *PSSR
+      *  Stamp duty file
+      *
+     F**********SDMSTDY2UF  E           K        DISK                     LUC140
+     FXXMSTDY2UF  E           K        DISK                               LUC140
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT                LUC140
+      *  Stamp Duty Extension File (by Stamp Duty Code,& Freq)
+      *
+     F**********REM004P1O   E             05     PRINTER      KINFDS SPOOL      UC      LUC140
+     FXX1404P1O   E             05     PRINTER      KINFDS SPOOL      UC                LUC140
+     F                                              KINFSR *PSSR
+      ** Retail Stamp Duty Report
+      *
+     F**********REM004AUO   E                    PRINTER      KINFDS SPOOLU     UC      LUC140
+     FXX1404AUO   E                    PRINTER      KINFDS SPOOLU     UC                LUC140
+     F                                              KINFSR *PSSR
+      ** Retail Stamp Duty Audit Report
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    MY@    12  12  3
+     E/EJECT
+     E                    CURY      150  3  A            Currency codes
+     E                    DECM      150  1 0             Decimal places
+      *
+      *  Array containing months of the year
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    #MTH    1  12  9               Month Names-Full
+     E/COPY ZSRSRC,ZFRPEDZ1
+      /SPACE 3
+     IRESDCDPP
+      *
+      *  Rename fields in Retail Stamp Duty Codes File
+      *
+     I              MSDC                            IMSDC
+     I              MCYCD                           IMCYCD
+     I              MCUST                           IMCUST
+     I              MACOD                           IMACOD
+     I              MACSQ                           IMACSQ
+     I/COPY ZSRSRC,ZFRPEDZ2
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IACDETL      DS
+      *
+      *  Data Structure containing Account number structure
+      *
+     I**********                              1  22 WKACNT                LUC140
+     I                                        1  28 WKACNT                LUC140
+     I**********                              5  22 WKACDB                LUC140
+     I                                        5  28 WKACDB                LUC140
+     I                                        1   3 WKBRCA
+     I                                        4   4 WKDSH
+     I**********                              5  100WKCUST                LUC140
+     I                                        5  10 WKCUST                LUC140
+     I                                       11  11 WKDS1
+     I                                       12  14 WKCYCD
+     I                                       15  15 WKDS2
+     I**********                             16  190WKACOD                LUC140
+     I**********                             20  20 WKDS3                 LUC140
+     I**********                             21  220WKACSQ                LUC140
+     I                                       16  250WKACOD                LUC140
+     I                                       26  26 WKDS3                 LUC140
+     I                                       27  280WKACSQ                LUC140
+      *
+      *  Data Structure splitting field MACDR/WKACDR
+      *
+     I            DS
+     I**********                              1  18 W2ACDR                LUC140
+     I                                        1  24 W2ACDR                LUC140
+     I                                        1   3 W2BRCA
+     I**********                              4   90W2CUST                LUC140
+     I                                        4   9 W2CUST                LUC140
+     I                                       10  12 W2CYCD
+     I**********                             13  160W2ACOD                LUC140
+     I**********                             17  180W2ACSQ                LUC140
+     I                                       13  220W2ACOD                LUC140
+     I                                       13  240W2ACSQ                LUC140
+      *
+      *  Data Structure containing Account to be debited
+      *
+     I            DS
+     I**********                              1  22 W3ACDR                LUC140
+     I                                        1  28 W3ACDR                LUC140
+     I                                        1   3 W3BRCA
+     I                                        4   4 WKDS4
+     I**********                              5  100W3CUST                LUC140
+     I                                        5  10 W3CUST                LUC140
+     I                                       11  11 WKDS5
+     I                                       12  14 W3CYCD
+     I                                       15  15 WKDS6
+     I**********                             16  190W3ACOD                LUC140
+     I**********                             20  20 WKDS7                 LUC140
+     I**********                             21  220W3ACSQ                LUC140
+     I                                       16  250W3ACOD                LUC140
+     I                                       26  26 WKDS7                 LUC140
+     I                                       27  280W3ACSQ                LUC140
+      *
+      *  Data Structure to convert RPTPER to numeric
+      *
+     I            DS
+     I                                        1   2 WKRPT
+     I                                        1   20RPTPR
+      *
+      * Spool/Spoolu data structures
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      * access Bank/Branch details
+     I**
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I**
+     ISDBRCH    E DSSDBRCHPD
+     I**
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFC1
+     I** CLIENT DETAILS
+      *
+      *
+     I**  EXTERNAL DS FOR BRANCH CODES
+      *
+      *
+      * First DS for access programs, Short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      * Perform Initial Routine
+      *
+     C                     EXSR #MINIT
+      *
+      * Perform Main processing
+      *
+     C                     EXSR #MMAIN
+      *
+      *   Perform Exit Routine
+      *
+     C                     EXSR #MEXIT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *      SR/#MINIT - Initial Subroutine                           *
+      *                  Initialises fields                           *
+      *                  Accesses Standing Data                       *
+      *****************************************************************
+      *
+     C           #MINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEA'0'       *IN
+      *
+      *  Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C**********           MOVEL'REM004'  DBPGM                           LUC140
+     C                     MOVEL'XX1404'  DBPGM                           LUC140
+      *
+      *  Parameter List : Report Period (2,0)
+      *                   Detail Indicator (Detail 'D'/Summary'S')
+      *                   Mode (COB 'C'/Input Cylce 'I')
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLVL    1
+     C                     PARM           RENT    3
+     C                     PARM           RPTPER  2
+     C                     PARM           DETIND  1
+     C                     PARM           MODE    1
+      *
+      *  Set up key for ACCNT
+      *
+     C           KACNM     KLIST
+     C                     KFLD           WKCUST
+     C                     KFLD           WKCYCD
+     C                     KFLD           WKACOD
+     C                     KFLD           WKACSQ
+     C                     KFLD           WKBRCA
+      *
+      *  Initialise work fields
+      *
+      *
+      *  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     MOVE RPTPER    WKRPT   2
+     C                     MOVE *BLANKS   WKMSDC  2
+     C                     MOVE *BLANKS   WKMSDF  1
+     C                     MOVE *BLANKS   WKCRNM 20
+     C                     MOVE *BLANKS   WKCRTN 10
+     C                     MOVE *BLANKS   WKMSDF  1
+     C                     Z-ADD0         WKSTMP 152
+     C                     Z-ADD0         WKSDPM 150
+     C                     Z-ADD0         WKSDPY 150
+     C                     Z-ADD0         WKSFMM 150
+     C                     Z-ADD0         WKSFYY 150
+     C                     Z-ADD0         W1POST 150
+     C                     Z-ADD0         W2POST 150
+     C                     Z-ADD0         W3POST 150
+     C                     Z-ADD0         WKPOST 150
+     C                     Z-ADD0         WKSFNO  40
+     C                     Z-ADD0         WKCDMM 150
+     C                     Z-ADD0         WKCDYY 150
+     C                     Z-ADD0         WKCDNO  40
+     C                     Z-ADD0         WKGGMM 150
+     C                     Z-ADD0         WKGGYY 150
+     C                     Z-ADD0         WKGGNO  40
+     C**********           Z-ADD0         WKCUST  60                      LUC140
+     C**********           Z-ADD0         WKACOD  40                      LUC140
+     C                     MOVE *BLANKS   WKCUST  6                       LUC140
+     C                     Z-ADD0         WKACOD 100                      LUC140
+     C                     Z-ADD0         WKACSQ  20
+     C                     MOVE *BLANKS   WKBRCA  3
+     C                     MOVE *BLANKS   WKCYCD  3
+     C                     MOVE *BLANKS   W1CYCD  3
+     C                     MOVE *BLANKS   WKDESC 30
+     C                     MOVE '-'       WKDSH   1
+     C                     MOVE '-'       WKDS1   1
+     C                     MOVE '-'       WKDS2   1
+     C                     MOVE '-'       WKDS3   1
+      *
+      *  If DETIND=S (Sumary Report), seton 83
+      *
+     C           DETIND    IFEQ 'S'
+     C                     SETON                     83
+     C                     ENDIF
+      *
+      *  If MODE=I (Input Cylce) seton *in86
+      *
+     C           MODE      IFEQ 'I'
+     C                     SETON                     86
+     C                     ENDIF
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+      *
+      *  Data base error in file SDBANKPD
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 06  *
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR #AUDIT
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C**
+      *
+      *
+      *  Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*
+     C*     Load currency details into array
+     C*
+     C                     EXSR LOADSR
+     C*
+     C* work out WKMM -  current Run month
+     C*
+     C           3         SUBSTBJMRDT:3  MONTH   3
+     C                     Z-ADD1         Y       30
+     C           MONTH     LOKUPMY@,Y                    39
+     C                     Z-ADDY         WKMM    20
+     C*
+     C* Month Full Names
+     C*
+     C                     Z-ADDRPTPR     M       20
+     C                     MOVE *BLANKS   RPTMM   9
+     C                     MOVEL#MTH,M    RPTMM
+     C*
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MMAIN - Main Processing Subroutine                     *
+      *****************************************************************
+      *
+     C           #MMAIN    BEGSR
+     C                     SETOF                     88
+      *
+      ****Position at begiining of file SDMSTDY2                                           LUC140
+      *   Position at begiining of file XXMSTDY2                                           LUC140
+      *
+     C********** *LOVAL    SETLLSDMSTDY2             35                                    LUC140
+     C**********           READ SDMSTDY2                 35                                LUC140
+     C           *LOVAL    SETLLXXMSTDY2             35                                    LUC140
+     C                     READ XXMSTDY2                 35                                LUC140
+      * Only process Retail a/c records - not SE Customer records
+     C           MBRCA     DOWEQ*BLANKS
+     C           *IN35     ANDEQ*OFF
+     C**********           READ SDMSTDY2                 35                                LUC140
+     C                     READ XXMSTDY2                 35                                LUC140
+     C                     ENDDO
+      *
+      *  If record not found
+      *
+     C           *IN35     IFEQ *ON
+      *
+      ***Data*base error in file SDMSTDY0                                                  LUC140
+      *  Data base error in file XXMSTDY0                                                  LUC140
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE            ***************
+     C**********           MOVEL'SDMSTDY0'DBFILE           *DB ERROR 005 *                 LUC140
+     C                     MOVEL'XXMSTDY0'DBFILE           *DB ERROR 005 *                 LUC140
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C**********           MOVEL'REM004'  DBPGM                           LUC140
+     C                     MOVEL'XX1404'  DBPGM                           LUC140
+     C                     OUT  LDA
+     C                     EXSR #AUDIT
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+      *Open printer file
+      *
+     C**********           OPEN REM004P1                                                    LUC140
+     C                     OPEN XX1404P1                                                    LUC140
+      *
+      *  Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     MOVE MBRCA     RENT
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM           RENT
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      *   If an error during ZSFILE processing, perform DB processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVELSFILE     DBKEY            ***************
+     C                     MOVEL'ZSFILE  'DBFILE           ** DB ERR 02 **
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR #AUDIT
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Move Stamp Duty Freq and Code to work fields
+      *
+     C                     MOVE MSDF      WKMSDF
+     C                     MOVE MSDC      WKMSDC
+     C*
+     C*  To get Branch Name
+     C*
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM MBRCA     @DSNB   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 04  *
+     C                     MOVEL'004'     DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR #AUDIT
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *  Do while more records
+      *
+     C           *IN35     DOWEQ'0'
+      *
+      * Only process Retail a/c records - not SE Customer records
+     C           MBRCA     IFNE *BLANKS
+      *
+      ***Move fields to work fields before access RESDCDV0                LUC140
+      *  Move fields to work fields before access XXSDCDV0                LUC140
+      *
+     C                     MOVE MBRCA     WKBRCA
+     C                     MOVE MCYCD     WKCYCD
+     C**********           Z-ADDMCUST     WKCUST
+     C                     MOVE MCUST     WKCUST           LUC140
+     C                     Z-ADDMACOD     WKACOD           LUC140
+     C                     Z-ADDMACSQ     WKACSQ
+      *
+      *   format Account to be debited
+      *
+     C                     MOVE *BLANKS   W2ACDR
+     C                     MOVE *BLANKS   W3ACDR
+     C                     MOVE MACDR     W2ACDR
+     C           W2ACDR    IFNE *BLANKS
+     C                     MOVE '-'       WKDS4   1
+     C                     MOVE '-'       WKDS5   1
+     C                     MOVE '-'       WKDS6   1
+     C                     MOVE '-'       WKDS7   1
+     C                     ENDIF
+     C                     MOVE W2BRCA    W3BRCA
+     C                     MOVE W2CYCD    W3CYCD
+     C**********           Z-ADDW2CUST    W3CUST                          LUC140
+     C                     MOVE W2CUST    W3CUST                          LUC140
+     C                     Z-ADDW2ACOD    W3ACOD
+     C                     Z-ADDW2ACSQ    W3ACSQ
+      *
+      * access stamp duty description and Stamp Duty Currency
+      *
+     C           MSDC      IFNE *BLANKS
+     C********** MSDC      CHAINRESDCDV0             37                   LUC140
+     C           MSDC      CHAINXXSDCDV0             37                   LUC140
+     C           *IN37     IFEQ '0'
+     C                     MOVE MDESC     WKDESC
+     C                     MOVE IMCYCD    W1CYCD
+     C                     ELSE
+      *
+      ***Data*base error in file RESDCDV0                                 LUC140
+      *  Data base error in file XXSDCDV0                                 LUC140
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD009       DBASE            ***************
+     C**********           MOVEL'RESDCDV0'DBFILE           *DB ERROR 009 *LUC140
+     C                     MOVEL'XXSDCDV0'DBFILE           *DB ERROR 009 *LUC140
+     C                     MOVE MSDC      DBKEY            ***************
+     C**********           MOVEL'REM005'  DBPGM                           LUC140
+     C                     MOVEL'XX1405'  DBPGM                           LUC140
+     C                     OUT  LDA
+     C                     EXSR #AUDIT
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF                           MSCD IFNE BLKS
+      *
+      *    IF the description is blank, place EXEMPT in description
+      *
+     C           WKDESC    IFEQ *BLANKS
+     C           WKMSDC    ANDEQ*BLANKS
+     C                     MOVEL'EXEMPT'  WKDESC
+     C                     ENDIF
+      *
+      *  if first time through or when necessary
+      *
+     C           *IN81     IFEQ '0'                        first time thro
+      *
+      * If summary report - the header should only appear once or
+      * on overflow
+      *
+     C           DETIND    IFEQ 'S'
+     C           *IN84     ANDEQ'0'
+      * or if detail
+     C           DETIND    OREQ 'D'
+     C                     WRITEREM004H1
+     C                     SETON                     84
+     C                     ENDIF
+      *
+      *   Print   Stamp Duty Code and Description
+      *
+     C                     WRITEREM004SH
+      *
+      *  If Detail report, print Detail headings
+      *
+     C           DETIND    IFEQ 'D'
+     C                     WRITEREM004DH
+     C                     WRITEREM004D2
+     C                     ELSE
+      *
+      *   If summary and first time thro'for summary, print summary hdngs
+      *
+     C           *IN85     IFEQ '0'
+     C                     WRITEREM004M1
+     C                     WRITEREM004M2
+     C                     SETON                     85
+     C                     ENDIF
+     C                     ENDIF
+     C                     SETON                     81
+     C                     ENDIF
+      *
+      *   Seton indicator to signify at least one record has been
+      *****processed in SDMSTDY2                                          LUC140
+      *    processed in XXMSTDY2                                          LUC140
+      *
+     C                     SETON                     88    >= 1 RECORD
+      *
+      * Chain to SDCUSTL0 to obtain customer details
+      *
+     C                     MOVE WKCUST    W1CUST  6
+     C**
+     C*    OBTAIN CUSTOMER DETAILS
+     C                     MOVE *BLANK    CLNKEY 10
+     C                     MOVELW1CUST    CLNKEY
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CLNKEY    @KEY1  10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           @KYST     IFNE '*CNUM  '
+     C           @RTCD     ORNE *BLANK
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVEL@KEY1     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 005 *
+     C                     MOVEL'005'     DBASE            ***************
+     C                     EXSR #AUDIT
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * If found, move report name/town to work fields
+      *
+     C                     MOVE BBCRNM    WKCRNM
+     C                     MOVE BBCRTN    WKCRTN
+      *
+      * If called from COB, then no calculations needed
+      * else do calculations
+      *
+     C           MODE      IFEQ 'I'
+     C           WKMSDC    ANDNE*BLANKS
+     C                     EXSR #MCALC
+     C                     ENDIF
+     C           WKMSDC    IFEQ *BLANKS
+     C           WKMSDF    ANDEQ*BLANKS
+     C                     Z-ADD0         WKSDPM
+     C                     Z-ADD0         WKSDPY
+     C                     Z-ADDMSDPM     WKTPM  150
+     C                     Z-ADDMSDPY     WKTPY  150
+     C                     Z-ADD0         MSDPM
+     C                     Z-ADD0         MSDPY
+     C                     ENDIF
+      *
+      * Print required values to report
+      *
+     C           DETIND    IFEQ 'D'
+     C                     EXSR #MREPT
+     C                     ENDIF
+      *
+      * Add to subtotals and totals for report
+      *
+     C                     EXSR #MSUBT
+      *
+      * If the report is running in the COB mode (Mode='C')
+      * and the month of the Run Date is December, set the Stamp
+      **Duty*This Year on SDMSTDY2 to 0 and update the file               LUC140
+      * Duty This Year on XXMSTDY2 to 0 and update the file               LUC140
+      *
+      *   return MSDPM/MSDPY to the original values
+      *
+     C                     Z-ADDWKTPM     MSDPM
+     C                     Z-ADDWKTPY     MSDPY
+     C           MODE      IFEQ 'C'
+     C           WKMM      ANDEQ12
+     C                     Z-ADD0         MSDPY
+     C                     UPDATSDMSTDD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Read next record
+      *
+     C**********           READ SDMSTDY2                 35               LUC140
+     C                     READ XXMSTDY2                 35               LUC140
+      *
+      * If the next record read has a new stamp duty Cde/Freq, output
+      * Subtotals  on change of Stamp duty Frequency
+      *
+     C           MSDC      IFNE WKMSDC
+     C                     SETOF                     81
+      *
+      *   format  and print Stamp Duty Frequency totals
+      *
+     C                     EXSR PRNTSF
+      *
+      * check for overflow
+     C                     EXSR #MCHKO
+     C                     WRITEREM004SF
+     C                     EXSR #MTOTS
+      *
+      * check for overflow
+      *
+     C                     EXSR #MCHKO
+     C                     WRITEREM004S1
+      *
+      *   format  and print Stamp Duty Cde totals
+      *
+     C                     EXSR PRNTSD
+      *
+      * check for overflow
+      *
+     C                     EXSR #MCHKO
+     C                     WRITEREM004SD
+      *
+      * Zeroise stamp duty freq /code totals after printing them
+      *
+     C                     EXSR #MTOTC
+     C                     MOVE MSDC      WKMSDC
+     C                     MOVE MSDF      WKMSDF
+     C                     ELSE
+      *
+      *   IF the Stamp Duty Frequency has changed
+      *
+     C           MSDF      IFNE WKMSDF
+      *
+      *   format and print Stamp Duty Frequency Totals
+      *
+     C                     EXSR PRNTSF
+      *
+      * check for overflow
+     C                     EXSR #MCHKO
+     C                     WRITEREM004SF
+     C                     MOVE MSDF      WKMSDF
+      *
+      * Zeroise stamp duty freq totals and aggregate for other totals
+      *
+     C                     EXSR #MTOTS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MCHKO - Check overflow Subroutine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MCHKO    BEGSR
+      *
+      * If overflow indicator is on
+      *  Write Header for Printer file.
+      *
+     C           *IN05     IFEQ *ON
+     C                     WRITEREM004H1
+     C                     WRITEREM004SH
+     C           DETIND    IFEQ 'D'
+     C                     WRITEREM004DH
+     C                     WRITEREM004D2
+     C                     ENDIF
+     C           DETIND    IFEQ 'S'
+     C                     SETOF                     81
+     C                     ENDIF
+     C                     MOVE *OFF      *IN05
+     C                     ENDIF
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MREPT - Report Subroutine                              *
+      *                Prints necessary values to report              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MREPT    BEGSR
+      *
+      *   format Stamp Duty Detail line fieldsto the correct no. decimal
+      *   places
+     C                     EXSR PRNTSR
+      *
+      *  Write Header for Printer file, if necessary.
+     C                     EXSR #MCHKO
+      *
+      *   Print Detail Line
+      *
+     C                     WRITEREM004D1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MCALC - Calculate all necessary values to report       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MCALC    BEGSR
+     C           3         SUBSTBJMRDT:3  MONTH   3
+     C                     Z-ADD1         Y       30
+     C           MONTH     LOKUPMY@,Y                    39
+     C                     Z-ADDY         WKMM    20
+     C                     Z-ADD1         DIVFAC  30
+     C                     SELEC
+      *
+      *   For monthly frequencies...
+      *
+     C           MSDF      WHEQ 'M'
+     C                     Z-ADD12        DIVFAC
+      *
+      *   For quarterly frequencies...
+      *
+     C           MSDF      WHEQ 'Q'
+     C                     Z-ADD4         DIVFAC
+      *
+      *   For six-monthly frequencies...
+      *
+     C           MSDF      WHEQ 'X'
+     C                     Z-ADD2         DIVFAC
+      *
+      *   For annual frequencies...
+      *
+     C           MSDF      WHEQ 'Y'
+     C                     Z-ADD1         DIVFAC
+     C                     ENDSL
+     C                     EXSR #MPROC
+      *
+      * Amt this month is the field POST and the amt ytd will be
+      *                                         MSDPY + POST
+      *
+     C                     Z-ADD0         WKSDPY
+     C           WKSDPM    ADD  MSDPY     WKSDPY
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MFRQD - Calculate Frequency dates that fall            *
+      *                between Todays date and Period End date        *
+      *****************************************************************
+      *
+     C           #MFRQD    BEGSR
+     C                     Z-ADD0         MLTFAC  20
+     C           MSDF      IFEQ 'Q'
+     C           RPTPR     DIV  3         MLTFAC
+     C           WKMM      IFGT 3
+     C           WKMM      ANDLE6
+     C           MLTFAC    SUB  1         MLTFAC
+     C                     ENDIF
+     C           WKMM      IFGT 6
+     C           WKMM      ANDLE9
+     C           MLTFAC    SUB  2         MLTFAC
+     C                     ENDIF
+     C           WKMM      IFGT 9
+     C           WKMM      ANDLE12
+     C           MLTFAC    SUB  3         MLTFAC
+     C                     ENDIF
+     C                     ENDIF
+     C           MSDF      IFEQ 'M'
+     C           RPTPR     SUB  WKMM      MLTFAC
+     C           MLTFAC    ADD  1         MLTFAC
+     C                     ENDIF
+     C           MSDF      IFEQ 'X'
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDGE7
+     C           RPTPR     ANDLE12
+     C                     Z-ADD1         MLTFAC
+     C                     ENDIF
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDGE1
+     C           RPTPR     ANDLE6
+     C                     Z-ADD0         MLTFAC
+     C                     ENDIF
+     C           WKMM      IFGE 7
+     C           WKMM      ANDLE12
+     C           RPTPR     ANDGE7
+     C           RPTPR     ANDLE12
+     C                     Z-ADD0         MLTFAC
+     C                     ENDIF
+     C*
+     C*  PHIL -CANT CHECK FOR 31/12for RPTPR as said
+     C*  UNDERNEATH
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDEQ12
+     C                     Z-ADD2         MLTFAC
+     C                     ENDIF
+     C*
+     C*  PHIL -CANT CHECK FOR 31/12- RPTPR as said
+     C*  UNDERNEATH
+     C           WKMM      IFGT 7
+     C           WKMM      ANDLE12
+     C           RPTPR     ANDEQ12
+     C                     Z-ADD1         MLTFAC
+     C                     ENDIF
+     C*
+     C*  PHIL -CANT CHECK FOR 30/6- RPTPR as said
+     C*  UNDERNEATH
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDEQ6
+     C                     Z-ADD1         MLTFAC
+     C                     ENDIF
+     C                     ENDIF
+     C           MSDF      IFEQ 'Y'
+     C           WKMM      ANDEQ12
+     C                     Z-ADD1         MLTFAC
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MFRQ2 - Calculate COMPLETE FREQUENCY DATES             *
+      *                between Todays date and Period End date        *
+      *****************************************************************
+      *
+     C           #MFRQ2    BEGSR
+     C                     Z-ADD0         MLTFC2  20
+     C           MSDF      IFEQ 'Q'
+     C           RPTPR     DIV  3         MLTFC2
+     C           WKMM      IFLE 3
+     C           MLTFC2    SUB  1         MLTFC2
+     C                     ENDIF
+     C           WKMM      IFGT 3
+     C           WKMM      ANDLE6
+     C           MLTFC2    SUB  2         MLTFC2
+     C                     ENDIF
+     C           WKMM      IFGT 6
+     C           WKMM      ANDLE9
+     C           MLTFC2    SUB  3         MLTFC2
+     C                     ENDIF
+     C           WKMM      IFGT 9
+     C           WKMM      ANDLE12
+     C           MLTFC2    SUB  4         MLTFC2
+     C                     ENDIF
+     C                     ENDIF
+     C           MSDF      IFEQ 'M'
+     C           RPTPR     SUB  WKMM      MLTFC2
+     C           MLTFC2    SUB  1         MLTFC2
+     C                     ENDIF
+     C           MSDF      IFEQ 'X'
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDGE7
+     C           RPTPR     ANDLE12
+     C                     Z-ADD1         MLTFC2
+     C                     ENDIF
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDGE1
+     C           RPTPR     ANDLE6
+     C                     Z-ADD0         MLTFC2
+     C                     ENDIF
+     C           WKMM      IFGE 7
+     C           WKMM      ANDLE12
+     C           RPTPR     ANDGE7
+     C           RPTPR     ANDLE12
+     C                     Z-ADD0         MLTFC2
+     C                     ENDIF
+     C*
+     C*  PHIL -CANT CHECK FOR 31/12  HERE AS SAID
+     C*  UNDERNEATH
+     C           WKMM      IFGT 7
+     C           WKMM      ANDLE12
+     C           RPTPR     ANDEQ12
+     C                     Z-ADD0         MLTFC2
+     C                     ENDIF
+     C*
+     C*  PHIL -CANT CHECK FOR 30/6   HERE AS SAID
+     C*  UNDERNEATH
+     C           WKMM      IFGE 1
+     C           WKMM      ANDLE6
+     C           RPTPR     ANDEQ6
+     C                     Z-ADD0         MLTFC2
+     C                     ENDIF
+     C                     ENDIF
+     C           MSDF      IFEQ 'Y'
+     C           WKMM      ANDEQ12
+     C                     Z-ADD1         MLTFC2
+     C                     ENDIF
+     C           MLTFC2    IFLE 0
+     C                     Z-ADD0         MLTFC2
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MPROC - Calculates amount of stamp duty according to   *
+      *                the frequency at which the duty is due and the *
+      *                yearly amount which is to be paid              *
+      *                                                               *
+      *       Called by: #MMAIN                                       *
+      *       Calls:     *PSSR                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MPROC    BEGSR
+      *
+      *   Determine whether account has been opened during charging
+      *   period.
+      *
+     C                     EXSR #MDVAL
+      *
+      *   Initialise Stamp Duty for this month.
+      *
+     C                     Z-ADD*ZEROS    POST   150
+     C                     Z-ADD*ZEROS    DFACT
+      *
+     C                     SELEC
+      *
+      *   Calculate Duty for accounts opened before the charging period
+      *
+     C           NEW       WHEQ 'N'
+     C                     EXSR #MCALO
+     C                     EXSR #MFRQD
+     C           POST      MULT MLTFAC    WKSDPM
+      *
+      *   Calculate Duty for accounts opened during the charging period
+      *
+     C           NEW       WHEQ 'Y'
+     C                     EXSR #MMCAL
+     C                     EXSR #MCALN
+     C                     EXSR #MFRQ2
+     C           MYAMT     DIV  DIVFAC    POST2  150
+     C           POST2     MULT MLTFC2    POST3  150
+     C           POST      ADD  POST3     WKSDPM
+     C                     ENDSL
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MDVAL - Checks to see if account has been opened       *
+      *                within the Stamp Duty charging period.         *
+      *                                                               *
+      *       Called by: #MPROC                                       *
+      *       Calls:     *PSSR                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MDVAL    BEGSR
+      *
+     C                     Z-ADD1         MN      20
+     C                     Z-ADD1         OM      20
+     C***                  Z-ADD*ZERO     BM      10                      171296
+     C                     Z-ADD*ZERO     BM      20                      171296
+     C                     Z-ADD*ZEROS    PRD     20
+     C                     MOVE 'N'       NEW     1
+      *
+      *  Initialise value of period of liability to duty.
+      *
+     C                     SELEC
+     C           MSDF      WHEQ 'Y'
+     C                     Z-ADD11        PRD
+     C           MSDF      WHEQ 'X'
+     C                     Z-ADD5         PRD
+     C           MSDF      WHEQ 'Q'
+     C                     Z-ADD2         PRD
+     C                     ENDSL
+      *
+      *   Determine month account opened
+      *
+     C           KACNM     CHAINACCNT                38
+     C                     MOVELDACO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    OPDATE  7
+      *
+     C           5         SUBSTOPDATE:3  OPMTYR  5
+     C                     MOVE OPMTYR    OYR     2
+     C                     MOVELOPMTYR    OMTH    3
+     C                     MOVE BJMRDT    CURYR   2
+      *
+      *  If the year of opening is the same as the current year,
+      *  the account may not be liable for full stamp duty.
+      *  If the month of opening is greater (i.e. later) than the
+      *  first month of the period, then partial duty should be
+      *  charged.
+      *
+     C           OYR       IFEQ CURYR
+     C           MONTH     LOKUPZMNM,MN                  36
+     C           OMTH      LOKUPZMNM,OM                  37
+     C           MN        SUB  PRD       BM
+     C           OM        IFGT BM
+     C           OM        ANDLEMN
+     C                     MOVE 'Y'       NEW
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MMCAL - Calculates months of Stamp Duty to be levied   *
+      *                on accounts which have opened during the       *
+      *                charging period.                               *
+      *                                                               *
+      *       Called by: #MDVAL                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MMCAL    BEGSR
+      *
+     C           MN        SUB  OM        TEMP    20
+     C           TEMP      ADD  1         MTSOPN  20
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MCALO - Calculates amount of stamp duty according to   *
+      *                the frequency at which the duty is due and the *
+      *                yearly amount which is to be paid              *
+      *                                                               *
+      *       Called by: #MPROC                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MCALO    BEGSR
+      *
+     C                     SELEC
+     C           MSDF      WHEQ 'Y'
+     C                     Z-ADD1         DFACT   20
+     C           MSDF      WHEQ 'X'
+     C                     Z-ADD2         DFACT
+     C           MSDF      WHEQ 'Q'
+     C                     Z-ADD4         DFACT
+     C           MSDF      WHEQ 'M'
+     C                     Z-ADD12        DFACT
+     C                     ENDSL
+      *
+      *   Calculate amount to be posted
+      *
+     C           DFACT     IFNE 0
+     C           MYAMT     DIV  DFACT     POST
+     C                     ELSE
+     C                     Z-ADD0         POST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MCALN - Calculates amount of stamp duty according to   *
+      *                the frequency at which the duty is due and the *
+      *                yearly amount which is to be paid              *
+      *                                                               *
+      *       Called by: #MPROC                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MCALN    BEGSR
+      *
+      *   Calculate amount to be posted
+      *
+     C           MTSOPN    IFNE 0
+     C           12        DIV  MTSOPN    DFACT
+     C                     ELSE
+     C                     Z-ADD0         DFACT
+     C                     ENDIF
+     C           DFACT     IFNE 0
+     C           MYAMT     DIV  DFACT     POST
+     C                     ELSE
+     C                     Z-ADD0         POST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MSUBT - Subtotals subroutine                           *
+      *                Add neessary values to subtotals/totals        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MSUBT    BEGSR
+      *
+      *    Subtotal Stamp Duty Detail fields
+      *
+     C                     ADD  1         WKSFNO
+     C           MODE      IFEQ 'C'
+     C                     ADD  MSDPM     WKSFMM
+     C                     ADD  MSDPY     WKSFYY
+     C                     ELSE
+     C                     ADD  WKSDPM    WKSFMM
+     C                     ADD  WKSDPY    WKSFYY
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MTOTS - Zeroise Stamp duty freq totals and             *
+      *                Add to aggregate totals                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MTOTS    BEGSR
+      *
+      *    Add Frequency totals to Stamp Duty Code totals
+      *
+     C                     ADD  WKSFNO    WKCDNO
+     C                     ADD  WKSFMM    WKCDMM
+     C                     ADD  WKSFYY    WKCDYY
+      *
+      *    zeroise stamp duty frequency totals
+      *
+     C                     Z-ADD0         WKSFNO
+     C                     Z-ADD0         WKSFMM
+     C                     Z-ADD0         WKSFYY
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MTOTC - Zeroise Stamp duty code totals and             *
+      *                Add to aggregate totals                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MTOTC    BEGSR
+      *
+      *   Add Stamp Duty Code totoals to Grand totals
+      *
+     C                     ADD  WKCDNO    WKGGNO
+     C                     ADD  WKCDMM    WKGGMM
+     C                     ADD  WKCDYY    WKGGYY
+      *
+      *    zeroise stamp duty frequency and code totals
+      *
+     C                     Z-ADD0         WKSFNO
+     C                     Z-ADD0         WKSFMM
+     C                     Z-ADD0         WKSFYY
+     C                     Z-ADD0         WKCDNO
+     C                     Z-ADD0         WKCDMM
+     C                     Z-ADD0         WKCDYY
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       #MEXIT - Exit Subroutine                                *
+      *                Returns to calling program                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MEXIT    BEGSR
+      *
+      *  Write End of Report Banner
+      *
+     C           *IN88     IFEQ '1'
+      *
+      * format totals
+      *
+     C                     EXSR PRNTSF
+      *
+      * check for overflow
+     C                     EXSR #MCHKO
+     C                     WRITEREM004SF
+     C                     EXSR #MTOTS
+      *
+      * check for overflow
+     C                     EXSR #MCHKO
+     C                     WRITEREM004S1
+      *
+      * format totals
+      *
+     C                     EXSR PRNTSD
+      *   check for overflow
+      *
+     C                     EXSR #MCHKO
+     C                     WRITEREM004SD
+     C                     EXSR #MTOTC
+      *   check for overflow
+      *
+     C                     EXSR #MCHKO
+     C                     WRITEREM004G1
+      *   check for overflow
+      *
+     C                     EXSR #MCHKO
+     C*****                WRITEREM004GG
+     C*****                WRITEREM004G1
+     C                     ELSE
+     C                     WRITEREM004Z1
+     C                     ENDIF
+      *
+      *  IF overflow has occurred , print headings
+      *
+     C           *IN05     IFEQ *ON
+     C                     WRITEREM004H1
+     C                     ENDIF
+     C                     WRITEREM004E1
+     C**********           CLOSEREM004P1                                  LUC140
+     C                     CLOSEXX1404P1                                  LUC140
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      * SR/#AUDIT - Produce Audit Report
+      *
+      ********************************************************************
+      *
+     C           #AUDIT    BEGSR
+      *
+      *    Dump and return to the calling program
+      *
+     C**********           OPEN REM004AU                                  LUC140
+     C                     OPEN XX1404AU                                  LUC140
+      *
+      *  Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C**********           MOVEL'REM004'  DBPGM                           LUC140
+     C                     MOVEL'XX1404'  DBPGM                           LUC140
+      *
+     C                     MOVE MBRCA     RENT
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM           RENT
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      *   If an error during ZSFILE processing, perform DB processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITEHEADAU
+     C           *IN35     IFEQ '1'
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     WRITEDBERROR
+     C**********           CLOSEREM004AU                                  LUC140
+     C                     CLOSEXX1404AU                                  LUC140
+      *
+     C                     ENDSR
+      *
+      *
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     PRNTSR SR     SUB-ROUTINE                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PRNTSR    BEGSR
+     C*
+     C*     Edit Stamp duty for this month/year
+     C*
+     C                     Z-ADD1         X
+     C           W1CYCD    LOKUPCURY,X               13  15
+     C*
+     C*   If COB format file fields MSDPM/MSDPY
+     C*
+     C           MODE      IFEQ 'C'
+     C                     MOVE MSDPM     ZFLD15
+     C                     ELSE
+     C                     MOVE WKSDPM    ZFLD15
+     C                     ENDIF
+     C                     MOVE DECM,X    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C*     Move values from file to print line
+     C*
+     C                     MOVE ZOUT22    W1SDPM 22
+     C*
+     C*  Stamp duty this year
+     C*
+     C           MODE      IFEQ 'C'
+     C                     MOVE MSDPY     ZFLD15
+     C                     ELSE
+     C                     MOVE WKSDPY    ZFLD15
+     C                     ENDIF
+     C                     MOVE DECM,X    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C*     Move values from file to print line
+     C*
+     C                     MOVE ZOUT22    W1SDPY 22
+     C                     ENDSR                                       ***
+     C*
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     PRNTSD SR     SUB-ROUTINE  to print Stamp Duty Code total    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PRNTSD    BEGSR
+     C*
+     C*     Edit Stamp duty for this month/year
+     C*
+     C                     Z-ADD1         X
+     C           W1CYCD    LOKUPCURY,X               13  15
+     C                     MOVE WKCDMM    ZFLD15
+     C                     MOVE DECM,X    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C*     Move values from file to print line
+     C*
+     C                     MOVE ZOUT22    W1CDMM 22
+     C*
+     C*  format yearly total for stamp duty code
+     C*
+     C                     MOVE WKCDYY    ZFLD15
+     C                     MOVE DECM,X    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C*     Move values from file to print line
+     C*
+     C                     MOVE ZOUT22    W1CDYY 22
+     C                     ENDSR                                       ***
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     PRNTSF SR     SUB-ROUTINE  to print Stamp Duty Freq total    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PRNTSF    BEGSR
+     C*
+     C*     Edit Stamp duty for this month/year
+     C*
+     C                     Z-ADD1         X
+     C           W1CYCD    LOKUPCURY,X               13  15
+     C                     MOVE WKSFMM    ZFLD15
+     C                     MOVE DECM,X    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C*     Move values from file to print line
+     C*
+     C                     MOVE ZOUT22    W1SFMM 22
+     C*
+     C*  format yearly total for stamp duty code
+     C*
+     C                     MOVE WKSFYY    ZFLD15
+     C                     MOVE DECM,X    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+     C*     Move values from file to print line
+     C*
+     C                     MOVE ZOUT22    W1SFYY 22
+     C                     ENDSR                                       ***
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     LOADSR SR     SUB-ROUTINE                                    *
+     C*                                                                  *
+     C*     Load currency details into array                             *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           LOADSR    BEGSR
+     C*
+     C                     Z-ADD1         X       30
+     C           *LOVAL    SETLLSDCURRL0
+     C                     READ SDCURRL0                 02
+     C*
+     C*     Load and read loop
+     C*
+     C           *IN02     DOWEQ'0'
+     C*
+     C                     MOVE A6CYCD    CURY,X
+     C/COPY WNCPYSRC,RE0880C002
+     C                     Z-ADDA6NBDP    DECM,X
+     C                     ADD  1         X
+     C                     READ SDCURRL0                 02
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+      *   If Input Cycle, run DBERRCTL
+      *
+     C           MODE      IFEQ 'I'
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,ZDATE2Z4
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1998
+**  MY@
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   #MTH - MONTHS FULL NAMES
+January
+February
+March
+April
+May
+June
+July
+August
+September
+October
+November
+December

@@ -1,5 +1,6 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
+/*EXI    TEXT('Midas GL PUT ITEM INTO PROJECTED CLEAR BAL')          */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Dealing Module                                      */
@@ -13,6 +14,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*  MD048440 - No cleanup/housekeeping processing of GLPRONTD and    */
+/*             GLOLPSTD.                                             */
+/*             This program also do the housekeeping of GLPRONTD and */
+/*             GLOLPSTD.                                             */
+/*             Pattern to fix MD032907 which is already core in SP10.*/
 /*       MD046248 - Finastra Rebranding                              */
 /*  MD032907 - Local component to update PRONO based on CLBL         */
 /*             instead of LDBL - SEE GL0575.                         */
@@ -26,7 +32,7 @@
 /*             journal receiver SCC0408 00001 and before the datebase*/
 /*             save SCC0410 00001.                                   */
 /*********************************************************************/
- 
+
 /** &RLEV IS STANDARD RCF PARM NOT USED IN THIS PROGRAM  */
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)
 /**/
@@ -82,6 +88,7 @@
 /**/
              CLRPFM     FILE(GLPRONTD)
              CLRPFM     FILE(GLPRONT2)
+             CLRPFM     FILE(GLOLPSTD)                                                  /*MD048440*/
 /**/
              CALL       PGM(GL0580C)
 /**/

@@ -12,8 +12,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 248936B            Date 22May20               *
-      *  Prev Amend No. 248936A            Date 22May20               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  PreV Amend No. CER009             Date 21Oct20               *
+      *                 CER008             Date 21Oct20               *
+      *                 248936B            Date 22May20               *
+      *                 248936A            Date 22May20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -115,6 +118,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to FM2.1                            *
+      *  CER008 - Base Italian Features Upgrade to FM2.1              *
       *  248936B - Print Additional Info to match enquiry screen.     *
       *            Check if CGL031 is switched on.                    *
       *            Patterned after 251925.                            *
@@ -266,6 +272,10 @@
       *                                                                                      LLN022A
       ** Bank of England Customer details - retrieval                                        LLN022A
       *                                                                                      LLN022A
+      *                                                                                       CER009
+     FSDCUT2L0IF  E           K        DISK                                                   CER009
+      ** RTV: Customer Details Ext. file for BOI Monthly Reporting                            CER009
+      *                                                                                       CER009      
      FSDCUX2L0IF  E           K        DISK                                                   CER001
       * RTV: Customer Details Ext.  file for European Reporting - Luxemb.                     CER001
      FSDCUSTL1IF  E           K        DISK
@@ -338,6 +348,7 @@
       ** SAVE INDICATOR *IN 99
       *
      E/COPY WNCPYSRC,SD0010PEPG
+     E                    LUL         7132                                                    CER008
      E                    BLC         5132                                                    CER001
       * IBLC 2002 Extended informations array                                                 CER001
      E********************@CN     1  14 25               Long constants.  CSD007
@@ -354,6 +365,9 @@
      I*
      I*00/Copy Member SD0010P   Initialise Program I-Spec
      I/COPY WNCPYSRC,SD0010PIPG
+      *                                                                                       CER008
+     IBLLINE      DS                           1024                                           CER008
+      *                                                                                       CER008
       *                                                                                      LLN022A
      I            DS                                                                         LLN022A
       *                                                                                      LLN022A
@@ -1720,6 +1734,26 @@
      C                     END                             *FI
       * End of Fix BHF950
      C/COPY WNCPYSRC,SD0010PC01
+      *                                                                                       CER008
+      ** If CER008 SAR is on, call PGM SD4010 to access Extension                             CER008
+      ** file SDCUT1PD and seton indicator 83                                                 CER008
+      *                                                                                       CER008
+     C           CER008    IFEQ 'Y '                                                          CER008
+     C                     CALL 'SD4010'                                                      CER008
+     C                     PARM BBCUST    PCUST   6                                           CER008
+     C                     PARM *BLANKS   BLLINE                                              CER008
+     C                     PARM *BLANK    PFAIL   1                                           CER008
+     C           PFAIL     IFEQ *ON                                                           CER008
+     C                     MOVE *OFF      *IN83                                               CER008
+     C                     ELSE                                                               CER008
+     C                     MOVE *ON       *IN83                                               CER008
+      *                                                                                       CER008
+      ** Set up lines array                                                                   CER008
+      *                                                                                       CER008
+     C                     MOVEABLLINE    LUL                                                 CER008
+     C                     ENDIF                                                              CER008
+     C                     ENDIF                                                              CER008
+      *                                                                                       CER008
       *CASE:     PAR.Audit/Request Status Ind is Audit Mode
      C           WUARSI    IFEQ @CN,02                     *IF
       *CASE:     PAR.Last Change Date NE WRK.run day number
@@ -1872,6 +1906,104 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,SD0010PCP3                                           S01408
      C*                                                                   S01408
+      *                                                                                       CER008
+      ** If CER008 SAR is on, print WINDOW informations                                       CER008
+      *                                                                                       CER008
+     C           *IN83     IFEQ *ON                                                           CER008
+     C                     MOVEL*BLANKS   RRLINE                                              CER008
+     C                     WRITEZZEXIWIN                                                      CER008
+      *                                                                                       CER008
+     C           1         DO   2         UL      20                                          CER008
+     C                     MOVELLUL,UL    RRLINE                                              CER008
+     C           *IN97     IFEQ *ON                                                           CER008
+     C                     WRITEZZPAGHDR               97                                     CER008
+      *                                                                                       CER008
+     C                     ENDIF                                                              CER008
+     C                     WRITEZZEXIWIN                                                      CER008
+      *                                                                                       CER008
+     C                     ENDDO                                                              CER008
+      *                                                                                       CER008
+     C                     ENDIF                                                              CER008
+      *                                                                                       CER008
+      ** BOI Monthly Reporting                                                                CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           BBCUST    CHAINSDCUT2L0             84                                       CER009
+     C           *IN84     IFEQ *OFF                                                          CER009
+      *                                                                                       CER009
+     C                     MOVE BBCUST    XTCUST                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCCONS    XTCONS                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCCPTY    XTCPTY                                              CER009
+      *                                                                                       CER009
+     C           PCECSG    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTECSG                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCECSG    XTECSG                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCFIID    XTFIID                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCDBCD    XTDBCD                                              CER009
+      *                                                                                       CER009
+     C           PCECBC    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTECBC                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCECBC    XTECBC                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PCPRCT    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTPRCT                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCPRCT    XTPRCT                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PCCNTP    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTCNTP                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCCNTP    XTCNTP                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PCFSCD    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTFSCD                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCFSCD    XTFSCD                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCBNTP    XTBNTP                                              CER009
+      *                                                                                       CER009
+     C           PCCUCR    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTCUCR                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCCUCR    XTCUCR                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCCRTP    XTCRTP                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCCRNM    XTCRNM                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCCPPT    XTCPPT                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCFCCR    XTFCCR                                              CER009
+      *                                                                                       CER009
+     C           PCHLCD    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTHLCD                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PCHLCD    XTHLCD                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCCCCN    XTCCCN                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PCPROV    XTPROV                                              CER009
+     C                     MOVE PCCCCL    XTCCCL                                              LUC139
+     C                     MOVE PCCURF    XTCURF                                              LUC139
+      *                                                                                       CER009
+     C                     WRITEZZPAGHDR               97                                     CER008
+     C                     WRITEZZCER009                                                      CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C           ULX043    IFEQ 'Y'                                                           CER001
      C           ILFLAG    ANDEQ'0'                                                           CER001
      C                     MOVE *BLANKS   RRFROM                                              CER001
@@ -2637,6 +2769,33 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,SD0010PCP6                                           S01408
      C*                                                                   S01408
+      *                                                                                       CER008
+      ** CER008.......Italian customer details                                                CER008
+      *                                                                                       CER008
+     C                     MOVE 'N'       CER008  1                                           CER008
+     C                     CALL 'AOSARDR0'                                                    CER008
+     C                     PARM *BLANKS   @RTCD                                               CER008
+     C                     PARM '*VERIFY' @OPTN                                               CER008
+     C                     PARM 'CER008'  @SARD                                               CER008
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER008
+      *                                                                                       CER008
+     C           @RTCD     IFEQ *BLANKS                                                       CER008
+     C                     MOVE 'Y'       CER008                                              CER008
+     C                     ENDIF                                                              CER008
+      *                                                                                       CER009
+      ** Check feature 'CER009' existence : BOI Monthly Reporting                             CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009  1                                           CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   @RTCD                                               CER009
+     C                     PARM '*VERIFY' @OPTN                                               CER009
+     C                     PARM 'CER009'  @SARD                                               CER009
+      *                                                                                       CER009
+      ** If feature 'CER009' is installed                                                     CER009
+      *                                                                                       CER009
+     C           @RTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Determine if feature ULX012 (Guarantees and Collateral                               CER001
       ** Management enhancements) is installed                                                CER001

@@ -13,8 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. LUC139             Date 11Jan21               *
+      *  Prev Amend No. CER009             Date 22Oct20               *
+      *                 CER008             Date 22Oct20               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
@@ -231,6 +234,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MP                               *
+      *  CER008 - Base Italian Features Upgrade to MP                 *      
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -691,6 +697,8 @@
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
+     D  TransIt1               1      1                                                       LUC139
+     D  TransIt2               2    175                                                       LUC139
                                                                                               CSW213
      D TransInEx4      DS          9999                                                       CSW213
      D  TransCUAH                          LIKE(SDCUAH)                                       CSW213
@@ -763,6 +771,8 @@
      D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
      D DDEXDT_FX     E                     EXTFLD(DDEXDT)                                     CDL099
      D SDCUEX        E DS                  EXTNAME(SDCUEXPD)                                MD044880
+     D SDCUS1        E DS                  EXTNAME(SDCUS1PD)                                  LUC139
+     D SDCUS2        E DS                  EXTNAME(SDCUS2PD)                                  LUC139
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -1028,6 +1038,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D RatDateDS       S           4800A                                                    BUG10563
      D PayDateDS       S           4800A                                                    BUG10563
      D WDUMMY          S             90A                                                    BUG10563
+     D Bfp8            S              4  0                                                    CER009
 
       *                                                                                       CER001
       ** Length for regional fields                                                           CER001
@@ -1113,6 +1124,9 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D DLAALn          S              4  0                                                    CAP210
      D CCTNLn          S              4  0                                                 AR1086546
      D CCTNLn1         S              4  0                                                  MD021813
+     D FRXLn           S              4  0                                                    CER009
+     D FXFRLn          S              4  0                                                    CER009
+     D IRSILn          S              4  0                                                    CER009
                                                                                               CSW209
       ** Work variable used by CSW209                                                         CSW209
      D IPY9ALn         S              4P 0                                                    CSW209
@@ -1159,6 +1173,8 @@ RGC  D RPIF4LN         S              4  0                                      
      D FTCRLn          S              4  0                                                    CGL132
      D CRSSLn          S              4  0                                                    CGL157
      D CRDDLn          S              4  0                                                    CGL157
+     D CUS1Ln          S              4  0                                                    CER008
+     D CUS2Ln          S              4  0                                                    CER009     
      D/COPY OFCPYSRCZ,CRE101_001                                                              CRE101
       ** +--- Start of main processing -----------------------------------+
 
@@ -1320,6 +1336,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
      C                   ADD       RPIFLn        Bfp                                          CDL099
      C     FXEDLn        SUBST     BUFFER:Bfp    InCDL099                                     CDL099
+     C                   ADD       RPIFLn        Bfp                                          CER009
+     C     FXFRLn        SUBST     BUFFER:Bfp    RegData                                      CER009
+     C                   ADD       FXFRLn        Bfp                                          CER009
 
      C                   CALL      'FXFXDLVU'
       * Common header information (DS) from source system
@@ -1334,6 +1353,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                     BUG4815
      C                   PARM                    ExtData
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    RegData                                      CER009
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -5296,6 +5316,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CDL099
      C                   Z-ADD     RecordLen     FXEDLn            4 0                        CDL099
                                                                                               CDL099
+                                                                                              CER009
+     C                   MOVEL     'FXFXRXPD'    FileName                                     CER009
+     C                   EXSR      GETRCDLN                                                   CER009
+     C                   Z-ADD     RecordLen     FXFRLn                                       CER009
      C**********         MOVEL     'SDCUCUPD'    FileName                              CER043 CSF011
      C**********         EXSR      GETRCDLN                                            CER043 CSF011
      C**********         Z-ADD     RecordLen     SDCULn                                CER043 CSF011
@@ -5776,6 +5800,15 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CGL157
      C                   EVAL      FileName = 'SDCRDDPD'                                      CGL157
      C                   EXSR      GETRCDLN                                                   CGL157
+                                                                                              CER008
+     C                   EVAL      FileName = 'SDCUS1PD'                                      LUC139
+     C                   EXSR      GETRCDLN                                                   CER008
+     C                   EVAL      CUS1Ln = RecordLen                                         CER008
+                                                                                              CER008
+     C                   EVAL      FileName = 'SDCUS2PD'                                      LUC139
+     C                   EXSR      GETRCDLN                                                   CER009
+     C                   EVAL      CUS2Ln = RecordLen                                         CER009
+                                                                                              CER009
      C                   Z-ADD     500           CRS01Ln           4 0                        CGL157
      C                   Z-ADD     500           CRS02Ln           4 0                        CGL157
      C                   Z-ADD     500           CRS03Ln           4 0                        CGL157
@@ -7400,6 +7433,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      Bfp  += 20                                               MD055373
       *                                                                                     MD055373
      C                                                                                      MD054028
+     C**********         EVAL      TransIt1  = %SUBST(BufferEx2:Bfp:CUS1Ln)            CER008 LUC139
+     C**********         EVAL      Bfp  += CUS1Ln                                      CER008 LUC139
+     C**********         EVAL      TransIt2  = %SUBST(BufferEx2:Bfp:CUS2Ln)            CER009 LUC139
+     C**********         EVAL      Bfp  += CUS2Ln                                      CER009 LUC139
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093
@@ -7411,6 +7448,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C     ExtCUSDBufEx3 BEGSR                                                              MD022093
                                                                                             MD022093
      C                   EVAL      Bfp = 1                                                  MD022093
+     C                   EVAL      TransIt1  = %SUBST(BufferEx3:Bfp:CUS1Ln)                   LUC139
+     C                   EVAL      Bfp  += CUS1Ln                                             LUC139
+     C                   EVAL      TransIt2  = %SUBST(BufferEx3:Bfp:CUS2Ln)                   LUC139
      C                   EVAL      BFEx3Ln -= Bfp                                           MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093

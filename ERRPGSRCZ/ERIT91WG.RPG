@@ -1,0 +1,100 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER European Italy I.C.D. Setup')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT91WG - European Italy I.C.D. Setup                       *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. UIT021 *Create     Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+     FERITICL0UF  E           K        DISK                      A
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      ** List of parameters.
+     C           *ENTRY    PLIST
+     C                     PARM           @RTRN   7
+     C                     PARM           @MODE   1
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'ERIT91WG'DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C           @MODE     IFEQ '1'
+     C           @MODE     OREQ '2'
+      *
+     C                     MOVE 'IT'      WWICCD  2
+     C           WWICCD    CHAINERITICL0             32
+      *
+     C           *IN32     IFEQ '1'
+      *
+     C                     MOVE 'IT'      N1ICCD
+     C                     MOVE 'N'       N1LERP
+     C                     Z-ADD0         N1CORD
+     C                     Z-ADD0         N1PRRV
+     C                     Z-ADDBJRDNB    N1LCD
+     C                     MOVE 'I'       N1TYLC
+      *
+     C                     WRITEERITICD0
+      *
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C*****************************************************************
+     C** *PSSR  S/R
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C**
+     C                     ENDSR
+     C*****************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

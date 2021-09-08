@@ -1,0 +1,112 @@
+     H        1    Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR AGGREGATE FIELDS 6001/3 FOR RENEWED LOANS')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR4021 - AGGREGATE FIELDS 6001/3 FOR RENEWED LOANS           *
+      *                                                               *
+      *  Called By: IRC1000 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Misys 2009                                     *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 13Jan21               *
+      *  Prev Amend No. MMI140             Date 28Feb11               *
+      *                 MBV006 *Create     Date 07Oct09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - PUMA Changes February 2011 and Usura changes.       *
+      *           Aggregate also fields for Usura.                    *
+      *  MBV006 - HVB modification: aggregate values of fields 6001   *
+      *           and 6003 on all loans which are part of a rollover  *
+      *           chain and output them only on the loan which is     *
+      *           live at end of reporting month.                     *
+      *                                                               *
+      *****************************************************************
+     FBVLQLKL4IP  E           K        DISK
+     FIRPUMAL0UF  E           K        DISK
+      *
+      ** Italian Returns Data Area
+     IIRSTAT    E DSIRSTAT
+      *
+      * Read all Loan Links file received from Loan IQ and exclude
+      * links where the new loan has not yet started
+      *
+     C           BVNOST    IFLE IREMD
+      *
+      * Check that both the old and the new loans are present in the
+      * extract file.
+      *
+     C                     MOVELBVOLLN    MK277     P
+     C           MK277     CHAINIRPUMAL0             01
+      *
+     C                     Z-ADDMK953     OLD953                          MMI140
+     C                     Z-ADDMK954     OLD954                          MMI140
+     C                     Z-ADDMK955     OLD955                          MMI140
+     C                     Z-ADDM06001    OL6001
+     C                     Z-ADDM06003    OL6003
+     C                     Z-ADDM09478    OL9478                          MMI140
+      *
+     C                     MOVELBVNLLN    MK277     P
+     C           MK277     CHAINIRPUMAL0             02
+      *
+      * If both loans are present in extract file:
+      *
+     C           *IN01     IFEQ *OFF
+     C           *IN02     ANDEQ*OFF
+      *
+      * - Increase fields on new loan by amounts from old loan
+      *
+     C                     ADD  OLD954    MK954                           MMI140
+     C                     ADD  OLD955    MK955                           MMI140
+     C                     ADD  OL6001    M06001
+     C                     ADD  OL6003    M06003
+     C                     ADD  OL9478    M09478                          MMI140
+     C           OLD953    IFGT MK953                                     MMI140
+     C                     Z-ADDOLD953    MK953                           MMI140
+     C                     ENDIF                                          MMI140
+      *
+     C                     UPDATIRPUMA
+      *
+      * - Zeroise fields on old loan
+      *
+     C                     MOVELBVOLLN    MK277     P
+     C           MK277     CHAINIRPUMAL0             01
+     C           *IN01     IFEQ *OFF
+     C                     Z-ADD*ZERO     MK954                           MMI140
+     C                     Z-ADD*ZERO     MK955                           MMI140
+     C                     Z-ADD*ZERO     M06001
+     C                     Z-ADD*ZERO     M06003
+     C                     Z-ADD*ZERO     M09478                          MMI140
+     C                     UPDATIRPUMA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initial Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *LIKE     DEFN MK953     OLD953                          MMI140
+     C           *LIKE     DEFN MK954     OLD954                          MMI140
+     C           *LIKE     DEFN MK955     OLD955                          MMI140
+     C           *LIKE     DEFN M06001    OL6001
+     C           *LIKE     DEFN M06003    OL6003
+     C           *LIKE     DEFN M09478    OL9478                          MMI140
+      *
+      *** Retrieve DTAARA for reporting date
+      *
+     C           *NAMVAR   DEFN           IRSTAT
+     C                     IN   IRSTAT
+      *
+     C                     ENDSR

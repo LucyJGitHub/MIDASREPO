@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. MD058050           Date 10May21               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. CER009             Date 17Nov20               *
+      *                 MD057871           Date 30Apr21               *
+      *                 MD058050           Date 10May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -137,6 +139,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns Upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MP                               *
       *  MD057871 - Allow a blank floor in calling ARR Calculator     *
       *  MD058050 - CLE172 fields are reflected in LE0310P1 Report    *
       *             when CLE172 off. Switch off *IN21 if CLE172 is    *
@@ -351,6 +355,9 @@
      FLELOANL8IF  E           K        DISK                               140821
      F            CLOANCLF                          KRENAMELELOAN8F       140821
      F/COPY WNCPYSRC,LE0310FFP1                                           S01408
+     FLECLT1L0IF  E           K        DISK                                                   CER009
+      ** RTV: Lending Trans. Extension file for BOI Monthly Reporting                         CER009
+      *                                                                                       CER009
      FLELOAML7IF  E           K        DISK                                                   237732
      F*                                                                   S01408
      FLECLX1L0IF  E           K        DISK                                                   CER001
@@ -1238,6 +1245,21 @@
      C***/COPY*WNCPYSRC,LE0310CCP3***                                                         CFC006
      C/COPY WNCPYSRC,LE0310CCP3                                                             MD020563
      C*
+      ** Check feature 'CER009' existence                                                     CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009  1                                           CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+      ** If feature 'CER009' is installed                                                     CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
       *****************************************************************           AR1097176 MD020563
       ***Check*if*CFC006*-*COB*Restructure*-*Remove*reports*from*COB***           AR1097176 MD020563
       ***is*installed**************************************************           AR1097176 MD020563
@@ -2309,6 +2331,13 @@ STOP  *                                                                   CLE004
      C                     ENDIF                                                              CER050
       *                                                                                       CER050
 0440 C                     EXSR DETAB
+      *                                                                                       CER009
+      ** Reset indicator                                                                      CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE *OFF      *IN25                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C/COPY WNCPYSRC,LE0310C003
 0441 C*
 0442 C*
@@ -2402,6 +2431,129 @@ STOP  *                                                                   CLE004
      C**                                                                  S01408
      C/COPY WNCPYSRC,LE0310CCP1                                           S01408
      C*                                                                   S01408
+      ** BOI Monthly Reporting                                                                CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+      *                                                                                       CER009
+     C           LNRF      CHAINLECLT1D0             88                                       CER009
+      *                                                                                       CER009
+     C           *IN88     IFEQ *OFF                                                          CER009
+      *                                                                                       CER009
+     C                     MOVE PFMOOP    XTMOOP  1                                           CER009
+      *                                                                                       CER009
+     C           PFAGCT    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTAGCT  3                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PFAGCT    XTAGCT                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PFAGCL    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTAGCL  3                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PFAGCL    XTAGCL                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PFECBD    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTECBD  2                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PFECBD    XTECBD                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PFSBCR    XTSBCR  1                                           CER009
+      *                                                                                       CER009
+     C                     MOVE PFSBLW    XTSBLW  3                                           CER009
+      *                                                                                       CER009
+     C                     MOVE PFINSB    XTINSB  1                                           CER009
+      *                                                                                       CER009
+     C           PFTPPR    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTTPPR  6                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PFTPPR    XTTPPR                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PFPEPR    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTPEPR  6                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PFPEPR    XTPEPR                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PFGLPA    XTGLPA  1                                           CER009
+      *                                                                                       CER009
+     C                     MOVE PFTPFD    XTTPFD  1                                           CER009
+      *                                                                                       CER009
+     C           PFDPIV    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTDPIV  5                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PFDPIV    XTDPIV                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PFEDIV    XTEDIV  3                                           CER009
+      *                                                                                       CER009
+     C                     Z-ADD0         ZADEC                                               CER009
+      *                                                                                       CER009
+     C           PFCATC    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTCATC 11                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE *BLANK    ZFIELD                                              CER009
+     C                     MOVE PFCATC    ZFIELD                                              CER009
+     C                     EXSR ZEDIT                                                         CER009
+     C                     MOVE ZFIELD    XTCATC                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE *BLANK    ZFIELD                                              CER009
+     C                     MOVE PFTPAC    ZFIELD                                              CER009
+     C                     EXSR ZEDIT                                                         CER009
+     C                     MOVE ZFIELD    XTTPAC  3                                           CER009
+      *                                                                                       CER009
+     C                     MOVE *BLANK    ZFIELD                                              CER009
+     C                     MOVE PFCLRL    ZFIELD                                              CER009
+     C                     EXSR ZEDIT                                                         CER009
+     C                     MOVE ZFIELD    XTCLRL  3                                           CER009
+      *                                                                                       CER009
+     C                     MOVE *BLANK    ZFIELD                                              CER009
+     C                     MOVE PFACST    ZFIELD                                              CER009
+     C                     EXSR ZEDIT                                                         CER009
+     C                     MOVE ZFIELD    XTACST  3                                           CER009
+      *                                                                                       CER009
+     C                     MOVE PFLNIT    XTLNIT  7                                           CER009
+      *                                                                                       CER009
+     C                     Z-ADD3         ZADEC                                               CER009
+      *                                                                                       CER009
+     C           PFTEGL    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTTEGL  9                                           CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE *BLANK    ZFIELD                                              CER009
+     C                     MOVE PFTEGL    ZFIELD                                              CER009
+     C                     EXSR ZEDIT                                                         CER009
+     C                     MOVE ZFIELD    XTTEGL                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PFPTRP    IFEQ *ZEROS                                                        LUC139
+     C                     MOVE *BLANK    XTPTRP  3                                           LUC139
+     C                     ELSE                                                               LUC139
+     C                     MOVE PFPTRP    XTPTRP                                              LUC139
+     C                     ENDIF                                                              LUC139
+      *                                                                                       LUC139
+     C           PFCMPC    IFEQ *ZEROS                                                        LUC139
+     C                     MOVE *BLANK    XTCMPC  9                                           LUC139
+     C                     ELSE                                                               LUC139
+     C                     MOVE *BLANK    ZFIELD                                              LUC139
+     C                     MOVE PFCMPC    ZFIELD                                              LUC139
+     C                     EXSR ZEDIT                                                         LUC139
+     C                     MOVE ZFIELD    XTCMPC                                              LUC139
+     C                     ENDIF                                                              LUC139
+      *                                                                                       LUC139
+     C                     MOVE *ON       *IN25                                               CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+     C                     MOVE *OFF      *IN25                                               CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE *OFF      *IN25                                               CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Accessed to LECLX1L0 european reporting file                                         CER001
       *                                                                                       CER001
@@ -2701,12 +2853,26 @@ STOP  *                                                                   CLE004
 0565 C*
 0566 C           DETB      BEGSR                           *** DETB ***
 0567 C*
+      ** Move *IN25 to a work field as it will be used by DETB                                CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE *IN25     WIN25   1                                           CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
 0568 C*
 0569 C                     SETOF                     27
 0570 C*
 0571 C*    EXECUTE PROCESSING COMMON TO 1 & 2 RECORDS
 0572 C*
 0573 C                     EXSR DETAB
+      *                                                                                       CER009
+      ** Return the value of *IN25 after it is used                                           CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE WIN25     *IN25                                               CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE *OFF      *IN25                                               CER009
+     C                     ENDIF                                                              CER009
 0574 C*
 0575 C*    IF NOT ACTIONED TODAY, NO FURTHER PROCESSING
 0576 C*
@@ -5212,6 +5378,117 @@ STOP  *                                                                   CLE004
      O        D  1     30 80                                                                  244691
      O                    72             62 'ROLLOVER BASE RATE CODE'                         244691
      O                 65      NBRA      69                                                   244691
+      ** BOI Monthly Reporting                                                                CER009
+      *                                                                                       CER009
+     O        D 11     25                                                                     CER009
+     O                                   24 'BOI Monthly Reporting :'                         CER009
+     O                                   48 'Motivation of operation'                         CER009
+     O                                   72 '........................'                        CER009
+     O                                   87 '..............:'                                 CER009
+     O                         XTMOOP    89                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   44 'Agricultural credit'                             CER009
+     O                                   69 'classification..........'                        CER009
+     O                                   87 '.................:'                              CER009
+     O                         XTAGCT    91                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   42 'Agricultural laws'                               CER009
+     O                                   67 'classification..........'                        CER009
+     O                                   87 '...................:'                            CER009
+     O                         XTAGCL    91                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   45 'Economical branch of'                            CER009
+     O                                   61 'destination for'                                 CER009
+     O                                   74 'agricultural'                                    CER009
+     O                                   87 'investment :'                                    CER009
+     O                         XTECBD    90                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   42 'Subsidized credit'                               CER009
+     O                                   67 'indicator...............'                        CER009
+     O                                   87 '...................:'                            CER009
+     O                         XTSBCR    89                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   43 'Law for subsidized'                              CER009
+     O                                   68 'credit code.............'                        CER009
+     O                                   87 '...................:'                            CER009
+     O                         XTSBLW    92                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   44 'Subsidized interest'                             CER009
+     O                                   61 'for export oper.'                                CER009
+     O                                   85 'indicator...............'                        CER009
+     O                                   87 ':'                                               CER009
+     O                         XTINSB    89                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   49 'Type of product.........'                        CER009
+     O                                   73 '........................'                        CER009
+     O                                   87 '.............:'                                  CER009
+     O                         XTTPPR    94                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   40 'Personalisation'                                 CER009
+     O                                   65 'of operation............'                        CER009
+     O                                   87 '.....................:'                          CER009
+     O                         XTPEPR    94                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   42 'Global or partial'                               CER009
+     O                                   67 'operation...............'                        CER009
+     O                                   87 '...................:'                            CER009
+     O                         XTGLPA    89                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   45 'Operation with third'                            CER009
+     O                                   70 'party funds.............'                        CER009
+     O                                   87 '................:'                               CER009
+     O                         XTTPFD    89                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   45 'Destination province'                            CER009
+     O                                   70 'of investment...........'                        CER009
+     O                                   87 '................:'                               CER009
+     O                         XTDPIV    93                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   45 'Economic destination'                            CER009
+     O                                   70 'of investment...........'                        CER009
+     O                                   87 '................:'                               CER009
+     O                         XTEDIV    91                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   49 'Category code CR........'                        CER009
+     O                                   73 '........................'                        CER009
+     O                                   87 '.............:'                                  CER009
+     O                         XTCATC    99                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   49 'Type of activity........'                        CER009
+     O                                   73 '........................'                        CER009
+     O                                   87 '.............:'                                  CER009
+     O                         XTTPAC    91                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   49 'Client role CR..........'                        CER009
+     O                                   73 '........................'                        CER009
+     O                                   87 '.............:'                                  CER009
+     O                         XTCLRL    91                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   49 'Account status CR.......'                        CER009
+     O                                   73 '........................'                        CER009
+     O                                   87 '.............:'                                  CER009
+     O                         XTACST    91                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   43 'Line item of usura'                              CER009
+     O                                   68 'reporting...............'                        CER009
+     O                                   87 '..................:'                             CER009
+     O                         XTLNIT    95                                                   CER009
+     O        D  1     25                                                                     CER009
+     O                                   49 'Effective Global Rate...'                        CER009
+     O                                   73 '........................'                        CER009
+     O                                   87 '.............:'                                  CER009
+     O                         XTTEGL    97                                                   CER009
+     O        D  1     25                                                                     LUC139
+     O                                   49 'Priority Risk Code'                              LUC139
+     O                                   68 'product.................'                        LUC139
+     O                                   87 '..................:'                             LUC139
+     O                         XTPTRP    91                                                   LUC139
+     O        D  1     25                                                                     LUC139
+     O                                   43 'Commission Rate of'                              LUC139
+     O                                   61 'maximum uncovered'                               LUC139
+     O                                   86 'balance.................'                        LUC139
+     O                                   87 ':'                                               LUC139
+     O                         XTCMPC    97                                                   LUC139
      O        D  1     30 80                                              S01518
      O**********                         18 'BASE CCY RATE'                            S01518 CLE036
      O**********       63      BCXR      35 '   0 .        '                           S01518 CLE036

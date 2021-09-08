@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD030964           Date 06Mar17               *      
+      *  Last Amend No. LUC139             Date 08Jan21               *
+      *  Prev Amend No. BUG14529(CER009)   Date 18Nov20               *
+      *                 CER009             Date 18Nov20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD030964           Date 06Mar17               *      
       *                 MD039655           Date 03Sep19               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -53,6 +56,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  BUG14529 -  Error on Amend - Serious Midas Error (CER009)    *
+      *  CER009 - PUMA II Upgrade to MP                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD030964 - Convert settlement details to screen format.      *      
@@ -180,6 +186,9 @@
       *                                                                                       CER001
       ** ER Facilities details LUX Extension File                                             CER001
       *                                                                                       CER001
+     D CrFilDtaItl   E DS                  EXTNAME(LEFCT1PD)                                  CER009
+      ** PUMA II Details in File Format                                                       CER009
+                                                                                              CER009
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER001
       *                                                                                       CER001
       ** First DS for Access programs - short data structure                                  CER001
@@ -195,6 +204,12 @@
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)                                MD030964
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
       ** External DS for Customer Details                                                     CSF011
+                                                                                              CER009
+     D SDCURR        E DS                  Extname(SDCURRPD)                                  CER009
+      ** Currency Codes                                                                       CER009
+                                                                                              CER009
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CER009
+      ** External DS for Dealing ICD                                                          CER009
 
       **--------------------------------------------------------------------------------------------
 
@@ -208,6 +223,8 @@
      D POPTN           S              7A                                                      CER001
      D PSARD           S              6A                                                      CER001
      D ULX004          S              1A                                                      CER001
+     D CER009          S              1A                                                      CER009
+     D PCurr           S              3A                                                      CER009
                                                                                               CER049
      DTranStamp        S             51A                                                      CER049
       ** Stamp Tax Details                                                                    CER049
@@ -294,6 +311,11 @@
      C                   IF        ULX004  = 'Y'                                              CER001
      C                   EXSR      LEFCIP2RV                                                  CER001
      C                   ENDIF                                                                CER001
+                                                                                              CER009
+     C                   If        CER009  = 'Y'                                              CER009
+     C                   Exsr      SrFCIP4RV                                                  CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
      C     CLE106        IFEQ      'Y'                                                        CLE106
       *                                                                                       CLE106
       ** Facility UTN was extracted from the FM file format data structure                    CLE106
@@ -329,6 +351,11 @@
      C                   EXSR      ZASETINCVT                                               MD030964
      C                   ENDIF                                                              MD030964
       *                                                                                     MD030964
+                                                                                              CER009
+     C                   If        CER009  = 'Y'                                              CER009
+     C                   Exsr      SrFCIP4CT                                                  CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
      C                   ENDIF
 
      C                   ENDIF
@@ -506,6 +533,26 @@
      C                   ELSE                                                                 CER001
      C                   EVAL      ULX004  = 'Y'                                              CER001
      C                   ENDIF                                                                CER001
+                                                                                              CER009
+      ** Check Feature CER009                                                                 CER009
+                                                                                              CER009
+     C                   Callb     'AOSARDR0'                                                 CER009
+     C                   Parm      *BLANKS       ReturnCode                                   CER009
+     C                   Parm      '*VERIFY'     POptn                                        CER009
+     C                   Parm      'CER009'      PSarD                                        CER009
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+     C                   If        ReturnCode = *BLANKS                                       CER009
+     C                   Eval      CER009 = 'Y'                                               CER009
+     C                   Else                                                                 CER009
+     C                   Eval      CER009 = 'N'                                               CER009
+     C                   Endif                                                                CER009
+                                                                                              CER009
+     C                   Callb     'AODEALR1'                                                 CER009
+     C                   Parm      *BLANKS       ReturnCode                                   CER009
+     C                   Parm      '*FIRST'      POptn                                        CER009
+     C     SDDEAL        Parm      SDDEAL        DSSDY                                        CER009
+                                                                                              CER009
      C                   ENDSR
 
       **********************************************************************
@@ -655,6 +702,23 @@
       *****************************************************************                       CER001
       /EJECT                                                                                  CER001
       *****************************************************************
+      *                                                               *                       CER009
+      *  SrFCIP4RV - Retrieve PUMA II Details                         *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     SrFCIP4RV     Begsr                                                                CER009
+                                                                                              CER009
+     C                   Callb     'LEFCIP4RV'                                                CER009
+     C                   Parm                    ReturnCode                                   CER009
+     C                   Parm                    CNUM                                         CER009
+     C                   Parm                    DDFACT                                       CER009
+     C                   Parm                    DDFCNO                                       CER009
+     C                   Parm                    CrFilDtaItl                                  CER009
+                                                                                              CER009
+     C                   Endsr                                                                CER009
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
      C     LEFCIPCVT     BEGSR
 
      C                   CALLB     'LEFCIPCVT'
@@ -759,5 +823,31 @@
       *****************************************************************                     MD030964
       /EJECT                                                                                MD030964
       *****************************************************************                     MD030964
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SrFCIP4CT - Convert PUMA II Details                          *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     SrFCIP4CT     Begsr                                                                CER009
+                                                                                              CER009
+     C                   Movel     FMFCCY        Pcurr                                        CER009
+                                                                                              CER009
+     C                   Callb     'AOCURRR0'                                                 CER009
+     C                   Parm      *BLANK        ReturnCode                                   CER009
+     C                   Parm      '*KEY   '     Poptn                                        CER009
+     C                   Parm                    Pcurr                                        CER009
+     C     SDCURR        Parm      SDCURR        DSSDY                                        CER009
+                                                                                              CER009
+     C                   Callb     'LEFCIP4CT'                                                CER009
+     C                   Parm                    ReturnCode                                   CER009
+     C                   Parm                    A6NBDP                                       CER009
+     C                   Parm                    BNDCSP                                       CER009
+     C                   Parm                    CrFilDtaItl                                  CER009
+     C                   Parm                    RegData                                      CER009
+                                                                                              CER009
+     C                   Endsr                                                                CER009
+      *****************************************************************                       CER009
 **  CPY@
 (c) Finastra International Limited 2003

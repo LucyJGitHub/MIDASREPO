@@ -1,0 +1,714 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*XBIA*  OVRDSPF MEP1010D MEP1010DF                                   *
+/*EXI *  TEXT('Midas ME Display Incoming Messages Log Records')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module
+      *                                                               *
+      *  MEP1010 - Display Incoming Messages Log Records              *
+      *                                                               *
+      *  Function:  This program displays selected messages and       *
+      *             controls any actions.                             *
+      *                                                               *
+      *  Called By: MEC1000 - Display Incoming Messages               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. EFix022            Date 22Apr15               *
+      *  Prev Amend No. MD031937           Date 13Jan15               *
+      *                 AR856737           Date 15Jul2011             *
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE058   *CREATE   Date 14Feb2003             *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  EFix022  - Remove /COPY MECPYSRC,SRERRPSSR                   *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+     FMEP1010DCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+     F                                              KINFSR SRFILE
+      * DSP: Display Log Record        Display record(1 screen)
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E*
+     E/COPY MECPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     I/COPY MECPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+      /EJECT
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP Action Code
+     I                                        1   1 P1ACTC
+     IP2PARM    E DSMEINLFPD                    512
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Invalid Action code (FT)'
+      * Action Code
+     I                                        1   1 ZA0001
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I*
+     I*** Split up Log Information Field
+     I#1LIN       DS
+     I                                        1  78 #1LINA
+     I                                       79 302 #1LINB
+     I                                        1  78 #1LIN1
+     I                                       79 156 #1LIN2
+     I                                      157 234 #1LIN3
+     I                                      235 312 #1LIN4
+     I*
+     IP0KEYI      DS                            100
+      **  Define data structure used to pass parameters
+      *
+     I                                        1  10 ##ARCH
+      /EJECT
+      *
+      * Data to be passed to window processing
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1ACTC    PARM           WP0001  1        Action Code
+     C                     PARM           P2PARM           RCD: UDC Data R
+     C                     PARM           P0KEYI
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELP2PARM    W0PREF
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1MSGR    IFEQ *ZERO                      Item Identifier
+      * One or more key fields is blank
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+     C   12                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+      * Enable PUTOVR
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      *
+      * Build key
+     C                     EXSR MBFL#1
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+     C*
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+      * Enable PUTOVR
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+     C   05                MOVEL'Y'       W0TRN
+      *
+      * If insert go to key screen else exit
+      *
+     C           *IN12     IFEQ '1'
+     C           P1ACTC    IFEQ 'I'
+     C                     MOVEL'K'       W0TRN
+     C                     ELSE
+     C                     EXSR ZXEXPG
+     C                     END
+     C                     END
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C           P1ACTC    IFEQ 'I'
+     C           P1ACTC    OREQ 'A'
+     C  N10                EXSR DCVLDL
+     C                     END
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C           P1ACTC    IFEQ 'A'
+     C           P1ACTC    OREQ 'I'
+     C           P1ACTC    OREQ 'D'
+     C           *IN10     ANDEQ'1'
+     C                     EXSR EBPR##
+     C                     END
+      *
+      * Exit if enquire
+      *
+     C           P1ACTC    IFEQ 'E'
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * DSPRCD: Det. Scrn Func. F - R10 Copy source templates  * 
+      * CASE: DTL.Action Code is Enquire
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1MSGR           Message Reference
+     C                     Z-ADD*ZERO     #1KPRT           Message Part
+     C                     Z-ADD*ZERO     #1DTAC           Date of Action
+     C                     MOVEL*BLANKS   #KDTAC           Date of Action
+      *
+      * Fill Command lines and narrative text from messages
+      *
+     C                     SELEC
+      *
+      * Enquiry screen
+      *
+     C           P1ACTC    WHEQ 'E'
+     C           P1ACTC    OREQ 'e'
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'STP0030' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONDT
+      *
+      * Action codes
+      *
+     C                     MOVEL*BLANKS   ##CMD1
+      *
+      * Function keys
+      *
+     C           P1ACTC    IFEQ 'Y'
+     C                     MOVEL'STP0032' #UFKEY
+     C                     ELSE
+     C                     MOVEL'STP0033' #UFKEY
+     C                     END
+      *
+     C                     ENDSL
+      *
+      * Function keys
+      *
+     C           *LIKE     DEFN #MSGID    #UFKEY
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM #UFKEY    #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move Log File fields to screen
+      *================================================================
+     C                     Z-ADDLFMSGR    #1MSGR           Message Reference
+     C                     Z-ADDLFKPRT    #1KPRT           Message Part
+     C                     MOVELLFRDNB    #1DTAC           Date of Action
+     C                     MOVEL*BLANKS   #KDTAC           Date of Action
+     C                     MOVELLFMSID    #1MSID           Action (Msg id.)
+     C                     MOVELLFMSDT    #1LIN1           Log Info Line 1
+     C                     MOVELLFARSM    #1LIN2           Log Info Line 2
+     C                     MOVELLFARSD    #1LIN3           Log Info Line 3
+     C                     MOVEL*BLANKS   #1LIN4           Log Info Line 4
+     C                     MOVELLFAUSR    #1AUSR           User name
+     C                     MOVELLFARDT    #1ARDT           Action Date
+     C                     Z-ADDLFATIM    #1ATIM           Action Time
+     C*
+     C**  Format Date of Action for display
+     C                     Z-ADDLFRDNB    SSDAYN
+     C                     CALL 'ZA0140'
+     C                     PARM           SSDAYN  50
+     C                     PARM WUDFF     SSDFMT  1
+     C                     PARM *ZEROS    SSDATE  60
+     C                     PARM *BLANKS   SSDATA  7
+     C                     PARM *BLANK    SSRTN   1
+     C                     PARM *ZEROS    SSDAT8  80
+     C                     MOVELSSDATE    #KDTAC
+     C*
+     C                     MOVELLFMSID    #1MSID           Action (Msg id.
+     C                     MOVE *OFF      *IN76
+      *
+      **  Use message id and Data to format Log Text
+     C                     MOVELLFMSID    #MSGID
+     C           LFMSGF    IFEQ *BLANKS
+     C                     MOVEL'MEMSG'   #MSGF     P
+     C                     ELSE
+     C                     MOVELLFMSGF    #MSGF
+     C                     ENDIF
+     C                     MOVELLFMSDT    #MSDTA    P
+     C                     CALL 'MEC1150'
+     C                     PARM           #MSGID  7
+     C                     PARM           #MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C                     MOVEL#MSTX1    #1LIN
+      *
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     Z-ADDLFMSGR    #1MSGR           Message Reference
+     C                     Z-ADDLFKPRT    #1KPRT           Message part
+     C                     MOVELP1ACTC    #PACTC           Action Code
+     C           P1ACTC    IFEQ 'e'
+     C                     MOVEL'E'       #PACTC           Action Code
+     C                     ENDIF
+     C                     Z-ADDLFRDNB    #1DTAC           Date of Action
+     C*
+     C**  Format Date of Action for display
+     C                     Z-ADDLFRDNB    SSDAYN
+     C                     CALL 'ZA0140'
+     C                     PARM           SSDAYN  50
+     C                     PARM WUDFF     SSDFMT  1
+     C                     PARM *ZEROS    SSDATE  60
+     C                     PARM *BLANKS   SSDATA  7
+     C                     PARM *BLANK    SSRTN   1
+     C                     PARM *ZEROS    SSDAT8  80
+     C                     MOVELSSDATE    #KDTAC
+     C*
+      *
+      * Option Name
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'STP0030' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##ONKY
+      *
+      * Action codes
+      *
+     C                     MOVEL*BLANKS   #KCMD1
+      *
+      * Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'STP0033' #MSGID
+     C                     PARM 'XXUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    #KCMD2
+     C*
+      * USER: Load key screen
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+     C                     MOVEL*BLANK    P0RTN
+      *
+      * CASE: CTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     END                             *FI
+      * CASE: CTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     END                             *FI
+      *
+      * DSPRCD: Exit Program - R10 Copy source templates  * 
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Copy any undisplayed messages back to caller
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Initialise indicators for re-entry
+     C                     MOVE '0'       *IN
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'FTUSRMSG'ZADFMF 10
+      * Define work field Midas run date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+     C                     MOVEL*BLANKS   BBIN89
+     C                     MOVEL*BLANKS   CBIN89
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Retrieve Midas Date - R10 Standard Functions  * 
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      *================================================================
+     C/EJECT
+     C*
+     C* PSSR Processing
+     C*
+     C******/COPY MECPYSRC,SRERRPSSR                                                         EFix022
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY MECPYSRC,SRERRC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

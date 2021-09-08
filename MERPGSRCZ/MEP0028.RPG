@@ -1,0 +1,135 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME  Check if IBAN currency equal to Msg ccy')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0028 - Check if IBAN currency equal to Message Currency   *
+      *                                                               *
+      *  Function:  This program checks if IBAN account specified     *
+      *  is in Messsage Currency (field 32A:)                         *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2003       *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 MKFX01             Date 23Jan06               *
+      *                 EEE058   *CREATE   Date 05Feb2003             *
+      * Midas Release 4.01--------------------------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  EEE058 - Incoming STP idenifier is Elixir customer           *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *
+      *  Customer details extension
+      *
+     F/EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Copyright
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IPCRIT     E DSMEGNCRPD
+      *
+      *  Return Criteria Details to calling program
+      *
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+     I                                       25  59 WUIBAN
+     I                                       60 256 REST
+      * Transalation field 32a:
+     I            DS
+     I                                        1  48 P@DCA
+     I                                       25  300P@DAT
+     I                                       31  33 P@CCY
+     I                                       34  48 P@AMT
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+     ID@ACCT    E DSACCNTAB
+      * ACCNTABF - Account details record format data structure
+      *
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *LIKE     DEFN WUTGCK    P@IN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C           WUFDDT    PARM           P@IN
+     C                     PARM           P#PTTN 32
+     C                     PARM           GDOPER  2
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           PCRIT            Message Details
+      * If true put T
+     C                     MOVEL'F'       P#RETN
+      *
+     C                     MOVELPDCA      P@DCA
+      *
+      *  Construct Midas IBAN from Account Line
+      *
+     C                     MOVE *BLANKS   P@IBAN
+     C                     MOVE *BLANKS   W@IBAN 34
+     C                     MOVELWUIBAN    ACCCHK  1
+     C           ACCCHK    IFEQ '/'
+     C                     MOVE WUIBAN    W@IBAN
+     C                     MOVELW@IBAN    P@IBAN
+     C                     ELSE
+     C                     MOVELWUIBAN    P@IBAN
+     C                     ENDIF
+      *
+     C                     CALL 'AOIBANR4'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM           P@IBAN 34
+     C           D@ACCT    PARM *BLANKS   DSSDY
+      *
+     C           P@RTCD    IFEQ *BLANKS
+      *
+     C           CCY       IFEQ P@CCY
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Exit program
+      *
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2003

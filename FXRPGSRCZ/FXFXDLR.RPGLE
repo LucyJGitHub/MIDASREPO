@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. LUC139             Date 15Jan21               *
+      *  Prev Amend No. CER009             Date 12Nov20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
@@ -45,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to Midasplus                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD044506 - MT300 98D trade execution date can not be before  *
@@ -167,6 +171,12 @@
      D  DLRPIFS3In                         LIKE(DLRPIFScn3Fmt)                                CSW213
      D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                                CSW214
                                                                                               CSW213
+                                                                                              CER009
+     D FXDLExFilFmt  E DS                  EXTNAME(DLFXT1PD)                                  CER009
+      ** FX Transaction Extension File - File Format                                          CER009
+                                                                                              CER009
+     D RegData       E DS                  EXTNAME(FXFXRXPD)                                  CER009
+      ** Regional Data in File Format                                                         CER009
       ** DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *
@@ -190,6 +200,9 @@
       *                                                                                       CDL099
       **--------------------------------------------------------------------------------------------
 
+     D CER009          S              1A                                                      CER009
+      ** Switchable Feature for the CER009 enhancement                                        CER009
+                                                                                              CER009
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
 
@@ -271,6 +284,7 @@
       *
      C                   MOVEL     @DLRED        DDDLNO
      C                   EXSR      FXFXDLRTV
+     C                   EXSR      SrFXFXDL2RV                                                CER009
                                                                                              BUG4562
       *                                                                                      BUG4562
       * Retrieve TRAM details                                                                BUG4562
@@ -282,6 +296,7 @@
       *
      C     Idx           IFEQ      0
      C                   EXSR      FXFXDLCVT
+     C                   EXSR      SrFXFXDL2CT                                                CER009
      C                   EXSR      ZASETINCVT
      C                   ENDIF
 
@@ -327,7 +342,8 @@
      C                                           + InfData                                    CTI004
      C                                           + ExtData + InSwift2013                      CSW213
      C                                           + OutCDL099                                  CDL099
-
+     C                                           + RegData                                    CER009
+     
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011
@@ -460,6 +476,21 @@
      C                   MOVEL     'N'           CDL099                                       CDL099
      C                   ENDIF                                                                CDL099
       *                                                                                       CDL099
+      ** Check if CER009 is enabled                                                           CER009
+                                                                                              CER009
+     C                   CallB     'AOSARDR0'                                                 CER009
+     C                   Parm      *blank        @RTCD                                        CER009
+     C                   Parm      '*VERIFY '    @OPTN                                        CER009
+     C                   Parm      'CER009'      @SARD                                        CER009
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+     C                   Eval      CER009 = 'N'                                               CER009
+     C                   If        @RTCD = *blank                                             CER009
+     C                   Eval      CER009 = 'Y'                                               CER009
+     C                   Else                                                                 CER009
+     C                   Eval      CER009 = 'N'                                               CER009
+     C                   EndIf                                                                CER009
+                                                                                              CER009
      C                   ENDSR
       **********************************************************************
      C     FXFXDLRED     BEGSR
@@ -795,6 +826,72 @@
      C                   ENDSR                                                                CSW213
       *****************************************************************                       CSW213
       /EJECT                                                                                  CSW213
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SrFXFXDL2RV - Retrieve the FX deals transaction extension    *                       CER009
+      *                data                                           *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     SrFXFXDL2RV   BEGSR                                                                CER009
+                                                                                              CER009
+      ** When CER009 enhancement is installed                                                 CER009
+                                                                                              CER009
+     C                   If        CER009 = 'Y'                                               CER009
+     C                   CallB     'FXFXDL2RV'                                                CER009
+                                                                                              CER009
+      ** Return code                                                                          CER009
+                                                                                              CER009
+     C                   Parm                    ReturnCode                                   CER009
+                                                                                              CER009
+      ** Action Code                                                                          CER009
+                                                                                              CER009
+     C                   Parm                    DDACTN                                       CER009
+                                                                                              CER009
+      ** Front Office Transaction ID                                                          CER009
+                                                                                              CER009
+     C                   Parm                    FOTRID                                       CER009
+                                                                                              CER009
+      ** (Midas) Deal Number                                                                  CER009
+                                                                                              CER009
+     C                   Parm                    DDDLNO                                       CER009
+                                                                                              CER009
+      ** FX Transaction Extension File - File Format                                          CER009
+                                                                                              CER009
+     C                   Parm                    FXDLExFilFmt                                 CER009
+     C                   EndIf                                                                CER009
+     C                   ENDSR                                                                CER009
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SrFXFXDL2CT - Convert the FX deals transaction extension data*                       CER009
+      *                to screen format                               *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     SrFXFXDL2CT   BEGSR                                                                CER009
+                                                                                              CER009
+      ** When CER009 enhancement is installed                                                 CER009
+                                                                                              CER009
+     C                   If        CER009 = 'Y'                                               CER009
+     C                   If        DDACTN = 'I'                                               CER009
+     C                   Eval      RegData = *blank                                           CER009
+     C                   Else                                                                 CER009
+     C                   CallB     'FXFXDL2CT'                                                CER009
+                                                                                              CER009
+      ** Return code                                                                          CER009
+                                                                                              CER009
+     C                   Parm                    ReturnCode                                   CER009
+                                                                                              CER009
+      ** FX Transaction Extension File - File Format                                          CER009
+                                                                                              CER009
+     C                   Parm                    FXDLExFilFmt                                 CER009
+                                                                                              CER009
+      ** Regional Data in File Format                                                         CER009
+                                                                                              CER009
+     C                   Parm                    RegData                                      CER009
+     C                   EndIf                                                                CER009
+     C                   EndIf                                                                CER009
+     C                   ENDSR                                                                CER009
       *****************************************************************
       /EJECT
      C/COPY ZACPYSRC,PSSR_ILE

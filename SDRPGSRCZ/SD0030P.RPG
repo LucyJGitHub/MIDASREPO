@@ -11,8 +11,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER009             Date 23Nov20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CRE015             Date 18Dec09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -52,6 +54,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MidasPlus                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  CRE015 - Retail Term and Notice Accounts                     *
@@ -119,6 +123,10 @@
      F*                                                               *
      F*****************************************************************
      F/COPY WNCPYSRC,SD0030PFPG                                           S01408
+      *                                                                                       CER009
+     FSDACT1L0IF  E           K        DISK                                                   CER009
+      ** RTV: Account codes Ext. file for BOI Monthly Reporting                               CER009
+      *                                                                                       CER009
      FSDACX2L0IF  E           K        DISK                           UC                      CER001
       *                                                                                       CER001
       ** RTV: Account Codes        ER - Extension file                                        CER001
@@ -586,6 +594,40 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,SD0030PCP4                                           S01408
      C*                                                                   S01408
+      *                                                                                       CER009
+      ** BOI Monthly Reporting                                                                CER009
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           A5ACCD    CHAINSDACT1D0             88                                       CER009
+     C           *IN88     IFEQ *OFF                                                          CER009
+      *                                                                                       CER009
+     C           PMMBCD    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTMBCD                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PMMBCD    XTMBCD                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PMCLAA    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTCLAA                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PMCLAA    XTCLAA                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C           PMCLAL    IFEQ *ZEROS                                                        CER009
+     C                     MOVE *BLANK    XTCLAL                                              CER009
+     C                     ELSE                                                               CER009
+     C                     MOVE PMCLAL    XTCLAL                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PMACCI    XTACCI                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PMACUT    XTACUT                                              CER009
+      *                                                                                       CER009
+     C                     MOVE PMACNA    XTACNA                                              CER009
+      *                                                                                       CER009
+     C                     WRITEZZUIT021                                                      CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Output IBLC 2002 Detail if Found                                                     CER001
       *                                                                                       CER001
@@ -1161,6 +1203,20 @@
      C*00/Copy Member SD0030P   Initialise Program I-Spec                 S01408
      C/COPY WNCPYSRC,SD0030PCPG                                           S01408
       *                                                                   S01408
+      ** Check feature 'CER009' existence                                                     CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009  1                                           CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER009
+      *                                                                                       CER009
+      ** If feature 'CER009' is installed                                                     CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                   S01413
       ** Set ind for Retail 3 fields.                                     S01413
      C                     CALL 'AOMMODR0'                                S01413

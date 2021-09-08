@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. LUC139             Date 08Jan21               *
+      *  Prev Amend No. CER009             Date 17Nov20               *
+      *                 MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056313           Date 21Sep20               *      
       *                 MD051895           Date 22May19               *
@@ -148,6 +150,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MP                               *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -521,6 +525,15 @@
       * (Current) Customer Loans in Screen Format - Fourth Details
      D CurClFour     E DS                  EXTNAME(LECLI4PD)
      D                                     PREFIX(@)
+                                                                                              CER009
+     D ValidCLIPItl  E DS                  EXTNAME(LEVCLIT1PD)                                CER009
+      ** Extension fields Valids - Italy                                                      CER009
+                                                                                              CER009
+     D CrFilFmtItl   E DS                  EXTNAME(LECLT1PD)                                  CER009
+      ** Extension Fields File Format - Italy                                                 CER009
+                                                                                              CER009
+     D OKCLIPItl     E DS                  EXTNAME(LEECLIT1PD)                                CER009
+      ** OK Flags - Italy                                                                     CER009
 
       * (Current) Customer Loans in Screen Format - Sixth Details                             CLE134
      D CurClSix      E DS                  EXTNAME(LECLI6PD)                                  CLE134
@@ -980,6 +993,7 @@
      D PLoanNum        S              6A                                                      CLE148
      D PFind           S              1A                                                      CER001
      D ULX004          S              1A                                                      CER001
+     D CER009          S              1A                                                      CER009
 
      D CSC022          S              1A   INZ('N')                                           CSC022
       ** Counter variable                                                                     CSC022
@@ -1764,6 +1778,26 @@
      C                   PARM                    DDLNRF                                     MD044880
      C                   PARM                    ClExtFilFmt                                MD044880
      C                   ENDIF                                                              MD044880
+                                                                                              CER009
+      ** Retrieve Italian Features extension file if switchable feature                       CER009
+      ** CER009 is on                                                                         CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   MOVE      DDLNRF        PLoanNum                                     CER009
+     C                   CALLB     'LECLIP6RV'                                                CER009
+     C                   PARM      *BLANK        ReturnCode                                   CER009
+     C                   PARM                    PLoanNum                                     CER009
+     C                   PARM                    CrFilFmtItl                                  CER009
+                                                                                              CER009
+     C                   IF        ReturnCode <> *BLANKS                                      CER009
+     C                   EVAL      DBFILE = 'LECLT1PD'                                        CER009
+     C                   EVAL      DBASE  = 909                                               CER009
+     C                   EVAL      DBKEY  = DDLNRF                                            CER009
+     C                   EXSR      *PSSR                                                      CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1929,6 +1963,19 @@
      C                   GOTO      EValidTr                                                   CER001
      C                   ENDIF                                                                CER001
                                                                                               CER001
+      ** Validate Italian extension fields if switchable feature is on                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EXSR      SRValTrItl                                                 CER009
+                                                                                              CER009
+      ** If error in validation, fail this input                                              CER009
+                                                                                              CER009
+     C                   IF        Idx <> 0                                                   CER009
+     C                   GOTO      EValidTr                                                   CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -3863,6 +3910,17 @@
      C                   PARM      8             ZADEC                                        CLE106
      C                   MOVE      ZFIELD        DDFCXR                                       CLE106
      C                   ENDIF                                                                CLE106
+                                                                                              CER009
+      ** Update the Italian Extension File if switchable feature is on                        CER009
+                                                                                              CER009
+     C                   IF        @RTCD = *BLANK AND                                         CER009
+     C                             CER009 = 'Y'                                               CER009
+     C                   MOVE      VL_CLLNRF     VPFLNRF                                      CER009
+     C                   CALLB     'LECLIP6UP'                                                CER009
+     C                   PARM      *BLANK        @RTCD                                        CER009
+     C                   PARM                    DDACTN                                       CER009
+     C                   PARM                    ValidCLIPItl                                 CER009
+     C                   ENDIF                                                                CER009
       *
       *
       * IF THERE WERE ANY ERRORS IN THE UPDATE FUNCTIONS, ROLLBACK ANY
@@ -4144,6 +4202,38 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SRValTrItl - Validate Italian Extension fields               *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     SRValTrItl    BEGSR                                                                CER009
+     C                   CALLB     'LECLIP6VL'                                                CER009
+     C                   PARM                    ReturnCode                                   CER009
+     C                   PARM                    RegData                                      CER009
+     C                   PARM                    DDCURR                                       CER009
+     C                   PARM                    BJDFIN                                       CER009
+     C                   PARM                    OKCLIPItl                                    CER009
+     C                   PARM                    FldNameArr                                   CER009
+     C                   PARM                    MsgIdArr                                     CER009
+     C                   PARM                    MsgDtaArr                                    CER009
+     C                   PARM                    Idx                                          CER009
+     C                   PARM                    WFldNamArr                                   CER009
+     C                   PARM                    WMsgIdArr                                    CER009
+     C                   PARM                    WMsgDtaArr                                   CER009
+     C                   PARM                    WIdx                                         CER009
+     C                   PARM                    ValidCLIPItl                                 CER009
+                                                                                              CER009
+     C                   IF        ReturnCode <> *BLANKS                                      CER009
+     C                   EVAL      DBPGM  = 'LECLIP6VL'                                       CER009
+     C                   EVAL      DBASE  = 911                                               CER009
+     C                   EVAL      DBKEY  = DDLNRF                                            CER009
+     C                   EXSR      *PSSR                                                      CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C                   ENDSR                                                                CER009
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
@@ -4538,6 +4628,31 @@
      C                   KFLD                    KFTYP             3                          CLE168
      C                   KFLD                    KFSEQ             2                          CLE168
       *                                                                                       CLE168
+                                                                                              CER009
+      ** Determine if CER009 is on                                                            CER009
+                                                                                              CER009
+     C                   MOVE      'N'           CER009                                       CER009
+     C                   CALLB     'AOSARDR0'                                                 CER009
+     C                   PARM      *BLANKS       @RTCD                                        CER009
+     C                   PARM      '*VERIFY'     @OPTN                                        CER009
+     C                   PARM      'CER009'      @SARD                                        CER009
+                                                                                              CER009
+     C     @RTCD         IFEQ      *BLANKS                                                    CER009
+     C                   MOVE      'Y'           CER009                                       CER009
+     C                   ELSE                                                                 CER009
+     C     @RTCD         IFEQ      '*NRF'                                                     CER009
+     C                   MOVE      'N'           CER009                                       CER009
+     C                   ELSE                                                                 CER009
+                                                                                              CER009
+      ** Database error                                                                       CER009
+                                                                                              CER009
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER009
+     C                   EVAL      DBASE = 912                                                CER009
+     C                   EVAL      DBKEY = @OPTN                                              CER009
+     C                   EXSR      *PSSR                                                      CER009
+     C                   ENDIF                                                                CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
       ** Key Fields for Facility File                                                         CLE031
      C     CHKFAC        KLIST                                                                CLE031
      C                   KFLD                    KFCUS                                        CLE031

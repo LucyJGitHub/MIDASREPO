@@ -1,0 +1,720 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Account Code Extension')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - SD Account Code Maintenance                          *
+      *                                                               *
+      *  RPG/XX0031W0 - Account Code Extension                        *
+      *               - window added to Account Maintenance SD0031R   *
+      *               - window added to Account Enquiry     SD0031E   *
+      *                                                               *
+      *  (C) Copyright Finastra International Limited 2019            *
+      *                                                               *
+      *  Last Amend No. LUC117  *Create    Date 13Feb19               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC117 - Journal Entry Changes (Upgrade S21049 to FBM 2.1)   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       01         FIRST CYCLE ONLY                             *
+      *       03         F3 PRESSED EXIT PROGRAM                      *
+      *       05         F5 PRESSED REDISPLAY THE SCREEN              *
+      *       12         F12 PRESSED GOTO PREVIOUS SCREEN             *
+      *       20         PROTECT FIELD ON Delete, Enquiry and         *
+      *                  Authorization                                *
+      *       30         REDISPLAY THE SCREEN                         *
+      *       31-35      Errors on Screen Fields                      *
+      *       50         Chain Fail                                   *
+      *       51         Chain Lock Fail                              *
+      *       55         Delete Action - ENABLE F10                   *
+      *       56         Enquire, Authorise - DISABLE F5              *
+      *       75         Error in validation                          *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  CLEAR  - Clear message file                                  *
+      *  DELET  - Delete action F10                                   *
+      *  EFORMT - Edit/Format screen for amend, delete and enquiry    *
+      *  END    - End program                                         *
+      *  EXIT   - Exit program F3                                     *
+      *  INIT   - Initialize fields                                   *
+      *  PREV   - Previous screen F12                                 *
+      *  RESET  - Rest the screen when F5 entered                     *
+      *  UPDAT  - Update the extension file                           *
+      *  $$INSE - INSERT                                              *
+      *  $$AMEN - AMEND                                               *
+      *  $$DELE - DELETE                                              *
+      *  $$CLSC - Clear Screen Fields                                 *
+      *  $$TOSC - Fields from File to Screen                          *
+      *  $$TOFI - Fields from Screen to File                          *
+      *  VALID  - Validate the screen                                 *
+      *  ZASNMS - Send message to program's message queue.            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FXX0031#0CF  E                    WORKSTN
+      *
+     FXXACODY1IF  E           K        DISK
+     F            XXACODD0                          KRENAMEXXACODD1
+      ** Account Code Extension Rtv
+      *
+     FXXACODY0UF  E           K        DISK                      A
+     F                                              KCOMIT
+      ** Account Code Extension Upd
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+     E                    FOOT    1   3 31
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     IA@CPY       DS
+      *
+      ** BIS Copyright array
+      *
+     I                                        1  80 CPY@
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ILDA         DS                            256
+      *
+      ** DATA STRUCTURE FOR DATABASE ERROR
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** PROGRAM NAME
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I/COPY QWINDSRC,SD0030GDTA
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *                                                               *
+      *                   MAIN PROCESSING                             *
+      *                                                               *
+      *****************************************************************
+      *
+      ** INITIALISE DATA
+      *
+     C                     EXSR INIT
+      *
+      *------------------------------------------------------------
+      *
+      ** CONTINUE TO REDISPLAY THE SCREEN IF INDICATOR 30 REMAINS OFF
+      *
+     C           *IN30     DOUEQ*ON
+     C                     WRITE#MSGCTL
+     C                     EXFMTWINDOWF
+     C                     EXSR CLEAR
+      *
+     C           ACTN      IFEQ 'E'
+     C           *IN03     CASEQ*ON       EXIT
+     C           *IN12     CASEQ*ON       PREV
+     C                     CAS            END
+     C                     ENDCS
+      *
+     C                     ELSE
+      *
+     C           *IN03     CASEQ*ON       EXIT
+     C           *IN05     CASEQ*ON       RESET
+     C           *IN10     CASEQ*ON       $$DELE
+     C           *IN12     CASEQ*ON       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      *
+      * VALIDATE THE SCREEN                                           *
+      *                                                               *
+      * Called from:  Main processing                                 *
+      * Calls:        SR/ZASNMS, SR/VAL01                             *
+      *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      ** RESET ALL THE ERROR INDICATORS
+      *
+     C                     SETOF                         75
+     C                     MOVEA'00000'   *IN,31
+      *
+      ** For delete action, must use F10 to delete or F12 to cancel.
+      *
+     C           ACTN      IFEQ 'D'                        B1
+      *
+     C                     MOVEL'FLR0002' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                       75
+      *
+     C                     ELSE                            X1
+      *
+      ** Validate Screen Fields - conditional.
+      *
+     C                     EXSR VAL01
+      *
+     C                     ENDIF                           E1
+      *
+      *---------------------------------------------------------------
+      *
+     C           *IN75     IFEQ *ON                        B1
+      *
+      ** IF THERE IS AN ERROR IN ANY OF THE FIELDS THEN NEED TO
+      ** REDISPLAY THE SCREEN AND SEND ALL ERROR MESSAGES
+      *
+     C                     SETOF                     30
+      *
+     C                     ELSE                            X1
+      *
+      ** NO ERRORS SO UPDATE THE EXTENSION FILE
+      *
+     C                     SETON                     30
+      *
+     C           ACTN      CASEQ'I'       $$INSE           INSERT
+     C           ACTN      CASEQ'A'       $$AMEN           AMEND
+     C                     ENDCS
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * VALIDATE SCREEN FIELDS                                        *
+      *                                                               *
+      * Called from:  SR/VALID                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VAL01     BEGSR
+      *
+      ** Validate Screen Fields - conditional.
+      *
+     C*********            EXSR $$DLYN                     DEAL NO. REQ
+     C                     EXSR $$BKYN                     BOOK CDE REQ
+      *
+     C                     ENDSR
+      *
+      *================================================================
+      *
+     C*********  $$DLYN    BEGSR                           #1DLYN
+      *********
+      *================================================================
+      *********
+     C*********            DO
+      **********
+     C*********  #1DLYN    IFNE *BLANKS
+     C*********  #1DLYN    ANDNE'Y'
+     C*********  #1DLYN    ANDNE'N'
+     C*********            MOVEL'WNMSGF'  ZAMSGF
+     C*********            MOVEL'SDA0001' ZAMSID
+     C*********            EXSR ZASNMS
+     C*********            SETON                     7531  *
+     C*********            LEAVE
+     C*********            ENDIF
+      *********
+     C*********            LEAVE
+     C*********            ENDDO
+      *
+     C*********            ENDSR
+      *********
+      *================================================================
+      *
+     CSR         $$BKYN    BEGSR                           #1BKYN
+      *
+      *================================================================
+      *
+     C                     DO
+      *
+     C           #1BKYN    IFNE *BLANKS
+     C           #1BKYN    ANDNE'Y'
+     C           #1BKYN    ANDNE'N'
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     MOVEL'XXW0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     7532  *
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     LEAVE
+     C                     ENDDO
+      *
+     CSR                   ENDSR
+      *
+      *================================================================
+      *
+     CSR         $$INSE    BEGSR                           INSERT
+      *
+      *================================================================
+      *
+     C           *IN51     DOUEQ*OFF
+     C                     MOVE #ACCD     FILKEY 10
+     C           FILKEY    CHAINXXACODD0             5051
+     C                     ENDDO
+      *
+     C           *IN50     IFEQ *ON
+     C                     MOVE #ACCD     XKACCD
+     C                     EXSR $$TOFI                     TO FILE FLDS
+     C                     WRITEXXACODD0
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *
+      *================================================================
+      *
+     CSR         $$AMEN    BEGSR                           AMEND
+      *
+      *================================================================
+      *
+     C           *IN51     DOUEQ*OFF
+     C                     MOVE #ACCD     FILKEY
+     C           FILKEY    CHAINXXACODD0             5051
+     C                     ENDDO
+      *
+     C                     EXSR $$TOFI                     TO FILE FLDS
+      *
+     C           *IN50     IFEQ *ON
+     C                     MOVE #ACCD     XKACCD
+     C                     MOVE 'I'       XKCHTP
+     C                     WRITEXXACODD0
+     C                     ELSE
+     C                     UPDATXXACODD0
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *
+      *================================================================
+      *
+     CSR         $$DELE    BEGSR                           DELETE
+      *
+      *================================================================
+      *
+     C           *IN51     DOUEQ*OFF
+     C                     MOVE #ACCD     FILKEY
+     C           FILKEY    CHAINXXACODD0             5051
+     C                     ENDDO
+      *
+     C           *IN50     IFEQ *OFF
+     C                     DELETXXACODD0
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN30
+      *
+     CSR                   ENDSR
+      *
+      *================================================================
+      *
+     CSR         $$CLSC    BEGSR                           CLEAR SCREEN
+      *
+      *================================================================
+      *
+     C**********           MOVE *BLANKS   #1DLYN
+     C                     MOVE *BLANKS   #1BKYN
+      *
+     CSR                   ENDSR
+      *
+      *================================================================
+      *
+     CSR         $$TOSC    BEGSR                           TO SCRN FLDS
+      *
+      *================================================================
+      *
+     C**********           MOVE XKDLYN    #1DLYN
+     C                     MOVE XKBKYN    #1BKYN
+      *
+     CSR                   ENDSR
+      *
+      *================================================================
+      *
+     CSR         $$TOFI    BEGSR                           TO FILE FLDS
+      *
+      *================================================================
+      *
+     C*********  #1DLYN    IFEQ *BLANKS
+     C*********            MOVE 'N'       XKDLYN
+     C*********            ELSE
+     C*********            MOVE #1DLYN    XKDLYN
+     C*********            ENDIF
+      *
+     C           #1BKYN    IFEQ *BLANKS
+     C                     MOVE 'N'       XKBKYN
+     C                     ELSE
+     C                     MOVE #1BKYN    XKBKYN
+     C                     ENDIF
+      *
+     C                     Z-ADDWURDNB    XKLCD            LAST CHG DAT
+     C                     MOVE ACTN      XKCHTP           LAST CHG ACT
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      *
+      * CLEAR MESSAGE FILE
+      *
+      * Called from:  Main processing
+      * CallS:        CLP/Y2CLMSC
+      *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * INITIALISE FIELDS
+      *
+      * Called from:  Main Processing
+      * Calls:        SR/EFORMT
+      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** First cycle: STATIC DATA
+      *
+     C           *IN01     IFEQ *OFF                       B1 - 1ST CYCLE
+      *
+     C                     MOVE *ON       *IN01
+      *
+      ** DEFINE THE LDA FOR ERROR HANDLING
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define work field Run day number
+      *
+     C                     Z-ADD*ZERO     WURDNB  50
+      *
+      ** Define work field Midas Run Date
+      *
+     C                     MOVEL*BLANK    WUMRDT  7
+      *
+      ** Define work field Set Up Complete
+      *
+     C                     MOVEL*BLANK    WUSUC   1
+      *
+      ** Define work field Date format flag
+      *
+     C                     MOVEL*BLANK    WUDFF   1
+      *
+      ** Define work field Multi-branching Indicator
+      *
+     C                     MOVEL*BLANK    WUMBIN  1
+      *
+      ** Get Rundate - Rundate  *
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      *
+      ** Define window position
+      ** (used with IBM 'Windows' keyword and GUI)
+      *
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+     C                     MOVE MRDT      #DATE
+      *
+      **   Retrieve title for window
+      *
+     C           ACTN      IFEQ 'E'
+     C                     MOVE 'XXW0002' TITLE
+     C                     ELSE
+     C                     MOVE 'XXW0003' TITLE
+     C                     ENDIF
+      *
+     C                     MOVEL'XXUSRMSG'ZAMSGF           WNMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      *
+      ** CALL ACCESS PROG. FOR BANK DETAILS.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Check for data base error.
+      *
+     C           @RTCD     IFNE *BLANK                     B2
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD900       DBASE            * DBERROR 900 *
+     C                     MOVEL@OPTN     DBOPTN  7        ***************
+     C                     MOVEL'*FIRST ' DBKEY  29        *2
+     C                     MOVE *ON       *INU7            *2
+     C                     MOVE *ON       *INU8            *2
+     C                     MOVE *ON       *INKC            *2
+     C                     ENDIF                           E2
+      *
+     C           BJDFIN    IFEQ 'M'                        B2
+     C                     MOVE *ON       *IN98            Date format
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1 - 1ST CYCLE
+      *
+     C                     TIME           ##TME
+      *
+     C                     MOVE 'Y'       CALL    1
+      *
+      ** Set up KLISTs and move in key from DATA
+      *
+     C                     MOVE #1ACCD    #ACCD  100
+     C                     MOVELDATA      DBERR  11
+      *
+     C                     MOVE *OFF      *IN20            protect ind.
+     C                     MOVE *OFF      *IN55            delete ind.
+     C                     MOVE *OFF      *IN56            delete ind.
+      *
+     C                     EXSR EFORMT
+      *
+      ** If action is delete, access record and format for screen output.
+      *
+     C           ACTN      IFEQ 'D'                        B1
+     C                     MOVE *ON       *IN20            protect
+     C                     MOVE *ON       *IN55            actn = delete
+     C                     ENDIF                           E1
+      *
+      ** If action is amend, access record and format for screen output.
+      *
+     C           ACTN      IFEQ 'A'                        B1
+     C                     ENDIF                           E1
+      *
+      ** If action is enquire or authorize, access record and
+      ** format for screen output.  Protect window field from input.
+      *
+     C           ACTN      IFEQ 'E'                        B1
+     C           ACTN      OREQ 'X'                        B1
+     C                     MOVE *ON       *IN20            protect ind.
+     C                     MOVE *ON       *IN56            protect ind.
+     C                     ENDIF                           E1
+      *
+      ** If action is insert, initialize the screen field.
+      ** Set default values if required.
+      *
+     C           ACTN      IFEQ 'I'                        B1
+     C                     ENDIF                           E1
+      *
+      ** If record not found for actions delete, amend or enquiry
+      ** display screen with blank values rather than producing a
+      ** useless database error.
+      *
+      ** Output footer to screen.
+      *
+     C           *IN55     IFEQ *ON                        B1
+     C                     MOVEAFOOT,2    SFOOT            actn = delete
+     C                     ELSE                            X1
+     C           *IN56     IFEQ *ON
+     C                     MOVEAFOOT,3    SFOOT            enquire, authorise
+     C                     ELSE
+     C                     MOVEAFOOT,1    SFOOT            not delete
+     C                     ENDIF
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *****************************************************************
+      *
+      * EDIT FORMAT SCREEN OUTPUT FOR ACTION DELETE, AMEND, ENQUIRY,
+      *  AND AUTHORIZE.
+      *
+      * Called from:  SR/INIT
+      * Calls:        none
+      *
+      *****************************************************************
+      *
+     C           EFORMT    BEGSR
+      *
+     C                     MOVE #ACCD     FILKEY
+     C           FILKEY    CHAINXXACODD1             50
+      *
+     C                     Z-ADDWURDNB    #1LCD
+     C                     MOVE ACTN      #1CHTP
+      *
+     C           *IN50     CASEQ*ON       $$CLSC           CLEAR SCREEN
+     C           *IN50     CASEQ*OFF      $$TOSC           FILE TO SCRN
+     C                     ENDCS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *
+      * Called from:  Main processing
+      * Calls:        SR/INIT
+      *
+      *****************************************************************
+      *
+     C           RESET     BEGSR
+      *
+      ** RESET ALL ERROR INDICATORS SO THAT NO FIELDS WILL
+      ** BE HIGHLIGHTED
+      *
+     C                     SETOF                         75
+     C                     SETOF                     205055
+     C                     MOVEA'00000'   *IN,31
+      *
+      ** Clear the program message queue and call SR/INIT to retrieve
+      ** the last committed data from the extension file.
+      *
+     C                     EXSR CLEAR
+     C                     WRITE#MSGCTL
+      *
+      ** CALL SUBROUTINE INIT
+      *
+     C                     EXSR INIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *
+      * Called from:  Main processing
+      * Calls:        SR/END
+      *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+      *
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      * Called from:  Main processing
+      * Calls:        SR/END
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * EXIT FROM PROGRAM
+      *
+      * Called from:  Main processing, SR/VALID, SR/EXIT, SR/PREV
+      *
+      *****************************************************************
+      *
+     C           END       BEGSR
+      *
+     C                     SETON                     LR
+     C                     SETOF                     30
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * Send message to program's message queue.
+      *
+      * Called from:  SR/VALID, SR/DELET
+      * Calls:        CLP/Y2SNMGC
+      *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANK                     B1
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF                           E1
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+** CPY@
+(C) Copyright Finastra International Limited 2019
+** FOOT
+F3=Exit F5=Refresh F12=Previous
+F3=Exit F10=Delete F12=Previous
+F3=Exit F12=Previous

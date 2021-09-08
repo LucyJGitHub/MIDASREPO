@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048483           Date 08Dec17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER009             Date 23Nov20               *
+      *                 MD048483           Date 08Dec17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD030956           Date 09Oct14               *
       *                 CTI006             Date 31Mar14               *
@@ -118,6 +120,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - PUMA II Upgrade to MidasPlus                        *
       *  MD048483 - Fix duplicate write error on RECCYDXC file.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -960,6 +964,10 @@
      IDATALX      DS                           1024                                           CER001
      I                                        1   3 #1CYCO                                    CER001
      I                                        4  13 #1SPAE                                    CER001
+      *                                                                                       CER009
+     IDATAIT      DS                           1024                                           CER009
+     I                                        1   3 #1CCY                                     CER009
+      *                                                                                       CER009
      ISDBANK    E DSSDBANKPD                                                                BUG11870
       **  Bank details                                                                      BUG11870
       *                                                                                     BUG11870
@@ -3614,6 +3622,12 @@
      C                     MOVEL'C'       WUWFG1                                              CMG003
      C                     ENDIF                                                              CER001
      C                     ENDIF                                                              CER001
+      *                                                                                       CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           WUWFG1    ANDEQ'C'                                                           CER009
+     C           CMG003    ANDNE'Y'                                                           CER009
+     C                     MOVEL'U'       WUWFG1                                              CER009
+     C                     ENDIF                                                              CER009
       *                                                                                       CER001
       ** Call Commodity Details Maintenance                                                   CMG003
       *                                                                                       CMG003
@@ -3705,16 +3719,147 @@
      C                     ENDSL                                                              CMG003
       *                                                                                       CMG003
      C                     ELSE                                                               CMG003
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'U'       WUCNLP                                              CER009
+     C                     ELSE                                                               CER009
      C                     MOVEL'N'       WUCNLP                                              CMG003
+     C                     ENDIF                                                              CER009
      C                     ENDIF                                                              CMG003
      C                     ENDIF                                                              CMG003
      C                     ENDIF                                                              CMG003
      C                     ENDIF                                                              CMG003
      C                     ELSE                                                               CMG003
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'U'       WUCNLP                                              CER009
+     C                     ELSE                                                               CER009
      C                     MOVEL'N'       WUCNLP                                              CMG003
+     C                     ENDIF                                                              CER009
      C                     ENDIF                                                              CMG003
      C                     ENDIF                                                              CMG003
       *                                                                                       CMG003
+      ** When CER009 enhancement is installed                                                 CER009
+      *                                                                                       CER009
+     C           WUWFG1    IFEQ 'U'                                                           CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     CALL 'SD0022'               90                                     CER009
+     C                     PARM P2ANCD    ACTION                                              CER009
+     C                     PARM #1CYCD    DATAIT                                              CER009
+     C                     PARM *BLANK    W0RTN                                               CER009
+      *                                                                                       CER009
+     C           *IN90     IFEQ *ON                                                           CER009
+      *                                                                                       CER009
+      ** Call to program ended in error                                                       CER009
+      *                                                                                       CER009
+     C                     MOVEL'Y2U0032' W0RTN                                               CER009
+     C                     MOVEL*BLANKS   W0CLPG                                              CER009
+     C                     MOVEL'SD0022'  W0CLPG                                              CER009
+      *                                                                                       CER009
+      ** Send message '*Error occured on CALL...'                                             CER009
+      *                                                                                       CER009
+     C                     MOVEL'Y2U0032' ZAMSID                                              CER009
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CER009
+     C                     MOVELW0CLPG    ZAMSDA                                              CER009
+     C                     EXSR ZASNMS                                                        CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** Error detected?                                                                      CER009
+      *                                                                                       CER009
+     C           W0RTN     IFNE *BLANK                                                        CER009
+     C                     MOVEL*ON       *IN99                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** CASE: PGM.*Return code is *DBF update error                                          CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'Y2U0004'                                                     CER009
+     C                     MOVEL'Y2U0004' P0RTN                                               CER009
+     C                     EXSR ZYEXPG                                                        CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: PGM.*Return code is *User QUIT requested                                       CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'Y2U9999'                                                     CER009
+     C                     MOVEL'Y2U9999' P0RTN                                               CER009
+     C                     EXSR ZYEXPG                                                        CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: PGM.*Return code is *Previous Screen                                           CER009
+      *                                                                                       CER009
+     C           W0RTN     IFEQ 'USR0790'                                                     CER009
+      *                                                                                       CER009
+      ** CASE:                                                                                CER009
+      *                                                                                       CER009
+     C           ULX043    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'L'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Market Data Feed is Yes                                                    CER009
+      *                                                                                       CER009
+     C           CSD006    IFEQ 'Y'                                                           CER009
+     C           CAP057    OREQ 'Y'                                                           CER009
+     C           CAP058    OREQ 'Y'                                                           CER009
+     C           CAP059    OREQ 'Y'                                                           CER009
+     C                     MOVEL'M'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Private Banking is Yes                                                     CER009
+      *                                                                                       CER009
+     C           WUN4ST    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'P'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Retails     direct link is Yes                                             CER009
+      *                                                                                       CER009
+     C           WUCRTP    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'R'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Midas/Swift direct link is Yes                                             CER009
+      *                                                                                       CER009
+     C           WUMSDL    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'W'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Funds Transfer is Yes                                                      CER009
+      *                                                                                       CER009
+     C           WUFDTR    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'F'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Securities is Yes                                                          CER009
+      *                                                                                       CER009
+     C           WUSECS    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'S'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: WRK.Dealing: FX is Yes                                                         CER009
+      *                                                                                       CER009
+     C           WUDLFX    IFEQ 'Y'                                                           CER009
+     C                     MOVEL'D'       WUWFG1                                              CER009
+     C                     ELSE                                                               CER009
+      *                                                                                       CER009
+      ** CASE: Otherwise                                                                      CER009
+      *                                                                                       CER009
+     C                     GOTO DCEXIT                                                        CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+     C                     MOVEL'N'       WUCNLP                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     ELSE                                                               CER009
+     C                     MOVEL'N'       WUCNLP                                              CER009
+     C                     ENDIF                                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C                     END                             *ITR
       * CASE: PGM.*Return code is &Delete
      C           W0RTN     IFEQ 'DEL'                      *IF
@@ -12670,6 +12815,19 @@
      C                     MOVEL*BLANKS   RTCODE  1                                           CER001
      C                     MOVEL*BLANKS   ACTION  1                                           CER001
       *                                                                                       CER001
+      ** Check if CER009 is enabled                                                           CER009
+      *                                                                                       CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY 'POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER009
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009  1                                           CER009
+     C           PRTCD     IFEQ *BLANKS                                                       CER009
+     C                     MOVE 'Y'       CER009                                              CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
       ** Call AOSARDR0 to check if CER043 is switched on                                      CER043
       *                                                                                       CER043
      C                     MOVE 'N'       CER043  1                                           CER043

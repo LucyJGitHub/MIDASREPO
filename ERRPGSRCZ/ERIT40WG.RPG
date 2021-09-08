@@ -1,0 +1,468 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Decision table Transaction Types setup')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT40WG - Decision table Transaction Types setup            *
+      *                                                               *
+      *  Function:  This program setup the European Reporting         *
+      *             Decision table Transaction types for Italy        *
+      *                                                               *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
+      *                                                               *
+      *  Last Amend No. LUC139             Date 10Feb21               *
+      *  Prev Amend No. DBA302             Date 10Oct00               *
+      *                 UIT021   *Create   Date 13JAN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  DBA302 - After upgrade to DBA302 fields exist on different   *
+      *           files are defined with different lengths            *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  87     -  Access file FDDTSTPD                               *
+      *  88     -  Access file.                                       *
+      *  89     -  Access file.                                       *
+      *  U7U8   -  Database error.                                    *
+      *  LR     -  Terminates program.                                *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  *PSSR  -  Error subroutine                                   *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+     FINVTP   IF  E                    DISK         KINFSR *PSSR
+      ** 'IV' Investment type file
+      *
+     FFDDTSTPDIF  E                    DISK         KINFSR *PSSR
+     F            FDDTSTPD                          KRENAMEFDDTSTD0
+      ***  Deal type/subtype Combination file
+      *
+     FERITTTL0UF  E           K        DISK         KINFSR *PSSR A
+      ** ER Italy Decision table Transaction types Prefix 'N4'
+      **                      Update index
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+      /EJECT
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+     IFDDTSTD0                                                                    DBA302
+     I              PLDPCD                          FDDPCD                        DBA302
+      ** Rename fields for FDDTSTPD format                                        DBA302
+     IINVTPDF                                                                     DBA302
+      ** Rename fields for FDDTSTPD format                                        DBA302
+     I              PLDPCD                          INDPCD                        DBA302
+      *
+      ** Local data area for database errors
+     IWLDA      E DSLDA                         256
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Book codes
+     ISDBOOK    E DSSDBOOKPD
+      *
+      ** External DS for Loan types/sub-types  'LE'
+     ISDLOAN    E DSSDLOANPD
+      *
+      ** External DS for Facility types  'FC'
+     ISDFACT    E DSSDFACTPD
+      *
+      ** External DS for Instruction types  'IT'
+     ISDINTY    E DSINTYPD
+      *
+      ** Array for Deal Types
+     I            DS
+     I                                        1   2 DL1
+     I                                        3   4 DL2
+     I                                        1   4 DL12
+      *
+      ** Array for Book Codes
+     I            DS
+     I                                        1   3 IV1
+     I                                        4   5 IV2
+     I                                        1   5 IV12
+      *
+      ** Array for Instruments
+     I            DS
+     I                                        1   2 IT1
+     I                                        3   7 IT2
+     I                                        8   8 IT3
+     I                                        1   8 IT123
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** List of parameters.
+     C           *ENTRY    PLIST
+     C                     PARM           @RTRN   7
+     C                     PARM           @MODE   1
+      *
+      ** Copyright
+     C                     MOVEACPY@      CPY@@   1
+      *
+      ** Redefine data error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Setup keys
+     C           ERKEY     KLIST
+     C                     KFLD           ERKEY1  2
+     C                     KFLD           ERKEY2  8
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'             90
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'WWBFIL           ***************
+     C                     MOVEL'ERit40WG'WWBKEY           * DBERROR 001 *
+     C                     Z-ADD001       WWBASE           ***************
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C           @MODE     IFEQ '1'
+     C           @MODE     OREQ '2'
+      *
+      *****************************************************************
+      * 'DL' PROCESSING
+      *****************************************************************
+      *
+      ***  Access deal subtype via FDDTSTPD file
+      *
+     C                     READ FDDTSTPD                 87
+     C           *IN87     DOWEQ*OFF
+      *
+      ***  If deal type is FD or FN , I work with Fiduciary Module
+      ***  else I work with Dealing Module
+      *
+     C           DTPE11    IFNE 'FD'                       *B1
+     C           DTPE11    ANDNE'FN'
+     C                     MOVE 'DL'      ERKEY1           Dealing
+     C                     MOVE *BLANKS   ERKEY2
+      *
+     C                     MOVELDTPE11    DL1
+     C                     MOVELDLST11    DL2
+     C                     MOVELDL12      ERKEY2
+      *
+     C           ERKEY     CHAINERITTTL0             89
+     C           *IN89     IFEQ '1'                        - B3
+     C                     MOVELERKEY1    N4MMOD           Module
+     C                     MOVELDL12      N4TTYP           Trans. type
+     C                     Z-ADD0         N4RBND           Line Items debit
+     C                     Z-ADD0         N4RBNC                      credit
+     C                     Z-ADD0         N4CPND           Compl. Items debit
+     C                     Z-ADD0         N4CPNC                        credit
+     C                     Z-ADDBJRDNB    N4LCD            Last chg date
+     C                     MOVE 'I'       N4TYLC           Type of last chg
+     C                     WRITEERITTTD0
+     C                     END                             - E3
+      *
+     C                     END                             *B1
+      *
+      ***  Read next record
+      *
+     C                     READ FDDTSTPD                 87
+      *
+     C                     ENDDO                           - E1
+      *
+      *****************************************************************
+      * 'LE' PROCESSING
+      *****************************************************************
+      *
+     C                     MOVE 'LE'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+      *
+      ** Access Loan type/sub-type via access program
+     C                     CALL 'AOLOANR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM *BLANKS   @OLNTY  2
+     C                     PARM *BLANKS   @OLNST  2
+     C           SDLOAN    PARM SDLOAN    DSSDY
+      *
+     C           @RTCD     DOWEQ*BLANKS                    - B1
+      *
+     C                     MOVELAYLNTY    WWLNTY  4
+     C                     MOVE AYLNST    WWLNTY
+     C                     MOVELWWLNTY    ERKEY2
+      *
+     C           ERKEY     CHAINERITTTL0             89
+     C           *IN89     IFEQ '1'                        - B2
+     C                     MOVE 'LE'      N4MMOD
+     C                     MOVELWWLNTY    N4TTYP
+     C                     Z-ADD0         N4RBND           Line Items debit
+     C                     Z-ADD0         N4RBNC                      credit
+     C                     Z-ADD0         N4CPND           Compl. Items debit
+     C                     Z-ADD0         N4CPNC                        credit
+     C                     Z-ADDBJRDNB    N4LCD
+     C                     MOVE 'I'       N4TYLC
+     C                     WRITEERITTTD0
+     C                     END                             - E2
+      *
+      ** Read next record via access program
+     C                     CALL 'AOLOANR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM *BLANKS   @OLNTY  2
+     C                     PARM *BLANKS   @OLNST  2
+     C           SDLOAN    PARM SDLOAN    DSSDY
+      *
+     C                     ENDDO                           - E1
+      *
+      *****************************************************************
+      * 'FC' PROCESSING
+      *****************************************************************
+      *
+     C                     MOVE 'FC'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+     C                     MOVE *BLANKS   N4TTYP
+      *
+      ** Access Facility type via access program
+     C                     CALL 'AOFACTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM *BLANKS   @OFCTY  3
+     C                     PARM           SDFACT
+      *
+     C           @RTCD     DOWEQ*BLANKS                    - B1
+      *
+     C                     MOVELAMFCTY    ERKEY2
+      *
+     C           ERKEY     CHAINERITTTL0             89
+     C           *IN89     IFEQ '1'                        - B2
+     C                     MOVE 'FC'      N4MMOD
+     C                     MOVELAMFCTY    N4TTYP    P
+     C                     Z-ADD0         N4RBND           Line Items debit
+     C                     Z-ADD0         N4RBNC                      credit
+     C                     Z-ADD0         N4CPND           Compl. Items debit
+     C                     Z-ADD0         N4CPNC                        credit
+     C                     Z-ADDBJRDNB    N4LCD
+     C                     MOVE 'I'       N4TYLC
+     C                     WRITEERITTTD0
+     C                     END                             - E2
+      *
+      ** Read next record via access program
+     C                     CALL 'AOFACTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM *BLANKS   @OFCTY  3
+     C                     PARM           SDFACT
+      *
+     C                     ENDDO                           - E1
+      *****************************************************************
+      * 'IV' PROCESSING
+      *****************************************************************
+     C                     READ INVTP                    88
+     C                     MOVE 'IV'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+     C                     MOVE *BLANKS   N4TTYP
+      *
+     C           *IN88     DOWEQ'0'                        - B1
+      *
+     C           RECI      IFEQ 'D'                        - B2
+      *
+      ** Access Book code access program
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM *BLANKS   @OBKCD  2
+     C                     PARM           SDBOOK
+      *
+     C           @RTCD     DOWEQ*BLANKS                    - B3
+     C                     MOVELBDBKCD    IV2
+     C                     MOVELINVT      IV1
+     C                     MOVELIV12      ERKEY2
+      *
+     C           ERKEY     CHAINERITTTL0             89
+     C           *IN89     IFEQ '1'                        - B4
+     C                     MOVE 'IV'      N4MMOD
+     C                     MOVELERKEY2    N4TTYP
+     C                     Z-ADD0         N4RBND           Line Items debit
+     C                     Z-ADD0         N4RBNC                      credit
+     C                     Z-ADD0         N4CPND           Compl. Items debit
+     C                     Z-ADD0         N4CPNC                        credit
+     C                     Z-ADDBJRDNB    N4LCD
+     C                     MOVE 'I'       N4TYLC
+     C                     WRITEERITTTD0
+     C                     END                             - E4
+      *
+      ** Read next record via access program
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM *BLANKS   @OBKCD  2
+     C                     PARM           SDBOOK
+      *
+     C                     ENDDO                           - E3
+      *
+     C                     END                             - E2
+      *
+     C                     READ INVTP                    88
+     C                     ENDDO                           - E1
+      *****************************************************************
+      * 'IT' PROCESSING
+      *****************************************************************
+      *
+     C                     MOVE 'IT'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+     C                     MOVE *BLANKS   N4TTYP
+      *
+      ** Access Instruction type via access program
+     C                     CALL 'AOFFITR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM *BLANKS   @OISTT  5
+     C           SDINTY    PARM SDINTY    DSSDY
+      *
+     C           @RTCD     DOWEQ*BLANKS                    - B1
+      *
+     C           RECI      IFEQ 'D'                        - B2
+      *
+      ** Access Book code access program
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD1  7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM *BLANKS   @OBKCD  2
+     C                     PARM           SDBOOK
+      *
+     C           @RTCD1    DOWEQ*BLANKS                    - B3
+     C                     MOVELBDBKCD    IT1              Book code
+     C                     MOVELISTT      IT2              Instrument type
+      *
+      ** Loop with
+     C                     Z-ADD1         J       10
+     C           J         DOWLT4                          - B4 (3 times)
+      *
+      ***  Put-call
+      *
+     C           J         IFEQ 1                          - B5
+     C                     MOVE 'C'       IT3
+     C                     ELSE                            - X5
+     C           J         IFEQ 2                          - B6
+     C                     MOVE 'P'       IT3
+     C                     ELSE                            - X6
+     C                     MOVE ' '       IT3
+     C                     END                             - E6
+     C                     END                             - E5
+      *
+     C                     MOVELIT123     ERKEY2
+      *
+     C           ERKEY     CHAINERITTTL0             89
+     C           *IN89     IFEQ '1'                        - B5
+     C                     MOVE 'IT'      N4MMOD
+     C                     MOVELERKEY2    N4TTYP
+     C                     Z-ADD0         N4RBND           Line Items debit
+     C                     Z-ADD0         N4RBNC                      credit
+     C                     Z-ADD0         N4CPND           Compl. Items debit
+     C                     Z-ADD0         N4CPNC                        credit
+     C                     Z-ADDBJRDNB    N4LCD
+     C                     MOVE 'I'       N4TYLC
+     C                     WRITEERITTTD0
+     C                     END                             - E5
+      *
+     C                     ADD  1         J
+     C                     ENDDO                           - E4
+      *
+      ** Read next record via access program
+     C                     CALL 'AOBOOKR0'                 Next book code
+     C                     PARM *BLANKS   @RTCD1  7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM *BLANKS   @OBKCD  2
+     C                     PARM           SDBOOK
+      *
+     C                     ENDDO                           - E3
+      *
+     C                     END                             - E2
+      *
+      ** Read next record via access program
+     C                     CALL 'AOFFITR0'                 Next intrument type
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM *BLANKS   @OISTT  5
+     C           SDINTY    PARM SDINTY    DSSDY
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDIF
+      *
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWBASE    IFEQ *ZERO                      - B1
+     C                     Z-ADD999       WWBASE
+     C                     MOVE ##ERFL    WWBFIL
+     C                     MOVE '1'       *INU7
+     C                     END                             - E1
+      *
+      **  Update data area LDA.
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997.

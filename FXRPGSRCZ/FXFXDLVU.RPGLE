@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057285           Date 17Feb21               *
-      *  Prev Amend No. AR818539           Date 12Mar20               *
+      *  Last Amend No. LUC139             Date 15Jan21               *
+      *  Prev Amend No. CER009             Date 12Nov20               *
+      *                 MD057285           Date 17Feb21               *
+      *                 AR818539           Date 12Mar20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -118,6 +120,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
       *  MD057285 - Removed execution of *PSSR after AOCUSTR0         *
       *  AR818539 - Make sure to default settlement based on SSI when *
       *             customer has changed. (Child: AR818540)           *
@@ -477,6 +481,22 @@
 
      D ExtData       E DS                  EXTNAME(FXFXEXPD)
       * FX Extra Data - File (D/B) format
+                                                                                              CER009
+     D ValidFXDLEx   E DS                  EXTNAME(FXVFXIT1PD)                                CER009
+      ** FX Deals Transaction Valid Extension File                                            CER009
+                                                                                              CER009
+     D FXDLExFilFmt  E DS                  EXTNAME(DLFXT1PD)                                  CER009
+      ** FX Transaction Extension File - File Format                                          CER009
+                                                                                              CER009
+     D OKExtFlg      E DS                  EXTNAME(FXEFXIT1PD)                                CER009
+      ** FX Deals Transaction Extension File Error Definition                                 CER009
+                                                                                              CER009
+     D RegData       E DS                  EXTNAME(FXFXRXPD)                                  CER009
+      ** Regional Data in File Format                                                         CER009
+                                                                                              LUC139
+     D RegScnFmt     E DS                  EXTNAME(FXFXRXPD)                                  LUC139
+     D                                     PREFIX(@)                                          LUC139
+      * (Current) Deal in Screen Format                                                       LUC139
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
@@ -535,6 +555,12 @@
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
 
+     D RegData500      S            500A                                                      CER009
+      ** Fields to receive the incoming transaction                                           CER009
+                                                                                              CER009
+     D CER009          S              1A                                                      CER009
+      ** Switchable Feature for the CER009 enhancement                                        CER009
+                                                                                              CER009
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
 
@@ -806,6 +832,7 @@
      C                   EVAL      DLRPIFScn4Fmt = DLRPIFS4In                                 CSW214
       *                                                                                       CDL099
      C                   EVAL      InCDL099 = ExtDta500                                       CDL099
+     C                   MOVEL     RegData500    RegData                                      CER009
 
       * Reset variables gradually updated
 
@@ -851,6 +878,7 @@
      C                   ENDIF                                                                CGL058
       *                                                                                       CGL058
      C                   EXSR      ValidateTr
+     C                   EXSR      SrValidateEx                                               CER009     
       *                                                                                     AR818539
       ** If customer is valid, check if there is SSI details                                AR818539
       *                                                                                     AR818539
@@ -866,6 +894,7 @@
      C                   EXSR      SetupAmend
      C**********         EXSR      ValdateAmd                                               MD020624
      C                   EXSR      ValidateTr
+     C                   EXSR      SrValidateEx                                               CER009
      C                   EXSR      ValdateAmd                                               MD020624
      C                   EXSR      ValidateSt
      C                   EXSR      ValidateLP                                                BUG3992
@@ -874,6 +903,7 @@
       *  Processing for Authorisations                                                        BUG617
      C                   EXSR      FXFXDLCVT                                                  BUG617
      C                   EXSR      ValidateTr                                                BUG4482
+     C                   EXSR      SrValidateEx                                               CER009
      C                   EXSR      ValidateSt                                                BUG4482
      C                   EXSR      ValidateLP                                                BUG3992
       *                                                                                       BUG617
@@ -962,6 +992,7 @@
      C                                           + InfData    + ExtData                       CTI004
      C                                           + OutSwift2013                               CSW213
      C                                           + InCDL099                                   CDL099
+     C                                           + RegData                                    CER009
      C                   ENDIF                                                               BUG4742
 
      C                   RETURN
@@ -1071,6 +1102,33 @@
       ** Warning array index (3P0) from/to caller
 
      C                   PARM      *ZEROS        WIdx
+                                                                                              CER009
+      ** When CER009 enhancement is installed                                                 CER009
+                                                                                              CER009
+     C                   If        CER009 = 'Y'                                               CER009
+     C                   CALLB     'FXFXDL2RV'                                                CER009
+                                                                                              CER009
+      ** Return code                                                                          CER009
+                                                                                              CER009
+     C                   PARM                    ReturnCode                                   CER009
+                                                                                              CER009
+      ** Action Code                                                                          CER009
+                                                                                              CER009
+     C                   PARM                    DDACTN                                       CER009
+                                                                                              CER009
+      ** Front Office Transaction ID                                                          CER009
+                                                                                              CER009
+     C                   PARM                    APFOTranID                                   CER009
+                                                                                              CER009
+      ** (Midas) Deal Number                                                                  CER009
+                                                                                              CER009
+     C                   PARM                    DDDLNO                                       CER009
+                                                                                              CER009
+      ** FX Transaction Extension File - File Format                                          CER009
+                                                                                              CER009
+     C                   PARM                    FXDLExFilFmt                                 CER009
+     C                   EndIf                                                                CER009
+                                                                                              CER009
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1202,6 +1260,7 @@
       * For Amends, put the complete (pre-existing) deal into the Valid
       *  file record - fields in this will be updated during  processing
      C                   MOVE      DealFilFmt    ValidDeal
+     C                   MOVE      FXDLExFilFmt  ValidFXDlEx                                  LUC139
       *****************************************************************           MD027337 MD027337A
       ***Convert*DDVDAT*to*Midas*Day*number****************************           MD027337 MD027337A
       *****************************************************************           MD027337 MD027337A
@@ -1336,6 +1395,58 @@
      C                   END                                                                  254420
 
      C                   ENDSR
+      *****************************************************************                       CER009
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SrValidateEx - Validate the FX deals transaction extension   *                       CER009
+      *                 details                                       *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+     C     SrValidateEx  BEGSR                                                                CER009
+                                                                                              CER009
+      ** When CER009 enhancement is installed                                                 CER009
+                                                                                              CER009
+     C                   If        CER009 = 'Y'                                               CER009
+     C                   CallB     'FXFXDL2VL'                                                CER009
+                                                                                              CER009
+      ** Action Code                                                                          CER009
+                                                                                              CER009
+     C                   Parm                    DDACTN                                       CER009
+                                                                                              CER009
+      ** Regional Data in File Format                                                         CER009
+                                                                                              CER009
+     C                   Parm                    RegData                                      CER009
+                                                                                              CER009
+      ** FX Deals Transaction Extension File Error Definition                                 CER009
+                                                                                              CER009
+     C                   Parm                    OKExtFlg                                     CER009
+                                                                                              CER009
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CER009
+                                                                                              CER009
+     C                   Parm                    FldNameArr                                   CER009
+     C                   Parm                    MsgIDArr                                     CER009
+     C                   Parm                    MsgDtaArr                                    CER009
+                                                                                              CER009
+      ** Array index (3P0) from/to caller                                                     CER009
+                                                                                              CER009
+     C                   Parm                    Idx                                          CER009
+                                                                                              CER009
+      ** Warning error fields/message IDs/message data (arrays) from/to caller                CER009
+                                                                                              CER009
+     C                   Parm      *blank        WFldNamArr                                   CER009
+     C                   Parm      *blank        WMsgIdArr                                    CER009
+     C                   Parm      *blank        WMsgDtaArr                                   CER009
+                                                                                              CER009
+      ** Warning array index (3P0) from/to caller                                             CER009
+                                                                                              CER009
+     C                   Parm      *zero         WIdx                                         CER009
+                                                                                              CER009
+      ** FX Deals Transaction Valid Extension File                                            CER009
+                                                                                              CER009
+     C                   Parm                    ValidFXDLEx                                  CER009
+     C                   EndIf                                                                CER009
+     C                   ENDSR                                                                CER009
       *****************************************************************
       /EJECT
       *****************************************************************                      BUG3992
@@ -1598,6 +1709,16 @@
      C                   PARM                    InCDL099                                     CDL099
      C                   PARM                    OutCDL099                                    CDL099
 
+     C                   If        CER009 = 'Y'                                               LUC139
+     C                   CallB     'FXFXDL2CT'                                                LUC139
+      ** Return code                                                                          LUC139
+     C                   Parm                    ReturnCode                                   LUC139
+      ** FX Transaction Extension File - File Format                                          LUC139
+     C                   Parm                    FXDLExFilFmt                                 LUC139
+      ** Regional Data in File Format                                                         LUC139
+     C                   Parm                    RegScnFmt                                    LUC139
+     C                   EndIf                                                                LUC139
+                                                                                              LUC139
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1607,6 +1728,8 @@
      C                   IF        DDACTN = 'I'
      C                   EXSR      SETUPDEALN
      C                   ENDIF
+                                                                                              CER009
+     C                   MOVE      DDDLNO        F3DN38                                       CER009
 
      C     Idx           IFEQ      0
      C                   EXSR      SETUPVALID
@@ -1669,11 +1792,13 @@
      C                   RESET                   OKPayInsDS
      C                   RESET                   OKRecInsDS
      C                   RESET                   OKFRAInsDS
+     C                   RESET                   OKExtFlg                                     LUC139
 
      C                   RESET                   PayDat
      C                   RESET                   RecDat
 
      C                   CLEAR                   ValidDeal
+     C                   CLEAR                   ValidFXDLEx                                  LUC139
       ** Numeric fields within 'ValidDeal' have to be reset explicitly as
       **  there are long alpha fileds overlapping these which cause the
       **  CLEAR to put blanks in the numeric fields
@@ -1814,6 +1939,7 @@
      C                   IF           DDACTN = 'D'
      C                             OR DDACTN = 'X'
      C                   MOVE      DealFilFmt    ValidDeal
+     C                   MOVE      FXDLExFilFmt  ValidFxdlex                                  LUC139
      C                   ENDIF
 
       * Set Valid file field(s) that are needed for all Action Codes
@@ -1863,6 +1989,24 @@
      C                   CALLB     'FXFXDLUPF'
      C                   PARM      *BLANK        @RTCD             7
      C                   PARM                    ValidDeal
+     C                   If        CER009 = 'Y'                                               CER009
+     C                             And @RTCD = *blank                                         CER009
+     C                   Move      F3DN38        PVDN38                                       CER009
+     C                   CallB     'FXFXDL2UP'                                                CER009
+                                                                                              CER009
+      ** Return code                                                                          CER009
+                                                                                              CER009
+     C                   Parm      *blank        @RTCD                                        CER009
+                                                                                              CER009
+      ** Action Code                                                                          CER009
+                                                                                              CER009
+     C                   Parm                    DDACTN                                       CER009
+                                                                                              CER009
+      ** FX Deals Transaction Valid Extension File                                            CER009
+                                                                                              CER009
+     C                   Parm                    ValidFXDLEx                                  CER009
+     C                   EndIf                                                                CER009
+                                                                                              CER009
      C/COPY WNCPYSRC,FXFXDLXC04
       *                                                                                     MD022496
      C**********         EVAL      F3CHTP = DDACTN                                 MD022496 MD022708
@@ -1951,6 +2095,16 @@
      C                   PARM                    DDSTS            24                         BUG617
      C                   PARM                    OutCDL099                                    CDL099
                                                                                              BUG617
+     C                   If        CER009 = 'Y'                                               LUC139
+     C                   CallB     'FXFXDL2CT'                                                LUC139
+      ** Return code                                                                          LUC139
+     C                   Parm                    ReturnCode                                   LUC139
+      ** FX Transaction Extension File - File Format                                          LUC139
+     C                   Parm                    FXDLExFilFmt                                 LUC139
+      ** Regional Data in File Format                                                         LUC139
+     C                   Parm                    RegScnFmt                                    LUC139
+     C                   EndIf                                                                LUC139
+                                                                                              LUC139
      C                   ENDSR                                                               BUG617
       **********************************************************************                 BUG617
       **********************************************************************                 BUG4562
@@ -2211,6 +2365,7 @@
      C                   PARM                    InfData500                                  BUG4815
      C                   PARM                    ExtData500
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    RegData500                                   CER009
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -2497,6 +2652,20 @@
      C                   MOVEL     'N'           CSW213                                       CSW213
      C                   ENDIF                                                                CSW213
                                                                                               CSW213
+                                                                                              CER009
+      ** Check if CER009 is enabled                                                           CER009
+                                                                                              CER009
+     C                   CallB     'AOSARDR0'                                                 CER009
+     C                   Parm      *blank        @RTCD                                        CER009
+     C                   Parm      '*VERIFY '    @OPTN                                        CER009
+     C                   Parm      'CER009'      @SARD                                        CER009
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+     C                   Eval      CER009 = 'N'                                               CER009
+     C                   If        @RTCD = *blank                                             CER009
+     C                   Eval      CER009 = 'Y'                                               CER009
+     C                   EndIf                                                                CER009
+                                                                                              CER009
      C     RPIFKey       KLIST                                                              MD024185
      C                   KFLD                    RLAPID                                     MD024185
      C                   KFLD                    RLLTRF                                     MD024185

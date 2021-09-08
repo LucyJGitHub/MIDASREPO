@@ -1,0 +1,690 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR EXTRACT TABLES FOR SECETI')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR1500 - EXTRACT TABLES FOR SECETI                           *
+      *                                                               *
+      *  Called By: ERC0701 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1999           *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139             Date 17Feb21               *
+      *                 MMI103             Date 30Oct02               *
+      *                 MMI102             Date 08Apr02               *
+      *                 MMI080             Date 29Jan01               *
+      *                 MMI059 *CREATE     Date 12Aug99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI103 - Version 5 of BFRS: added 805 and 841, deleted 840.  *
+      *  MMI102 - Version 4 of BFRS: table 834 becomes 835; one field *
+      *           added to 835.                                       *
+      *  MMI080 - PUMA Changes December 2000: amended 840; added 714  *
+      *  MMI059 - SECETI Interface                                    *
+      *                                                               *
+      *****************************************************************
+     FSDCURRPDIF  E                    DISK
+     FSDCRT1L0IF  E           K        DISK
+     FSDBCT1L0IF  E                    DISK
+     FSDCUSTPDIF  E                    DISK
+     FSDCUT2L0IF  E           K        DISK
+     FIRFXTBL1IF  E           K        DISK
+     FIRTABEPDO   F      30            DISK                      A
+      *
+     IDSFCLT      DS
+      *
+     I                                        1   20F0SVMA
+     I                                        3   40F0CRCT
+     I                                        5   50F00112
+     I                                        6   80F00556
+     I                                        9  150F0CECR
+      *
+     IDSGARR      DS
+      *
+     I                                        1   1 GR001A
+     I                                        2   4 GR001B
+     I                                        5   5 GR001C
+     I                                        6   6 GR001D
+     I*****                                   7   7 GR002A                MMI102
+     I*****                                   8   8 GR002B                MMI102
+     I*****                                   9   9 GR002C                MMI102
+     I                                        7   7 GR001E                MMI102
+     I                                        8   8 GR002A                MMI102
+     I                                        9   9 GR002B                MMI102
+     I                                       10  10 GR002C                MMI102
+     IDSGARP      DS
+      *
+     I                                        1   1 GP001A
+     I                                        2   4 GP001B
+     I                                        5   5 GP001C                MMI103
+     I                                        6   6 GP001D                MMI103
+     I                                        7   7 GP001E                MMI103
+      *
+      * 720 - Currencies table
+      *
+     C                     EXSR TAB702
+      *                                                                   MMI080
+      * 714 - Market Risk table                                           MMI080
+      *                                                                   MMI080
+     C                     EXSR TAB714                                    MMI080
+      *
+      * 715, 716, 717 - Banks table
+      * 725 - International institutions table
+      *
+     C                     EXSR TABCUS
+      *
+      * 800 - Branches table
+      *
+     C                     EXSR TAB800
+      *                                                                   MMI103
+      * 805 - Cash  table                                                 MMI103
+      *                                                                   MMI103
+     C                     EXSR TAB805                                    MMI103
+      *
+      * 820 - CODE OF DELIBERATING ENTITY
+      *
+     C                     EXSR TAB820
+      *
+      * 824 - FACILITY TYPES
+      *
+     C                     EXSR TAB824
+      *
+      **835*-*GUARANTEES*REALI*1**                                        MMI102
+      * 834 - GUARANTEES REALI 1                                          MMI102
+      *
+     C*****                EXSR TAB835                                    MMI102
+     C                     EXSR TAB834                                    MMI102
+      *
+      * 836 - GUARANTEES REALI 2
+      *
+     C                     EXSR TAB836
+      *
+      **840*-*GUARANTEES*PERSONALI**                                      MMI103
+      * 841 - GUARANTEES PERSONALI                                        MMI103
+      *
+     C**********           EXSR TAB840                                    MMI103
+     C                     EXSR TAB841                                    MMI103
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      *
+     C           TAB702    BEGSR
+      *
+     C                     MOVE '702'     TAB     3
+      *
+      * Extract all currencies
+      *
+     C                     READ SDCURRPD                 01
+     C           *IN01     DOWEQ*OFF
+     C           A6CYCD    CHAINSDCRT1L0             02
+     C           *IN02     IFEQ *OFF
+     C           A6SPRT    IFNE 1
+      *
+     C                     MOVELPBUCCY    KEY    20 P
+     C                     MOVE PBUCCY    KEY2    3
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE    1
+     C                     Z-ADDA6SPRT    WRK12  126H
+     C                     MOVELWRK12     VALUE  28 P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ELSE
+      *
+     C  N77                DO
+     C                     MOVELPBUCCY    KEY    20 P
+     C                     MOVE PBUCCY    KEY2    3
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE    1
+     C                     Z-ADDA6SPRT    WRK12  126H
+     C                     SETON                         77
+     C                     MOVELWRK12     VALUE  28 P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+     C                     READ SDCURRPD                 01
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   MMI080
+      *                                                                   MMI080
+     C           TAB714    BEGSR                                          MMI080
+      *                                                                   MMI080
+     C                     MOVE '714'     TAB                             MMI080
+      *                                                                   MMI080
+     C                     MOVEL'001'     KEY    20 P                     MMI080
+     C                     MOVE *BLANKS   KEY2    3                       MMI080
+     C                     EXCPTHDR                                       MMI080
+      *                                                                   MMI080
+     C                     MOVE '1'       LINE    1                       MMI080
+     C                     MOVEL'0'       VALUE  28 P                     MMI080
+     C                     EXCPTDET                                       MMI080
+      *                                                                   MMI080
+     C                     MOVE '2'       LINE    1                       MMI080
+     C                     MOVEL'000000'  VALUE  28 P                     MMI080
+     C                     EXCPTDET                                       MMI080
+      *                                                                   MMI080
+     C                     MOVE '3'       LINE    1                       MMI080
+     C                     MOVEL'0'       VALUE  28 P                     MMI080
+     C                     EXCPTDET                                       MMI080
+      *                                                                   MMI080
+     C                     MOVE '4'       LINE    1                       MMI080
+     C                     MOVEL'0'       VALUE  28 P                     MMI080
+     C                     EXCPTDET                                       MMI080
+      *                                                                   MMI080
+     C                     MOVE '5'       LINE    1                       MMI080
+     C                     MOVEL'0'       VALUE  28 P                     MMI080
+     C                     EXCPTDET                                       MMI080
+      *                                                                   MMI080
+     C                     EXCPTFTR                                       MMI080
+      *                                                                   MMI080
+     C                     ENDSR                                          MMI080
+      *                                                                   MMI080
+      /EJECT                                                              MMI080
+      *****************************************************************
+      *
+     C           TABCUS    BEGSR
+      *
+     C                     READ SDCUSTPD                 01
+     C           *IN01     DOWEQ*OFF
+     C           BBCUST    CHAINSDCUT2L0             02
+      *
+      * Banks: output to table 715, 716 (childs only), 717
+      *
+     C           BBBNBI    IFEQ 'Y'
+     C                     EXSR TAB715
+     C           BBPCNB    IFNE *BLANKS
+     C                     EXSR TAB716
+     C                     END
+     C                     EXSR TAB717
+     C                     END
+      *
+      * International institutions: output to table 725
+      *
+     C           PCECSG    IFEQ 770
+     C           PCECSG    OREQ 771
+     C                     EXSR TAB725
+     C                     END
+      *
+     C                     READ SDCUSTPD                 01
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB715    BEGSR
+      *
+     C                     MOVE '715'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+     C                     MOVELBBCUST    KEY       P
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELPCFIID    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELPCECSG    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '3'       LINE
+     C           PCECSG    IFEQ 300
+     C           PCECSG    OREQ 724
+     C                     MOVEL'5'       VALUE     P
+     C                     ELSE
+     C                     MOVEL'1'       VALUE     P
+     C                     END
+     C                     EXCPTDET
+      *
+     C                     MOVE '4'       LINE
+     C           BBPCNB    IFEQ *BLANKS
+     C                     MOVEL'0'       VALUE     P
+     C                     ELSE
+     C                     MOVEL'1'       VALUE     P
+     C                     ENDIF
+     C                     EXCPTDET
+      *
+     C                     MOVE '5'       LINE
+     C                     MOVEL'0'       VALUE     P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB716    BEGSR
+      *
+     C                     MOVE '716'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Retrieve Parent details
+      *
+     C                     CALL 'IR1110'
+     C                     PARM           BBPCNB
+     C                     PARM *ZEROS    PAR065  3
+     C                     PARM *ZEROS    PAR091  3
+     C                     PARM *BLANKS   PAR359 16
+      *
+     C                     MOVELBBCUST    KEY       P
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELPAR065    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELPAR091    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB717    BEGSR
+      *
+     C                     MOVE '717'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Access table of EMU countries to determine if Bank is located
+      * in one of them. If yes, then bank is subject to Riserva
+      * Obbligatoria
+      *
+     C           KEYTAB    KLIST
+     C                     KFLD           WTAB    3
+     C                     KFLD           WCOD   18
+     C                     MOVEL'BBN'     WTAB
+     C                     MOVELBBCOLC    WCOD
+     C           KEYTAB    CHAINIRFXTBL1             59
+      *
+     C                     MOVELBBCUST    KEY       P
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C           *IN59     IFEQ '1'
+     C                     MOVEL'0'       VALUE     P
+     C                     ELSE
+     C                     MOVEL'1'       VALUE     P
+     C                     END
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C           *IN59     IFEQ '1'
+     C                     MOVEL'1'       VALUE     P
+     C                     ELSE
+     C                     MOVEL'0'       VALUE     P
+     C                     END
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB725    BEGSR
+      *
+     C                     MOVE '725'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+     C                     MOVELBBCUST    KEY       P
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELPCFIID    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB800    BEGSR
+      *
+     C                     MOVE '800'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Extract branches selected for inclusion
+      *
+     C                     READ SDBCT1L0                 01
+     C           *IN01     DOWEQ*OFF
+      *
+     C           PAINCL    IFEQ 'Y'
+      *
+     C                     MOVELPAORSP    KEY       P
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     Z-ADDPAONSP    WRK05   50
+     C                     MOVELWRK05     VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELPAORPR    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '3'       LINE
+     C                     MOVELPAORPA    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDIF
+      *
+     C                     READ SDBCT1L0                 01
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT                                                              MMI103
+      *****************************************************************   MMI103
+      *                                                                   MMI103
+     C           TAB805    BEGSR                                          MMI103
+      *                                                                   MMI103
+     C                     MOVE '805'     TAB                             MMI103
+     C                     MOVE *BLANKS   KEY2                            MMI103
+      *                                                                   MMI103
+     C                     MOVEL'FITTIZIO'KEY       P                     MMI103
+     C                     EXCPTHDR                                       MMI103
+      *                                                                   MMI103
+     C                     EXCPTFTR                                       MMI103
+      *                                                                   MMI103
+     C                     ENDSR                                          MMI103
+      *                                                                   MMI103
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB820    BEGSR
+      *
+     C                     MOVE '820'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Extract Deliberating Entities
+      *
+     C           'CDE'     SETLLIRFXTBL1
+      *
+     C                     DO   *HIVAL
+     C           'CDE'     READEIRFXTBL1                 50
+      *
+      ** END OF FILE
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVELF0INTK    WRK03   3
+     C                     MOVELWRK03     KEY       P
+     C                     EXCPTHDR
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB824    BEGSR
+      *
+     C                     MOVE '824'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Extract Facility Types from Internal Table 'FAB'
+      *
+     C           'FAB'     SETLLIRFXTBL1
+      *
+     C                     DO   *HIVAL
+     C           'FAB'     READEIRFXTBL1                 50
+      *
+      ** End of file
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVELF0INTK    WRK03   3
+     C                     MOVELF0PNAR    DSFCLT
+      *
+     C                     MOVE WRK03     WRK06   60
+     C                     MOVELWRK06     KEY       P
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELF0SVMA    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELF0CRCT    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '3'       LINE
+     C                     MOVELF00112    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '4'       LINE
+     C                     MOVELF00556    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '5'       LINE
+     C                     MOVELF0CECR    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C*****      TAB835    BEGSR                                          MMI102
+     C           TAB834    BEGSR                                          MMI102
+      *
+     C*****                MOVE '835'     TAB                             MMI102
+     C                     MOVE '834'     TAB                             MMI102
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Extract Real Guarantees
+      *
+     C           'GAR'     SETLLIRFXTBL1
+      *
+     C                     DO   *HIVAL
+     C           'GAR'     READEIRFXTBL1                 50
+      *
+      ** End of file
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C*****                MOVELF0INTK    WRK03   3                       MMI103
+     C                     MOVELF0INTK    WRK08   8                       MMI103
+     C                     MOVELF0PNAR    DSGARR
+      *
+     C*****                MOVE WRK03     WRK08   80                      MMI103
+     C                     MOVELWRK08     KEY       P                     MMI103
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELGR001A    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELGR001B    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '3'       LINE
+     C                     MOVELGR001C    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '4'       LINE
+     C                     MOVELGR001D    VALUE     P
+     C                     EXCPTDET
+      *                                                                   MMI102
+     C                     MOVE '5'       LINE                            MMI102
+     C                     MOVELGR001E    VALUE     P                     MMI102
+     C                     EXCPTDET                                       MMI102
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           TAB836    BEGSR
+      *
+     C                     MOVE '836'     TAB
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Extract Real Guarantees
+      *
+     C           'GAR'     SETLLIRFXTBL1
+      *
+     C                     DO   *HIVAL
+     C           'GAR'     READEIRFXTBL1                 50
+      *
+      ** End of file
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C*****                MOVELF0INTK    WRK03   3                       MMI103
+     C                     MOVELF0INTK    WRK08   8                       MMI103
+     C                     MOVELF0PNAR    DSGARR
+      *
+     C***********          MOVE WRK03     WRK08   80                      MMI103
+     C                     MOVELWRK08     KEY       P                     MMI103
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELGR002A    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELGR002B    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '3'       LINE
+     C                     MOVELGR002C    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     EXCPTFTR
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C********** TAB840    BEGSR                                          MMI103
+     C           TAB841    BEGSR                                          MMI103
+      *
+     C**********           MOVE '840'     TAB                             MMI103
+     C                     MOVE '841'     TAB                             MMI103
+     C                     MOVE *BLANKS   KEY2
+      *
+      * Extract PERSONAL GUARANTEES
+      *
+     C           'GAP'     SETLLIRFXTBL1
+      *
+     C                     DO   *HIVAL
+     C           'GAP'     READEIRFXTBL1                 50
+      *
+      ** End of file
+      *
+     C           *IN50     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      ***********                                                         MMI080
+     C***********          MOVELF0INTK    WRK03   3                       MMI080
+     C***********          MOVELF0PNAR    DSGARP                          MMI080
+      ***********                                                         MMI080
+     C***********          MOVE WRK03     WRK08   80                      MMI080
+     C***********          MOVELWRK08     KEY       P                     MMI080
+      *                                                                   MMI080
+     C***********          MOVELF0INTK    WRK06A  6                 MMI080MMI103
+     C                     MOVELF0INTK    WRK08   8                       MMI103
+     C                     MOVELF0PNAR    DSGARP                          MMI080
+      *                                                                   MMI080
+     C***********          MOVELWRK06A    KEY       P               MMI080MMI103
+     C                     MOVELWRK08     KEY       P                     MMI103
+     C                     EXCPTHDR
+      *
+     C                     MOVE '1'       LINE
+     C                     MOVELGP001A    VALUE     P
+     C                     EXCPTDET
+      *
+     C                     MOVE '2'       LINE
+     C                     MOVELGP001B    VALUE     P
+     C                     EXCPTDET
+      *                                                                   MMI103
+     C                     MOVE '3'       LINE                            MMI103
+     C                     MOVELGP001C    VALUE     P                     MMI103
+     C                     EXCPTDET                                       MMI103
+      *                                                                   MMI103
+     C                     MOVE '4'       LINE                            MMI103
+     C                     MOVELGP001D    VALUE     P                     MMI103
+     C                     EXCPTDET                                       MMI103
+      *                                                                   MMI103
+     C                     MOVE '5'       LINE                            MMI103
+     C                     MOVELGP001E    VALUE     P                     MMI103
+     C                     EXCPTDET                                       MMI103
+      *                                                                   MMI103
+     C                     EXCPTFTR
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+     OIRTABEPDEADD             HDR
+     O                                    1 '0'
+     O                         TAB        5
+     O                         KEY       26
+     O                                   27 '='
+     O                         KEY2      30
+      *
+     O        EADD             DET
+     O                         LINE       1
+     O                         VALUE     30
+      *
+     O        EADD             FTR
+     O                                    1 '8'

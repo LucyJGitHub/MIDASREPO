@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC139             Date 23Dec20               *
+      *  Prev Amend No. CER009             Date 21Oct20               *
+      *                 CER008             Date 21Oct20               *
+      *                 MD054028           Date 05Sep19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 AR1003366          Date 11May16               *
       *                 AR981842           Date 11May16               *
@@ -54,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian Returns Upgrade to FM2.1                *
+      *  CER009 - Puma II Upgrade to MidasPlus                        *
+      *  CER008 - Base Italian Features Upgrade to MidasPlus          *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -226,6 +232,23 @@
      D CuSW13        E DS                  EXTNAME(SDSW13PD)                                  CFT050
      D  S13DDBRCD    E                     EXTFLD(DDBRCD)                                     CFT050
  
+     D CuIt1FilFmt   E DS                  EXTNAME(SDCUT1PD)                                  CER008
+     D IT_BBCUST     E                     EXTFLD(BBCUST)                                     CER008
+     D CuIt2FilFmt   E DS                  EXTNAME(SDCUT2PD)                                  CER009
+     D CuXcFilFmt    E DS                  EXTNAME(SDCUSTXC)                                  CER008
+     D CrFaFilFmt    E DS                  EXTNAME(SDFTCSPD)                                  CER008
+     D TranInCtnm    E DS                  EXTNAME (SDCCTNPD)                                 CER008
+     D CT_DDACTN     E                     EXTFLD(DDACTN)                                     CER008
+     D CT_DDCUST     E                     EXTFLD(DDCUST)                                     CER008
+     D CT_DDNTCP     E                     EXTFLD(DDNTCP)                                     CER008
+     D CuCuxc        E DS                  EXTNAME(SDCUXCPD)                                  CER008
+     D CuFATC        E DS                  EXTNAME(SDFTCRPD)                                  CER008
+     D  DDCUST1      E                     EXTFLD(DDCUST)                                     CER008
+     D CurCuIt1      E DS                  EXTNAME (SDCUS1PD)                                 CER008
+     D                                     PREFIX (I1@)                                       CER008
+     D CurCuIt2      E DS                  EXTNAME (SDCUS2PD)                                 CER008
+     D                                     PREFIX (I2@)                                       CER008
+
       ** New Customer in File Format
      D NwCuFilFmt    E DS                  EXTNAME(SDVCUSDPD)
  
@@ -263,6 +286,8 @@
      D OKCuPriv      E DS                  EXTNAME(SDECUPBPD)
      D OKCuMT3x      E DS                  EXTNAME(SDECUMTPD)
      D OKCuSwft      E DS                  EXTNAME(SDECUSWPD)                                 CSW207
+     D OKFlagsItl1   E DS                  EXTNAME(SDECUIT1PD)                                CER008
+     D OKFlagsItl2   E DS                  EXTNAME(SDECUIT2PD)                                CER009
  
       ** Further Details Parameter Data Structure
      D**********FURDETS          DS           565                                            BUG4454
@@ -504,6 +529,12 @@
      D PAccMde         S              1                                                     BUG11722
      D WAccMde         S              1                                                     BUG11722
      D CSD037          S              1                                                     BUG11722
+     D CER008          S              1A                                                      CER008
+     D CER009          S              1A                                                      CER009
+     D WScreenPrv      S              1A                                                      CER009
+     D @EINKE          S              1A                                                      CER009
+     D @EIN20          S              1A                                                      CER009
+     D @INKE           S              1A                                                      CER009
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -597,10 +628,42 @@
       ** Do window processing
  
      C     BGN4ST        IFEQ      'Y'
+                                                                                              CER008
+      ** Skip if Browse or Next browse                                                        CER008
+                                                                                              CER008
+     C                   IF        WScreen <> 'B' AND                                         CER008
+     C                             WScreen <> 'R'                                             CER008
+                                                                                              CER008
+      ** Display Italian Extension fields if CER008 or CER009 is on                           CER008
+                                                                                              CER008
+     C                   IF        (CER008 = 'Y' OR                                           CER008
+     C                             CER009 = 'Y') AND                                          CER009
+     C                             @INKL <> '1'                                               CER008
+     C                   EXSR      SRItalian                                                  CER008
+     C                   ENDIF                                                                CER008
+                                                                                              CER008
+     C                   ENDIF                                                                CER008
+                                                                                              CER008
      C                   DOW       WScreen = 'W'
      C                   EXSR      Scrn@W
      C                   ENDDO
      C                   ELSE
+                                                                                              CER008
+      ** Skip if Browse or Next browse                                                        CER008
+                                                                                              CER008
+     C                   IF        WScreen <> 'B' AND                                         CER008
+     C                             WScreen <> 'R'                                             CER008
+                                                                                              CER008
+      ** Display Italian Extension field if CER008 or CER009 is on                            CER008
+                                                                                              CER008
+     C                   IF        (CER008 = 'Y' OR                                           CER008
+     C                              CER009 = 'Y') AND                                         CER009
+     C                             @INKL <> '1'                                               CER008
+     C                   EXSR      SRItalian                                                  CER008
+     C                   ENDIF                                                                CER008
+                                                                                              CER008
+     C                   ENDIF                                                                CER008
+                                                                                              CER008
      C     WScreen       DOWEQ     'W'
      C                   EXSR      Scrn@W2
      C                   ENDDO
@@ -748,6 +811,12 @@
      C                   ENDIF
  
      C     DDACTN        IFEQ      'E'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Further Details (F23) has not been selected
  
@@ -873,6 +942,12 @@
       ** Enquire
  
      C     DDACTN        IFEQ      'E'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** From BRT screen 1, go to screen 2 if there are details to view
       ** Otherwise, return to browse screen
@@ -994,6 +1069,12 @@
       ** Enquire
  
      C     DDACTN        IFEQ      'E'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** If F23 is not taken, display Message Details screen
  
@@ -1110,6 +1191,12 @@
       ** Enquire
  
      C     DDACTN        IFEQ      'E'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** If displaying Further Details, return to message details screen
       ** Otherwise move on to customer subfile display
@@ -1229,6 +1316,12 @@
       ** Enquire
  
      C     DDACTN        IFEQ      'E'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** If displaying Further Details, return to message details screen
       ** Otherwise, move on to customer subfile display
@@ -1399,6 +1492,13 @@ e3   C                   ENDIF                                                  
       ** F12 - Return to Private Banking Details screen
  
      C     PWRtn         IFEQ      'USR0790'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C     BGN4ST        IFEQ      'Y'                                                       BUG7053
      C                   EVAL      WScreen = 'I'
      C                   ELSE                                                                BUG7053
@@ -1462,6 +1562,13 @@ e3   C                   ENDIF                                                  
       ** Else if F12 pressed, return to PROCESS MESSAGE DETAILS SCREEN
       *
      C     PWRtn         IFEQ      'USR0790'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C     BGN4ST        IFEQ      'Y'
      C                   EVAL      WScreen = 'I'
      C                   ELSE
@@ -1492,6 +1599,12 @@ e3   C                   ENDIF                                                  
       ** Enquire
  
      C     DDACTN        IFEQ      'E'
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Enquire
  
@@ -1597,6 +1710,12 @@ e3   C                   ENDIF                                                  
      C     WCustRead     IFNE      *BLANK
      C                   MOVEL     WCustRead     DDCUSN
      C                   EXSR      RTVCUS
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Return to browse screen if there is an error on customer number
  
@@ -1696,6 +1815,13 @@ e3   C                   ENDIF                                                  
      C                   EXSR      SNDM@P
      C                   ELSE
      C                   MOVE      'Y'           @RDNB
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C                   MOVEL     'R'           WScreen
      C                   ENDIF
  
@@ -1765,6 +1891,12 @@ e3   C                   ENDIF                                                  
      C                   MOVEL     @OPSEL        DDACTN
      C                   MOVEL     WCustSel      DDCUSN
      C                   EXSR      SRVACTN
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
      C     DDACTNOK      IFEQ      'N'
      C                   MOVEL     'B'           WScreen
@@ -1890,6 +2022,8 @@ e3   C                   ENDIF                                                  
      C                   PARM                    CurCuPrim                                    CFT050
      C                   PARM                    CurCuSeco                                    CFT050
      C                   PARM                    CurCuMT3x                                    CFT050
+     C                   PARM                    CuIt1FilFmt                                  CER008
+     C                   PARM                    CuIt2FilFmt                                  CER009
  
       ** OK - Action code
       ** OK - Customer Reference
@@ -2023,6 +2157,8 @@ e3   C                   ENDIF                                                  
      C/COPY WNCPYSRC,SDH00083
      C                   PARM                    GCrCuFilFmt
      C                   PARM                    CrSwFilFmt                                   CSW207
+     C                   PARM                    CuXcFilFmt                                   CER008
+     C                   PARM                    CrFaFilFmt                                   CER008
  
       ** Switchable features
  
@@ -2056,6 +2192,11 @@ e3   C                   ENDIF                                                  
      C                   PARM                    CurCuTicd                                  AR981842
      C                   PARM                    CurCuCurx                                  AR981842
      C                   PARM                    NewCuSwft                                    CSW207
+     C                   PARM                    TranInCtnm                                   CER008
+     C                   PARM                    CuCUXC                                       CER008
+     C                   PARM                    CuFATC                                       CER008
+     C                   PARM                    CurCuIt1                                     CER008
+     C                   PARM                    CurCuIt2                                     CER009
  
       ** Update 'Current' Customer with Customer in Screen Format
  
@@ -2122,6 +2263,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     CANC@P        BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Return to 'subfile' screen
  
@@ -2138,6 +2285,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     CANC@S        BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Return to BRT tax screen
  
@@ -2166,6 +2319,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     CANC@F        BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Go to secondary details screen
  
@@ -2182,6 +2341,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     CANC@M        BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** If MT3xx BEI enhancement has been installed and
       ** SWIFT/Direct Link module is on, display MT3xx BEI details
@@ -2207,6 +2372,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     CANC@B        BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** If on BRT screen 2, F12 returns to BRT screen 1
       ** otherwise F12 returns to customer Primary Details screen
@@ -2228,6 +2399,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     CANC@R        BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
       ** Return to Messages Screen
  
@@ -2282,6 +2459,12 @@ e3   C                   ENDIF                                                  
       *****************************************************************
  
      C     ENDP          BEGSR
+                                                                                              CER009
+      ** Store the value of the screen                                                        CER009
+                                                                                              CER009
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   EVAL      WScreenPrv = WScreen                                       CER009
+     C                   ENDIF                                                                CER009
  
      C                   MOVEL     'T'           WScreen
  
@@ -2316,6 +2499,81 @@ e3   C                   ENDIF                                                  
      C                   ENDSR
  
       *****************************************************************
+      /EJECT                                                                                  CER009
+      *****************************************************************                       CER009
+      *                                                               *                       CER009
+      *  SRItalian - Process Italian Fields                           *                       CER009
+      *                                                               *                       CER009
+      *****************************************************************                       CER009
+                                                                                              CER009
+     C     SRItalian     BEGSR                                                                CER009
+                                                                                              CER009
+     C                   DOW       WScreen <> 'T'                                             CER009
+                                                                                              CER009
+     C                   IF        CER008 = 'Y'                                               CER008
+     C                   CALLB     'SDCUS11DP'                                                CER008
+     C                   PARM      *BLANKS       RetCodeIn                                    CER008
+     C                   PARM                    CurCuIt1                                     CER008
+     C                   PARM                    OkFlagsItl1                                  CER008
+     C                   PARM                    FldNameArr                                   CER008
+     C                   PARM                    MsgIdArr                                     CER008
+     C                   PARM                    MsgDtaArr                                    CER008
+     C                   PARM                    WFldNamArr                                   CER008
+     C                   PARM                    WMsgIdArr                                    CER008
+     C                   PARM                    WMsgDtaArr                                   CER008
+     C                   PARM      'N'           @EINKE                                       CER008
+     C                   PARM      'Y'           @EIN20                                       CER008
+     C                   PARM                    @INKC                                        CER008
+     C                   PARM                    @INKL                                        CER008
+     C                   PARM                    @INKE                                        CER008
+                                                                                              CER008
+     C                   SELECT                                                               CER008
+     C                   WHEN      @INKC = '1'                                                CER008
+     C                   EXSR      ENDP                                                       CER008
+     C                   WHEN      @INKL = '1'                                                CER008
+     C                   EVAL      WScreen = WScreenPrv                                       CER008
+     C                   LEAVESR                                                              CER008
+     C                   ENDSL                                                                CER008
+                                                                                              CER008
+     C                   ENDIF                                                                CER008
+                                                                                              CER008
+      ** Display Puma II Details                                                              CER008
+                                                                                              CER008
+     C                   IF        CER009 = 'Y'                                               CER009
+     C                   CALLB     'SDCUS12DP'                                                CER009
+     C                   PARM      *BLANKS       RetCodeIn                                    CER009
+     C                   PARM                    NwCuFilFmt                                   CER009
+     C                   PARM                    CurCuIt1                                     LUC139
+     C                   PARM                    CurCuIt2                                     CER009
+     C                   PARM                    OkFlagsItl2                                  CER009
+     C                   PARM                    FldNameArr                                   CER009
+     C                   PARM                    MsgIdArr                                     CER009
+     C                   PARM                    MsgDtaArr                                    CER009
+     C                   PARM                    WFldNamArr                                   CER009
+     C                   PARM                    WMsgIdArr                                    CER009
+     C                   PARM                    WMsgDtaArr                                   CER009
+     C                   PARM      'N'           @EINKE                                       CER009
+     C                   PARM      'Y'           @EIN20                                       CER009
+     C                   PARM                    @INKC                                        CER009
+     C                   PARM                    @INKL                                        CER009
+     C                   PARM                    @INKE                                        CER009
+                                                                                              CER009
+     C                   SELECT                                                               CER009
+     C                   WHEN      @INKC = '1'                                                CER009
+     C                   EXSR      ENDP                                                       CER009
+     C                   WHEN      @INKL = '1'                                                CER009
+     C                   EVAL      WScreen = WScreenPrv                                       CER009
+     C                   LEAVESR                                                              CER009
+     C                   OTHER                                                                CER009
+     C                   LEAVESR                                                              CER009
+     C                   ENDSL                                                                CER009
+                                                                                              CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
+     C                   ENDDO                                                                CER009
+                                                                                              CER009
+     C                   ENDSR                                                                CER009
+      *****************************************************************                       CER009
       /EJECT
       *****************************************************************
       *                                                               *
@@ -2500,6 +2758,54 @@ e3   C                   ENDIF                                                  
      C**********         EVAL      CER048 = 'N'                                   BUG26917 BUG26917A
      C**********         ENDIF                                                    BUG26917 BUG26917A
       **********                                                                  BUG26917 BUG26917A
+      ** Check if CER008 is on                                                                CER008
+                                                                                              CER008
+     C                   CALLB     'AOSARDR0'                                                 CER008
+     C                   PARM      *BLANKS       PRTCD                                        CER008
+     C                   PARM      '*VERIFY'     POPTN                                        CER008
+     C                   PARM      'CER008'      PSARD                                        CER008
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER008
+                                                                                              CER008
+     C                   IF        PRTCD = *BLANKS                                            CER008
+     C                   EVAL      CER008 = 'Y'                                               CER008
+     C                   ELSE                                                                 CER008
+                                                                                              CER008
+     C                   IF        PRTCD <> *BLANKS  AND                                      CER008
+     C                             PRTCD <> '*NRF'                                            CER008
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER008
+     C                   EVAL      DBKEY  = 'CER008'                                          CER008
+     C                   EVAL      DBASE  = 9                                                 CER008
+     C                   EXSR      *PSSR                                                      CER008
+     C                   ELSE                                                                 CER008
+                                                                                              CER008
+     C                   EVAL      CER008 = 'N'                                               CER008
+     C                   ENDIF                                                                CER008
+     C                   ENDIF                                                                CER008
+                                                                                              CER008
+      ** Check if CER009 is on                                                                CER009
+                                                                                              CER009
+     C                   CALLB     'AOSARDR0'                                                 CER009
+     C                   PARM      *BLANKS       PRTCD                                        CER009
+     C                   PARM      '*VERIFY'     POPTN                                        CER009
+     C                   PARM      'CER009'      PSARD                                        CER009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER009
+                                                                                              CER009
+     C                   IF        PRTCD = *BLANKS                                            CER009
+     C                   EVAL      CER009 = 'Y'                                               CER009
+     C                   ELSE                                                                 CER009
+                                                                                              CER009
+     C                   IF        PRTCD <> *BLANKS  AND                                      CER009
+     C                             PRTCD <> '*NRF'                                            CER009
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER009
+     C                   EVAL      DBKEY  = 'CER009'                                          CER009
+     C                   EVAL      DBASE  = 10                                                CER009
+     C                   EXSR      *PSSR                                                      CER009
+     C                   ELSE                                                                 CER009
+                                                                                              CER009
+     C                   EVAL      CER009 = 'N'                                               CER009
+     C                   ENDIF                                                                CER009
+     C                   ENDIF                                                                CER009
+                                                                                              CER009
      C                   EXSR      INITIAL
  
       *  Hook to enable non-core initial processing to be included

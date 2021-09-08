@@ -23,8 +23,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC139             Date 07Jan21               *
+      *  Prev Amend No. BUG14761(CER009)   Date 17Nov20               *
+      *                 CER009             Date 17Nov20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
       *                 CFC006             Date 06Aug12               *
@@ -117,6 +120,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  LUC139 - UCI Italian returns upgrade to FM2.1                *
+      *  BUG14761 - Component LEC06 00001 failed during Day3 COB run  *
+      *             as I/O Operation was applied to a closed file     *
+      *             (CER009)                                          *
+      *  CER009 - PUMA II Upgrade to MP                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020563 - CFC006 issues                                     *
@@ -294,6 +302,9 @@
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0300FFPG                                           S01408
      F*                                                                   S01408
+     FLEFCT1L0UF  E           K        DISK                      A                            CER009
+      ** Facilities Maintenance BOI extension details                                         CER009
+      *                                                                                       CER009
      FLEFCX2L0UF  E           K        DISK                      A                            CER001
       ** ER Facilities details - LUX Extension File                                           CER001
      F*****************************************************************   MOF60
@@ -1354,6 +1365,17 @@
       *                                                                                       CLE041
      C***/COPY*WNCPYSRC,LE0300CCP1***                                                  S01408 CFC006
      C/COPY WNCPYSRC,LE0300CCP1                                                             MD020563
+      *                                                                                       CER009
+     C                     MOVE 'N'       CER009                                              CER009
+     C                     CALL 'AOSARDR0'                                                    CER009
+     C                     PARM *BLANKS   PRTCD                                               CER009
+     C                     PARM '*VERIFY' POPTN                                               CER009
+     C                     PARM 'CER009'  PSARD                                               CER009
+     C           SCSARD    PARM SCSARD    DSSDY                                               CER009
+      *                                                                                       CER009
+     C           PRTCD     IFEQ *BLANK                                                        CER009
+     C                     MOVE 'Y'       CER009  1                                           CER009
+     C                     ENDIF                                                              CER009
       *****************************************************************           AR1097176 MD020563
       ***Check*if*CFC006*-*COB*Restructure*-*Remove*reports*from*COB***           AR1097176 MD020563
       ***is*installed**************************************************           AR1097176 MD020563
@@ -2458,6 +2480,34 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,LE0300CCP2                                           S01408
      C*                                                                   S01408
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C                     MOVE CNUMA     KCNUM                                               CER009
+     C                     Z-ADDFACTA     KFACT                                               CER009
+     C                     Z-ADDFCNOA     KFCNO                                               CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+      ** Chain to LEFCT1L0 for BOI Monthly Reporting Details                                  CER009
+      ** If feature is switched on                                                            CER009
+      *                                                                                       CER009
+     C                     MOVE *OFF      *IN32                                               CER009
+     C           CER009    IFEQ 'Y'                                                           CER009
+     C           KEYMX6    CHAINLEFCT1L0             43                                       CER009
+     C           *IN43     IFEQ *ON                                                           CER009
+     C                     MOVE CNUMA     PRCNUM                                              CER009
+     C                     Z-ADDFACTA     PRFACT                                              CER009
+     C                     Z-ADDFCNOA     PRFCNO                                              CER009
+     C                     Z-ADD0         PRSBCL                                              CER009
+     C                     MOVE *BLANKS   PRDECD                                              CER009
+     C                     Z-ADD0         PREXPO                                              CER009
+     C                     MOVE *BLANKS   PRSACO                                              CER009
+     C                     Z-ADD0         PRSAPE                                              CER009
+     C                     WRITELEFCT1D0                                                      CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
+     C                     MOVE *ON       *IN32                                               CER009
+      *                                                                                       CER009
+     C                     ENDIF                                                              CER009
+      *                                                                                       CER009
      C           ULX004    IFEQ 'Y'                                                           CER001
      C**********           Z-ADDCNUMA     KCNUM                                       CER001 CSD027A
      C                     MOVE CNUMA     KCNUM                                              CSD027A
@@ -4951,6 +5001,19 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,LE0300OOP1                                           S01408
      O*                                                                   S01408
+     O        D  1     30 32                                                                  CER009
+     O       AND      N09                                                                   BUG14761
+     O                                   28 '312 - OPERATIVITA'' FIDO'                        CER009
+     O                         PRSBCL    35                                                   CER009
+     O                                   60 '367 - COPERTURA SACE'                            CER009
+     O                         PRSACO    69                                                   CER009
+     O                                  101 '104 - PERCENTUALE SACE'                          CER009
+     O                         PRSAPE   111 ' 0 ,   '                                         CER009
+      *                                                                                       CER009
+     O        D        30 32                                                                  CER009
+     O       AND      N09                                                                   BUG14761
+     O                                   29 '225 - ORGANO DELIBERANTE'                        CER009
+     O                         PRDECD    35                                                   CER009
      O********D**2     30 60                                                         CER001 BUG10267
      O        D  2     30 62                                                                BUG10267
      O*******AND      N09                                                            BUG10505 CFC006

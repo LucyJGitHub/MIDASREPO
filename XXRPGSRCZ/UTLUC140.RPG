@@ -1,0 +1,205 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Stamp Duty Extension File UTILITY')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas    - Retail Module                                     *
+      *                                                               *
+      *  UTLUC140 - Stamp Duty Extension File UTILITY                 *
+      *                                                               *
+      *  Function : This program will be called manually as part of   *
+      *             installation. It will create an extension file    *
+      *             record for each live Retail account.              *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. LUC140             Date 26Feb21               *
+      *  Prev Amend No. MMI013 *CREATE     Date 25Mar98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *  MMI013 - Retail Stamp Duty and Account Changes               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   85  -  Read the ACCNT file                                  *
+      *   86  -  Chain THE SDMSTDY0 file                              *
+      *   LR  -  Last record                                          *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      *
+     FXXMSTDY0UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+      ** Stamp Duty Extension File
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      ** Copyright Array
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *****************************************************************
+     I/EJECT
+      *****************************************************************
+      *
+      * Main Processing
+      *================================================================
+      *  M A I N L I N E  -  P R O G R A M   S T A R T                *
+      *================================================================
+      *
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'UTLUC140'DBPGM
+      *
+      ** Mainline Processing
+      *
+     C                     EXSR #MAIN
+      *
+      ** Exit Program
+      *
+     C                     EXSR #EXIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      * TITLE SR/#MAIN                                                *
+      *****************************************************************
+      *                                                               *
+      *  #MAIN - Main screen processing                               *
+      *                                                               *
+      *  Called By: Mainline Processing                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MAIN     BEGSR
+      *
+      * For each record, check and write in SDMSTDX0
+      *
+     C                     READ ACCNT                    85
+      *
+      * Declare key to chain the XXMSTDY0 file
+     C           KSDM      KLIST
+     C                     KFLD           CNUM                            MMI012
+     C                     KFLD           CCY                             MMI012
+     C                     KFLD           ACOD                            MMI012
+     C                     KFLD           ACSQ                            MMI012
+     C                     KFLD           BRCA                            MMI012
+      *
+      * From the first to the last ACCNT record
+     C           *IN85     DOWEQ*OFF
+      *
+      * Try to find a record in XXMSTDY0, if found no process
+     C           KSDM      CHAINXXMSTDY0             86
+     C           *IN86     IFEQ *ON                        B001
+      *
+      * Record ID and Account type check
+     C           RECI      IFEQ 'D'                        B002
+     C           ATYP      ANDEQ'R'
+      *
+      * If the Record ID and The Account type are correct
+      * set SDMSTDX0 fields to the valu of the ACCNT fields
+     C                     MOVE CNUM      MCUST
+     C                     MOVE CCY       MCYCD
+     C                     MOVE ACOD      MACOD
+     C                     MOVE ACSQ      MACSQ
+     C                     MOVE BRCA      MBRCA
+     C                     MOVE '01'      MSDC
+     C                     MOVE 'Q'       MSDF
+     C                     MOVE *BLANKS   MACDR
+     C                     MOVE *ZERO     MSDPM
+     C                     MOVE *ZERO     MSDPY
+     C                     MOVE *BLANKS   MSDPD
+      *
+      * Create a record on at the end of the physical file SDMSTDX0
+     C                     WRITESDMSTDD0
+     C                     ENDIF                           E002
+     C                     ENDIF                           E001
+      *
+      * Read the next record
+     C                     READ ACCNT                    85
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * TITLE SR/#EXIT                                                *
+      *****************************************************************
+      *                                                               *
+      *  #EXIT - End processing .                                     *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #EXIT     BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+      *
+     C                     DUMP
+     C                     ENDIF
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(C) Copyright Midas-Kapiti International Ltd. 1998

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026356           Date 06Nov19               *
-      *  Prev Amend No. MD053725           Date 31Jul19               *
+      *  Last Amend No. LUC140             Date 23Feb21               *
+      *  Prev Amend No. MD026356           Date 06Nov19               *
+      *                 MD053725           Date 31Jul19               *
       *                 MD052414A          Date 26Mar19               *
       *                 MD034242           Date 13Mar19               *
       *                 MD052414           Date 06Feb19               *
@@ -82,6 +83,11 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  LUC140 - Upgrade MMI013 to FM2.1                             *
+      *           (MMI013 - Midas Italy RE Stamp Duty and Account)    *
+      *           Amendment of core hooks GL0340E001, GL0340EEP1,     *
+      *           GL0340CCP2, GL0340CCP4 to GL0340CCP9, GL0340CP10.   *
+      *           Addition of hook LUC140_001                         *
       *  MD026356  - Report displays *ERROR* when account is closed.  *
       *              Display '-Customer Closed-' text instead.        *
       *  MD053725 - CGL050 feature still has differences against      *
@@ -3726,6 +3732,7 @@ TELLER TRANSACTION           N                                            CRT001
 SWEEP ACCOUNTING             V                                            CRE004
 GENERIC POSTING INTERFACE    Z                                                                CGL047
 ACCOUNT TRANSFER             L                                                                CAP204
+     X/COPY WNCPYSRC,LUC140_001
 **CTDATA POST
 DAILY POST                                                                                   BUG9203
 SPOT REVALUATION                                                                             BUG9203

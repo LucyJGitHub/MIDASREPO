@@ -1,0 +1,2306 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IR TRANSFER DATA FROM ERITTRPD TO IRPUMAPD')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting - Italy                           *
+      *                                                               *
+      *  IR1000 - TRANSFER DATA FROM ERITTRPD TO IRPUMAPD             *
+      *                                                               *
+      *  Called By: IRC1000 as part of the ERREPORT job               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Prev Amend No. LUC139 *Amend      Date 12May21               *
+      *                 LUC139 *Amend      Date 25Mar21               *
+      *                 LUC139             Date 13Jan21               *
+      *                 MBV006             Date 26Sep12               *
+      *                 MMI140             Date 28Feb11               *
+      *                 261936             Date 17Sep09               *
+      *                 MMI136             Date 19Dec08               *
+      *                 MMI135             Date 01Dec08               *
+      *                 MMI132             Date 25Mar08               *
+      *                 MBV002             Date 14Mar07               *
+      *                 MMI117             Date 03Jan05               *
+      *                 MMI115             Date 23Mar04               *
+      *                 225425             Date 03Mar04               *
+      *                 222577             Date 28Oct03               *
+      *                 220519             Date 07Aug03               *
+      *                 MMI108             Date 10Jul03               *
+      *                 218387             Date 03Jun03               *
+      *                 218384             Date 03Jun03               *
+      *                 217552             Date 02May03               *
+      *                 216416             Date 31Mar03               *
+      *                 214833             Date 04Mar03               *
+      *                 MMI106             Date 21Feb03               *
+      *                 212402             Date 22Nov02               *
+      *                 212079             Date 15Nov02               *
+      *                 MMI100             Date 06Nov02               *
+      *                 MMI096             Date 17Jun02               *
+      *                 203420             Date 18Mar02               *
+      *                 204013             Date 19Mar02               *
+      *                 MMI091             Date 27Dec01               *
+      *                 200160             Date 21Nov01               *
+      *                 MMI084             Date 19Jun01               *
+      *                 197061             Date 23Aug01               *
+      *                 192459             Date 31May01               *
+      *                 192458             Date 31May01               *
+      *                 189157             Date 31May01               *
+      *                 193213             Date 14May01               *
+      *                 191520             Date 27Mar01               *
+      *                 191519             Date 27Mar01               *
+      *                 190269             Date 21Feb01               *
+      *                 MMI080             Date 03Jan01               *
+      *                 MMI033             Date 21JUN99               *
+      *                 MMI033  *CREATE    Date 08Oct98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *           - Reverse sign of MK690 if negative                 *
+      *  LUC139 - Convert ICBVFX from neg to positive                 *
+      *  LUC139 - Set up MK204 correctly                              *
+      *  LUC139 - Set up MK277 correctly                              *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MBV006 - Install Lending parts of MMI120                     *
+      *  MMI140 - PUMA changes february 2011 and Usura changes.       *
+      *  261936 - For Participations Sold output fields 6002 and 6004 *
+      *           instead of 6001 and 6003.                           *
+      *  MMI136 - PUMA changes December 2008                          *
+      *  MMI135 - Fidi Plurimi                                        *
+      *  MMI132 - PUMA changes for Basel 2.                           *
+      *  MBV002 - HVB Milan specific: field 690 and 790 on Facilities *
+      *           should contain granted amount net of Quota Altrui.  *
+      *  MMI117 - CR 2005                                             *
+      *  MMI115 - PUMA Changes March 2004 (Tassi Attivi)              *
+      *  225425 - Extend fix 217552 to cover all sottovoci of 1557.   *
+      *  222577 - Apply FORSEC changes also to complementary output.  *
+      *  220519 - Set field 623 to 600 for GL Accounts.               *
+      *  MMI108 - PUMA Changes June 2003                              *
+      *  218387 - Field 014 can only be zero or 1.                    *
+      *  218384 - Fields 609 and 709 should be zero for matured deals *
+      *  217552 - FT 1557.04 to be suppressed if currency is euro and *
+      *           counterparty is resident.                           *
+      *  216416 - Swap fields 564 and 304 in work field ICGUTP.       *
+      *  214833 - FT 1941.01 sottovoce 04: force field 004 to 2.      *
+      *  MMI106 - PUMA Changes January 2003                           *
+      *  212402 - Field 550 should contain Sottovoce Effettiva.       *
+      *           Field 955 should contain decimals.                  *
+      *  212079 - Field 117 not reset after each record               *
+      *  MMI100 - R4.1 Upgrade                                        *
+      *  MMI096 - Rewrite Guarantees Extraction.                      *
+      *  203420 - Fix FT 390406 complementary Voce fix                *
+      *  204013 - Fixing FORGLA subproc. to move CHAIN and forced     *
+      *           value for FT 4101                                   *
+      *  MMI091 - PUMA Changes December 2001 - Recompiled             *
+      *  200160 - Output Category Code CR to field 206. If field 206  *
+      *           not zero, set 164 to 1.                             *
+      *  MMI084 - Equivalente Creditizio (fields 667 696 697 767)     *
+      *  197061 - Field 650 not output unless MMI033 on.              *
+      *           Wrong number of decimals for 669 670 769 770.       *
+      *           If loan matured but unpaid, report as live.         *
+      *  192459 - Calculate number of installments matured  (248)     *
+      *  192458 - Fields 104 and 367 (SACE information) should be     *
+      *           output to Facility and not to Guarantee             *
+      *  189157 - Obtain Field 304 from table COL                     *
+      *  193213 - Divide fields 612, 613, 614, 615 by 1000 only if    *
+      *           reporting currency is Lira.                         *
+      *  191520 - Set field 940 according to value of field           *
+      *           'Global/Partial'                                    *
+      *  191519 - Set field 691 and 791 for Lending                   *
+      *  190269 - Output a sequence number in field 277 for Valutaria *
+      *           Field 680 must be zero for matured MM deals         *
+      *  MMI080 - PUMA Changes December 2000                          *
+      *  MMI033 - Minerva Interface                                   *
+      *                                                               *
+      *****************************************************************
+     FERITTRPDIP  E                    DISK
+     FSDCUT2L0IF  E           K        DISK
+     FSDCUSTL1IF  E           K        DISK
+     FSDCRT1L0IF  E           K        DISK
+     FSDCURRPDIF  E                    DISK
+     F***ERCURRL1IF  E           K        DISK                            MMI100
+     FERICDRPDIF  E                    DISK                               MMI100
+     FSDBSRTL0IF  E           K        DISK
+     FSDBANKPDIF  E                    DISK
+     FERITACL1IF  E           K        DISK
+     F** N3 - ER Italy Account Code File
+      *
+     FDEALSALLIF  E           K        DISK
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F*           DEALSDGF                          KIGNORE
+     F            MMDELDP0                          KIGNORE
+     F            MMDENBP0                          KIGNORE
+     F            MMDENSP0                          KIGNORE
+     F            FXDEALP0                          KIGNORE
+     F            DLBHISD0                          KIGNORE
+     F            DLCHISD0                          KIGNORE
+     F            DLDHISD0                          KIGNORE
+     F            DLEHISD0                          KIGNORE
+     F            DLGHISD0                          KIGNORE
+     F***ERITGAL1IF  E           K        DISK                      192458MMI096
+     FIRPUMAPDO   E                    DISK
+      *****************************************************************
+     E                    SSA    12  12  3
+     E                    CCY       100  3 0 CCS     3
+     E                    UI1       100  3 0 UI2     8 0
+     E                    CIN        99  3 0
+     E                    PER         4  1
+     I            DS
+     I                                        1   1 WT117
+     I                                        2   4 WF117
+     I                                        5   7 WL117
+     I                                        8   9 WD117
+     I                                       10  10 WS117
+     I                                       11  14 WP117
+     I                                        1  14 DS117
+     I            DS
+     I                                        1   4 ICOR01
+     I                                        6  18 #COR01                Cnum/Ccy/Acod (4)
+     I                                       25  26 #COR02                AcSq
+     I************                            1   5 WL277                 MMI096
+     I                                        6  20 WD277
+     I************                            6  11 WU277                 MMI096
+     I************                           12  13 WC277                 MMI096
+     I************                           15  18 WA277                 MMI096
+     I************                           21  35 WF277                 MMI096
+     I                                        1  35 DS277
+     I            DS
+     I                                        1   4 WTYPE                 Type
+     I                                        1  18 WCOR01                Type/Cnum/Ccy/Acod (4)
+     I                                       25  29 WCOR02                AcSq/Brca
+     I                                        1  35 DS204
+     I            DS
+     I                                        1   80EXSTRD
+     I                                        1   40WYEAR
+     I                                        5   60WMONTH
+     I                                        7   80WDAY
+      *
+     I            DS
+     I                                        1   60IMIDAS
+     I                                        1   20IDAY
+     I                                        3   40IMONTH
+     I                                        5   60IYEAR
+      *                                                                   MMI080
+     I            DS                                                      MMI080
+     I                                        1  35 ICORAP                MMI080
+     I                                        1   4 EXRIND                MMI080
+      *                                                                   MMI135
+     I            DS                                                      MMI135
+     I                                        1  24 ICLKCD                MMI135
+     I                                       18  18 WFI003                MMI135
+     I                                       19  24 WRIPA                 MMI135
+      *                                                                   MMI080
+     IIRFXTB    E DSIRFXTBPD                                              MMI080
+     IDSSDY     E DSDSSDY                                                 MMI080
+      *
+      *****************************************************************
+     C**********                                                          MMI096
+     C**N99*****           EXSR INIT                                      MMI096
+     C**********                                                          MMI096
+     C**********           MOVELICORAP    WFIE03  3                       MMI096
+     C**********           MOVELICORAP    WFIE16 16                       MMI096
+     C**********           MOVELICORAP    WFIE20 20                       MMI096
+     C**********           MOVE WFIE16    WD016   4                       MMI096
+     C**********           MOVE WFIE20    WD003   3                       MMI096
+     C**********                                                          MMI096
+     C********** ICDECK    IFEQ 'HFCP    '                                MMI096
+     C********** WD016     ANDNE'   1'                                    MMI096
+     C********** WFIE03    OREQ 'LEC'                                     MMI096
+     C********** WD016     ANDNE'   1'                                    MMI096
+     C********** WFIE03    OREQ 'GA0'                                     MMI096
+     C********** WD003     ANDEQ'REP'                                     MMI096
+     C**********           ELSE                                           MMI096
+     C**********           EXSR ELAB                                      MMI096
+     C**********           ENDIF                                          MMI096
+     C**********                                                          MMI096
+     C*****************************************************************   MMI096
+     C**********                                                          MMI096
+     C********** ELAB      BEGSR                                          MMI096
+     C**********                                                          MMI096
+     C*
+     C                     CLEARIRPUMA
+     C*
+     C                     EXSR CHKLES
+     C                     EXSR DIVLIR
+      *
+     C                     MOVE '201'     MKUIA
+     C           EXRIND    IFEQ 'FCLT'
+     C***********EXRIND    OREQ 'GA00'                                    MMI096
+     C           EXRIND    OREQ 'GUAR'                                    MMI096
+     C                     MOVE '205'     MKUIA
+     C                     END
+     C           EXRIND    IFEQ 'ROLL'
+     C                     MOVE '701'     MKUIA
+     C                     END
+     C                     MOVELICLINI    MK001
+     C                     MOVE ICLINI    MK002
+     C***********          MOVE ICCYDG    MK003                           MMI096
+     C                     MOVE ICRSDG    MK004
+     C                     MOVE ICIDUR    MK005
+     C                     MOVE ICUCCY    MK007
+     C           MK007     IFEQ 197
+     C                     Z-ADD242       MK007
+     C                     END
+      *
+     C                     Z-ADD1         X
+     C           MK007     LOKUPCIN,X                    30
+     C           *IN30     IFEQ '1'
+     C           *IN30     OREQ '0'
+     C           MK007     ANDEQ242
+     C                     Z-ADD1         MK003
+     C                     ELSE                                           MMI096
+     C                     Z-ADD2         MK003                           MMI096
+     C                     END
+     C                     MOVE ICUCCY    MK008
+     C           MK008     IFEQ 197
+     C                     Z-ADD242       MK008
+     C                     END
+     C*
+     C           MK007     IFEQ 018
+     C                     EXSR FOR018
+     C                     END
+     C*
+     C                     MOVE ICSTRD    MK009
+     C                     MOVE ICENDD    MK010
+     C                     MOVE ICECSG    MK011
+     C                     MOVE ICECBC    MK012
+     C                     Z-ADDICORSP    MK013
+     C***********          MOVE ICCOTP    MK014                           218387
+     C           TIPSEG    IFNE 0                                         MMI080
+     C           ICCONS    IFEQ 7                                         MMI080
+     C           ICCONS    OREQ 9                                         MMI080
+     C***********ICLINI    IFEQ 390402                              MMI080218387
+     C***********ICLINI    OREQ 390406                              MMI080218387
+     C***********ICLINI    OREQ 390502                              MMI080218387
+     C                     Z-ADD1         MK014                           MMI080
+     C***********          ENDIF                                    MMI080218387
+     C                     ENDIF                                          MMI080
+     C                     ENDIF                                          MMI080
+     C                     MOVE ICPRCT    MK015
+     C                     MOVE ICUCTR    MK016
+     C                     MOVE ICOPCD    MK020
+     C                     Z-ADDMK016     MK021
+     C                     MOVE ICEDIV    MK022
+     C           MK022     IFEQ 0
+     C           MK022     OREQ 130
+     C                     Z-ADD129       MK022
+     C                     END
+     C                     MOVE ICS117    MK023
+     C                     MOVE ICSBLW    MK024
+     C                     Z-ADDICCOCD    MK025
+     C                     Z-ADDICCOTP    MK028
+     C                     Z-ADDICFACT    MK029
+     C                     MOVE ICCUST    MK030
+     C                     MOVE ICFIID    MK031
+     C                     MOVE ICSECC    MK032
+     C                     MOVE ICPOLK    MK037
+     C                     MOVE ICTPLK    MK043
+     C                     MOVEL'00'      MK044
+     C                     Z-ADD1         MK048
+     C                     Z-ADDMK016     MK050
+     C                     Z-ADD1000001   MK054
+     C                     MOVELMK030     MK055
+     C                     MOVE ICLNNB    MK058
+     C                     MOVE ICCCPL    MK064
+     C*****                MOVE ICJRRG    MK069                           MMI106
+     C           EXRIND    IFEQ 'SECU'                                    MMI080
+     C           ICCRRT    ANDNE0                                         MMI080
+     C                     Z-ADDICCRRT    WRK075  75                      MMI080
+     C                     MOVE WRK075    WRK070  70                      MMI080
+     C                     Z-ADDWRK070    MK073                           MMI080
+     C                     END                                            MMI080
+     C                     MOVE ICISCC    MK075
+     C           ICREOP    IFNE ' '
+     C                     MOVE ICREOP    MK079
+     C                     ELSE
+     C                     MOVEL'0'       MK079
+     C                     END
+     C                     Z-ADDMK011     MK093
+     C                     Z-ADDMK016     MK094
+     C                     MOVE ICRSDG    MK096
+     C                     MOVE ICMBCD    MK098
+     C*  S.V. EFFETTIVA CARICATA IN ICILIN
+     C                     MOVE ICILIN    MK100
+     C           ICCOTP    IFEQ 2
+     C                     Z-ADD1         MK101
+     C           ICCNTP    IFEQ 02803
+     C                     Z-ADD4         MK101
+     C                     END
+     C           ICCNTP    IFEQ 10105
+     C                     Z-ADD5         MK101
+     C                     END
+     C                     END
+     C***********          MOVE ICSBCR    MK102                           MMI115
+     C                     Z-ADDICSBCR    MK102                           MMI115
+     C                     MOVE ICINSB    MK103
+     C                     MOVELICLKCD    MK104                           MMI096
+     C********             MOVE ICUNAM    MK106
+     C                     MOVE ICPAWN    MK107
+     C                     MOVE ICPOPT    MK109
+     C                     MOVE ICTPFD    MK111
+     C                     Z-ADDICMOOP    MK112
+     C           MK112     IFEQ 9
+     C                     Z-ADD0         MK112
+     C                     END
+     C           ICRTTP    IFEQ 0
+     C                     Z-ADDICRTTP    MK113
+     C                     ELSE
+     C                     Z-ADD1         MK113
+     C                     END
+     C                     MOVE ICDBCD    MK115
+     C                     MOVE ICPBCU    MK116
+     C                     MOVE ICCOIP    MK120
+     C           ICDPIV    IFNE 0
+     C                     Z-ADD1         MK122
+     C                     ELSE
+     C                     Z-ADD2         MK122
+     C                     END
+     C**********           MOVE ICRCID    MK126                           MMI117
+     C                     Z-ADD*ZERO     MK126                           MMI117
+     C           ICACST    IFEQ 52                                        MMI117
+     C                     Z-ADD9         MK126                           MMI117
+     C                     ENDIF                                          MMI117
+     C                     MOVE ICTEGL    MK130
+     C           EXRIND    IFEQ 'LECL'                                    MMI140
+     C           EXRIND    OREQ 'LEPP'                                    MMI140
+     C           EXRIND    OREQ 'LEPS'                                    MMI140
+     C           EXRIND    OREQ 'GLAC'                                    MMI140
+     C                     Z-ADDICDERT    WRK063  63H                     MMI140
+     C                     MOVE WRK063    MK130                           MMI140
+     C                     ENDIF                                          MMI140
+      *                                                                   MMI140
+     C                     Z-ADD6         MK133
+     C                     Z-ADD1         MK134
+     C                     MOVE ICGOLD    MK135
+     C                     MOVE ICTEOD    MK136
+     C                     MOVE ICMKTP    MK137
+     C           ICMKTP    IFEQ *ZERO                                     MMI108
+     C                     Z-ADD90        MK137                           MMI108
+     C                     ENDIF                                          MMI108
+     C                     Z-ADDICENCR    MK142                           MMI117
+     C           EXRIND    IFEQ 'MMNA'                                    MMI117
+     C                     Z-ADD1         MK142                           MMI117
+     C                     ENDIF                                          MMI117
+     C                     MOVE ICRESE    MK138
+     C                     MOVE ICINTP    MK139
+     C                     MOVE ICINLK    MK140
+     C                     MOVE ICTPCO    MK143
+     C                     MOVE ICTPPL    MK144
+     C           MK144     IFEQ 9
+     C                     Z-ADD0         MK144
+     C                     END
+     C                     MOVE ICILIN    MK149
+     C                     MOVE ICUCCY    MK154
+     C                     Z-ADD1         MK157
+     C                     MOVE ICREAR    MK160
+     C                     MOVE ICDTOP    MK162
+     C                     MOVE ICRDUR    MK163
+     C*********            MOVE ICENCR    MK166                           MMI117
+     C                     Z-ADDICCLTP    MK170
+     C                     Z-ADDTIPSEG    MK175                           MMI080
+     C                     MOVE ICBUFC    MK177
+     C                     MOVE ICLKTI    MK178
+     C                     MOVE ICPRCT    MK181
+     C           ICDPIV    IFNE *ZERO                                     MMI100
+     C                     MOVE ICDPIV    MK181                           MMI100
+     C                     ENDIF                                          MMI100
+     C                     MOVE ICTPUV    MK183
+     C                     MOVE ICOTHR    MK191
+     C                     MOVE ICFMAR    MK192
+     C                     MOVELICAUTR    WFIE12 12
+     C                     MOVELWFIE12    MK193
+     C                     MOVE WFIE12    MK194
+     C                     MOVE ICPRTP    MK198
+     C                     MOVE ICILIN    MK200
+     C                     EXSR $CUST
+     C                     MOVELICORAP    DS204
+     C                     MOVELWCOR01    WFLD23 23        Type/Cnum/Ccy/Acod (4)
+     C                     MOVE WCOR02    WFLD23           AcSq/Brca
+     C                     MOVE *BLANKS   MK204
+     C                     MOVELWFLD23    MK204            Type/Cnum/Ccy/Acod (4)/AcSq/Brca
+     C**********           MOVE ICDECK    MK204                           LUC139
+     C                     MOVELICDECK    WRK08   8                       LUC139
+     C           WTYPE     IFEQ 'GLAC'                                    LUC139
+     C                     MOVE '    '    WRK08                           LUC139
+     C                     ENDIF                                          LUC139
+     C                     MOVE WRK08     MK204                           LUC139
+     C                     MOVE ICCATC    MK206                           200160
+     C********** MK206     IFNE 0                                   200160MMI117
+     C**********           Z-ADD1         MK164                     200160MMI117
+     C**********           ENDIF                                    200160MMI117
+     C                     MOVEL'99999999'MK209
+     C                     MOVE '99999999'MK209
+     C                     MOVE ICFSCD    MK211
+     C                     MOVE ICSPFW    MK217
+     C                     Z-ADDICLSTM    MK221
+     C                     Z-ADDICNUMO    MK224
+     C*****                MOVELICDECD    MK225
+     C**********           MOVEL'AMD'     MK225
+     C                     MOVELICDECD    MK225                           MMI033
+     C           ICENDD    IFLE XYENDP
+     C                     Z-ADDICENDD    MK227
+     C                     END
+     C           ICSTRD    IFGE XYSTRQ                                    MMI115
+     C                     Z-ADDICSTRD    MK241                           MMI115
+     C                     END                                            MMI115
+     C                     MOVE ICSTRD    MK242
+     C                     MOVE ICNBUM    MK246
+     C                     Z-ADDICOPDT    MK247
+     C                     Z-ADDICRETM    MK248                           192459
+     C                     MOVEL*ZERO     MK249
+     C                     Z-ADDICDDAT    MK253                           MMI115
+     C                     MOVE ICENDD    MK254
+     C***********          MOVE ICLNTP    MK273                           MMI096
+     C           1         SUB  ICCLTP    MK273                           MMI096
+     C                     Z-ADD1         MK276
+     C                     Z-ADD5         MK275
+     C***********EXRIND    IFEQ 'GA00'                                    MMI096
+     C***********          MOVELICLKCD    ICORAP                          MMI096
+     C***********          END                                            MMI096
+     C                     EXSR $M277
+     C                     MOVEL'   '     MK281
+     C                     MOVEL'00000000'MK282
+     C                     MOVEL'00000000'MK283
+     C                     Z-ADDMK009     MK282
+     C                     Z-ADDMK010     MK283
+     C                     MOVEL'000'     MK285
+     C                     MOVEL'000'     MK286
+     C                     MOVEL'000'     MK287
+     C                     MOVEL*BLANKS   MK288
+     C                     MOVEL*BLANKS   MK289
+     C                     MOVEL*BLANKS   MK290
+     C                     MOVEL*BLANKS   MK292
+     C                     Z-ADDICOPDT    MK298
+     C                     MOVELICGUNB    MK300
+     C                     MOVE ICPTRP    MK302
+     C***********          Z-ADD*ZERO     MK304                     189157MMI096
+     C***********WFIE03    IFEQ 'GA0'                               189157MMI096
+     C***********          Z-ADDICCOCD    WRK04N  40                189157MMI096
+     C***********          MOVELWRK04N    WKEY      P               189157MMI096
+     C***********          CALL 'AOFXTBR0'                          189157MMI096
+     C***********          PARM '*BLANKS' WRTCD   7                 189157MMI096
+     C***********          PARM '*KEY   ' WOPTN   7                 189157MMI096
+     C***********          PARM 'COL'     FIELD   3                 189157MMI096
+     C***********          PARM           WKEY   18                 189157MMI096
+     C***********IRFXTB    PARM IRFXTB    DSSDY                     189157MMI096
+     C***********WRTCD     IFEQ *BLANKS                             189157MMI096
+     C***********          MOVE F0PNAR    WRK01A  1                 189157MMI096
+     C***********WRK01A    IFGE '1'                                 189157MMI096
+     C***********WRK01A    ANDLE'9'                                 189157MMI096
+     C***********          MOVE WRK01A    MK304                     189157MMI096
+     C***********          ENDIF                                    189157MMI096
+     C***********          ENDIF                                    189157MMI096
+     C***********          ENDIF                                    189157MMI096
+     C***********          MOVE ICGUTP    MK304                     MMI096216416
+     C                     MOVELICGUTP    MK304                           216416
+     C                     MOVE ICGUAR    MK308
+     C                     Z-ADDICCOCD    MK309
+     C                     MOVE ICLKCU    MK310
+     C                     Z-ADD11        MK311
+     C                     Z-ADDICSBCL    MK312
+      *
+     C                     MOVELICGUNB    WCAM11
+     C                     MOVE WCAM11    MK314
+     C                     Z-ADD4         MK318
+     C                     MOVE ICESVL    MK331
+     C                     Z-ADDICSEIM    MK335
+     C                     MOVE ICCROP    MK336
+     C                     Z-ADD1         MK340
+     C                     MOVE ICCPPA    MK341
+     C                     MOVELICCOMP    MK344
+     C                     MOVELMK344     MK345
+     C                     MOVELMK344     MK296
+     C                     MOVELICDECK    MK347
+     C                     MOVE ICAMTP    MK350
+     C           ICNUMO    IFLE 12
+     C                     Z-ADD68        MK351
+     C                     END
+     C           ICNUMO    IFGT 12
+     C           ICNUMO    ANDLE60
+     C                     Z-ADD73        MK351
+     C                     END
+     C           ICNUMO    IFGT 60
+     C                     Z-ADD300       MK351
+     C                     END
+     C                     MOVE ICGTTE    MK352
+     C                     MOVE ICGTOR    MK353
+     C                     MOVE ICCREQ    MK355
+     C                     MOVE ICRSKT    MK356
+     C                     MOVE ICSCAT    MK357
+     C                     MOVEL'00000000'MK359
+     C                     MOVE '00000000'MK359
+     C                     MOVE ICPSTP    MK363
+     C                     MOVE ICLNTP    MK367                           MMI096
+     C                     MOVE ICISSS    MK368
+     C                     MOVE ICMRTP    MK370
+     C                     Z-ADDICCVTP    MK375
+     C                     MOVE ICCVID    MK377
+     C                     MOVE ICYDAT    MK378
+     C                     MOVE ICCAIM    MK389
+     C                     Z-ADDICGURP    MK472
+     C           EXRIND    IFEQ 'SECU'                                    MMI080
+     C           ICCRRT    ANDNE0                                         MMI080
+     C                     Z-ADD1         MK534                           MMI080
+     C                     END                                            MMI080
+     C                     MOVE *BLANK    MK535
+     C                     MOVEL'0001'    MK535
+     C                     MOVE ICCCAC    MK536
+     C                     MOVE ICFRCC    MK537
+     C                     MOVE ICMATN    MK539
+     C                     Z-ADDMK003     MK541
+     C                     Z-ADDMK100     MK550                           212402
+     C                     MOVE ICSECL    MK552
+     C                     MOVE ICMARK    MK554
+     C           ICMARK    IFEQ *ZERO                                     MMI108
+     C                     Z-ADD90        MK554                           MMI108
+     C                     ENDIF                                          MMI108
+     C                     MOVE ICISEC    MK555
+     C           ICTPAC    IFGT 10
+     C                     Z-ADDICTPAC    MK556
+     C                     END
+     C                     MOVE ICCLRL    MK557
+     C                     MOVE ICCCRE    MK560
+     C*TOLTO VIENE GENERATO DALLE PROCEDURE
+     C**********           MOVE ICCATC    MK561
+     C                     MOVE ICLKCU    MK562
+     C                     MOVE ICACST    MK563
+     C************         MOVE ICGUTP    MK564                           MMI096
+     C************         MOVELICGUTP    MK564                     MMI096216416
+     C                     MOVE ICGUTP    MK564                           216416
+     C                     MOVELICLKCU    MK565                           MMI117
+     C                     MOVE ICSETP    MK576
+     C                     MOVE ICOPCC    MK580
+     C                     MOVE ICCCCI    MK584
+     C                     MOVE ICSHTP    MK594
+     C                     MOVE ICACTV    MK595
+     C                     MOVE ICCARD    MK597
+     C                     MOVE ICPRVC    MK598
+     C                     MOVE ICCUAM    MK599
+     C                     Z-ADDICBVLR    MK600
+     C           ICCRDR    IFEQ 'D'
+     C                     Z-ADDICBVLR    MK601
+     C                     MOVE ICBVFX    MK701
+     C                     ELSE
+     C                     Z-ADDICBVLR    MK602
+     C                     MOVE ICBVFX    MK702
+     C                     END
+     C           ICCRDR    IFEQ 'D'
+     C                     Z-ADDICTILI    MK603
+     C                     ELSE
+     C                     Z-ADDICTILI    MK604
+     C                     END
+     C                     Z-ADDICBVLR    MK605
+     C                     Z-ADDICMVLR    MK608
+     C                     Z-ADDICNVLR    MK609
+     C                     Z-ADDICNEGL    MK610
+     C                     MOVE ICCOVL    MK611
+     C                     Z-ADDICNCDL    MK612
+     C***********          DIV  1000      MK612                           193213
+     C                     Z-ADDICNCCL    MK613
+     C***********          DIV  1000      MK613                           193213
+     C                     Z-ADDICCPDL    MK614
+     C***********          DIV  1000      MK614                           193213
+     C                     Z-ADDICCPCL    MK615
+     C***********          DIV  1000      MK615                           193213
+     C                     MOVE ICAGPR    MK618
+     C                     Z-ADDMK601     MK620
+     C                     MOVE ICCPSU    MK621
+     C                     Z-ADDICQNCD    MK635
+     C********             DIV  100       MK635
+     C                     Z-ADDICQNCC    MK636
+     C********             DIV  100       MK636
+     C                     MOVE ICQCPD    MK637
+     C********             DIV  100       MK637
+     C                     MOVE ICQCPC    MK638
+     C********             DIV  100       MK638
+     C                     MOVE ICQMVD    MK639
+     C                     MOVE ICQMVC    MK640
+     C                     MOVE ICPFLR    MK645
+     C                     MOVE ICDBLR    MK646
+     C                     Z-ADDMK601     MK650                           197061
+     C           ICCRDR    IFEQ 'D'
+     C                     Z-ADDICAUXL    MK651
+     C                     ELSE
+     C                     Z-ADDICAUXL    MK652
+     C                     END
+     C                     MOVE ICMTCR    MK655
+     C                     Z-ADDICBVLR    MK660
+     C                     Z-ADDICAALR    MK661
+     C                     Z-ADDICLALR    MK662
+     C                     MOVE ICAACL    MK663
+     C                     MOVE ICLACL    MK664
+     C                     MOVE ICACLR    MK665
+     C                     MOVE ICLCLR    MK666
+     C************         Z-ADDMK618     MK667                           MMI084
+     C                     Z-ADDICESVL    MK667                           MMI084
+     C                     MOVE ICINCR    MK669
+     C                     MOVE ICUNSL    MK670
+     C                     MOVE ICICNP    MK673
+     C                     MOVE ICICPE    MK674
+     C           1000      MULT ICTEGL    MK679     H                     MMI140
+     C                     MOVE MK602     MK680
+     C**********           Z-ADDMK600     MK690                           MBV002
+     C           MK600     SUB  ICAUXC    MK690                           MBV002
+     C*                                                                   LUC139
+     C* temporary fix for Unicredit upgrade. If MK690 is negative         LUC139
+     C* due to sold amount larger than facility amount, make positive     LUC139
+     C*                                                                   LUC139
+     C           MK690     IFLT *ZERO                                     LUC139
+     C                     MULT -1        MK690                           LUC139
+     C                     ENDIF                                          LUC139
+     C                     MOVE ICLRSK    MK691
+     C           ICINVL    IFGE 0                                         MMI084
+     C                     Z-ADDICINVL    MK696                           MMI084
+     C                     ELSE                                           MMI084
+     C                     Z-SUBICINVL    MK697                           MMI084
+     C                     ENDIF                                          MMI084
+     C**********           MOVE ICACLK    MK698                           MMI136
+     C                     Z-ADD1         MK698                           MMI136
+     C           MK601     IFGT 0
+     C                     Z-ADDMK601     MK699
+     C                     ELSE
+     C                     Z-ADDMK602     MK699
+     C                     END
+     C                     MOVE ICBVFX    MK700
+     C                     MOVE ICTICY    MK703
+     C**********           MOVE ICMVFX    MK708                           MMI132
+     C                     MOVE ICNVFX    MK709
+     C           MK701     IFNE 0
+     C                     Z-ADDMK701     MK710
+     C                     ELSE
+     C                     MOVE ICNEGC    MK710
+     C                     END
+     C                     Z-ADDMK608     MK711
+     C                     MOVE ICPRIC    MK718
+     C                     Z-ADDMK701     MK720
+     C                     Z-ADDMK608     MK724
+     C           MK601     IFGT 0
+     C                     Z-ADDICNEGL    MK726
+     C********             DIV  100       MK726
+     C                     ADD  MK601     MK726
+     C                     ELSE
+     C                     Z-ADDICNEGL    MK726
+     C********             DIV  100       MK726
+     C                     ADD  MK602     MK726
+     C                     END
+     C                     Z-ADDMK635     MK730                           MMI115
+     C*****                MOVE ICINVL    MK732                           MMI106
+     C******               MOVE MK724     MK734
+     C**********           MOVE MK708     MK734                           MMI132
+     C                     MOVE ICMVFX    MK734                           MMI132
+     C********             MOVE ICPFLR    MK745
+     C                     MOVE ICPVFX    MK745
+     C                     MOVE ICDBFX    MK746
+     C                     MOVE ICAUXC    MK751
+     C                     MOVE ICAAFX    MK761
+     C*****                MOVE ICLAFX    MK762                           MMI106
+     C*****                MOVE ICAACF    MK763                           MMI106
+     C*****                MOVE ICLACF    MK764                           MMI106
+     C                     MOVE ICACFX    MK765
+     C                     MOVE ICLCFX    MK766
+     C**********           MOVE ICFTEX    MK767                           MMI132
+     C*****                MOVE ICOREX    MK768                           MMI106
+     C                     MOVE ICUINC    MK769
+     C                     MOVE ICUNSC    MK770
+     C                     MOVE ICCPNP    MK771
+     C                     MOVE ICCPPE    MK772
+     C**********           Z-ADDMK700     MK790                           MBV002
+     C           MK600     IFNE *ZERO                                     MBV002
+     C           MK690     ANDNE*ZERO                                     MBV002
+     C           MK700     DIV  MK600     EXCHR  138H                     MBV002
+     C           MK690     MULT EXCHR     MK790     H                     MBV002
+     C                     ENDIF                                          MBV002
+     C                     MOVE ICCRSK    MK791
+     C                     MOVE ICNOPA    MK796
+     C                     MOVE ICAMPA    MK797
+     C                     MOVE ICBVFX    MK799
+     C                     Z-ADDICNCCL    MK803
+     C                     Z-ADDICNCCL    MK807
+     C********** WFIE03    IFEQ 'MMD'                                     MMI096
+     C           EXRIND    IFEQ 'MMDL'                                    MMI096
+     C           ICCRDR    ANDEQ'D'
+     C                     Z-ADDICTEGL    MK825
+     C                     END
+     C                     Z-ADDICBVLR    MK835
+     C********** WFIE03    IFEQ 'MMD'                                     MMI096
+     C           EXRIND    IFEQ 'MMDL'                                    MMI096
+     C           ICCRDR    ANDNE'D'
+     C                     Z-ADDICTEGL    MK846
+     C                     END
+     C                     MOVE ICOREX    MK859
+     C                     MOVE ICCPUP    MK860
+     C                     MOVE ICICUP    MK861
+     C                     MOVE ICNMCR    MK890
+     C                     Z-ADDICTEGL    MK899
+     C                     MOVE ICCCTY    MK902
+     C                     MOVE ICCECT    MK903
+     C           ICGLPA    IFEQ 1                                         191520
+     C                     Z-ADD1         MK940                           191520
+     C                     ELSE                                           191520
+     C                     Z-ADD2         MK940                           MMI080
+     C                     ENDIF                                          191520
+     C                     Z-ADD98        MK944                           MMI106
+     C                     Z-ADDICTEGL    MK950
+     C                     Z-ADDICOUTB    MK953
+     C**********           Z-ADDICQCPD    MK954                           MMI140
+     C                     Z-ADDIC6001    MK954                           MMI140
+     C**********           Z-ADDICCPDL    MK955                           212402
+     C********** ICCPDL    MULT 100       MK955                     212402MMI140
+     C           MK612     ADD  MK614     MK955                           MMI140
+     C                     MULT 100       MK955                           MMI140
+     C                     MOVE ICLSTP    M05008                          MBV006
+     C                     Z-ADD2         M05033                          MMI136
+     C                     Z-ADDMK212     M05531                          MMI136
+     C                     Z-ADD1         M05751                          MMI132
+     C                     Z-ADD1         M05752                          MMI132
+     C                     Z-ADD1         M05753                          MMI132
+     C                     Z-ADD2         M05756                          MMI132
+     C                     Z-ADD1         M05757                          MMI132
+     C           EXRIND    IFEQ 'LEPS'                                    261936
+     C                     Z-ADDIC6001    M06002                          261936
+     C                     ELSE                                           261936
+     C                     Z-ADDIC6001    M06001                          MMI115
+     C                     ENDIF                                          261936
+     C           MK612     ADD  MK614     M06003                          MMI115
+     C           MK613     ADD  MK615     M06004                          261936
+     C                     Z-ADDICAUXC    M06006                          MMI117
+     C                     Z-ADDIC6416    M06416                          MMI115
+     C                     Z-ADDICPNCD    M09478                          MMI140
+     C*
+     C* FORZATURE
+     C*
+     C                     EXSR FORZA
+     C*
+     C                     WRITEIRPUMA
+     C*
+     C* ADDITONAL OUTPUT
+     C*
+     C********** WFIE03    IFEQ 'GLA'                                     MMI096
+     C           EXRIND    IFEQ 'GLAC'                                    MMI096
+     C                     EXSR WRINEX
+     C                     ELSE
+     C           ICCPAC    IFNE 0
+     C                     EXSR WRICNT
+     C                     END
+     C                     END
+      *                                                                   MMI135
+      * For Fido Plurimo, if borrower is different from facility          MMI135
+      * customer output an additional 9125.90.                            MMI135
+      *                                                                   MMI135
+     C           MK276     IFNE 1                                         MMI135
+     C                     CLEARIRPUMA                                    MMI135
+     C                     MOVE ICCUST    MK030                           MMI135
+     C                     MOVELICFCUS    MK055                           MMI135
+     C           MK030     IFNE MK055                                     MMI135
+     C                     MOVE '205'     MKUIA                           MMI135
+     C                     Z-ADD9125      MK001                           MMI135
+     C                     Z-ADD90        MK002                           MMI135
+     C                     MOVE WFI003    MK003                           MMI135
+     C                     Z-ADDICRSDG    MK004                           MMI135
+     C                     Z-ADD2         MK057                           MMI135
+     C                     MOVELICLNNB    WRK011 11                       MMI135
+     C                     MOVE WRK011    MK058                           MMI135
+      *                                                                   MMI135
+     C                     WRITEIRPUMA                                    MMI135
+     C                     ENDIF                                          MMI135
+     C                     ENDIF                                          MMI135
+      ***********                                                         MMI096
+     C***********          ENDSR                                          MMI096
+      *
+      *****************************************************************
+      *
+     C           WRINEX    BEGSR
+      *
+     C                     MOVELICDECK    KYACOD 10
+     C           KYACOD    CHAINERITACL1             80
+      **   If record not found, or rubrique = 0, not to be reported:
+     C           *IN80     IFEQ '0'                        - B2
+     C           ICCRDR    IFEQ 'D'                        - B3
+     C           N3CPND    IFNE 0
+     C           N3CRND    LOKUPPER                      80
+     C                     MOVELN3CPND    MK001
+     C                     MOVE N3CPND    MK002
+     C                     Z-ADDN3CEND    MK100
+     C                     Z-ADDN3CEND    MK200
+     C                     MOVE MK277     $FIEL2  2
+     C                     MOVEL'A'       $FIEL2
+     C                     MOVE $FIEL2    MK277
+     C   80                EXSR WRTPUM
+     C                     END
+     C           N3CP1D    IFNE 0
+     C           N3CR1D    LOKUPPER                      80
+     C                     MOVELN3CP1D    MK001
+     C                     MOVE N3CP1D    MK002
+     C                     Z-ADDN3CE1D    MK100
+     C                     Z-ADDN3CE1D    MK200
+     C                     MOVE MK277     $FIEL2  2
+     C                     MOVEL'B'       $FIEL2
+     C                     MOVE $FIEL2    MK277
+     C   80                EXSR WRTPUM
+     C                     END
+     C           N3CP2D    IFNE 0
+     C           N3CR2D    LOKUPPER                      80
+     C                     MOVELN3CP2D    MK001
+     C                     MOVE N3CP2D    MK002
+     C                     Z-ADDN3CE2D    MK100
+     C                     Z-ADDN3CE2D    MK200
+     C                     MOVE MK277     $FIEL2  2
+     C                     MOVEL'C'       $FIEL2
+     C                     MOVE $FIEL2    MK277
+     C   80                EXSR WRTPUM
+     C                     END
+     C                     ELSE                            - X3
+     C           N3CPNC    IFNE 0
+     C           N3CRNC    LOKUPPER                      80
+     C                     MOVELN3CPNC    MK001
+     C                     MOVE N3CPNC    MK002
+     C                     Z-ADDN3CENC    MK100
+     C                     Z-ADDN3CENC    MK200
+     C                     MOVE MK277     $FIEL2  2
+     C                     MOVEL'A'       $FIEL2
+     C                     MOVE $FIEL2    MK277
+     C   80                EXSR WRTPUM
+     C                     END
+     C           N3CP1C    IFNE 0
+     C           N3CR1C    LOKUPPER                      80
+     C                     MOVELN3CP1C    MK001
+     C                     MOVE N3CP1C    MK002
+     C                     Z-ADDN3CE1C    MK100
+     C                     Z-ADDN3CE1C    MK200
+     C                     MOVE MK277     $FIEL2  2
+     C                     MOVEL'B'       $FIEL2
+     C                     MOVE $FIEL2    MK277
+     C   80                EXSR WRTPUM
+     C                     END
+     C           N3CP2C    IFNE 0
+     C           N3CR2C    LOKUPPER                      80
+     C                     MOVELN3CP2C    MK001
+     C                     MOVE N3CP2C    MK002
+     C                     Z-ADDN3CE2C    MK100
+     C                     Z-ADDN3CE2C    MK200
+     C                     MOVE MK277     $FIEL2  2
+     C                     MOVEL'C'       $FIEL2
+     C                     MOVE $FIEL2    MK277
+     C   80                EXSR WRTPUM
+     C                     END
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           WRICNT    BEGSR
+      *
+     C                     MOVE MK277     WRK04   4
+     C                     MOVEL'X'       WRK04
+     C                     MOVE WRK04     MK277
+     C                     MOVEL'2'       MKUIA
+     C                     MOVELICCPAC    MK001
+     C                     MOVE ICCPAC    MK002
+      *
+     C********** WFIE03    IFEQ 'MMD'                                     MMI096
+     C           EXRIND    IFEQ 'MMDL'                                    MMI096
+     C                     EXSR FOCMMD
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'SEF'                                     MMI096
+     C********** EXRIND    IFEQ 'SEFU'                              MMI096MMI108
+     C**********           EXSR FOCSEF                                    MMI108
+     C**********           END                                            MMI108
+      *                                                                   222577
+     C           EXRIND    IFEQ 'SECU'                                    222577
+     C           EXRIND    OREQ 'SEFU'                                    222577
+     C                     EXSR FORSEC                                    222577
+     C                     END                                            222577
+      *
+     C           MKUIA     IFEQ '201'
+     C                     WRITEIRPUMA
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           WRTPUM    BEGSR
+      *
+     C           MK001     IFLT 4000                       B1
+     C           MK001     ORGT 5999
+     C           MK001     IFEQ 3915                       B2
+     C           MK001     OREQ 3917
+     C           MK010     IFGE XYSTRQ                     B3
+     C           MK010     OREQ 0
+     C                     ELSE                            X3
+     C                     WRITEIRPUMA
+     C                     END                             E3
+     C                     ELSE                            X2
+     C                     WRITEIRPUMA
+     C                     END                             E2
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * DIVLIR - If Reporting Currency has zero decimal places, i.e.
+      *          it is Italian Lira
+      *
+     C           DIVLIR    BEGSR
+      *
+     C           CCNBDP    IFEQ 0
+     C*
+     C           ICBVLR    DIV  100       ICBVLR
+     C           ICTILI    DIV  100       ICTILI
+     C           ICMVLR    DIV  100       ICMVLR
+     C           ICNVLR    DIV  100       ICNVLR
+     C           ICAALR    DIV  100       ICAALR
+     C           ICLALR    DIV  100       ICLALR
+     C           ICAACL    DIV  100       ICAACL
+     C           ICLACL    DIV  100       ICLACL
+     C           ICACLR    DIV  100       ICACLR
+     C           ICLCLR    DIV  100       ICLCLR
+     C           ICPFLR    DIV  100       ICPFLR
+     C           ICOUTB    DIV  100       ICOUTB
+     C           ICQNCD    DIV  100       ICQNCD
+     C           ICQNCC    DIV  100       ICQNCC
+     C           ICQCPD    DIV  100       ICQCPD
+     C           ICQCPC    DIV  100       ICQCPC
+     C           ICNEGL    DIV  100       ICNEGL
+     C           ICPFLR    DIV  100       ICPFLR
+     C           ICCTVL    DIV  100       ICCTVL
+     C*          ICCPDL    DIV  100       ICCPDL
+     C           ICAGPR    DIV  100       ICAGPR
+     C*          ICPRIC    DIV  100       ICPRIC
+     C           ICOREX    DIV  100       ICOREX
+     C           ICNCDL    DIV  1000      ICNCDL                          193213
+     C           ICNCCL    DIV  1000      ICNCCL                          193213
+     C           ICCPDL    DIV  1000      ICCPDL                          193213
+     C           ICCPCL    DIV  1000      ICCPCL                          193213
+     C                     DIV  100       ICINCR                          197061
+     C                     DIV  100       ICUNSL                          197061
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * CHECK AMOUNT LESS ZERO
+      *****************************************************************
+     C           CHKLES    BEGSR
+      *
+     C           ICNVFX    IFLE 0
+     C                     MULT -1        ICNVFX
+     C                     END
+     C           ICNVLR    IFLE 0
+     C                     MULT -1        ICNVLR
+     C                     END
+     C           ICBVLR    IFLE 0
+     C                     MULT -1        ICBVLR
+     C                     END
+     C           ICBVFX    IFLE 0                                         LUC139
+     C                     MULT -1        ICBVFX                          LUC139
+     C                     END                                            LUC139
+     C           ICAAFX    IFLE 0
+     C                     MULT -1        ICAAFX
+     C                     END
+     C           ICAALR    IFLE 0
+     C                     MULT -1        ICAALR
+     C                     END
+     C           ICLAFX    IFLE 0
+     C                     MULT -1        ICLAFX
+     C                     END
+     C           ICLALR    IFLE 0
+     C                     MULT -1        ICLALR
+     C                     END
+     C           ICACFX    IFLE 0
+     C                     MULT -1        ICACFX
+     C                     END
+     C           ICACLR    IFLE 0
+     C                     MULT -1        ICACLR
+     C                     END
+     C           ICAACF    IFLE 0
+     C                     MULT -1        ICAACF
+     C                     END
+     C           ICTILI    IFLE 0
+     C                     MULT -1        ICTILI
+     C                     END
+     C           ICAUXL    IFLE 0
+     C                     MULT -1        ICAUXL
+     C                     END
+     C           ICAACL    IFLE 0
+     C                     MULT -1        ICAACL
+     C                     END
+     C           ICLCFX    IFLE 0
+     C                     MULT -1        ICLCFX
+     C                     END
+     C           ICLCLR    IFLE 0
+     C                     MULT -1        ICLCLR
+     C                     END
+     C           ICLACL    IFLE 0
+     C                     MULT -1        ICLACL
+     C                     END
+     C           ICNCDL    IFLE 0
+     C                     MULT -1        ICNCDL
+     C                     END
+      *
+     C           ICCPDL    IFLE 0
+     C                     MULT -1        ICCPDL
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FOR018    BEGSR
+      *
+     C           ICAACF    DIV  100       ICAACF
+     C           ICAAFX    DIV  100       ICAAFX
+     C           ICACFX    DIV  100       ICACFX
+     C           ICAMPA    DIV  100       ICAMPA
+     C           ICAUXC    DIV  100       ICAUXC
+     C           ICBVFX    DIV  100       ICBVFX
+     C           ICCPNP    DIV  100       ICCPNP
+     C           ICCPPE    DIV  100       ICCPPE
+     C           ICCRSK    DIV  100       ICCRSK
+     C           ICDBFX    DIV  100       ICDBFX
+     C           ICFTEX    DIV  100       ICFTEX
+     C           ICINVL    DIV  100       ICINVL
+     C           ICLACF    DIV  100       ICLACF
+     C           ICLAFX    DIV  100       ICLAFX
+     C           ICLCFX    DIV  100       ICLCFX
+     C           ICMVFX    DIV  100       ICMVFX
+     C           ICNEGC    DIV  100       ICNEGC
+     C           ICNOPA    DIV  100       ICNOPA
+     C           ICNVFX    DIV  100       ICNVFX
+     C*          ICOREX    DIV  100       ICOREX
+     C           ICPRIC    DIV  100       ICPRIC
+     C           ICTICY    DIV  100       ICTICY
+     C********   ICUINC    DIV  100       ICUINC
+     C********   ICUNSC    DIV  100       ICUNSC                       197061
+     C********   ICUNSL    DIV  100       ICUNSL                       197061
+     C           ICPVFX    DIV  100       ICPVFX
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORZA     BEGSR
+      *
+     C********** WFIE03    IFEQ 'GLA'                                     MMI096
+     C           EXRIND    IFEQ 'GLAC'                                    MMI096
+     C           EXRIND    OREQ 'GLA4'                                    MMI100
+     C           EXRIND    OREQ 'GLA5'                                    MMI100
+     C                     EXSR FORGLA
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'SEC'                                     MMI096
+     C********** WFIE03    OREQ 'SEF'                                     MMI096
+     C           EXRIND    IFEQ 'SECU'                                    MMI096
+     C           EXRIND    OREQ 'SEFU'                                    MMI096
+     C                     EXSR FORSEC
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'CPO'                                     MMI096
+     C           EXRIND    IFEQ 'CPOS'                                    MMI096
+     C                     EXSR FORCPO
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'GA0'                                     MMI096
+     C           EXRIND    IFEQ 'GUAR'                                    MMI096
+     C                     EXSR FORGAR
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'MMD'                                     MMI096
+     C           EXRIND    IFEQ 'MMDL'                                    MMI096
+     C           EXRIND    OREQ 'MMNA'                                    MMI100
+     C                     EXSR FORMMD
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'FCL'                                     MMI096
+     C           EXRIND    IFEQ 'FCLT'                                    MMI096
+     C                     EXSR FORFCL
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'FXP'                                     MMI096
+     C********** WFIE03    OREQ 'FXS'                                     MMI096
+     C           EXRIND    IFEQ 'FXPU'                                    MMI096
+     C           EXRIND    OREQ 'FXSA'                                    MMI096
+     C                     EXSR FORFOR
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'FRI'                                     MMI096
+     C           EXRIND    IFEQ 'FRIR'                                    MMI096
+     C                     EXSR FORFRI
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'LEC'                                     MMI096
+     C********** WFIE03    OREQ 'LEP'                                     MMI096
+     C           EXRIND    IFEQ 'LECL'                                    MMI096
+     C           EXRIND    OREQ 'LEPP'                                    MMI096
+     C           EXRIND    OREQ 'LEPS'                                    MMI096
+     C                     EXSR FORLEC
+     C                     END
+      *
+     C********** WFIE03    IFEQ 'ROL'                                     MMI096
+     C           EXRIND    IFEQ 'ROLL'                                    MMI096
+     C                     EXSR FORROL
+     C                     END
+      *                                                                   MMI117
+      * Determine if we need to swap seller and debtor.                   MMI117
+      *                                                                   MMI117
+     C           EXRIND    IFEQ 'LEPP'                     B1             MMI117
+     C           EXRIND    OREQ 'MMNA'                                    MMI117
+      *                                                                   MMI117
+     C           ICLINI    IFEQ 111520                     B2             MMI117
+     C           ICLINI    OREQ 111902                                    MMI117
+     C           ICLINI    OREQ 116304                                    MMI117
+     C           ICLINI    OREQ 116305                                    MMI117
+     C           ICLINI    OREQ 116306                                    MMI117
+     C           ICLINI    OREQ 116307                                    MMI117
+     C           ICLINI    OREQ 234120                                    MMI117
+     C           MK142     ANDEQ0                                         MMI117
+     C           ICLINI    OREQ 234138                                    MMI117
+     C           MK142     ANDEQ0                                         MMI117
+     C           ICLINI    OREQ 234152                                    MMI117
+     C           MK142     ANDEQ0                                         MMI117
+      *                                                                   MMI117
+      * Data related to debtor                                            MMI117
+      *                                                                   MMI117
+     C                     MOVE MK030     M05030                          MMI117
+     C                     MOVE MK203     M05203                          MMI117
+      *                                                                   MMI117
+      * Data related to seller                                            MMI117
+      *                                                                   MMI117
+     C                     MOVE MK565     MK030                           MMI117
+     C                     MOVE MK566     MK203                           MMI117
+     C                     MOVE M05106    MK106                           MMI117
+     C                     MOVE M05119    MK119                           MMI117
+      *                                                                   MMI117
+     C           SLCOLC    IFEQ VDICCD                     B3             MMI117
+     C                     Z-ADD1         MK004                           MMI117
+     C                     ELSE                            X3             MMI117
+     C                     Z-ADD2         MK004                           MMI117
+     C                     ENDIF                           E3             MMI117
+      *                                                                   MMI117
+     C                     CALL 'ERIT77'                                  MMI117
+     C                     PARM           SLCOLC           Input          MMI117
+     C                     PARM *ZERO     RTUCTR  30       Output         MMI117
+     C                     PARM *BLANKS   ERROR   1        Return         MMI117
+      *                                                                   MMI117
+     C           ERROR     IFEQ *BLANKS                    B3             MMI117
+     C                     Z-ADDRTCUCR    MK016                           MMI117
+     C                     ENDIF                           E3             MMI117
+      *                                                                   MMI117
+     C                     MOVELICLKCU    WNBCUS                          MMI117
+     C                     CALL 'ERIT63'                                  MMI117
+     C                     PARM           WNBCUS           Input          MMI117
+     C                     PARM *ZERO     RTCONS  10       Output         MMI117
+     C                     PARM *ZERO     RTCPTY  40       Output         MMI117
+     C                     PARM *ZERO     RTECSG  30       Output         MMI117
+     C                     PARM *BLANKS   RTFIID  9        Output         MMI117
+     C                     PARM *ZERO     RTDBCD  10       Output         MMI117
+     C                     PARM *ZERO     RTECBC  30       Output         MMI117
+     C                     PARM 99999     RTPRCT  50       Output(Default)MMI117
+     C                     PARM *ZERO     RTCNTP  50       Output         MMI117
+     C                     PARM 777777793 RTFSCD 110       Output(Default)MMI117
+     C                     PARM *BLANKS   RTBNTP  1        Output         MMI117
+     C                     PARM *ZERO     RTCUCR  90       Output         MMI117
+     C                     PARM *ZERO     RTCRTP  10       Output         MMI117
+     C                     PARM *BLANKS   RTCRNM 60        Output         MMI117
+     C                     PARM *BLANKS   RTFCCR 16        Output         MMI117
+     C                     PARM *BLANKS   RTHOLC 30        Output         MMI117
+     C                     PARM *ZERO     RTHLCD  60       Output         MMI117
+     C                     PARM *BLANKS   RTCUAD 40        Output         MMI117
+     C                     PARM *BLANKS   RTCUCT 40        Output         MMI117
+     C                     PARM *BLANKS   RTCCCN  7        Output         MMI117
+     C                     PARM *BLANKS   RTCCCL 15        Output         MMI117
+     C                     PARM *BLANKS   RTCCCD  3        Output         MMI117
+     C                     PARM *ZERO     RTCURF  10       Output         MMI117
+     C                     PARM *ZERO     RTCPPT  20       Output         MMI117
+     C                     PARM *BLANKS   RTCOTP  2        Output         MMI117
+     C                     PARM *BLANKS   ERROR   1        Return         MMI117
+      *                                                                   MMI117
+     C           ERROR     IFEQ *BLANKS                    B3             MMI117
+     C                     MOVE RTECSG    MK011                           MMI117
+     C                     MOVE RTECBC    MK012                           MMI117
+     C                     MOVE RTPRCT    MK015                           MMI117
+     C                     MOVE RTDBCD    MK115                           MMI117
+     C                     MOVE RTCNTP    MK124                           MMI117
+     C                     MOVE RTCUCR    MK212                           MMI117
+     C                     MOVE RTCRNM    MK213                           MMI117
+     C                     MOVE RTHOLC    MK214                           MMI117
+     C                     MOVE RTHLCD    MK215                           MMI117
+     C                     MOVE RTCCCN    MK216                           MMI117
+     C                     ENDIF                           E3             MMI117
+     C                     ENDIF                           E2             MMI117
+     C                     ENDIF                           E1             MMI117
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORGLA    BEGSR
+      *                                                                   220519
+     C                     Z-ADDMK600     MK623                           220519
+      *
+     C                     MOVELICDECK    KYACOD                          204013
+     C           KYACOD    CHAINERITACL1             80                   204013
+      *                                                                   204013
+      * Use the table, if the value exists                                204013
+     C           *IN80     IFEQ *OFF                                      204013
+     C                     Z-ADDN3DUR     MK005                           204013
+     C                     ENDIF                                          204013
+      *                                                                   204013
+     C                     Z-ADD1         MK698
+      *  Type of Rate used for Retail is always 1
+     C                     Z-ADD1         MK113
+      *
+     C           MK001     IFEQ 1228
+     C           MK001     OREQ 1922
+     C                     Z-ADDMK601     MK603
+     C                     Z-ADDMK602     MK604
+     C                     Z-ADDMK701     MK703
+     C                     Z-ADDMK702     MK704
+     C                     END
+      *
+     C           MK001     IFEQ 1117
+     C                     Z-ADDMK601     MK631
+     C                     END
+      *
+     C           ICLINI    IFEQ 122301
+     C           MK100     IFEQ 10
+     C                     Z-ADD0         MK174
+     C                     END
+     C           MK100     IFEQ 02
+     C                     Z-ADD1         MK174
+     C                     END
+     C           MK100     IFEQ 06
+     C                     Z-ADD2         MK174
+     C                     END
+     C                     END
+      *
+     C           ICLINI    IFEQ 101101
+     C                     Z-ADD1         MK043
+     C                     END
+      *
+     C           ICLINI    IFEQ 196509
+     C                     Z-ADD1         MK003
+     C                     END
+      *
+     C           ICLINI    IFEQ 100720
+     C                     Z-ADD1         MK360
+     C                     END
+      *                                                                   214833
+     C           ICLINI    IFEQ 194101                                    214833
+     C           MK100     ANDEQ4                                         214833
+     C                     Z-ADD2         MK004                           214833
+     C                     END                                            214833
+      *
+     C*****                MOVELICDECK    KYACOD  4                       204013
+     C*****      KYACOD    CHAINERITACL1             80                   204013
+     C*****                Z-ADDN3DUR     MK005                           204013
+      *
+      * Force FT 4101 Duration = 1, always                                204013
+     C           MK001     IFEQ 4101                                      204013
+     C           MK100     ANDEQ16                                        204013
+     C                     Z-ADD1         MK005                           204013
+     C                     ENDIF                                          204013
+      *                                                                   204013
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORFRI    BEGSR
+      *
+     C                     Z-ADD100000    MK299
+     C                     Z-ADD1         MK539
+     C                     Z-ADDICBVLR    MK609
+     C                     Z-ADDICBVLR    MK610
+     C**********           Z-ADDICBVLR    MK668                           MMI132
+     C                     Z-ADDICBVLR    MK677
+     C                     Z-ADDICBVLR    MK699
+     C                     Z-ADD0         MK724
+     C                     Z-ADD0         MK726
+     C                     MOVE ICBVFX    MK709
+     C                     MOVE ICBVFX    MK710
+     C                     MOVE ICBVFX    MK777
+     C                     MOVE ICBVFX    MK799
+      *
+     C           ICLINI    IFGE 159300
+     C           ICLINI    ANDLE159399
+     C           MK378     IFEQ 0
+     C                     Z-ADDMK010     MK378
+     C                     END
+     C***********          Z-ADD00        MK137                           MMI108
+     C                     MOVE *ZERO     DS117
+     C           ICBSRT    IFEQ 0
+     C                     MOVEL'F'       WT117
+     C                     ELSE
+     C                     MOVEL'I'       WT117
+     C                     END
+     C                     MOVEL'I'       WT117
+     C                     MOVE ICBSRT    $BSRT   2
+     C                     Z-ADD1         X
+     C           ICUCCY    LOKUPCCY,X                    26
+     C                     MOVELCCS,X     $CCY    3
+     C                     MOVE *BLANKS   BABSRN                          212079
+     C                     MOVE *BLANKS   BABSRS                          212079
+     C           KYBSRT    CHAINSDBSRTL0             26
+     C                     MOVELBABSRN    WL117
+     C                     MOVE BABSRS    WD117
+     C********             MOVEL'+'       WS117
+     C           ICSPRE    IFLT 0
+     C                     MULT -1        ICSPRE
+     C                     Z-ADDICSPRE    WPW17   43
+     C                     MOVE WPW17     WP117
+     C                     MOVEL'-'       WS117
+     C                     ELSE
+     C                     Z-ADDICSPRE    WPW17   43
+     C                     MOVE WPW17     WP117
+     C                     MOVEL'+'       WS117
+     C                     END
+     C                     MOVELDS117     MK117
+     C*
+     C                     MOVE *ZERO     MK130
+     C           ICCRDR    IFEQ 'D'
+     C                     Z-ADDICCRRT    $K130   53
+     C                     MOVE $K130     MK130
+     C                     ELSE
+     C                     Z-ADDICDERT    $K130   53
+     C                     MOVE $K130     MK130
+     C                     END
+     C           ICBSRT    IFEQ 0
+     C                     MOVEL'F'       MK130
+     C                     ELSE
+     C                     MOVEL'I'       MK130
+     C                     END
+     C                     END
+      *
+     C           MK143     IFEQ 22
+     C                     MOVEL'F'       MK130
+     C                     END
+      *
+     C                     EXSR FORRAT
+      *
+     C           MK143     IFEQ 23
+     C           MK143     OREQ 24
+     C                     Z-ADD1         MK370
+     C                     ELSE
+     C                     Z-ADD0         MK370
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORRAT    BEGSR
+      *
+     C                     MOVELMK277     WWDLNO  60
+      *
+     C           WWDLNO    CHAINDEALSDGF             80
+     C           *IN80     IFEQ '0'                        - B1
+     C           DTYP      IFEQ 'RS'
+     C           UBRTT     IFEQ *BLANKS
+     C           TBRTT     OREQ *BLANKS
+     C                     MOVELDLST      WWDLST  1
+     C                     MOVE *ZERO     MK130
+     C           WWDLST    IFEQ '1'                        ---|
+     C           WWDLST    OREQ '3'                           |
+     C                     Z-ADDTEINR     $K130   53          |
+     C                     MOVE $K130     MK130               |
+     C           TBRTT     IFEQ *BLANKS                    -| |
+     C                     MOVEL'F'       MK130             | |
+     C                     ELSE                             | |
+     C                     MOVEL'I'       MK130             | |
+     C                     END                             -| |
+     C                     ELSE                               |
+     C                     Z-ADDUEINR     $K130   53          |
+     C                     MOVE $K130     MK130               |
+     C           UBRTT     IFEQ *BLANKS                    -| |
+     C                     MOVEL'F'       MK130             | |
+     C                     ELSE                             | |
+     C                     MOVEL'I'       MK130             | |
+     C                     END                             -| |
+     C                     END                             ---|
+     C                     END                               E4
+     C                     END                               E4
+     C                     END                               E4
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORSEC    BEGSR
+      *
+     C           MK001     IFEQ 3904
+     C                     Z-ADD1         MK335
+     C                     END
+      *
+     C           MK001     IFEQ 1063
+     C           MK002     ANDEQ11
+      *
+     C                     Z-ADD38        MK107
+      *
+     C                     Z-ADDMK602     MK601
+     C                     Z-ADDMK702     MK701
+     C                     Z-ADDMK662     MK661
+     C*****                Z-ADDMK762     MK761                           MMI106
+     C                     Z-ADDICLAFX    MK761                           MMI106
+      *
+     C                     Z-ADD0         MK602
+     C                     Z-ADD0         MK662
+     C                     Z-ADD0         MK702
+     C*****                Z-ADD0         MK762                           MMI106
+      *
+     C                     END
+      *
+     C           MK001     IFEQ 3065
+     C           MK001     OREQ 3061
+     C                     Z-ADDMK601     MK617
+     C                     Z-ADDMK602     MK659
+     C                     Z-ADD0         MK601
+     C                     Z-ADD0         MK602
+     C           MK010     IFLT XYSTRP
+     C                     MOVEL'501'     MKUIA
+     C                     END
+     C                     END
+      *
+     C           MK001     IFEQ 1535
+     C           BBBNBI    IFEQ 'Y'
+     C                     Z-ADD51        MK002
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORCPO    BEGSR
+      *
+     C           MK001     IFEQ 1625
+      *
+     C                     Z-ADD0         MK116
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORMMD    BEGSR
+      *
+     C           MK010     IFLT XYSTRQ
+     C                     MOVEL'501'     MKUIA
+     C                     END
+      *
+     C                     Z-ADDMK010     WSTR    80
+     C                     EXSR DATDIF
+     C                     Z-ADDENDDAT    $END    50
+     C           $END      IFLE $ENDP
+     C                     Z-ADD0         MK601
+     C                     Z-ADD0         MK701
+     C                     Z-ADD0         MK602
+     C                     Z-ADD0         MK702
+     C                     Z-ADD0         MK680                           190269
+     C                     Z-ADD0         MK282                           190269
+     C                     Z-ADD0         MK283                           190269
+     C                     Z-ADD0         MK609                           218384
+     C                     Z-ADD0         MK709                           218384
+     C                     END
+      ***********
+     C***********MK009     IFGE XYSTRQ
+     C***********MK601     IFGT 0
+     C***********          Z-ADDMK601     MK635
+     C***********          Z-ADD1         MK639
+     C***********          ELSE
+     C***********          Z-ADDMK602     MK636
+     C***********          Z-ADD1         MK640
+     C***********          END
+     C***********          END
+      *                                                                   MMI100
+      * NEGOTIABLE ASSETS                                                 MMI100
+      *                                                                   MMI100
+     C           MK001     IFEQ 1163                                      MMI100
+     C           MK001     OREQ 1165                                      MMI100
+     C                     Z-ADDICNVLR    MK601                           MMI100
+     C                     MOVE ICNVFX    MK701                           MMI100
+     C                     END                                            MMI100
+      *                                                                   MMI100
+     C           MK001     IFEQ 3905                                      MMI100
+     C                     MOVE MK609     MK601                           MMI100
+     C                     MOVE MK709     MK701                           MMI100
+     C                     MOVE MK601     MK675                           MMI100
+     C                     MOVE MK701     MK775                           MMI100
+     C                     END                                            MMI100
+      *
+     C           ICLINI    IFGE 173900
+     C           ICLINI    ANDLE173999
+     C                     Z-ADD04        MK145
+     C                     END
+      *
+     C           ICLINI    IFEQ 101758
+     C                     Z-ADDMK009     WSTR    80
+     C                     EXSR DATDIF
+     C                     Z-ADDENDDAT    $STR    50
+     C                     Z-ADDMK010     WSTR    80
+     C                     EXSR DATDIF
+     C                     Z-ADDENDDAT    $END    50
+     C           $END      SUB  $STR      $DIF    50
+     C           $DIF      IFLT 30
+     C                     Z-ADD56        MK002
+     C                     END
+     C                     END
+      *
+     C           ICLINI    IFEQ 101792
+     C           $END      ANDLE$ENDP
+     C                     Z-ADD98        MK002
+     C                     END
+      *
+     C           ICLINI    IFEQ 183734
+     C                     Z-ADD2         MK120
+     C                     END
+      *
+     C           ICLINI    IFEQ 170929
+     C                     Z-ADD04        MK145
+     C           ICNUMO    IFLT 3
+     C                     Z-ADD30        MK100
+     C                     END
+     C           ICNUMO    IFGE 3
+     C           ICNUMO    ANDLT6
+     C                     Z-ADD32        MK100
+     C                     END
+     C           ICNUMO    IFEQ 6
+     C                     Z-ADD33        MK100
+     C                     END
+     C           ICNUMO    IFGE 7
+     C           ICNUMO    ANDLT12
+     C                     Z-ADD35        MK100
+     C                     END
+     C           ICNUMO    IFEQ 12
+     C                     Z-ADD37        MK100
+     C                     END
+     C           ICNUMO    IFGE 13
+     C           ICNUMO    ANDLT18
+     C                     Z-ADD39        MK100
+     C                     END
+     C           ICNUMO    IFEQ 18
+     C                     Z-ADD40        MK100
+     C                     END
+     C           ICNUMO    IFGT 18
+     C                     Z-ADD42        MK100
+     C                     END
+     C                     END
+      *
+     C           ICLINI    IFEQ 173912
+     C           ICNUMO    ANDGT1
+     C                     Z-ADD14        MK002
+     C                     END
+      *
+     C           ICLINI    IFEQ 173904
+     C           $END      ANDLE$ENDP
+     C                     Z-ADD98        MK002
+     C                     END
+      *
+     C           MK001     IFEQ 1789
+     C           BBBNBI    IFEQ 'Y'
+     C                     Z-ADD06        MK002
+     C           MK031     IFEQ $CMPC
+     C                     Z-ADD10        MK002
+     C                     END
+     C                     ELSE
+     C                     Z-ADD02        MK002
+     C                     END
+     C                     END
+      *
+     C           MK001     IFEQ 1595
+     C           MK143     ANDEQ26
+     C                     Z-ADD31        MK143
+     C                     END
+      *
+      * SPOT O TERM CNT
+     C                     MOVELICDECK    WRK05
+     C                     MOVE WRK05     $L      1
+     C           $L        IFEQ 'O'
+     C                     Z-ADD1         X
+     C           ICUCCY    LOKUPUI1,X                    26
+     C                     Z-ADDUI2,X     $DAT8   80
+     C           MK010     IFLE $DAT8
+     C                     Z-ADD1         MK162
+     C                     ELSE
+     C                     Z-ADD2         MK162
+     C                     END
+     C                     END
+     C*
+     C           MK001     IFEQ 1561
+     C           MK001     OREQ 1565
+     C           MK601     IFNE 0
+     C                     Z-ADDMK601     MK691
+     C                     Z-ADDMK701     MK791
+     C                     ELSE
+     C                     Z-ADDMK602     MK691
+     C                     Z-ADDMK702     MK791
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORROL    BEGSR
+      *
+     C                     MOVEL'LECL'    MK204
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORFCL    BEGSR
+      *                                                                   MMI135
+      * If this is a 'Fido Plurimo' facility set FT to 9125.10            MMI135
+      *                                                                   MMI135
+     C           WRIPA     IFNE *BLANKS                                   MMI135
+     C                     Z-ADD9125      MK001                           MMI135
+     C                     Z-ADD10        MK002                           MMI135
+     C                     MOVELWRIPA     MK054                           MMI135
+     C                     MOVE WRIPA     MK054                           MMI135
+     C                     Z-ADD1         MK057                           MMI135
+     C                     ENDIF                                          MMI135
+      *
+     C           MK010     IFEQ 20501231
+     C           MK273     OREQ 1
+     C                     Z-ADD1         MK005
+     C                     Z-ADD0         MK010
+     C                     Z-ADD1         MK273
+     C                     Z-ADD15        MK224
+     C                     END
+      *
+     C                     MOVELMK277     WCAM11 110
+     C                     MOVE WCAM11    MK058
+      *
+     C           MK001     IFEQ 9125
+     C                     MOVELMK030     MK203
+     C                     END
+      ***********                                                   MMI096192458
+      **Check*all related Guarantees for SACE details               MMI096192458
+      ***********                                                   MMI096192458
+     C***********KGUAR     KLIST                                    MMI096192458
+     C***********          KFLD           RRRCUS                    MMI096192458
+     C***********          KFLD           RRUTSI                    MMI096192458
+     C***********          KFLD           RRUTSR                    MMI096192458
+     C***********                                                   MMI096192458
+     C***********          MOVE ICFCUS    RRRCUS                    MMI096192458
+     C***********          MOVE 'F'       RRUTSI                    MMI096192458
+     C***********          MOVELICFACT    WRK05   5                 MMI096192458
+     C***********          MOVE ICFCNO    WRK05                     MMI096192458
+     C***********          MOVELWRK05     RRUTSR    P               MMI096192458
+     C***********KGUAR     CHAINERITGAL1             01             MMI096192458
+     C************IN01     DOWEQ*OFF                                MMI096192458
+     C***********RRGCOD    IFGE 36701                               MMI096192458
+     C***********RRGCOD    ANDLE36799                               MMI096192458
+     C***********RRGCOD    DIV  100       WRK05N  50                MMI096192458
+     C***********          MVR            MK367                     MMI096192458
+     C***********1000      MULT RRGPER    MK104                     MMI096192458
+     C***********          ENDIF                                    MMI096192458
+     C***********KGUAR     READEERITGAL1                 01         MMI096192458
+     C***********          ENDDO                                    MMI096192458
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           FORFOR    BEGSR
+      *
+     C                     Z-ADDICCTVL    MK684
+     C           ICCRDR    IFEQ 'D'
+     C                     Z-ADDMK601     MK685
+     C                     Z-ADDMK701     MK785
+     C                     ELSE
+     C                     Z-ADDMK602     MK683
+     C                     Z-ADDMK702     MK783
+     C                     END
+     C*
+     C                     MOVELICTPPR    WFIX06  6
+     C                     MOVELWFIX06    WFIX04  4
+     C           WFIX04    IFEQ '0143'
+     C                     MOVE WFIX06    WFIS02  20
+     C                     MOVE WFIS02    MK143
+     C                     END
+      * SPOT O TERM CNT
+     C                     Z-ADD1         X
+     C           ICUCCY    LOKUPUI1,X                    26
+     C                     Z-ADDUI2,X     $DAT8   80
+     C           MK010     IFLE $DAT8
+     C                     Z-ADD1         MK162
+     C                     ELSE
+     C                     Z-ADD2         MK162
+     C                     END
+      *
+     C           MK003     IFEQ 1
+     C                     MOVEL'5'       MKUIA
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           FORGAR    BEGSR
+      *                                                                   MMI096
+      * First 16 characters of Field 204 must be unique                   MMI096
+      *                                                                   MMI096
+     C                     MOVELICORAP    DS277                           MMI096
+     C           'GA'      CAT  WD277:0   MK204     P                     MMI096
+      ***********                                                         189157
+     C***********ICCOCD    IFEQ 400                                       189157
+     C***********          Z-ADD1         MK304                           189157
+     C***********          END                                            189157
+      ***********                                                         MMI096
+     C***********MK001     IFEQ 9641                                      MMI096
+     C***********          Z-ADD9423      MK001                           MMI096
+     C***********          END                                            MMI096
+      *
+     C           MK001     IFEQ 9225
+     C                     MOVELMK308     MK030
+     C                     END
+      ***********                                                         189157
+     C***********ICCOCD    IFEQ 403                                       189157
+     C***********          Z-ADD2         MK304                           189157
+     C***********          END                                            189157
+      ***********                                                         189157
+     C***********ICCOCD    IFEQ 411                                       189157
+     C***********          Z-ADD2         MK304                           189157
+     C***********          END                                            189157
+      ***********                                                         189157
+     C***********ICCOCD    IFEQ 420                                       189157
+     C***********          Z-ADD1         MK304                           189157
+     C***********          END                                            189157
+      ***********                                                         189157
+     C***********ICCOCD    IFEQ 511                                       189157
+     C***********          Z-ADD6         MK304                           189157
+     C***********          END                                            189157
+      ***********                                                         MMI096
+     C***********          MOVELICNOTE    WFIE08  8                       MMI096
+     C***********          MOVELWFIE08    WFIX05  5                       MMI096
+     C***********          MOVELWFIX05    WFIX03  3                       MMI096
+     C***********          MOVE WFIX05    WFIS02  20                      MMI096
+     C***********WFIX03    IFEQ '367'                                     MMI096
+     C***********          MOVE WFIS02    MK367                           MMI096
+     C***********          MOVE WFIE08    WFIS03  30                      MMI096
+     C***********          Z-ADDWFIS03    MK104                           MMI096
+     C***********          MULT 1000      MK104                           MMI096
+     C***********          END                                            MMI096
+      ***********                                                         MMI096
+     C***********          MOVE ICFCUS    WRK06   6                       MMI096
+     C***********          MOVE ICFACT    WRK09   9                       MMI096
+     C***********          MOVE ICFCNO    WRK11  11                       MMI096
+     C***********          MOVELWRK06     WRK09   9                       MMI096
+     C***********          MOVELWRK09     WRK11                           MMI096
+     C***********          MOVEL*BLANK    MK277                           MMI096
+     C***********          MOVELWRK11     MK277                           MMI096
+     C                     MOVE *BLANKS   WRK04   4                       MMI096
+     C                     MOVE WRK04     MK277                           MMI096
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           FORLEC    BEGSR
+      *                                                                   MMI135
+      * If loan is covered by a 'Fido Plurimo' facility output the        MMI135
+      * RIPA code of the facility to field 276                            MMI135
+      *                                                                   MMI135
+     C           WRIPA     IFNE *BLANKS                                   MMI135
+     C                     MOVE WRIPA     MK276                           MMI135
+     C                     ENDIF                                          MMI135
+      *
+     C                     Z-ADDMK010     WSTR    80
+     C                     EXSR DATDIF
+     C                     Z-ADDENDDAT    $END    50
+     C           $END      IFLE $ENDP
+     C           ICUNAM    ANDEQ0                                         197061
+     C                     Z-ADD0         MK601
+     C                     Z-ADD0         MK701
+     C                     Z-ADD0         MK602
+     C                     Z-ADD0         MK702
+     C                     Z-ADD0         MK609
+     C                     Z-ADD0         MK709
+     C                     Z-ADD0         MK620
+     C                     Z-ADD0         MK720
+     C                     END
+      *
+     C           ICLINI    IFEQ 101101
+     C                     Z-ADD1         MK043
+     C           MK227     IFGT 19981231
+     C                     Z-ADD0         MK227
+     C                     END
+     C                     END
+      *
+     C           ICLINI    IFEQ 0101758
+     C           MK227     IFGT 19980228
+     C                     Z-ADD0         MK227
+     C                     END
+     C                     END
+      *
+     C           ICLINI    IFEQ 112302
+     C                     Z-ADD070       MK022
+     C                     Z-ADD1         MK158
+     C                     Z-ADD1         MK170
+     C                     Z-ADD1         MK960
+     C                     END
+      *
+     C           MK001     IFEQ 1131
+     C                     Z-ADD1         MK960
+     C                     END
+      *
+     C           ICLINI    IFEQ 113126
+     C           ICLINI    OREQ 113176                                    MMI117
+     C**********           Z-ADD021       MK556                           MMI117
+     C                     Z-ADD032       MK556                           MMI117
+     C                     END
+      *
+     C           ICLINI    IFEQ 116304
+     C           MK004     IFEQ 1
+     C                     Z-ADDMK011     MK041
+     C                     Z-ADD86        MK046
+     C                     Z-ADD86        MK088
+     C                     END
+     C                     END
+      *
+     C                     MOVELICTPPR    WFIX06  6
+     C                     MOVELWFIX06    WFIX04  4
+      *
+     C           WFIX04    IFEQ '0109'
+     C                     MOVE WFIX06    WFIS02  20
+     C                     MOVE WFIS02    MK109
+     C                     MOVELICLNIT    WFIX06  6
+     C                     MOVELWFIX06    WFIX04  4
+     C           WFIX04    IFEQ '0144'
+     C                     MOVE WFIX06    WFIS02
+     C                     MOVE WFIS02    MK144
+     C                     END
+     C                     END
+      *
+     C           WFIX04    IFEQ '0158'
+     C                     MOVE WFIX06    WFIS02
+     C                     MOVE WFIS02    MK158
+     C                     END
+      *
+     C           WFIX04    IFEQ '0280'
+     C                     MOVE WFIX06    WFIS02
+     C                     MOVE WFIS02    MK280
+     C                     END
+      *
+     C           WFIX04    IFEQ '0166'
+     C                     MOVE WFIX06    WFIS02
+     C                     MOVE WFIS02    MK166
+      *
+     C                     MOVELICLNIT    WFIX06  6
+     C                     MOVELWFIX06    WFIX04  4
+     C           WFIX04    IFEQ '0280'
+     C                     MOVE WFIX06    WFIS02
+     C                     MOVE WFIS02    MK280
+     C                     END
+     C***********          MOVE ICTPAC    WFIX03                          MMI096
+     C***********WFIX03    IFGE '001'                                     MMI096
+     C***********WFIX03    ANDLE'004'                                     MMI096
+     C***********          MOVE WFIX03    MK109                           MMI096
+     C           ICTPAC    IFGE 1                                         MMI096
+     C           ICTPAC    ANDLE4                                         MMI096
+     C                     Z-ADDICTPAC    MK109                           MMI096
+     C                     END
+      *
+     C                     END
+      *                                                                   191519
+     C           MK001     IFEQ 1557                                      191519
+     C           MK001     OREQ 1561                                      191519
+     C           MK001     OREQ 1565                                      191519
+     C           MK601     IFNE 0                                         191519
+     C                     Z-ADDMK601     MK691                           191519
+     C                     Z-ADDMK701     MK791                           191519
+     C                     ELSE                                           191519
+     C                     Z-ADDMK602     MK691                           191519
+     C                     Z-ADDMK702     MK791                           191519
+     C                     END                                            191519
+     C                     END                                            191519
+      *                                                                   217552
+      * Suppress 1557.xx if ccy in and counterparty resident              217552
+      *                                                                   217552
+     C           MK001     IFEQ 1557                                      217552
+     C********** MK002     ANDEQ04                                  217552225425
+     C           MK003     ANDEQ1                                         217552
+     C           MK004     ANDEQ1                                         217552
+     C                     MOVE '501'     MKUIA                           217552
+     C                     END                                            217552
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ***********                                                         MMI108
+     C***********FOCSEF    BEGSR                                          MMI108
+      ***********                                                         MMI108
+     C***********MK001     IFEQ 41400                                     MMI108
+     C***********          Z-ADD090       MK554                           MMI108
+     C***********          END                                            MMI108
+      ***********                                                         MMI108
+     C***********          ENDSR                                          MMI108
+      ***********                                                         MMI108
+      *****************************************************************
+      *
+     C           FOCMMD    BEGSR
+      *
+     C                     Z-ADDMK010     WSTR    80
+     C                     EXSR DATDIF
+     C                     Z-ADDENDDAT    $END    50
+     C                     MOVELICCPAC    WRK05   5
+     C           WRK05     IFEQ '03917'
+     C           WRK05     OREQ '03915'
+     C           'Q'       LOKUPPER                      80
+     C  N80                MOVEL'501'     MKUIA
+     C           $END      IFLE $ENDP
+     C                     MOVELICLINI    WRK05   5
+     C                     MOVE ICLINI    WRK02   2
+     C           WRK05     IFEQ '01017'
+     C           WRK02     IFLT '92'
+     C                     Z-ADD06        MK002
+     C           MK010     IFGE XYSTRQ
+     C                     MOVEL'501'     MKUIA
+     C                     END
+     C                     ELSE
+     C                     Z-ADD04        MK002
+     C                     END
+     C                     END
+     C           WRK05     IFEQ '01739'
+     C           WRK02     IFLT '12'
+     C                     Z-ADD06        MK002
+     C                     ELSE
+     C                     Z-ADD08        MK002
+     C           MK010     IFGE XYSTRQ
+     C                     MOVEL'501'     MKUIA
+     C                     END
+     C                     END
+     C                     END
+     C                     ELSE
+     C                     MOVEL'501'     MKUIA
+     C                     END
+     C                     END
+      *
+      * To fix FT 390406 coming out when the deal has already matured     203420
+     C           ICCPAC    IFEQ 390406                                    203420
+     C                     MOVELICLINI    WRK05                           203420
+     C           WRK05     IFEQ '01103'                                   203420
+     C           MK010     ANDLTXYSTRP                                    203420
+     C                     MOVEL'501'     MKUIA                           203420
+     C                     ENDIF                                          203420
+     C                     ENDIF                                          203420
+      *                                                                   203420
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           $M277     BEGSR
+      *
+     C                     MOVELICORAP    DS277
+     C           ICOR01    IFEQ 'GLAC'
+     C                     MOVEL#COR01    WFLD15 15        Cnum/Ccy/Acod (4)
+     C                     MOVE #COR02    WFLD15           AcSq
+     C                     MOVE *BLANKS   MK277
+     C                     MOVELWFLD15    MK277            Cnum/Ccy/Acod (4)/AcSq
+     C                     ELSE
+     C                     MOVE WD277     MK277
+     C                     ENDIF
+      *                                                                   190269
+      * Valutaria: field 277 is a sequence number                         190269
+      *                                                                   190269
+     C           EXRIND    IFEQ 'DLEX'                                    190269
+     C                     ADD  1         VALSEQ 100                      190269
+     C                     MOVE VALSEQ    VALSEA 10                       190269
+     C           'VALU'    CAT  VALSEA:1  MK277                           190269
+     C                     ENDIF                                          190269
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      **********                                                          MMI096
+     C********** INIT      BEGSR                                          MMI096
+      **********                                                          MMI096
+     C**********           SETON                     99                   MMI096
+      *
+     C           *INZSR    BEGSR
+      *
+     C           1         CHAINSDBANKPD             59
+      *
+     C                     MOVELBJMRDT    WDAT5   5
+     C                     MOVE WDAT5     WDAT3   3
+     C                     Z-ADD1         X       20
+     C           WDAT3     LOKUPSSA,X                    50
+     C   50                Z-ADDX         WDAT2   20
+     C   50                MOVELBJMRDT    WDAT4   4
+     C   50                MOVE WDAT2     WDAT4
+     C   50                MOVELWDAT4     WDAT6   6
+     C   50                MOVE BJMRDT    WDAT2
+     C   50                MOVE WDAT2     WDAT6
+     C           WDAT2     IFLT 71
+     C                     MOVEL'20'      WDAT4
+     C                     ELSE
+     C                     MOVEL'19'      WDAT4
+     C                     END
+     C                     MOVE WDAT6     WDAT2
+     C                     MOVE WDAT2     WDAT4
+     C                     MOVELWDAT4     WDAT8   8
+     C                     MOVE WDAT6     WDAT4
+     C                     MOVELWDAT6     WDAT2
+     C                     MOVE WDAT2     WDAT4
+     C                     MOVE WDAT4     WDAT8   8
+     C                     MOVE WDAT8     XYENDP  80
+     C                     MOVE WDAT8     XYSTRP  80
+     C                     MOVE '01'      XYSTRP  80
+     C                     Z-ADDXYENDP    WSTR    80
+     C                     EXSR DATDIF
+     C                     Z-ADDENDDAT    $ENDP   50
+     C                     Z-ADDXYENDP    XYSTRQ  80
+     C*                                                                   ER0136
+     C                     MOVE WDAT8     WDAT4   4
+     C                     MOVELWDAT4     WDA2X   2
+     C                     MOVE WDA2X     X
+      *
+     C           X         IFEQ 1
+     C           X         OREQ 2
+     C           X         OREQ 3
+     C                     MOVE '0101'    XYSTRQ
+     C                     END
+      *
+     C           X         IFEQ 4
+     C           X         OREQ 5
+     C           X         OREQ 6
+     C                     MOVE '0401'    XYSTRQ
+     C                     END
+      *
+     C           X         IFEQ 7
+     C           X         OREQ 8
+     C           X         OREQ 9
+     C                     MOVE '0701'    XYSTRQ
+     C                     END
+      *
+     C           X         IFEQ 10
+     C           X         OREQ 11
+     C           X         OREQ 12
+     C                     MOVE '1001'    XYSTRQ
+     C                     END
+      *
+     C           X         IFEQ 01
+     C           X         OREQ 02
+     C           X         OREQ 04
+     C           X         OREQ 05
+     C           X         OREQ 07
+     C           X         OREQ 08
+     C           X         OREQ 10
+     C           X         OREQ 11
+     C                     MOVEA'M***'    PER
+     C                     END
+      *
+     C           X         IFEQ 03
+     C           X         OREQ 09
+     C                     MOVEA'MQ**'    PER
+     C                     END
+      *
+     C           X         IFEQ 06
+     C                     MOVEA'MQS*'    PER
+     C                     END
+      *
+     C           X         IFEQ 12
+     C                     MOVEA'MQSA'    PER
+     C                     END
+      **********                                                          MMI100
+     C********** BJCYCD    CHAINERCURRL1             80                   MMI100
+      **********                                                          MMI100
+     C**********           Z-ADDVRNBDP    CCNBDP  10       Dec places     MMI100
+      *
+     C           KYBSRT    KLIST
+     C                     KFLD           $CCY
+     C                     KFLD           $BSRT
+      *
+     C           *LOVAL    SETLLSDCRT1L0
+     C                     READ SDCRT1L0                 30
+     C*
+     C                     MOVEL*ZERO     $CMPC   9
+     C                     MOVE '10009'   $CMPC
+     C*
+     C                     Z-ADD0         X       20
+     C** MAIN PROCESSING
+     C           *IN30     DOWEQ'0'                        - B1
+     C*
+     C                     ADD  1         X
+     C                     MOVELPBCYCD    CCS,X                           UIT021
+     C                     Z-ADDPBUCCY    CCY,X
+     C*
+     C                     READ SDCRT1L0                 30
+     C*
+     C                     END                             - E1
+     C*                                                                   MMI100
+     C* Access ER ICD to obtain Reporting Currency                        MMI100
+     C*                                                                   MMI100
+     C                     READ ERICDRPD                 80               MMI100
+      *
+     C           1         SETLLSDCURRPD
+     C                     READ SDCURRPD                 30
+     C*
+     C                     Z-ADD0         X       20
+     C                     Z-ADD0         Y       20
+     C** MAIN PROCESSING
+     C           *IN30     DOWEQ'0'                        - B1
+     C*
+     C           A6CYCD    CHAINSDCRT1L0             31
+     C           *IN31     IFEQ '0'
+     C                     ADD  1         Y
+     C                     Z-ADDPBUCCY    UI1,Y
+     C                     Z-ADDA6MMSD    UI2,Y
+     C           A6INCY    IFEQ 'Y'
+     C                     ADD  1         X
+     C                     Z-ADDPBUCCY    CIN,X
+     C                     END
+     C                     END
+     C*                                                                   MMI100
+     C* Store decimal places of Puma Reporting Currency                   MMI100
+     C*                                                                   MMI100
+     C           A6CYCD    IFEQ VDCCYC                                    MMI100
+     C                     Z-ADDA6NBDP    CCNBDP  10                      MMI100
+     C                     ENDIF                                          MMI100
+     C*
+     C                     READ SDCURRPD                 30
+     C*
+     C                     END                             - E1
+      *                                                                   MMI080
+      * Define Tipo Segnalante (default is 1)                             MMI080
+      *     0 = Italian Bank                                              MMI080
+      *     1 = Italian branch of EU bank                                 MMI080
+      *     2 = Italian branch of non-EU bank                             MMI080
+      *                                                                   MMI080
+     C                     Z-ADD1         TIPSEG  10                      MMI080
+      *                                                                   MMI080
+     C                     MOVEL'0'       WKEY   18                       MMI080
+     C                     CALL 'AOFXTBR0'                                MMI080
+     C                     PARM '*BLANKS' WRTCD   7                       MMI080
+     C                     PARM '*KEY   ' WOPTN   7                       MMI080
+     C                     PARM 'BBP'     FIELD   3                       MMI080
+     C                     PARM           WKEY   18                       MMI080
+     C           IRFXTB    PARM IRFXTB    DSSDY                           MMI080
+     C           WRTCD     IFEQ *BLANKS                                   MMI080
+     C                     Z-ADD0         TIPSEG                          MMI080
+     C                     ENDIF                                          MMI080
+      *                                                                   MMI080
+     C                     MOVEL'1'       WKEY                            MMI080
+     C                     CALL 'AOFXTBR0'                                MMI080
+     C                     PARM '*BLANKS' WRTCD                           MMI080
+     C                     PARM '*KEY   ' WOPTN                           MMI080
+     C                     PARM 'BBP'     FIELD                           MMI080
+     C                     PARM           WKEY                            MMI080
+     C           IRFXTB    PARM IRFXTB    DSSDY                           MMI080
+     C           WRTCD     IFEQ *BLANKS                                   MMI080
+     C                     Z-ADD1         TIPSEG                          MMI080
+     C                     ENDIF                                          MMI080
+      *                                                                   MMI080
+     C                     MOVEL'2'       WKEY                            MMI080
+     C                     CALL 'AOFXTBR0'                                MMI080
+     C                     PARM '*BLANKS' WRTCD                           MMI080
+     C                     PARM '*KEY   ' WOPTN                           MMI080
+     C                     PARM 'BBP'     FIELD                           MMI080
+     C                     PARM           WKEY                            MMI080
+     C           IRFXTB    PARM IRFXTB    DSSDY                           MMI080
+     C           WRTCD     IFEQ *BLANKS                                   MMI080
+     C                     Z-ADD2         TIPSEG                          MMI080
+     C                     ENDIF                                          MMI080
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           DATDIF    BEGSR
+     C*
+     C                     Z-ADD0         ENDDAT  50
+     C                     Z-ADDWSTR      EXSTRD
+     C                     MOVE WYEAR     IYEAR
+     C                     Z-ADDWMONTH    IMONTH
+     C                     Z-ADDWDAY      IDAY
+     C*
+     C                     Z-ADDIMIDAS    #SDATE
+     C                     MOVEL'D'       #SDTFM
+     C                     MOVEL*BLANKS   #SRTRN
+     C                     Z-ADD*ZEROS    #SDGIM
+     C*
+     C                     CALL 'ZA0270'
+     C                     PARM           #SDATE  60
+     C                     PARM           #SDTFM  1
+     C                     PARM           #SRTRN  1
+     C                     PARM           #SDGIM  50
+     C                     Z-ADD#SDGIM    ENDDAT  50
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           $CUST     BEGSR
+      *                                                                   MMI117
+      * Extract fields related to seller of part purchased                MMI117
+      *                                                                   MMI117
+     C           EXRIND    IFEQ 'LEPP'                                    MMI117
+     C           EXRIND    OREQ 'MMNA'                                    MMI117
+      *                                                                   MMI117
+     C                     MOVELICLKCU    WNBCUS                          MMI117
+     C           WNBCUS    CHAINSDCUSTL1             80                   MMI117
+      *                                                                   MMI117
+     C           *IN80     IFEQ *OFF                                      MMI117
+     C                     MOVE BBCOLC    SLCOLC  2                       MMI117
+     C           BBPCNB    IFNE *BLANKS                                   MMI117
+     C                     MOVELBBPCNB    MK566                           MMI117
+     C                     ELSE                                           MMI117
+     C                     MOVELBBCUST    MK566                           MMI117
+     C                     ENDIF                                          MMI117
+     C                     ENDIF                                          MMI117
+      *                                                                   MMI117
+     C           WNBCUS    CHAINSDCUT2L0             80                   MMI117
+      *                                                                   MMI117
+     C           *IN80     IFEQ *OFF                                      MMI117
+     C                     MOVE PCECSG    M05011                          MMI117
+     C           PCDBCD    IFEQ 1                                         MMI117
+     C                     Z-ADD1         M05106                          MMI117
+     C                     ENDIF                                          MMI117
+     C           PCDBCD    IFEQ 2                                         MMI117
+     C                     Z-ADD1         M05119                          MMI117
+     C                     ENDIF                                          MMI117
+     C                     ENDIF                                          MMI117
+     C                     ENDIF                                          MMI117
+      *
+     C                     MOVELICCUST    WNBCUS  6
+     C           WNBCUS    CHAINSDCUT2L0             80
+      **   If record not found:
+     C           *IN80     IFEQ '0'                        - B1
+     C           PCDBCD    IFEQ 1
+     C                     Z-ADD1         MK106
+     C                     END
+     C           PCDBCD    IFEQ 2
+     C                     Z-ADD1         MK119
+     C                     END
+     C                     MOVE PCCUCR    MK212
+     C                     MOVE PCCRNM    MK213
+     C                     MOVE PCHOLC    MK214
+     C                     MOVE PCHLCD    MK215
+     C                     MOVE PCCCCN    MK216
+     C                     MOVE PCCNTP    MK124
+     C                     END
+      *
+     C           WNBCUS    CHAINSDCUSTL1             80
+      **   If record not found:
+     C           *IN80     IFEQ '0'                        - B1
+     C           BBPCNB    IFNE '      '
+     C                     MOVELBBPCNB    MK203
+     C                     ELSE
+     C                     MOVELBBCUST    MK203
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+**  MONTH SHORTNAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

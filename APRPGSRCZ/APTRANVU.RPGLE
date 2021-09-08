@@ -5222,6 +5222,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD05654
      C**********         ADD       26            Bfp                                MD044553 MD05654
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
+     C                   ADD       1             Bfp                                          CIR020
+     C     100           SUBST     BUFFER:Bfp    InCIR020                                     CIR020
                                                                                              BUG6671
 
      C**********         ENDSL                                                               BUG4646
@@ -5243,6 +5245,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                     BUG6671
      C                   PARM                    ExtData                                     BUG6671
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    InCIR020                                     CIR020
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058404           Date 06Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
       *                 MD057930           Date 26Apr21               *
       *                 MD057934           Date 23Apr21               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -428,8 +430,14 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
-     C                             DDBLRT  = *BLANKS  and                                     CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
+     C                             DDBLRT  = *BLANKS and                                      CDL102
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDBLRT = BABLRT                                            CLE172
                                                                                               CLE172
@@ -437,7 +445,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'N'                                       MD057889
      C                   EVAL      DDBLRT = 'N'                                             MD057889
                                                                                             MD057889
@@ -546,7 +560,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDRFRR = BARFRR                                            CLE172
                                                                                               CLE172
@@ -584,6 +604,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDRFRR'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'
+     C                   EVAL      FldNamXAr(Idx) = 'SURFRR'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STRFRR'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049404'
      C                   ENDIF
 
@@ -601,6 +628,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDRFRR'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SURFRR'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STRFRR'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049405'
      C                   ENDIF
 
@@ -661,9 +695,35 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDCALM'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUCALM'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STCALM'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049406'
      C                   ENDIF
 
+      ** For IRS, the NCCR and SARR calculation method are not allowed                        CIR020
+     C                   IF        (ApiName = 'CIR1' or ApiName = 'SIR1' or                   CIR020
+     C                              ApiName = 'CIR2' or ApiName = 'SIR1' or                   CIR020
+     C                              ApiName = 'CACF') and                                     CIR020
+     C                             (DDCALM = 'NCCR' or DDCALM = 'SARR')                       CIR020
+     C                   EVAL      DDCALMOK = 'N'                                             CIR020
+     C                   EVAL      Idx = Idx + 1                                              CIR020
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUCALM'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STCALM'                                  CIR020
+     C                   ELSE                                                                 CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'DDCALM'                                  CIR020
+     C                   ENDIF                                                                CIR020
+     C                   EVAL      MsgIdXAr(Idx) = '5049516'
+     C                   ENDIF                                                                CIR020
+     C                                                                                        CIR020
      C                   ENDIF
      C                   ENDIF                                                              MD057794
 
@@ -678,6 +738,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDCALM'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUCALM'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STCALM'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049407'
      C                   ENDIF
 
@@ -701,7 +768,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      WNumBADJ = BABADJ                                          CLE172
                                                                                               CLE172
@@ -743,6 +816,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUBADJ'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STBADJ'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049426'
      C                   ELSE
 
@@ -775,6 +855,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUBADJ'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STBADJ'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049401'
      C                   ENDIF
 
@@ -817,7 +904,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      WNumFLOR = BAFLOR                                          CLE172
                                                                                               CLE172
@@ -863,6 +956,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUFLOR'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STFLOR'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049408'
      C                   ELSE
 
@@ -889,6 +989,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'                                MD057790
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUFLOR'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STFLOR'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049408'                                MD057790
      C                   ENDIF                                                              MD057790
                                                                                             MD057790
@@ -923,6 +1030,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUFLOR'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STFLOR'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049409'
      C                   ENDIF
 
@@ -954,7 +1068,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BALBDY        WDAY                                         CLE172
                                                                                               CLE172
@@ -1010,6 +1130,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDLBDY'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SULBDY'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STLBDY'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049423'
      C                   ENDIF
 
@@ -1029,6 +1156,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDLBDY'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SULBDY'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STLBDY'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049420'
      C                   ENDIF
 
@@ -1055,7 +1189,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BALODY        WDAY                                         CLE172
                                                                                               CLE172
@@ -1111,6 +1251,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDLODY'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SULODY'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STLODY'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049424'
      C                   ENDIF
 
@@ -1130,6 +1277,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDLODY'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SULODY'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STLODY'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049421'
      C                   ENDIF
 
@@ -1159,12 +1313,26 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDOPSH = BAOPSH                                            CLE172
                                                                                               CLE172
       ** Default to N if base rate code not exists                                          MD057889
-     C                   WHEN      ApiName = 'CLIP' and                                     MD057889
+     C**********         WHEN      ApiName = 'CLIP' and                              MD057889 CIR020
+     C                   WHEN      (ApiName = 'CLIP' or                                       CIR020
+     C                              ApiName = 'LDNI' or                                       CIR020
+     C                              ApiName = 'FUND' or                                       CIR020
+     C                              ApiName = 'CIR1' or                                       CIR020
+     C                              ApiName = 'CIR2' or                                       CIR020
+     C                              ApiName = 'SIR1' or                                       CIR020
+     C                              ApiName = 'SIR2' or                                       CIR020
+     C                              ApiName = 'CACF') and                                     CIR020
      C                             BSRTRecFound = 'N'                                       MD057889
      C                   EVAL      DDOPSH = 'N'                                             MD057889
                                                                                             MD057889
@@ -1204,6 +1372,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUOPSH'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STOPSH'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049410'
      C                   ELSE
 
@@ -1218,6 +1393,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUOPSH'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STOPSH'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049412'
      C                   ENDIF
 
@@ -1232,6 +1414,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUOPSH'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STOPSH'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049495'
      C                   ENDIF
 
@@ -1252,6 +1441,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUOPSH'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STOPSH'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049417'
      C                   ENDIF
 
@@ -1283,7 +1479,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BARRDP        WDAY                                         CLE172
                                                                                               CLE172
@@ -1339,6 +1541,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SURRDP'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STRRDP'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049422'
      C                   ELSE
 
@@ -1352,6 +1561,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SURRDP'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STRRDP'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049454'
      C                   ENDIF
 
@@ -1373,6 +1589,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SURRDP'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STRRDP'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049425'
      C                   ENDIF
 
@@ -1395,10 +1618,16 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-    C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
+     C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y' and                                     CLE172
      C                             DDBLRT = 'Y'                                               CLE172
      C                   EVAL      WDBAV = BADBAV                                             CLE172
@@ -1439,6 +1668,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUDBAV'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STDBAV'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049453'
      C                   ELSE
      C                   MOVEL     DDDBAV        WDBAV
@@ -1480,6 +1716,13 @@
      C                   ELSE                                                                 CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'
      C                   ENDIF                                                                CLE172
+     C                   IF        Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUDBAV'                                  CIR020
+     C                   ELSEIF    Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STDBAV'                                  CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      MsgIdXAr(Idx) = '5049455'
      C                   ENDIF
 
@@ -1501,7 +1744,13 @@
      C**********         IF        ApiName = 'CLIP' and                                CLE172 CDL102
      C                   IF        (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                               CDL102 CIR020
+     C                             ApiName = 'FUND'  or                                       CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             TransCHTP = 'I'                                            CLE172
      C                   EVAL      DDRTKN = 'N'                                               CLE172
      C                   EVAL      VRTKN = 'N'                                                CLE172

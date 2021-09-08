@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -94,6 +95,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -366,6 +368,10 @@
      D*ExtData****   E DS                  EXTNAME(MMLDEXPD)             CAP004 194994
      D ExtData       E DS                  EXTNAME(MMDAEXPD)                    194994
       * MM Extra Data - File (D/B) format                                       CAP004
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
                                                                                 CAP051
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP051
       ** External DS for SAR details                                            CAP051
@@ -1265,6 +1271,8 @@
      C                   PARM                    WIdx
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidDeal
+      * Backward-looking rate fields                                                          CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
 
      C                   ENDSR
       *****************************************************************
@@ -1397,6 +1405,8 @@
      C                   PARM                    DealScnfmt                     CAP011
       * Deal Status                                                             CAP011
      C                   PARM                    DDSTS                          CAP011
+      * Backward-looking rate fields                                                          CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
                                                                                 CAP011
       ** DATA SUBSTITUTION                                                      CAP011
                                                                                 CAP011
@@ -1500,6 +1510,8 @@
      C                   PARM                    DealScnfmt
       * Deal Status
      C                   PARM                    DDSTS            24
+      * Backward-looking rate fields                                                          CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode

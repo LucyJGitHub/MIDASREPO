@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -39,6 +41,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -62,18 +67,18 @@
       *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FZAFSETISDFCF   E             WORKSTN
       ** Further Settlement Instructions screen
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
       ** Table of field numbers and names
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -82,7 +87,7 @@
       *       86  Protect payment fields                              *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -101,50 +106,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the ZA standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       * Added the following /copy members for new message handling.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
      D/COPY ZACPYSRC,APICTLARR
- 
+
      D/COPY ZACPYSRC,FVAL_ARRAY
- 
+
      D/COPY ZACPYSRC,MSGHNDDCL
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D RER             S              1    DIM(48)
      D PAR             S              1    DIM(48)
      D FNA             S             10    DIM(75)
@@ -152,70 +157,70 @@
      D UER             S              7    DIM(75) ASCEND
      D @Z0             S              1    DIM(74) CTDATA PERRCD(74)
      D WFldNameArr     S             10    DIM(75)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       ** Deal in File Format
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** Screen - Receive Instructions
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** Screen - Payment Instructions
- 
+
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)
       ** File - Receive Further Settlement Instructions
- 
+
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)
       ** File - Payment Further Settlement Instructions
- 
+
      D #FRECS        E DS                  EXTNAME(SDFSSRPD)
       ** Screen - Receive Further Settlement Instructions
- 
+
      D #FPAYS        E DS                  EXTNAME(SDFSSPPD)
       ** Screen - Payment Further Settlement Instructions
- 
+
      D #FRECE        E DS                  EXTNAME(SDFSERPD)
       ** Errors - Receive Further Settlement Instructions
- 
+
      D #FPAYE        E DS                  EXTNAME(SDFSEPPD)
       ** Errors - Payment Further Settlement Instructions
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for General Ledger Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External DS for SAR Details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D SDDeaAcc      E                     EXTFLD(QQACCD)                                     CGL029
       ** External DS for Dealing details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS FOR Currency Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External DS for Customer Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access Programs, Short Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access Programs, Long Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D RUNDAT          DS            13
      D  DDRUNA                 1      7
      D  @MBIN                 13     13
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -225,97 +230,97 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialisation
- 
+
      C                   EXSR      INIT
- 
+
       ** If not Insert, then retrieve and convert details
- 
+
      C     ##ACTN        IFNE      'I'
- 
+
      C                   CALLB     'ZAFSETICVT'
- 
+
       ** INPUT
       ** Deal Number
      C                   PARM                    ##DLNO
- 
+
       ** Action Code
      C                   PARM                    ##ACTN
- 
+
       ** Payment currency
      C                   PARM                    ##PCCY
- 
+
       ** Receive currency
      C                   PARM                    ##RCCY
- 
+
       ** LDNI Deal details
      C                   PARM                    NwDlFilFmt
- 
+
       ** OUTPUT
       ** Screen - Payment Further Settlement Instructions
      C                   PARM                    #FPAYS
- 
+
       ** Screen - Receive Further Settlement Instructions
      C                   PARM                    #FRECS
- 
+
      C                   ENDIF
- 
+
       ** Work With Further Settlement Instructions
- 
+
      C                   EXSR      WRKSTI
- 
+
       ** Errors outstanding
- 
+
      C     ##ACTN        IFEQ      'I'
      C     ##ACTN        OREQ      'A'
      C     ##ACTN        OREQ      'X'
- 
+
      C     @IDX          IFNE      *ZERO
      C     DDRMAC        OREQ      'Y'
      C     FRAL01        ANDEQ     *BLANK
      C     DDPMAC        OREQ      'Y'
      C     FPAL01        ANDEQ     *BLANK
      C                   MOVEL     '*ERRORS'     RetCodeIn
- 
+
      C                   ELSE
- 
+
      C                   MOVE      '0'           @INKL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Close down program
- 
+
      C     @INKC         IFEQ      '1'
      C     @INKL         OREQ      '1'
      C                   SETON                                        LR
      C                   ENDIF
- 
+
       ** Return
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
       * WRKSTI - Work With Further Settlement Instructions            *
       *****************************************************************
      C     WRKSTI        BEGSR
- 
+
       ** Set off roll indicators
- 
+
      C                   MOVE      '0'           *IN07
      C                   MOVE      '0'           *IN08
- 
+
       ** Validate for Authorisation
- 
+
      C     ##ACTN        IFEQ      'X'
      C                   EXSR      VALSTI
      C                   EXSR      SETRECE
      C                   EXSR      SETPAYE
      C                   ENDIF
- 
+
       ** Write/Read Payment and Receive Screen
- 
+
      C     DDPMAC        IFEQ      'Y'                                                      MD023371
      C                   EXSR      WRPAYM                                                   MD023371
      C                   ENDIF                                                              MD023371
@@ -323,9 +328,9 @@
      C     DDRMAC        IFEQ      'Y'                                                      MD023371
      C                   EXSR      WRRECP
      C                   ENDIF                                                              MD023371
- 
+
       ** Do While F3 or F12 not taken
- 
+
      C     *INKC         DOWEQ     '0'
      C     *INKL         ANDEQ     '0'
      C     *INKH         ANDEQ     '0'
@@ -361,9 +366,9 @@
      C                   MOVE      '0'           *IN07
      C                   MOVE      '0'           *IN08
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -436,9 +441,9 @@
       * VALSTI - Validate Further Settlement Instructions             *
       *****************************************************************
      C     VALSTI        BEGSR
- 
+
       ** Validate Further Settlement Instructions
- 
+
      C                   CALLB     'ZAFSETIVAL'
       *
       ** INPUTS
@@ -517,14 +522,14 @@
       *
       ** Receive - Further Settle instructions - File format
      C                   PARM                    #FRECF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * SETPAYE - Set Payment Error Indicators                        *
       *****************************************************************
      C     SETPAYE       BEGSR
- 
+
      C     ##ACTN        IFEQ      'I'
      C     ##ACTN        OREQ      'A'
      C     ##ACTN        OREQ      'X'
@@ -557,11 +562,11 @@
      C                   ENDDO
       *
      C                   ELSE
- 
+
       ** Send Warning Messages
- 
+
      C                   EVAL      Z = 1
- 
+
      C                   DOW       Z < 76 and WMsgIdArr(Z) <> *Blanks
      C                   EVAL      ZAMsgID = WMsgIdArr(Z)
      C                   EVAL      ZAMsgDta = WMsgDtaArr(Z)
@@ -579,14 +584,14 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * SETRECE - Set Receipt Error Indicators                        *
       *****************************************************************
      C     SETRECE       BEGSR
- 
+
      C     ##ACTN        IFEQ      'I'
      C     ##ACTN        OREQ      'A'
      C     ##ACTN        OREQ      'X'
@@ -619,11 +624,11 @@
      C                   ENDDO
       *
      C                   ELSE
- 
+
       ** Send Warning Messages
- 
+
      C                   EVAL      Z = 1
- 
+
      C                   DOW       Z < 76 and WMsgIdArr(Z) <> *Blanks
      C                   EVAL      ZAMsgID = WMsgIdArr(Z)
      C                   EVAL      ZAMsgDta = WMsgDtaArr(Z)
@@ -641,7 +646,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -650,51 +655,51 @@
       *                                                               *
       *****************************************************************
      C     SRWarnMsg     BEGSR
- 
+
      C                   CALL      'ZA0350'
      C                   PARM      'DRSMM'       ZAMsgFile        10
      C                   PARM                    ZAMsgId          10
      C                   PARM                    ZAMsgDta         45
- 
+
      C                   EVAL      ZAMsgId = *Blanks
      C                   EVAL      ZAMsgDta = *Blanks
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * ERROR    - Call Program ZA0240 to output Error messages       *
       *****************************************************************
      C     ERROR         BEGSR
- 
+
       ** Display error message
- 
+
      C                   MOVEL     *BLANK        ZAMSID           10
      C                   MOVEL     @WERR         ZAMSID
      C                   CALL      'ZA0240'
      C                   PARM                    ZAMSID
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * SETSCNIND - Set Screen Conditioning Indicators                *
       *****************************************************************
      C     SETSCNIND     BEGSR
- 
+
       ** Reset screen 'protect' indicators
- 
+
      C                   MOVEL     '0'           *IN85
      C                   MOVEL     '0'           *IN86
- 
+
       ** If action code is not insert or amend, protect all fields
- 
+
      C     ##ACTN        IFNE      'I'
      C     ##ACTN        ANDNE     'A'
      C                   MOVEL     '1'           *IN85
      C                   MOVEL     '1'           *IN86
      C                   ENDIF
- 
+
       ** If EMU Settlement Currency feature is on
- 
+
      C     CEU003        IFEQ      'Y'
       *
       ** Get receive currency 'in' currency ind
@@ -762,16 +767,16 @@
      C     DDPMAC        IFNE      'Y'
      C                   MOVEL     '1'           *IN86
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * GETCCYDET - Get currency details                              *
       *****************************************************************
      C     GETCCYDET     BEGSR
- 
+
       **  Access Currency Details
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*DBERR  '    @RTCD
      C                   PARM      '*KEY    '    @OPTN
@@ -784,16 +789,16 @@
      C                   Z-ADD     1             DBASE                          *************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * INIT - Initialisation                                         *
       *****************************************************************
      C     INIT          BEGSR
- 
+
       ** Clear Outputs
- 
+
      C                   MOVEL     *BLANK        RetCodeIn
      C                   CLEAR                   #FPAYS
      C                   CLEAR                   #FRECS
@@ -801,39 +806,39 @@
      C                   CLEAR                   #FRECF
      C                   MOVE      '0'           @INKC
      C                   MOVE      '0'           @INKL
- 
+
       ** Deal Number
- 
+
      C                   MOVEL     ##DLNO        DDDLNO
- 
+
       ** Receipt Unallocated Account and Account 1
- 
+
      C     DDRMAC        IFEQ      'Y'
      C                   MOVEL     DDRONX        DRUAC
      C                   MOVEL     DDRONX        DRAC01
      C                   ENDIF
- 
+
       ** Payment Unallocated Account and Account 1
- 
+
      C     DDPMAC        IFEQ      'Y'
      C                   MOVEL     DDPONX        DPUAC
      C                   MOVEL     DDPONX        DPAC01
      C                   ENDIF
- 
+
       ** Set Screen Conditioning indicators
- 
+
      C                   EXSR      SETSCNIND
- 
+
       ** Determine Deal Type
- 
+
      C     ##ACTN        IFEQ      'I'
      C                   MOVE      IKTYPE        DLTYPE            2
      C                   ELSE
      C                   MOVE      IKMTYP        DLTYPE
      C                   ENDIF
- 
+
       ** Calculate Total of Principal + Interest of Deal
- 
+
      C     IKAMNP        IFLT      0
      C                   Z-SUB     IKAMNP        UAMNP            15 0
      C                   ELSE
@@ -904,9 +909,9 @@
       * *INZSR - Initial processing                                   *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Parameters passed into the program
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUTS
@@ -965,8 +970,8 @@
      C                   PARM                    #FPAYF
       ** Receive - Further Settle instructions - File format
      C                   PARM                    #FRECF
- 
- 
+
+
       *
       **  Run date in DDMMMYY
       *
@@ -1009,9 +1014,9 @@
       ** Move workstation ID to screen field.
       *
      C                   MOVEL     PsJobName     DDWSID
- 
+
      C/COPY ZACPYSRC,MSGHNDDATA
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************

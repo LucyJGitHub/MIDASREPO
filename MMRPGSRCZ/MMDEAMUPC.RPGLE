@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -65,15 +67,15 @@
       *****************************************************************
      FMMVDEAMPD UF   E             DISK
      F                                     COMMIT
- 
+
      FMMVDEAML2 UF   E           K DISK
      F                                     RENAME(MMVDEAMD0:MMVDEAMD2)
      FMMVEDEAMPDO    E             DISK
      F                                     RENAME(MMVDEAMD0:MMVDEAMERR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,MMDEAMU010
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -92,19 +94,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006--------------
       ** The following /COPY line includes the definitions for fields           CAP006
       ** used in checking whether there are messages on the data queue.         CAP006
@@ -115,7 +117,7 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
      D DBerrUpd        C                   CONST('DB error in DEAM API update')
                                                                                               CDL006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL006
@@ -123,12 +125,12 @@
                                                                                               CDL006
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDL006
       ** First DS for access programs, short data structure                                   CDL006
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID DEAL AMENDMENTS
      D MMVDEM        E DS                  EXTNAME(MMVDEAMPD)
- 
+
      D MMDEAMUPC       DS             1    DTAARA(MMDEAMUPC)
- 
+
      D Object          S             10A   INZ('MMDEAMUPC')
      D LockObj         S             10A   INZ('MMDEAMLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -142,34 +144,34 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,MMDEAMU011
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       /COPY WNCPYSRC,MMDEAMU001
- 
+
       ** Set up the name of the server/database updater data queue.             CAP006
      C                   EVAL      DtaQName = 'APDEAMDTQ'                       CAP006
                                                                                 CAP006
@@ -206,36 +208,36 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       /COPY WNCPYSRC,MMDEAMU002
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     MMVDEAMPD
- 
+
       ** READ VALID DEAL AMENDMENTS
      C                   READ      MMVDEAMD0                              99    *
      C     *IN99         DOWEQ     '0'
- 
+
       /COPY WNCPYSRC,MMDEAMU003
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lower level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = IGFRNT
      C                   EVAL      ARFOAsocID = IGAFRT
      C                   EVAL      ARRprLocn  = IGREPA
- 
+
       /COPY WNCPYSRC,MMDEAMU004
- 
+
       ** MM DATABASE UPDATE
      C                   CALLB     'MMDEAMUPM'
      C*******************PARM                    @@RTCD            7            175784
      C                   PARM      *BLANKS       @@RTCD            7            175784
      C                   PARM                    MMVDEM
- 
+
       /COPY WNCPYSRC,MMDEAMU005
- 
+
       ** DL DATABASE UPDATE IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C                   ROLBK
@@ -244,18 +246,18 @@
      C     IGCHTP        IFEQ      'I'
      C     IGCHTP        OREQ      'A'
      C     IGCHTP        OREQ      'R'
- 
+
       /COPY WNCPYSRC,MMDEAMU006
- 
+
      C                   CALLB     'MMDEAMUPD'
      C                   PARM                    @@RTCD            7
      C                   PARM                    MMVDEM
      C                   END
      C                   END                                                    CAP006
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMU007
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
@@ -264,9 +266,9 @@
      C                   DELETE    MMVDEAMD0
      C                   COMMIT
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMU008
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -288,13 +290,13 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID DEAL AMENDMENTS
      C                   READ      MMVDEAMD0                              99    *
      C                   END
- 
+
      ** Unlock allocation data area
      C                   CALLB     'APCDLCOBJ'
      C                   PARM                    Object
@@ -306,15 +308,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,MMDEAMU009
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMDEAMU012
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -351,26 +353,26 @@
                                                                                               CDL006
      C                   CALLB     'MMFIDINIT'                                                CDL006
      C                   PARM      *BLANKS       WRTCD             7                          CDL006
- 
+
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -380,14 +382,14 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMDEAMU013
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

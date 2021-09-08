@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058379           Date 01Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
@@ -231,6 +233,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of refereNce rate field             *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -1412,7 +1417,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       1467          Bfp2                                CSF011 MD038485
      C**********         ADD       1681          Bfp2                                MD038485 CER050
      C**********         ADD       1680          Bfp2                                CER050 MD054028
-     C                   ADD       1678          Bfp2                                       MD054028
+     C**********         ADD       1678          Bfp2                              MD054028 MD058379
+     C                   ADD       1728          Bfp2                                       MD058379
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A
@@ -2307,7 +2313,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C     DAIFLn        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       DAIFLn        Bfp
      C     DAEXLn        SUBST     BUFFER:Bfp    ExtData
-
+     C                   ADD       DAEXLn        Bfp                                          CDL102
+     C                                                                                        CDL102
+      *** Backward-Looking Rate Fields (CDL102)                                               CDL102
+     C     DLBLRTLn      SUBST     BUFFER:Bfp    DLBLRDta         49                          CDL102
+     C                   EVAL      ExtData = %SUBST(ExtData:1:DAEXLn) + DLBLRDta              CDL102
+                                                                                              CDL102
      C                   CALL      'MMDEAMVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -4118,6 +4129,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       20            Bfp                                          261140
      C     20            SUBST     BUFFER:Bfp    AFRT                                         261140
      C                   ADD       20            Bfp                                          261140
+      ** Backward-Looking Rate Fields (CDL102)                                                CDL102
+     C     DLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           50                          CDL102
+     C                   EVAL      ExtData = %SUBST(ExtData:1:FUEXLn) + BSRDta                CDL102
+     C                   ADD       DLBSRTLn      Bfp                                          CDL102
+                                                                                              CDL102
 
      C                   CALL      'ABFUNDVU'
      C                   PARM                    HeadIn
@@ -5916,6 +5932,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'MMDAEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DAEXLn            4 0
+      *                                                                                       CDL102
+     C                   Z-ADD     49            DLBLRTLn          4 0                        CDL102
 
      C                   MOVEL     'SDCUCUPD'    FileName                                     CER043
      C                   EXSR      GETRCDLN                                                   CER043
@@ -6772,6 +6790,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CAP191
      C                   Z-ADD     RecordLen     FUEXLn            4 0                        CAP191
                                                                                               CAP191
+     C                   Z-ADD     50            DLBSRTLn          4 0                        CDL102
      C                   ENDSR
       *****************************************************************
       /SPACE 5

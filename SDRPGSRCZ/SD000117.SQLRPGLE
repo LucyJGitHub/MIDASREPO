@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSD103  *CREATE    Date 10Aug20               *
+      *  Last Amend no. MD058331           Date 05Jul21
+      *  Prev Amend No. CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058331 - CSD103 LIBOR General Section - Change Control     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
@@ -169,7 +171,8 @@
         WJobName = 'ARRCALC_' + SYSID;
         WCommand = 'SBMJOB JOB(' + %trim(WJobName) +') '
                  + 'JOBD(MBATCH) USER(*JOBD) RTGDTA(*JOBD) '
-                 + 'RQSDTA(''CALL SDC000114'') '
+       //********+ 'RQSDTA(''CALL SDC000114'') '                                          //MD058331
+                 + 'RQSDTA(''CALL PGM(SDC000114) PARM(*MENU)'') '                         //MD058331
                  + 'INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)';
       /end-free
      C                   CALLP(E)  RunSysCmd(WCommand: %len(WCommand))

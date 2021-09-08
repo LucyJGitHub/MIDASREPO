@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
@@ -57,6 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -108,11 +113,11 @@
       *  CSE006 - Repurchase Agreements                               *
       *                                                               *
       *****************************************************************
- 
+
      FSDTIX     UF A E           K DISK
      F                                     COMMIT
      F                                     PREFIX(DX)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -131,39 +136,39 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D ##CM            S              1    DIM(58) CTDATA PERRCD(58)
      D ##CF            S              1    DIM(21) CTDATA PERRCD(21)
      D ##OX1           S              1    DIM(78) CTDATA PERRCD(78)
@@ -179,29 +184,29 @@
      D ##CT1           S              1    DIM(81) CTDATA PERRCD(81)
      D ##CN2           S              1    DIM(78) CTDATA PERRCD(78)
      D ##CT2           S              1    DIM(78) CTDATA PERRCD(78)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D NwMcFilFmt    E DS                  EXTNAME(MMVRPMCPD) PREFIX(P)
       * New Deal in File Format
- 
+
      D NwMcScnFmt    E DS                  EXTNAME(MMRPMCPD)
       * New Deal in Screen Format
- 
+
      D CrMcScnFmt    E DS                  EXTNAME(MMRPMCPD) PREFIX(L)
       * Current Deal in Screen Format
- 
+
      D DeamFilFmt    E DS                  EXTNAME(MMDEAMPP)
       * New Deal in Screen Format
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVDEAMPD)
       * New Deal in File Format
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
@@ -214,7 +219,7 @@
      D  IGPAY                369    927
      D  IGRECEx             1137   1154                                                       CGL029
      D  IGPAYEx             1155   1172                                                       CGL029
- 
+
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
      D QQDOR2        E                     EXTFLD(QQDORI)                                     CGL029
@@ -223,7 +228,7 @@
      D QQMOP2        E                     EXTFLD(QQMOPI)                                     CGL029
      D QQRON2        E                     EXTFLD(QQRONS)                                     CGL029
      D QQPON2        E                     EXTFLD(QQPONS)                                     CGL029
- 
+
      D NeDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       * New Deal in File Format
      D QQDOR3        E                     EXTFLD(QQDORI)                                     CGL029
@@ -233,56 +238,56 @@
      D QQRON3        E                     EXTFLD(QQRONS)                                     CGL029
      D QQPON3        E                     EXTFLD(QQPONS)                                     CGL029
      D QQINS3        E                     EXTFLD(QQINSA)                                     CGL029
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(MMLDNIPD) PREFIX(C)
       * (Current) Deal in Screen Format
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD) PREFIX(N)
       * New Deal in Screen Format
                                                                                               CAP087
      D DPTXX         E DS                  EXTNAME(DPTMVDL1) PREFIX(D)                        CAP087
      D**  Data structure of Depot Movement File                                               CAP087
- 
+
      D MMERPM        E DS                  EXTNAME(MMERPMCPD)
       * Error indicators
- 
+
      D @CCI@M          DS
       ** Current Control Indicators for main Detail Screen
      D  @EINKJ                 1      1
      D  @EINKL                 2      2
      D  @EINKN                 3      3
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDTypeOK                      1A
      D  DDAmntOK                      1A
      D  DDDlnoOK                      1A
      D  DDCcyOK                       1A
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Warning Index for arrays of of error message ids etc
      D WIdx            S              3P 0
- 
+
      D                 DS
      D**  Data Structure for screen value date
      D  @VDAT                  1      6
      D  @DSPD                  1      2
      D  @DSPM                  3      4
      D  @DSPY                  5      6
- 
+
      D                 DS
      D**  Data Structure to format date parameter passed to mm0085
      D  @PDAT                  1      8  0
@@ -295,22 +300,24 @@
      D                 DS
      D  @XTIME                 1      6  0
      D  DXTIM                  1      4  0
- 
- 
+
+
      D  DlPtcInd       S              1
      D  DlAcptInd      S              1
- 
+
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D ErrorFlag       S              1A
       ** Midas Day number
      D @@DAYN          S              5P 0
- 
+
       ** Flag to indicate caller of MMRPDLUPD                                                 CAP087
       ** 'Y' - called from Securities module                                                  CAP087
       ** 'N' - called from Money Markey module                                                CAP087
      D DepotPos        S              1A                                                      CAP087
                                                                                               CAP087
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
       ** Formatted date field for use in the parameter list
      D                 DS
      D DateOut                 1      8  0
@@ -321,14 +328,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
      D/COPY WNCPYSRC,MMRPMCSD01
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -339,18 +346,18 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Z-ADD     99            ER                2 0
- 
+
       * Do while ER is equal to 99
      C                   DOW       ER = 99
- 
+
      C                   IF        DlAcptInd = 'Y'
      C                   EVAL      @EINKL = 'Y'
      C                   ELSE
      C                   EVAL      @EINKL = *Blank
      C                   ENDIF
- 
+
      C                   CALLB     'MMRPMCDSP'
      C                   PARM                    RetCodeIn
      C                   PARM                    NwMcScnFmt
@@ -459,7 +466,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Proc15        BEGSR
       *
       ** Ensure that Cash/Securities indicator is set for 'Cash'
@@ -551,11 +558,11 @@
      C                   MOVEL     'MMA0734'     MsgIdArr(1)
      C                   MOVEL     'DDAMNT'      FldNameArr(1)
      C                   ENDIF
- 
+
      C                   IF        DDACTN <> 'A' and DDACTN <> 'I'
      C                   EVAL      DlPtcInd = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'MMRPMCDSP'
      C                   PARM                    RetCodeIn
      C                   PARM                    NwMcScnFmt
@@ -758,7 +765,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     CashSec       BEGSR
      C*
      C** If Cash Securites type is 'C'
@@ -783,17 +790,17 @@
      C                   Z-ADD     99            EN                2 0
      C*
      C                   DOW       EN = 99
- 
+
      C** If Accept flag is set display message
      C                   IF        DlPtcInd = 'Y'
      C                   MOVEL     'MMA0734'     MsgIdArr(1)
      C                   MOVEL     'DDAMNT'      FldNameArr(1)
      C                   ENDIF
- 
+
      C                   IF        DDACTN <> 'A' and DDACTN <> 'I'
      C                   EVAL      DlPtcInd = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'MMRPMCDSP'
      C                   PARM                    RetCodeIn
      C                   PARM                    NwMcScnFmt
@@ -1200,6 +1207,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       *
       * Deal Status
      C                   PARM                    DDSTS            24
@@ -1223,12 +1231,12 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CN2
      C                   PARM                    MESLEN
- 
+
      C                   Z-ADD     78            MESLEN
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CT2
      C                   PARM                    MESLEN
- 
+
      C*
      C* Override SECRTNTPPD to QTEMP/SECRTNTPPD
      C*
@@ -1307,7 +1315,7 @@
      C*
      C** Load value date to numeric keyfield,in YYYYMMDD format
      C                   MOVE      DDVDAT        @VDAT
- 
+
      C                   Z-ADD     0             @PDAT
      C                   MOVE      @DSPY         @PYEAR
      C     BJDFIN        IFEQ      'D'
@@ -1331,7 +1339,7 @@
      C                   Z-ADD     0             @PDAT
      C                   END
      C                   Z-ADD     @PDAT         ValueDate         8 0
- 
+
       ** Generate DEAM Sequence Number
      C                   CALLB     'MM0085'
      C                   PARM                    Term              1
@@ -1345,7 +1353,7 @@
      C                   ELSE
      C                   Z-ADD     SeqNoPack     IGDS38
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -1631,7 +1639,7 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CN1
      C                   PARM                    MESLEN
- 
+
      C                   Z-ADD     81            MESLEN
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    ##CT1

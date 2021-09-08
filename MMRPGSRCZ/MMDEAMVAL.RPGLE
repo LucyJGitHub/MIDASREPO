@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR806147           Date 21May18               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR806147 - Pass Deal Number to MMVERLYMDT. (Child: AR806148) *
@@ -341,7 +343,34 @@
                                                                                               CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
-
+      *                                                                                       CDL102
+      *** Backward-Looking Rate Screen Fields                                                 CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+                                                                                              CDL102
+      ** Deam Backward-Looking Rate Valid Fields                                              CDL102
+     D DeamValBlrt     DS                                                                     CDL102
+     D  VBLRT                         1A                                                      CDL102
+     D  VRFRR                        10A                                                      CDL102
+     D  VCALM                         4A                                                      CDL102
+     D  VBADJ                        11P 7                                                    CDL102
+     D  VFLOR                        11P 7                                                    CDL102
+     D  VLBDY                         2S 0                                                    CDL102
+     D  VLODY                         2S 0                                                    CDL102
+     D  VOPSH                         1A                                                      CDL102
+     D  VRRDP                         2S 0                                                    CDL102
+     D  VDBAV                         1A                                                      CDL102
+      *                                                                                       CDL102
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -426,6 +455,9 @@
                                                                                               CDL010
       ** Fields defined for Enhancement CDL010                                                CDL010
      D CDL010          S              1A                                                      CDL010
+                                                                                              CDL102
+      ** Fields defined for Enhancement CDL102                                                CDL102
+     D CDL102          S              1A   INZ('N')                                           CDL102
       **                                                                                      CRE073
      D CRE073          S              1A   INZ('N')                                           CRE073
      D TMCNSP          S             11P 7                                                    CRE073
@@ -1121,6 +1153,15 @@
                                                                                               CDL020
      C                   ENDIF                                                                CDL020
                                                                                               CDL020
+      *                                                                                       CDL102
+      ** Validate backward-looking rate fields if CDL102 is ON                                CDL102
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   IF        DDMTYP = 'BC'                                              CDL102
+     C                   EXSR      SRBLRTE                                                    CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
      C     EXITMODULE    TAG
 
      C                   RETURN
@@ -1167,6 +1208,10 @@
      C                   PARM                    WIdx
       * Valid Deals layout (DS) from/to caller
      C                   PARM                    ValidDeal
+      *                                                                                       CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+      *                                                                                       CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
 
 
       * File / Data area Accesses required for calling parameters
@@ -1451,6 +1496,19 @@
      C                   If        PRTCD = *Blanks                                            CRE073
      C                   Eval      CRE073 = 'Y'                                               CRE073
      C                   Endif                                                                CRE073
+      *                                                                                       CDL102
+      ** Access SAR details file to determine if CDL102 is switched on                        CDL102
+      *                                                                                       CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   CallB     'AOSARDR0'                                                 CDL102
+     C                   Parm      *Blanks       PRTCD                                        CDL102
+     C                   Parm      '*VERIFY'     POPTN                                        CDL102
+     C                   Parm      'CDL102'      PSARD                                        CDL102
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+     C                   If        PRTCD = *Blanks                                            CDL102
+     C                   Eval      CDL102 = 'Y'                                               CDL102
+     C                   Endif                                                                CDL102
      C/COPY WNCPYSRC,MMH00174
       *
       *  Set up the name of the MSGF from which the message handler will
@@ -1779,7 +1837,53 @@
      C                   EVAL      IGRDFD = DDRDFD                                            CRE073
                                                                                               CRE073
      C                   ENDSR                                                                CRE073
-
+      *                                                                                       CDL102
+      *****************************************************************                       CDL102
+      /EJECT                                                                                  CDL102
+      *****************************************************************                       CDL102
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CDL102
+      *****************************************************************                       CDL102
+     C     SRBLRTE       BEGSR                                                                CDL102
+      *                                                                                       CDL102
+     C                   CLEAR                   TempInpDS                                    CDL102
+      *                                                                                       CDL102
+     C                   CALLB     'ZAVBLRTE'                                                 CDL102
+     C                   PARM      'DEAM'        ApiName           4                          CDL102
+     C                   PARM                    DDDLNO                                       CDL102
+     C                   PARM      *BLANKS       TransTyp          2                          CDL102
+     C                   PARM                    IGCCY                                        CDL102
+     C                   PARM                    IGBSRT                                       CDL102
+     C                   PARM      *ZERO         TransICBS         1 0                        CDL102
+     C                   PARM      *BLANKS       TransCHTP         1                          CDL102
+     C                   PARM      DeamScnBlrt   TempInpDS       200                          CDL102
+     C                   PARM                    Idx                                          CDL102
+     C                   PARM                    FldNameArr                                   CDL102
+     C                   PARM                    MsgIDArr                                     CDL102
+     C                   PARM                    TempOutDS       200                          CDL102
+     C                   PARM      *BLANKS       RetCodeOut                                   CDL102
+      *                                                                                       CDL102
+      ** Move back updated values to screen fields                                            CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     TempInpDS     DeamScnBlrt                                  CDL102
+      *                                                                                       CDL102
+     C     RetCodeOut    IFNE      'Error'                                                    CDL102
+     C                   MOVEL     TempOutDS     DeamValBlrt                                  CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     VBLRT         IGBLRT                                       CDL102
+     C                   MOVEL     VRFRR         IGRFRR                                       CDL102
+     C                   MOVEL     VCALM         IGCALM                                       CDL102
+     C                   Z-ADD     VBADJ         IGBADJ                                       CDL102
+     C                   Z-ADD     VFLOR         IGFLOR                                       CDL102
+     C                   Z-ADD     VLBDY         IGLBDY                                       CDL102
+     C                   Z-ADD     VLODY         IGLODY                                       CDL102
+     C                   MOVEL     VOPSH         IGOPSH                                       CDL102
+     C                   Z-ADD     VRRDP         IGRRDP                                       CDL102
+     C                   MOVEL     VDBAV         IGDBAV                                       CDL102
+      *                                                                                       CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+     C                   ENDSR                                                                CDL102
+      *                                                                                       CDL102
       *****************************************************************
       /EJECT
       *****************************************************************

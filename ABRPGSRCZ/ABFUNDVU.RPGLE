@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -66,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -107,12 +112,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FSDBRTDL1  IF A E           K DISK    INFSR(*PSSR)
       ** BRT Control Data
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -131,64 +136,69 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+     D BLKFLR          C                   CONST('            ')                              CDL102
+     D SCNSTR          C                   CONST('9999.9999999')                              CDL102
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInFUND    E DS                  EXTNAME(ABFUNDPD)
- 
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
+     D NewLibor        S             50                                                       CDL102
+
       * Incoming FUND extra data layout                                                       CAP191
      D ExtData       E DS                  EXTNAME(ABFUEXPD)                                  CAP191
                                                                                               CAP191
@@ -202,7 +212,10 @@
      D QQPONS1       E                     EXTFLD(QQPONS)                                     CGL029
      D QQINSA1       E                     EXTFLD(QQINSA)                                     CGL029
      D QQMOPI1       E                     EXTFLD(QQMOPI)                                     CGL029
- 
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CDL102
+     D CurrScnBlrt     DS            50                                                       CDL102
+                                                                                              CDL102
+
       ** Current Deal in File Format of associated deal
      D CrDlFilFmt2   E DS                  EXTNAME(MMDELDPP)
      D                                     Prefix(D2:2)
@@ -213,7 +226,7 @@
      D QQPONS2       E                     EXTFLD(QQPONS)                                     CGL029
      D QQINSA2       E                     EXTFLD(QQINSA)                                     CGL029
      D QQMOPI2       E                     EXTFLD(QQMOPI)                                     CGL029
- 
+
       ** New Deal in File Format of main deal
      D NwDlFilFmt1   E DS                  EXTNAME(MMVLDNIPD)
      D                                     Prefix(N1:2)
@@ -224,7 +237,7 @@
      D QQPONS3       E                     EXTFLD(QQPONS)                                     CGL029
      D QQINSA3       E                     EXTFLD(QQINSA)                                     CGL029
      D QQMOPI3       E                     EXTFLD(QQMOPI)                                     CGL029
- 
+
       ** New Deal in File Format of associated deal
      D NwDlFilFmt2   E DS                  EXTNAME(MMVLDNIPD)
      D                                     Prefix(N2:2)
@@ -235,54 +248,54 @@
      D QQPONS4       E                     EXTFLD(QQPONS)                                     CGL029
      D QQINSA4       E                     EXTFLD(QQINSA)                                     CGL029
      D QQMOPI4       E                     EXTFLD(QQMOPI)                                     CGL029
- 
+
       ** Deal file format use for update
      D UpdDlFilFmt   E DS                  EXTNAME(MMVLDNIPD)
- 
+
       ** Current Deal in Screen Format
      D CrDlScnFmt    E DS                  EXTNAME(ABFUNDPD)
      D                                     PREFIX(DC:2)
- 
+
       ** New Deal in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(ABFUNDPD)
      D                                     PREFIX(DD:2)
- 
+
       ** Internal Funding Deals Error Indicator File
      D OkFlags       E DS                  EXTNAME(ABEFUNDPD)
- 
+
       * 24X7 Data area structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Trading ICD
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
- 
+
       ** External DS for general ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D QQACCD1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for dealing details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D QQACCD2       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * Payment Further Settlement Instructions in file format                              BUG24144
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)                                BUG24144
                                                                                             BUG24144
@@ -301,18 +314,18 @@
                                                                                               CSC022
       ** Array of Commitment Job Names                                                        CSC022
      D COMITJOB        S             10A   DIM(10)                                            CSC022
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Data structure for ZMUSER details
      D ZMUSER          DS            17
      D  PUSRID                 1     10A
      D  PDBRN                 11     13A
      D  PDPPT                 14     16A
- 
+
       ** Data structure for RUNDAT details
      D RUNDAT          DS            13
      D  PAGMRDT                1      7A
@@ -320,31 +333,32 @@
      D  PAGSUC                11     11A
      D  PAGDFF                12     12A
      D  PAGMBIN               13     13A
- 
+
       ** Midas Run Date
      D                 DS
      D WkBJMRDT                1      7
      D WkDLUP                  1      2  0
      D WkMLUP                  3      5
      D WkYLUP                  6      7  0
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+     D Pos             S              3P 0                                                    CDL102
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
      D PKey            S              1A
      D PMsgId          S              7A
      D PReDsp          S              1A
@@ -357,11 +371,11 @@
      D CDL019          S              1A                                                      CDL019
      D CDL020          S              1A                                                      CDL020
      D WRunDay         S                   LIKE(BJRDNB)
- 
+
       ** Generated Deal Number
      D PDealNum        S              6S 0
      D ADealNum        S              6A
- 
+
       ** Parameters for MM1010
      D PMTTI           S             15P 0
      D PINTD           S             13P 0
@@ -391,18 +405,18 @@
      D AAuth           S              1A                                                      CAP191
      D FRNT            S             20A                                                      261140
      D AFRT            S             20A                                                      261140
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -412,7 +426,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Retrieve ZMUSER details                                                             BUG8550
                                                                                              BUG8550
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG8550
@@ -424,12 +438,20 @@
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     TranInFUND
      C                   MOVEL     PExtData500   ExtData                                      CAP191
+      *                                                                                       CDL102
+      ** ExtData Buffer Pointer                                                               CDL102
+     C                   Z-ADD     1             eBfp              4 0                        CDL102
+     C                   MOVEL     'ABFUEXPD'    Filename                                     CDL102
+     C                   EXSR      GETRCDLN                                                   CDL102
+     C                   ADD       RecordLen     eBfp                                         CDL102
+     C                   EVAL      TranScnBlrt = %SUBST(PExtData500:eBfp:50)                  CDL102
+      *                                                                                       CDL102
      C                   EVAL      PFrntId = FRNT                                             261910
      C                   EVAL      PFrntAsId = AFRT                                           261910
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -437,26 +459,34 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Processing depends upon action code
      C                   EXSR      RESETCYCLE
      C                   MOVEL     CrDlFilFmt1   NwDlFilFmt1
      C                   MOVEL     CrDlFilFmt2   NwDlFilFmt2
- 
+
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         #1ACTN = 'I'
      C                   EXSR      ValidateTr
- 
+
       * Processing for amends or changes
      C                   WHEN         #1ACTN = 'A'
      C                   EXSR      SetupAmd
      C                   EXSR      ValidateTr
      C                   EXSR      ValAmd                                                     CDL038
- 
+
      C                   ENDSL
- 
+      *                                                                                       CDL102
+     C                   EVAL       NewLibor = TranScnBlrt                                    CDL102
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor)                              CDL102
+     C                   IF         Pos <> 0                                                  CDL102
+     C                   EVAL       NewLibor  = %REPLACE(BLKFLR:NewLibor:Pos:12)              CDL102
+     C                   EVAL       TranScnBlrt = NewLibor                                    CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
@@ -476,16 +506,16 @@
       *
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
       * Remerge buffer with all relevant data structures
      C**********         EVAL      Buffer = TranInFUND + PDDSTS                               CAP191
      C                   EVAL      Buffer = TranInFUND + PDDSTS + @TimeStamp +                CAP191
      C**********                   ExtData + AAuth                                     CAP191 261140
      C                             ExtData + AAuth + FRNT + AFRT                              261140
- 
+     C                             + TranScnBlrt                                              CDL102
      C     INVALID       TAG
      C                   SETON                                        LR
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
@@ -494,12 +524,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    PExtData500                                  CAP191
@@ -517,23 +547,23 @@
      C                   PARM                    AAUTH                                        CAP191
      C                   PARM                    FRNT                                         261140
      C                   PARM                    AFRT                                         261140
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'ABUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'
- 
+
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,ABFUNDM01
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        @RtCd <> *BLANKS
      C                   EVAL      DBKEY  =  @Optn                              ************
@@ -541,16 +571,16 @@
      C                   EVAL      DBASE  =  001                                ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger Details
- 
+
      C**********         CALL      'AOGELRR0'                                                 CGL029
      C                   CALL      'AOGELRR1'                                                 CGL029
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       ** Database Error
      C                   IF        @RtCd <> *BLANKS
      C                   EVAL      DBKEY  =  @Optn                              ************
@@ -558,79 +588,79 @@
      C                   EVAL      DBASE  =  002                                ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Dealing Data Details
- 
+
      C**********         CALL      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
       ** Database Error
- 
+
      C                   IF        @RtCd <> *BLANKS
      C                   EVAL      DBKEY  =  @Optn                              ************
      C                   EVAL      DBFILE =  'SDDEALPD'                         * DBERR 03 *
      C                   EVAL      DBASE  =  003                                ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Module Details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RtCd <> *BLANKS
      C                   EVAL      DBKEY  =  @Optn                              ************
      C                   EVAL      DBFILE =  'SDMMODPD'                         * DBERR 04 *
      C                   EVAL      DBASE  =  004                                ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Trading Details
- 
+
      C                   CALL      'AOTRADR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RtCd <> *BLANKS
      C                   EVAL      DBKEY  =  @Optn                              ************
      C                   EVAL      DBFILE =  'SDTRADPD'                         * DBERR 05 *
      C                   EVAL      DBASE  =  005                                ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if S01383 is installed
- 
+
      C                   EVAL      S01383 = 'N'
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       @RtCd
      C                   PARM      '*VERIFY'     @Optn
      C                   PARM      'S01383'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RtCd = *Blanks
      C                   EVAL      S01383 = 'Y'
      C                   ENDIF
- 
+
       ** Check if CAS004 is installed
- 
+
      C                   EVAL      CAS004 = 'N'
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       @RtCd
      C                   PARM      '*VERIFY'     @Optn
      C                   PARM      'CAS004'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RtCd = *Blanks
      C                   EVAL      CAS004 = 'Y'
      C                   ENDIF
@@ -660,15 +690,15 @@
      C                   IF        @RtCd = *Blanks                                            CDL020
      C                   EVAL      CDL020 = 'Y'                                               CDL020
      C                   ENDIF                                                                CDL020
- 
+
       ** Access SD BRT Control Data
- 
+
      C                   IF        S01383 = 'Y'
      C                   EVAL      PKey = 'D'
      C     PKey          CHAIN     SDBRTDL1                           02
- 
+
       ** Database error.
- 
+
      C                   IF        *IN02 = *On  OR
      C                             RECI <> 'D'
      C                   EVAL      DBKEY = PKey                                 ************
@@ -715,29 +745,29 @@
      C                   ENDIF                                                                CSC022
                                                                                               CSC022
      C                   ENDIF                                                                CSC022
- 
+
       ** Retrieve ZMUSER details
- 
+
      C******DTAARA       DEFINE                  ZMUSER                                      BUG8550
      C**********         IN        ZMUSER                                                    BUG8550
- 
+
       ** Retrieve RUNDAT details.
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Check if CSC011 is installed
       ** If CSC011 is installed and in switchover mode, use
       ** S1DATE from DTAARA/SC24x7 as the rundate.
- 
+
      C                   EVAL      WRunDay = BJRDNB
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*VERIFY'     @Optn
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RtCd = *Blanks
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -745,7 +775,7 @@
      C                   IF        LIBR = S1SUPP
      C                   EVAL      WRunDay = S1DATE
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
      C                   IF        @RtCd <> '*NRF'
@@ -756,19 +786,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Convert Midas Day Number to YYYYMMDD format
- 
+
      C                   CALLB     'ZDATE9'
      C                   PARM      WRunDay       PDayNoIn
      C                   PARM      *ZERO         PDateOutZ9
      C                   PARM                    PRetCode
- 
+
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,ABFUND01
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -783,26 +813,26 @@
       * The Internal Funding Deal in file format from the database is retrieved
       * as well.
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ABFUNDRTV'
- 
+
       ** Input Parameters
       ** ================
       * Return code
- 
+
      C                   PARM                    RetCodeOut
- 
+
       ** Mode = '*FRONT' (Front Office Transaction Interface)
       ** Mode = '      ' (Not Front Office Transaction Interface)
       ** Mode = '*RPR  ' (Repair function)
       ** Mode = '*SIN  ' (Screen Input function)
- 
+
      C                   PARM      '*SIN  '      PModeOfOp         6
- 
+
       ** Response mode
- 
+
      C                   PARM      'S'           PRespMode         1
- 
+
       ** Action Code
       ** Front Office Transaction ID
       ** Front Office Associated Transaction Id
@@ -811,7 +841,7 @@
       ** (Midas) Booking Branch
       ** (Midas) Booking Branch for Associated Deal
       ** Linked maintenance flag
- 
+
      C                   PARM                    #1ACTN            1
      C                   PARM                    PFrntId          20
      C                   PARM                    PFrntAsId        20
@@ -820,24 +850,24 @@
      C                   PARM                    #1BRC1            3
      C                   PARM                    #1BRC2            3
      C                   PARM                    PLnkFlag          1
- 
+
       ** Standing Data
       ** =============
       ** SDBANKPD
       ** ========
- 
+
      C                   PARM                    BJSBRC
- 
+
       ** SDGELRPD
       ** ========
- 
+
      C                   PARM                    BKOBUV
- 
+
       ** ZMUSER
       ** ========
- 
+
      C                   PARM                    PDBRN
- 
+
       ** Output Parameters
       ** =================
       ** (Current) deal in file format of deal
@@ -846,24 +876,25 @@
       ** OK - Deal Number
       ** OK - Booking branch
       ** OK - Booking branch for associated deal number
- 
+
      C                   PARM                    CrDlFilFmt1
      C                   PARM                    CrDlFilFmt2
+     C**********         PARM                    CurrScnBlrt                                  CDL102
      C                   PARM      *BLANK        OKACTN            1
      C                   PARM      *BLANK        OKDLNO            1
      C                   PARM      *BLANK        OKBRC1            1
      C                   PARM      *BLANK        OKBRC2            1
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM      *ZERO         Idx
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -873,41 +904,41 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For Amends, convert the Internal Funding Deal transaction to screen format
- 
+
      C                   CALLB     'ABFUNDCVT'
- 
+
       ** Input Parameter
       ** ================
       ** Return Code
- 
+
      C                   PARM      *BLANK        RetCodeOut
- 
+
       ** Action Code
- 
+
      C                   PARM                    #1ACTN
- 
+
       ** Deal in file format of deal
       ** Deal in file format of associated deal
- 
+
      C                   PARM                    CrDlFilFmt1
      C                   PARM                    CrDlFilFmt2
- 
+
       ** Standing Data
       ** =============
       ** SDBANKPD
       ** ========
- 
+
      C                   PARM                    BJDFIN
- 
+
       ** SDDEALPD
       ** ========
- 
+
      C                   PARM                    BNDCSP
- 
+
      C                   PARM                    CAS004
- 
+
      C                   PARM                    CDL019                                    CDL019
                                                                                            CDL019
      C                   PARM                    CDL020                                    CDL020
@@ -915,19 +946,21 @@
       ** Output Parameters
       ** =================
       ** Deal in screen format
- 
+
      C                   PARM                    CrDlScnFmt
- 
+      ** Backward-Looking Rate Fields from file                                               CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
+
       ** Deal Status
- 
+
      C                   PARM                    PDDSTS            7
- 
+
       ** Profit Centre Description 1
       ** Profit Centre Description 2
- 
+
      C                   PARM                    PPRF1D           30
      C                   PARM                    PPRF2D           30
- 
+
       ** Front Office Transaction ID                                                          261140
       ** Associated Front Office Transaction ID                                               261140
      C                   PARM                    FRNT                                         261140
@@ -941,47 +974,47 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Internal Funding Deal details
- 
+
      C                   RESET                   RetCodeOut
- 
+
      C                   CALLB     'ABFUNDVAL'
- 
+
       ** Return Code
- 
+
      C                   PARM      *BLANK        RetCodeOut
- 
+
       ** Mode = '*FRONT' (Front Office Transaction Interface)
       ** Mode = '      ' (Not Front Office Transaction Interface)
       ** Mode = '*RPR  ' (Repair function)
       ** Mode = '*SIN  ' (Screen Input function)
- 
+
      C                   PARM                    PModeOfOp
- 
+
       ** Response mode (1A, from caller (A=Asynchronous, S=Synchronous))
- 
+
      C                   PARM      'S'           PRespMode
- 
+
       ** AB Internal Funding Deal screen details from incoming
       ** transaction - screen format
- 
+
      C                   PARM                    TranInFUND
- 
+
       ** Current Screen Format
       ** Current File Format 1
       ** Current File Format 2
- 
+
      C                   PARM                    CrDlScnFmt
      C                   PARM                    CrDlFilFmt1
      C                   PARM                    CrDlFilFmt2
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANKPD
       ** ========
- 
+
       ** Date Format Indicator
       ** Currency Code
       ** Single Branch Code
@@ -990,7 +1023,7 @@
       ** Customer Number
       ** Run Day Number
       ** Back Value Period in Days
- 
+
      C                   PARM                    BJDFIN
      C                   PARM                    BJCYCD
      C                   PARM                    BJSBRC
@@ -999,113 +1032,115 @@
      C                   PARM                    BJCUST
      C                   PARM                    WRunDay
      C                   PARM                    BJBVPD
- 
+
       ** SDGELRPD
       ** ========
- 
+
       ** Profit Centres Used
       ** Originating Branch Used
       ** Originating Branch/User Valid
       ** Profit Centres Amendable
       ** Profit Centre Deafults Used
- 
+
      C                   PARM                    BKPRCU
      C                   PARM                    BKOBRU
      C                   PARM                    BKOBUV
      C                   PARM                    BKPRCA
      C                   PARM                    BKPCDU
- 
+
       ** SDDEALPD
       ** ========
- 
+
       ** Decimal Separator
- 
+
      C                   PARM                    BNDCSP
- 
+
       ** SDMMODPD
       ** ========
- 
+
       ** Leo Letters of Credit
- 
+
      C                   PARM                    BGNOST
- 
+
       ** SDTRADPD
       ** ========
- 
+
       ** Base Rate Change Facility
- 
+
      C                   PARM                    BLBRCF
- 
+
       ** RUNDAT
       ** ======
- 
+
       ** Multibranching Indicator
      C                   PARM                    PAGMBIN
- 
+
       ** ZMUSER
       ** ======
- 
+
       ** Default Branch
       ** Department Code
- 
+
      C                   PARM                    PDBRN
      C                   PARM                    PDPPT
- 
+
      C                   PARM                    CAS004
                                                                                            CDL019
      C                   PARM                    CDL019                                    CDL019
                                                                                            CDL020
      C                   PARM                    CDL020                                    CDL020
- 
+                                                                                              CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+
       ** Output Parameters
       ** =================
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    WIdx
- 
+
       ** AB Internal Funding Deal screen error indicators
- 
+
      C                   PARM                    OkFlags
- 
+
       ** AB Internal Funding Deal for file update - file format 1
- 
+
      C                   PARM                    NwDlFilFmt1
- 
+
       ** AB Internal Funding Deal for file update - file format 2
- 
+
      C                   PARM                    NwDlFilFmt2
- 
+
       ** Redisplay Flag
- 
+
      C                   PARM      *BLANK        PReDsp
- 
+
       ** Profit Centre Description 1
       ** Profit Centre Description 2
- 
+
      C                   PARM                    PPRF1D
      C                   PARM                    PPRF2D
- 
+
       ** Amended by validation module flag
- 
+
      C                   PARM                    PValFlg
- 
+
      C                   ENDSR
       /EJECT                                                                                  CDL038
       *****************************************************************                       CDL038
@@ -1131,6 +1166,10 @@
      C                   PARM                    ReturnCode                                   CDL038
      C                   PARM                    NwDlScnFmt                                   CDL038
      C                   PARM                    CrDlScnfmt                                   CDL038
+      ** Incoming Backward-Looking Rate fields in Screen Format :                             CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+      ** (Current) Backward-Looking Rate fields in Screen Format :                            CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM      'N'           ResetErrs         1                          CDL038
      C                   PARM                    BKOBRU                                       CDL038
      C                   PARM                    BNDCSP                                       CDL038
@@ -1180,23 +1219,23 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIdArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   CLEAR                   CrDlScnFmt
      C                   CLEAR                   NwDlFilFmt1
      C                   CLEAR                   NwDlFilFmt2
- 
+
      C                   EVAL      OkFlags = *ALL'Y'
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1205,9 +1244,9 @@
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       **                                                                                      CAP191
      C**********         EVAL      IKFRNT = APFOTRANID                                 CAP191 261140
      C**********         EVAL      IKAFRT = APFOASOCID                                 CAP191 261140
@@ -1223,9 +1262,9 @@
                                                                                               CAP191
       ** If Insert and deal number not defined,
       ** get next available deal number
- 
+
      C                   IF        #1ACTN = 'I' AND #1DLNO = *BLANK
- 
+
      C                   EXSR      SRGetNxtDl
      C                   MOVE      ADealNum      #1DLNO
      C                   EVAL      N1DN38 = PDealNum
@@ -1235,14 +1274,14 @@
      C                   MOVE      #1DLNO        N1DN38
      C                   MOVE      #1DLNO        N1PCDN
      C                   MOVE      #1DLNO        N2DADN
- 
+
      C                   ENDIF
- 
+
       ** If Insert deal associated number not defined ,
       ** get next available deal associated number
- 
+
      C                   IF        #1ACTN = 'I' AND #1DADN = *BLANK
- 
+
      C                   EXSR      SRGetNxtDl
      C                   MOVE      ADealNum      #1DADN
      C                   EVAL      N2DN38 = PDealNum
@@ -1252,15 +1291,15 @@
      C                   MOVE      #1DADN        N2DN38
      C                   MOVE      #1DADN        N2PCDN
      C                   MOVE      #1DADN        N1DADN
- 
+
      C                   ENDIF
- 
+
       ** Setup other fields prior to update.
- 
+
      C                   DOW       WSetFld <> 'N'
- 
+
      C                   IF        WSetFld = '1'
- 
+
      C                   EVAL      UpdDlFilFmt = NwDlFilFmt1
      C                   EVAL      IKMTYP = 'IL'
      C                   EVAL      IKTYPE = 'IL'
@@ -1275,167 +1314,167 @@
      C                   EVAL      IKROBR = N1BRCA
      C                   Z-SUB     IKMTTI        IKMTTI
      C                   ENDIF
- 
+
       ** Time of Input
- 
+
      C                   TIME                    IKTIME
- 
+
       ** Record Identifier
- 
+
      C                   EVAL      IKRCID = 'HK'
- 
+
       ** Logical Delete Flag
- 
+
      C                   EVAL      IKDLTF = ' '
- 
+
       ** Date and Time of Last Update
- 
+
      C                   EVAL      IKDLUP = WkDLUP
      C                   EVAL      IKMLUP = WkMLUP
      C                   EVAL      IKYLUP = WkYLUP
      C                   TIME                    IKTLUP
- 
+
       ** Type of last change
- 
+
      C                   IF        #1ACTN <> 'E'
      C                   EVAL      IKCHTP = #1ACTN
      C                   ENDIF
- 
+
       ** Last Change Date
- 
+
      C                   EVAL      IKLCD  = WRunDay
- 
+
       ** Last Update User ID
- 
+
      C                   EVAL      IKLUID = PUSRID
- 
+
       ** Broker Code
- 
+
      C                   EVAL      IKBKCD = 'PHON'
- 
+
       ** Deal Transaction Date
- 
+
      C                   EVAL      IKDTYY = DDATYr
      C                   EVAL      IKDTMM = DDATMn
      C                   EVAL      IKDTDD = DDATDy
- 
+
       ** Deal Deleted indicator
- 
+
      C                   EVAL      IKDDLT = ' '
- 
+
       ** Deal Status Indicator
- 
+
      C                   EVAL      IKDSTS = 'A'
- 
+
       ** Rollover indicator
- 
+
      C                   EVAL      IKRBSI = ' '
- 
+
       ** Deal PC Transaction number
- 
+
      C                   EVAL      IKPCTN = *Zeros
- 
+
       ** Deal last action
- 
+
      C                   EVAL      IKLACT = #1ACTN
- 
+
       ** Deal Brokerage
- 
+
      C                   MOVE      *ALL'9'       IKBRKG
- 
+
       ** Deal User Code
       ** Deal authorisation officer
- 
+
      C                   EVAL      IKDUSC = PUSRID
      C                   EVAL      IKAOFR = PUSRID
- 
+
       ** Deal action date
- 
+
      C                   MOVE      PDateOutZ9    IKLDAT
- 
+
       ** Start/Last interest date = Deal value date
- 
+
      C                   EVAL      IKSLYY = IKVDYY
      C                   EVAL      IKSLMM = IKVDMM
      C                   EVAL      IKSLDD = IKVDDD
- 
+
       ** Input interest rate
- 
+
      C                   Z-ADD     IKINTR        IKIIRT
- 
+
       ** Account Sequence Number
- 
+
      C                   EVAL      IKACSQ = 1
- 
+
       ** Negative Interest Indicator
- 
+
      C                   IF        IKINTR < 0
      C                   EVAL      IKNGVI = 'Y'
      C                   ENDIF
- 
+
       ** Midas Taxable Indicator
- 
+
      C                   EVAL      IKMTAX = 'N'
- 
+
       ** Interest accrual contr year = Deal value date
- 
+
      C                   EVAL      IKIAYY = IKVDYY
      C                   EVAL      IKIAMM = IKVDMM
      C                   EVAL      IKIADD = IKVDDD
- 
+
       ** Interest at maturity
- 
+
      C                   EXSR      SRSetIMAT
- 
+
       ** If Amount is negative
- 
+
      C                   IF        IKAMNP < 0
- 
+
      C                   IF        PIMAT < 0
      C                   Z-SUB     PIMAT         IKIMAT
      C                   ELSE
      C                   Z-ADD     PIMAT         IKIMAT
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        PIMAT < 0
      C                   Z-ADD     PIMAT         IKIMAT
      C                   ELSE
      C                   Z-SUB     PIMAT         IKIMAT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Ensure Interest at Maturity is same sign as amt if -VE INT.
- 
+
      C                   IF        IKNGVI = 'Y'
      C                   IF        IKAMNP < 0
- 
+
      C                   IF        PIMAT < 0
      C                   Z-ADD     PIMAT         IKIMAT
      C                   ELSE
      C                   Z-SUB     PIMAT         IKIMAT
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        PIMAT < 0
      C                   Z-SUB     PIMAT         IKIMAT
      C                   ELSE
      C                   Z-ADD     PIMAT         IKIMAT
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Set automatic authorisation flag to 'Y'
- 
+
      C                   EVAL      IKAUTH = 'Y'
- 
+
       ** If first time around setup WSetFld to '2'
       ** If WSetFld = '2' set it to 'N'
- 
+
      C                   IF        WSetFld = '1'
      C                   EVAL      NwDlFilFmt1 = UpdDlFilFmt
      C                   EVAL      WSetFld = '2'
@@ -1443,9 +1482,9 @@
      C                   EVAL      NwDlFilFmt2 = UpdDlFilFmt
      C                   EVAL      WSetFld = 'N'
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1454,24 +1493,24 @@
       *                                                               *
       *****************************************************************
      C     SRGetNxtDl    BEGSR
- 
+
       ** Get next deal number
- 
+
      C                   CALLB     'CAGETNXTDL'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM      *BLANKS       PMsgId
      C                   PARM      *BLANKS       ADealNum
      C                   PARM      *ZERO         PDealNum
- 
+
       ** Database error
- 
+
      C                   IF        PMsgId <> *BLANK
      C                   EVAL      DBKEY = #1DLNO                               ************
      C                   EVAL      DBFILE = 'CAGTNXDL'                          * DBERR 08 *
      C                   EVAL      DBASE = 008                                  ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1484,9 +1523,9 @@
       *                                                               *
       *****************************************************************
      C     SRSetIMAT     BEGSR
- 
+
      C                   CALLB     'MM1010'
- 
+
       ** Input Parameters
       ** ================
       ** Total Interest
@@ -1500,7 +1539,7 @@
       ** Round Down Interest Indicator
       ** Taxable Indicator
       ** Deal Number
- 
+
      C                   PARM      IKMTTI        PMTTI
      C                   PARM                    PINTD
      C                   PARM      IKIPFQ        PIPFQ
@@ -1512,40 +1551,40 @@
      C                   PARM      IKRDFC        PRDFC
      C                   PARM      IKMTAX        PMTAX
      C                   PARM      IKDN38        PDeal
- 
+
       ** Maturity Date for BRT Calculation
- 
+
      C                   PARM                    PBRMD
- 
+
       **  Hong Kong Tax Rate from Dealing ICD
- 
+
      C                   PARM                    BNHKTR
      C                   PARM                    S01383
- 
+
       ** SDBRTDPD
       ** ========
       ** BRT Rate
       ** Date Effective From
       ** BRT Rate - Previous
- 
+
      C                   PARM                    BRTR
      C                   PARM                    DEFF
      C                   PARM                    PBRTR
- 
+
       ** Customer Number
- 
+
      C                   PARM      IKCNUM        PCNUM
- 
+
       ** Currency Code
       ** Location Code
- 
+
      C                   PARM                    PZCCY
      C                   PARM                    PZLOC
- 
+
       ** Interest at Maturity
- 
+
      C                   PARM                    PIMAT
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1553,12 +1592,12 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
- 
+
       ** Update deal
       ** Money Market updates
- 
+
      C                   CALLB     'MMLDNIUPM'
      C                   PARM      *BLANK        @RtCd
      C                   PARM                    NwDlFilFmt1
@@ -1566,9 +1605,9 @@
      C                   PARM      *BLANKS       #FRECF                                     BUG24144
      C                   PARM      *BLANKS       PBFRCD          100                        BUG24144
      C                   PARM      *BLANKS       PAFRCD          100                        BUG24144
- 
+
       ** Deals updates
- 
+
      C                   IF        @RtCd = *BLANK
      C                   CALLB     'MMLDNIUPD'
      C                   PARM                    @RtCd
@@ -1578,13 +1617,13 @@
      C                   PARM      *BLANKS       PBFRCD          100                        BUG24144
      C                   PARM      *BLANKS       PAFRCD          100                        BUG24144
      C                   ENDIF
- 
+
       ** Update associated deal
- 
+
      C                   IF        @RtCd = *BLANK
- 
+
       ** Money Market updates for associated deal
- 
+
      C                   CALLB     'MMLDNIUPM'
      C                   PARM      *BLANK        @RtCd
      C                   PARM                    NwDlFilFmt2
@@ -1592,9 +1631,9 @@
      C                   PARM      *BLANKS       #FRECF                                     BUG24144
      C                   PARM      *BLANKS       PBFRCD          100                        BUG24144
      C                   PARM      *BLANKS       PAFRCD          100                        BUG24144
- 
+
       ** Deals updates for associated deal
- 
+
      C                   IF        @RtCd = *BLANK
      C                   CALLB     'MMLDNIUPD'
      C                   PARM                    @RtCd
@@ -1604,12 +1643,12 @@
      C                   PARM      *BLANKS       PBFRCD          100                        BUG24144
      C                   PARM      *BLANKS       PAFRCD          100                        BUG24144
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If there were any errors in the update functions, rollback any
       ** updates and end this program.  Otherwise, commit the updates
- 
+
      C                   IF        @RtCd <> *BLANK AND @RtCd <> '*RECUPD'
      C     CSC022        IFEQ      'N'                                                        CSC022
      C                   ROLBK
@@ -1621,7 +1660,7 @@
      C                   MOVEL     '0'           APIRetc
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   IF        @RtCd = '*RECUPD'
      C     CSC022        IFEQ      'N'                                                        CSC022
      C                   ROLBK
@@ -1641,12 +1680,12 @@
      C                   ENDIF                                                                CSC022
      C                   ENDIF                                                                CSC022
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If update not done due to record being updated by another
       ** workstation send message to screen.
- 
+
      C
      C                   IF        @RtCd = '*RECUPD'
      C
@@ -1654,9 +1693,26 @@
      C                   EVAL      MsgIdArr(1)   = 'MMM1023'
      C
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
+      ****************************************************************                        CDL102
+      *  Get Record Lengths of Transaction Data Blocks               *                        CDL102
+      ****************************************************************                        CDL102
+     C     GETRCDLN      BEGSR                                                                CDL102
+                                                                                              CDL102
+     C                   CALLB     'UTGETRCDLN'                                               CDL102
+     C                   PARM                    ReturnCode       10                          CDL102
+     C                   PARM      *ZERO         RecordLen         5 0                        CDL102
+     C                   PARM                    FileName         10                          CDL102
+     C                   PARM      '*LIBL     '  FileLib          10                          CDL102
+                                                                                              CDL102
+      ** If file not found (or any other error) shut down the program                         CDL102
+     C     ReturnCode    Ifne      *Blanks                                                    CDL102
+     C                   EXSR      *pssr                                                      CDL102
+     C                   EndIf                                                                CDL102
+                                                                                              CDL102
+     C                   ENDSR                                                                CDL102
       *****************************************************************
       * The following /COPY contains the standard program status
       * subroutine, including a bound call to the DBERRCTL module.

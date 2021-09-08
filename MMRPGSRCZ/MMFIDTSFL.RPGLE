@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058379           Date 12Jul21               *     
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 24Feb15               *
@@ -64,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -223,6 +228,19 @@
      D ZMUSER          DS            17
      D  ZMBRCA                11     13
      D  ZMDEPT                14     16
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
 
      D PCYDP           S              1S 0
      D PNTCE           S              3S 0
@@ -2381,6 +2399,7 @@
      C                   PARM                    FIRDFC
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    NNDCSP
+     C                   PARM                    TranScnBlrt                                  CDL102
 
      C     ReturnCode    IfNe      *BLANKS
      C     *LOCK         In        LDA

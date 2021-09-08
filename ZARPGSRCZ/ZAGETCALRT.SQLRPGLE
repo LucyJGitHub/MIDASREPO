@@ -12,17 +12,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058182           Date 25May21               *
-      *  Prev Amend No. MD058040A          Date 25May21               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD058182           Date 25May21               *
+      *                 MD058040A          Date 25May21               *
       *                 MD058040           Date 11May21               *
       *                 MD057871           Date 30Apr21               *
       *                 CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing.                       *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
-      *             to SDHSDRTD and LELIBEPD with Int Period Date     *                             
+      *             to SDHSDRTD and LELIBEPD with Int Period Date     *
       *             less than or equal Control Date.                  *
       *  MD058040A - Duplicate records still found in HISTSHQ. Fix    *
       *              the number of decimal places used in checking    *
@@ -296,6 +298,7 @@
      D strDate         s              5s 0
      D endDate         s              5s 0
      D writeRecord     s              1a                                                    MD058040
+     D FileID          s             10a                                                      CDL102
 
       *---------------*
       ** JSON Details *
@@ -752,11 +755,19 @@
 
                  msg = http_error(err);
                  errorMessage = %trim(msg);
-                 returnCD = 'CONNECTION_ERROR';
-                 isError = True;
-                 AuditLogDS.SJTMST = %timestamp();
-                 AuditLogDS.SJEXMS = %trim(msg);
-                 AuditLogDS.SJCODE = '999';
+                 if errorMessage = 'URL contains a bad port number!';
+                    returnCD = 'EXCEPTION_ERROR';
+                    isError = True;
+                    AuditLogDS.SJTMST = %timestamp();
+                    AuditLogDS.SJEXMS = %trim(msg);
+                    AuditLogDS.SJCODE = '400';
+                 else;
+                    returnCD = 'CONNECTION_ERROR';
+                    isError = True;
+                    AuditLogDS.SJTMST = %timestamp();
+                    AuditLogDS.SJEXMS = %trim(msg);
+                    AuditLogDS.SJCODE = '999';
+                 endif;
                  exsr errorHandler;
 
               endmon;
@@ -1079,11 +1090,11 @@
                                   ' and CTRNID = ' + QUO + transactREF + QUO +
                                   ' and CINPDT = ' +
                                     %char(result.list(i).intPDMidas);
-                   elseif fileToCheck = LELIBEPD;
-                        wSQLStr = 'select * from LELIBEPD ' +
-                                  'where LDLNRF = ' + QUO + transactREF + QUO +
-                                  ' and LDINDT = ' +
-                                    %char(result.list(i).intPDMidas);
+       //**********elseif fileToCheck = LELIBEPD;                                             CDL102
+       //**********  wSQLStr = 'select * from LELIBEPD ' +                                    CDL102
+       //**********               'where LDLNRF = ' + QUO + transactREF + QUO +               CDL102
+       //**********               ' and LDINDT = ' +                                          CDL102
+       //**********                 %char(result.list(i).intPDMidas);                         CDL102
                    elseif fileToCheck = SDHSDRTD2;                                        //MD058040
                         wSQLStr = 'select * from SDHSDRTD ' +                             //MD058040
                                   'where CMODID = '  + QUO + moduleID + QUO +             //MD058040
@@ -1264,13 +1275,25 @@
                    finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
                    ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
 
-                   exec sql insert into LELIBEPD
-                   values (:ExtractFLDS);
+                   // Start of change CDL102
+                   select;
+                   when moduleID  = 'LE';
+                      FileID = 'LELIBEPD';
+                      exec sql insert into LELIBEPD
+                      values (:ExtractFLDS);
+                   when moduleID  = 'DL';
+                      FileID = 'DLLIBEPD';
+                      exec sql insert into DLLIBEPD
+                      values (:ExtractFLDS);
 
+                   endsl;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       AuditLogDS.SJTMST = %timestamp();
-                      AuditLogDS.SJEXMS = 'Error in access LELIBEPD '
+                      // Start of change CDL102
+                      //AuditLogDS.SJEXMS = 'Error in access LELIBEPD '
+                      AuditLogDS.SJEXMS = 'Error in access ' + FileID
                                        + 'SQL ERROR ' + %char(sqlCod);
+                      // End of change CDL102
                       AuditLogDS.SJCODE = '010';
                       isError = true;
                       exsr errorHandler;
@@ -1290,55 +1313,56 @@
        //                                                            *
        //*************************************************************
 
-       begsr updateExtractFile;
+       //begsr updateExtractFile;                                                             CDL102
 
-                   clear ExtractFLDS;
-                   clear compAveRate;
-                   clear finalAveRate;
-                   ExtractFLDS.LDLNRF = transactREF;
-                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
-                   ExtractFLDS.LDINDT = result.list(i).intPDMidas;
-                   ExtractFLDS.LDINPD = result.list(i).intPrdDays;
+       //**********clear ExtractFLDS;                                                         CDL102
+       //**********clear compAveRate;                                                         CDL102
+       //**********clear finalAveRate;                                                        CDL102
+       //**********ExtractFLDS.LDLNRF = transactREF;                                          CDL102
+       //**********ExtractFLDS.LDVDAT = result.list(i).intPDMidas;                            CDL102
+       //**********ExtractFLDS.LDINDT = result.list(i).intPDMidas;                            CDL102
+       //**********ExtractFLDS.LDINPD = result.list(i).intPrdDays;                            CDL102
 
-                   select;
-                        when calcMethod = 'NCCR';
-                             compAveRate =
-                               %dec(Result.List(i).dlyCompRate:11:7);
-                        when calcMethod = 'CCR';
-                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
-                             compAveRate =
-                               %dec(Result.List(i).aveCompRate:11:7);
-                        when calcMethod = 'SARR';
-                             compAveRate =
-                               %dec(Result.List(i).rateApplied:11:7);
-                        when calcMethod = 'SAVG';
-                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
-                             compAveRate =
-                               %dec(Result.List(i).simpleAve:11:7);
-                   endsl;
+       //**********select;                                                                    CDL102
+       //**********     when calcMethod = 'NCCR';                                             CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).dlyCompRate:11:7);                         CDL102
+       //**********     when calcMethod = 'CCR';                                              CDL102
+       //**********          ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);                    CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).aveCompRate:11:7);                         CDL102
+       //**********     when calcMethod = 'SARR';                                             CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).rateApplied:11:7);                         CDL102
+       //**********     when calcMethod = 'SAVG';                                             CDL102
+       //**********          ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);                    CDL102
+       //**********          compAveRate =                                                    CDL102
+       //**********            %dec(Result.List(i).simpleAve:11:7);                           CDL102
+       //**********endsl;                                                                     CDL102
 
-                   finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
-                   ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
+       //**********finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);                      CDL102
+       //**********ExtractFLDS.LDCART = %dech(finalAveRate:11:7);                             CDL102
 
-                   wSqlStr = 'update LELIBEPD A '  +
-                              'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
-                              ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
-                                 + QUO +
-                              ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
+       //**********wSqlStr = 'update LELIBEPD A '  +                                          CDL102
+       //**********           'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +                 CDL102
+       //**********           ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF                 CDL102
+       //**********              + QUO +                                                      CDL102
+       //**********           ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);              CDL102
 
-                   exec sql
-                   execute immediate :wSqlStr;
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      AuditLogDS.SJTMST = %timestamp();
-                      AuditLogDS.SJEXMS = 'Error in access LELIBEPD '
-                                       + 'SQL ERROR ' + %char(sqlCod);
-                      AuditLogDS.SJCODE = '011';
-                      isError = true;
-                      exsr errorHandler;
-                   endif;
+       //**********exec sql                                                                   CDL102
+       //**********execute immediate :wSqlStr;                                                CDL102
 
-       endsr;
+       //**********if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;                             CDL102
+       //**********   AuditLogDS.SJTMST = %timestamp();                                       CDL102
+       //**********   AuditLogDS.SJEXMS = 'Error in access LELIBEPD '                         CDL102
+       //**********                    + 'SQL ERROR ' + %char(sqlCod);                        CDL102
+       //**********   AuditLogDS.SJCODE = '011';                                              CDL102
+       //**********   isError = true;                                                         CDL102
+       //**********   exsr errorHandler;                                                      CDL102
+       //**********endif;                                                                     CDL102
+
+       //endsr;                                                                               CDL102
 
        //*************************************************************
        /EJECT

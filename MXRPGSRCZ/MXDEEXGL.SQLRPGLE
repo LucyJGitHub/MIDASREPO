@@ -5,9 +5,9 @@
 /**** *  CRTRPGMOD                                                    *                     MD056612
 /*STD *  RPGSQLMOD                                                    *                     MD056612
 /*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD056612
-/*C*T****MODULE(**********/**********)*********************************              260324 MD053540
-/*C*T****SRCFILE(**********/**********)********************************              260324 MD053540
-/*C*T****SRCMBR(*MODULE)*OUTPUT(*PRINT)********************************              260324 MD053540
+/*CRT *  MODULE(**********/**********)                                *                       260324
+/*CRT *  SRCFILE(**********/**********)                               *                       260324
+/*CRT *  SRCMBR(*MODULE) OUTPUT(*PRINT)                               *                       260324
 /*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD053540
 /*STD *  RPGBASEMO2                                                   *                     MD053540
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
@@ -42,7 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD053540 - IBMi 7.4 Source Compilation                       *
-      *             Apply for MD-58402                                *      
+      *             Apply for MD-58402                                *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *

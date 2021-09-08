@@ -1,0 +1,549 @@
+     H        1   Y
+      *****************************************************************   USW004
+/*STD *  RPGBASE                                                      *   USW004
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERIT58 - ER Extract program - CALCULATE NUMERI ON LOANS      *
+      *                                                               *
+      *  (c) Copyright MISYS 2003                                     *
+      *                                                               *
+      *  Last Amend No. MD058100           Date 20May21               *
+      *  Last Amend No. LUC139             Date 04Jan21               *
+      *  Last Amend No. MMI140             Date 02Mar11               *
+      *  Prev Amend No. 261936             Date 17Sep09               *
+      *                 252949             Date 14Feb08               *
+      *                 MBV006             Date 08Jun08               *
+      *                 MMI115             Date 24Mar04               *
+      *                 MMI110   *Create   Date 06Oct03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI140 - Usura changes.                                      *
+      *  261936 - Fields 6001 and 6003 on main loan should be         *
+      *           reduced by corresponding fields of parts sold.      *
+      *  252949 - Discount Loans - Average balance not calculated.    *
+      *  MBV006 - For Loans rebooked in Loan IQ, do not include       *
+      *           rebooking movements in quarterly statistics.        *
+      *  MMI115 - Calculate extra fields for Tassi Attivi.            *
+      *         - Option to calculate Numbers from start of quarter.  *
+      *  MMI110 - Rewrite Numbers calculation.                        *
+      *                                                               *
+      *****************************************************************
+      *
+     FEREXTRPDIF  E                    DISK
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FMLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCLF                          KRENAMEMLOANCLF
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FHISTR   IF  E           K        DISK
+     FMHISR   IF  E           K        DISK
+     F            HISTSHMF                          KRENAMEMHISTHMF
+     F            HISTSHPF                          KRENAMEMHISTHPF
+     F            HISTSHQF                          KRENAMEMHISTHQF
+     FBVLQLKL0IF  E           K        DISK                               MBV006
+     F            BVLQLKD0                          KRENAMEBVLQOLD        MBV006
+     F* Loans rebooked from Midas to Loan IQ - keyed by old loan ref      MBV006
+     FBVLQLKL1IF  E           K        DISK                               MBV006
+     F            BVLQLKD0                          KRENAMEBVLQNEW        MBV006
+     F* Loans rebooked from Midas to Loan IQ - keyed by new loan ref      MBV006
+     FERNUMEPDO   E                    DISK
+      *
+      * Transaction reference
+      *
+     I            DS
+     I                                        1  21 EXTREF
+     I                                        1   6 EXLNRF
+     I                                       19  21 CHKREP
+      *
+      * Work data stucture for date calculations
+      *
+     I            DS
+     I                                        1   60WDATE
+     I                                        1   20WDAY
+     I                                        3   40WMON
+     I                                        5   60WYEAR
+      *
+      * DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *                                                                   MMI115
+      * DS for access programs, long data structure                       MMI115
+      *                                                                   MMI115
+     IDSSDY     E DSDSSDY                                                 MMI115
+      *
+      * External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Initial subroutine
+      *
+     C                     EXSR SRINIT
+      *
+      * Mainline
+      *
+     C                     READ EREXTRPD                 LR
+     C           *INLR     DOWEQ*OFF
+      *
+      * Process all Loans extracted - but exclude repayments
+      *
+     C           EXLOTD    IFEQ 'LEN'
+     C           EXLOTD    OREQ 'PPU'
+     C           EXLOTD    OREQ 'PSO'
+      *
+     C           CHKREP    IFNE 'REP'
+      *
+      * Reset output fields
+      *
+     C                     RESETERNUMED0
+      *
+      * Process loan history
+      *
+     C                     EXSR SRHIST
+      *
+      * Output a record with calculated data to extension file
+      *
+     C                     EXSR SROUT
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ EREXTRPD                 LR
+     C                     ENDDO
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRHIST -  Process Loan History                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHIST    BEGSR
+      *
+      * Zeroise work fields
+      *
+     C                     Z-ADD*ZERO     WCPAM  150
+     C                     Z-ADD*ZERO     WVDAT   50
+     C                     Z-ADD*ZERO     WKINT  180                      MMI115
+      *
+      * Access loan details to find customer number, as the one
+      * on EREXTRPD can be the seller of the participation.
+      *
+     C           EXLNRF    CHAINCLOANCLF             01
+     C           *IN01     IFEQ *ON
+     C           EXLNRF    CHAINMLOANCLF             01
+     C                     ENDIF
+      *                                                                   MMI140
+      * Current interest rate and frequency                               MMI140
+      *                                                                   MMI140
+     C                     Z-ADDINTR      ICDERT                          MMI140
+     C                     MOVE IPFR      INTFRQ                          MMI140
+     C*                                                                   MBV006
+     C* Find out if loan has been rebooked from Midas to Loan IQ          MBV006
+     C*                                                                   MBV006
+     C                     MOVE *BLANKS   REBOOK  3                       MBV006
+     C           LNRF      CHAINBVLQOLD              01                   MBV006
+     C           *IN01     IFEQ *OFF                                      MBV006
+     C                     MOVE 'OLD'     REBOOK                          MBV006
+     C                     ENDIF                                          MBV006
+     C           LNRF      CHAINBVLQNEW              01                   MBV006
+     C           *IN01     IFEQ *OFF                                      MBV006
+     C                     MOVE 'NEW'     REBOOK                          MBV006
+     C                     ENDIF                                          MBV006
+      *
+      * Access loan history
+      *
+     C           KHIST     CHAINHISTR                01
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      * Calculate numbers and movements
+      *
+     C                     EXSR SRCALC
+      *
+     C           KHIST     READEHISTR                    01
+     C                     ENDDO
+      *
+      * Access loan history
+      *
+     C           KHIST     CHAINMHISR                01
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      * Calculate numbers and movements
+      *
+     C                     EXSR SRCALC
+      *
+     C           KHIST     READEMHISR                    01
+     C                     ENDDO
+      *
+      * Calculate numbers for part of current month after last movement
+      *
+     C           WVDAT     IFGE BEGMON
+     C           BEGNEX    SUB  WVDAT     NDAYS
+     C                     ELSE
+     C           BEGNEX    SUB  BEGMON    NDAYS
+     C                     ENDIF
+     C           WCPAM     MULT NDAYS     ITEM
+     C                     ADD  ITEM      OUT661
+      *
+      * Calculate numbers for part of current year after last movement
+      *
+     C           WVDAT     IFGE BEGYEA
+     C           BEGNEX    SUB  WVDAT     NDAYS
+     C                     ELSE
+     C           BEGNEX    SUB  BEGYEA    NDAYS
+     C                     ENDIF
+     C           WCPAM     MULT NDAYS     ITEM
+     C                     ADD  ITEM      OUT612
+      *                                                                   MMI115
+      * Calculate Interest in Period                                      MMI115
+      *                                                                   MMI115
+     C           ITEM      MULT INTR      DEBINT 180H                     MMI115
+     C                     ADD  DEBINT    WKINT                           MMI115
+      *                                                                   MMI140
+      * Maximum balance in quarter                                        MMI140
+      *                                                                   MMI140
+     C           WCPAM     IFGT OUT953                                    MMI140
+     C                     Z-ADDWCPAM     OUT953                          MMI140
+     C                     ENDIF                                          MMI140
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRCALC -  Calculate numbers and movements                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCALC    BEGSR
+      *                                                                   252949
+      * For Discount Loans reduce amount of starting principal by         252949
+      * discount.                                                         252949
+      *                                                                   252949
+     C           PTYP      IFEQ 63                                        252949
+     C           PTYP      OREQ 65                                        252949
+     C           PTYP      OREQ 67                                        252949
+     C           AMTP      IFEQ 'ST'                                      252949
+     C                     SUB  TOTI      PRAM                            252949
+     C                     ENDIF                                          252949
+     C                     ENDIF                                          252949
+      *
+      * Original Exposure
+      *
+     C           AMTP      IFEQ 'ST'
+     C                     Z-ADDPRAM      OUT859
+     C                     END
+      *
+      * Number of repayments from start of loan
+      *
+     C           AMTP      IFEQ 'MR'
+     C           AMTP      OREQ 'RE'
+     C                     ADD  1         OUT248
+     C                     END
+      *
+      * Number of movements in quarter
+      *
+     C           VDAT      IFGE BEGQUA
+      *
+      * Start or Principal Increase - Debit movements
+      *
+     C           AMTP      IFEQ 'ST'
+     C           REBOOK    ANDNE'NEW'                                     MBV006
+     C           AMTP      OREQ 'PI'
+     C                     ADD  PRAM      OUT635
+     C                     ADD  1         OUT639
+     C                     END
+      *                                                                   MMI115
+      * Date of last Principal Increase in quarter                        MMI115
+      *                                                                   MMI115
+     C           AMTP      IFEQ 'PI'                                      MMI115
+     C           VDAT      ANDGTOU6416                                    MMI115
+     C                     Z-ADDVDAT      OU6416                          MMI115
+     C                     END                                            MMI115
+      *
+      * Interest capitalisation
+      *
+     C           AMTP      IFEQ 'IN'
+     C           AMTP      OREQ 'MI'
+     C           INTC      IFEQ 'Y'
+     C           INTA      ANDGT0
+     C                     ADD  INTA      OUT637
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Repayments - Credit movements
+      *
+     C           AMTP      IFEQ 'MA'
+     C           REBOOK    ANDNE'OLD'                                     MBV006
+     C           AMTP      OREQ 'MR'
+     C           AMTP      OREQ 'RE'
+     C           PRAM      IFNE *ZERO
+     C                     ADD  PRAM      OUT636
+     C                     ADD  1         OUT640
+     C                     ENDIF
+     C           INTA      IFNE *ZERO
+     C           INTC      ANDEQ'Y'
+     C                     ADD  INTA      OUT637
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Increase numbers in month
+      *
+     C           VDAT      IFGE BEGMON
+      *
+     C           WVDAT     IFGE BEGMON
+     C           VDAT      SUB  WVDAT     NDAYS   50
+     C                     ELSE
+     C           VDAT      SUB  BEGMON    NDAYS
+     C                     ENDIF
+     C           WCPAM     MULT NDAYS     ITEM   150
+     C                     ADD  ITEM      OUT661
+     C                     ENDIF
+      *
+      * Increase numbers in year
+      *
+     C           VDAT      IFGE BEGYEA
+      *
+     C           WVDAT     IFGE BEGYEA
+     C           VDAT      SUB  WVDAT     NDAYS
+     C                     ELSE
+     C           VDAT      SUB  BEGYEA    NDAYS
+     C                     ENDIF
+     C           WCPAM     MULT NDAYS     ITEM
+     C                     ADD  ITEM      OUT612
+      *                                                                   MMI115
+      * Increase Interest in Year                                         MMI115
+      *                                                                   MMI115
+     C           ITEM      MULT INTR      DEBINT                          MMI115
+     C                     ADD  DEBINT    WKINT                           MMI115
+      *                                                                   MMI115
+      * Include Manual Adjustments                                        MMI115
+      *                                                                   MMI115
+     C           AMTP      IFEQ 'MI'                                      MMI115
+     C                     ADD  INTA      OU6001                          MMI115
+     C                     ENDIF                                          MMI115
+     C                     ENDIF
+      *
+      * Save current values
+      *
+     C**********           Z-ADDCPAM      WCPAM                           252949
+     C                     Z-ADDVDAT      WVDAT
+      *                                                                   252949
+      * For Discount Loans field CPAM on history file is always zero,     252949
+      * so need to calculate it.                                          252949
+      *                                                                   252949
+     C           PTYP      IFEQ 63                                        252949
+     C           PTYP      OREQ 65                                        252949
+     C           PTYP      OREQ 67                                        252949
+     C           AMTP      IFEQ 'ST'                                      252949
+     C                     Z-ADDPRAM      WCPAM                           252949
+     C                     ENDIF                                          252949
+     C           AMTP      IFEQ 'MT'                                      252949
+     C                     Z-ADD*ZERO     WCPAM                           252949
+     C                     ENDIF                                          252949
+     C                     ELSE                                           252949
+     C                     Z-ADDCPAM      WCPAM                           252949
+     C                     ENDIF                                          252949
+      *                                                                   MMI140
+      * Maximum balance in quarter                                        MMI140
+      *                                                                   MMI140
+     C           VDAT      IFGE BEGQUA                                    MMI140
+     C           WCPAM     ANDGTOUT953                                    MMI140
+     C                     Z-ADDWCPAM     OUT953                          MMI140
+     C                     ENDIF                                          MMI140
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SROUT  -  Write record to extension file                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROUT     BEGSR
+      *
+      * Divide month numbers by number of days in month to obtain
+      * average balances
+      *
+     C                     DIV  MONLEN    OUT661    H
+      *
+      * For participations sold swap debit and credit.
+      *
+     C           EXLOTD    IFEQ 'PSO'
+     C                     Z-ADDOUT612    OUT613
+     C                     Z-ADD*ZERO     OUT612
+     C                     Z-ADDOUT614    OUT615                          261936
+     C                     Z-ADD*ZERO     OUT614                          261936
+     C                     Z-ADDOUT635    XUT635 150
+     C                     Z-ADDOUT636    OUT635
+     C                     Z-ADDXUT635    OUT636
+     C                     Z-ADDOUT637    XUT637 150
+     C                     Z-ADDOUT638    OUT637
+     C                     Z-ADDXUT637    OUT638
+     C                     Z-ADDOUT639    XUT639 150
+     C                     Z-ADDOUT640    OUT639
+     C                     Z-ADDXUT639    OUT640
+     C                     Z-ADDOUT661    OUT662
+     C                     Z-ADD*ZERO     OUT661
+     C                     ENDIF
+      *
+      * For matured loans output numbers as 'capitalised'.
+      *
+     C           MDAT      IFLT BEGNEX
+     C                     Z-ADDOUT612    OUT614
+     C                     Z-ADDOUT613    OUT615
+     C                     Z-ADD*ZERO     OUT612
+     C                     Z-ADD*ZERO     OUT613
+     C                     ENDIF
+      *                                                                   MMI115
+      * Divide Interest work field according to int. calc. basis          MMI115
+      *                                                                   MMI115
+     C           CALC      IFEQ 2                                         MMI115
+     C           CALC      OREQ 5                                         MMI115
+     C                     DIV  36000     WKINT     H                     MMI115
+     C                     ELSE                                           MMI115
+     C                     DIV  36500     WKINT     H                     MMI115
+     C                     ENDIF                                          MMI115
+     C                     ADD  WKINT     OU6001                          MMI115
+      *                                                                   MMI115
+      * Deal Date                                                         MMI115
+      *                                                                   MMI115
+     C                     Z-ADDDDAT      OUT253                          MMI115
+      *                                                                   MMI140
+      * Average balance in quarter                                        MMI140
+      *                                                                   MMI140
+     C           OUT612    ADD  OUT614    OU9478                          MMI140
+     C                     DIV  QUALEN    OU9478                          MMI140
+      *
+      * Fill key fields
+      *
+     C                     MOVE EXTREF    TREF
+     C                     MOVE EXBRCD    BRCD
+      *
+     C                     WRITEERNUMED0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT -  Initial processing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           KHIST     KLIST
+     C                     KFLD           EXBRCD
+     C                     KFLD           CNUM
+     C                     KFLD           EXLNRF
+      *
+      *  Access Banks Details to Retrieve Run Date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  Determine date fields
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM BJRDNB    ZDAYNO  50
+     C                     PARM 'D'       DATFIN  1
+     C           WDATE     PARM           ZDATE   60
+     C                     PARM *BLANKS   RETCOD  7
+      *
+      * Beginning of current month
+      *
+     C                     Z-ADD01        WDAY
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGMON  50
+      *
+      * Beginning of next month
+      *
+     C                     Z-ADDWDATE     SVDATE  60
+     C                     ADD  1         WMON
+     C           WMON      IFEQ 13
+     C                     Z-ADD1         WMON
+     C                     ADD  1         WYEAR
+     C                     ENDIF
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGNEX  50
+     C           BEGNEX    SUB  BEGMON    MONLEN  20
+      *
+      * Beginning of current quarter
+      *
+     C                     Z-ADDSVDATE    WDATE
+     C           WMON      IFEQ 2
+     C           WMON      OREQ 3
+     C                     Z-ADD1         WMON
+     C                     ENDIF
+     C           WMON      IFEQ 5
+     C           WMON      OREQ 6
+     C                     Z-ADD4         WMON
+     C                     ENDIF
+     C           WMON      IFEQ 8
+     C           WMON      OREQ 9
+     C                     Z-ADD7         WMON
+     C                     ENDIF
+     C           WMON      IFEQ 11
+     C           WMON      OREQ 12
+     C                     Z-ADD10        WMON
+     C                     ENDIF
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGQUA  50
+     C           BEGNEX    SUB  BEGQUA    QUALEN  20                      MMI140
+      *
+      * Beginning of current year
+      *
+     C                     Z-ADD1         WMON
+      *
+     C                     CALL 'ZDATE1'
+     C                     PARM *BLANKS   RETCOD
+     C                     PARM WDATE     ZDATE
+     C                     PARM 'D'       DATFIN
+     C                     PARM           ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    BEGYEA  50
+      *                                                                   MMI115
+      * If so required, calculate Numbers from Start of Quarter           MMI115
+      *                                                                   MMI115
+     C                     MOVEL'QUARTER' WKEY      P                     MMI115
+     C                     CALL 'AOFXTBR0'                                MMI115
+     C                     PARM '*BLANKS' @@RTCD                          MMI115
+     C                     PARM '*KEY   ' @@OPTN                          MMI115
+     C                     PARM 'NUM'     FIELD   3                       MMI115
+     C                     PARM           WKEY   18                       MMI115
+     C                     PARM           DSSDY                           MMI115
+      *                                                                   MMI115
+     C           @@RTCD    IFEQ *BLANKS                                   MMI115
+     C                     Z-ADDBEGQUA    BEGYEA                          MMI115
+     C                     ENDIF                                          MMI115
+      *
+     C                     ENDSR

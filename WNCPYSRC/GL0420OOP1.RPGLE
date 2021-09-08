@@ -6,12 +6,18 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD054560           DATE 08Oct19               *
-      *  Prev Amend No. LUC132             DATE 30Jul19               *
+      *  Last Amend No. MDSC035979         Date 22Sep21               *
+      *  Prev Amend No. MD054560           DATE 08Oct19               *
+      *                 LUC132             DATE 30Jul19               *
       *                 LUC108  *CREATE    DATE 19Apr16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MDSC035979 - UCI-AG from SP8 to FM 2021.B RPG Development    *
+      *               Issues.                                         *
+      *             - GL0420P4 printer file record length is only 100.*
+      *               Changed end position to 100.                    *
+      *  MD054560 - Missing Running Balance in GL0420P1               *
       *  MD054560 - Missing Running Balance in GL0420P1               *
       *  LUC132 - Amendments to Statement of Account feature AG       *
       *  LUC108 - Statement of Accounts                               *
@@ -3388,9 +3394,13 @@
       *
      O          E    65 84                    16
      O         AND   79                                                         LUC108
-     O                     36@WCNA1              62
-     O                     35                    86 'DEMAND STATEMENT'
-     O                       ANAM               117
+     O**********        36   @WCNA1              62                                       MDSC035979
+     O**********        35                       86 'DEMAND STATEMENT'                    MDSC035979
+     O**********             ANAM               117                                       MDSC035979
+      *                                                                                   MDSC035979
+     O                  36   @WCNA1              35                                       MDSC035979
+     O                  35                       70 'DEMAND STATEMENT'                    MDSC035979
+     O                       ANAM               100                                       MDSC035979
       *
      O          E    65 84                    17
      O         AND   79                                                         LUC108
@@ -3402,49 +3412,80 @@
       *
      O          E    65 84                    19
      O         AND   79                                                         LUC108
-     O                     36@WCNA4              62
-     O                       CCY                 87
-     O                     27BRCA                97
-     O                     27                    98 '-'
-     O                     27CCY                101
-     O                     27                   102 '-'
-     O                     27CNUM               108
-     O                     27                   109 '-'
-     O                     27ACOD               119
-     O                     27                   120 '-'
-     O                     27ACSQ               122
-     O                    N27ACNO               110
+     O**********           36@WCNA4              62                                       MDSC035979
+     O**********             CCY                 87                                       MDSC035979
+     O**********           27BRCA                97                                       MDSC035979
+     O**********           27                    98 '-'                                   MDSC035979
+     O**********           27CCY                101                                       MDSC035979
+     O**********           27                   102 '-'                                   MDSC035979
+     O**********           27CNUM               108                                       MDSC035979
+     O**********           27                   109 '-'                                   MDSC035979
+     O**********           27ACOD               119                                       MDSC035979
+     O**********           27                   120 '-'                                   MDSC035979
+     O**********           27ACSQ               122                                       MDSC035979
+     O**********          N27ACNO               110                                       MDSC035979
+      *                                                                                   MDSC035979
+     O                     36@WCNA4              35                                       MDSC035979
+     O                       CCY                 57                                       MDSC035979
+     O                     27BRCA                75                                       MDSC035979
+     O                     27                    76 '-'                                   MDSC035979
+     O                     27CCY                 79                                       MDSC035979
+     O                     27                    80 '-'                                   MDSC035979
+     O                     27CNUM                86                                       MDSC035979
+     O                     27                    87 '-'                                   MDSC035979
+     O                     27ACOD                97                                       MDSC035979
+     O                     27                    98 '-'                                   MDSC035979
+     O                     27ACSQ               100                                       MDSC035979
+     O                    N27ACNO                88                                       MDSC035979
       *
      O          E    65 84                    23
      O         AND   79                                                         LUC108
-     O                       LSTDN              104
-     O                                          106 '-'
-     O                       RUNA               116
+     O**********             LSTDN              104                                       MDSC035979
+     O**********                                106 '-'                                   MDSC035979
+     O**********             RUNA               116                                       MDSC035979
+      *                                                                                   MDSC035979
+     O                       LSTDN               88                                       MDSC035979
+     O                                           90 '-'                                   MDSC035979
+     O                       RUNA               100                                       MDSC035979
       *
      O          E    65 84                    25
      O         AND   79                                                         LUC108
      O                       STPA          3     85
-     O                       STPP          3    110
+     O**********             STPP          3    110                                       MDSC035979
+     O                       STPP          3    100                                       MDSC035979
       *
      O          E    64 84                    30
      O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
-     O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
-     O                     71PSTBF              119 '  ,   ,   ,   , 0 . CR'
-     O                     72PSTBF              119 ' ,   ,   ,   , 0 .  CR'
-     O                     73PSTBF              119 '   ,   ,   , 0 .   CR'
-     O                  83                      119 'DR'
+     O**********           70PSTBF              119 '   ,   ,   ,   , 0 CR'               MDSC035979
+     O**********           71PSTBF              119 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O**********           72PSTBF              119 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O**********           73PSTBF              119 '   ,   ,   , 0 .   CR'               MDSC035979
+     O**********           83                   119 'DR'                                  MDSC035979
+      *                                                                                   MDSC035979
+     O                     70PSTBF              100 '   ,   ,   ,   , 0 CR'               MDSC035979
+     O                     71PSTBF              100 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O                     72PSTBF              100 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O                     73PSTBF              100 '   ,   ,   , 0 .   CR'               MDSC035979
+     O                     83                   100 'DR'                                  MDSC035979
       *
      O          E    64 84 10            1
      O         AND   79                                                         LUC108
      O                       BKEURO              80
-     O                                           97 '('
-     O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
-     O                     KBEUPBF              120 '  ,   ,   ,   , 0 . CR)'
-     O                     KCEUPBF              120 ' ,   ,   ,   , 0 .  CR)'
-     O                     KDEUPBF              120 '   ,   ,   , 0 .   CR)'
-     O                  83                      120 'DR)'
+     O**********                                 97 '('                                   MDSC035979
+     O**********           KAEUPBF              120 '   ,   ,   ,   , 0 CR)'              MDSC035979
+     O**********           KBEUPBF              120 '  ,   ,   ,   , 0 . CR)'             MDSC035979
+     O**********           KCEUPBF              120 ' ,   ,   ,   , 0 .  CR)'             MDSC035979
+     O**********           KDEUPBF              120 '   ,   ,   , 0 .   CR)'              MDSC035979
+     O**********           83                   120 'DR)'                                 MDSC035979
+      *                                                                                   MDSC035979
+     O                                           77 '('                                   MDSC035979
+     O                     KAEUPBF              100 '   ,   ,   ,   , 0 CR)'              MDSC035979
+     O                     KBEUPBF              100 '  ,   ,   ,   , 0 . CR)'             MDSC035979
+     O                     KCEUPBF              100 ' ,   ,   ,   , 0 .  CR)'             MDSC035979
+     O                     KDEUPBF              100 '   ,   ,   , 0 .   CR)'              MDSC035979
+     O                     83                   100 'DR)'                                 MDSC035979
       *
      O          E    43 51 04DET         1
      O         AND     N12 84
@@ -3466,18 +3507,31 @@
      O                  23 72PSTA                75 '  ,   ,   , 0 .  '
      O                  23 73PSTA                75 ' ,   ,   , 0 .   '
      O                  23                       77 'DR'
-     O                  22 70PSTA                83 ' ,   ,   ,   , 0 '
-     O                  22 71PSTA                83 '   ,   ,   , 0 . '
-     O                  22 72PSTA                83 '  ,   ,   , 0 .  '
-     O                  22 73PSTA                83 ' ,   ,   , 0 .   '
-     O                  22                       85 'CR'
-      *
-     O               86 70   RUNBAL             117 '   ,   ,   ,   , 0 '       LUC132
-     O               86 71   RUNBAL             117 '  ,   ,   ,   , 0 . '      LUC132
-     O               86 72   RUNBAL             117 ' ,   ,   ,   , 0 .  '      LUC132
-     O               86 73   RUNBAL             117 '   ,   ,   , 0 .   '       LUC132
-     O               86    09                   119 'DR'                        LUC132
-     O               86   N09                   119 'CR'                        LUC132
+     O**********     22 70   PSTA                83 ' ,   ,   ,   , 0 '                   MDSC035979
+     O**********     22 71   PSTA                83 '   ,   ,   , 0 . '                   MDSC035979
+     O**********     22 72   PSTA                83 '  ,   ,   , 0 .  '                   MDSC035979
+     O**********     22 73   PSTA                83 ' ,   ,   , 0 .   '                   MDSC035979
+     O**********     22                          85 'CR'                                  MDSC035979
+      *                                                                                   MDSC035979
+     O**********     86 70   RUNBAL             117 '   ,   ,   ,   , 0 '          LUC132 MDSC035979
+     O**********     86 71   RUNBAL             117 '  ,   ,   ,   , 0 . '         LUC132 MDSC035979
+     O**********     86 72   RUNBAL             117 ' ,   ,   ,   , 0 .  '         LUC132 MDSC035979
+     O**********     86 73   RUNBAL             117 '   ,   ,   , 0 .   '          LUC132 MDSC035979
+     O**********     86    09                   119 'DR'                           LUC132 MDSC035979
+     O**********     86   N09                   119 'CR'                           LUC132 MDSC035979
+      *                                                                                   MDSC035979
+     O               22 70   PSTA                75 ' ,   ,   ,   , 0 '                   MDSC035979
+     O               22 71   PSTA                75 '   ,   ,   , 0 . '                   MDSC035979
+     O               22 72   PSTA                75 '  ,   ,   , 0 .  '                   MDSC035979
+     O               22 73   PSTA                75 ' ,   ,   , 0 .   '                   MDSC035979
+     O               22                          77 'CR'                                  MDSC035979
+      *                                                                                   MDSC035979
+     O               86 70   RUNBAL              98 '   ,   ,   ,   , 0 '                 MDSC035979
+     O               86 71   RUNBAL              98 '  ,   ,   ,   , 0 . '                MDSC035979
+     O               86 72   RUNBAL              98 ' ,   ,   ,   , 0 .  '                MDSC035979
+     O               86 73   RUNBAL              98 '   ,   ,   , 0 .   '                 MDSC035979
+     O               86    09                   100 'DR'                                  MDSC035979
+     O               86   N09                   100 'CR'                                  MDSC035979
       *
      O          E    43 51N04DET         1
      O         AND      84 78
@@ -3493,56 +3547,90 @@
      O         AND     N33
      O         AND   79                                                         LUC108
      O                                           45 'CARRIED FORWARD'
-     O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
-     O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
-     O                     73PSTBAL             119 '   ,   ,   , 0 .   CR'
-     O                     47                   119 'DR'
+     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'               MDSC035979
+     O**********           47                   119 'DR'                                  MDSC035979
+      *                                                                                   MDSC035979
+     O                     71PSTBAL             100 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O                     72PSTBAL             100 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O                     73PSTBAL             100 '   ,   ,   , 0 .   CR'               MDSC035979
+     O                     47                   100 'DR'                                  MDSC035979
       *
      O          E    43 52   TOT              54
      O         AND  N33 84
      O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
-     O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
-     O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
-     O                     72CLBL1              119 ' ,   ,   ,   , 0 .  CR'
-     O                     73CLBL1              119 '   ,   ,   , 0 .   CR'
-     O                     24                   119 'DR'
+     O**********           70CLBL1              119 '   ,   ,   ,   , 0 CR'               MDSC035979
+     O**********           71CLBL1              119 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O**********           72CLBL1              119 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O**********           73CLBL1              119 '   ,   ,   , 0 .   CR'               MDSC035979
+     O**********           24                   119 'DR'                                  MDSC035979
+      *                                                                                   MDSC035979
+     O                     70CLBL1              100 '   ,   ,   ,   , 0 CR'               MDSC035979
+     O                     71CLBL1              100 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O                     72CLBL1              100 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O                     73CLBL1              100 '   ,   ,   , 0 .   CR'               MDSC035979
+     O                     24                   100 'DR'                                  MDSC035979
       *
      O          E    43 45   ENDPG       1
      O         AND      84
      O         AND  N33 10
      O         AND   79                                                         LUC108
-     O                       BKEURO              80
-     O                                           97 '('
-     O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
-     O                     KBEUPBAL             120 '  ,   ,   ,   , 0 . CR)'
-     O                     KCEUPBAL             120 ' ,   ,   ,   , 0 .  CR)'
-     O                     KDEUPBAL             120 '   ,   ,   , 0 .   CR)'
-     O                     47                   120 'DR)'
+     O**********             BKEURO              80                                       MDSC035979
+     O**********                                 97 '('                                   MDSC035979
+     O**********           KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'              MDSC035979
+     O**********           KBEUPBAL             120 '  ,   ,   ,   , 0 . CR)'             MDSC035979
+     O**********           KCEUPBAL             120 ' ,   ,   ,   , 0 .  CR)'             MDSC035979
+     O**********           KDEUPBAL             120 '   ,   ,   , 0 .   CR)'              MDSC035979
+     O**********           47                   120 'DR)'                                 MDSC035979
+      *                                                                                   MDSC035979
+     O                       BKEURO              60                                       MDSC035979
+     O                                           77 '('                                   MDSC035979
+     O                     KAEUPBAL             100 '   ,   ,   ,   , 0 CR)'              MDSC035979
+     O                     KBEUPBAL             100 '  ,   ,   ,   , 0 . CR)'             MDSC035979
+     O                     KCEUPBAL             100 ' ,   ,   ,   , 0 .  CR)'             MDSC035979
+     O                     KDEUPBAL             100 '   ,   ,   , 0 .   CR)'              MDSC035979
+     O                     47                   100 'DR)'                                 MDSC035979
       *
      O          E    84 43 52TOT              55
      O         AND     N33
      O         AND   79                                                         LUC108
-     O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
-     O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
-     O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
-     O                     73PSTBAL             119 '   ,   ,   , 0 .   CR'
-     O                     47                   119 'DR'
+     O**********           70PSTBAL             119 '   ,   ,   ,   , 0 CR'               MDSC035979
+     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'               MDSC035979
+     O**********           47                   119 'DR'                                  MDSC035979
+      *                                                                                   MDSC035979
+     O                     70PSTBAL             100 '   ,   ,   ,   , 0 CR'               MDSC035979
+     O                     71PSTBAL             100 '  ,   ,   ,   , 0 . CR'              MDSC035979
+     O                     72PSTBAL             100 ' ,   ,   ,   , 0 .  CR'              MDSC035979
+     O                     73PSTBAL             100 '   ,   ,   , 0 .   CR'               MDSC035979
+     O                     47                   100 'DR'                                  MDSC035979
       *
      O          E    84 43 52TOT         1
      O         AND     N33 10
      O         AND   79                                                         LUC108
-     O                       BKEURO              80
-     O                                           97 '('
-     O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
-     O                     KBEUPBAL             120 '  ,   ,   ,   , 0 . CR)'
-     O                     KCEUPBAL             120 ' ,   ,   ,   , 0 .  CR)'
-     O                     KDEUPBAL             120 '   ,   ,   , 0 .   CR)'
-     O                     47                   120 'DR)'
+     O**********             BKEURO              80                                       MDSC035979
+     O**********                                 97 '('                                   MDSC035979
+     O**********           KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'              MDSC035979
+     O**********           KBEUPBAL             120 '  ,   ,   ,   , 0 . CR)'             MDSC035979
+     O**********           KCEUPBAL             120 ' ,   ,   ,   , 0 .  CR)'             MDSC035979
+     O**********           KDEUPBAL             120 '   ,   ,   , 0 .   CR)'              MDSC035979
+     O**********           47                   120 'DR)'                                 MDSC035979
+      *                                                                                   MDSC035979
+     O                       BKEURO              60                                       MDSC035979
+     O                                           77 '('                                   MDSC035979
+     O                     KAEUPBAL             100 '   ,   ,   ,   , 0 CR)'              MDSC035979
+     O                     KBEUPBAL             100 '  ,   ,   ,   , 0 . CR)'             MDSC035979
+     O                     KCEUPBAL             100 ' ,   ,   ,   , 0 .  CR)'             MDSC035979
+     O                     KDEUPBAL             100 '   ,   ,   , 0 .   CR)'              MDSC035979
+     O                     47                   100 'DR)'                                 MDSC035979
       *
      O          E    84 43 45ENDPG            55
      O         AND   79                                                         LUC108
-     O                                          116 '- CONTD'
+     O**********                                116 '- CONTD'
+     O                                          100 '- CONTD'                             MDSC035979
       *
      O          E    84 43 52TOT              58
      O         AND  N33N16

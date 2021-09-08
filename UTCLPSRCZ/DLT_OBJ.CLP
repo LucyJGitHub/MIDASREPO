@@ -1,3 +1,4 @@
+/*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI    TEXT('Midas UT Delete key DB files')                        */
 /*********************************************************************/
@@ -6,10 +7,10 @@
 /*                                                                   */
 /*       DLT_OBJ - Midas UT Delete key DB files                      */
 /*                                                                   */
-/*       (c) Finastra International Limited 2012                     */
+/*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. MD031937           Date 13Jan15              */
-/*       Prev Amend No. AR856737  *CREATE  Date 13Sep11              */
+/*       Last Amend No. MD031937           Date 07Oct21              */
+/*       Prev Amend No. AR856737  *CREATE  Date 07Oct21              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
@@ -18,7 +19,8 @@
 /*                                                                   */
 /*********************************************************************/
 
-PGM
+             PGM
+
              DLTOBJ     OBJ(MEINCRM1) OBJTYPE(*FILE)
              DLTOBJ     OBJ(MEINFTJ1) OBJTYPE(*FILE)
              DLTOBJ     OBJ(MEINFTJ2) OBJTYPE(*FILE)
@@ -36,4 +38,4 @@ PGM
 
              DLTOBJ     OBJ(MEINFTPD) OBJTYPE(*FILE)
 
-ENDPGM
+             ENDPGM

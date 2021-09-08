@@ -1,15 +1,16 @@
+/*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas UT Delete key DB files')                        */
+/*EXI    TEXT('Midas UT STP - Create save file')                     */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas Utilities                                             */
 /*                                                                   */
-/*       DLT_OBJ - Midas UT Delete key DB files                      */
+/*       DLT_OBJ - Midas UT STP - Create save file                   */
 /*                                                                   */
-/*       (c) Finastra International Limited 2012                     */
+/*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. MD031937           Date 13Jan15              */
-/*       Prev Amend No. AR856737  *CREATE  Date 13Sep11              */
+/*       Last Amend No. MD031937           Date 07Oct21              */
+/*       Prev Amend No. AR856737  *CREATE  Date 07Oct21              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
@@ -19,6 +20,7 @@
 /*********************************************************************/
 
              PGM PARM(&B4LIB)
+
              DCL       VAR(&B4LIB) TYPE(*CHAR) LEN(10)
 
              CRTSAVF    FILE(&B4LIB/LSDM_0) AUT(*ALL)

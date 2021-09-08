@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. UUC103             Date 20Oct20               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD058751           Date 03Sep21               *
+      *  Prev Amend No. UUC103             Date 20Oct20               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD028250           Date 28Jul14               *
       *                 MD046248           Date 27Oct17               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *           CAR UUC103. Alphanumeric batch numbers not checked  *
+      *           correctly.                                          *
+      *           Hook GLH00404 amended.                              *
       *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
       *           UUC061 - SWIFT Statement Enhancement                *
       *           Use Hooks GLH00403, GLH00404, GLH00407, GLH00408,   *

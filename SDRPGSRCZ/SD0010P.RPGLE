@@ -19,6 +19,8 @@
       *  Last Amend No. CER073D            Date 13Aug20               *
       *  Prev Amend No. CER076             Date 12Aug20               *
       *                 EML103             Date 19Feb20               *
+      *                 248936B            Date 22May20               *
+      *                 248936A            Date 22May20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -131,6 +133,13 @@
       *           SD0010PC05                                          *
       *           SD0010PC07                                          *
       *           SD0010PC34                                          *
+      *  248936B - Print Additional Info to match enquiry screen.     *
+      *            Check if CGL031 is switched on.                    *
+      *            Patterned after 251925.                            *
+      *  248936A - Additional Details for Customer not printed.       *
+      *           Applied fix 249980.                                 *
+      *  248936 - Fields introduced by CER001 should only be printed  *
+      *           when switchable feature ULX004 is switched on.      *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -502,6 +511,18 @@
      D  #RSET                  4      4                                         CGL018
      D  #COMMA                 5      5    INZ(',')                             CGL018
       *                                                                   CGL018
+     DWWBRTH           DS                                                                    248936B
+      * Birth Date in DDMMMCCYY format                                                       248936B
+     D WWBRDM                  1      5                                                      248936B
+     D WWBRCC                  6      7                                                      248936B
+     D WWBRYY                  8      9                                                      248936B
+      *                                                                                      248936B
+     DWWISDT           DS                                                                    248936B
+      * Issue Date in DDMMMCCYY format                                                       248936B
+     D WWISDM                  1      5                                                      248936B
+     D WWISCC                  6      7                                                      248936B
+     D WWISYY                  8      9                                                      248936B
+      *                                                                                      248936B
      D @VAL01          C                   CONST('AddCustDtlFl01')
      D @VAL02          C                   CONST('AddCustDtlFl02')
      D @VAL03          C                   CONST('AddCustDtlFl03')
@@ -893,7 +914,13 @@
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
       *                                                                                       CGL032
-     C                   MOVE      ZADATE        R2ISDT
+     C**********         MOVE      ZADATE        R2ISDT                                      248936B
+     C                   MOVE      *BLANKS       R2ISDT                                      248936B
+     C                   MOVEL     ZADATE        WWISDT                                      248936B
+     C                   MOVEL     WWISCC        WWISYY                                      248936B
+     C     2             SUBST     E5ISDT:1      WWISCC                                      248936B
+     C                   MOVE      *BLANKS       R2ISDT                                      248936B
+     C                   MOVEL     WWISDT        R2ISDT                                      248936B
      C                   ENDIF
       *                                                                                       232543
      C     CER047        IFEQ      'Y'
@@ -2040,12 +2067,14 @@
      C                   MOVE      E5TXNB        A5TXNB           12                           S0142
      C                   MOVE      E5PRVO        A5PRVO            1                           S0142
      C                   MOVE      E5MDTL        A5MDTL            5                           S0142
-     C                   MOVE      E5CNA1        A5CNA1           35                           S0142
+     C**********         MOVE      E5CNA1        A5CNA1           35                   S0142 248936B
+     C                   MOVE      E5CNA1        A5CNA1           70                         248936B
      C     CSW207        IFEQ      'Y'
      C                   MOVE      E5ISCD        A5ISCD           35
      C                   ENDIF
      C/COPY WNCPYSRC,SD0010PC31
-     C                   MOVE      E5CNA2        A5CNA2           35                           S0142
+     C**********         MOVE      E5CNA2        A5CNA2           35                   S0142 248936B
+     C                   MOVE      E5CNA2        A5CNA2           70                         248936B
      C                   MOVE      E5CNA3        A5CNA3           35                           S0142
      C                   MOVE      E5CNA4        A5CNA4           35                           S0142
      C                   MOVE      E5CWL1        A5CWL1           20                           S0142
@@ -2100,6 +2129,34 @@
      C                   END                                                                   11333
      C******************** MOVELWUWADT    A5BRTH  7                 S01421113339
      C                   MOVEL(P)  WUWADT        A5BRTH                                        11333
+      *                                                                                      248936B
+      ** Print City and Zip Code if CGL032 is ON                                             248936B
+      *                                                                                      248936B
+     C     CGL032        IFEQ      'Y'                                                       248936B
+     C                   MOVE      E5CITY        A5CITY           35                         248936B
+     C                   MOVE      E5ZIPC        A5ZIPC           10                         248936B
+     C                   SETON                                        93                     248936B
+     C                   ELSE                                                                248936B
+     C                   SETOFF                                       93                     248936B
+     C                   ENDIF                                                               248936B
+      *                                                                                      248936B
+      * If CGL031 is ON:                                                                     248936B
+      * Synchronize screen field names with report field names.                              248936B
+      * Format Birth Date to print in DDMMMCCYY.                                             248936B
+      *                                                                                      248936B
+     C     CGL031        IFEQ 'Y'                                                            248936B
+     C                   SETON                                        92                     248936B
+     C     A5BRTH        IFNE      *BLANKS                                                   248936B
+     C     E5BRT2        ANDNE     *BLANKS                                                   248936B
+     C                   MOVE      *BLANKS       WWBRTH                                      248936B
+     C                   MOVEL     A5BRTH        WWBRTH                                      248936B
+     C                   MOVEL     WWBRCC        WWBRYY                                      248936B
+     C                   MOVEL     E5BRT2        WWBRCC                                      248936B
+     C                   MOVEL     WWBRTH        A5BRTH                                      248936B
+     C                   ENDIF                                                               248936B
+     C                   ELSE                                                                248936B
+     C                   SETOFF                                       92                     248936B
+     C                   ENDIF                                                               248936B
      C*
      C/COPY WNCPYSRC,SD0010PCP7
      C*
@@ -3114,6 +3171,7 @@
       *                                                                                       CER001
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           ULX004            1
+     C                   MOVE      *ON           *IN20                                        248936
      C                   ELSE
      C                   MOVE      'N'           ULX004            1
      C                   ENDIF
@@ -3184,6 +3242,31 @@
      C                   MOVE      'N'           CGL032
      C                   ENDIF
       *                                                                                       CGL032
+      ** Check CGL031 feature                                                                248936B
+      *                                                                                      248936B
+     C                   CALL      'AOSARDR0'                                                248936B
+     C                   PARM      '       '     PRTCD                                       248936B
+     C                   PARM      '*VERIFY'     POPTN                                       248936B
+     C                   PARM      'CGL031'      PSARD                                       248936B
+     C     SCSARD        PARM      SCSARD        DSSDY                                       248936B
+      *                                                                                      248936B
+      ** DB Error Management.                                                                248936B
+      *                                                                                      248936B
+     C                   MOVEL     'N'           CGL031            1                         248936B
+     C     PRTCD         IFNE      *BLANKS                                                   248936B
+     C     PRTCD         IFNE      '*NRF   '                                                 248936B
+     C     *LOCK         IN        LDA                                                       248936B
+     C                   Z-ADD     008           DBASE                          ************ 248936B
+     C                   MOVEL     'SCSARDPD'    DBFILE                         *DBERROR 08* 248936B
+     C                   MOVEL     PSARD         DBKEY                          ************ 248936B
+     C                   OUT       LDA                                                       248936B
+     C                   EXSR      *PSSR                                                     248936B
+     C                   ENDIF                                                               248936B
+     C                   ELSE                                                                248936B
+     C                   MOVEL     'Y'           CGL031                                      248936B
+     C                   MOVE      '1'           *IN92                                       248936B
+     C                   ENDIF                                                               248936B
+      *                                                                                      248936B
       ** Check CSW207 feature                                                                 CSW207
      C                   CALL      'SWIF2007'
      C                   PARM      '       '     PRTCD

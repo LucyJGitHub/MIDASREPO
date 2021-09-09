@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058476           Date 23Jul21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
@@ -166,6 +167,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058476 - LE 24x7 API - Online Accounts movements not       *
+      *             generated (CAP774)                                *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  207964 - Incorrect exposure if loan is in base currency. Do  *
@@ -825,6 +828,8 @@
      D SC24X7        E DS                  EXTNAME(SC24X7)
       ***  24X7 Data Structure
 
+     D SCND24X7S     E DS                  EXTNAME(SCND24X7)                                MD058476
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
       ***  SDSTAT Data Structure
 
@@ -1445,6 +1450,7 @@
       *
       ***  Update shadow files
       *
+     C                   MOVEL     L_CLFRNT      W2FRNT            8                        MD058476
      C     L_CLCHTP      IFEQ      'I'
      C     L_CLCHTP      OREQ      'A'
      C     L_CLCHTP      OREQ      'R'
@@ -1460,6 +1466,10 @@
      C*****CLE134        OREQ      'Y'                                               CLE134 MD025467
      C*****MPHAS         ANDEQ     'A'                                               CLE134 MD025467
      C     MPHAS         IFNE      'C'                                                      MD025467
+     C     MPHAS         OREQ      'C'                                                      MD058476
+     C     CAP774        ANDEQ     'Y'                                                      MD058476
+     C     SNMODE        ANDEQ     'NIGHT'                                                  MD058476
+     C     W2FRNT        ANDNE     'LE000473'                                               MD058476
      C/COPY WNCPYSRC,LEH01179
      C                   EXSR      SRSHDW
      C                   ENDIF                                                                CLE134
@@ -7765,6 +7775,7 @@
      C                   Endif                                                                CLE055
      C                   Endif                                                                CLE055
       *
+     C                   MOVEL     L_CLFRNT      W2FRNT            8                        MD058476
      C                   IF        CLE134      = 'N'           OR                          AR317473A
      C                             CLE134      = 'Y'           AND                         AR317473A
      C**********                   *IN99       = '0'                              AR317473A MD026167
@@ -7772,7 +7783,15 @@
      C                             MPHAS       = 'A'           OR                           MD026167
      C                             CLE134      = 'Y'           AND                          MD026167
      C                             *IN99       = '0'           AND                          MD026167
-     C                             MPHAS       = 'G'                                        MD026167
+     C**********                   MPHAS       = 'G'                               MD026167 MD058476
+     C                             MPHAS       = 'G'           OR                           MD058476
+     C                             CLE134      = 'Y'           AND                          MD058476
+     C                             *IN99       = '0'           AND                          MD058476
+     C                             CAP774      = 'Y'           AND                          MD058476
+     C                             SNMODE      = 'NIGHT'       AND                          MD058476
+     C                             MPHAS       = 'C'           AND                          MD058476
+     C                             W2FRNT      <>'LE000473'                                 MD058476
+      *
      C                   CALL      'AOOULEU0'
      C                   PARM                    @RTCD
      C                   PARM                    Z#BSTS
@@ -9356,6 +9375,34 @@
      C                   EXSR      *PSSR                                                      CLE106
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
+      ** Check if CAP774 feature is enabled                                                 MD058476
+      *                                                                                     MD058476
+     C                   Move      *BLANKS       SNMODE            5                        MD058476
+     C                   Move      'N'           CAP774            1                        MD058476
+      *                                                                                     MD058476
+     C                   CALL      'AOSARDR0'                                               MD058476
+     C                   PARM      *BLANKS       PRtcd                                      MD058476
+     C                   PARM      '*VERIFY'     POptn                                      MD058476
+     C                   PARM      'CAP774'      PSard                                      MD058476
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD058476
+      *                                                                                     MD058476
+     C                   IF        PRtcd <> *BLANKS  AND                                    MD058476
+     C                             PRtcd <> '*NRF   '                                       MD058476
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD058476
+     C                   EVAL      DBASE = 72                                               MD058476
+     C                   EVAL      DBKEY = 'CAP774'                                         MD058476
+     C                   EXSR      *PSSR                                                    MD058476
+     C                   ENDIF                                                              MD058476
+      *                                                                                     MD058476
+     C                   IF        PRtcd = *BLANKS                                          MD058476
+     C                   EVAL      CAP774 = 'Y'                                             MD058476
+     C     *DtaAra       Define    SCND24X7      SCND24X7S                                  MD058476
+     C                   In        SCND24X7S                                                MD058476
+     C                   Move      NDMODE        SNMODE            5                        MD058476
+     C                   ELSE                                                               MD058476
+     C                   EVAL      CAP774 = 'N'                                             MD058476
+     C                   ENDIF                                                              MD058476
+      *                                                                                     MD058476
                                                                                               CLE134
       ** Access SAR details to see if CLE134 is switched on.                                  CLE134
                                                                                               CLE134

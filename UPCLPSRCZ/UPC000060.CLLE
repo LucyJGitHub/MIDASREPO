@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
+/*       Prev Amend No. MD056250           Date 22Sep21              */
 /*       Last Amend No. MD058291 *CREATE   Date 22Sep21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056250 - UPC000049 and UPC000050 execution failed due to  */
+/*                  missing libraries                                */
 /*       MD058291 - Program UPC000049 has ended abnormally after     */
 /*                  accessing DDS files for non-migrated SDSARDPD    */
 /*                - Cloned UPC000050 to create new DDS SAR files     */
@@ -38,6 +41,7 @@
              DCL        VAR(&SDSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)                                  /*MD056250*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2019')
@@ -75,6 +79,28 @@
 
              CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PRFX *TCAT +
                              'DMLIB')
+                                                                                        /*MD056250*/
+             CHKOBJ     OBJ(&LIBMOV) OBJTYPE(*LIB)                                      /*MD056250*/
+/* If library does not exist then create it; check if user has authority to */          /*MD056250*/
+/*  the CRTLIB command.                                                     */          /*MD056250*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD056250*/
+                CHKOBJ     OBJ(CRTLIB) OBJTYPE(*CMD) AUT(*USE)                          /*MD056250*/
+                MONMSG     MSGID(CPF9802) EXEC(DO)                                      /*MD056250*/
+                   RTVMSG     MSGID(UPM0013) MSGF(UTMSGF) MSG(&MESSAGE)                 /*MD056250*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                 /*MD056250*/
+                  RTVMSG     MSGID(UPM0014) MSGF(UTMSGF) +
+                          MSGDTA(&LIBMOV) MSG(&MESSAGE)                                 /*MD056250*/
+                   CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                 /*MD056250*/
+                   CALL       PGM(SCC0010) PARM('UPC000050' 'ENTER' ' ')                /*MD056250*/
+                   CHGJOB     SWS(XXXXXX11)                                             /*MD056250*/
+                   GOTO       CMDLBL(ENDPGM)                                            /*MD056250*/
+                ENDDO                                                                   /*MD056250*/
+                                                                                        /*MD056250*/
+                RTVJOBA    DATE(&TODAY)                                                 /*MD056250*/
+                CRTLIB     LIB(&LIBMOV) TEXT('Temporary for Bridge' +
+                                *BCAT &TODAY)                                           /*MD056250*/
+                                                                                        /*MD056250*/
+             ENDDO                                                                      /*MD056250*/
              CHKOBJ     OBJ(&LIBMOV/SDSVALPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SDSVRF))
 

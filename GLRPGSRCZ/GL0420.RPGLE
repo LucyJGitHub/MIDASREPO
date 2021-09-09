@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. AR1068690          Date 14Dec12               *
-      *  Prev Amend No. 260897             Date 19Oct12               *
+      *  Last Amend No. MD058751           Date 03Sep21               *
+      *  Prev Amend No. AR1068690          Date 14Dec12               *
+      *                 260897             Date 19Oct12               *
       *                 244144             Date 19Oct12               *
       *                 UUC105             Date 19Oct20               *
       *                 UUC102             Date 16Oct20               *
@@ -166,6 +167,10 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *           CAR UUC103. Alphanumeric batch numbers not checked  *
+      *           correctly.                                          *
+      *           Hook GL0420CP15 amended.                            *
       *  AR1068690 - Apply 260897 244144 (Child:AR1069087)            *
       *  260897 - Negative rate shown on account statement.           *
       *  244144 - initialised arrays VDAR & VCAR after adding the     *

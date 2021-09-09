@@ -4,10 +4,14 @@
       *                                                               *
       *  GL0420CP15 - Balance Statements (A/C Formats)                *
       *                                                               *
-      *  Last Amend No. UUC102 *CREATE  Date 16Oct20                  *
+      *  Last Amend No. MD058751        Date 03Sep21                  *
+      *  Prev Amend No. UUC102 *CREATE  Date 16Oct20                  *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *             CAR UUC103. Alphanumeric batch numbers not        *
+      *             checked correctly.                                *
       *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
       *           UUC063 - Balance Statement Enhancement              *
       *                                                               *
@@ -26,6 +30,7 @@
       *                                                                         UUC102
      C     BTNB          IFEQ      ALP1                                         UUC102
      C     BINN          ANDEQ     ALP2                                         UUC102
+     C     BINN          OREQ      ALP2                                                     MD058751
      C                   MOVE      'Y'           XXXXXX                         UUC102
       **   Read Extended customer informations                                  UUC102
      C     KBTBI         SETLL     GLJENAP0                                     UUC102

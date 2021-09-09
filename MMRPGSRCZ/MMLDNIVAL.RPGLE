@@ -165,7 +165,7 @@
       *                                                               *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
       *              Initialise DDAIR to *BLANKS when Short Term Rate *
-      *              is not equal to .0000000                         *
+      *              is not equal to '.0000000'.                      *
       *  MD058734 - Default value for Day Basis Average based         *
       *             from Calculation Method 3,4 and 5.                *
       *  MD058547 - User cannot amend a call notice deposit taken     *

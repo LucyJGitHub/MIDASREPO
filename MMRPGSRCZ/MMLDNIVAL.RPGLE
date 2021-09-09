@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend no. MD058543           Date 09Sep21               *
+      *  Last Amend no. MD058543A          Date 09Sep21               *
       *  Prev Amend No. MD058734           Date 03Sep21               *
       *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
@@ -163,9 +163,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058543 - BADJ not included in DDAIR during amend of deal.  *
-      *             Initialise DDAIR to *BLANKS when Short Term Rate  *
-      *             is not equal to .0000000                          *
+      *  MD058543A - BADJ not included in DDAIR during amend of deal. *
+      *              Initialise DDAIR to *BLANKS when Short Term Rate *
+      *              is not equal to .0000000                         *
       *  MD058734 - Default value for Day Basis Average based         *
       *             from Calculation Method 3,4 and 5.                *
       *  MD058547 - User cannot amend a call notice deposit taken     *
@@ -2676,7 +2676,7 @@
                                                                                               CDL033
      C     DDSTRT        IFNE      *BLANKS                                                    259981
      C     DDSTRT        ANDNE     '0.0000000'                                                259981
-     C     DDSTRT        ANDNE     '.0000000'                                               MD058543
+     C     DDSTRT        ANDNE     '.0000000'                                              MD058543A
                                                                                               259981
       ** Initialize Actual Interest to *BLANKS                                              BUG10810
                                                                                             BUG10810

@@ -4,10 +4,13 @@
       *                                                               *
       *  GLH00403 - Midas GL Retrieve Postings by Network Account     *
       *                                                               *
-      *  Last Amend No. UUC103 *CREATE  Date 20Oct20                  *
+      *  Last Amend No. MD058767        Date 07Sep21                  *
+      *  Prev Amend No. UUC103 *CREATE  Date 20Oct20                  *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058767 - MT940s are producing many extra spaces in tag 86. *
+      *             Upgraded CAR UUC061 fix MD030976.                 *
       *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
       *           UUC061 - SWIFT Statement Enhancement                *
       *                                                               *
@@ -33,3 +36,11 @@
      D   MGADI4                                                                 UUC103
      D   MGADI5                                                                 UUC103
      D   MGADI6                                                                 UUC103
+     D   MGADXX                            dim(6) like(MGADI1)                              MD058767
+     D                                     overlay(GLExtNarr)                               MD058767
+     D wkftref         DS                                                                   MD058767
+     D  wkftre1                      65                                                     MD058767
+     D  wkftre2                      65                                                     MD058767
+     D  wkftre3                      65                                                     MD058767
+                                                                                            MD058767
+     D   FTREFXX       S                   dim(4) like(FTREF1)                              MD058767

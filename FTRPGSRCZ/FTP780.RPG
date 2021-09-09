@@ -1,0 +1,2117 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module.                               *
+      *                                                               *
+      *                                                               *
+      *  FTP780 - Checking for Insufficient Funds                     *
+      *                                                               *
+      *  Function:  To check if the Vostro Accnt of the Payment       *
+      *             being authorised has enough funds.                *
+      *                                                               *
+      *  Called by: FT0060 - Funds Transfer Payment Authorisation     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 25Jul11               *
+      *  Prev Amend No. MAR015             Date 12Apr06               *
+      *                 MAR013             Date 01Mar06               *
+      *                 PNL012 CHG001      Date 17Oct05               *
+      *                 PNL012             Date 16Sep05               *
+      *                 233571             Date 25May05               *
+      *                 MK0561             Date 16Mar05               *
+      *                 ESL038             Date 04Oct04               *
+      *                 EEE065             Date 29Jun2004             *
+      *                 E10003             Date 29Dec2004             *
+      *                 E00030             Date 12Dec2003             *
+      *                 ERN054  *Amend     Date 18Aug2003             *
+      *                 ERN054  *Create    Date 08Jul2003             *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *           - Customer number changed to 6 alpha.  Changed      *
+      *             program accordingly.                              *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           In core RSACMTPD file the FUND field has been       *
+      *           increased from 15 to 21 long in but in core         *
+      *           OTPAY  and INPAY files the field PREF has remained  *
+      *           15 long.                                            *
+      *           Moved FUND to ULFUND (15A) before chaining to file  *
+      *         - Account Code changes. Increased lenght of POACOD    *
+      *           W2ACOD                                              *
+      *  MAR015 - When processing non retail account read cleared     *
+      *           balance from ACCNTL0 instead of MEMOS.              *
+      *  MAR013 - PNL012 fixes. Add processing for IBAN.              *
+      *  PNL012 - CHG001                                              *
+      *  PNL012 - Account Payments Authorisation Processing           *
+      *           Also added 233571                                   *
+      *  233571 - Overdraft Line is being ignored in available funds  *
+      *           checking.                                           *
+      *  MK0561 - Set Branch Code correctly when accessing accounts   *
+      *           file.                                               *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE065 - User open of display                                *
+      *  E10003 - Rename branch on OTPAY and INPAY formats            *
+      *  ERN054 - If partial and positions 13 to 15 filled use        *
+      *  E00030 - Check exchange rate validity                        *
+      *  ERN054 - Agent Message Changes                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FMEMOSL1 IF  E           K        DISK
+      *
+     FRSACMTL1IF  E           K        DISK
+     F            APOSTPDF                          KIGNORE
+      *
+      * Include Shadow Post movements only
+      *
+     FOTPAY   IF  E           K        DISK                           UC
+      *
+      * Check for Unauthorised Outgoing Payments
+      *
+     FINPAY   IF  E           K        DISK                           UC
+      *
+      * Check for Unauthorised Incoming Payments
+      *
+     FFTP780DFCF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+      *
+      * Window display screen
+      *
+     FACCLOCV1IF  E           K        DISK
+      *
+      * Check if account has to be checked
+      *
+     FACCLOCV2IF  E           K        DISK                               PNL012
+      *                                                                   PNL012
+      * Check if account has to be checked (extra accounts)               PNL012
+      *                                                                   PNL012
+     FACCNTL0 IF  E           K        DISK                                                   MAR015
+      *                                                                                       MAR015
+      * Midas GL Account details - full a/c number                                            MAR015
+      *                                                                                       MAR015
+     FFTQUTEPDIF  E           K        DISK                                                   E00030
+      *                                                                                       E00030
+      * Quotation conventions                                                                 E00030
+      *                                                                                       E00030
+     FFTQOVRP0O   E                    DISK                                                   E00030
+      *                                                                                       E00030
+      * Quotation convention rate override seen                                               E00030
+      *                                                                                       E00030
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    20    Chain to MEMOS file                                  *
+      *    21    Insufficient Funds                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT  -  Initialisation routine                           *
+      *   #HATYP  -  Determine Accnt Type                             *
+      *   #HNOST  -  Processing for Nostro Accnt                      *
+      *   #HRETL  -  Processing for Retail Accnt                      *
+      *   #HPART  -  Processing for Partial Accnt                     *
+      *   #HFULL  -  Processing for full Accnt                        *
+      *   #HNCDE  -  Processing for Nostro Code                       *
+      *   #HFCHK  -  Fund Calculation and Insufficient Fund Checking  *
+      *   SRADJB  -  Fund Calculation and Insufficient Fund Checking  *
+      *   *PSSR   -  Error handling                                   *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      *
+      * Copyright notice for inclusion in all programs
+     E                    CPY@    1   1 80               Midas copyright
+     E                    DB1        29  1
+     E                    CMD@    1   1 80
+      **  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      **  Array of QCMDEXC command to edit
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *                                                                                       E10004
+     IOTPAYDDF    01                                                                          E10004
+     I              BRCA                            OPBRCA                                    E10004
+      *                                                                                       E10004
+     IINPAYDDF    01                                                                          E10004
+     I              BRCA                            INBRCA                                    E10004
+      *
+      *  Copysource for error processing
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource
+      *
+      ** Data structure for the Account being passed
+      *
+     IP@IDTA      DS                            256
+      * Party one
+     I                                        1   1 PITP1
+     I                                        2  36 PIPRY1
+      * Party two
+     I                                       37  37 PITP2
+     I                                       38  72 PIPRY2
+      * Party three
+     I                                       73  73 PITP3
+     I                                       74 108 PIPRY3
+      * Account currency, amount, date
+     I                                      109 111 PICCY
+     I                                      112 1260PIAMNT
+     I                                      127 1310PIPDTE
+      * Payment Reference and type
+     I                                      132 146 PIPREF
+     I                                      147 148 PIPTYP
+      * Branch of partys
+     I                                      149 151 PIBRC1
+     I                                      152 154 PIBRC2
+     I                                      155 157 PIBRC3
+      * Booking branch
+     I                                      158 160 PIBRCB
+      *                                                                                       E00030
+      * Screen rate not entered                                                               E00030
+     I                                      170 170 PISCRT                                    E00030
+      * Settelment currency and amount, rate, Pay currency and amount                         E00030
+     I                                      171 173 PISMCY                                    E00030
+     I                                      174 1860PISMAM                                    E00030
+     I                                      187 1999PIRATE                                    E00030
+     I                                      200 202 PIPCCY                                    E00030
+     I                                      203 2150PIPYAM                                    E00030
+     I                                      216 2300POEXAM                                    E00030
+     I                                      231 2438POEXRT                                    E00030
+      *                                                                                       E00030
+      *  Calling parameter data structure for AOCCYCV0                                        E00030
+      *                                                                                       E00030
+     ID#DTA       DS                            256                                           E00030
+      *                                       From Currency & amount                          E00030
+     I                                        1   3 D#FCCY                                    E00030
+     I                                    P   4  110D#FAMT                                    E00030
+      *                                       To Currency & amount                            E00030
+     I                                       12  14 D#TCCY                                    E00030
+     I                                    P  15  220D#TAMT                                    E00030
+      *                                       Rate and multi/div ind.                         E00030
+     I                                       23  23 D#MDIN                                    E00030
+     I                                    P  24  368D#RATE                                    E00030
+      *                            Output     Rate and multi/div ind.                         E00030
+      *                                       If no in rate                                   E00030
+     I                                       37  37 O#MDIN                                    E00030
+      *                                   P  38  508O#RATE                                    E00030
+      *                                                                                       E00030
+      *                                                                                       E00030
+     I/COPY FTCPYSRC,FT0010I001                                                               E00030
+      *                                                                                       E00030
+      *
+     IP@ODTA      DS                            256
+     I                                        1   3 POBRCA
+     I                                        4   9 POCNUM
+     I                                       10  12 POCCY
+     I*****                                  13  16 POACOD                                  AR856737
+     I*****                                  17  18 POACSQ                                  AR856737
+     I*****                                  19  330POCLBL                                  AR856737
+     I*****                                  34  480POODLN                                  AR856737
+     I*****                                  49  630POAVBL                                  AR856737
+     I*****                                  64  64 PODRCK                                  AR856737
+      **** Account Code has increased to 10 character                                       AR856737
+     I                                       13  22 POACOD                                  AR856737
+     I                                       23  24 POACSQ                                  AR856737
+     I                                       25  390POCLBL                                  AR856737
+     I                                       40  540POODLN                                  AR856737
+     I                                       55  690POAVBL                                  AR856737
+     I                                       70  70 PODRCK                                  AR856737
+      *
+     IW0DATA      DS                            256
+      *
+      *  Define data structure used to pass parameters
+      *
+     I                                        1   3 B#BRCA
+     I                                        4   4 O#ACTD
+     I                                        5  14 O#CPGM
+      *
+      * Account Details
+      *
+      ** Data structure for MEMO Dbase error key
+      *
+     I            DS
+     I                                        1  18 EMEMO
+     I                                        1   6 ECNNM
+     I                                        7   9 ECUCD
+     I*****                                  10  13 EACCD                                   AR856737
+     I*****                                  14  15 EACSQ                                   AR856737
+     I*****                                  16  18 EBRCD                                   AR856737
+     I                                       10  19 EACCD                                   AR856737
+     I                                       20  21 EACSQ                                   AR856737
+     I                                       22  24 EBRCD                                   AR856737
+      *
+      ** Data Structure for Dbase Error
+      *
+     ISDBANK    E DSSDBANKPD
+      * Bank Details accessed via access program
+      *
+     ISDNOST    E DSSDNOSTPD
+      * Nostro Details accessed via access program
+      *
+     ISDCUST    E DSSDCUSTPD
+      * Customer Details accessed via access program
+      *
+     ISDCURR    E DSSDCURRPD
+      * Currency Details accessed via access program
+      *
+     ISDCUHS    E DSSDCUHSPD                                                                  PNL012
+      * Currency Historical Details accessed via access program                               PNL012
+      *                                                                                       PNL012
+     IDSFDY     E DSDSFDY
+      * DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      * DS for access programs, short data structure
+      *
+     ID@ACCT    E DSACCNTAB
+      *
+      *  Account Details DS for assigning data from Access
+      *  Programs to work fields
+      *
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I/EJECT
+      *
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls     #HINIT  Initialisation routine                    *
+      *             #HATYP  Determine Account Type                    *
+      *             #HNOST  Processing for Nostro Accnt               *
+      *             #HRETL  Processing for Retail Accnt               *
+      *             #HPART  Processing for Partial Accnt              *
+      *             #HFCHK  Fund Calculation and Insufficient Funds   *
+      *                     Checking                                  *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Call Initial Routine
+      *
+     C                     EXSR #HINIT
+      *
+      **  Determine Accnt Type
+     C                     EXSR #HATYP
+      *
+      **  Process according to Accnt Type
+      *
+     C           @ATYP     CASEQ'F'       #HNOST
+     C           @ATYP     CASEQ'N'       #HNCDE
+     C           @ATYP     CASEQ'R'       #HRETL
+     C           @ATYP     CASEQ'P'       #HPART
+     C           @ATYP     CASEQ'G'       #HFULL
+     C           @ATYP     CASEQ'I'       #HIBAN                                              MAR013
+     C                     END
+      *
+     C                     EXSR #HCHK
+      *
+     C           ##CHK     IFEQ 'Y'
+      * If recalculate then do again
+     C           *IN05     DOUEQ*OFF
+     C           PNL012    IFEQ 'Y'                                       PNL012
+     C                     EXSR #HFCH1                                    PNL012
+     C                     ELSE                                           PNL012
+     C                     EXSR #HFCHK
+     C                     ENDIF                                          PNL012
+     C                     ENDDO
+     C                     END
+      *                                                                                       E00030
+      * If FX then cross check                                                                E00030
+      *                                                                                       E00030
+     C           PISMCY    IFNE *BLANKS                                                       E00030
+     C           PIPCCY    ANDNE*BLANKS                                                       E00030
+     C           PISMCY    ANDNEPIPCCY                                                        E00030
+     C* If recalculate then do again                                                          E00030
+     C           *IN05     DOUEQ*OFF                                                          E00030
+     C                     EXSR SRRATE                                                        E00030
+     C                     ENDDO                                                              E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      *
+      **  Exit program
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HINIT   : Initialisation Routine                           *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HINIT    BEGSR
+      *
+      ** Copyright insertion
+      *
+     C                     MOVEACPY@      MISYS@ 80
+      *
+      ** Declare Entry Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCE  7
+     C                     PARM           P@DSP   3
+     C                     PARM           P@IDTA
+     C                     PARM           P@ODTA
+     C                     PARM           P@AUTH  1                                       ESL038
+      *
+     C                     CLEARP@ODTA
+     C                     MOVEL*BLANKS   P@RTCE
+     C                     MOVE *BLANK    ATYP
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM           @OPTN   7        B:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * Open file OTPAY
+      *
+     C           FIL001    IFEQ *BLANKS
+      *
+      *  Override file OTPAY to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'OTPAY   'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN OTPAY
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      * Open file INPAY
+      *
+     C           FIL002    IFEQ *BLANKS
+      *
+      *  Override file INPAY to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'INPAY   'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN INPAY
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+      *
+      * Open file FTP780DF
+      *
+     C           FIL003    IFEQ *BLANKS
+     C           P@DSP     ANDNE'NO'                                                          EEE065
+     C                     OPEN FTP780DF
+     C                     MOVEL'Y'       FIL003  1
+     C                     END
+      *                                                                   PNL012
+      ** Only display the window if SAR PNL012 is active.                 PNL012
+      *                                                                   PNL012
+     C                     CALL 'AOSARDR0'                                PNL012
+     C                     PARM *BLANKS   @RTCD   7                       PNL012
+     C                     PARM '*KEY   ' @OPTN   7                       PNL012
+     C                     PARM 'PNL012'  @SARD   6                       PNL012
+     C                     PARM *BLANKS   DSFDY                           PNL012
+      *                                                                   PNL012
+     C                     MOVE 'N'       PNL012  1                       PNL012
+     C           @RTCD     IFEQ *BLANKS                                   PNL012
+     C                     MOVE 'Y'       PNL012                          PNL012
+     C                     ENDIF                                          PNL012
+      *                                                                   PNL012
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HCHK    : Subroutine to check whether checking is ok       *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HCHK     BEGSR
+      *
+     C                     MOVEL*BLANKS   ##CHK   1
+      *
+     C           KACCL     KLIST
+     C                     KFLD           ACBRCA
+     C                     KFLD           ACCNUM
+     C                     KFLD           ACCCY
+     C                     KFLD           ACACOD
+     C                     KFLD           ACACSQ
+      *
+     C                     MOVELBRCA      ACBRCA
+     C*****                Z-ADDCNUM      ACCNUM                                             MD31937
+     C                     MOVE CNUM      ACCNUM                                             MD31937
+     C                     MOVELCCY       ACCCY
+     C                     Z-ADDACOD      ACACOD
+     C                     Z-ADDACSQ      ACACSQ
+      *
+     C                     MOVELBRCA      POBRCA
+     C                     MOVELCNUM      POCNUM
+     C                     MOVELCCY       POCCY
+     C                     MOVELACOD      POACOD
+     C                     MOVELACSQ      POACSQ
+     C                     MOVEL*BLANKS   PODRCK
+      *
+     C           KACCL     CHAIN@CLOCV1              90
+      *
+     C                     SELEC
+     C           *IN90     WHEQ *OFF
+     C           ACDRCK    ANDEQ'Y'
+     C           ATYP      ANDEQ'R'
+     C           PNL012    ANDEQ'N'                                       PNL012
+     C           ACDRCK    OREQ 'Y'                                       PNL012
+     C           PNL012    ANDEQ'Y'                                       PNL012
+     C                     MOVEL'Y'       ##CHK
+     C                     MOVELACDRCK    PODRCK
+     C                     OTHER
+     C                     MOVEL'*NOCHK ' P@RTCE
+     C                     ENDSL
+      *
+     C           #XCHK     TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *   #HATYP   : Subroutine to Determine the Accnt type           *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HATYP    BEGSR
+      *
+      * Check for first blank party
+     C                     MOVEL*BLANKS   @ATYP   1
+     C           *LIKE     DEFN PITP3     ##TYPE
+     C           *LIKE     DEFN PIPRY3    ##PRTY
+     C           *LIKE     DEFN PIBRC3    ##BRCA
+     C                     MOVEL*BLANKS   ##TYPE
+     C                     MOVEL*BLANKS   ##PRTY
+     C                     MOVEL*BLANKS   ##BRCA                                              MAR013
+      *
+     C                     SELEC
+     C*****      PITP3     WHNE *BLANKS                                                       MAR013
+     C*****                MOVELPITP3     ##TYPE                                              MAR013
+     C*****                MOVELPIPRY3    ##PRTY                                              MAR013
+     C*****                MOVELPIBRC3    ##BRCA                                              MAR013
+     C*****      PITP2     WHNE *BLANKS                                                       MAR013
+     C*****                MOVELPITP2     ##TYPE                                              MAR013
+     C*****                MOVELPIPRY2    ##PRTY                                              MAR013
+     C*****                MOVELPIBRC2    ##BRCA                                              MAR013
+     C           PITP1     WHNE *BLANKS
+     C           PITP1     ANDNE'A'                                                           MAR013
+     C                     MOVELPITP1     ##TYPE
+     C                     MOVELPIPRY1    ##PRTY
+     C                     MOVELPIBRC1    ##BRCA
+     C           PITP2     WHNE *BLANKS                                                       MAR013
+     C           PITP2     ANDNE'A'                                                           MAR013
+     C                     MOVELPITP2     ##TYPE                                              MAR013
+     C                     MOVELPIPRY2    ##PRTY                                              MAR013
+     C                     MOVELPIBRC2    ##BRCA                                              MAR013
+     C           PITP3     WHNE *BLANKS                                                       MAR013
+     C           PITP3     ANDNE'A'                                                           MAR013
+     C                     MOVELPITP3     ##TYPE                                              MAR013
+     C                     MOVELPIPRY3    ##PRTY                                              MAR013
+     C                     MOVELPIBRC3    ##BRCA                                              MAR013
+     C                     ENDSL
+      *
+     C           ##TYPE    IFNE *BLANKS
+     C                     MOVEL##TYPE    @ATYP
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HNOST   : Processing for Nostro Accnt                      *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HNOST    BEGSR
+      *
+      **  Check for Nostro Accnt using Access object.
+      *
+     C           3         SUBST##PRTY:1  @KEYB
+     C           2         SUBST##PRTY:4  @KEYE
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANK    @KEYA   6
+     C                     PARM           @KEYB   3
+     C                     PARM *BLANK    @KEYC   4
+     C                     PARM *BLANK    @KEYD   2
+     C                     PARM           @KEYE   2
+     C                     PARM *BLANKS   @KEYG   3
+     C                     PARM *BLANKS   @KEYH  10
+     C                     PARM *BLANKS   @KEYI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'001'     DBASE            * DBERR 001 *
+     C           @KEYE     CAT  @KEYB:0   DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+      ** Record found. Determine Overdraft Limit and Relative Rec No.
+      ** in MEMOS.
+      *
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     MOVEAA7CUST    DB1,6
+     C                     MOVEAA7CYCD    DB1,9
+     C                     MOVEAA7ACCD    DB1,13
+     C                     MOVELA7ACSN    ##ACSN  2
+     C                     MOVEA##ACSN    DB1,15
+     C                     MOVEAA7BRCD    DB1,17
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM A7CUST    @CNNM   6        I:Customer Number
+     C                     PARM A7CYCD    @CUCD   3        I:Currency Code
+     C*****                PARM A7ACCD    @ACCD   4        I:Account Code Num               AR856737
+     C                     PARM A7ACCD    @ACCD  10        I:Account Code Num               AR856737
+     C                     PARM ##ACSN    @ACSQ   2        I:Account Sequence
+     C                     PARM A7BRCD    @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'002'     DBASE            * DBERR 002 *
+     C                     MOVEADB1       DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA  3
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HRETL   : Processing for Retail Accnt                      *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HRETL    BEGSR
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     MOVEL##PRTY    @RETL  10        I:Account Identifier
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM           @RETL  10        I:Account Identifier
+     C                     PARM *BLANKS   @CNNM   6        I:Customer Number
+     C                     PARM *BLANKS   @CUCD   3        I:Currency Code
+     C*****                PARM *BLANKS   @ACCD   4        I:Account Code Num               AR856737
+     C                     PARM *BLANKS   @ACCD  10        I:Account Code Num               AR856737
+     C                     PARM *BLANKS   @ACSQ   2        I:Account Sequence
+     C                     PARM *BLANKS   @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      **  If nor record found, output dbase error and return to
+      **  calling program.
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'003'     DBASE            * DBERR 003 *
+     C                     MOVEL##PRTY    DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HPART   : Processing for Partial Accnt                     *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HPART    BEGSR
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C           6         SUBST##PRTY:1  @CNNM   6        I:Customer Number
+     C                     MOVELPICCY     @CUCD   3        I:Currency Code
+     C*****      4         SUBST##PRTY:7  @ACCD   4        I:Account Code Num
+     C*****      2         SUBST##PRTY:11 @ACSQ   2        I:Account Sequence
+     C*****      3         SUBST##PRTY:13 @BRCD            I:Branch code                ERN054MK0561
+     C*****      3         SUBST##PRTY:16 @BRCD            I:Branch code                    AR856737
+     C           10        SUBST##PRTY:7  @ACCD  10        I:Account Code Num               AR856737
+     C           2         SUBST##PRTY:17 @ACSQ   2        I:Account Sequence               AR856737
+     C           3         SUBST##PRTY:19 @BRCD            I:Branch code                    AR856737
+     C           @BRCD     IFEQ *BLANKS                                                       ERN054
+     C                     MOVEL##BRCA    @BRCD   3        I:Branch code
+     C                     ENDIF                                                              ERN054
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM           @CNNM   6        I:Customer Number
+     C                     PARM           @CUCD   3        I:Currency Code
+     C*****                PARM           @ACCD   4        I:Account Code Num               AR856737
+     C                     PARM           @ACCD  10        I:Account Code Num               AR856737
+     C                     PARM           @ACSQ   2        I:Account Sequence
+     C                     PARM           @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      **  If nor record found, output dbase error and return to
+      **  calling program.
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'004'     DBASE            * DBERR 004 *
+     C           ##BRCA    CAT  ##PRTY:0  DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HFULL   : Processing for Full Accnt                        *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HFULL    BEGSR
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C           6         SUBST##PRTY:1  @CNNM   6        I:Customer Number
+     C           3         SUBST##PRTY:7  @CUCD   3        I:Currency Code
+     C*****      4         SUBST##PRTY:10 @ACCD   4        I:Account Code Num               AR856737
+     C*****      2         SUBST##PRTY:14 @ACSQ   2        I:Account Sequence               AR856737
+     C*****      3         SUBST##PRTY:16 @BRCD   3        I:Branch code                    AR856737
+     C           10        SUBST##PRTY:10 @ACCD            I:Account Code Num               AR856737
+     C           2         SUBST##PRTY:21 @ACSQ            I:Account Sequence               AR856737
+     C           3         SUBST##PRTY:23 @BRCD            I:Branch code                    AR856737
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM           @CNNM   6        I:Customer Number
+     C                     PARM           @CUCD   3        I:Currency Code
+     C*****                PARM           @ACCD   4        I:Account Code Num               AR856737
+     C                     PARM           @ACCD            I:Account Code Num               AR856737
+     C                     PARM           @ACSQ   2        I:Account Sequence
+     C                     PARM           @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      **  If nor record found, output dbase error and return to
+      **  calling program.
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'005'     DBASE            * DBERR 005 *
+     C                     MOVEL##PRTY    DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT                                                                                  MAR013
+      *****************************************************************                       MAR013
+      *   #HIBAN   : Processing for Iban Accnt                        *                       MAR013
+      *   Called by: Main process                                     *                       MAR013
+      *   Calls    : Nothing                                          *                       MAR013
+      *****************************************************************                       MAR013
+      *                                                                                       MAR013
+     C           #HIBAN    BEGSR                                                              MAR013
+      *                                                                                       MAR013
+      *  Call to Access Program - AOIBANR4 Check Account Number                               MAR013
+      *  Access Account Details file for the file fields                                      MAR013
+      *                                                                                       MAR013
+     C           1         SUBST##PRTY:1  ##001   1                                           MAR013
+     C           ##001     IFEQ '/'
+     C           34        SUBST##PRTY:2  @IBAN  34 P      I:IBAN Number                      MAR013
+     C                     ELSE
+     C           34        SUBST##PRTY:1  @IBAN     P      I:IBAN Number                      MAR013
+     C                     ENDIF
+      *                                                                                       MAR013
+     C                     CALL 'AOIBANR4'                                                    MAR013
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd                        MAR013
+     C                     PARM '*KEY'    @OPTN   7        B:Option                           MAR013
+     C                     PARM           @IBAN  34        I:IBAN Number                      MAR013
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format                           MAR013
+      *                                                                                       MAR013
+      **  If nor record found, output dbase error and return to                               MAR013
+      **  calling program.                                                                    MAR013
+      *                                                                                       MAR013
+     C           @RTCD     IFNE *BLANK                                                        MAR013
+     C                     MOVEL@RTCD     P@RTCE                                              MAR013
+     C                     MOVEL'ACCNT   'DBFILE           *************                      MAR013
+     C                     MOVEL'010'     DBASE            * DBERR 010 *                      MAR013
+     C                     MOVEL##PRTY    DBKEY            *************                      MAR013
+      *                                                                                       MAR013
+      ** Return to Calling program                                                            MAR013
+      *                                                                                       MAR013
+     C                     EXSR *PSSR                                                         MAR013
+      *                                                                                       MAR013
+     C                     ELSE                                                               MAR013
+     C                     MOVELBRCA      W0BRCA                                              MAR013
+      *                                                                                       MAR013
+     C                     END                                                                MAR013
+      *                                                                                       MAR013
+     C                     ENDSR                                                              MAR013
+      *                                                                                       MAR013
+     C/EJECT
+      *****************************************************************
+      *   #HNCDE   : Processing for Nostro Code                       *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HNCDE    BEGSR
+      *
+      **  Check for Nostro Accnt using Access object.
+      *
+     C                     MOVELPICCY     @KEYB
+     C           2         SUBST##PRTY:1  @KEYE
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANK    @KEYA
+     C                     PARM           @KEYB
+     C                     PARM *BLANK    @KEYC
+     C                     PARM *BLANK    @KEYD
+     C                     PARM           @KEYE
+     C                     PARM *BLANKS   @KEYG
+     C                     PARM *BLANKS   @KEYH
+     C                     PARM *BLANKS   @KEYI
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'006'     DBASE            * DBERR 006 *
+     C           @KEYE     CAT  @KEYB:0   DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+      ** Record found. Determine Overdraft Limit and Relative Rec No.
+      ** in MEMOS.
+      *
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+      *  Access Account Details file for the file fields
+      *
+     C                     MOVELA7ACSN    @ACSQ
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            B:Option
+     C                     PARM *BLANKS   @RETL            I:Account Identifier
+     C                     PARM A7CUST    @CNNM            I:Customer Number
+     C                     PARM A7CYCD    @CUCD            I:Currency Code
+     C                     PARM A7ACCD    @ACCD            I:Account Code Num
+     C                     PARM           @ACSQ            I:Account Sequence
+     C                     PARM A7BRCD    @BRCD            I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+      *
+      ** DB error if no customer number found for this currency/nostro
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'008'     DBASE            * DBERR 008 *
+     C                     MOVEADB1       DBKEY            *************
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HFCHK   : Fund Caluclation and Insufficient Fund Checking  *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HFCHK    BEGSR
+      *
+      * Define and set key for MEMOSL1
+      *
+     C           KMEMO     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+      *
+      **  Chain to MEMOS file to get the Shadow cleared balance.
+      *
+     C           KMEMO     CHAINMEMOSL1              20
+      *                                                                                       MAR015
+      **  If record not found - not retail nor nostro - try ACCNTL0                           MAR015
+      *                                                                                       MAR015
+     C           *IN20     IFEQ '1'                                                           MAR015
+     C           KMEMO     CHAINACCNTABF             20                                       MAR015
+     C                     Z-ADDCLBL      CLBLC                                               MAR015
+      *
+      **  If record not found issue a dbase errorr and return to
+      *   calling program.
+      *
+     C           *IN20     IFEQ '1'
+     C                     MOVEL'*NRFMEM' P@RTCE
+     C                     MOVEL'MEMOSL1' DBFILE           *************
+     C                     MOVEL'007'     DBASE            * DBERR 007 *
+     C                     MOVE CNUM      ECNNM            *************
+     C                     MOVE CCY       ECUCD
+     C                     MOVE ACOD      EACCD
+     C                     MOVE ACSQ      EACSQ
+     C                     MOVE BRCA      EBRCD
+     C                     MOVELEMEMO     DBKEY
+      *
+      ** Return to Calling program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *                                                                                       MAR015
+     C                     ELSE                                                               MAR015
+      *                                                                                       MAR015
+     C                     Z-ADDCLBLN     CLBLC  150
+      *                                                                                       MAR015
+     C                     ENDIF                                                              MAR015
+      *
+      ** Adjust Balance for unauthorised transactions
+      *
+     C                     MOVEL'YES'     ##MODE  3
+     C                     Z-ADD0         ##ADJB 150
+     C           ##MODE    IFEQ 'YES'
+     C                     EXSR SRADJB
+     C                     ENDIF
+      *
+      * Access settlement currency decimal places
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM CCY       @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@RTCD     P@RTCE
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'009'     DBASE            * DBERR 009 *
+     C                     MOVELCCY       DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Convert overdraft limit to same factor as cleared balance from MEMOS
+      **  (ODLN is in whole currency units whereas CLBLN is unformatted full
+      **  amount with decimal places)
+     C           *LIKE     DEFN ODLN      WODLN +03
+     C                     SELEC
+     C           A6NBDP    WHEQ 0
+     C                     Z-ADDODLN      WODLN
+     C           A6NBDP    WHEQ 1
+     C           ODLN      MULT 10        WODLN
+     C           A6NBDP    WHEQ 2
+     C           ODLN      MULT 100       WODLN
+     C           A6NBDP    WHEQ 3
+     C           ODLN      MULT 1000      WODLN
+     C                     OTHER
+     C                     MOVEL'*DECP'   P@RTCE
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'010'     DBASE            * DBERR 010 *
+     C                     MOVELA6NBDP    DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDSL
+      *
+      **  Compute for Insufficient fund.
+      *
+      * If Overdraft is 0
+      *
+     C           WODLN     SUB  CLBLN     @HRES  150
+     C           CLBLN     SUB  WODLN     ##AVB  150
+      *
+      **  If transaction is forward valued.
+      *
+      * Note in ##MODE amount has already been adjusted
+      *
+     C           PIPDTE    IFGT BJRDNB
+     C           ##MODE    OREQ 'YES'
+     C           @HRES     SUB  PIAMNT    @HRES
+     C***********CLBLN     ADD  PIAMNT    ##AVB                                               233571
+      *                                                                                       PNL012
+     C           PNL012    IFEQ 'Y'                                                           PNL012
+     C           CCY       ANDNEW1CCY                                                         PNL012
+      * Calculate amount 1                                                                    PNL012
+     C                     CLEARD#DTA                                                         PNL012
+      *                                                                                       PNL012
+     C           BJCYCD    IFEQ W1CCY                                                         PNL012
+     C*****                Z-ADDW1AMNT    D#TAMT                                        PNL012CHG001
+     C                     Z-ADD0         D#TAMT                                              CHG001
+     C                     ELSE                                                               PNL012
+      *                                                                                       PNL012
+     C*****                Z-ADDW1AMNT    D#FAMT                                        PNL012CHG001
+     C                     Z-ADD0         D#FAMT                                              CHG001
+     C           PIPDTE    IFGE BJRDNB                                                        PNL012
+     C                     MOVELA6MDIN    D#MDIN                                              PNL012
+     C                     Z-ADDA6SPRT    D#RATE                                              PNL012
+     C                     ELSE                                                               PNL012
+      *                                                                                       PNL012
+     C                     CALL 'AOCUHSR0'             9090                                   PNL012
+     C                     PARM '*MSG   ' @RTCD                                               PNL012
+     C                     PARM '*KEY   ' @OPTN                                               PNL012
+     C                     PARM PIPDTE    @DAT4   50                                          PNL012
+     C                     PARM W1CCY     @CUR4   3                                           PNL012
+     C           SDCUHS    PARM SDCUHS    DSSDY                                               PNL012
+      *                                                                                       PNL012
+     C           *IN90     IFEQ '1'                                                           PNL012
+     C           O#RTN     ORNE *BLANKS                                                       PNL012
+     C                     MOVEL'AOCUHSR0'DBFILE           ***************                    PNL012
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 30 *                    PNL012
+     C                     Z-ADD30        DBASE            ***************                    PNL012
+     C                     EXSR SRERR                                                         PNL012
+     C                     END                                                                PNL012
+      *                                                                                       PNL012
+     C                     Z-ADDG2SPRT    D#RATE                                              PNL012
+     C                     MOVE G2MDIN    D#MDIN                                              PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     MOVELW1CCY     D#FCCY                                              PNL012
+     C                     MOVELBJCYCD    D#TCCY                                              PNL012
+      *                                                                                       PNL012
+     C                     CALL 'AOCCYCV0'             9090                                   PNL012
+     C                     PARM *BLANKS   O#RTN   7                                           PNL012
+     C                     PARM '*F*T*RAT'W0ACT   8                                           PNL012
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           PNL012
+      *                                                                                       PNL012
+     C           *IN90     IFEQ '1'                                                           PNL012
+     C           O#RTN     ORNE *BLANKS                                                       PNL012
+     C                     MOVEL'AOCCYCV0'DBFILE           ***************                    PNL012
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 29 *                    PNL012
+     C                     Z-ADD29        DBASE            ***************                    PNL012
+     C                     EXSR SRERR                                                         PNL012
+     C                     END                                                                PNL012
+      *                                                                                       PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+      * Calculate amount 2                                                                    PNL012
+     C                     Z-ADDD#TAMT    D#FAMT                                              PNL012
+     C           PIPDTE    IFGE BJRDNB                                                        PNL012
+      * Access settlement currency decimal places                                             PNL012
+     C                     CALL 'AOCURRR0'                                                    PNL012
+     C                     PARM *BLANKS   @RTCD                                               PNL012
+     C                     PARM '*KEY    '@OPTN                                               PNL012
+     C                     PARM CCY       @CURR   3                                           PNL012
+     C           SDCURR    PARM SDCURR    DSSDY                                               PNL012
+      *                                                                                       PNL012
+     C           @RTCD     IFNE *BLANK                                                        PNL012
+     C                     MOVEL@RTCD     P@RTCE                                              PNL012
+     C                     MOVEL'SDCURRPD'DBFILE           *************                      PNL012
+     C                     MOVEL'031'     DBASE            * DBERR 031 *                      PNL012
+     C                     MOVELCCY       DBKEY            *************                      PNL012
+     C                     EXSR *PSSR                                                         PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C           A6MDIN    IFEQ 'D'                                                           PNL012
+     C                     MOVEL'M'       D#MDIN                                              PNL012
+     C                     ELSE                                                               PNL012
+     C                     MOVEL'D'       D#MDIN                                              PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     Z-ADDA6SPRT    D#RATE                                              PNL012
+     C                     ELSE                                                               PNL012
+      *                                                                                       PNL012
+     C                     CALL 'AOCUHSR0'             9090                                   PNL012
+     C                     PARM '*MSG   ' @RTCD                                               PNL012
+     C                     PARM '*KEY   ' @OPTN                                               PNL012
+     C                     PARM PIPDTE    @DAT4                                               PNL012
+     C                     PARM CCY       @CUR4                                               PNL012
+     C           SDCUHS    PARM SDCUHS    DSSDY                                               PNL012
+      *                                                                                       PNL012
+     C           *IN90     IFEQ '1'                                                           PNL012
+     C           O#RTN     ORNE *BLANKS                                                       PNL012
+     C                     MOVEL'AOCUHSR0'DBFILE           ***************                    PNL012
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 30 *                    PNL012
+     C                     Z-ADD30        DBASE            ***************                    PNL012
+     C                     EXSR SRERR                                                         PNL012
+     C                     END                                                                PNL012
+      *                                                                                       PNL012
+     C                     Z-ADDG2SPRT    D#RATE                                              PNL012
+      *                                                                                       PNL012
+     C           G2MDIN    IFEQ 'D'                                                           PNL012
+     C                     MOVEL'M'       D#MDIN                                              PNL012
+     C                     ELSE                                                               PNL012
+     C                     MOVEL'D'       D#MDIN                                              PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     MOVELBJCYCD    D#FCCY                                              PNL012
+     C                     MOVELCCY       D#TCCY                                              PNL012
+      *                                                                                       PNL012
+     C                     CALL 'AOCCYCV0'             9090                                   PNL012
+     C                     PARM *BLANKS   O#RTN   7                                           PNL012
+     C                     PARM '*F*T*RAT'W0ACT   8                                           PNL012
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           PNL012
+      *                                                                                       PNL012
+     C           *IN90     IFEQ '1'                                                           PNL012
+     C           O#RTN     ORNE *BLANKS                                                       PNL012
+     C                     MOVEL'AOCCYCV0'DBFILE           ***************                    PNL012
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 29 *                    PNL012
+     C                     Z-ADD29        DBASE            ***************                    PNL012
+     C                     EXSR SRERR                                                         PNL012
+     C                     END                                                                PNL012
+      *                                                                                       PNL012
+     C           ##AVB     ADD  D#TAMT    ##AVB                                               PNL012
+     C                     Z-ADDD#TAMT    PIAMNT                                              PNL012
+      *                                                                                       PNL012
+     C                     ELSE                                                               PNL012
+      *                                                                                       PNL012
+     C           ##AVB     ADD  PIAMNT    ##AVB                                               233571
+      *                                                                                       PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     END
+      *
+     C           ##AVB     IFGT 0
+     C                     MOVEL'*EXCEED' P@RTCE
+     C                     ELSE
+     C                     MOVEL*BLANKS   P@RTCE
+     C                     END
+      *
+      **  Pass back the full account to FTC0803. Details from ACCNTAB
+      *
+     C                     MOVELCNUM      POCNUM
+     C                     MOVELCCY       POCCY
+     C                     MOVELACOD      POACOD
+     C                     MOVELACSQ      POACSQ
+     C                     MOVELBRCA      POBRCA
+     C                     Z-ADDCLBLN     POCLBL
+     C                     Z-ADDWODLN     POODLN
+     C                     Z-ADD##AVB     POAVBL
+      *
+      *  Display window
+     C           P@DSP     IFEQ 'YES'
+     C           PNL012    ANDEQ'N'                                       PNL012
+     C           P@DSP     OREQ 'YES'                                     PNL012
+     C           P@RTCE    ANDNE*BLANKS                                   PNL012
+     C           PNL012    ANDEQ'Y'                                       PNL012
+     C                     EXSR SRDSPL
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT                                                              PNL012
+      *****************************************************************   PNL012
+      *   #HFCH1   : PNL012 funds calculation                         *   PNL012
+      *   Called by: Main process                                     *   PNL012
+      *   Calls    : Nothing                                          *   PNL012
+      *****************************************************************   PNL012
+      *                                                                   PNL012
+     C           #HFCH1    BEGSR                                          PNL012
+      *                                                                   PNL012
+     C           *LIKE     DEFN POCNUM    W1CNUM                          PNL012
+     C           *LIKE     DEFN POCCY     W1CCY                           PNL012
+     C           *LIKE     DEFN POACOD    W1ACOD                          PNL012
+     C           *LIKE     DEFN POACSQ    W1ACSQ                          PNL012
+     C           *LIKE     DEFN POBRCA    W1BRCA                          PNL012
+     C           *LIKE     DEFN POCLBL    W1CLBL                          PNL012
+     C           *LIKE     DEFN POODLN    W1ODLN                          PNL012
+     C           *LIKE     DEFN POAVBL    W1AVBL                          PNL012
+     C           *LIKE     DEFN PIAMNT    W1AMNT                          PNL012
+      *                                                                   PNL012
+     C                     MOVELPOCNUM    CNUM                            PNL012
+     C                     MOVELPOCCY     CCY                             PNL012
+     C                     MOVELPOACOD    ACOD                            PNL012
+     C                     MOVELPOACSQ    ACSQ                            PNL012
+     C                     MOVELPOBRCA    BRCA                            PNL012
+      *                                                                   PNL012
+     C                     MOVELPOCNUM    W1CNUM                          PNL012
+     C                     MOVELPOCCY     W1CCY                           PNL012
+     C                     MOVELPOACOD    W1ACOD                          PNL012
+     C                     MOVELPOACSQ    W1ACSQ                          PNL012
+     C                     MOVELPOBRCA    W1BRCA                          PNL012
+     C                     MOVELPIAMNT    W1AMNT                          PNL012
+      *                                                                   PNL012
+     C                     MOVE *OFF      *IN05                           PNL012
+      *                                                                   PNL012
+     C                     EXSR #HFCHK                                    PNL012
+      *                                                                   PNL012
+     C                     Z-ADDPOCLBL    W1CLBL                          PNL012
+     C                     Z-ADDPOODLN    W1ODLN                          PNL012
+     C                     Z-ADDPOAVBL    W1AVBL                          PNL012
+      *                                                                   PNL012
+     C           P@RTCE    IFEQ *BLANKS                                   PNL012
+     C           *IN05     ANDEQ*OFF                                      PNL012
+      *                                                                   PNL012
+     C*****                MOVELPOCNUM    W2CNUM  60                      PNL012           MD31937
+     C                     MOVELPOCNUM    W2CNUM  6                       PNL012           MD31937
+     C*****                MOVELPOACOD    W2ACOD  40                      PNL012 AR856737
+     C                     MOVELPOACOD    W2ACOD 100                      PNL012 AR856737
+     C                     MOVELPOACSQ    W2ACSQ  20                      PNL012
+      *                                                                   PNL012
+     C           W2CNUM    SETLL@CLOCV2                                   PNL012
+     C           W2CNUM    READE@CLOCV2                  22               PNL012
+      *                                                                   PNL012
+     C           *IN22     DOWEQ*OFF                                      PNL012
+     C           P@RTCE    ANDEQ*BLANKS                                   PNL012
+     C           *IN05     ANDEQ*OFF                                      PNL012
+      *                                                                   PNL012
+     C*****                MOVELW1AMNT    PIAMNT                    PNL012CHG001
+     C                     MOVEL*ZEROS    PIAMNT                          CHG001
+      *                                                                   PNL012
+     C           W2CNUM    IFNE ACCNUM                                    PNL012
+     C           W1CCY     ORNE ACCCY                                     PNL012
+     C           W2ACOD    ORNE ACACOD                                    PNL012
+     C           W2ACSQ    ORNE ACACSQ                                    PNL012
+     C           W1BRCA    ORNE ACBRCA                                    PNL012
+      *                                                                   PNL012
+     C           ACDRCK    IFEQ 'Y'                                       PNL012
+      *                                                                   PNL012
+     C                     MOVE ACCNUM    CNUM                            PNL012
+     C                     MOVE ACCCY     CCY                             PNL012
+     C                     MOVE ACACOD    ACOD                            PNL012
+     C                     MOVE ACACSQ    ACSQ                            PNL012
+     C                     MOVE ACBRCA    BRCA                            PNL012
+      *                                                                   PNL012
+     C                     MOVE ACCNUM    @CNNM                           PNL012
+     C                     MOVE ACACOD    @ACCD                           PNL012
+     C                     MOVE ACACSQ    @ACSQ                           PNL012
+      *                                                                   PNL012
+     C                     CALL 'AOACCTR0'                                PNL012
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd    PNL012
+     C                     PARM '*KEY'    @OPTN   7        B:Option       PNL012
+     C                     PARM *BLANKS   @RETL  10        I:Account IdentPNL012
+     C                     PARM           @CNNM   6        I:Customer NumbPNL012
+     C                     PARM CCY       @CUCD   3        I:Currency CodePNL012
+     C*****                PARM           @ACCD   4        I:Account Code PNL012            AR856737
+     C                     PARM           @ACCD  10        I:Account Code PNL012            AR856737
+     C                     PARM           @ACSQ   2        I:Account SequePNL012
+     C                     PARM BRCA      @BRCD   3        I:Branch code  PNL012
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format       PNL012
+      *                                                                   PNL012
+      ** DB error if no customer number found for this currency/nostro    PNL012
+      *                                                                   PNL012
+     C           @RTCD     IFNE *BLANK                                    PNL012
+     C                     MOVEL@RTCD     P@RTCE                          PNL012
+     C                     MOVEL'PNL012  'DBFILE           *************  PNL012
+     C                     MOVEL'012'     DBASE            * DBERR 012 *  PNL012
+     C                     MOVEADB1       DBKEY            *************  PNL012
+     C                     EXSR *PSSR                                     PNL012
+     C                     ENDIF                                          PNL012
+      *                                                                   PNL012
+     C                     EXSR #HFCHK                                    PNL012
+      *                                                                   PNL012
+     C                     ENDIF                                          PNL012
+      *                                                                   PNL012
+     C                     ENDIF                                          PNL012
+      *                                                                   PNL012
+     C           W2CNUM    READE@CLOCV2                  22               PNL012
+     C                     ENDDO                                          PNL012
+      *                                                                   PNL012
+     C           P@RTCE    IFEQ *BLANKS                                   PNL012
+     C           *IN05     OREQ *ON                                       PNL012
+     C                     MOVELW1CNUM    POCNUM                          PNL012
+     C                     MOVELW1CCY     POCCY                           PNL012
+     C                     MOVELW1ACOD    POACOD                          PNL012
+     C                     MOVELW1ACSQ    POACSQ                          PNL012
+     C                     MOVELW1BRCA    POBRCA                          PNL012
+     C                     Z-ADDW1CLBL    POCLBL                          PNL012
+     C                     Z-ADDW1ODLN    POODLN                          PNL012
+     C                     Z-ADDW1AVBL    POAVBL                          PNL012
+     C                     MOVELW1AMNT    PIAMNT                          PNL012
+     C                     ENDIF                                          PNL012
+      *                                                                   PNL012
+     C                     ENDIF                                          PNL012
+      *                                                                   PNL012
+     C                     ENDSR                                          PNL012
+      *                                                                                       E00030
+     C/EJECT                                                                                  E00030
+      *****************************************************************                       E00030
+      *   SRRATE - Display FX Rate verification                       *                       E00030
+      *   Called by - Main                                            *                       E00030
+      *****************************************************************                       E00030
+      *                                                                                       E00030
+     C           SRRATE    BEGSR                                                              E00030
+      *                                                                                       E00030
+      * Check that quotation convention exists                                                E00030
+     C           KQUTE     KLIST                                                              E00030
+     C                     KFLD           FTFCCY                                              E00030
+     C                     KFLD           FTTCCY                                              E00030
+      *                                                                                       E00030
+     C                     MOVELPISMCY    FTFCCY                                              E00030
+     C                     MOVELPIPCCY    FTTCCY                                              E00030
+     C           KQUTE     CHAIN@QUTEPD              90                                       E00030
+     C           *IN90     IFEQ *ON                                                           E00030
+     C                     GOTO EXRATE                                                        E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      * Calculate amount                                                                      E00030
+      *                                                                                       E00030
+     C                     CLEARD#DTA                                                         E00030
+     C                     Z-ADDPISMAM    D#FAMT                                              E00030
+      *                                                                                       E00030
+     C                     MOVELFTCFLG    D#MDIN                                              E00030
+      *                                                                                       E00030
+     C                     Z-ADDPIRATE    D#RATE                                              E00030
+     C                     MOVELPISMCY    D#FCCY                                              E00030
+     C                     MOVELPIPCCY    D#TCCY                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'AOCCYCV0'             9090                                   E00030
+     C                     PARM *BLANKS   O#RTN   7                                           E00030
+     C                     PARM '*F*T*RAT'W0ACT   8                                           E00030
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           E00030
+      *                                                                                       E00030
+     C           *IN90     IFEQ '1'                                                           E00030
+     C           O#RTN     ORNE *BLANKS                                                       E00030
+     C                     MOVEL'AOCCYCV0'DBFILE           ***************                    E00030
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 28 *                    E00030
+     C                     Z-ADD28        DBASE            ***************                    E00030
+     C                     EXSR SRERR                                                         E00030
+     C                     END                                                                E00030
+      *                                                                                       E00030
+     C           *LIKE     DEFN D#TAMT    ##CAMT                                              E00030
+     C                     Z-ADDD#TAMT    ##CAMT                                              E00030
+      *                                                                                       E00030
+     C                     SELEC                                                              E00030
+      * If quotation convention is M                                                          E00030
+     C           FTCFLG    WHEQ 'M'                                                           E00030
+      *                                                                                       E00030
+     C                     CLEARD#DTA                                                         E00030
+     C                     Z-ADDPISMAM    D#FAMT                                              E00030
+      *                                                                                       E00030
+     C                     MOVEL'D'       D#MDIN                                              E00030
+      *                                                                                       E00030
+     C                     Z-ADDPIRATE    D#RATE                                              E00030
+     C                     MOVELPISMCY    D#FCCY                                              E00030
+     C                     MOVELPIPCCY    D#TCCY                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'AOCCYCV0'             9090                                   E00030
+     C                     PARM *BLANKS   O#RTN   7                                           E00030
+     C                     PARM '*F*T*RAT'W0ACT   8                                           E00030
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           E00030
+      *                                                                                       E00030
+     C           *IN90     IFEQ '1'                                                           E00030
+     C           O#RTN     ORNE *BLANKS                                                       E00030
+     C                     MOVEL'AOCCYCV0'DBFILE           ***************                    E00030
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 28 *                    E00030
+     C                     Z-ADD28        DBASE            ***************                    E00030
+     C                     EXSR SRERR                                                         E00030
+     C                     END                                                                E00030
+      *                                                                                       E00030
+     C                     Z-ADDD#TAMT    POEXAM                                              E00030
+      *                                                                                       E00030
+      * If quotation convention is D                                                          E00030
+     C           FTCFLG    WHEQ 'D'                                                           E00030
+      *                                                                                       E00030
+     C                     CLEARD#DTA                                                         E00030
+     C                     Z-ADDPISMAM    D#FAMT                                              E00030
+      *                                                                                       E00030
+     C                     MOVEL'M'       D#MDIN                                              E00030
+      *                                                                                       E00030
+     C                     Z-ADDPIRATE    D#RATE                                              E00030
+     C                     MOVELPISMCY    D#FCCY                                              E00030
+     C                     MOVELPIPCCY    D#TCCY                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'AOCCYCV0'             9090                                   E00030
+     C                     PARM *BLANKS   O#RTN   7                                           E00030
+     C                     PARM '*F*T*RAT'W0ACT   8                                           E00030
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           E00030
+      *                                                                                       E00030
+     C           *IN90     IFEQ '1'                                                           E00030
+     C           O#RTN     ORNE *BLANKS                                                       E00030
+     C                     MOVEL'AOCCYCV0'DBFILE           ***************                    E00030
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 28 *                    E00030
+     C                     Z-ADD28        DBASE            ***************                    E00030
+     C                     EXSR SRERR                                                         E00030
+     C                     END                                                                E00030
+      *                                                                                       E00030
+     C                     Z-ADDD#TAMT    POEXAM                                              E00030
+      *                                                                                       E00030
+     C                     OTHER                                                              E00030
+     C                     GOTO EXRATE                                                        E00030
+     C                     ENDSL                                                              E00030
+      *                                                                                       E00030
+      * Calculate spot equivalent                                                             E00030
+     C                     CLEARD#DTA                                                         E00030
+      *                                                                                       E00030
+     C                     Z-ADDPISMAM    D#FAMT                                              E00030
+      *                                                                                       E00030
+     C                     MOVELPISMCY    D#FCCY                                              E00030
+     C                     MOVELPIPCCY    D#TCCY                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'AOCCYCV0'             9090                                   E00030
+     C                     PARM *BLANKS   O#RTN   7                                           E00030
+     C                     PARM '*F*T*SPT'W0ACT   8                                           E00030
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           E00030
+      *                                                                                       E00030
+     C           *IN90     IFEQ '1'                                                           E00030
+     C           O#RTN     ORNE *BLANKS                                                       E00030
+     C                     MOVEL'AOCCYCV0'DBFILE           ***************                    E00030
+     C                     MOVEL'*CALL'   DBKEY            * DB ERROR 28 *                    E00030
+     C                     Z-ADD28        DBASE            ***************                    E00030
+     C                     EXSR SRERR                                                         E00030
+     C                     END                                                                E00030
+      *                                                                                       E00030
+      * Calculate spread equivalent amount                                                    E00030
+     C                     CLEARP#0010                                                        E00030
+      *                                                                                       E00030
+     C                     MOVELPISMCY    P#FRCY                                              E00030
+     C                     Z-ADDPISMAM    P#FRAM                                              E00030
+      *                                                                                       E00030
+     C                     MOVELPIPCCY    P#TOCY                                              E00030
+      *                                                                                       E00030
+     C                     Z-ADDBJRDNB    P#FRDT                                              E00030
+     C                     Z-ADDBJRDNB    P#TODT                                              E00030
+     C                     MOVEL'Y'       P#SDIN                                              E00030
+     C*****                Z-ADD0         P#TOAM                                              E00030
+     C*****                Z-ADD0         P#RATE                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'FT0010'                                                      E00030
+     C                     PARM           P#0010                                              E00030
+      *                                                                                       E00030
+      * Check is quoted rate and spread rate are on the same side                             E00030
+      * Both greater than 1                                                                   E00030
+     C           PIRATE    IFGE 1                                                             E00030
+     C           P#RATE    ANDGE1                                                             E00030
+     C                     GOTO EXRATE                                                        E00030
+     C                     ENDIF                                                              E00030
+      * Both less than                                                                        E00030
+     C           PIRATE    IFLT 1                                                             E00030
+     C           P#RATE    ANDLT1                                                             E00030
+     C                     GOTO EXRATE                                                        E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+     C           *LIKE     DEFN PIRATE    ##TOP                                               E00030
+     C           *LIKE     DEFN ##TOP     ##BOT                                               E00030
+      * Set default spread to be 10%                                                          E00030
+     C                     Z-ADD1.1       ##TOP                                               E00030
+     C                     Z-ADD0.9       ##BOT                                               E00030
+      *                                                                                       E00030
+      * If no error then set spread to 2.5%                                                   E00030
+     C           P#INDC    IFEQ '0000'                                                        E00030
+     C                     Z-ADDP#TOAM    D#TAMT                                              E00030
+     C                     Z-ADD1.025     ##TOP                                               E00030
+     C                     Z-ADD0.975     ##BOT                                               E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+     C           *LIKE     DEFN D#TAMT    ##UPPR                                              E00030
+     C           *LIKE     DEFN D#TAMT    ##LWER                                              E00030
+     C           D#TAMT    MULT ##TOP     ##UPPR                                              E00030
+     C           D#TAMT    MULT ##BOT     ##LWER                                              E00030
+      *                                                                                       E00030
+      * If amount in range ok                                                                 E00030
+     C           PIPYAM    IFGE ##LWER                                                        E00030
+     C           PIPYAM    ANDLE##UPPR                                                        E00030
+     C                     GOTO EXRATE                                                        E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      *                                                                                       E00030
+      * Get customer name                                                                     E00030
+     C                     MOVELCNUM      P@CUST    P                                         E00030
+     C                     CALL 'AOCUSTR0'             9090                                   E00030
+     C                     PARM *BLANKS   P@RTCD  7                                           E00030
+     C                     PARM '*KEY   ' P@OPTN  7                                           E00030
+     C                     PARM           P@CUST 10                                           E00030
+     C                     PARM *BLANKS   P@KYST  7                                           E00030
+     C           SDCUST    PARM *BLANKS   DSSDY                                               E00030
+      *                                                                                       E00030
+     C                     MOVELBBCRNM    #1ACNM    P                                         E00030
+      *                                                                                       E00030
+      * Set position                                                                          E00030
+     C                     Z-ADD7         SWROW                                               E00030
+     C                     Z-ADD7         SWCOL                                               E00030
+      * Format account                                                                        E00030
+     C                     MOVELBRCA      #1ACCT    P                                         E00030
+     C                     MOVELCNUM      ##006A  6 P                                         E00030
+     C           #1ACCT    CAT  '-':0     #1ACCT                                              E00030
+     C           #1ACCT    CAT  ##006A:0  #1ACCT                                              E00030
+     C           #1ACCT    CAT  '-':0     #1ACCT                                              E00030
+     C           #1ACCT    CAT  CCY:0     #1ACCT                                              E00030
+     C                     MOVELACOD      ##004A  4 P                                         E00030
+     C           #1ACCT    CAT  '-':0     #1ACCT                                              E00030
+     C           #1ACCT    CAT  ##004A:0  #1ACCT                                              E00030
+     C                     MOVELACSQ      ##002A  2 P                                         E00030
+     C           #1ACCT    CAT  '-':0     #1ACCT                                              E00030
+     C           #1ACCT    CAT  ##002A:0  #1ACCT                                              E00030
+      *                                                                                       E00030
+     C                     MOVELPISMCY    #1SMCY                                              E00030
+      *                                                                                       E00030
+      * Access settlement currency decimal places                                             E00030
+     C                     CALL 'AOCURRR0'                                                    E00030
+     C                     PARM *BLANKS   @RTCD                                               E00030
+     C                     PARM '*KEY    '@OPTN                                               E00030
+     C                     PARM PISMCY    @CURR   3                                           E00030
+     C           SDCURR    PARM SDCURR    DSSDY                                               E00030
+      *                                                                                       E00030
+     C           @RTCD     IFNE *BLANK                                                        E00030
+     C                     MOVEL@RTCD     P@RTCE                                              E00030
+     C                     MOVEL'SDCURRPD'DBFILE           *************                      E00030
+     C                     MOVEL'099'     DBASE            * DBERR 009 *                      E00030
+     C                     MOVELCCY       DBKEY            *************                      E00030
+     C                     EXSR *PSSR                                                         E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      * Format amounts                                                                        E00030
+     C                     Z-ADDA6NBDP    ZADEC                                               E00030
+      * Current balance                                                                       E00030
+     C                     MOVEL*BLANKS   #1SMAM                                              E00030
+     C                     Z-ADDPISMAM    ##015N                                              E00030
+     C                     MOVE ##015N    ZFIELD                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'ZEDIT'                9090                                   E00030
+     C                     PARM           ZFIELD 16        B:Function Field                   E00030
+     C                     PARM           ZADEC   10       I:No of decimals                   E00030
+      *                                                                                       E00030
+     C                     MOVE ZFIELD    #1SMAM                                              E00030
+      *                                                                                       E00030
+      * Pay Amount                                                                            E00030
+     C                     MOVELPIPCCY    #1PCCY                                              E00030
+      *                                                                                       E00030
+      * Access settlement currency decimal places                                             E00030
+     C                     CALL 'AOCURRR0'                                                    E00030
+     C                     PARM *BLANKS   @RTCD                                               E00030
+     C                     PARM '*KEY    '@OPTN                                               E00030
+     C                     PARM PIPCCY    @CURR   3                                           E00030
+     C           SDCURR    PARM SDCURR    DSSDY                                               E00030
+      *                                                                                       E00030
+     C           @RTCD     IFNE *BLANK                                                        E00030
+     C                     MOVEL@RTCD     P@RTCE                                              E00030
+     C                     MOVEL'SDCURRPD'DBFILE           *************                      E00030
+     C                     MOVEL'099'     DBASE            * DBERR 009 *                      E00030
+     C                     MOVELCCY       DBKEY            *************                      E00030
+     C                     EXSR *PSSR                                                         E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      * Format amounts                                                                        E00030
+     C                     Z-ADDA6NBDP    ZADEC                                               E00030
+      * Current balance                                                                       E00030
+     C                     MOVEL*BLANKS   #1PYAM                                              E00030
+     C                     Z-ADDPIPYAM    ##015N                                              E00030
+     C                     MOVE ##015N    ZFIELD                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'ZEDIT'                9090                                   E00030
+     C                     PARM           ZFIELD 16        B:Function Field                   E00030
+     C                     PARM           ZADEC   10       I:No of decimals                   E00030
+      *                                                                                       E00030
+     C                     MOVE ZFIELD    #1PYAM                                              E00030
+      *                                                                                       E00030
+      * Expected Amount                                                                       E00030
+     C                     MOVELPIPCCY    #1EXCY                                              E00030
+      *                                                                                       E00030
+      * Access settlement currency decimal places                                             E00030
+     C                     CALL 'AOCURRR0'                                                    E00030
+     C                     PARM *BLANKS   @RTCD                                               E00030
+     C                     PARM '*KEY    '@OPTN                                               E00030
+     C                     PARM PIPCCY    @CURR   3                                           E00030
+     C           SDCURR    PARM SDCURR    DSSDY                                               E00030
+      *                                                                                       E00030
+     C           @RTCD     IFNE *BLANK                                                        E00030
+     C                     MOVEL@RTCD     P@RTCE                                              E00030
+     C                     MOVEL'SDCURRPD'DBFILE           *************                      E00030
+     C                     MOVEL'099'     DBASE            * DBERR 009 *                      E00030
+     C                     MOVELCCY       DBKEY            *************                      E00030
+     C                     EXSR *PSSR                                                         E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      * Format amounts                                                                        E00030
+     C                     Z-ADDA6NBDP    ZADEC                                               E00030
+      * Current balance                                                                       E00030
+     C                     MOVEL*BLANKS   #1EXAM                                              E00030
+     C                     Z-ADDPOEXAM    ##015N                                              E00030
+     C                     MOVE ##015N    ZFIELD                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'ZEDIT'                9090                                   E00030
+     C                     PARM           ZFIELD 16        B:Function Field                   E00030
+     C                     PARM           ZADEC   10       I:No of decimals                   E00030
+      *                                                                                       E00030
+     C                     MOVE ZFIELD    #1EXAM                                              E00030
+      *                                                                                       E00030
+      * Format rate                                                                           E00030
+     C                     Z-ADD8         ZADEC                                               E00030
+      * Current balance                                                                       E00030
+     C                     MOVEL*BLANKS   #1RATE                                              E00030
+     C           PIRATE    MULT 100000000 ##015N                                              E00030
+     C                     MOVE ##015N    ZFIELD                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'ZEDIT'                9090                                   E00030
+     C                     PARM           ZFIELD 16        B:Function Field                   E00030
+     C                     PARM           ZADEC   10       I:No of decimals                   E00030
+      *                                                                                       E00030
+     C                     MOVE ZFIELD    #1RATE                                              E00030
+      * Expected rate                                                                         E00030
+     C                     MOVEL*BLANKS   #1EXRT                                              E00030
+     C           1         DIV  PIRATE    POEXRT    H                                         E00030
+     C           POEXRT    MULT 100000000 ##015N                                              E00030
+     C                     MOVE ##015N    ZFIELD                                              E00030
+      *                                                                                       E00030
+     C                     CALL 'ZEDIT'                9090                                   E00030
+     C                     PARM           ZFIELD 16        B:Function Field                   E00030
+     C                     PARM           ZADEC   10       I:No of decimals                   E00030
+      *                                                                                       E00030
+     C                     MOVE ZFIELD    #1EXRT                                              E00030
+      *                                                                                       E00030
+     C                     MOVELPIPREF    QOPREF                                              E00030
+     C                     MOVEL##JOB     QOAJOB                                              E00030
+     C                     MOVEL##USR     QOAUSR                                              E00030
+     C                     MOVEL##JNO     QOAJNO                                              E00030
+     C                     TIME           QOATIM                                              E00030
+      *                                                                                       E00030
+     C                     WRITE@QOVRP0                                                       E00030
+      *                                                                                       E00030
+     C                     MOVEL*BLANKS   ##WDSP  1                                           E00030
+      * Display                                                                               E00030
+     C                     DO   *HIVAL                                                        E00030
+      *                                                                                       E00030
+     C           ##WDSP    IFNE *BLANKS                                                       E00030
+     C                     WRITE#MSGCTL                                                       E00030
+     C                     ENDIF                                                              E00030
+     C                     MOVEL'Y'       ##WDSP  1                                           E00030
+      *                                                                                       E00030
+     C********   P@RTCE    IFNE *BLANKS                                                       E00030
+     C********             MOVEL*ON       *IN78                                               E00030
+     C********             ELSE                                                               E00030
+     C                     MOVEL*OFF      *IN78                                               E00030
+     C********             ENDIF                                                              E00030
+      *                                                                                       E00030
+     C                     EXFMTFTP780W2                                                      E00030
+      * Clear messages from program message queue                                             E00030
+     C                     CALL 'Y2CLMSC'                                                     E00030
+     C                     PARM ##PGM     ZAPGMQ 10                                           E00030
+     C                     PARM '*SAME'   ZAPGRL  5                                           E00030
+      *                                                                                       E00030
+     C           *IN05     IFEQ *ON                                                           E00030
+     C           *IN10     OREQ *OFF                                                          E00030
+     C           *IN05     ANDEQ*OFF                                                          E00030
+     C                     LEAVE                                                              E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+     C           *IN10     IFEQ *ON                                                           E00030
+      *                                                                                       E00030
+      * Set up data for check                                                                 E00030
+      *                                                                                       E00030
+     C                     CLEARW0DATA                                                        E00030
+     C                     MOVELPIBRCB    B#BRCA                                              E00030
+     C                     MOVEL'O'       O#ACTD                                              E00030
+     C                     MOVEL##PGM     O#CPGM                                              E00030
+      *                                                                                       E00030
+      * Check all valid actions                                                               E00030
+      *                                                                                       E00030
+     C                     CALL 'ME1190'               9090                                   E00030
+     C                     PARM *BLANKS   P0RTN   7                                           E00030
+     C                     PARM '*ACTCODE'W0ACT   8                                           E00030
+     C                     PARM           W0DATA                                              E00030
+      *                                                                                       E00030
+      * Option ended in error                                                                 E00030
+      *                                                                                       E00030
+     C           *IN90     IFEQ '1'                                                           E00030
+     C                     MOVEL'MIN0019' FTMSID                                              E00030
+     C                     MOVEL'MEMSG'   FTMSGF                                              E00030
+     C                     EXSR FTSNMS                                                        E00030
+     C                     END                                                                E00030
+      *                                                                                       E00030
+      * Invalid action                                                                        E00030
+      *                                                                                       E00030
+     C           P0RTN     IFNE *BLANKS                                                       E00030
+     C                     MOVEL'BAE0001' FTMSID                                              E00030
+     C                     MOVEL'FTUSRMSG'FTMSGF                                              E00030
+     C                     EXSR FTSNMS                                                        E00030
+     C                     ENDIF                                                              E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+      * Override allowed                                                                      E00030
+      *                                                                                       E00030
+     C           *IN90     IFEQ *OFF                                                          E00030
+     C           P0RTN     ANDEQ*BLANKS                                                       E00030
+     C           P@AUTH    ANDEQ'Y'                                                           E00030
+     C                     MOVEL'*OVER  ' P@RTCE                                              E00030
+     C                     LEAVE                                                              E00030
+     C                     ENDIF                                                              E00030
+      *                                                                                       E00030
+     C                     ENDDO                                                              E00030
+      *                                                                                       E00030
+     C           EXRATE    TAG                                                                E00030
+      *                                                                                       E00030
+     C                     ENDSR                                                              E00030
+      *                                                                                       E00030
+     C/EJECT
+      *****************************************************************
+      *   SRDSPL - Display balance information                        *
+      *   Called by - #HFCHK Check Sufficient Funds                   *
+      *****************************************************************
+      *
+     C           SRDSPL    BEGSR
+      *
+      * Get customer name
+     C                     MOVELCNUM      P@CUST    P
+     C                     CALL 'AOCUSTR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM           P@CUST 10
+     C                     PARM *BLANKS   P@KYST  7
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *
+     C                     MOVELBBCRNM    #1ACNM    P
+      *
+      * Set position
+     C                     Z-ADD5         SWROW
+     C                     Z-ADD5         SWCOL
+      * Format account
+     C                     MOVELBRCA      #1ACCT    P
+     C                     MOVELCNUM      ##006A  6 P
+     C           #1ACCT    CAT  '-':0     #1ACCT
+     C           #1ACCT    CAT  ##006A:0  #1ACCT
+     C           #1ACCT    CAT  '-':0     #1ACCT
+     C           #1ACCT    CAT  CCY:0     #1ACCT
+     C                     MOVELACOD      ##004A  4 P
+     C           #1ACCT    CAT  '-':0     #1ACCT
+     C           #1ACCT    CAT  ##004A:0  #1ACCT
+     C                     MOVELACSQ      ##002A  2 P
+     C           #1ACCT    CAT  '-':0     #1ACCT
+     C           #1ACCT    CAT  ##002A:0  #1ACCT
+      *
+      * Format amounts
+     C                     Z-ADDA6NBDP    ZADEC
+      * Current balance
+     C                     MOVEL*BLANKS   #1CLBS
+     C           CLBLC     IFLT 0
+     C                     MOVEL'Cr'      #1CLBS
+     C                     Z-SUBCLBLC     ##015N 150
+     C                     ELSE
+     C                     MOVEL'Dr'      #1CLBS
+     C                     Z-ADDCLBLC     ##015N
+     C                     ENDIF
+     C                     MOVE ##015N    ZFIELD
+      *
+     C                     CALL 'ZEDIT'                9090
+     C                     PARM           ZFIELD 16        B:Function Field
+     C                     PARM           ZADEC   10       I:No of decimals
+      *
+     C                     MOVE ZFIELD    #1CLBA
+      * Unauthorised
+     C                     MOVEL*BLANKS   #1UNPS
+     C           ##ADJB    IFLT 0
+     C                     MOVEL'Cr'      #1UNPS
+     C                     Z-SUB##ADJB    ##015N 150
+     C                     ELSE
+     C                     MOVEL'Dr'      #1UNPS
+     C                     Z-ADD##ADJB    ##015N
+     C                     ENDIF
+     C                     MOVE ##015N    ZFIELD
+      *
+     C                     CALL 'ZEDIT'                9090
+     C                     PARM           ZFIELD 16        B:Function Field
+     C                     PARM           ZADEC   10       I:No of decimals
+      *
+     C                     MOVE ZFIELD    #1UNPA
+      * Clean balance
+     C                     MOVEL*BLANKS   #1CLNS
+     C           CLBLN     IFLT 0
+     C                     MOVEL'Cr'      #1CLNS
+     C                     Z-SUBCLBLN     ##015N 150
+     C                     ELSE
+     C                     MOVEL'Dr'      #1CLNS
+     C                     Z-ADDCLBLN     ##015N
+     C                     ENDIF
+     C                     MOVE ##015N    ZFIELD
+      *
+     C                     CALL 'ZEDIT'                9090
+     C                     PARM           ZFIELD 16        B:Function Field
+     C                     PARM           ZADEC   10       I:No of decimals
+      *
+     C                     MOVE ZFIELD    #1CLNA
+      * Payment amount
+     C                     MOVEL*BLANKS   #1AUPS
+     C           PIAMNT    IFLT 0
+     C                     MOVEL'Cr'      #1AUPS
+     C                     Z-SUBPIAMNT    ##015N 150
+     C                     ELSE
+     C                     MOVEL'Dr'      #1AUPS
+     C                     Z-ADDPIAMNT    ##015N
+     C                     ENDIF
+     C                     MOVE ##015N    ZFIELD
+      *
+     C                     CALL 'ZEDIT'                9090
+     C                     PARM           ZFIELD 16        B:Function Field
+     C                     PARM           ZADEC   10       I:No of decimals
+      *
+     C                     MOVE ZFIELD    #1AUPA
+      * Overdraft line
+     C                     MOVE WODLN     ZFIELD
+     C                     MOVEL*BLANKS   #1OVDS
+     C           WODLN     IFLT 0
+     C                     MOVEL'Cr'      #1OVDS
+     C                     Z-SUBWODLN     ##015N 150
+     C                     ELSE
+     C                     MOVEL'Dr'      #1OVDS
+     C                     Z-ADDWODLN     ##015N
+     C                     ENDIF
+     C                     MOVE ##015N    ZFIELD
+      *
+     C                     CALL 'ZEDIT'                9090
+     C                     PARM           ZFIELD           B:Function Field
+     C                     PARM           ZADEC            I:No of decimals
+      *
+     C                     MOVE ZFIELD    #1OVDA
+      * Avaiable balance
+     C                     MOVE ##AVB     ZFIELD
+     C                     MOVEL*BLANKS   #1AVBS
+     C           ##AVB     IFLT 0
+     C                     MOVEL'Cr'      #1AVBS
+     C                     Z-SUB##AVB     ##015N 150
+     C                     ELSE
+     C                     MOVEL'Dr'      #1AVBS
+     C                     Z-ADD##AVB     ##015N
+     C                     ENDIF
+     C                     MOVE ##015N    ZFIELD
+      *
+     C                     CALL 'ZEDIT'                9090
+     C                     PARM           ZFIELD           B:Function Field
+     C                     PARM           ZADEC            I:No of decimals
+      *
+     C                     MOVE ZFIELD    #1AVBA
+      *
+      * Display
+     C                     DO   *HIVAL
+      *
+     C           ##WDSP    IFNE *BLANKS
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+     C                     MOVEL'Y'       ##WDSP  1
+      *
+     C********** P@RTCE    IFNE *BLANKS
+     C           P@AUTH    IFEQ 'Y'
+     C                     MOVEL*ON       *IN78
+     C                     ELSE
+     C                     MOVEL*OFF      *IN78
+     C                     ENDIF
+      *
+     C                     EXFMTFTP780W1
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C           *IN05     IFEQ *ON
+     C           *IN10     OREQ *OFF
+     C           *IN05     ANDEQ*OFF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           *IN10     IFEQ *ON
+      *
+      * Set up data for check
+      *
+     C                     CLEARW0DATA
+     C                     MOVELPIBRCB    B#BRCA
+     C                     MOVEL'O'       O#ACTD
+     C                     MOVEL##PGM     O#CPGM
+      *
+      * Check all valid actions
+      *
+     C                     CALL 'ME1190'               9090
+     C                     PARM *BLANKS   P0RTN   7
+     C                     PARM '*ACTCODE'W0ACT   8
+     C                     PARM           W0DATA
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0019' FTMSID
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     EXSR FTSNMS
+     C                     END
+      *
+      * Invalid action
+      *
+     C           P0RTN     IFNE *BLANKS
+     C                     MOVEL'BAE0001' FTMSID
+     C                     MOVEL'FTUSRMSG'FTMSGF
+     C                     EXSR FTSNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Override allowed
+      *
+     C           *IN90     IFEQ *OFF
+     C           P0RTN     ANDEQ*BLANKS
+     C                     MOVEL'*OVER  ' P@RTCE
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRADJB - Adjust Balance for Un-authorised Transactions      *
+      *   Called by - #HFCHK Check Sufficient Funds                   *
+      *****************************************************************
+      *
+     C           SRADJB    BEGSR
+      *
+      * Define Key for RSACMTL1
+      *
+     C           KRSAC     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+     C                     MOVEL*BLANKS   ##FUND
+      *
+      * SETLL and read all entries
+      *
+     C           KRSAC     SETLLRSACMTL1
+     C           KRSAC     READERSACMTL1                 91
+     C           *IN91     DOWEQ'0'
+      *
+      * If FUND not blank find if OP or IN
+      *
+     C           FUND      IFNE *BLANKS
+     C           2         SUBSTFUND:12   ##002A  2
+      *
+      * Check Outgoing
+      *
+     C           ##002A    IFEQ 'OP'
+     C           ##FUND    ANDNEFUND
+      ** The FUND field has been increased from 15 to 21 long in RSACMTPD file but the PREF AR856737
+      *  on OTPAY is still 15 long.                                                         AR856737
+     C                     MOVE *BLANKS   ULFUND 15                                         AR856737
+     C                     MOVELFUND      ULFUND                                            AR856737
+     C*****      FUND      CHAINOTPAY                92                                     AR856737
+     C           ULFUND    CHAINOTPAY                92                                     AR856737
+     C                     ENDIF
+      *
+      * Check Incoming
+      *
+     C           ##002A    IFEQ 'IN'
+     C           ##FUND    ANDNEFUND
+      ** The FUND field has been increased from 15 to 21 long in RSACMTPD file but the PREF AR856737
+      *  on INPAY is still 15 long.                                                         AR856737
+     C                     MOVE *BLANKS   ULFUND                                            AR856737
+     C                     MOVELFUND      ULFUND                                            AR856737
+     C*****      FUND      CHAININPAY                92                                     AR856737
+     C           ULFUND    CHAININPAY                92                                     AR856737
+     C                     ENDIF
+      *
+      * Check Incoming
+      *
+     C           *IN92     IFEQ *OFF
+     C           AUIN      ANDEQ*BLANKS
+      *
+      * Adjust balances only back-valued or today
+      *
+      * If Debit, decrease balance towards credit (negative)
+      *
+     C           DORC      IFEQ 0
+     C           VUDT      ANDLEBJRDNB
+     C           CLBLN     SUB  MVAM      CLBLN
+     C                     ENDIF
+      *
+     C           VUDT      IFLE BJRDNB                                    PNL012
+     C           DORC      IFEQ 0
+     C                     ADD  MVAM      ##ADJB
+     C                     ELSE
+     C                     SUB  MVAM      ##ADJB
+     C                     ENDIF
+     C                     ENDIF                                          PNL012
+      *
+      * If Credit, increase balance towards debit (positive)
+      *
+     C           DORC      IFEQ 1
+     C           VUDT      ANDLEBJRDNB
+     C           CLBLN     ADD  MVAM      CLBLN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Save reference
+      *
+     C           *LIKE     DEFN FUND      ##FUND
+     C                     MOVELFUND      ##FUND
+      *
+     C                     ENDIF
+      *
+      * Read Next Record
+      *
+     C           KRSAC     READERSACMTL1                 91
+     C                     ENDDO
+      *
+     C           EXADJB    ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - anywhere within the program                     *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  FTSNMS   : Send message to program's message queue           *
+      *                                                               *
+      *  CALLED BY: ALL OVER                                          *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         FTSNMS    BEGSR
+      *
+      * If no program send to FT0090
+      *
+     C           FTPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     FTPGMQ
+     C                     END
+      *
+      * If level to send is blanks default to *SAME
+      *
+     C           FTPGRL    IFEQ *BLANK
+     C                     MOVEL'*SAME'   FTPGRL
+     C                     END
+      *
+      * If no message file specified, use default
+      *
+     C           FTMSGF    IFEQ *BLANK
+     C                     MOVEL'FTUSRMSG'FTMSGF
+     C                     END
+      *
+     C                     CALL 'AOCREPT'
+     C                     PARM           FTMSID  7
+     C                     PARM           FTMSGF 10
+     C                     PARM           FTMSFL 10
+     C                     PARM           FTMSDT256
+     C                     PARM           FTPGRL  5
+     C                     PARM           FTPGMQ 10
+     C                     PARM           FTMSGQ 10
+     C                     PARM           FTMSGT  7
+      *
+     C                     MOVEL'Y'       FTMSGS  1
+     C                     MOVELFTWARN    FTWARN  1
+      *
+      * Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANK    FTMSID
+     C                     MOVEL*BLANK    FTMSGF
+     C                     MOVEL*BLANK    FTMSFL
+     C                     MOVEL*BLANK    FTMSDT
+     C                     MOVEL*BLANK    FTPGRL
+     C                     MOVEL*BLANK    FTPGMQ
+     C                     MOVEL*BLANK    FTMSGQ
+     C                     MOVEL*BLANK    FTMSGT
+      *================================================================
+     CSR         FTEXIT    ENDSR
+     C/EJECT
+      *
+      * File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+      *
+** CPY@   Object Copyright
+(c) Misys International Banking Systems Ltd. 2003
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

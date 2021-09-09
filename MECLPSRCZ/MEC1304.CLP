@@ -1,23 +1,25 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas ME Send prompt to ME FT IMM control')           */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
 /*       MEC1304  - Send Prompt to ME FT IMM Auto Gen Job            */
 /*                                                                   */
-/*       (c) Finastra International Limited 2001                     */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. MD31937            Date 13Jan15              */
+/*       Last Amend No. AR856737           Date 13Sep11              */
+/*       Last Amend No. HVB019             Date 05Dec11              */
+/*       Last Amend No. ESL038            Date 04Oct2004             */
+/*       Prev Amend No. E00045            Date 08Jan2004             */
+/*                      DJB100            Date 27Nov2002             */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 209318             Date 10Sep02              */
+/*       Last Amend No. 209318            Date 10Sep02               */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*                      CPK015             Date 18Apr02              */
+/*       Prev Amend No. CPK015            Date 18Apr02               */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408            Date 05May95               */
@@ -25,7 +27,13 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD31937  - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       HVB019   - DISABLE STP on Bank Holiday                      */
+/*                  Prevent startup of STP if in DISABLE mode        */
+/*       ESL038 - ING STP Development                                */
+/*       E00045 - Suppress start of STP                              */
+/*       DJB100 - Correct wait time for allocation                   */
 /*       209318 - The ALCOBJ command for MEFTIMM should specify      */
 /*                WAIT(0) not WAIT(60).                              */
 /*       CPK015 - 4.01 packaging.  Use DPLIB and not DILIB.          */
@@ -38,7 +46,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited +
+                          Misys International Banking Systems Ltd. +
                           2001')
 /* */
 /* Declare variables */
@@ -51,6 +59,7 @@
              DCL        VAR(&MSG_PRTY) TYPE(*CHAR) LEN(10)
              DCL        VAR(&KEY_LEN) TYPE(*DEC) LEN(3 0) VALUE(10)
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&STP_STAT) TYPE(*CHAR) LEN(5)                          /*HVB019  */
 /* */
 /* Global Monitor Message */
 /* */
@@ -60,7 +69,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited')
+                          Misys International Banking Systems Ltd.')
 /* */
 /* Send Message to MRUNQ */
 /* */
@@ -74,6 +83,20 @@
 /*/COPY WNCPYSRC,MEC1304MP1                                          */
                                                                       /*S01408*/
              CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+/**/                                                                                      /*E00045*/
+/* Check for start up */                                                                  /*E00045*/
+/**/                                                                                      /*E00045*/
+/* Not used  CALL       PGM(MEP0050) PARM(&RTN_CODE)             */                     /*AR856737*/
+/*           IF         COND(&RTN_CODE *NE '       ')  THEN(DO)  */                     /*AR856737*/
+                                                                                        /*HVB019  */
+/* Check if STP is DISABLED due to bank holiday. If DISABLED then do not start STP */   /*HVB019  */
+             RTVDTAARA  DTAARA(MESTPSTAT) RTNVAR(&STP_STAT)                             /*HVB019  */
+             IF         COND(&STP_STAT = 'DSBLD') THEN(DO)
+             SNDPGMMSG  MSG('STP DISABLED - Today is holiday on +
+                          PF/BVRHOLPF') TOMSGQ(MOPERQ MRUNQ)                            /*HVB019  */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                  /*HVB019  */
+             GOTO       CMDLBL(ENDCLPGM)                                                  /*E00045*/
+             ENDDO                                                                        /*E00045*/
 /**/
 /**Check*if*data*queue*exists**/                                                          /*CPK015*/
 /**/

@@ -1,0 +1,172 @@
+      *****************************************************************
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 13Sep11               *
+      *  Last Amend No. ESL038             Date 26Nov2004             *
+      *---------------------------------------------------------------*
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  ESL038 - EBA Mapping                                         *
+      *****************************************************************
+      *
+      ** Access SAR details file to determine if ESL038 is switched ON
+      *
+     C           ESL038    IFEQ *BLANKS
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'ESL038'  P@SARD  6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVEL'Y'       ESL038  1
+     C                     ELSE
+     C                     MOVEL'Y'       ESL038  1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           ESL038    IFEQ 'Y'
+      *
+      * Set key block 3 is sequence 0
+      *
+     C                     Z-ADDPHMSGR    KFMSGR           Msg Ref.
+     C                     Z-ADD0         KFPART           Part No.
+     C                     MOVEL'103:'    KFTAG     P      Tag No.
+     C                     Z-ADD0         KFSEQ            Sequence No.
+     C                     MOVEL*BLANKS   KFMSEQ           Sequence No.
+      *
+      *  Position and read record
+      *
+     C                     MOVE '0'       *IN11                           CRT002
+     C                     MOVE '0'       *IN12                           CRT002
+      *
+     C           KYINDT    SETLLMEINDTS2
+     C                     READ MEINDTS2                 60
+      *
+     C           DTMTG     IFEQ '103:'
+     C                     MOVEL*BLANKS   WKDATA
+     C   11                MOVELDTMFLD    WKDATA
+     C   12                MOVELDSMF35    WKDATA
+     C           WKDATA    IFNE *BLANKS
+      * Define key
+     C           KYLCSD    KLIST
+     C                     KFLD           LCCYCD
+     C                     KFLD           LCYCPY
+      * Set Key
+     C                     MOVELMPCYCD    LCCYCD
+     C                     MOVELWKDATA    LCYCPY
+      * Set Key
+     C           KYLCSD    CHAINSDLCSDD0             90
+      * If found map account
+     C           *IN90     IFEQ *OFF
+     C                     SELEC
+      * Cover then fill in receiver's correspondent
+     C           P54       WHEQ *BLANKS
+     C           P53       ANDNE*BLANKS
+     C                     MOVELP54       DSOUT
+     C                     MOVEL':54D:'   OTTAG
+     C                     MOVE LCSETA    ##008A  8
+     C                     MOVEL*BLANKS   ##035A 35
+      * If not retail them construct nostro
+     C           ##008A    IFEQ *BLANKS
+     C                     MOVELLCCYCD    A7CYCD
+     C                     MOVELLCSETA    A7NONB
+     C           KNOST     CHAIN@A7REB9              90
+      * If found set up
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*BLANKS   OTCODE    P
+     C           OTCODE    CAT  A7CUST:0  OTCODE
+     C           OTCODE    CAT  A7CYCD:0  OTCODE
+     C           OTCODE    CAT  A7ACCD:0  OTCODE
+     C                     MOVELA7ACSN    ##002A  2 P
+     C           OTCODE    CAT  ##002A:0  OTCODE
+     C           OTCODE    CAT  A7BRCD:0  OTCODE
+     C                     ENDIF
+      * Set screen field
+     C           LCCYCD    CAT  LCSETA:0  ##035A    P
+     C                     MOVEL##035A    OUT,1
+      *
+     C                     ELSE
+     C                     MOVELLCSETA    ##035A
+     C                     MOVEL##035A    OUT,1
+      * Account number
+     C                     MOVELLCSETA    ACNO
+     C           KACNUM    CHAINACCNTABF             90
+      * If found set up
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*BLANKS   OTCODE    P
+     C                     MOVELCNUM      ##006A  6 P
+     C           OTCODE    CAT  ##006A:0  OTCODE
+     C           OTCODE    CAT  CCY:0     OTCODE
+     C                     MOVELACOD      ##004A  4 P
+     C           OTCODE    CAT  ##004A:0  OTCODE
+     C                     MOVELACSQ      ##002A  2 P
+     C           OTCODE    CAT  ##002A:0  OTCODE
+     C           OTCODE    CAT  BRCA:0    OTCODE
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVELDSOUT     P54
+      * No cover information
+     C           P54       WHEQ *BLANKS
+     C           P53       ANDEQ*BLANKS
+     C                     MOVELP53       DSOUT
+     C                     MOVEL':53D:'   OTTAG
+     C                     MOVE LCSETA    ##008A  8
+     C                     MOVEL*BLANKS   ##035A 35
+      * If not retail them construct nostro
+     C           ##008A    IFEQ *BLANKS
+      * Look up details
+     C           KNOST     KLIST
+     C                     KFLD           A7CYCD
+     C                     KFLD           A7NONB
+     C                     MOVELLCCYCD    A7CYCD
+     C                     MOVELLCSETA    A7NONB
+     C           KNOST     CHAIN@A7REB9              90
+      * If found set up
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*BLANKS   OTCODE    P
+     C           OTCODE    CAT  A7CUST:0  OTCODE
+     C           OTCODE    CAT  A7CYCD:0  OTCODE
+     C           OTCODE    CAT  A7ACCD:0  OTCODE
+     C                     MOVELA7ACSN    ##002A  2 P
+     C           OTCODE    CAT  ##002A:0  OTCODE
+     C           OTCODE    CAT  A7BRCD:0  OTCODE
+     C                     ENDIF
+      * Set screen field
+     C           LCCYCD    CAT  LCSETA:0  ##035A    P
+     C                     MOVEL##035A    OUT,1
+      *
+     C                     ELSE
+      * Set up data
+     C                     MOVELLCSETA    ##035A
+     C                     MOVEL##035A    OUT,1
+      * Look up details
+     C           KACNUM    KLIST
+     C                     KFLD           ACNO
+      * Account number
+     C                     MOVELLCSETA    ACNO
+     C           KACNUM    CHAINACCNTABF             90
+      * If found set up
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL*BLANKS   OTCODE    P
+     C                     MOVELCNUM      ##006A  6 P
+     C           OTCODE    CAT  ##006A:0  OTCODE
+     C           OTCODE    CAT  CCY:0     OTCODE
+     C                     MOVELACOD      ##004A  4 P
+     C           OTCODE    CAT  ##004A:0  OTCODE
+     C                     MOVELACSQ      ##002A  2 P
+     C           OTCODE    CAT  ##002A:0  OTCODE
+     C           OTCODE    CAT  BRCA:0    OTCODE
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVELDSOUT     P53
+     C                     ENDSL
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *****************************************************************
+      * End of ME1100DDC1                                             *
+      *****************************************************************

@@ -1,0 +1,223 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0091 - Repair Beneficiary and Ordering Customer field     *
+      *                                                               *
+      *  Function:  This program validates either Ordering Customer   *
+      *             field 50K or Benefficiary field 59 and if valid   *
+      *             it blanks out line 2 to 5. The program            *
+      *             expects IBAN or Partial GL account                *
+      *                                                               *
+      *             The program also removed '/' from valid GL account*
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2011       *
+      *                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15            *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *  Last Amend No. HVB009  *CREATE    Date 06Sep11               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1       *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  HVB009 - Repair Ordering and Benefficiary field              *
+      *                                                               *
+      *****************************************************************
+     FACCNTL10IF  E           K        DISK
+      *
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IP#RPP1      DS
+     I                                        1   1 FLAG1
+     I                                       27  60 I#IBAN
+     I                                       26  26 WSLASH
+     I**                                     26  48 I#GLAC
+     I                                       26  60 I#GLAC
+     I                                       61  95 LINE2
+     I                                       96 130 LINE3
+     I                                      131 165 LINE4
+     I                                      166 200 LINE5
+     I                                      201 251 REST1
+      *  REPAIRED TAGG DESCRIPTION
+      *
+     IP#RPP2      DS
+     I                                        1   1 FLAG2
+     I                                       26  60 R#ACNT
+     I                                       61 200 LINE25
+     I                                      201 251 REST2
+      *
+     IINGLAC      DS                             24
+     I****                                    1   60K#CNUM                                 MD31937
+     I                                        1   6 K#CNUM                                 MD31937
+     I                                        7  160K#ACOD
+     I                                       17  180K#ACSQ
+     I                                       19  21 K#BRCA
+     I                                       22  24 K#CCY
+      *
+     IW#PDCA      DS                             60
+     I                                       37  39 W#CCY
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+      *
+     IPCRIT     E DSMEGNCRPD
+      * Criteria rule hit
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      ** Key list to access Account file
+     C           KGLACC    KLIST
+     C                     KFLD           K#CNUM
+     C                     KFLD           K#CCY
+     C                     KFLD           K#ACOD
+     C                     KFLD           K#ACSQ
+     C                     KFLD           K#BRCA
+      *
+     C                     MOVE *BLANKS   V#ACC   1
+      *
+     C                     MOVEL*BLANKS   P#RETN
+     C                     MOVELFLAG1     FLAG2
+      *
+      *
+      ** For STP the Debiting or Crediting account can be either in IBAN or Partial GL account
+      *  Partial GL Account is assumed to be in format CUST+ACOD+ACSQ+BRCH
+      *
+     C           V#ACC     IFNE 'Y'
+      ** If account is entered in Partial GL format then first 18 digit should be numeric
+     C                     Z-ADD*ZERO     W#CNT   20
+      *
+     C           WSLASH    IFEQ '/'
+     C           34        SUBSTI#GLAC:2  I#ACLN    P
+     C                     ELSE
+     C                     MOVELI#GLAC    I#ACLN    P
+     C                     ENDIF
+      *
+      ** Repair Account. Remove blanks etc
+     C                     CALL 'FTP970'
+     C                     PARM *BLANKS   @RTN    7
+     C                     PARM           I#ACLN 35
+     C                     PARM *BLANKS   O#ACLN 35
+      *
+     C                     MOVELO#ACLN    W#GLAC 35 P
+      *
+     C           DIGITS    CHECKW#GLAC    W#CNT          80
+     C           W#CNT     IFGT 18
+      ** Check if GL account exist in Midas
+     C                     EXSR SRGLAC
+      *
+      ** If valid GL account and if the account was entered with '/' then
+      *  remove the '/'.
+     C           WSLASH    IFEQ '/'
+     C                     MOVELW#GLAC    R#ACNT    P
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Account still not valid
+     C           V#ACC     IFNE 'Y'
+      *
+      ** Check if it is valid Midas IBAN
+     C                     EXSR SRIBAN
+      *
+     C                     ENDIF
+      *
+      ** Valid Account exist - Blank out line 2 to 5
+     C           V#ACC     IFEQ 'Y'
+      *
+     C           LINE2     IFNE *BLANKS
+     C                     MOVE *BLANKS   LINE25
+     C                     ENDIF
+      *
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+     C                     ENDIF
+      *
+      *  Exit program
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+     C           SRGLAC    BEGSR
+      *================================================================
+      * Process Partial GL Account
+      *================================================================
+      ** Populate the Key list (CUST+ACOD+ACSQ+BRCH)
+     C                     MOVE *BLANKS   INGLAC
+     C                     MOVELW#GLAC    INGLAC
+      ** Get the Settlement Currency from the message to complete the key list
+     C                     MOVE *BLANKS   K#CCY
+     C                     MOVELPDCA      W#PDCA
+     C                     MOVELW#CCY     K#CCY
+      *
+     C           KGLACC    CHAINACCNTL10             75
+     C           *IN75     IFEQ *OFF
+     C                     MOVE 'Y'       V#ACC
+     C                     ELSE
+     C                     MOVE 'N'       V#ACC
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         EXGLAC    ENDSR
+      *
+     C           SRIBAN    BEGSR
+      *================================================================
+      * Process IBAN Account
+      *================================================================
+      *
+      * Check if it is valid Midas IBAN
+      *
+     C                     CALL 'AOIBANR2'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM           I#IBAN
+     C                     PARM *BLANKS   DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       V#ACC
+     C                     ELSE
+     C                     MOVE 'N'       V#ACC
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         EXIBAN    ENDSR
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2002

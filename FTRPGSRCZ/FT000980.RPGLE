@@ -1,8 +1,7 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas FT Charge Calculation Module')                   *
       *****************************************************************
       *                                                               *
       *  Midas - Funds Transfer Module                                *
@@ -15,12 +14,24 @@
       *             calculate the default charges for the requesting  *
       *             application.                                      *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CFT120             Date 28Sep12               *
-      *                 CRE075             Date 06Dec10               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 25Jul11               *
+      *                 MKCAR1             Date 04Aug2005             *
+      *                 URGIND             Date 21Jul2005             *
+      *                 STP989             Date 15Apr2005             *
+      *                 STP997             Date 25Mar2005             *
+      *                 MK0510             Date 07Feb2004             *
+      *                 MK0509             Date 07Feb2004             *
+      *                 MK0506             Date 03Feb2004             *
+      *                 STP017             Date 20Nov2004             *
+      *                 ESL038             Date 06Dec2004             *
+      *                 ERN054             Date 20Jun2003             *
+      *                 EEE058             Date 11Feb2003             *
+      *                 241259             Date 28Aug06               *
+      *  Last Amend No. CFT120             Date 28Sep12               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -59,8 +70,31 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Added field DSMSEQ due to CSW209 changes.           *
+      *           Applied following changes:                          *
+      *           MKCAR1, URGIND, STP989, STP997,                     *
+      *           MK0510, MK0509, MK0506, STP017, ESL038,             *
+      *           ERN054, EEE058.                                     *
+      *  MKCAR1 - Handle clearing settlement methods.                 *
+      *  URGIND - Urgent Flag processing.                             *
+      *  STP989 - Set Override indicator to 'yes' when calling FT0010 *
+      *           when rate set.                                      *
+      *  STP997 - Do not recalculate pay amount for external networks *
+      *  MK0510 - Correct Foreign Destination processing.             *
+      *  MK0509 - Use customer marketing information for customer     *
+      *           group retrieval for outgoing payments as well as    *
+      *           for incoming.                                       *
+      *  MK0506 - Enlarge #Search variable, so that it is able to     *
+      *           keep all the needed data.                           *
+      *  STP017 - STP flags: 'Y' = STP, 'N' = Manual.                 *
+      *  ESL038 - ING STP Development                                 *
+      *         - Correct Foreign Destination processing.             *
+      *  ERN054 - Agency message changes                              *
+      *           Introduce new defaulting extensions                 *
+      *  EEE058 - Incoming STP corrections                            *
+      *  241259 - Calculate instructed and pay amounts correctly.     *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -96,7 +130,7 @@
       *  BUG8305- FX spread set should be blank if pay and settlement *
       *           currencies are the same                             *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
-      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
       *  CSD025 - Customer De-Activation                              *
       *  CSW037 - Additional Field Data on MT300/MT320                *
       *  CSW036 - Dual SWIFT BIC held on Client Details               *
@@ -113,69 +147,100 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * FT Payment Charge Definition
      FFTPCHGL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL0)
       * FT Payment Charge Defaults
      FFTPYCGL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL1)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL2)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL3)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL4  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL4)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL5  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL5)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL6  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL6)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL7  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL7)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL8  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL8)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGL9  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGL9)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGLA  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGLA)
- 
+
       * FT Payment Charge Defaults
      FFTPYCGLB  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGLB)
- 
+
+      * FT Extended Payment Charge Defaults                                                   ERN054
+     FFTPYCGV1  IF   E           K DISK    INFSR(*PSSR)                                       ERN054
+     F                                     Rename(FTPYCGD0:PYCGV0)                            ERN054
+      *                                                                                       ERN054
+     FMEINCRL1  IF   E           K DISK                                                       ERN054
+      *                                                                                       ERN054
+      *  Message header for sender of message                                                 ERN054
+      *                                                                                       ERN054
+     FMEINDTS2  IF   E           K DISK                                                       ERN054
+      *                                                                                       ERN054
+      *  Message details in message/part/tag order                                            ERN054
+      *                                                                                       ERN054
+                                                                                              ERN054
+     FFTLOOKV0  IF   E           K DISK                                                       ERN054
+      *                                                                                       ERN054
+      *  FT Look Up searches                                                                  ERN054
+      *                                                                                       ERN054
       * FT Payment Charge Defaults for STP
      FMEGNCRL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * SD Customer details file
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * Customer grouping codes
      FSDCGRPL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * Customer Marketing Groups                                                             246583
      FSDCMRKL1  IF   E           K DISK    INFSR(*PSSR)                                       246583
                                                                                               246583
+      * Customer marketing codes                                                              EEE058
+     FSDCMRKL0  IF   E           K DISK    INFSR(*PSSR)                                       EEE058
+                                                                                              EEE058
+     FMEBICPV0  IF   E           K DISK
+     F                                     INFSR(*PSSR)
+      * RTV : BIC Plus data
+
+     FMEBICDL2  IF   E           K DISK
+     F                                     INFSR(*PSSR)
+      * RTV : BIC Directory
+
+     FMEINMVV0  IF   E           K DISK                                                       STP997
+      * Midas ME Message Routing Extensionen                                                  STP997
+      *                                                                                       STP997
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -185,7 +250,7 @@
       *       99  Chain                                               *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -197,143 +262,199 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+                                                                                              ERN054
+      *               1 BRANCH                                                                ERN054
+      *               2 CUSTOM                                                                ERN054
+      *               3 CURRCY                                                                ERN054
+      *               4 TRNTYP                                                                ERN054
+      *               5 TRSBTY                                                                ERN054
+      *               6 CSGRCD                                                                ERN054
+      *               7 NETWRK                                                                ERN054
+      *               8 PAYTYP                                                                ERN054
+      *               9 MSGTYP                                                                ERN054
+      *              10 STMTMD                                                                ERN054
+      *              11 DRACTP                                                                ERN054
+      *              12 CRACTP                                                                ERN054
+      *              13 ADDDED                                                                ERN054
+      *              14 FXTRAN                                                                ERN054
+      *              15 TdCtry                                                                ERN054
+      *              16 UrgFlg                                                                URGIND
+      *                                                                                       ERN054
+     D**Search#        S             20A   DIM(10)                                      ERN054EMRFIX
+     D  Search#        S             20A   DIM(50)                                            EMRFIX
+     D  SearchNbr      S              5  0                                                    ERN054
+     D  KeySV          S              1A   DIM(20)                                            ERN054
+     D  Idx            S              5  0                                                    ERN054
+     D  KeysComb       S              1                                                       ERN054
+      * Key fields                                                                            ERN054
+     D Keys            DS                                                                     ERN054
+     D  KeBRANCH                           LIKE(BRANCH)                                       ERN054
+     D  KeCUSTOM                           LIKE(CUSTOM)                                       ERN054
+     D  KeCURRCY                           LIKE(CURRCY)                                       ERN054
+     D  KeTRNTYP                           LIKE(TRNTYP)                                       ERN054
+     D  KeTRSBTY                           LIKE(TRSBTY)                                       ERN054
+     D  KeCSGRCD                           LIKE(CSGRCD)                                       ERN054
+     D  KeNETWRK                           LIKE(NETWRK)                                       ERN054
+     D  KePAYTYP                           LIKE(PAYTYP)                                       ERN054
+     D  KeMSGTYP                           LIKE(MSGTYP)                                       ERN054
+     D  KeSTMTMD                           LIKE(STMTMD)                                       ERN054
+     D  KeDRACTP                           LIKE(DRACTP)                                       ERN054
+     D  KeCRACTP                           LIKE(CRACTP)                                       ERN054
+     D  KeADDDED                           LIKE(ADDDED)                                       ERN054
+     D  KeFXTRAN                           LIKE(FXTRAN)                                       ERN054
+     D  KeTdCtry                           LIKE(TdCtry)                                       ERN054
+     D  KeUrgFlg                           LIKE(UrgFlg)                                       URGIND
+                                                                                              ERN054
+     D FTLOOK        E DS                  EXTNAME(FTLOOKP0)                                  ERN054
+      * FTLOOKP0 - Look Up searches                                                           ERN054
+     D**##Search              16     25                                                 ERN054MK0506
+     D  ##Search              16     35                                                       MK0506
+      *                                                                                       ERN054
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Charge on each tier
      D TierCharge      S             13    DIM(11)
- 
+
       **  Chargeable Amount on each tier
      D TierAmount      S             13    DIM(11)
- 
+
       ** Array to hold customer 1 default codes
      D Cus1_dft        S              5    DIM(20)
- 
+
       ** Array to hold customer 2 default codes
      D Cus2_dft        S              5    DIM(20)
- 
+
       ** Array to hold STP default codes
      D CusS_dft        S              5    DIM(20)
- 
+
       * Nostro DataStructure
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** External DS for Customer details
      D Accnt         E DS                  EXTNAME(ACCNTAB)  Prefix(E_)
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Funds Transfer ICD
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** External data structure for customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for payment charge defaults
      D FTPYCG        E DS                  EXTNAME(FTPYCGPD)
- 
+
       ** External data structure for STP payment charge defaults
      D MEGNCR        E DS                  EXTNAME(MEGNCRPD)
- 
+
      **  Currency details from SDGELRPD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
+      ** Country code details                                                                 CFT017
+     D SDCTRY        E DS                  EXTNAME(SDCTRYPD)                                  CFT017
+      *                                                                                       CFT017
+     **  Payment extension data                                                               EEE058
+     D P9Pext        E DS                  EXTNAME(FTPEXTP0)                                  EEE058
+                                                                                              EEE058
+                                                                                              EEE058
+      **  Data Structure for input/output parameters                                          EEE058
+     D/COPY FTCPYSRC,FT0010D001                                                               EEE058
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Outgoing Payments file/extension file
      D OutPay        E DS                  EXTNAME(OTPAYDD)  PREFIX(O_)
      D OtPayEx       E DS                  EXTNAME(OTPAYXPD) PREFIX(O_)
- 
+
       ** Incoming Payments file/extension file
      D InPay         E DS                  EXTNAME(INPAYDD)  PREFIX(I_)
      D InPayEx       E DS                  EXTNAME(INPAYXPD) PREFIX(I_)
- 
+
       ** Cheques for Collection files
      D CqCoD         E DS                  EXTNAME(CQCODDD)  PREFIX(B_)
      D CqCoC         E DS                  EXTNAME(CQCOCDD)  PREFIX(A_)
- 
+
       ** Cheques to be Paid files
      D CqPaC         E DS                  EXTNAME(CQPACDD)  PREFIX(C_)
      D CqPaD         E DS                  EXTNAME(CQPADDD)  PREFIX(D_)
- 
+
       ** Request for Transfer files
      D FT101H        E DS                  EXTNAME(FT101HPD) PREFIX(H1)
      D FT101D        E DS                  EXTNAME(FT101DPD) PREFIX(D1)
- 
+
       ** Customer Credit Transfer files
      D FT102H        E DS                  EXTNAME(FT102HPD) PREFIX(H2)
      D FT102D        E DS                  EXTNAME(FT102DPD) PREFIX(D2)
- 
+
       ** For IBAN customer number calculations
      D P@ACCN        E DS                  EXTNAME(ACCNTAB) PREFIX(IB)
       *                                                                                       CFT120
       ** Switchable Features File                                                             CFT120
       *                                                                                       CFT120
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CFT120
- 
+
       ** For moving charges from file to array for Manual processing
      DCodesM           DS
      D  W_ArrayM              60    159
- 
+
       ** For moving charges from file to array for STP processing
      DCodesS           DS
      D  W_ArrayS             169    268
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Tmp12           S             12
      D Tmp18           S             18                                                       TDA006
      D CNum35          S             35
      D WCustNo         S                   Like(BBCUST)
- 
+
       ** Transaction being charged - Main details
       **                           - Extension/secondary details
- 
+
      D P_TransDet      S           3000A
      D P_TransExt      S           3000A
- 
+
       ** Entry parameters
      D P_TransType     S              2A
      D P_Procmthd      S              1A
@@ -343,23 +464,23 @@
       ** Parm list for callb to FT000981                                                      CFT120
       *                                                                                       CFT120
      D P_ChgDRCcy      S              3A                                                      CFT120
- 
+
       ** Parm list for callb to FT000982
      D P_SpreadCde     S              5A
      D P_PayCcy        S                   Like(BJCYCD)
      D P_SettCcy       S                   Like(BJCYCD)
      D P_ExRate        S                   Like(A6SPRT)
      D P_STP           S              1A
- 
+
       ** Parm list for callb to FT000983
      D P_OffsetCde     S              5A
      D P_SettDate      S              6A
      D P_PayDate       S                   Like(P_SettDate)
- 
+
       ** Work fields used by ZEDIT
      D ZFIELD          S             16A
      D ZADEC           S              1P 0
- 
+
       ** Work fields used by ZXRATE
      D ZRATE1          S             13P 8
      D ZRATE2          S             13P 8
@@ -367,7 +488,7 @@
      D ZMDI2           S              1A
      D ZRATEX          S             13P 8
      D ZMDIX           S              1A
- 
+
       ** Work fields
      D Cus_12B         S              1A
      D***Cus_Grp       S S            1A1A                                                    248174
@@ -379,7 +500,7 @@ L011 D P               S              3P 0
      D Z               S              2P 0
      D CusKey1         S                   LIKE(CUSTOM)
      D CusKey2         S                   LIKE(CUSTOM)
- 
+
       ** Klist fields
      D K_Branch        S                   LIKE(BRANCH)
      D K_Custom        S                   LIKE(CUSTOM)
@@ -388,13 +509,24 @@ L011 D P               S              3P 0
      D K_Trntyp        S                   LIKE(TRNTYP)
      D K_Trsbty        S                   LIKE(TRSBTY)
      D K_Csgrcd        S                   LIKE(CSGRCD)
- 
+      * Extra keys for extended payment charging                                              ERN054
+     D  K_NETWRK       S                   LIKE(NETWRK)                                       ERN054
+     D  K_PAYTYP       S                   LIKE(PAYTYP)                                       ERN054
+     D  K_MSGTYP       S                   LIKE(MSGTYP)                                       ERN054
+     D  K_STMTMD       S                   LIKE(STMTMD)                                       ERN054
+     D  K_DRACTP       S                   LIKE(DRACTP)                                       ERN054
+     D  K_CRACTP       S                   LIKE(CRACTP)                                       ERN054
+     D  K_ADDDED       S                   LIKE(ADDDED)                                       ERN054
+     D  K_FXTRAN       S                   LIKE(FXTRAN)                                       ERN054
+     D  K_TdCtry       S                   LIKE(TdCtry)                                       ERN054
+     D  K_UrgFlg       S                   LIKE(UrgFlg)                                       URGIND
+
      D K_D6snbr        S                   LIKE(D6SNBR)
- 
+
      D K_Gnmtpy        S                   LIKE(GNMTPY)
      D K_Gnmset        S                   LIKE(GNMSET)
      D K_Gnpytp        S                   LIKE(GNPYTP)
- 
+
       ** Fields from transaction
      D PayAmt          S             13P 0
      D PayCcy          S              3A
@@ -402,15 +534,15 @@ L011 D P               S              3P 0
      D ChgExch         S             13P 8
      D STP             S              1A
      D Levied          S                   Like(ChgCcy)
- 
+
      D BaseCcyDP       S                   LIKE(A6NBDP)
      D  BaseCcy        S                   Like(BJCYCD)
- 
+
      D RetCode982      S                   Like(RetCodeIn)
      D RetCode980      S                   Like(RetCodeIn)
- 
+
       ** Partial General Ledger Type
- 
+
      D PType           DS
      D   PCnum                        6
      D***PAcod**                      4                                                       CGL029
@@ -426,29 +558,40 @@ L011 D P               S              3P 0
      D***GLAcod*                      4                                                       CGL029
      D   GLAcod                      10                                                       CGL029
      D   GLAcsq                       2
- 
+
       ** Data structure for MULTIBRANCH Indicator using rundat.
      D RUNDAT          DS
      D  MBIN                  13     13
- 
+
       * Work currency
      D Acc_Ccy         S                   Like(O_PCCY)
      D Acc_Ccy1        S                   Like(O_PCCY)
      D Acc_Ccy2        S                   Like(O_PCCY)
      D Acc_Cus         S              1  0
- 
+
       * Location Fields
      D SettDateLoc     S              3
      D PayDateLoc      S              3
- 
- 
+
+
      D P_SettAmt       S                   Like(O_SMAM)
      D P_ChargesDR     S                   Like(O_CDRO)
      D P_ADDC          S                   Like(O_ADDC)
- 
+
      D Euro            S                   Like(BkEuro)
      D SettIn          S                   Like(A6INCY)
      D PayIn           S                   Like(A6INCY)
+                                                                                              EEE058
+      ** Data structure for information on OUR processing                                     EEE058
+     D O2Parm          DS           256                                                       EEE058
+     D  O2Msgr                             LIKE(O_OPMSGR)                                     EEE058
+     D  O2Kprt                             LIKE(O_OPKPRT)                                     EEE058
+     D  O2Acod                             LIKE(E_ACOD)                                       EEE058
+     D  O2Gpcd                             LIKE(PXGPCD)                                       EEE058
+     D  O2Coma                       13S 0                                                    EEE058
+     D  O2Penf                             LIKE(PXPENF)                                       EEE058
+     D  O2M900                        1A                                                      EEE058
+     D  O2M191                        1A                                                      EEE058
                                                                                               246583
      D ChkGrp          S                   Like(D7GPC1)                                       246583
       *                                                                                       CFT120
@@ -462,134 +605,152 @@ L011 D P               S              3P 0
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+                                                                                              ERN054
+     I@INDTS2       01                                                                        ERN054
+     I@IN35S2       02                                                                        ERN054
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
-      ** Move entry records to correct data structure for transaction and
-      ** work out if customer is 1,2 or(B)oth for default charges.
- 
+                                                                                              EEE058
+     C                   IF        EEE058 = *BLANKS                                           EEE058
+     C                   CALLB     'AOSARDR0'                                                 EEE058
+     C                   PARM      *BLANKS       @Rtcd                                        EEE058
+     C                   PARM      '*VERIFY'     @Optn                                        EEE058
+     C                   PARM      'EEE058'      @Sard             6                          EEE058
+     C     SCSARD        PARM      SCSARD        Dssdy                                        EEE058
+                                                                                              EEE058
+     C                   IF        @Rtcd = *BLANKS                                            EEE058
+     C                   MOVEL     'EEE058'      EEE058            6                          EEE058
+     C                   ELSE                                                                 EEE058
+     C                   MOVEL     '*NRF  '      EEE058            6                          EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
+
+      **?Move entry records to correct data structure for transaction and
+      **?work out if customer is 1,2 or(B)oth for default charges.
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EXSR      In_Pay
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EXSR      Out_Pay
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EXSR      In_CCT
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EXSR      Out_CCT
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EXSR      In_ReT
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EXSR      Out_ReT
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EXSR      Ch_Paid
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EXSR      Ch_Collect
- 
+
      C                   ENDSL
- 
-      ** Calculate the exchange rate between charges ccy and
-      **  settlement currency (OP), pay ccy (IN).
+
+      **?Calculate the exchange rate between charges ccy and
+      **? settlement currency (OP), pay ccy (IN).
      C                   Exsr      CalChgXRate
- 
- 
-      ** Get customer part of key for access to default charges file.
- 
+
+
+      **?Get customer part of key for access to default charges file.
+
      C                   EXSR      Key_Cust
- 
-      ** Get rest of key fields for access to default charges file.
- 
+
+      **?Get rest of key fields for access to default charges file.
+
      C                   EXSR      Key_Rest
- 
-      ** Get default charges for Manual.
- 
+
+      **?Get default charges for Manual.
+
      C                   EXSR      Dft_Manual
- 
-      ** Get default charges for STP.
- 
-     C                   IF        P_ProcMthd = 'S'
+
+      **?Get default charges for STP.
+
+     C*****              IF        P_ProcMthd = 'S'                                           STP017
+     C                   IF        P_ProcMthd = 'Y'                                           STP017
      C                   EXSR      Dft_STP
      C                   ENDIF
- 
-      ** Work out charges to use from customer 1 2 or STP
- 
+
+      **?Work out charges to use from customer 1 2 or STP
+
      C                   EXSR      Dft_Charges
- 
-      ** Calculate charges
- 
+
+      **?Calculate charges
+
      C                   EXSR      Charges
- 
-      ** Reset Entry parms with data structure data
- 
+
+      **?Reset Entry parms with data structure data
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      P_TransDet = InPay
      C                   EVAL      P_TransExt = InPayEx
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      P_TransDet = OutPay
      C                   EVAL      P_TransExt = OtPayEx
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      P_TransDet = FT102H
      C                   EVAL      P_TransExt = FT102D
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      P_TransDet = FT102H
      C                   EVAL      P_TransExt = FT102D
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      P_TransDet = FT101H
      C                   EVAL      P_TransExt = FT101D
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      P_TransDet = FT101H
      C                   EVAL      P_TransExt = FT101D
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      P_TransDet = CqPaC
      C                   EVAL      P_TransExt = CqPaD
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      P_TransDet = CqCoD
      C                   EVAL      P_TransExt = CqCoC
- 
+
      C                   ENDSL
-      ** End Program
+      **?End Program
      C                   EVAL      *Inlr = *On
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       * In_Pay - Incoming payments                                    *
@@ -599,50 +760,50 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     In_Pay        BEGSR
       *    ******
- 
-      ** Move input data to data structures
+
+      **?Move input data to data structures
      C                   EVAL      InPay = P_TransDet
      C                   EVAL      InPayEx = P_TransExt
- 
+
      C                   Eval      P_ChargesDR = I_CDRO
      C                   Eval      P_ADDC = I_ADDC
      C                   IF        CFT120 = 'Y'                                               CFT120
      C                   EVAL      P_ChgDRCcy = I_INCDRC                                      CFT120
      C                   ENDIF                                                                CFT120
- 
-      ** Work out if customer 1,2 or (B)oth
- 
+
+      **?Work out if customer 1,2 or (B)oth
+
      C                   SELECT
- 
+
      C                   WHEN      Intrcd = '1'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and I_ADDC = 'A'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and I_ADDC = 'D'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '3' and I_ADDC = 'A'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '3' and I_ADDC = 'D'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and I_ADDC = 'A'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '4' and I_ADDC = 'D'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Out_Pay - Outgoing payments                                   *
@@ -652,38 +813,38 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    *******
      C     Out_Pay       BEGSR
       *    *******
- 
-      ** Move input data to data structures
+
+      **?Move input data to data structures
      C                   EVAL      OutPay = P_TransDet
      C                   EVAL      OtPayEx = P_TransExt
- 
+
      C                   Eval      P_ChargesDR = O_CDRO
      C                   Eval      P_ADDC = O_ADDC
      C                   IF        CFT120 = 'Y'                                               CFT120
      C                   EVAL      P_ChgDRCcy = O_OPCDRC                                      CFT120
      C                   ENDIF                                                                CFT120
- 
-      ** Work out if customer 1,2 or B)oth
- 
+
+      **?Work out if customer 1,2 or B)oth
+
      C                   SELECT
- 
+
      C                   WHEN      Ottrcd = '1'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and O_ADDC = 'A'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and O_ADDC = 'D'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * In_CCT - Incoming customer credit transfer                    *
@@ -693,80 +854,80 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     In_CCT        BEGSR
       *    ******
- 
-      ** Move input data to data structures
+
+      **?Move input data to data structures
      C                   EVAL      FT102H = P_TransDet
      C                   EVAL      FT102D = P_TransExt
- 
-      ** Work out if customer 1,2 or(B)oth
- 
+
+      **?Work out if customer 1,2 or(B)oth
+
      C                   SELECT
- 
+
      C                   WHEN      Intrcd = '1'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and H2CCTCHG = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and D2CCYCHG = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and H2CCTCHG = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and D2CCYCHG = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and H2CCTCHG = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and D2CCYCHG = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '3' and H2CCTCHG = 'OUR'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '3' and D2CCYCHG = 'OUR'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '3' and H2CCTCHG = 'BEN'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '3' and D2CCYCHG = 'BEN'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '3' and H2CCTCHG = 'SHA'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '3' and D2CCYCHG = 'SHA'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '4' and H2CCTCHG = 'OUR'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '4' and D2CCYCHG = 'OUR'
      C                   EVAL      Cus_12B = 'B'
- 
+
      C                   WHEN      Intrcd = '4' and H2CCTCHG = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and D2CCYCHG = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and H2CCTCHG = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and D2CCYCHG = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Out_CCT - Outgoing customer credit transfer                   *
@@ -776,44 +937,44 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    *******
      C     Out_CCT       BEGSR
       *    *******
- 
-      ** Move input data to data structures
+
+      **?Move input data to data structures
      C                   EVAL      FT102H = P_TransDet
      C                   EVAL      FT102D = P_TransExt
- 
-      ** Work out if customer 1,2 or(B)oth
- 
+
+      **?Work out if customer 1,2 or(B)oth
+
      C                   SELECT
- 
+
      C                   WHEN      Ottrcd = '1'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and H2CCTCHG = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and D2CCYCHG = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and H2CCTCHG = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and D2CCYCHG = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and H2CCTCHG = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Ottrcd = '2' and D2CCYCHG = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * In_Ret - Incoming request for transfer                        *
@@ -823,53 +984,53 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     In_Ret        BEGSR
       *    ******
- 
-      ** Move input data to data structures
+
+      **?Move input data to data structures
      C                   EVAL      FT101H = P_TransDet
      C                   EVAL      FT101D = P_TransExt
- 
-      ** Work out if customer 1,2 or (B)oth
- 
+
+      **?Work out if customer 1,2 or (B)oth
+
      C                   SELECT
- 
+
      C                   WHEN      Intrcd = '1'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and D1TDCHGS = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and D1TDCHGS = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '2' and D1TDCHGS = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '3' and D1TDCHGS = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '3' and D1TDCHGS = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '3' and D1TDCHGS = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and D1TDCHGS = 'OUR'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and D1TDCHGS = 'SHA'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   WHEN      Intrcd = '4' and D1TDCHGS = 'BEN'
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Out_Ret - Outgoing request for transfer                       *
@@ -879,22 +1040,22 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    *******
      C     Out_Ret       BEGSR
       *    *******
- 
-      ** Move input data to data structures
- 
+
+      **?Move input data to data structures
+
      C                   EVAL      FT101H = P_TransDet
      C                   EVAL      FT101D = P_TransExt
- 
-      ** Work out if customer 1,2 or (B)oth
- 
+
+      **?Work out if customer 1,2 or (B)oth
+
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Ch_Paid - Cheques to be paid                                  *
@@ -904,20 +1065,20 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    *******
      C     Ch_Paid       BEGSR
       *    *******
- 
-      ** Move input data to data structures
- 
+
+      **?Move input data to data structures
+
      C                   EVAL      CqPaC = P_TransDet
      C                   EVAL      CqPaD = P_TransExt
- 
+
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Ch_Collect - Cheques to be collected                          *
@@ -927,20 +1088,20 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    **********
      C     Ch_Collect    BEGSR
       *    **********
- 
-      ** Move input data to data structures
- 
+
+      **?Move input data to data structures
+
      C                   EVAL      CqCoD = P_TransDet
      C                   EVAL      CqCoC = P_TransExt
- 
+
      C                   EVAL      Cus_12B = '1'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Key_Cust - Work out customer for getting default charge codes *
@@ -951,52 +1112,52 @@ L011 D P               S              3P 0
       *        CCcust                                                 *
       *                                                               *
       *****************************************************************
- 
+
       *    ********
      C     Key_Cust      BEGSR
       *    ********
- 
+
      C                   EVAL      CusKey1 = *blanks
      C                   EVAL      CusKey2 = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EXSR      INcust
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EXSR      OPcust
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EXSR      BIcust
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EXSR      BOcust
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EXSR      RIcust
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EXSR      ROcust
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EXSR      CPcust
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EXSR      CCcust
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * INcust - Work out customer for incoming payments              *
@@ -1006,375 +1167,375 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     INcust        BEGSR
       *    ******
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Intrcd = '1'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_ACBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      I_ACBK        W_BNC1                                       237319
      C                   Movel     I_ACBK        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = I_ACBK
      C                   Endif
- 
-      ** Account with bank requires pay ccy
+
+      **?Account with bank requires pay ccy
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** A/C with bank
+      **?A/C with bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_BNCT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_BNC1        @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_BNC1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ENDIF
- 
-      ** Beneficiary requires pay ccy
+
+      **?Beneficiary requires pay ccy
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** Benificiary
+      **?Benificiary
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '2' and I_ADDC = 'A'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_INTRIT
      C                   EVAL      W_BNC1 = I_INTRIB
      C                   Eval      Acc_Ccy1 = I_SMCY
-      ** Third reimbursement
+      **?Third reimbursement
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_INRCRT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_INRCO1      @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_INRCO1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_INRCO1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_INRCO1
      C                   ENDIF
- 
-      ** Receivers correspondent requires settle ccy
+
+      **?Receivers correspondent requires settle ccy
      C                   Eval      Acc_Ccy1 = I_SMCY
-      ** Receivers correspondent
+      **?Receivers correspondent
      C                   EXSR      Customer
      C                   ENDIF
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_SNTP
      C                   EVAL      W_BNC1 = I_SND1
-      ** Sender requires settle ccy
+      **?Sender requires settle ccy
      C                   Eval      Acc_Ccy1 = I_SMCY
-      ** Sender
+      **?Sender
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '2' and I_ADDC = 'D'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_ACBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      I_ACBK        W_BNC1                                       237319
      C                   Movel     I_ACBK        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = I_ACBK
      C                   Endif
- 
-      ** Account with bank requires pay ccy
+
+      **?Account with bank requires pay ccy
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** A/C with bank
+      **?A/C with bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_BNCT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_BNC1        @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_BNC1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ENDIF
- 
-      ** Beneficiary requires pay ccy
+
+      **?Beneficiary requires pay ccy
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** Beneficiary
+      **?Beneficiary
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '3' and I_ADDC = 'A'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_INTRIT
      C                   EVAL      W_BNC1 = I_INTRIB
      C                   Eval      Acc_Ccy1 = I_SMCY
-      ** Third reimbursement institution
+      **?Third reimbursement institution
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_INRCRT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_INRCO1      @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_INRCO1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_INRCO1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_INRCO1
      C                   ENDIF
- 
+
      C                   Eval      Acc_Ccy1 = I_SMCY
-      ** Receivers correspondents
+      **?Receivers correspondents
      C                   EXSR      Customer
      C                   ENDIF
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_SNTP
      C                   EVAL      W_BNC1 = I_SND1
      C                   Eval      Acc_Ccy1 = I_SMCY
-      ** Sender
+      **?Sender
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
       *
- 
-      ** Customer key 2
+
+      **?Customer key 2
      C                   EVAL      Acc_Cus = 2
      C                   EVAL      W_BNCT = I_ACBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      I_ACBK        W_BNC1                                       237319
      C                   Movel     I_ACBK        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = I_ACBK
      C                   Endif
- 
+
      C                   Eval      Acc_Ccy2 = I_PCCY
-      ** A/C with bank
+      **?A/C with bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_BNCT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_BNC1        @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_BNC1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ENDIF
- 
+
      C                   Eval      Acc_Ccy2 = I_PCCY
-      ** Beneficiary
+      **?Beneficiary
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey2 = Wcustno
       *
- 
+
      C                   WHEN      Intrcd = '3' and I_ADDC = 'D'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_ACBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      I_ACBK        W_BNC1                                       237319
      C                   Movel     I_ACBK        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = I_ACBK
      C                   Endif
- 
+
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** A/C with bank
+      **?A/C with bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_BNCT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_BNC1        @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_BNC1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ENDIF
- 
+
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** Beneficiary
+      **?Beneficiary
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '4' and I_ADDC = 'A'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_ACBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      I_ACBK        W_BNC1                                       237319
      C                   Movel     I_ACBK        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = I_ACBK
      C                   Endif
- 
+
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** A/C with bank
+      **?A/C with bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_BNCT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_BNC1        @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_BNC1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ENDIF
- 
+
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** Beneficiary
+      **?Beneficiary
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
       *
- 
-      ** Customer key 2
+
+      **?Customer key 2
      C                   EVAL      Acc_Cus = 2
      C                   EVAL      W_BNCT = I_INTRIT
      C                   EVAL      W_BNC1 = I_INTRIB
      C                   Eval      Acc_Ccy2 = I_SMCY
-      ** Third reimbursement institution
+      **?Third reimbursement institution
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_INRCRT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_INRCO1      @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_INRCO1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_INRCO1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_INRCO1
      C                   ENDIF
- 
+
      C                   Eval      Acc_Ccy2 = I_SMCY
-      ** Receivers correspondents
+      **?Receivers correspondents
      C                   EXSR      Customer
      C                   ENDIF
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_SNTP
      C                   EVAL      W_BNC1 = I_SND1
      C                   Eval      Acc_Ccy2 = I_SMCY
-      ** Sender
+      **?Sender
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey2 = Wcustno
- 
+
      C                   WHEN      Intrcd = '4' and I_ADDC = 'D'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = I_ACBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      I_ACBK        W_BNC1                                       237319
      C                   MoveL     I_ACBK        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = I_ACBK
      C                   Endif
- 
+
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** A/C with bank
+      **?A/C with bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = I_BNCT
- 
-      ** IBAN
+
+      **?IBAN
      C                   IF        W_BNCT = 'I'
      C     '/'           SCAN      I_BNC1        @P                3 0
- 
+
      C     @P            IFNE      1
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ELSE
      C                   EVAL      W_BNC1 = %SUBST(I_BNC1:2:34)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_BNC1 = I_BNC1
      C                   ENDIF
- 
+
      C                   Eval      Acc_Ccy1 = I_PCCY
-      ** Beneficiary
+      **?Beneficiary
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * OPcust - Work out customer for outgoing payments              *
@@ -1384,18 +1545,18 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     OPcust        BEGSR
       *    ******
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Ottrcd = '1'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = O_ORBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      O_ORBK        W_BNC1                                       237319
      C                   Movel     O_ORBK        W_BNC1                                       237319
@@ -1407,33 +1568,33 @@ L011 D P               S              3P 0
      C                   Movel     O_ORBK        W_BNC1
      C                   Endif
      C                   Endif
- 
-      ** Ordering bank requires settle ccy
+
+      **?Ordering bank requires settle ccy
      C                   Eval      Acc_Ccy1 = O_SMCY
-      ** Ordering bank
+      **?Ordering bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
-      ** Ordering customer requires settle ccy
+      **?Ordering customer requires settle ccy
      C                   Eval      Acc_Ccy1 = O_SMCY
      C                   EVAL      W_BNCT = O_ORCT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      O_ORC1        W_BNC1                                       237319
      C                   Movel     O_ORC1        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = O_ORC1
      C                   Endif
-      ** Ordering customer
+      **?Ordering customer
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Ottrcd = '2' and O_ADDC = 'A'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = O_ORBT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      O_ORBK        W_BNC1                                       237319
      C                   Movel     O_ORBK        W_BNC1                                       237319
@@ -1445,53 +1606,53 @@ L011 D P               S              3P 0
      C                   Movel     O_ORBK        W_BNC1
      C                   Endif
      C                   Endif
-      ** Ordering bank requires settle ccy
+      **?Ordering bank requires settle ccy
      C                   Eval      Acc_Ccy1 = O_SMCY
-      ** Ordering bank
+      **?Ordering bank
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = O_ORCT
- 
+
      C                   If        W_BNCT = 'N'
      C**********         Move      O_ORC1        W_BNC1                                       237319
      C                   Movel     O_ORC1        W_BNC1                                       237319
      C                   Else
      C                   EVAL      W_BNC1 = O_ORC1
      C                   Endif
-      ** Ordering customer requires settle ccy
+      **?Ordering customer requires settle ccy
      C                   Eval      Acc_Ccy1 = O_SMCY
-      ** Ordering customer
+      **?Ordering customer
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Ottrcd = '2' and O_ADDC = 'D'
-      ** Customer key 1
+      **?Customer key 1
      C                   EVAL      Acc_Cus = 1
      C                   EVAL      W_BNCT = O_SNCT
      C                   MOVEL     O_SNCO        Tmp12
      C**********         Move      Tmp12         W_BNC1                                       237319
      C                   Movel     Tmp12         W_BNC1                                       237319
-      ** Senders correspondent requires pay ccy
+      **?Senders correspondent requires pay ccy
      C                   Eval      Acc_Ccy1 = O_PCCY
-      ** Senders correspondent
+      **?Senders correspondent
      C                   EXSR      Customer
      C                   IF        WCustno = *blanks
      C                   EVAL      W_BNCT = O_DSTT
      C                   EVAL      W_BNC1 = O_DST1
-      ** Destination requires pay ccy
+      **?Destination requires pay ccy
      C                   Eval      Acc_Ccy1 = O_PCCY
-      ** Destination
+      **?Destination
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * BIcust - Work out customer for incoming customer credit       *
@@ -1502,13 +1663,13 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     BIcust        BEGSR
       *    ******
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Intrcd = '1'
      C                   EVAL      W_BNCT = D2AWITP
      C                   EVAL      W_BNC1 = D2ACCI35
@@ -1518,9 +1679,9 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNC1 = D2BENF1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '2'
      C                   IF        H2CCTCHG = 'OUR' or
      C                             D2CCYCHG = 'OUR'
@@ -1539,7 +1700,7 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
      C                   ENDIF
- 
+
      C                   WHEN      Intrcd = '2'
      C                   IF        H2CCTCHG = 'BEN' or
      C                             D2CCYCHG = 'BEN' or
@@ -1555,7 +1716,7 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
      C                   ENDIF
- 
+
      C                   WHEN      Intrcd = '3'
      C                   IF        H2CCTCHG = 'OUR' or
      C                             D2CCYCHG = 'OUR'
@@ -1568,7 +1729,7 @@ L011 D P               S              3P 0
      C                   EXSR      Customer
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   EVAL      W_BNCT = H2RCVTYP
      C                   EVAL      W_BNC1 = H2RCVCOR
      C                   EXSR      Customer
@@ -1584,7 +1745,7 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey2 = Wcustno
      C                   ENDIF
- 
+
      C                   WHEN      Intrcd = '3'
      C                   IF        H2CCTCHG = 'BEN' or
      C                             D2CCYCHG = 'BEN' or
@@ -1601,7 +1762,7 @@ L011 D P               S              3P 0
      C                   EVAL      CusKey1 = Wcustno
      C                   EVAL      CusKey2 = Wcustno
      C                   ENDIF
- 
+
      C                   WHEN      Intrcd = '4'
      C                   IF        H2CCTCHG = 'OUR' or
      C                             D2CCYCHG = 'OUR'
@@ -1619,7 +1780,7 @@ L011 D P               S              3P 0
      C                   EXSR      Customer
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   EVAL      W_BNCT = D2AWITP
      C                   EVAL      W_BNC1 = D2ACCI35
      C                   EXSR      Customer
@@ -1630,7 +1791,7 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey2 = Wcustno
      C                   ENDIF
- 
+
      C                   WHEN      Intrcd = '4'
      C                   IF        H2CCTCHG = 'BEN' or
      C                             D2CCYCHG = 'BEN' or
@@ -1646,11 +1807,11 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * BOcust - Work out customer for outgoing customer credit       *
@@ -1661,13 +1822,13 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     BOcust        BEGSR
       *    ******
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Ottrcd = '1'
      C                   EVAL      W_BNCT = H2ORDITP
      C                   EVAL      W_BNC1 = H2OINST3
@@ -1677,9 +1838,9 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNC1 = H2TOCUS1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Ottrcd = '2'
      C                   IF        H2CCTCHG = 'OUR' or
      C                             D2CCYCHG = 'OUR' or
@@ -1695,7 +1856,7 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
      C                   ENDIF
- 
+
      C                   WHEN      Ottrcd = '2'
      C                   IF        H2CCTCHG = 'BEN' or
      C                             D2CCYCHG = 'BEN'
@@ -1714,11 +1875,11 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      CusKey1 = Wcustno
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * RIcust - Work out customer for incoming request for transfer  *
@@ -1728,13 +1889,13 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     RIcust        BEGSR
       *    ******
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Intrcd = '1'
      C                   EVAL      W_BNCT = D1INTTTP
      C                   EVAL      W_BNC1 = D1TINST1
@@ -1749,9 +1910,9 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNC1 = D1TBNA35
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '2'
      C                   IF        D1TDCHGS = 'OUR' or
      C                             D1TDCHGS = 'SHA'
@@ -1764,9 +1925,9 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNC1 = D1TOCUS1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '2'
      C                   IF        D1TDCHGS = 'BEN'
      C                   EVAL      W_BNCT = D1INTTTP
@@ -1783,9 +1944,9 @@ L011 D P               S              3P 0
      C                   EXSR      Customer
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '3'
      C                   IF        D1TDCHGS = 'OUR' or
      C                             D1TDCHGS = 'SHA'
@@ -1798,9 +1959,9 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNC1 = D1TOCUS1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '3'
      C                   IF        D1TDCHGS = 'BEN'
      C                   EVAL      W_BNCT = D1INTTTP
@@ -1817,9 +1978,9 @@ L011 D P               S              3P 0
      C                   EXSR      Customer
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '4'
      C                   IF        D1TDCHGS = 'OUR' or
      C                             D1TDCHGS = 'SHA'
@@ -1832,9 +1993,9 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNC1 = D1TOCUS1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   WHEN      Intrcd = '4'
      C                   IF        D1TDCHGS = 'BEN'
      C                   EVAL      W_BNCT = D1INTTTP
@@ -1851,13 +2012,13 @@ L011 D P               S              3P 0
      C                   EXSR      Customer
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * ROcust - Work out customer for outgoing request for transfer  *
@@ -1867,11 +2028,11 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     ROcust        BEGSR
       *    ******
- 
+
      C                   EVAL      W_BNCT = 'G'
      C                   EVAL      W_BNC1 = H1HANDAC
      C                   EXSR      Customer
@@ -1879,11 +2040,11 @@ L011 D P               S              3P 0
      C                   EVAL      W_BNCT = 'R'
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * CPcust - Work out customer for cheques to be paid             *
@@ -1893,11 +2054,11 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     CPcust        BEGSR
       *    ******
- 
+
      C                   EVAL      W_BNCT = D_CDRT
      C                   MOVE      D_CDRO        W_BNC1
      C                   EXSR      Customer
@@ -1906,11 +2067,11 @@ L011 D P               S              3P 0
      C                   MOVE      D_DRPY        W_BNC1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * CCcust - Work out customer for cheques to be collected        *
@@ -1920,13 +2081,13 @@ L011 D P               S              3P 0
       * Calls: Customer                                               *
       *                                                               *
       *****************************************************************
- 
+
       *    ******
      C     CCcust        BEGSR
       *    ******
- 
+
      C                   Eval      Acc_Ccy1 = B_Smcy
- 
+
      C                   EVAL      W_BNCT = A_CDRT
      C                   MOVE      A_CDRO        W_BNC1
      C                   EXSR      Customer
@@ -1935,11 +2096,11 @@ L011 D P               S              3P 0
      C                   MOVE      A_CRPY        W_BNC1
      C                   EXSR      Customer
      C                   ENDIF
- 
+
      C                   EVAL      CusKey1 = Wcustno
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       * CalChgXRate  - Calcualtes charges exchange rate               *
       *                                                               *
@@ -1949,16 +2110,16 @@ L011 D P               S              3P 0
       *                                                               *
       *****************************************************************
      C     CalChgXRate   Begsr
- 
+
      C                   Select
- 
+
      C                   When      P_TransType = 'IN'
      C                   Eval      ChgCcy = I_INCHGC
      C                   Eval      FRMCCY = ChgCcy
      C                   Eval      ToCcy = I_PCCY
- 
+
      C                   Select
- 
+
      C***********        When      I_CDRO <> *Zeros                                           CSD027
      C                   When      I_CDRO <> *BLANKS                                          CSD027
      C                   Eval      ToCcy = BaseCcy
@@ -1976,11 +2137,11 @@ L011 D P               S              3P 0
      C                   Other
      C                   Eval      ToCcy = I_PCCY
      C                   Endsl
- 
+
      C                   When      P_TransType = 'OP'
      C                   Eval      ChgCcy = O_OPCHGC
      C                   Eval      FRMCCY = ChgCcy
- 
+
      C                   Select
      C***********        When      O_CDRO <> *Zeros                                           CSD027
      C                   When      O_CDRO <> *BLANKS                                          CSD027
@@ -1995,32 +2156,32 @@ L011 D P               S              3P 0
      C                   Other
      C                   Eval      ToCcy = O_PCCY
      C                   Endsl
- 
+
      C                   When      P_TransType = 'RI'
      C                   Eval      ChgCcy = D1M1CHGC
      C                   Eval      FRMCCY = ChgCcy
      C                   Eval      ToCcy = D1RCHCCY
- 
+
      C                   When      P_TransType = 'RO'
      C                   Eval      ChgCcy = D1M1CHGC
      C                   Eval      FRMCCY = D1RCHCCY
      C                   Eval      ToCcy = H1HANDCY
- 
+
       **  Put other Transaction types here.
      C                   Endsl
- 
+
      C                   Exsr      Convert1
- 
+
      C                   Eval      ChgExch  = CVTRAT
- 
+
      C                   Eval      O_OpChRt = CVTRAT
      C                   Eval      I_INCHRT = CVTRAT
      C                   Eval      D1M1CHRT = CVTRAT
- 
- 
- 
+
+
+
      C                   Endsr
- 
+
       *****************************************************************
       * Customer - Works out customer key field                       *
       *                                                               *
@@ -2030,43 +2191,43 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    ********
      C     Customer      BEGSR
       *    ********
- 
+
      C                   EVAL      WCustNo = *blanks
- 
-      ** Set correct account currency depending on customer 1 or 2
- 
+
+      **?Set correct account currency depending on customer 1 or 2
+
      C                   SELECT
- 
+
      C                   WHEN      Acc_Cus = 1
      C                   EVAL      Acc_Ccy = Acc_Ccy1
- 
+
      C                   WHEN      Acc_Cus = 2
      C                   EVAL      Acc_Ccy = Acc_Ccy2
- 
+
      C                   ENDSL
- 
+
      C                   SELECT
- 
+
      C                   WHEN      W_BNCT = 'C'  Or
      C                             W_BNCT = 'S'  Or
      C                             W_BNCT = 'R'  Or
      C                             W_BNCT = 'P'
- 
-      ** If it is a partial GL, convert it into a full GL for call
-      ** of AOACCTV1
+
+      **?If it is a partial GL, convert it into a full GL for call
+      **?of AOACCTV1
      C                   If        W_BNCT = 'P'
      C                   If        %SUBST(W_BNC1:1:1) = '/'                                BUG15088A
      C                   Eval      PType = %SUBST(W_BNC1:2:21)                             BUG15088A
      C                   Else                                                              BUG15088A
      C                   Movel     W_BNC1        PType
      C                   Endif                                                             BUG15088A
- 
-      ** If incoming or outgoing payment we need to set branch code
-      ** if it is blank.
+
+      **?If incoming or outgoing payment we need to set branch code
+      **?if it is blank.
      C                   Select
      C                   When      P_TransType = 'IN'
      C                   If        PBrcd = *blanks
@@ -2077,81 +2238,81 @@ L011 D P               S              3P 0
      C                   Eval      PBrcd = O_ORBB
      C                   Endif
      C                   Endsl
- 
-      ** If not multibranching, use single branch code form SDBANKPD
- 
+
+      **?If not multibranching, use single branch code form SDBANKPD
+
      C                   If        MBIN <> 'Y'
      C                   Movel     BJSBRC        GLBrcd
      C                   Else
      C                   Movel     PBrcd         GLBrcd
      C                   Endif
- 
+
      C                   Movel     PCnum         GLCnum
      C                   Movel     PAcod         GLAcod
      C                   Movel     PAcsq         GLAcsq
- 
-      ** Outgoing Payments
-      ** Set GLCycd depending on whether account is in debit
-      ** or credit currency.
- 
+
+      **?Outgoing Payments
+      **?Set GLCycd depending on whether account is in debit
+      **?or credit currency.
+
      C                   If        P_TRANSTYPE = 'OP'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Acc_Cus = 1
      C                   EVAL      GLCycd = Acc_Ccy1
      C                   WHEN      Acc_Cus = 2
      C                   EVAL      GLCycd = Acc_Ccy2
      C                   ENDSL
- 
+
      C                   Endif
- 
-      ** Incoming Payments
-      ** Set GLCycd depending on whether account is in debit
-      ** or credit currency.
- 
+
+      **?Incoming Payments
+      **?Set GLCycd depending on whether account is in debit
+      **?or credit currency.
+
      C                   If        P_TRANSTYPE = 'IN'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      Acc_Cus = 1
      C                   EVAL      GLCycd = Acc_Ccy1
      C                   WHEN      Acc_Cus = 2
      C                   EVAL      GLCycd = Acc_Ccy2
      C                   ENDSL
- 
+
      C                   Endif
- 
+
      C                   Movel     GLType        CNum35
- 
+
      C                   Else
- 
+
      C                   MOVEL     W_BNC1        CNum35
      C                   Endif
- 
+
      C                   CALLB     'AOACCTV1'
      C                   PARM      '*DBERR'      @Rtcd
      C                   PARM      '*KEY'        @Optn
      C                   PARM                    CNum35
      C     Dssdy         PARM      *Blanks       Dssdy
- 
+
      C                   SELECT
      C                   WHEN      @Optn = '*LEDGER'   or
      C                             @Optn = '*RETAIL'
      C                   EVAL      Accnt  = Dssdy
      C                   MOVEL     E_CNum        WCustNo
- 
- 
+
+
      C                   WHEN      @Optn = '*CUSTNO'   or
      C                             @Optn = '*SHNAME'
      C                   EVAL      SdCust = Dssdy
      C                   MOVEL     BBCUST        WCustNo
- 
- 
+
+
      C                   WHEN      @Optn = '*NOSTRO'
      C                   EVAL      SdNost = Dssdy
      C                   MOVEL     A7CUST        WCustNo
- 
+
      C                   OTHER
      C                   EVAL      ReturnCode = '*ERROR'
      C                   EVAL      DBKey  =  CNum35
@@ -2161,23 +2322,23 @@ L011 D P               S              3P 0
      C                   EVAL      DBProc =  'CUSTOMER'
      C                   EXSR      *PSSR
      C                   ENDSL
- 
-      ** Nostro
+
+      **?Nostro
      C                   WHEN      W_BNCT = 'N' or W_BNCT = 'F'
- 
+
      C                   SELECT
-      ** Incoming payments
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN' and W_BNCT = 'N'
      C**********         MOVE      W_BNC1        Tmp12                                        TDA006
      C**********         MOVE      W_BNC1        Tmp18                                 TDA006 237319
      C                   MOVEL     W_BNC1        Tmp18                                        237319
      C**********         EVAL      CNum35 = Acc_Ccy + %Subst(Tmp12:1:2)                       TDA006
      C                   EVAL      CNum35 = Acc_Ccy + %Subst(Tmp18:1:2)                       TDA006
- 
+
      C                   WHEN      P_TransType = 'IN' and W_BNCT = 'F'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP' and W_BNCT = 'N'
      C**********         MOVE      W_BNC1        Tmp12                                        TDA006
      C**********         MOVE      W_BNC1        Tmp18                                 TDA006 237319
@@ -2192,52 +2353,52 @@ L011 D P               S              3P 0
      C**********         EVAL      CNum35 = Acc_Ccy + %Subst(Tmp12:1:2)                       TDA006
      C                   EVAL      CNum35 = Acc_Ccy + %Subst(Tmp18:1:2)                       TDA006
      C                   EndIf                                                               BUG6864
- 
+
      C                   WHEN      P_TransType = 'OP' and W_BNCT = 'F'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      CNum35 = W_BNC1
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C**********         MOVE      W_BNC1        Tmp12                                        TDA006
      C**********         MOVE      W_BNC1        Tmp18                                 TDA006 237319
      C                   MOVEL     W_BNC1        Tmp18                                        237319
      C**********         EVAL      CNum35 = Acc_Ccy + %Subst(Tmp12:1:2)                       TDA006
      C                   EVAL      CNum35 = Acc_Ccy + %Subst(Tmp18:1:2)                       TDA006
- 
+
      C                   ENDSL
- 
- 
+
+
      C                   CALLB     'AOACCTV1'
      C                   PARM      '*DBERR'      @Rtcd
      C                   PARM      '*KEY'        @Optn
      C                   PARM                    CNum35
      C     Dssdy         PARM      *Blanks       Dssdy
- 
+
      C                   SELECT
      C                   WHEN      @Optn  = '*NOSTRO'
      C                   EVAL      SDNOST = Dssdy
      C                   MOVEL     A7CUST        WCustNo
- 
+
      C                   OTHER
      C                   EVAL      ReturnCode = '*ERROR'
      C                   EVAL      DBKey  =  CNum35
@@ -2247,8 +2408,8 @@ L011 D P               S              3P 0
      C                   EVAL      DBProc =  'CUSTOMER'
      C                   EXSR      *PSSR
      C                   ENDSL
- 
-      ** IBAN
+
+      **?IBAN
      C                   WHEN      W_BNCT = 'I'
       *
       ** Determine corresponding Midas account of IBAN account
@@ -2260,32 +2421,32 @@ L011 D P               S              3P 0
      C                   IF        %SUBST(P@IBAN:1:1) = '/'                                 BUG14880
      C                   EVAL      P@IBAN = %SUBST(P@IBAN:2)                                BUG14880
      C                   ENDIF                                                              BUG14880
- 
+
      C                   CALL      'AOIBANR4'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    P@IBAN           34
      C     P@ACCN        PARM                    DSSDY
       *
-      ** Database error
- 
+      **?Database error
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'AOIBANR4'    DBFILE
      C                   MOVEL     '007'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     IBCNUM        WCustNo
- 
- 
-      ** GL
+
+
+      **?GL
      C                   WHEN      W_BNCT = 'G'
      C                   EVAL      WCustNo = %subst(W_BNC1:1:6)
- 
+
      C                   WHEN      O_ORBT = 'P'
      C                   MOVE      O_ORBK        WCustNo
- 
+
      C                   WHEN      O_ORBT = 'R'
      C**********         MOVEL     O_ORBK        CNum35                                       237319
      C                   MOVEL     O_ORBK        ##0010A          10                          237319
@@ -2295,12 +2456,12 @@ L011 D P               S              3P 0
      C                   PARM      '*KEY'        @Optn
      C                   PARM                    CNum35
      C     Dssdy         PARM      *Blanks       Dssdy
- 
+
      C                   SELECT
      C                   WHEN      @Optn = '*RETAIL'
      C                   EVAL      Accnt  = Dssdy
      C                   MOVEL     E_CNum        WCustNo
- 
+
      C                   OTHER
      C                   EVAL      ReturnCode = '*ERROR'
      C                   EVAL      DBKey  =  CNum35
@@ -2310,11 +2471,11 @@ L011 D P               S              3P 0
      C                   EVAL      DBProc =  'CUSTOMER'
      C                   EXSR      *PSSR
      C                   ENDSL
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       * Key_Rest - Get rest of key fields for default charge access   *
       *                                                               *
@@ -2323,88 +2484,88 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    ********
      C     Key_Rest      BEGSR
       *    ********
- 
- 
-      ** Set correct account currency depending on customer 1 or 2
- 
+
+
+      **?Set correct account currency depending on customer 1 or 2
+
      C                   SELECT
- 
+
      C                   WHEN      Acc_Cus = 1
      C                   EVAL      Acc_Ccy = Acc_Ccy1
- 
+
      C                   WHEN      Acc_Cus = 2
      C                   EVAL      Acc_Ccy = Acc_Ccy2
- 
+
      C                   ENDSL
-      ** Get rest of possible key fields for access to default charges file
- 
+      **?Get rest of possible key fields for access to default charges file
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      K_Branch = I_BRCA
      C                   EVAL      K_Currcy = I_SMCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = I_PYST
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      K_Branch = O_BRCA
      C                   EVAL      K_Currcy = O_PCCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = O_PYST
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      K_Branch = H2BRCA
      C                   EVAL      K_Currcy = D2PAYCCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = H2CCTTST
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      K_Branch = H2BRCA
      C                   EVAL      K_Currcy = D2PAYCCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = H2CCTTST
- 
-      ** Incoming request for transfer
- 
+
+      **?Incoming request for transfer
+
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      K_Branch = H1BRCA
      C                   EVAL      K_Currcy = D1PAYCCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = H1PYST
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      K_Branch = H1BRCA
      C                   EVAL      K_Currcy = D1PAYCCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = H1PYST
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      K_Branch = C_BRCA
      C                   EVAL      K_Currcy = C_PCCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = C_PYST
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      K_Branch = A_BRCA
      C                   EVAL      K_Currcy = A_CRCY
      C                   EVAL      K_Trntyp = P_TransType
      C                   EVAL      K_Trsbty = B_PYST
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       * Dft_Manual - Get default charge codes for Manual processing.  *
       *                                                               *
@@ -2413,73 +2574,82 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    **********
      C     Dft_Manual    BEGSR
       *    **********
- 
+
      C                   CLEAR                   Cus1_Dft
      C                   CLEAR                   Cus2_Dft
- 
+
      C                   SELECT
- 
-      ** Customer 1
+
+      **?Customer 1
      C                   WHEN      Cus_12B = '1'
      C                   EVAL      X = 1
      C                   EVAL      Y = 1
- 
-      ** Customer 2
+
+      **?Customer 2
      C                   WHEN      Cus_12B = '2'
      C                   EVAL      X = 2
      C                   EVAL      Y = 2
- 
-      ** Both
+
+      **?Both
      C                   WHEN      Cus_12B = 'B'
      C                   EVAL      X = 1
      C                   EVAL      Y = 2
- 
+
      C                   ENDSL
- 
+
      C     X             DO        Y             Z
- 
+
      C                   SELECT
      C                   WHEN      Z = 1
      C                   EVAL      K_CustNum = Cuskey1
      C                   WHEN      Z = 2
      C                   EVAL      K_CustNum = Cuskey2
      C                   ENDSL
- 
+
      C                   Eval      K_Custom = K_CustNum
- 
+                                                                                              ERN054
+      ** Ignore all below for ERN054, it is incorrect                                         ERN054
+                                                                                              ERN054
+     C                   IF        ERN054 <> 'ERN054'                                         ERN054
+                                                                                              ERN054
+
      C     Kftpycgl0     CHAIN     PYCGL0                             99
- 
+
      C                   IF        *In99 = *On
      C     Kftpycgl1     CHAIN     PYCGL1                             99
      C                   ENDIF
- 
+
      C                   IF        *In99 = *On
      C     Kftpycgl6     CHAIN     PYCGL6                             99
      C                   ENDIF
- 
+
      C                   IF        *In99 = *On
      C     Kftpycgl7     CHAIN     PYCGL7                             99
      C                   ENDIF
- 
-      ***Access*customer*file*and*if*retail*customer*group*=*1*then*****                      248174
-      ** access customer grouping codes file and chain using codes
-      ** with set number = 1.
- 
+
+     ?***Access*customer*file*and*if*retail*customer*group*=*1*then*****                      248174
+     ?** access customer grouping codes file and chain using codes
+     ?** with set number = 1.
+
+      ** Ignore all below for EEE058, it is incorrect                                         EEE058
+                                                                                              EEE058
+     C                   IF        EEE058 <> 'EEE058'                                         EEE058
+                                                                                              EEE058
      C***********        EVAL      Cus_Grp = *blanks                                          248174
      C                   EVAL      K_D6snbr = '1'
- 
+
      C***********        IF        *In99 = *On                                                248174
      C*****K_CustNum     CHAIN     SDCUSTL1                           98                      248174
      C***********        IF        *In98 = *Off and BBCGRP = '1'                              248174
      C***********        EVAL      Cus_Grp = 'Y'                                              248174
      C***********        ENDIF                                                                248174
      C***********        ENDIF                                                                248174
- 
-      ** Get correct grouping code for checking.                                              246583
+
+     ?** Get correct grouping code for checking.                                              246583
                                                                                               246583
      C                   EVAL      ChkGrp    = *blanks                                        246583
      C     K_CustNum     CHAIN     SDCMRKL1                           96                      246583
@@ -2489,134 +2659,551 @@ L011 D P               S              3P 0
                                                                                               246583
      C***********        IF        *In99 = *On and Cus_Grp = 'Y'                              248174
      C                   IF        *In99 = *On and ChkGrp <> *Blanks                          248174
-      ** Read all set number 1 group codes from file
- 
+     ?** Read all set number 1 group codes from file
+
      C     K_D6snbr      SETLL     SDCGRPL0
      C     K_D6snbr      READE     SDCGRPL0                               97
- 
-      ** Use group code as part of key to access charge defaults file
+
+     ?** Use group code as part of key to access charge defaults file
      C     *In97         DOWEQ     *Off
      C                   EVAL      K_Csgrcd = D6GPCD
      C     Kftpycgl2     CHAIN     PYCGL2                             99
-      ** Got one - leave loop
-      ** Only if correct Grouping Code                                                        246583
+     ?** Got one - leave loop
+     ?** Only if correct Grouping Code                                                        246583
      C**********         IF        *In99 = *Off                                               246583
      C                   IF        *In99 = *Off AND CSGRCD = ChkGrp                           246583
      C                   LEAVE
      C                   ENDIF
- 
+
      C     K_D6snbr      READE     SDCGRPL0                               97
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C***********        IF        *In99 = *On and Cus_Grp = 'Y'                              248174
      C                   IF        *In99 = *On and ChkGrp <> *Blanks                          248174
-      ** Read all set number 1 group codes from file
- 
+     ?** Read all set number 1 group codes from file
+
      C     K_D6snbr      SETLL     SDCGRPL0
      C     K_D6snbr      READE     SDCGRPL0                               97
- 
-      ** Use group code as part of key to access charge defaults file
+
+     ?** Use group code as part of key to access charge defaults file
      C     *In97         DOWEQ     *Off
      C                   EVAL      K_Csgrcd = D6GPCD
      C     Kftpycgl3     CHAIN     PYCGL3                             99
-      ** Got one - leave loop
-      ** Only if correct Grouping Code                                                        246583
+     ?** Got one - leave loop
+     ?** Only if correct Grouping Code                                                        246583
      C*******************IF        *In99 = *Off                                               246583
      C                   IF        *In99 = *Off AND CSGRCD = ChkGrp                           246583
      C                   LEAVE
      C                   ENDIF
- 
+
      C     K_D6snbr      READE     SDCGRPL0                               97
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C***********        IF        *In99 = *On and Cus_Grp = 'Y'                              248174
      C                   IF        *In99 = *On and ChkGrp <> *Blanks                          248174
-      ** Read all set number 1 group codes from file
- 
+     ?** Read all set number 1 group codes from file
+
      C     K_D6snbr      SETLL     SDCGRPL0
      C     K_D6snbr      READE     SDCGRPL0                               97
- 
-      ** Use group code as part of key to access charge defaults file
+
+     ?** Use group code as part of key to access charge defaults file
      C     *In97         DOWEQ     *Off
      C                   EVAL      K_Csgrcd = D6GPCD
      C     Kftpycgl8     CHAIN     PYCGL8                             99
-      ** Got one - leave loop
-      ** Only if correct Grouping Code                                                        246583
+     ?** Got one - leave loop
+     ?** Only if correct Grouping Code                                                        246583
      C*******************IF        *In99 = *Off                                               246583
      C                   IF        *In99 = *Off AND CSGRCD = ChkGrp                           246583
      C                   LEAVE
      C                   ENDIF
- 
+
      C     K_D6snbr      READE     SDCGRPL0                               97
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C***********        IF        *In99 = *On and Cus_Grp = 'Y'                              248174
      C                   IF        *In99 = *On and ChkGrp <> *Blanks                          248174
-      ** Read all set number 1 group codes from file
- 
+     ?** Read all set number 1 group codes from file
+
      C     K_D6snbr      SETLL     SDCGRPL0
      C     K_D6snbr      READE     SDCGRPL0                               97
- 
-      ** Use group code as part of key to access charge defaults file
+
+     ?** Use group code as part of key to access charge defaults file
      C     *In97         DOWEQ     *Off
      C                   EVAL      K_Csgrcd = D6GPCD
      C     Kftpycgl9     CHAIN     PYCGL9                             99
-      ** Got one - leave loop
-      ** Only if correct Grouping Code                                                        246583
+     ?** Got one - leave loop
+     ?** Only if correct Grouping Code                                                        246583
      C*******************IF        *In99 = *Off                                               246583
      C                   IF        *In99 = *Off AND CSGRCD = ChkGrp                           246583
      C                   LEAVE
      C                   ENDIF
- 
+
      C     K_D6snbr      READE     SDCGRPL0                               97
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+                                                                                              EEE058
+     C                   Else                                                                 EEE058
+                                                                                              EEE058
+      ** get Group of PCAT if needed                                                          EEE058
+                                                                                              EEE058
+     C                   CALL      'FTP960'                                                   EEE058
+     C                   PARM                    RetCodeOut                                   EEE058
+     C                   PARM                    P9Pext                                       EEE058
+                                                                                              EEE058
+      ** Find customer market information for customer if no PCAT data                        EEE058
+     C                   MOVEL     *Off          *In98                                        EEE058
+     C                   IF        PXGPCD = *blanks                                           EEE058
+     C     K_CustNum     CHAIN     SDCMRKL0                           98                      EEE058
+                                                                                              EEE058
+      ** If EEE058 and no specific set up for customer                                        EEE058
+                                                                                              EEE058
+     C                   IF        EEE058 = 'EEE058' and                                      EEE058
+     C                             (P_TransType = 'IN' or P_TransType = 'OP')                 EEE058
+     C                             and *in98 = *on                                            EEE058
+      *                                                                                       EEE058
+      * Call program for OUR charge processing when linked to a messaeg                       EEE058
+      *                                                                                       EEE058
+     C                   Clear                   O2Parm                                       EEE058
+     C                   Eval      O2Penf = PXPENF                                            EEE058
+     C                   Eval      O2Acod = E_Acod                                            EEE058
+     C                   If        P_TransType = 'OP'                                         EEE058
+     C                   Eval      O2msgr = O_OPMSGR                                          EEE058
+     C                   Eval      O2Kprt = O_OPKPRT                                          EEE058
+     C                   Else                                                                 EEE058
+     C                   Eval      O2msgr = I_INMSGR                                          EEE058
+     C                   Eval      O2Kprt = I_INKPRT                                          EEE058
+     C                   Endif                                                                EEE058
+      *                                                                                       EEE058
+     C                   Call      'FTP860'                                                   EEE058
+     C                   Parm                    RetFtp860         7                          EEE058
+     C                   Parm                    O2Parm                                       EEE058
+      *                                                                                       EEE058
+      ** if account account set use                                                           EEE058
+     C                   If        RetFtp860 =  *blanks and O2Gpcd <> *blanks                 EEE058
+     C                   Eval      D7GPC1 = O2Gpcd                                            EEE058
+     C                   MOVEL     *Off          *In98                                        EEE058
+     C                   Endif                                                                EEE058
+     C                   Endif                                                                EEE058
+      * use code from PCAT                                                                    EEE058
+     C                   Else                                                                 EEE058
+     C                   EVAL      D7GPC1 = PXGPCD                                            EEE058
+     C                   Endif                                                                EEE058
+                                                                                              EEE058
+     C                   IF        *In98 = *Off and D7GPC1 <> *blanks                         EEE058
+     C                   EVAL      K_Csgrcd = D7GPC1                                          EEE058
+     C     Kftpycgl2     CHAIN     PYCGL2                             99                      EEE058
+     C                   IF        *In99 = *On                                                EEE058
+     C     Kftpycgl3     CHAIN     PYCGL3                             99                      EEE058
+     C                   IF        *In99 = *On                                                EEE058
+     C     Kftpycgl8     CHAIN     PYCGL8                             99                      EEE058
+     C                   IF        *In99 = *On                                                EEE058
+     C     Kftpycgl9     CHAIN     PYCGL9                             99                      EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
+                                                                                              EEE058
+     C                   ENDIF                                                                EEE058
+                                                                                              EEE058
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
+                                                                                              EEE058
+
      C                   IF        *In99 = *On
      C     Kftpycgl4     CHAIN     PYCGL4                             99
      C                   ENDIF
- 
+
      C                   IF        *In99 = *On
      C     Kftpycgla     CHAIN     PYCGLA                             99
      C                   ENDIF
- 
+
      C                   IF        *In99 = *On
      C     Kftpycgl5     CHAIN     PYCGL5                             99
      C                   ENDIF
- 
+
      C                   IF        *In99 = *On
      C     Kftpycglb     CHAIN     PYCGLB                             99
      C                   ENDIF
- 
-      ** If charge code default record found move file data structure
-      ** to work data structure to extract codes array
+                                                                                              ERN054
+      ** ERN054 Extended Payment Defaulting                                                   ERN054
+                                                                                              ERN054
+     C                   Else                                                                 ERN054
+                                                                                              ERN054
+      ** get Group of PCAT if needed                                                          ERN054
+                                                                                              ERN054
+     C                   CALL      'FTP960'                                                   ERN054
+     C                   PARM                    RetCodeOut                                   ERN054
+     C                   PARM                    P9Pext                                       ERN054
+                                                                                              ERN054
+      ** Find customer market information for customer if no PCAT data                        ERN054
+     C                   IF        PXGPCD = *blanks                                           ERN054
+     C     K_CustNum     CHAIN     SDCMRKL0                           98                      ERN054
+                                                                                              ERN054
+      ** No specific set up for customer                                                      ERN054
+                                                                                              ERN054
+     C                   If        (P_TransType = 'IN' or P_TransType = 'OP')                 ERN054
+     C                             and *in98 = *on                                            EEE058
+      *                                                                                       ERN054
+      * Call program for OUR charge processing when linked to a messaege                      ERN054
+      *                                                                                       ERN054
+     C                   Clear                   O2Parm                                       ERN054
+     C                   Eval      O2Penf = PXPENF                                            ERN054
+     C                   Eval      O2Acod = E_Acod                                            ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      O2msgr = O_OPMSGR                                          ERN054
+     C                   Eval      O2Kprt = O_OPKPRT                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      O2msgr = I_INMSGR                                          ERN054
+     C                   Eval      O2Kprt = I_INKPRT                                          ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+     C                   Call      'FTP860'                                                   ERN054
+     C                   Parm                    RetFtp860         7                          ERN054
+     C                   Parm                    O2Parm                                       ERN054
+      *                                                                                       ERN054
+      ** if account set use                                                                   ERN054
+     C                   If        RetFtp860 =  *blanks and O2Gpcd <> *blanks                 ERN054
+     C                   Eval      K_csgrcd = O2Gpcd                                          ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+      * use code from PCAT                                                                    ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_csgrcd = PXGPCD                                          ERN054
+     C                   Endif                                                                ERN054
+                                                                                              MK0509
+     C                   IF        *In98 = *Off and D7GPC1 <> *blanks                         MK0509
+     C                   EVAL      K_Csgrcd = D7GPC1                                          MK0509
+     C     Kftpycgl2     CHAIN     PYCGL2                             99                      MK0509
+     C                   IF        *In99 = *On                                                MK0509
+     C     Kftpycgl3     CHAIN     PYCGL3                             99                      MK0509
+     C                   IF        *In99 = *On                                                MK0509
+     C     Kftpycgl8     CHAIN     PYCGL8                             99                      MK0509
+     C                   IF        *In99 = *On                                                MK0509
+     C     Kftpycgl9     CHAIN     PYCGL9                             99                      MK0509
+     C                   ENDIF                                                                MK0509
+     C                   ENDIF                                                                MK0509
+     C                   ENDIF                                                                MK0509
+                                                                                              MK0509
+     C                   ENDIF                                                                MK0509
+                                                                                              MK0509
+                                                                                              ERN054
+     C                   Eval      *In99 = *On                                                ERN054
+     C                   Eval      K_netwrk = *blanks                                         ERN054
+     C                   Eval      K_paytyp = *blanks                                         ERN054
+     C                   Eval      K_msgtyp = *blanks                                         ERN054
+     C                   Eval      K_stmtmd = *blanks                                         ERN054
+     C                   Eval      K_dractp = *blanks                                         ERN054
+     C                   Eval      K_cractp = *blanks                                         ERN054
+     C                   Eval      K_fxtran = *blanks                                         ERN054
+     C                   Eval      K_tdctry = *blanks                                         ERN054
+     C                   Eval      K_UrgFlg = *blanks                                         URGIND
+      *                                                                                       ERN054
+     C     KIncrl1       KLIST                                                                ERN054
+     C                   Kfld                    CRMSGR                                       ERN054
+      *                                                                                       ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      CRMSGR = O_OPMSGR                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      CRMSGR = I_INMSGR                                          ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+     C     KIncrl1       Chain     @INCRL1                                                    ERN054
+      * If found get message 26T details                                                      ERN054
+     C                   If        %Found                                                     ERN054
+      * Set network and message type                                                          ERN054
+     C                   Eval      K_netwrk = CRNWRK                                          ERN054
+     C                   Eval      K_msgtyp = CRMTPY                                          ERN054
+      * Set part and :26T: and find                                                           ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      O2Kprt = O_OPKPRT                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      O2Kprt = I_INKPRT                                          ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+      * Get message details                                                                   ERN054
+      *                                                                                       ERN054
+     C     KIndts2a      KLIST                                                                ERN054
+     C                   Kfld                    DSMSGR                                       ERN054
+     C                   Kfld                    DSPART                                       ERN054
+     C                   Kfld                    DSMTG                                        ERN054
+     C                   Kfld                    DSMSEQ                                     AR856737
+     C                   Kfld                    DSSEQN                                       ERN054
+      *                                                                                       ERN054
+     C     KIndts2b      KLIST                                                                ERN054
+     C                   Kfld                    DSMSGR                                       ERN054
+     C                   Kfld                    DSPART                                       ERN054
+     C                   Kfld                    DSMTG                                        ERN054
+      *                                                                                       ERN054
+     C                   Eval      DSMSGR = CRMSGR                                            ERN054
+     C                   Eval      DSPART = O2KPRT                                            ERN054
+     C                   Eval      DSMTG  = ':26T:'                                           ERN054
+     C                   Eval      DSSEQN = 0                                                 ERN054
+     C                   EVAL      DSMSEQ = *blanks                                         AR856737
+     C                   Movel     *OFF          *In01                                        ERN054
+     C                   Movel     *OFF          *In02                                        ERN054
+      *                                                                                       ERN054
+     C     KIndts2a      Setll     Meindts2                                                   ERN054
+     C     KIndts2b      Reade     Meindts2                               90                  ERN054
+      * If found check for 26T                                                                ERN054
+     C                   If        *in90 = *off                                               ERN054
+      * Now fill pay type                                                                     ERN054
+     C                   Select                                                               ERN054
+     C                   When      (*in01 = *ON and DTMFLD <> *blanks)                        ERN054
+     C                   Eval      K_paytyp = DTMFLD                                          ERN054
+     C                   When      (*in02 = *ON and DSMF35 <> *blanks)                        ERN054
+     C                   Eval      K_paytyp = DSMF35                                          ERN054
+     C                   Endsl                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+      * Set Fx Tran                                                                           ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   If        O_SMCY <> O_PCCY                                           ERN054
+     C                   Eval      K_fxtran = 'Y'                                             ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_fxtran = 'N'                                             ERN054
+     C                   Endif                                                                ERN054
+     C                   Else                                                                 ERN054
+     C                   If        I_SMCY <> I_PCCY                                           ERN054
+     C                   Eval      K_fxtran = 'Y'                                             ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_fxtran = 'N'                                             ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ESL038
+     C                   If        P_TransType = 'IN'                                         ESL038
+     C                   Eval      W_BNC1 = I_Snd1                                            ESL038
+     C                   Eval      W_BNCT = I_SnTp                                            ESL038
+     C                   EndIf                                                                ESL038
+                                                                                              ESL038
+     C                   If        P_TransType = 'OP'                                         ESL038
+     C                   Eval      W_BNC1 = O_Dst1                                            ESL038
+     C                   Eval      W_BNCT = O_DstT                                            ESL038
+     C                   EndIf                                                                ESL038
+                                                                                              ESL038
+     C                   Eval      DSMTG  = '2:   '                                           ERN054
+     C                   Eval      DSSEQN = 2                                                 ERN054
+     C                   Eval      DSPART = 0                                                 ERN054
+     C                   Movel     *OFF          *In01                                        ERN054
+     C                   Movel     *OFF          *In02                                        ERN054
+      *                                                                                       ERN054
+     C     KIndts2a      Setll     Meindts2                                                   ERN054
+     C     KIndts2b      Reade     Meindts2                               90                  ERN054
+      * If found check for Urgent                                                             ERN054
+     C                   If        *in90 = *off                                               ERN054
+      * Now fill pay type                                                                     ERN054
+     C                   Select                                                               ERN054
+     C                   When      (*in01 = *ON and DTMFLD <> *blanks)                        ERN054
+     C                   MoveL     DTMFLD        #URFLC1          47                          URGIND
+     C                   Move      #URFLC1       #URFLC2           1                          URGIND
+     C                   When      (*in02 = *ON and DSMF35 <> *blanks)                        ERN054
+     C                   Movel     DSMF35        #URFLC3          35                          ERN054
+     C                   Move      #URFLC3       #URFLC2                                      URGIND
+     C                   Endsl                                                                ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+     C                   If        #URFLC2 = 'U'                                              URGIND
+     C                   Eval      K_UrgFlg = 'U'                                             URGIND
+     C                   Else                                                                 URGIND
+     C                   Eval      K_UrgFlg = 'N'                                             URGIND
+     C                   EndIf                                                                URGIND
+                                                                                              ESL038
+     C                   If        W_BNCT = 'S'                                               ESL038
+     C                   If        %Subst(W_BNC1:5:2) = 'PL'                                  ESL038
+     C                   Eval      K_tdCtry = 'PL'                                            ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      K_tdCtry = 'F '                                            ESL038
+     C                   EndIf                                                                ESL038
+     C                   Else                                                                 ESL038
+                                                                                              ESL038
+     C                   ExSr      Customer                                                   ESL038
+                                                                                              ERN054
+     C                   If        WCustNo <> *Blanks                                         MK0510
+     C     WCustNo       Chain     SDCUSTL1                                                   MK0510
+     C                   Else                                                                 MK0510
+     C     K_CustNum     CHAIN     SDCUSTL1                                                   ERN054
+     C                   EndIf                                                                MK0510
+                                                                                              MK0510
+     C                   Select                                                               ERN054
+     C                   When      Not %Found                                                 ERN054
+     C                   Eval      K_TdCtry = 'N '                                            ERN054
+     C                   When      BbCsid <> *blanks                                          ERN054
+     C                             and %Subst(BbCsid:5:2) = 'PL'                              ERN054
+     C                   Eval      K_tdCtry = 'PL'                                            ERN054
+     C                   When      BbCsid <> *blanks                                          ERN054
+     C                             and %Subst(BbCsid:5:2) <> 'PL'                             ERN054
+     C                   Eval      K_tdCtry = 'F '                                            ERN054
+     C                   When      BbCsid = *blanks                                           ERN054
+     C                             and BbColc = 'PL'                                          ERN054
+     C                   Eval      K_tdCtry = 'PL'                                            ERN054
+     C                   When      BbCsid = *blanks                                           ERN054
+     C                             and BbColc <> 'PL'                                         ERN054
+     C                   Eval      K_tdCtry = 'F '                                            ERN054
+     C                   Other                                                                ERN054
+     C                   Eval      K_tdCtry = 'N '                                            ERN054
+     C                   Endsl                                                                ERN054
+     C                   EndIf                                                                ESL038
+      * Set settlement method                                                                 ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Movel     O_STMT        K_stmtmd                                     ERN054
+      * Set for extended types, Elixir and MC Rocket                                          ERN054
+     C                   Select                                                               ERN054
+     C                   When      K_stmtmd = '18'                                            ERN054
+     C                   Eval      K_stmtmd = 'EX'                                            ERN054
+      *                                                                                       STP009
+      * STP009 remove code for MC and BA as coding conflics with Nordlb                       STP009
+      *                                                                                       STP009
+     C**********         When      K_stmtmd = '91' and PXPCAT = 'Y'                     STP009ERN054
+     C**********         Eval      K_stmtmd = 'MC'                                      STP009ERN054
+     C**********         When      K_stmtmd = '91' and PXPCAT <> 'Y'                    STP009ERN054
+     C**********         Eval      K_stmtmd = 'BA'                                      STP009ERN054
+     C                   When      K_stmtmd = '91'                                            STP009
+     C                   Eval      K_stmtmd = 'EC'                                            STP009
+     C                   When      K_stmtmd = '95'                                            STP009
+     C                   Eval      K_stmtmd = 'ZC'                                            STP009
+     C                   When      K_stmtmd = '97'                                            STP009
+     C                   Eval      K_stmtmd = 'TP'                                            STP009
+     C                   Endsl                                                                ERN054
+     C                   If        O_STMT = 8 And P_ClrStmt <> *Blanks                        MKCAR1
+     C                   Eval      K_stmtmd = P_ClrStmt                                       MKCAR1
+     C                   EndIf                                                                MKCAR1
+     C                   Else                                                                 ERN054
+     C                   Eval      K_stmtmd = '00'                                            ERN054
+     C                   Endif                                                                ERN054
+      * Set add deduct                                                                        ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      K_addded = O_ADDC                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_addded = I_ADDC                                          ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ERN054
+     C                   Do        SearchNbr     Idx                                          ERN054
+     C                   Clear                   Keys                                         ERN054
+     C                   Movea     Search#(Idx)  KeySV(1)                                     ERN054
+     C                   If        KeySV(1) = 'Y'                                             ERN054
+     C                   Eval      KeBRANCH = K_branch                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(2) = 'Y'                                             ERN054
+     C                   Eval      KeCUSTOM = K_custom                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(3) = 'Y'                                             ERN054
+     C                   Eval      KeCURRCY = K_currcy                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(4) = 'Y'                                             ERN054
+     C                   Eval      KeTRNTYP = K_trntyp                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(5) = 'Y'                                             ERN054
+     C                   Eval      KeTRSBTY = K_trsbty                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(6) = 'Y'                                             ERN054
+     C                   Eval      KeCSGRCD = K_csgrcd                                        ERN054
+     C                   If        KeCSGRCD = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(7) = 'Y'                                             ERN054
+     C                   Eval      KeNETWRK = K_netwrk                                        ERN054
+     C                   If        KeNETWRK = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(8) = 'Y'                                             ERN054
+     C                   Eval      KePAYTYP = K_paytyp                                        ERN054
+     C                   If        KePAYTYP = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(9) = 'Y'                                             ERN054
+     C                   Eval      KeMSGTYP = K_msgtyp                                        ERN054
+     C                   If        KeMSGTYP = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(10) = 'Y'                                            ERN054
+     C                   Eval      KeSTMTMD = K_stmtmd                                        ERN054
+     C                   If        KeSTMTMD = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(11) = 'Y'                                            ERN054
+     C                   Eval      KeDRACTP = K_dractp                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(12) = 'Y'                                            ERN054
+     C                   Eval      KeCRACTP = k_cractp                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(13) = 'Y'                                            ERN054
+     C                   Eval      KeADDDED = K_addded                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(14) = 'Y'                                            ERN054
+     C                   Eval      KeFXTRAN = K_fxtran                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(15) = 'Y'                                            ERN054
+     C                   Eval      KeTdCtry = K_tdctry                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(16) = 'Y'                                            URGIND
+     C                   Eval      KeUrgFlg = K_UrgFlg                                        URGIND
+     C                   Endif                                                                URGIND
+      *                                                                                       ERN054
+     C     KeyV0         Chain     PYCGV0                                                     ERN054
+      * If found use as default                                                               ERN054
+     C                   If        %Found                                                     ERN054
+     C                   Eval      *In99 = *Off                                               ERN054
+     C                   Leave                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   Enddo                                                                ERN054
+      *                                                                                       ERN054
+                                                                                              ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ERN054
+
+     ?** If charge code default record found move file data structure
+     ?** to work data structure to extract codes array
      C                   IF        *In99 = *Off
      C                   EVAL      CodesM = FTPYCG
- 
-      ** Now move work array to customer 1 or customer 2 array
+
+     ?** Now move work array to customer 1 or customer 2 array
      C                   SELECT
- 
+
      C                   WHEN      Z = 1
      C                   MOVEA     W_ArrayM      Cus1_Dft
- 
+
      C                   WHEN      Z = 2
      C                   MOVEA     W_ArrayM      Cus2_Dft
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+                                                                                              EEE058
+      ** Get FX rate default                                                                  EEE058
+                                                                                              EEE058
+     C                   IF        EEE058 = 'EEE058'                                          EEE058
+                                                                                              EEE058
+     C                   CALL      'FTP960'                                                   EEE058
+     C                   PARM                    RetCodeOut                                   EEE058
+     C                   PARM                    P9Pext                                       EEE058
+      * If not blank use                                                                      EEE058
+     C                   IF        PXFXSP <> *blanks                                          EEE058
+     C                   MOVEL     PXFXSP        Cus1_Dft(1)                                  EEE058
+     C                   MOVEL     PXFXSP        Cus2_Dft(1)                                  EEE058
+     C                   Endif                                                                EEE058
+      *                                                                                       EEE058
+      * If not blank use                                                                      ESL038
+     C                   IF        PXDOCD <> *blanks                                          ESL038
+     C                   MOVEL     PXDOCD        Cus1_Dft(2)                                  ESL038
+     C                   MOVEL     PXDOCD        Cus2_Dft(2)                                  ESL038
+     C                   Endif                                                                ESL038
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
+
      C                   ENDSR
- 
+
       *****************************************************************
       * Dft_STP - Get default charge codes for STP processing.        *
       *                                                               *
@@ -2625,34 +3212,49 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    *******
      C     Dft_STP       BEGSR
       *    *******
- 
+
      C                   CLEAR                   CusS_Dft
- 
-      ** Set key for access to STP charge code file
- 
+
+     ?** Set key for access to STP charge code file
+
      C                   EVAL      K_Gnmtpy = P_MessType
      C                   MOVE      P_SetNum      K_Gnmset
      C                   EVAL      K_Gnpytp = P_TransType
- 
+
      C     Kmegncrl1     CHAIN     MEGNCRL1                           99
- 
-      ** If charge code default record found move file data structure
-      ** to work data structure to extract codes array
- 
+
+     ?** If charge code default record found move file data structure
+     ?** to work data structure to extract codes array
+
      C                   IF        *In99 = *Off
      C                   EVAL      CodesS = MEGNCR
- 
-      ** Now move work array to STP array
- 
+
+     ?** Now move work array to STP array
+
      C                   MOVEA     W_ArrayS      CusS_Dft
      C                   ENDIF
- 
+      *                                                                                       STP997
+     C     KINMVV        KLIST                                                                STP997
+     C                   KFLD                    MVNWRK                                       STP997
+     C                   KFLD                    MVMTPY                                       STP997
+     C                   KFLD                    MVSNDK                                       STP997
+      *                                                                                       STP997
+     C                   MOVEL     GNNWRK        MVNWRK                                       STP997
+     C                   MOVEL     GNMTPY        MVMTPY                                       STP997
+     C                   MOVEL     *BLANKS       MVSNDK                                       STP997
+      *                                                                                       STP997
+     C     KINMVV        CHAIN     @INMVV0                            90                      STP997
+     C     *IN90         IFEQ      *OFF                                                       STP997
+     C     MVMCMG        ANDEQ     'Y'                                                        STP997
+     C                   MOVE      'Y'           #EXTRN                                       STP997
+     C                   ENDIF                                                                STP997
+
      C                   ENDSR
- 
+
       *****************************************************************
       * Dft_Charges - Work out charge codes to use - customer 1 or 2  *
       *               or STP                                          *
@@ -2662,39 +3264,41 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    ***********
      C     Dft_Charges   BEGSR
       *    ***********
- 
-      ** 20 possible charge codes in arrays.
-      ** If customer 2 present override customer 1.
-      ** If STP present overwrite customer 1 (after customer 2 overwrite).
-      ** Codes in customer 1 are used for calcs.
- 
+
+      **?20 possible charge codes in arrays.
+      **?If customer 2 present override customer 1.
+      **?If STP present overwrite customer 1 (after customer 2 overwrite).
+      **?Codes in customer 1 are used for calcs.
+
      C                   EVAL      X = 1
      C                   EVAL      Y = 20
- 
+
      C     X             DO        Y             Z
- 
+
      C                   IF        Cus2_dft(Z) <> *blanks
      C                   EVAL      Cus1_dft(Z) = Cus2_dft(Z)
      C                   ENDIF
- 
+
      C                   SELECT
- 
-     C                   WHEN      CusS_dft(Z) = '*****' and P_ProcMthd = 'S'
+
+     C*****              WHEN      CusS_dft(Z) = '*****' and P_ProcMthd = 'S'                 STP017
+     C                   WHEN      CusS_dft(Z) = '*****' and P_ProcMthd = 'Y'                 STP017
      C                   EVAL      Cus1_dft(Z) = *blanks
- 
-     C                   WHEN      CusS_dft(Z) <> *blanks and P_ProcMthd = 'S'
+
+     C*****              WHEN      CusS_dft(Z) <> *blanks and P_ProcMthd = 'S'                STP017
+     C                   WHEN      CusS_dft(Z) <> *blanks and P_ProcMthd = 'Y'                STP017
      C                   EVAL      Cus1_dft(Z) = CusS_dft(Z)
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Charges - Call correct charge programs                        *
@@ -2704,145 +3308,145 @@ L011 D P               S              3P 0
       * Calls: SR981 SR982 SR983 SR984                                *
       *                                                               *
       *****************************************************************
- 
+
       *    *******
      C     Charges       BEGSR
       *    *******
- 
+
      C                   EVAL      X = 1
      C                   EVAL      Y = 20
- 
+
      C     X             DO        Y             Z
- 
+
      C                   EVAL      P_ChargeCde = *blanks
- 
+
      C                   SELECT
- 
-      ** Fx spread set
+
+      **?Fx spread set
      C                   WHEN      Z = 1
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
- 
+
      C                   If        I_FXSPSC <> *Blanks
      C                   EVAL      Cus1_dft(Z) = I_FXSPSC
      C                   Else
      C                   Eval      I_FXSPSC = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
- 
+
      C                   IF        I_PCCY <> I_SMCY
      C                   EVAL      I_FXSPSC    = Cus1_dft(Z)
      C                   ELSE                                                                BUG8305
      C                   EVAL      P_SpreadCde = *blanks                                     BUG8305
      C                   EVAL      I_FXSPSC = *blanks                                        BUG8305
      C                   ENDIF
- 
+
      C                   EVAL      P_Payccy = I_PCCY
      C                   EVAL      P_SettCcy = I_SMCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
- 
+
      C                   If        O_FXSRSC <> *Blanks
      C                   EVAL      Cus1_dft(Z) = O_FXSRSC
      C                   ELSE
      C                   Eval      O_FXSRSC = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
- 
+
      C                   IF        O_PCCY <> O_SMCY
      C                   EVAL      O_FXSRSC    = Cus1_dft(Z)
      C                   ELSE                                                                BUG8305
      C                   EVAL      P_SpreadCde = *blanks                                     BUG8305
      C                   EVAL      O_FXSRSC = *blanks                                        BUG8305
      C                   ENDIF
- 
+
      C                   EVAL      P_Payccy = O_PCCY
      C                   EVAL      P_SettCcy = O_SMCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
- 
+
      C                   If        P_SpreadCde <> *Blanks
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
      C                   ELSE
      C                   Eval      H2FXSSCD = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_Payccy = D2PAYCCY
      C                   EVAL      P_SettCcy = D2CCTCCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
- 
+
      C                   If        P_SpreadCde <> *Blanks
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
      C                   ELSE
      C                   Eval      H2FXSSCD = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_Payccy = D2PAYCCY
      C                   EVAL      P_SettCcy = D2CCTCCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
- 
+
      C                   If        P_SpreadCde <> *Blanks
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
      C                   ELSE
      C                   Eval      H1FXSRST = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_Payccy = D1PAYCCY
      C                   EVAL      P_SettCcy = D1TRNCCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
+
      C                   IF        P_Payccy <> P_Settccy
      C                   EVAL      H1FXSRST    = Cus1_dft(Z)
      C                   ENDIF
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
- 
+
      C                   If        P_SpreadCde <> *Blanks
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
      C                   ELSE
      C                   Eval      H1FXSRST = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_Payccy = D1PAYCCY
      C                   EVAL      P_SettCcy = D1TRNCCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
+
      C                   IF        P_Payccy <> P_Settccy
      C                   EVAL      H1FXSRST    = Cus1_dft(Z)
      C                   ENDIF
- 
-      ** Cheques to be paid
-      ** If settle currency is blank set as pay ccy
+
+      **?Cheques to be paid
+      **?If settle currency is blank set as pay ccy
      C                   WHEN      P_TransType = 'CP'
- 
+
      C                   If        P_SpreadCde <> *Blanks
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
      C                   ELSE
      C                   Eval      C_FXSSET = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_Payccy = C_PCCY
      C                   If        D_DRCY <> *blanks
      C                   EVAL      P_SettCcy = D_DRCY
@@ -2851,35 +3455,35 @@ L011 D P               S              3P 0
      C                   ENDIF
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
-      ** Cheques to be collected
-      ** If pay currency is blank set as settle ccy
+
+      **?Cheques to be collected
+      **?If pay currency is blank set as settle ccy
      C                   WHEN      P_TransType = 'CC'
- 
+
      C                   If        A_FXSPDS <> *Blanks
      C                   EVAL      Cus1_dft(Z) = A_FXSPDS
      C                   ELSE
      C                   Eval      A_FXSPDS = Cus1_dft(Z)
      C                   Endif
- 
+
      C                   EVAL      P_SpreadCde = Cus1_dft(Z)
- 
+
      C                   EVAL      P_SettCcy = B_SMCY
      C                   EVAL      P_ExRate = 0
      C                   EVAL      P_STP = P_ProcMthd
- 
+
      C                   EVAL      P_Payccy = A_CRCY
- 
+
      C                   ENDSL
- 
+
      C                   EXSR      SR982
- 
-      ** Payment date offset
+
+      **?Payment date offset
      C                   WHEN      Z = 2
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   If        I_INPDOF <> *Blanks
      C                   EVAL      P_OffsetCde = I_INPDOF
@@ -2889,8 +3493,8 @@ L011 D P               S              3P 0
      C                   EVAL      I_INPDOF    = Cus1_dft(Z)
      C                   MOVE      I_SLDTD1      P_SettDate
      C                   MOVE      I_PVDTD1      P_PayDate
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   If        O_OTPDOF <> *Blanks
      C                   EVAL      P_OffsetCde = O_OTPDOF
@@ -2900,105 +3504,105 @@ L011 D P               S              3P 0
      C                   EVAL      O_OTPDOF    = Cus1_dft(Z)
      C                   MOVE      O_SLDTD1      P_SettDate
      C                   MOVE      O_PVDTD1      P_PayDate
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      P_OffsetCde = Cus1_dft(Z)
      C                   MOVE      H2DBTVDT      P_SettDate
      C                   MOVE      D2CRDVDT      P_PayDate
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      P_OffsetCde = Cus1_dft(Z)
      C                   MOVE      H2DBTVDT      P_SettDate
      C                   MOVE      D2CRDVDT      P_PayDate
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      P_OffsetCde = Cus1_dft(Z)
      C                   MOVE      H1DBTVDT      P_SettDate
      C                   MOVE      D1CRDVDT      P_PayDate
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      P_OffsetCde = Cus1_dft(Z)
      C                   MOVE      H1DBTVDT      P_SettDate
      C                   MOVE      D1CRDVDT      P_PayDate
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      P_OffsetCde = Cus1_dft(Z)
      C                   MOVE      D_DRVDD1      P_SettDate
      C                   MOVE      C_PVDTD1      P_PayDate
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      P_OffsetCde = Cus1_dft(Z)
      C                   MOVE      B_SLDTD1      P_SettDate
      C                   MOVE      A_CRVDD1      P_PayDate
- 
+
      C                   ENDSL
- 
+
      C                   EXSR      SR983
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   MOVE      P_SettDate    I_SLDTD1
      C                   MOVE      P_PayDate     I_PVDTD1
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   MOVE      P_SettDate    O_SLDTD1
      C                   MOVE      P_PayDate     O_PVDTD1
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   MOVE      P_SettDate    H2DBTVDT
      C                   MOVE      P_PayDate     D2CRDVDT
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   MOVE      P_SettDate    H2DBTVDT
      C                   MOVE      P_PayDate     D2CRDVDT
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   MOVE      P_SettDate    H1DBTVDT
      C                   MOVE      P_PayDate     D1CRDVDT
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   MOVE      P_SettDate    H1DBTVDT
      C                   MOVE      P_PayDate     D1CRDVDT
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   MOVE      P_SettDate    D_DRVDD1
      C                   MOVE      P_PayDate     C_PVDTD1
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   MOVE      P_SettDate    B_SLDTD1
      C                   MOVE      P_PayDate     A_CRVDD1
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
- 
-      ** Telex charge
+
+
+      **?Telex charge
      C                   WHEN      Z = 3 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3007,8 +3611,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_TLCODE    = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3017,28 +3621,28 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_TLXCDE    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
-      ** Currently no telex charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no telex charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no telex charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no telex charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no telex charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no telex charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no telex charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no telex charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
-      ** Currently no telex charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no telex charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      PayAmt = A_CQAM
      C                   EVAL      PayCcy = A_CRCY
@@ -3047,57 +3651,57 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      A_TLXCHD    = Cus1_dft(Z)
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_TXCH = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_TXCH   = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      A_TXCH = TotInChgCcy
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Cheque charge
+
+      **?Cheque charge
      C                   WHEN      Z = 4 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3106,8 +3710,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_CHCHCD    = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3116,91 +3720,91 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_CHQCHC    = Cus1_dft(Z)
- 
+
       * If Statement type <> 12 or 13, do not default this charge
      C                   If        O_STMT <> 12 AND
      C                             O_STMT <> 13
      C                   Eval      P_ChargeCde = *Blanks
      C                   Eval      O_CHQCHC    = *Blanks
      C                   Endif
- 
-      ** Incoming customer credit transfer
-      ** Currently no cheque charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no cheque charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no cheque charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no cheque charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no cheque charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no cheque charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no cheque charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no cheque charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
-      ** Currently no cheque charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no cheque charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no cheque charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no cheque charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_CQCH = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_CQCH   = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Costs abroad charge
+
+      **?Costs abroad charge
      C                   WHEN      Z = 5 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
-      ** Currently no costs abroad charge for this transaction type
+
+      **?Incoming payments
+      **?Currently no costs abroad charge for this transaction type
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3209,24 +3813,24 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_CACHCD    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
-      ** Currently no costs abroad charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no costs abroad charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no costs abroad charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no costs abroad charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no costs abroad charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no costs abroad charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no costs abroad charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no costs abroad charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      PayAmt = C_PDAM
      C                   EVAL      PayCcy = C_PDCY
@@ -3234,8 +3838,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D_CPCHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      PayAmt = A_CQAM
      C                   EVAL      PayCcy = A_CRCY
@@ -3244,61 +3848,61 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      A_CABCCD    = Cus1_dft(Z)
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_CSTA   = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      D_CSTA = TotInChgCcy
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      A_CSTA = TotInChgCcy
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Swift standard charge
+
+      **?Swift standard charge
      C                   WHEN      Z = 6 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
-      ** Currently no Swift standard charge for this transaction type
+
+      **?Incoming payments
+      **?Currently no Swift standard charge for this transaction type
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3307,14 +3911,14 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_SSTCCD    = Cus1_dft(Z)
- 
+
       * If Settlement type <> '08', do not allow Swift Standard Charge
      C                   If        O_STMT <> 08
      C                   Eval      P_ChargeCde = *Blanks
      C                   Eval      O_SSTCCD    = *Blanks
      C                   Endif
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3322,8 +3926,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3331,12 +3935,12 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
-      ** Currently no Swift standard charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no Swift standard charge for this transaction type
      C                   WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3344,72 +3948,72 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1SWSTCC    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Swift standard charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Swift standard charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Swift standard charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Swift standard charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_SWSCCC = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      H2SWSTAC = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      H2SWSTAC = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1SWSTDC = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Swift priority charge
+
+      **?Swift priority charge
      C                   WHEN      Z = 7 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
-      ** Currently no Swift priority charge for this transaction type
+
+      **?Incoming payments
+      **?Currently no Swift priority charge for this transaction type
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3418,14 +4022,14 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_SPRCCD    = Cus1_dft(Z)
- 
+
       * If Swift Priority <> 'U', do not allow Swift Priority Charge
      C                   If        O_SWPC <> 01
      C                   Eval      P_ChargeCde = *Blanks
      C                   Eval      O_SPRCCD    = *Blanks
      C                   Endif
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3433,8 +4037,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3442,12 +4046,12 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
-      ** Currently no Swift priority charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no Swift priority charge for this transaction type
      C                   WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3455,68 +4059,68 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1SWPRCC    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Swift priority charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Swift priority charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Swift priority charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Swift priority charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_SPCH = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      H2SWPRIR = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      H2SWPRIR = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1SWPRIC = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Misc. Charge
+
+      **?Misc. Charge
      C                   WHEN      Z = 8 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3525,8 +4129,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_MISCH     = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3535,80 +4139,80 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_MSCHC     = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
-      ** Currently no Misc. charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no Misc. charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no Misc. charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no Misc. charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no Misc. charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no Misc. charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no Misc. charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no Misc. charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
-      ** Currently no Misc. charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Misc. charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Misc. charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Misc. charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_MSCH = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_MSCH = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Misc. charge 1
+
+      **?Misc. charge 1
      C                   WHEN      Z = 9 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3617,8 +4221,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_MSCH1     = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3627,8 +4231,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_MSCHC1    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3636,8 +4240,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3645,8 +4249,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3654,10 +4258,10 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1IMICC1    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3665,70 +4269,70 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1OMICC1    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Misc. charge1 for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Misc. charge1 for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Misc. charge1 for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Misc. charge1 for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_CMSC01 = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_MISCC1 = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2MICH1 = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2MICH1 = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1IMICH1 = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1OMIC1 = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Misc. charge 2
+
+      **?Misc. charge 2
      C                   WHEN      Z = 10 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3737,8 +4341,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_MSCH2     = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3747,8 +4351,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_MSCHC2    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3756,8 +4360,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3765,8 +4369,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3774,10 +4378,10 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1IMICC2    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3785,70 +4389,70 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1OMICC2    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Misc. charge2 for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Misc. charge2 for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Misc. charge2 for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Misc. charge2 for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_CMSC02 = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_MISCC2 = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2MICH2 = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2MICH2 = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1IMICH2 = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1OMIC2 = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Misc. charge 3
+
+      **?Misc. charge 3
      C                   WHEN      Z = 11 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3857,8 +4461,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_MSCH3     = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3867,8 +4471,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_MSCHC3    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3876,8 +4480,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3885,8 +4489,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3894,10 +4498,10 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1IMICC3    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -3905,70 +4509,70 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1OMICC3    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Misc. charge3 for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Misc. charge3 for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Misc. charge3 for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Misc. charge3 for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_CMSC03 = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_MISCC3 = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2MICH3 = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2MICH3 = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1IMICH3 = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1OMIC3 = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Misc. charge 4
+
+      **?Misc. charge 4
      C                   WHEN      Z = 12 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -3977,8 +4581,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_MSCH4     = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -3987,8 +4591,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_MSCHC4    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -3996,8 +4600,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4005,8 +4609,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -4014,10 +4618,10 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1IMICC4    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -4025,70 +4629,70 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1OMICC4    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Misc. charge4 for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Misc. charge4 for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Misc. charge4 for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Misc. charge4 for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_CMSC04 = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_MISCC4 = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2MICH4 = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2MICH4 = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1IMICH4 = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1OMIC4 = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Misc. charge 5
+
+      **?Misc. charge 5
      C                   WHEN      Z = 13 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -4097,8 +4701,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_MSCH5     = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -4107,8 +4711,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_MSCHC5    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4116,8 +4720,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4125,8 +4729,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -4134,10 +4738,10 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1IMICC5    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -4145,70 +4749,70 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      H1OMICC5    = Cus1_dft(Z)
- 
-      ** Cheques to be paid
-      ** Currently no Misc. charge5 for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no Misc. charge5 for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no Misc. charge5 for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no Misc. charge5 for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_CMSC05 = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_MISCC5 = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2MICH5 = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2MICH5 = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1IMICH5 = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   EVAL      H1OMIC5 = TotInChgCcy
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Transfer commission charge
+
+      **?Transfer commission charge
      C                   WHEN      Z = 14 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -4217,8 +4821,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_TFCCCO    = Cus1_dft(Z)
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -4227,8 +4831,8 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_TFCCCD    = Cus1_dft(Z)
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4236,8 +4840,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4245,8 +4849,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -4254,14 +4858,14 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1TFCOCC    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
-      ** Currently transfer commission charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently transfer commission charge for this transaction type
      C                   WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      PayAmt = C_PDAM
      C                   EVAL      PayCcy = C_PDCY
@@ -4269,8 +4873,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D_CPCHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      PayAmt = A_CQAM
      C                   EVAL      PayCcy = A_CRCY
@@ -4279,61 +4883,61 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      A_TRCMCC    = Cus1_dft(Z)
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_TRCM = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_TRCM   = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2TRCOCH = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2TRCOCH = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1TRCHCC = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      D_TRCM = TotInChgCcy
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      A_TRCM = TotInChgCcy
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** FX/Change commission charge
+
+      **?FX/Change commission charge
      C                   WHEN      Z = 15 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -4343,14 +4947,14 @@ L011 D P               S              3P 0
      C                   Exsr      ChkEuro
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_FXCHEC    = Cus1_dft(Z)
- 
+
       * Not allowed if Pay Ccy = Sett Ccy
      C                   IF        I_PCCY = I_SMCY
      C                   Eval      P_ChargeCde = *Blanks
      C                   Eval      I_FXCHEC    = *Blanks
      C                   Endif
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   Eval      P_SettAmt = O_SMAM
      C                   EVAL      PayAmt = O_PYAM
@@ -4360,14 +4964,14 @@ L011 D P               S              3P 0
      C                   Exsr      ChkEuro
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      O_FXCACC    = Cus1_dft(Z)
- 
+
       * Not allowed if Pay Ccy = Sett Ccy
      C                   IF        O_PCCY = O_SMCY
      C                   Eval      P_ChargeCde = *Blanks
      C                   Eval      O_FXCACC    = *Blanks
      C                   Endif
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4375,8 +4979,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      PayAmt = D2PAYAMT
      C                   EVAL      PayCcy = D2PAYCCY
@@ -4384,8 +4988,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D2M2CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      PayAmt = D1PAYAMT
      C                   EVAL      PayCcy = D1PAYCCY
@@ -4393,14 +4997,14 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D1M1CHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
+
      C                   EVAL      D1FXCCCD    = Cus1_dft(Z)
- 
-      ** Outgoing request for transfer
-      ** Currently no FX/Change commission charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no FX/Change commission charge for this transaction type
      C                   WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      PayAmt = C_PDAM
      C                   EVAL      PayCcy = C_PDCY
@@ -4408,8 +5012,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D_CPCHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      PayAmt = A_CQAM
      C                   EVAL      PayCcy = A_CRCY
@@ -4418,61 +5022,61 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      A_FXCCCC    = Cus1_dft(Z)
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_INCHCM = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      O_OPCHCM = TotInChgCcy
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
      C                   WHEN      P_TransType = 'BI'
      C                   EVAL      D2FXCHAC = TotInChgCcy
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
      C                   WHEN      P_TransType = 'BO'
      C                   EVAL      D2FXCHAC = TotInChgCcy
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   EVAL      D1FXCHGC = TotInChgCcy
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      D_PDCHCM = TotInChgCcy
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      A_CCCHCM = TotInChgCcy
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Advice charge
+
+      **?Advice charge
      C                   WHEN      Z = 16 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -4481,83 +5085,83 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_ADCHCD    = Cus1_dft(Z)
- 
-      ** Outgoing payments
-      ** Currently no advice charge for this transaction type
+
+      **?Outgoing payments
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
-      ** Currently no advice charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no advice charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no advice charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no advice charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
-      ** Currently no advice charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no advice charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no advice charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_ADCH = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Telephone charge
+
+      **?Telephone charge
      C                   WHEN      Z = 17 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   Eval      P_SettAmt = I_SMAM
      C                   EVAL      PayAmt = I_PYAM
@@ -4566,107 +5170,107 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      I_TLCHCD    = Cus1_dft(Z)
- 
-      ** Outgoing payments
-      ** Currently no telephone charge for this transaction type
+
+      **?Outgoing payments
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
-      ** Currently no telephone charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no telephone charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no telephone charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no telephone charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
-      ** Currently no telephone charge for this transaction type
+
+      **?Cheques to be paid
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
-      ** Currently no telephone charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no telephone charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      I_TLCH = TotInChgCcy
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
       **                 WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Collection charge
+
+      **?Collection charge
      C                   WHEN      Z = 18 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
-      ** Currently no collection charge for this transaction type
+
+      **?Incoming payments
+      **?Currently no collection charge for this transaction type
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
-      ** Currently no collection charge for this transaction type
+
+      **?Outgoing payments
+      **?Currently no collection charge for this transaction type
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
-      ** Currently no collection charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no collection charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no collection charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no collection charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no collection charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no collection charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no collection charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no collection charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      PayAmt = C_PDAM
      C                   EVAL      PayCcy = C_PDCY
@@ -4674,8 +5278,8 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D_CPCHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      PayAmt = A_CQAM
      C                   EVAL      PayCcy = A_CRCY
@@ -4684,80 +5288,80 @@ L011 D P               S              3P 0
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
      C                   EVAL      A_COCHCD    = Cus1_dft(Z)
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      D_COLL = TotInChgCcy
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   EVAL      A_COLL = TotInChgCcy
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Correspondents charge
+
+      **?Correspondents charge
      C                   WHEN      Z = 19 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
-      ** Currently no correspondents charge for this transaction type
+
+      **?Incoming payments
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
-      ** Currently no correspondents charge for this transaction type
+
+      **?Outgoing payments
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
-      ** Currently no correspondents charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no correspondents charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no correspondents charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no correspondents charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      PayAmt = C_PDAM
      C                   EVAL      PayCcy = C_PDCY
@@ -4765,83 +5369,83 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D_CPCHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Cheques to be collected
-      ** Currently no correspondents charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no correspondents charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      C_COCH = TotInChgCcy
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
-      ** Deductions charge
+
+      **?Deductions charge
      C                   WHEN      Z = 20 and Cus1_dft(Z) <> *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
-      ** Currently no deductions charge for this transaction type
+
+      **?Incoming payments
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
-      ** Currently no deductions charge for this transaction type
+
+      **?Outgoing payments
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
-      ** Currently no deductions charge for this transaction type
+
+      **?Incoming customer credit transfer
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
-      ** Currently no deductions charge for this transaction type
+
+      **?Outgoing customer credit transfer
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
-      ** Currently no deductions charge for this transaction type
+
+      **?Incoming request for transfer
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
-      ** Currently no deductions charge for this transaction type
+
+      **?Outgoing request for transfer
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      PayAmt = C_PDAM
      C                   EVAL      PayCcy = C_PDCY
@@ -4849,59 +5453,59 @@ L011 D P               S              3P 0
      C                   EVAL      ChgExch = D_CPCHRT
      C                   EVAL      STP = P_ProcMthd
      C                   EVAL      P_ChargeCde = Cus1_dft(Z)
- 
-      ** Cheques to be collected
-      ** Currently no deductions charge for this transaction type
+
+      **?Cheques to be collected
+      **?Currently no deductions charge for this transaction type
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   IF        P_ChargeCde <> *blanks
      C                   EXSR      SR981
- 
-      ** If no error in return code then move data to correct file for
-      ** pass back to calling program.
- 
+
+      **?If no error in return code then move data to correct file for
+      **?pass back to calling program.
+
      C                   IF        RetCodeIn = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
       **                 WHEN      P_TransType = 'IN'
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
       **                 WHEN      P_TransType = 'OP'
- 
-      ** Incoming customer credit transfer
+
+      **?Incoming customer credit transfer
       **                 WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer
+
+      **?Outgoing customer credit transfer
       **                 WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
       **                 WHEN      P_TransType = 'RI'
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
       **                 WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid
+
+      **?Cheques to be paid
      C                   WHEN      P_TransType = 'CP'
      C                   EVAL      C_DEDS = TotInChgCcy
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
       **                 WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR981 - Calculate charges for the following using call to     *
@@ -4943,28 +5547,28 @@ L011 D P               S              3P 0
       * Calls: Convert1 Convert2                                      *
       *                                                               *
       *****************************************************************
- 
+
       *    *****
      C     SR981         BEGSR
       *    *****
- 
+
       * Always send transaction rate to charge calculation.
      C                   If        CHTRCY = 'Y'
- 
+
      C                   Select
- 
+
      C                   When      P_TransType = 'IN'
      C                   Eval      ChgExch   =  I_Rate
- 
+
      C                   When      P_TransType = 'OP'
      C                   Eval      ChgExch   =  O_Rate
- 
+
      C                   EndSl
- 
+
      C                   Endif
- 
+
       * If charges in transaction currency flag = 'Y'
- 
+
      C                   CALLB     'FT000981'
      C                   PARM                    RetCodeOut
      C                   PARM                    PayAmt
@@ -4982,15 +5586,15 @@ L011 D P               S              3P 0
      C                   PARM                    ChgableAmt       13 0
      C                   PARM                    TierCharge
      C                   PARM                    TierAmount
- 
+
      C                   IF        RetCodeOut = *blanks
- 
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN'
      C                   EVAL      FRMCCY = ChgCcy
- 
+
      C                   Select
      C***********        When      I_CDRO <> *Zeros                                           CSD027
      C                   When      I_CDRO <> *BLANKS                                          CSD027
@@ -5004,11 +5608,11 @@ L011 D P               S              3P 0
      C                   Other
      C                   Eval      ToCcy = I_PCCY
      C                   Endsl
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP'
      C                   EVAL      FRMCCY = Chgccy
- 
+
      C                   Select
      C***********        When      O_CDRO <> *Zeros                                           CSD027
      C                   When      O_CDRO <> *BLANKS                                          CSD027
@@ -5018,45 +5622,45 @@ L011 D P               S              3P 0
      C                   Other
      C                   Eval      ToCcy = O_PCCY
      C                   Endsl
- 
-      ** Incoming customer credit transfer (T.B.A.)
+
+      **?Incoming customer credit transfer (T.B.A.)
      C                   WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer (T.B.A.)
+
+      **?Outgoing customer credit transfer (T.B.A.)
      C                   WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer
+
+      **?Incoming request for transfer
      C                   WHEN      P_TransType = 'RI'
      C                   Eval      FRMCCY = ChgCcy
      C                   Eval      ToCcy = D1RCHCCY
- 
+
      C                   Eval      INPAMT = TotInChgCcy
      C                   ExSr      Convert1
      C                   ExSr      Convert2
      C                   Eval      TotInChgCcy = OUTAMT
- 
-      ** Outgoing request for transfer
+
+      **?Outgoing request for transfer
      C                   WHEN      P_TransType = 'RO'
      C                   Eval      FRMCCY = ChgCcy
      C                   Eval      ToCcy = H1HANDCY
- 
+
      C                   Eval      INPAMT = TotInChgCcy
      C                   ExSr      Convert1
      C                   ExSr      Convert2
      C                   Eval      TotInChgCcy = OUTAMT
- 
-      ** Cheques to be paid (T.B.A.)
+
+      **?Cheques to be paid (T.B.A.)
      C                   WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected (T.B.A.)
+
+      **?Cheques to be collected (T.B.A.)
      C                   WHEN      P_TransType = 'CC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR982 - Calculate FX spread using call to FT000982.           *
@@ -5066,15 +5670,21 @@ L011 D P               S              3P 0
       * Calls: Convert1 Convert2                                      *
       *                                                               *
       *****************************************************************
- 
+
       *    *****
      C     SR982         BEGSR
       *    *****
- 
+
       ** If the spread code is blank, do not call FT000982
- 
+
      C                   If        P_SpreadCde <> *Blanks
- 
+
+     C     P_Transtype   Ifeq      'IN'                                                       241259
+     C                   Z-ADD     I_Rate        P_ExRate                                     241259
+     C                   EndIf                                                                241259
+     C     P_Transtype   Ifeq      'OP'                                                       241259
+     C                   Z-ADD     O_Rate        P_ExRate                                     241259
+     C                   EndIf                                                                241259
      C                   CALLB     'FT000982'
      C                   PARM                    RetCode982
      C                   PARM                    P_SpreadCde
@@ -5082,16 +5692,16 @@ L011 D P               S              3P 0
      C                   PARM                    P_SettCcy
      C                   PARM                    P_ExRate
      C                   PARM                    P_STP
- 
+
      C                   EndIf
- 
-      ** Now calculate pay amount from settle amount using rate
-      ** from FT000982.
- 
- 
+
+      **?Now calculate pay amount from settle amount using rate
+      **?from FT000982.
+
+
      C                   SELECT
- 
-      ** Incoming payments
+
+      **?Incoming payments
      C                   WHEN      P_TransType = 'IN' And
      C                                           RetCode980 <> '*NONE     '
      C                   IF        RetCode980 = *Blanks OR
@@ -5102,31 +5712,59 @@ L011 D P               S              3P 0
      C                   EVAL      FRMCCY = I_PCCY
      C                   EVAL      TOCCY = I_SMCY
      C                   Endif
- 
+
      C                   EXSR      Convert1
- 
+
      C                   If        RetCode982 = '*CALC     '
      C                   EVAL      I_RATE = P_ExRate
      C                   Eval      CVTRAT = I_RATE
- 
+
      C                   IF        RetCode980 = *Blanks OR
      C                             RetCode980 = '*CALCPAY  '
      C                   EVAL      INPAMT = I_SMAM
      C                   Else
      C                   EVAL      INPAMT = I_PYAM
      C                   Endif
- 
+
      C                   EXSR      Convert2
- 
-     C                   IF        RetCode980 = *Blanks OR
-     C                             RetCode980 = '*CALCPAY  '
+                                                                                              EEE058
+     C                   Clear                   P#0010                                       EEE058
+     C     BTPCRD        DIV       100           P#RTDS                                       EEE058
+     C                   Z-Add     I_SLDT        P#FRDT                                       EEE058
+     C                   Z-Add     I_SLDT        P#TODT                                       EEE058
+     C*****              Movel     I_SMCY        P#FRCY                                 EEE058STP997
+     C*****              IF        RetCode980 = *Blanks OR                              EEE058STP997
+     C*****                        RetCode980 = '*CALCPAY  '                            EEE058STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
+     C                   Z-Add     I_SMAM        P#FRAM                                       EEE058
+     C                   Else                                                                 EEE058
+     C                   Z-Add     I_PYAM        P#TOAM                                       EEE058
+     C                   Endif                                                                EEE058
+     C                   Movel     I_SMCY        P#FRCY                                       STP997
+     C                   Movel     I_PCCY        P#TOCY                                       EEE058
+     C                   Z-Add     P_ExRate      P#RATE                                       EEE058
+     C                   If        P#RATE <> 0                                                STP989
+     C                   Eval      P#OVRT = 'Y'                                               STP989
+     C                   EndIf                                                                STP989
+     C                   Call      'FT0010'                                                   EEE058
+     C                   Parm                    P#0010                                       EEE058
+
+     C*****              IF        RetCode980 = *Blanks OR                                    STP997
+     C*****                        RetCode980 = '*CALCPAY  '                                  STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
      C                   EVAL      I_PYAM = OUTAMT
+     C                   EVAL      I_PYAM = P#TOAM                                            EEE058
      C                   Else
      C                   EVAL      I_SMAM = OUTAMT
+     C                   EVAL      I_SMAM = P#FRAM                                            EEE058
      C                   Endif
      C                   Endif
- 
-      ** Outgoing payments
+
+      **?Outgoing payments
      C                   WHEN      P_TransType = 'OP' And
      C                                           RetCode980 <> '*NONE     '
      C                   IF        RetCode980 = *Blanks OR
@@ -5137,67 +5775,96 @@ L011 D P               S              3P 0
      C                   EVAL      FRMCCY = O_PCCY
      C                   EVAL      TOCCY = O_SMCY
      C                   Endif
- 
+
      C                   EXSR      Convert1
- 
+
      C                   If        RetCode982 = '*CALC     '
      C                   EVAL      O_RATE = P_ExRate
      C                   EVAL      CVTRAT = O_RATE
- 
+
      C                   IF        RetCode980 = *Blanks OR
      C                             RetCode980 = '*CALCPAY  '
      C                   EVAL      INPAMT = O_SMAM
      C                   Else
      C                   EVAL      INPAMT = O_PYAM
      C                   Endif
- 
+
      C                   EXSR      Convert2
- 
-     C                   IF        RetCode980 = *Blanks OR
-     C                             RetCode980 = '*CALCPAY  '
+                                                                                              EEE058
+     C                   Clear                   P#0010                                       EEE058
+     C     BTPCRD        DIV       100           P#RTDS                                       EEE058
+     C                   Z-Add     O_SLDT        P#FRDT                                       EEE058
+     C                   Z-Add     O_SLDT        P#TODT                                       EEE058
+     C*****              Movel     O_SMCY        P#FRCY                                 EEE058STP997
+     C*****              IF        RetCode980 = *Blanks OR                              EEE058STP997
+     C*****                        RetCode980 = '*CALCPAY  '                            EEE058STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
+     C                   Z-Add     O_SMAM        P#FRAM                                       EEE058
+     C                   Else                                                                 EEE058
+     C                   Z-Add     O_PYAM        P#TOAM                                       EEE058
+     C                   Endif                                                                EEE058
+     C                   Movel     O_SMCY        P#FRCY                                       STP997
+     C                   Movel     O_PCCY        P#TOCY                                       EEE058
+     C                   Z-Add     P_ExRate      P#RATE                                       EEE058
+     C                   If        P#RATE <> 0                                                STP989
+     C                   Eval      P#OVRT = 'Y'                                               STP989
+     C                   EndIf                                                                STP989
+     C                   Call      'FT0010'                                                   EEE058
+     C                   Parm                    P#0010                                       EEE058
+
+     C*****              IF        RetCode980 = *Blanks OR                                    STP997
+     C*****                        RetCode980 = '*CALCPAY  '                                  STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
      C                   EVAL      O_PYAM = OUTAMT
+     C                   EVAL      O_NDAM = OUTAMT                                            241259
+     C                   EVAL      O_PYAM = P#TOAM                                            EEE058
      C                   Else
      C                   EVAL      O_SMAM = OUTAMT
+     C                   EVAL      O_SMAM = P#FRAM                                            EEE058
      C                   Endif
      C                   Endif
- 
-      ** Incoming customer credit transfer (T.B.A.)
+
+      **?Incoming customer credit transfer (T.B.A.)
      C                   WHEN      P_TransType = 'BI'
- 
-      ** Outgoing customer credit transfer (T.B.A.)
+
+      **?Outgoing customer credit transfer (T.B.A.)
      C                   WHEN      P_TransType = 'BO'
- 
-      ** Incoming request for transfer (T.B.A.)
+
+      **?Incoming request for transfer (T.B.A.)
      C                   WHEN      P_TransType = 'RI'
- 
+
      C                   EVAL      FRMCCY = D1PAYCCY
      C                   EVAL      TOCCY = D1TRNCCY
- 
+
      C                   EXSR      Convert1
- 
-      ** Override default exchange rate only if amended in 982
+
+      **?Override default exchange rate only if amended in 982
      C                   If        RetCode982 = '*CALC     '
      C                   EVAL      D1XRATE = P_ExRate
      C                   Endif
- 
+
      C                   EXSR      Convert2
- 
-      ** Outgoing request for transfer (T.B.A.)
+
+      **?Outgoing request for transfer (T.B.A.)
      C                   WHEN      P_TransType = 'RO'
- 
-      ** Cheques to be paid (T.B.A.)
+
+      **?Cheques to be paid (T.B.A.)
      C                   WHEN      P_TransType = 'CP'
- 
-      ** Cheques to be collected
+
+      **?Cheques to be collected
      C                   WHEN      P_TransType = 'CC'
      C                   If        RetCode982 = '*CALC     '
      C                   EVAL      A_RATE = P_ExRate
      C                   Endif
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR983 - Calculate default payment and settlement dates using  *
@@ -5208,11 +5875,11 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
       *    *****
      C     SR983         BEGSR
       *    *****
- 
+
       * Get Location Codes
      C                   CallB     'FTRTVLOC'
      C                   Parm                    RetCodeOut
@@ -5221,8 +5888,8 @@ L011 D P               S              3P 0
      C                   Parm                    P_TransExt
      C                   Parm      *Blanks       SettDateLoc
      C                   Parm      *Blanks       PayDateLoc
- 
- 
+
+
      C                   CALLB     'FT000983'
      C                   PARM                    RetCodeOut
      C                   PARM                    P_OffsetCde
@@ -5232,7 +5899,7 @@ L011 D P               S              3P 0
      C                   Parm                    P_PayCcy
      C                   Parm                    SettDateLoc
      C                   Parm                    PayDateLoc
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -5245,36 +5912,36 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Convert1      BEGSR
- 
-      ** From currency
+
+      **?From currency
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      FRMCCY        @CCY
      C     SDCURR        PARM      SDCURR        DSSDY                                        220004
      C*****SDCURR        PARM      SDCURR        DSFDY                                        220004
- 
+
      C                   MOVEL     A6NBDP        FRMDEC
      C                   EVAL      ZRATE1 = A6SPRT
      C                   EVAL      ZMDI1  = A6MDIN
- 
-      ** To currency
+
+      **?To currency
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      TOCCY         @CCY              3
      C     SDCURR        PARM      SDCURR        DSSDY                                        220004
      C*****SDCURR        PARM      SDCURR        DSFDY                                        220004
- 
+
      C                   MOVEL     A6NBDP        TODEC
      C                   EVAL      ZRATE2 = A6SPRT
      C                   EVAL      ZMDI2  = A6MDIN
- 
+
      C                   EVAL      OUTAMT = 0
- 
-      ** Work out xrate between to and from currencies
+
+      **?Work out xrate between to and from currencies
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -5282,12 +5949,12 @@ L011 D P               S              3P 0
      C                   PARM                    ZMDI2
      C                   PARM                    ZRATEX
      C                   PARM                    ZMDIX
- 
+
      C                   EVAL      CVTRAT = ZRATEX
      C                   EVAL      BASMD = ZMDIX
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * Convert2 - 2nd part of conversion from one currency to        *
@@ -5299,31 +5966,40 @@ L011 D P               S              3P 0
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Convert2      BEGSR
- 
+
       * If base currency
-     C                   If        (BaseCcy = FRMCCY    And
-     C                             ZMDI1    = 'M'       And
-     C                             ZMDI2    = 'M'       And
-     C                             ZRATEX   < 1   )     Or
-     C                             (BaseCcy = TOCCY     And
-     C                             ZMDI1    = 'M'       And
-     C                             ZMDI2    = 'M'       And
-     C                             ZRATEX   < 1   )
- 
-     C                   Eval      BASMD = 'D'
- 
-     C                   Endif
- 
-      ** Work out Multiply/Divide Indicator for a cross-ccy transaction.                      246723
-     C                   If        FRMCCY <> BaseCcy                                          246723
-     C                             and TOCCY <> BaseCcy                                       246723
-     C                             and ZMDI1 = ZMDI2                                          246723
-     C                             and ZRATEX < 1                                             246723
-     C                   Eval      BASMD = 'D'                                                246723
-     C                   Endif                                                                246723
- 
+     C**********         If        (BaseCcy = FRMCCY    And                                   241259
+     C**********                   ZMDI1    = 'M'       And                                   241259
+     C**********                   ZMDI2    = 'M'       And                                   241259
+     C**********                   ZRATEX   < 1   )     Or                                    241259
+     C**********                   (BaseCcy = TOCCY     And                                   241259
+     C**********                   ZMDI1    = 'M'       And                                   241259
+     C**********                   ZMDI2    = 'M'       And                                   241259
+     C**********                   ZRATEX   < 1   )                                           241259
+      *****************************************************************                       241259
+     C**********         Eval      BASMD = 'D'                                                241259
+      *****************************************************************                       241259
+     C**********         Endif                                                                241259
+
+      *****
+      ** Work out Multiply/Divide Indicator for a cross-ccy transaction.             246723   EFIXFM
+     C*****              If        FRMCCY <> BaseCcy                                 246723   EFIXFM
+     C*****                        and TOCCY <> BaseCcy                              246723   EFIXFM
+     C*****                        and ZMDI1 = ZMDI2                                 246723   EFIXFM
+     C*****                        and ZRATEX < 1                                    246723   EFIXFM
+     C*****              Eval      BASMD = 'D'                                       246723   EFIXFM
+     C*****              Endif                                                       246723   EFIXFM
+
+     C                   If        BaseCcy = FRMCCY                                           241259
+     C                   Eval      BASMD = ZMDI1                                              241259
+     C                   Else                                                                 241259
+     C                   If        BaseCcy = TOCCY                                            241259
+     C                   Eval      BASMD = ZMDI2                                              241259
+     C                   Endif                                                                241259
+     C                   Endif                                                                241259
+      *
      C                   CALLB     'ZCONVZ1'
      C                   PARM                    INPAMT           15 0
      C                   PARM                    CVTRAT           13 8
@@ -5333,30 +6009,124 @@ L011 D P               S              3P 0
      C                   PARM                    FRMDEC            1 0
      C                   PARM                    TODEC             1 0
      C                   PARM                    OUTAMT           15 0
- 
+
      C                   ENDSR
- 
+
+      *****************************************************************
+      *                                                               *
+      * Chec_STP - Check if ING STP conditions are met. Set STP Flag. *
+      *                                                               *
+      * Called by: SR981                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     Check_STP     BEGSR
+
+     C     KBicdL2       Klist
+     C                   Kfld                    BDBICC
+     C                   Kfld                    BDBICB
+
+     C     KBicpV0       Klist
+     C                   Kfld                    BIKEY
+      *
+
+     C                   Move      'Y'           STP_Cond          1
+     C                   Move      *Blanks       @@CTRY            2
+      *
+     C                   If        %Subst(O_ACB1:1:1) <> '/'
+     C                   Eval      BDBICC = %Subst(O_ACB1:1:8)
+     C                   Eval      BDBICB = %Subst(O_ACB1:9:3)
+     C                   If        %Subst(O_ACB1:9:3) = *blanks
+     C                   Eval      BDBICB = 'XXX'
+     C                   Endif
+     C                   Else                                                                 ESL038
+     C                   Eval      BDBICC = %Subst(O_ACB2:1:8)                                ESL038
+     C                   Eval      BDBICB = %Subst(O_ACB2:9:3)                                ESL038
+     C                   If        %Subst(O_ACB2:9:3) = *blanks                               ESL038
+     C                   Eval      BDBICB = 'XXX'                                             ESL038
+     C                   Endif                                                                ESL038
+     C                   Endif                                                                ESL038
+      *
+     C     KBicdL2       Chain     @BicdL2
+     C                   If        %Found
+     C                   Eval      @@CTRY = %Subst(BDBICC:5:2)
+     C                   Else
+      *
+      * Check if BIC Plus key has been supplied
+     C                   If        %Subst(O_ACB1:9:3) = *blanks
+     C                   Eval      BIKEY = %Subst(O_ACB1:1:8)
+     C     KBicpV0       Chain     @Bicppd
+     C                   If        not %Found or BiBic = *blanks
+     C                   Eval      STP_Cond = 'N'
+     C                   Endif
+     C                   If        %Found and BiBic <> *blanks
+     C                   Eval      @@CTRY = %Subst(BiBic:5:2)
+     C                   Endif
+     C                   Else
+     C                   Eval      STP_Cond = 'N'
+     C                   Endif
+     C                   Endif
+
+
+      * If BIC Found check if Country has IBAN, if yes validate
+     C                   If        STP_Cond = 'Y'
+
+     C                   CALL      'AOCTRYR0'                                                 CFT017
+     C                   PARM      *BLANKS       PRTCD             7                          CFT017
+     C                   PARM      '*KEY   '     POPTN             7                          CFT017
+     C                   PARM      @@CTRY        PCTCD             2                          CFT017
+     C     SDCTRY        PARM      SDCTRY        DSFDY                                        CFT017
+      *                                                                                       CFT017
+     C                   If        PRTCD = *Blanks
+     C                             and A4BBAN <> 0
+
+     C     1             SUBST     O_BNC1:1      U#0001            1
+     C     U#0001        IFEQ      '/'
+     C     34            SUBST(P)  O_BNC1:2      P@IBAN
+     C                   ELSE
+     C     34            SUBST(P)  O_BNC1:1      P@IBAN
+     C                   ENDIF
+     C
+      ** Check IBAN format                                                      CFT004
+     C                   Call      'AOIBANR5'                           90      CFT004
+     C                   Parm      *Blanks       @Rcode            7            CFT004
+     C                   Parm                    P@IBAN           34            CFT004
+
+     C     *In90         Ifeq      *On                                          CFT004
+     C     @Rcode        orne      *Blanks                                      CFT004
+     C                   Eval      STP_Cond = 'N'
+     C                   Endif
+     C                   Endif
+     C                   Endif
+
+
+     C                   Eval      STP = STP_Cond
+
+     C                   ENDSR
+
       *****************************************************************
       * ChkEuro - Check If Euro currencies
       *****************************************************************
      C     ChkEuro       Begsr
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      P_PayCcy      @CCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Eval      PayIn   = A6INCY
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      P_SettCcy     @CCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Eval      SettIn      = A6INCY
- 
+
      C                   If        BaseCcy     = Euro  Or
      C                             P_PayCcy    = Euro  AND
      C                             SettIn      = 'Y'   OR
@@ -5366,25 +6136,25 @@ L011 D P               S              3P 0
      C                             SettIn      = 'Y'
      C                   Eval      Cus1_dft(Z) = *Blanks
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
-      ** Entry paramaters
- 
-      ** Return Code (10A)
-      ** Transaction - Main file
-      ** Transaction - Extension file
-      ** Transaction Type (2A)
-      ** Process method (6A) - 'STP' or 'MANUAL'
-      ** Process method (6A) - Message type for STP
-      ** Process method (6A) - Set number for STP
-      ** Process method (6A) - Payment type for STP
- 
+
+      **?Entry paramaters
+
+      **?Return Code (10A)
+      **?Transaction - Main file
+      **?Transaction - Extension file
+      **?Transaction Type (2A)
+      **?Process method (6A) - 'STP' or 'MANUAL'
+      **?Process method (6A) - Message type for STP
+      **?Process method (6A) - Set number for STP
+      **?Process method (6A) - Payment type for STP
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCode980
      C                   PARM                    P_TransDet
@@ -5393,188 +6163,283 @@ L011 D P               S              3P 0
      C                   PARM                    P_ProcMthd
      C                   PARM                    P_MessType
      C                   PARM                    P_SetNum
- 
-      ** Paramater list for ZEDIT
- 
+     C                   PARM                    P_ClrStmt         2                          MKCAR1
+
+      **?Paramater list for ZEDIT
+
      C     P@ZEDIT       PLIST
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
-      ** Key list for FTPYCGL0
- 
+
+      **?Key list for FTPYCGL0
+
      C     Kftpycgl0     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Custom
      C                   KFLD                    K_Currcy
      C                   KFLD                    K_Trntyp
      C                   KFLD                    K_Trsbty
- 
-      ** Key list for FTPYCGL1
- 
+
+      **?Key list for FTPYCGL1
+
      C     Kftpycgl1     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Custom
      C                   KFLD                    K_Trntyp
      C                   KFLD                    K_Trsbty
- 
-      ** Key list for FTPYCGL2
- 
+
+      **?Key list for FTPYCGL2
+
      C     Kftpycgl2     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Csgrcd
      C                   KFLD                    K_Currcy
      C                   KFLD                    K_Trntyp
      C                   KFLD                    K_Trsbty
- 
-      ** Key list for FTPYCGL3
- 
+
+      **?Key list for FTPYCGL3
+
      C     Kftpycgl3     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Csgrcd
      C                   KFLD                    K_Trntyp
      C                   KFLD                    K_Trsbty
- 
-      ** Key list for FTPYCGL4
- 
+
+      **?Key list for FTPYCGL4
+
      C     Kftpycgl4     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Trntyp
      C                   KFLD                    K_Trsbty
- 
-      ** Key list for FTPYCGL5
- 
+
+      **?Key list for FTPYCGL5
+
      C     Kftpycgl5     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Currcy
- 
-      ** Key list for FTPYCGL6
- 
+
+      **?Key list for FTPYCGL6
+
      C     Kftpycgl6     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Custom
      C                   KFLD                    K_Currcy
- 
-      ** Key list for FTPYCGL7
- 
+
+      **?Key list for FTPYCGL7
+
      C     Kftpycgl7     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Custom
- 
-      ** Key list for FTPYCGL8
- 
+
+      **?Key list for FTPYCGL8
+
      C     Kftpycgl8     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Csgrcd
      C                   KFLD                    K_Currcy
- 
-      ** Key list for FTPYCGL9
- 
+
+      **?Key list for FTPYCGL9
+
      C     Kftpycgl9     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Csgrcd
- 
-      ** Key list for FTPYCGLA
- 
+
+      **?Key list for FTPYCGLA
+
      C     Kftpycgla     KLIST
      C                   KFLD                    K_Branch
      C                   KFLD                    K_Trntyp
- 
-      ** Key list for FTPYCGLB
- 
+
+      **?Key list for FTPYCGLB
+
      C     Kftpycglb     KLIST
      C                   KFLD                    K_Branch
- 
-      ** Partial Key list for SDCGRPL0
- 
+
+      **?Partial Key list for SDCGRPL0
+
      C     Ksdcgrpl0     KLIST
      C                   KFLD                    K_D6snbr
- 
-      ** Key list for MEGNCRL1
- 
+
+      **?Key list for MEGNCRL1
+
      C     Kmegncrl1     KLIST
      C                   KFLD                    K_Gnmtpy
      C                   KFLD                    K_Gnmset
      C                   KFLD                    K_Gnpytp
- 
-      ** Read in RUNDAT for multibranching details
- 
+
+      **?Read in RUNDAT for multibranching details
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
-      ** Access Bank details
- 
+
+      **?Access Bank details
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
-      ** Database error
- 
+
+      **?Database error
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '006'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
-      ** Get details for Base Currency
- 
+
+      **?Get details for Base Currency
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      BJCYCD        @CCY              3
      C     SDCURR        PARM      SDCURR        DSSDY                                        220004
      C*****SDCURR        PARM      SDCURR        DSFDY                                        220004
- 
-      ** Database error
- 
+
+      **?Database error
+
      C                   IF        @RTCD <> *Blanks
      C                   MOVEL     'SDCURRPD'    DBFILE
      C                   MOVEL     '004'         DBASE
      C                   MOVEL     BJCYCD        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
-      ** Save no. of decimal places of Base Currency
- 
+
+      **?Save no. of decimal places of Base Currency
+
      C                   Eval      BaseCcy = BJCYCD
      C                   EVAL      BaseCcyDP = A6NBDP
- 
-      ** Get Funds Transfer ICD
- 
+
+      **?Get Funds Transfer ICD
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDFTFR        PARM      SDFTFR        DSFDY
- 
-      ** Database error
- 
+
+      **?Database error
+
      C                   IF        @RTCD <> *Blanks
      C                   MOVEL     'SDFTFRPD'    DBFILE
      C                   MOVEL     '005'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
-      ** Get Euro currency details
- 
+
+      **?Get Euro currency details
+
      C**********         CallB     'AOGELRR0'                                                 CGL029
      C                   CALL      'AOGELRR1'                                                 CGL029
      C                   Parm      '*DBERR'      @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDGELR        Parm      SDGELR        DSSDY
- 
-      ** Database error
- 
+
+      **?Database error
+
      C                   IF        @RTCD <> *Blanks
      C                   MOVEL     'SDGELRPD'    DBFILE
      C                   MOVEL     '006'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Eval      Euro = BkEuro
- 
+                                                                                              ERN054
+      *                                                                                       ERN054
+      * Check for ERN054 Extended Payment defaulting                                          ERN054
+     C                   IF        ERN054 = *BLANKS                                           ERN054
+     C                   CALLB     'AOSARDR0'                                                 ERN054
+     C                   PARM      *BLANKS       @Rtcd                                        ERN054
+     C                   PARM      '*VERIFY'     @Optn                                        ERN054
+     C                   PARM      'EEE058'      @Sard             6                          ERN054
+     C     SCSARD        PARM      SCSARD        Dssdy                                        ERN054
+                                                                                              ERN054
+     C                   IF        @Rtcd = *BLANKS                                            ERN054
+     C                   MOVEL     'ERN054'      ERN054            6                          ERN054
+     C                   ELSE                                                                 ERN054
+     C                   MOVEL     '*NRF  '      ERN054            6                          ERN054
+     C                   ENDIF                                                                ERN054
+     C                   ENDIF                                                                ERN054
+      *                                                                                       ERN054
+      * Set Searches                                                                          ERN054
+      *               1 BRANCH                                                                ERN054
+      *               2 CUSTOM                                                                ERN054
+      *               3 CURRCY                                                                ERN054
+      *               4 TRNTYP                                                                ERN054
+      *               5 TRSBTY                                                                ERN054
+      *               6 CSGRCD                                                                ERN054
+      *               7 NETWRK                                                                ERN054
+      *               8 PAYTYP                                                                ERN054
+      *               9 MSGTYP                                                                ERN054
+      *              10 STMTMD                                                                ERN054
+      *              11 DRACTP                                                                ERN054
+      *              12 CRACTP                                                                ERN054
+      *              13 ADDDED                                                                ERN054
+      *              14 FXTRAN                                                                ERN054
+      *              15 TdCtry                                                                ERN054
+      *              16 UrgFlg                                                                URGIND
+     C                   Clear                   Search20         20                          ERN054
+      *                                        12345678901234567890                           ERN054
+                                                                                              ERN054
+      *                                                                                       ERN054
+      * Define Look Up key                                                                    ERN054
+     C     Klook1        Klist                                                                ERN054
+     C                   Kfld                    LPKEY                                        ERN054
+     C                   Kfld                    LPSEQN                                       ERN054
+     C     Klook2        Klist                                                                ERN054
+     C                   Kfld                    LPKEY                                        ERN054
+      *                                                                                       ERN054
+     C                   Eval      LPKEY = 'Charge Def'                                       ERN054
+     C                   Clear                   LPSEQN                                       ERN054
+      *                                                                                       ERN054
+      * Look to see if specific customer search required                                      ERN054
+     C     Klook1        Setll     @Lookv0                                                    ERN054
+     C     Klook2        Reade     @Lookv0                                90                  ERN054
+     C                   If        *in90 = *off                                               ERN054
+     C                   Eval      SearchNbr = 0                                              ERN054
+     C                   Dou       *in90 = *on                                                ERN054
+     C                   Eval      SearchNbr = SearchNbr + 1                                  ERN054
+     C                   Eval      Idx = SearchNbr                                            ERN054
+     C                   Movea     ##Search      Search#(Idx)                                 ERN054
+     C     Klook2        Reade     @Lookv0                                90                  ERN054
+     C                   Enddo                                                                ERN054
+     C                   Else                                                                 ERN054
+      *                                                                                       ERN054
+     C                   Eval      SearchNbr = 5                                              ERN054
+     C                   Eval      Search20 = 'YNNYNYYYYYNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(1)                                   ERN054
+     C                   Eval      Search20 = 'YNNYNNYYYYNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(2)                                   ERN054
+     C                   Eval      Search20 = 'YNNYYNNNNNNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(3)                                   ERN054
+     C                   Eval      Search20 = 'YNNNNYNNNNNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(4)                                   ERN054
+     C                   Eval      Search20 = 'YNNNNNNNNNNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(5)                                   ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ERN054
+     C     KeyV0         Klist                                                                ERN054
+     C                   Kfld                    KeBRANCH                                     ERN054
+     C                   Kfld                    KeCUSTOM                                     ERN054
+     C                   Kfld                    KeCURRCY                                     ERN054
+     C                   Kfld                    KeTRNTYP                                     ERN054
+     C                   Kfld                    KeTRSBTY                                     ERN054
+     C                   Kfld                    KeCSGRCD                                     ERN054
+     C                   Kfld                    KeNETWRK                                     ERN054
+     C                   Kfld                    KePAYTYP                                     ERN054
+     C                   Kfld                    KeMSGTYP                                     ERN054
+     C                   Kfld                    KeSTMTMD                                     ERN054
+     C                   Kfld                    KeDRACTP                                     ERN054
+     C                   Kfld                    KeCRACTP                                     ERN054
+     C                   Kfld                    KeADDDED                                     ERN054
+     C                   Kfld                    KeFXTRAN                                     ERN054
+     C                   Kfld                    KeTdCtry                                     ERN054
+     C                   Kfld                    KeUrgFlg                                     URGIND
+                                                                                              ERN054
+      *                                                                                       ERN054
+     C                   Move      'N'           #EXTRN            1                          STP997
+
       *                                                                                       CFT120
       ** Check if CFT120 is switched on                                                       CFT120
       *                                                                                       CFT120
@@ -5603,11 +6468,11 @@ L011 D P               S              3P 0
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       ** Program, module and procedure names for database error processing.
       ** ==================================================================
@@ -5617,4 +6482,4 @@ L011 D P               S              3P 0
      C/COPY ZACPYSRC,PSSR_ILE
       *********************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001

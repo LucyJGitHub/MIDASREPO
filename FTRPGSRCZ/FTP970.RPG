@@ -1,0 +1,352 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FTP970 - FT Pekao Account Line repair                        *
+     F*                                                               *
+     F*  (C) Copyright Misys International Banking Systems 2003       *
+     F*                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+     F*  Last Amend No. AR856737           Date 13Sep11               *
+     F*  Last Amend No. PKO001             Date 23Jan2004             *
+     F*  Prev Amend No. MKEMR3             Date 06May03               *
+     F*                 EEE058 *Create     Date 13Feb2003             *
+      * Midas Release 4 --------------- Base -------------------------*
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+     F*  PKO001 - Zorba processing                                    *
+     F*  MKEMR3 - Emergency fix - Return error when translating       *
+     F*           accounts impossible.                                *
+     F*  EEE058 - Incoming STP                                        *
+     F*                                                               *
+     F*****************************************************************
+     FFTRBRCV0IF  E           K        DISK
+      *
+      *  Retail branches for STP
+      *
+     F/EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E                    FC         35  1
+     E                    TC         35  1
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     IFCARRY      DS
+     I                                        1  35 FC
+     ITCARRY      DS
+     I                                        1  35 TC
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Switchable Features Descriptions *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I              'abcdefghijklmnopqrst-C         LW
+     I              'uvwxyz'
+     I              'ABCDEFGHIJKLMNOPQRST-C         UP
+     I              'UVWXYZ'
+     I              '/-.,:; '             C         CH
+     I              '       '             C         SP
+     I              '@@@@@@@'             C         @@
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM *BLANKS   @RTN    7
+     C                     PARM           I#ACLN 35
+     C                     PARM           O#ACLN 35
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELI#ACLN    W0PREF
+     C                     MOVEL*BLANKS   O#ACLN
+      *
+      * Initialise program
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If Car not active set return to spaces
+      *
+     C                     MOVEL*BLANKS   O@PREF 15
+     C           EEE058    IFEQ 'EEE058'
+      *
+      *  Repair account line
+      *
+     C                     EXSR SRACLN
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACLN   : Account Line Repair                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACLN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRACLN'  @STK,Q
+      *
+      *  Check for 8a then non/numeric
+      *
+      *
+      *  Convert spacing characters to spaces
+     C                     MOVE I#ACLN    @WRK    2
+      *
+     C           CH:@@     XLATEI#ACLN    @TEMP  35
+      *
+      *  Remove spaces
+      *
+     C                     MOVEL@TEMP     FCARRY
+     C                     MOVEL*BLANKS   O#ACLN
+     C                     Z-ADD1         B#      50
+     C                     MOVEL*BLANKS   #LEV    1
+     C           1         DO   35        A#      50
+      *                                                                                     MKEMR3
+     C           A#        IFGT 35                                                          MKEMR3
+     C                     MOVEL'*ERROR'  @RTN                                              MKEMR3
+     C                     GOTO EXACLN                                                      MKEMR3
+     C                     ENDIF                                                            MKEMR3
+      *                                                                                     MKEMR3
+      * If 9th is @ then look for STP branch
+     C           B#        IFEQ 9
+     C                     MOVEATC,1      RBBRCH
+     C                     EXSR SRRBRC
+     C           ##BROK    IFNE 'T'
+     C                     MOVEL'Y'       #LEV
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If 9th is @ then look
+     C           B#        IFEQ 9
+     C           FC,A#     ANDEQ'@'
+     C           #LEV      ANDEQ*BLANKS
+     C           A#        ADD  1         C#      50
+     C           C#        DO   35        D#      50
+      * Note first available character
+      *                                                                                     MKEMR3
+     C           D#        IFGT 35                                                          MKEMR3
+     C                     MOVEL'*ERROR'  @RTN                                              MKEMR3
+     C                     GOTO EXACLN                                                      MKEMR3
+     C                     ENDIF                                                            MKEMR3
+      *                                                                                     MKEMR3
+     C           FC,D#     IFNE '@'
+     C           #LEV      ANDEQ*BLANKS
+     C                     MOVEL'Y'       #LEV    1
+     C                     Z-ADDD#        C#
+     C                     ENDIF
+      * Terminate loop when next @ is found
+     C           FC,D#     IFEQ '@'
+     C           #LEV      ANDEQ'Y'
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      * If less than 7 pad with zeroes
+     C           D#        SUB  C#        ##POS   50
+     C           ##POS     IFLT 8
+     C           8         SUB  ##POS     ##POS
+     C           1         DO   ##POS     C#
+      *                                                                                     MKEMR3
+     C           B#        IFGT 35                                                          MKEMR3
+     C           A#        ORGT 35                                                          MKEMR3
+     C                     MOVEL'*ERROR'  @RTN                                              MKEMR3
+     C                     GOTO EXACLN                                                      MKEMR3
+     C                     ENDIF                                                            MKEMR3
+      *                                                                                     MKEMR3
+     C                     MOVEA'0'       TC,B#
+     C                     ADD  1         B#
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FC,A#     IFNE '@'
+      *                                                                                     MKEMR3
+     C           B#        IFGT 35                                                          MKEMR3
+     C                     MOVEL'*ERROR'  @RTN                                              MKEMR3
+     C                     GOTO EXACLN                                                      MKEMR3
+     C                     ENDIF                                                            MKEMR3
+      *                                                                                     MKEMR3
+     C                     MOVEAFC,A#     TC,B#
+     C                     ADD  1         B#
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           B#        IFGT 35                                                          MKEMR3
+     C                     MOVEL'*ERROR'  @RTN                                              MKEMR3
+     C                     GOTO EXACLN                                                      MKEMR3
+     C                     ENDIF                                                            MKEMR3
+      *                                                                                     MKEMR3
+     C                     MOVEA*BLANKS   TC,B#
+     C                     MOVEATC        O#ACLN
+      *
+      *  Convert spacing characters to spaces
+      *
+     C           '@':' '   XLATEO#ACLN    O#ACLN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACLN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       #FIRST  1
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Access SAR details file to see if PL0001 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'EEE058'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Allow Batch Authorisation processing
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           EEE058    ANDEQ*BLANKS
+     C                     MOVEL'EEE058'  EEE058  6
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 30 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCABR   : Check PCAT branch for STP                         *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRBRC    BEGSR
+      *
+     C           KRBRC     KLIST
+     C                     KFLD           RBBRCH
+     C                     MOVEL*BLANKS   ##BROK
+      *
+     C           KRBRC     CHAIN@RBRCV0              90
+     C           *IN90     IFEQ *OFF
+     C           RBSTPF    ANDEQ'Y'
+     C           RBTRFT    ANDNE'R'                                                           PKO001
+     C                     MOVEL'T'       ##BROK  1
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+      *
+      /EJECT
+**  CPY@ table
+(C) Copyright Misys International Banking Systems 2003

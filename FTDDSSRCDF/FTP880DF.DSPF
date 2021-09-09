@@ -1,0 +1,501 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+      *****************************************************************
+      *                                                               *
+      *   Midas - Message Management Module                           *
+      *                                                               *
+      *   DSPF/FTP880DF - Midas FT Display Pekao Customer Account     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *   Last Amend No. MD31937          Date 13Jan15                *
+      *   Last Amend No. AR856737         Date 13Sep11                *
+      *   Last Amend No. EEE058  *Amend   Date 29Jun2004              *
+      *   Prev Amend No. E30004           Date 25Feb2004              *
+      *                  EEE058           Date 26Feb2003              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *    MD31937  - Upgrade STP enhancements to BF Midas 2.1        *
+      *    AR856737 - Upgrade STP enhancements to Midas Plus level    *
+      *    EEE058 - Add Partial IBAN selection criteria.              *
+      *           - Increase scan limit.                              *
+      *           - Add Status selection criteria.                    *
+      *    E30004 - Include status in display                         *
+      *    EEE058 - Incoming STP                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      *=========================================================================
+     A          R #SFLRC1                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2003')
+     A                                      SFL
+     A                                      SETOF(98 'Force input format')
+     A                                      INDTXT(84 'Subfile next change')
+     A                                      INDTXT(36 'Invalid: #1SEL')
+     A  84                                  SFLNXTCHG
+     A            #1RECI         1A  H      TEXT('Record Identifier')
+     A            #1AJOB        10A  H      TEXT('Job name')
+     A            #1AUSR        10A  H      TEXT('User name')
+     A            #1ATIM         6S 0H      TEXT('Action Time')
+     A            #1ARDT         7A  H      TEXT('Action Date')
+     A            #1AACT         1A  H      TEXT('Action Type')
+     A            #1RDNB         5S 0H      TEXT('Run day number')
+     A            #1RNB1        16A  H      TEXT('Retail Number 1')
+     A            #1RNB2        18A  H      TEXT('Retail Number 2')
+     A            #1SEL          1A  B 11  2
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A N36                                  DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A            #1IBAN        34A  O 11  4TEXT('IBAN')
+     A                                      DSPATR(HI)
+     A            #1BEN1        35A  O 11 41TEXT('Beneficiary 1')
+     A                                      DSPATR(HI)
+      * E30004 start
+     A            #1ASTS         1A  O 11 78TEXT('Status')
+     A                                      DSPATR(HI)
+      * E30004 End
+      *=========================================================================
+     A          R #SFLCT1                   TEXT('Subfile control.')
+     A                                      SFLCTL(#SFLRC1)
+     A                                      SETOF(98 'Force input format')
+     A                                      SFLPAG(10) SFLSIZ(11)
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A  86                                  PUTOVR
+     A                                      INDTXT(80 'Clear subfile')
+     A                                      INDTXT(81 'Display subfile')
+     A                                      INDTXT(82 'End of subfile')
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N25
+     AAN80
+     AA 81                                  SFLDSP
+      *-------------------------------------------------------------------------
+      *  If version 2.1 or lessof OS/400 reinstate next line
+     A N80 81 82                            SFLEND(*MORE)
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  77                                  CF09(09 'CF09 Add')
+     A  78                                  CF12(12 'CF12 Previous')
+     A                                      CF18(18 'CF18 View 2')
+     A                                      CF19(19 'CF19 View 3')
+     A N82                                  ROLLUP(27 'Next page.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #2IBAN')
+     A                                      SETOF(32 'Invalid: #SBEN1')
+      * EEE058 start
+     A                                      SETOF(33 'Invalid: #SPIBN')
+     A                                      SETOF(34 'Invalid: #SSTAT')
+      * EEE058 end
+      *-------------------------------------------------------------------------
+     A            ##SFRC         4S 0H      SFLRCDNBR
+     A            ##USR         10A  O  1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10A  O  1 13TEXT('*PROGRAM')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##MRDT         7A  O  1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10A  O  2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONAM        40A  O  2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6Y 0O  2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #PACTC         1A  H      TEXT('Action Code')
+     A                                  4  2'Position on :'
+     A                                  4 16'IBAN'
+     A            #2IBAN        34A  B  4 30TEXT('IBAN')
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N31                                  DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 start
+     A***********                       6  3'Select on  :'
+     A***********                       6 16'Beneficiary'
+     A*********** #SBEN1        35A  B  6 30TEXT('Beneficiary')
+     A                                  5  3'Select on  :'
+     A                                  5 16'Beneficiary'
+     A            #SBEN1        35A  B  5 30TEXT('Beneficiary')
+      * EEE058 end
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A N32                                  DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 start
+     A                                  6 16'Partial IBAN'
+     A            #SPIBN        10A  B  6 30TEXT('Partial IBAN')
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N33                                  DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  7 16'Status'
+     A            #SSTAT         1A  B  7 30TEXT('StatusN')
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N34                                  DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 end
+      * E30004 start
+     A**81*********                     9  2'?    IBAN Account Identification  -
+     A*************                               Beneficiary Information      -
+     A*************                              '
+     A*************                         DSPATR(HI)
+     A  81                              9  2'?    IBAN Account Identification  -
+     A                                            Beneficiary Information      -
+     A                                          Status'
+     A                                      DSPATR(HI)
+      * E30004 End
+     A  81                             10  2'                                  -
+     A                                                                         -
+     A                                           '
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #SFLRC2                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2003')
+     A                                      SFL
+     A                                      SETOF(98 'Force input format')
+     A                                      INDTXT(84 'Subfile next change')
+     A                                      INDTXT(36 'Invalid: #1SEL')
+     A  84                                  SFLNXTCHG
+     A            #1RECI         1A  H      TEXT('Record Identifier')
+     A            #1AJOB        10A  H      TEXT('Job name')
+     A            #1AUSR        10A  H      TEXT('User name')
+     A            #1ATIM         6S 0H      TEXT('Action Time')
+     A            #1ARDT         7A  H      TEXT('Action Date')
+     A            #1AACT         1A  H      TEXT('Action Type')
+     A            #1RDNB         5S 0H      TEXT('Run day number')
+     A            #1IBAN        34A  H      TEXT('IBAN           ')
+     A            #1RNB1        16A  H      TEXT('Retail Number 1')
+     A            #1RNB2        18A  H      TEXT('Retail Number 2')
+     A            #1SEL          1A  B 11  2
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A N36                                  DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A            #1RNBR        34A  O 11  4TEXT('Retail Number')
+     A                                      DSPATR(HI)
+     A            #1BEN1        35A  O 11 41TEXT('Beneficiary 1')
+     A                                      DSPATR(HI)
+      * E30004 start
+     A            #1ASTS         1A  O 11 78TEXT('Status')
+     A                                      DSPATR(HI)
+      * E30004 End
+      *=========================================================================
+     A          R #SFLCT2                   TEXT('Subfile control.')
+     A                                      SFLCTL(#SFLRC2)
+     A                                      SETOF(98 'Force input format')
+     A                                      SFLPAG(10) SFLSIZ(11)
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A  86                                  PUTOVR
+     A                                      INDTXT(80 'Clear subfile')
+     A                                      INDTXT(81 'Display subfile')
+     A                                      INDTXT(82 'End of subfile')
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N25
+     AAN80
+     AA 81                                  SFLDSP
+      *-------------------------------------------------------------------------
+      *  If version 2.1 or lessof OS/400 reinstate next line
+     A N80 81 82                            SFLEND(*MORE)
+      *-------------------------------------------------------------------------
+      * Command keys                                                           .
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  77                                  CF09(09 'CF09 Add')
+     A  78                                  CF12(12 'CF12 Previous')
+     A                                      CF18(18 'CF18 View 1')
+     A                                      CF19(19 'CF19 View 3')
+     A N82                                  ROLLUP(27 'Next page.')
+      *-------------------------------------------------------------------------
+      * Setoffs                                                                .
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #2RNBR')
+     A                                      SETOF(32 'Invalid: #SBEN1')
+      * EEE058 start
+     A                                      SETOF(33 'Invalid: #SPIBN')
+     A                                      SETOF(34 'Invalid: #SSTAT')
+      * EEE058 end
+      *-------------------------------------------------------------------------
+      *
+     A            ##SFRC         4S 0H      SFLRCDNBR
+     A            ##USR         10A  O  1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10A  O  1 13TEXT('*PROGRAM')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##MRDT         7A  O  1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10A  O  2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONAM        40A  O  2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6Y 0O  2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #PACTC         1A  H      TEXT('Action Code')
+     A                                  4  2'Position on :'
+     A                                  4 16'Retail Number'
+     A            #2RNBR        34A  B  4 30TEXT('Retail Number')
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N31                                  DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 start
+     A***********                       6  3'Select on  :'
+     A***********                       6 16'Beneficiary'
+     A*********** #SBEN1        35A  B  6 30TEXT('Beneficiart 1')
+     A                                  5  3'Select on  :'
+     A                                  5 16'Beneficiary'
+     A            #SBEN1        35A  B  5 30TEXT('Beneficiart 1')
+      * EEE058 end
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A N32                                  DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 start
+     A                                  6 16'Partial IBAN'
+     A            #SPIBN        10A  B  6 30TEXT('Partial IBAN')
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N33                                  DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  7 16'Status'
+     A            #SSTAT         1A  B  7 30TEXT('Status')
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N34                                  DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 end
+      * E30004 start
+     A**81********                      9  2'?    Retail Account Number        -
+     A************                                Beneficiary Information      -
+     A************                               '
+     A  81                              9  2'?    Retail Account Number        -
+     A                                            Beneficiary Information      -
+     A                                          Status'
+      * E30004 End
+     A                                      DSPATR(HI)
+     A  81                             10  2'                                  -
+     A                                                                         -
+     A                                           '
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #SFLRC3                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SFL
+     A                                      SETOF(98 'Force input format')
+     A                                      INDTXT(84 'Subfile next change')
+     A                                      INDTXT(36 'Invalid: #1SEL')
+     A  84                                  SFLNXTCHG
+     A            #1RECI         1A  H      TEXT('Record Identifier')
+     A            #1SQNO         5S 0H      TEXT('Sequence Number')
+     A            #1AJOB        10A  H      TEXT('Job name')
+     A            #1AUSR        10A  H      TEXT('User name')
+     A            #1ATIM         6S 0H      TEXT('Action Time')
+     A            #1ARDT         7A  H      TEXT('Action Date')
+     A            #1AACT         1A  H      TEXT('Action Type')
+     A            #1RDNB         5S 0H      TEXT('Run day number')
+     A            #1IBAN        34A  H      TEXT('IBAN           ')
+     A            #1RNB1        16A  H      TEXT('Retail Number 1')
+     A            #1RNB2        18A  H      TEXT('Retail Number 2')
+     A            #1SEL          1A  B 11  2
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A N36                                  DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A            #1BEN1        35A  O 11  4TEXT('Beneficiary 1')
+     A                                      DSPATR(HI)
+     A            #1BEN2        35A  O 11 41TEXT('Beneficiary 2')
+     A                                      DSPATR(HI)
+      * E30004 start
+     A            #1ASTS         1A  O 11 78TEXT('Status')
+     A                                      DSPATR(HI)
+      * E30004 End
+      *=========================================================================
+     A          R #SFLCT3                   TEXT('Subfile control.')
+     A                                      SFLCTL(#SFLRC3)
+     A                                      SETOF(98 'Force input format')
+     A                                      SFLPAG(10) SFLSIZ(11)
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A  86                                  PUTOVR
+     A                                      INDTXT(80 'Clear subfile')
+     A                                      INDTXT(81 'Display subfile')
+     A                                      INDTXT(82 'End of subfile')
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N25
+     AAN80
+     AA 81                                  SFLDSP
+      *----------------------------------------------------------------
+      *  If version 2.1 or lessof OS/400 reinstate next line
+     A N80 81 82                            SFLEND(*MORE)
+      *-------------------------------------------------------------------------
+      * Command keys
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  77                                  CF09(09 'CF09 Add')
+     A  78                                  CF12(12 'CF12 Previous')
+     A                                      CF18(18 'CF18 View 1')
+     A                                      CF19(19 'CF19 View 2')
+     A N82                                  ROLLUP(27 'Next page.')
+      *-------------------------------------------------------------------------
+      * Setoffs
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #2BEN1')
+     A                                      SETOF(32 'Invalid: #SBEN2')
+      * EEE058 start
+     A                                      SETOF(33 'Invalid: #SPIBN')
+     A                                      SETOF(34 'Invalid: #SSTAT')
+      * EEE058 end
+      *-------------------------------------------------------------------------
+      *
+     A            ##SFRC         4S 0H      SFLRCDNBR
+     A            ##USR         10A  O  1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10A  O  1 13TEXT('*PROGRAM')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##MRDT         7A  O  1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10A  O  2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##ONAM        40A  O  2 21TEXT('Option Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##TME          6Y 0O  2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #PACTC         1A  H      TEXT('Action Code')
+     A                                  4  2'Position on :'
+     A                                  4 16'Beneficiary line 1'
+     A            #2BEN1        35A  B  4 35TEXT('Beneficiary 1')
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A N31                                  DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 start
+     A***********                       6  3'Select on  :'
+     A***********                       6 16'Beneficiary line 2'
+     A*********** #SBEN2        35A  B  6 35TEXT('Beneficiary 2')
+     A                                  5  3'Select on  :'
+     A                                  5 16'Beneficiary line 2'
+     A            #SBEN2        35A  B  5 35TEXT('Beneficiary 2')
+      * EEE058 end
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A N32                                  DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 start
+     A                                  6 16'Partial IBAN'
+     A            #SPIBN        10A  B  6 35TEXT('Partial IBAN')
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N33                                  DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                  7 16'Status'
+     A            #SSTAT         1A  B  7 35TEXT('Status')
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A N34                                  DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      * EEE058 end
+      * E30004 Start
+     A**81********                      9  2'?    Beneficiary Line 1           -
+     A************                                Beneficiary Line 2           -
+     A************                               '
+     A  81                              9  2'?    Beneficiary Line 1           -
+     A                                            Beneficiary Line 2           -
+     A                                          Status'
+      * E30004 End
+     A                                      DSPATR(HI)
+     A  81                             10  2'                                  -
+     A                                                                         -
+     A                                           '
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            ##CMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##CMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================

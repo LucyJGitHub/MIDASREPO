@@ -1,0 +1,225 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0027 - Check if Msg Amount below limit                    *
+      *                                                               *
+      *  Function:  This program checks if Message Amount (32A:)      *
+      *  is below limit specified in suffix                           *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2003       *
+      *                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 15Jul2011             *
+      *  Last Amend No. MKFX01             Date 23Jan06               *
+      *  Prev Amend No. EEE058             Date 05Feb2003             *
+      * Midas Release 4.01--------------------------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  EEE058 - Incoming STP idenifier is Elixir customer           *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *
+      *  Customer details extension
+      *
+     F/EJECT
+      *****************************************************************
+     E/COPY ZSRSRC,ZPOWERZ1
+     E                    YA1        15  1
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Copyright
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IPCRIT     E DSMEGNCRPD
+      *
+      *  Return Criteria Details to calling program
+      *
+     I            DS
+      *
+      *  Split the detail fields into field tag name and contents
+      *
+     I                                        1 256 WUFDDT
+     I                                        1   5 WUMTAG
+     I                                        6   6 WUFDIN
+     I                                        6 256 WUTGCK
+     I                                       25  48 WUIDCY
+     I                                       51 256 REST
+      *
+      * Transalation data structure for Suffix
+     I            DS
+     I                                        1  21 LIMIT
+     I                                        1   3 FIILER
+     I                                        4   6 LMCCY
+     I                                        7  21 LMAMT
+      * Transalation field 32a:
+     I            DS
+     I                                        1  24 P@DCA
+     I                                        1   60P@DAT
+     I                                        7   9 P@CCY
+     I                                       10  24 P@AMT
+      *
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+     ID@CURR    E DSSDCURRPD
+      * SDCURRPD - Currency Details
+      *
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+      *
+     C           *LIKE     DEFN WUTGCK    P@IN
+     C           *LIKE     DEFN A6SPRT    M@SPRT
+     C           *LIKE     DEFN A6SPRT    L@SPRT
+     C           *LIKE     DEFN A6MDIN    M@MDIN
+     C           *LIKE     DEFN A6MDIN    L@MDIN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C           WUFDDT    PARM           P@IN
+     C                     PARM           P#PTTN 32
+     C                     PARM           GDOPER  2
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+      * If true put T
+     C                     MOVEL'F'       P#RETN
+      *
+      * Get number of decimal places for 32a: currency
+     C                     MOVE *BLANKS   P@DCA
+     C                     MOVELWUIDCY    P@DCA
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RETC   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM P@CCY     @CURR   3
+     C           D@CURR    PARM D@CURR    DSSDY
+      *
+     C           @RETC     IFNE *BLANKS
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    W32NBD  10
+     C                     Z-ADDA6SPRT    M@SPRT
+     C                     MOVE A6MDIN    M@MDIN
+      *
+      * Get number of decimal places for Limit Currency
+     C                     MOVE *BLANKS   LIMIT
+     C                     MOVELP#PTTN    LIMIT
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RETC   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM LMCCY     @CURR   3
+     C           D@CURR    PARM D@CURR    DSSDY
+      *
+     C           @RETC     IFNE *BLANKS
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    WLMNBD  10
+     C                     Z-ADDA6SPRT    L@SPRT
+     C                     MOVE A6MDIN    L@MDIN
+      *
+      * Format message Amount field (change ',' decimal point to '.')
+      *
+     C                     MOVEAP@AMT     YA1
+     C                     Z-ADD1         C       30
+      *
+     C           C         DOUGT15
+      *
+     C           YA1,C     IFEQ ','
+     C                     MOVE '.'       YA1,C
+     C                     Z-ADD16        C
+     C                     ELSE
+     C                     ADD  1         C
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVEAYA1       AMT    15
+      *
+      * Convert Message Amount to Numeric
+      *
+     C                     MOVEL*BLANKS   WAMT   15
+     C                     MOVELAMT       WAMT
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WAMT      ZFIELD
+     C           15        SUB  W32NBD    ZADIG
+     C                     Z-ADDW32NBD    ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     RETRN
+     C                     END
+     C                     MOVE ZFIELD    W32AMT 150
+      *
+      * Convert Limit Amount to Numeric
+      *
+     C                     MOVEL*BLANKS   WAMT
+     C                     MOVELLMAMT     WAMT
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WAMT      ZFIELD
+     C           15        SUB  WLMNBD    ZADIG
+     C                     Z-ADDWLMNBD    ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'
+     C                     RETRN
+     C                     END
+     C                     MOVE ZFIELD    WLMAMT 150
+      *
+      * Convert Message Amount into Limit Currency Amount
+      *
+     C                     Z-ADDW32AMT    ZAMTF
+     C                     MOVE P@CCY     ZCCYF
+     C                     MOVE LMCCY     ZCCYT
+     C                     Z-ADDM@SPRT    ZRATEF
+     C                     Z-ADDL@SPRT    ZRATET
+     C                     MOVE M@MDIN    ZMDINF
+     C                     MOVE L@MDIN    ZMDINT
+     C                     Z-ADDW32NBD    ZCDPF
+     C                     Z-ADDWLMNBD    ZCDPT
+      *
+     C                     Z-ADD0         ZAMTT
+     C                     Z-ADD0         ZCRSRT
+     C                     MOVE *BLANK    ZCRSMD
+      *
+     C                     EXSR ZCCYCN
+      *
+      * Compare Amounts
+      *
+     C           ZAMTT     IFLT WLMAMT
+     C                     MOVEL'T'       P#RETN
+     C                     ENDIF
+      *
+      *  Exit program
+      *
+     C                     RETRN
+     C/COPY ZSRSRC,ZALIGNZ2
+      *
+     C/COPY ZSRSRC,ZCCYCN
+      *
+     C/COPY ZSRSRC,ZPOWERZ2

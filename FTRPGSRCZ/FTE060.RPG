@@ -1,0 +1,240 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module.                               *
+      *                                                               *
+      *  FTE060 - Midas FT BIC Load Interface File.                   *
+      *                                                               *
+      *  Called by: FTCE060 - Midas FT BIC Load Interface File.       *
+      *                                                               *
+      *  (c) Misys Banking Systems Ltd. 2006.                         *
+      *                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 13Sep11               *
+      *  Last Amend No. MKCAR9  *Create    Date 25Nov04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 Upgrade STP enhancement to Midas Plus level.        *
+      *  MKCAR9 - BIC Load.                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     FFTMSGRV0UF  E           K        DISK         KCOMIT       A
+      * Midas FT Payment Correspondent General Routes.
+      *
+     FFTBICLPDIF  E                    DISK
+      * Midas FT Payment Correspondent General Routes.
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    20    Chain to FTMSGRV0 file.                              *
+      *    21    EoF FTBICLPD file.                                   *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT  -  Initialisation routine                           *
+      *   #HMAIN  -  Main Processing.                                 *
+      *   *PSSR   -  Error handling                                   *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      *
+      * Copyright notice for inclusion in all programs
+     E                    CPY@    1   1 80               Midas copyright
+      **  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      **  Array of QCMDEXC command to edit
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  Copysource for error processing
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource
+      *
+      ** Data Structure for Dbase Error
+      *
+     ISDBANK    E DSSDBANKPD
+      * Bank Details accessed via access program
+      *
+     IDSFDY     E DSDSFDY
+      * External Data Structures used by Access Programs (Short)
+      *
+     I/EJECT
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls     #HINIT  Initialisation routine                    *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Call Initial Routine
+      *
+     C                     EXSR #HINIT
+      *
+     C                     EXSR #HMAIN
+      *
+     C                     COMIT
+      *
+      **  Exit program
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+      *
+     I/EJECT
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls     #HMAIN  Main Processing                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #HMAIN    BEGSR
+      *
+     C                     READ FTBICLPD                 21
+     C           *IN21     DOWNE*ON
+     C                     EXSR #HUPDT
+     C                     READ FTBICLPD                 21
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HUPDT   : Update BIC file.                                 *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HUPDT    BEGSR
+      *
+      ** Build Key
+      *
+     C                     MOVELI@DBIC    #BICC   8
+     C                     MOVE I@DBIC    #BICB   3
+     C                     MOVELI@PCCY    #PCCY   3
+      *
+     C           #BICDT    KLIST
+     C                     KFLD           #BICC
+     C                     KFLD           #BICB
+     C                     KFLD           #PCCY
+      *
+     C           #BICDT    CHAIN@MSGRV0              20
+      *
+     C           *IN20     IFEQ *ON
+      * Add new record.
+     C                     MOVEL#BICC     MGBICC
+     C                     MOVEL#BICB     MGBICB
+     C                     MOVELI@PCCY    MGPCCY
+     C                     MOVEL'D'       MGRECI
+     C                     MOVELI@RBIC    MGCBIC
+     C                     MOVE I@RBIC    MGCBIB
+     C                     MOVEL*BLANKS   MGRCAU
+     C                     MOVEL*BLANKS   MGRCAC
+     C                     MOVEL*BLANKS   MGCLRC
+     C                     MOVEL*BLANKS   MGCLRB
+     C                     MOVEL'N'       MGUI56
+     C                     MOVEL*BLANKS   MGCREG
+     C                     MOVEL*BLANKS   MGCTY1
+     C                     MOVEL*BLANKS   MGCTY2
+     C                     MOVEL*BLANKS   MGCTY3
+     C                     MOVEL*BLANKS   MGCTY4
+     C                     MOVEL*BLANKS   MGCTY5
+     C                     MOVEL*BLANKS   MGCLID
+     C                     MOVEL'Y'       MGPROT
+     C                     MOVEL'Y'       MGBENR
+     C                     Z-ADD0         MGBENL
+     C                     Z-ADD0         MGBENH
+     C                     MOVEL'Y'       MGSHAR
+     C                     Z-ADD0         MGSHAL
+     C                     Z-ADD0         MGSHAH
+     C                     MOVEL'Y'       MGOURR
+     C                     Z-ADD0         MGOURL
+     C                     Z-ADD0         MGOURH
+     C                     MOVEL*BLANKS   MGDES1
+     C                     MOVEL*BLANKS   MGDES2
+     C                     MOVEL*BLANKS   MGDES3
+     C                     MOVEL'A'       MGSTAT
+     C                     Z-ADD0         MGSTDT
+     C                     Z-ADD0         MGENDT
+     C                     MOVELP@JOB     MGAJOB
+     C                     MOVELP@USER    MGAUSR
+     C                     Z-ADDDDTIME    MGATIM
+     C                     MOVELBJMRDT    MGARDT
+     C                     MOVEL'I'       MGAACT
+     C                     Z-ADDBJRDNB    MGRDNB
+     C                     MOVEL*BLANKS   MGEX54
+     C                     MOVEL*BLANKS   MGHOBC
+     C                     WRITE@MSGRV0
+      *
+     C                     ELSE
+      * Update existing record.
+     C                     MOVEL'D'       MGRECI
+     C                     MOVELI@RBIC    MGCBIC
+     C                     MOVE I@RBIC    MGCBIB
+     C                     MOVELP@JOB     MGAJOB
+     C                     MOVELP@USER    MGAUSR
+     C                     Z-ADDDDTIME    MGATIM
+     C                     MOVELBJMRDT    MGARDT
+     C                     MOVEL'A'       MGAACT
+     C                     Z-ADDBJRDNB    MGRDNB
+     C                     UPDAT@MSGRV0
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   #HINIT   : Initialisation Routine                           *
+      *   Called by: Main process                                     *
+      *   Calls    : Nothing                                          *
+      *****************************************************************
+      *
+     C           #HINIT    BEGSR
+      *
+      ** Copyright insertion
+      *
+     C                     MOVEACPY@      MISYS@ 80
+      *
+      ** Declare Entry Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@JOB  10
+     C                     PARM           P@USER 10
+     C                     PARM           P@NBR   6
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM           @OPTN   7        B:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C                     TIME           DDTIME  60
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - anywhere within the program                     *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+** CPY@   Object Copyright
+(c) Misys Banking Systems Ltd. 2006

@@ -1,7 +1,6 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas FT Outgoing payments valid. S1/level 2')         *
      F*****************************************************************
      F*                                                               *
      F*  Midas - Funds Transfer Module                                *
@@ -13,13 +12,17 @@
      F*                                                               *
      F*  Called By: FT0345  - Incomimg Payments Maintenence Level 2   *
      F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR918975           Date 21Mar12               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CSW215             Date 06Apr15               *
-      *                 CFT120             Date 28Sep12               *
-      *                 CRE075             Date 06Dec10               *
+      *  Last Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. HVB007             Date 25Oct11               *
+      *  Last Amend No. AR856737           Date 05Aug11               *
+      *                 STP500             Date 04May05               *
+      *                 ESL038             Date 04May05               *
+      *                 176653             Date 25May00               *
+      *  Last Amend No. CFT120             Date 28Sep12               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,10 +70,18 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  AR918975 - Allow lower case SWIFT characters for STP.        *
-      *             (Child: AR919050)                                 *
-      *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  HVB007 - Error message FTM2222 is issued if 1st line         *
+      *           of Beneficiary is IBAN and 2nd line not blank.      *
+      *           Applied fix similar to BUG7778 in FTVBEBE           *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           STP500, ESL038, 176653                              *
+      *  STP500  - Validation changes.                                *
+      *  ESL038  - If first non-account is blank after 11 then xlate  *
+      *  176653  - New Settlement Field used in cpysrc SFTADDRC.      *
+      *          - Recompiled over changes in  cpysrc SFTADDRC.       *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -316,6 +327,10 @@
      I#MSTX2      DS
      I                                        1 256 #MSTXA
      I                                      257 512 #MSTXB
+      *                                                                                       STP500
+     I              'EURELIXIR '          C         EUREXD                                    STP500
+     I              'EURELIXIRC'          C         EUREXC                                    STP500
+     I              'EURSORBNET'          C         EURSRB                                    STP500
      E/COPY FTCPYSRC,SFTVALCS
       *                                                                   CSW096
       * Input Parameters                                                  CSW096
@@ -444,6 +459,8 @@
      C                     PARM           E#DATA
      C                     PARM           C#DATA
      C                     PARM           I5DATA
+     C                     PARM           @@CLID 10                                           STP500
+     C/COPY WNCPYSRC,FT0347C019
       *                                                                                       CFT032
       ** Parameter List for calling AOOUFMR0                                                  CFT032
       *                                                                                       CFT032
@@ -1515,6 +1532,7 @@
      C           F5INBT    IFNE 'C'                                       CFT014
      C           F5INBT    ANDNE'S'                                       CFT014
      C           WCL103    ANDEQ'N'                                       CFT014
+     C           F5INBT    ANDNE*BLANKS                                   200941
      C                     MOVEL'Y'       E#MSGS                          CFT014
      C                     MOVELS5IBK1    FTMSDT                          CFT014
      C                     MOVELE#CPGM    FTPGMQ                          CFT014
@@ -2365,6 +2383,7 @@
      C                     MOVEL'Y'       ADLINE
      C                     MOVEL'FTM2314' ADFLDM
      C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     MOVE V#STMT    WKSTMT  2                       176653
      C                     EXSR ADCHK
       *
       *  Depending on the indicators, highlight the field in error
@@ -2594,6 +2613,30 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0347CCPG                                           S01408
      C*                                                                   S01408
+      *                                                                                       ESL038
+      * If first non-account is blank after 11 then xlate                                     ESL038
+      *                                                                                       ESL038
+     C           ADCH26    IFEQ *BLANKS                                                       ESL038
+     C           ADEXSW    ANDEQ*BLANKS                                                       ESL038
+     C           ADSLSH    ANDNE'/'                                                           ESL038
+     C           ADCH36    OREQ *BLANKS                                                       ESL038
+     C           ADEXS2    ANDEQ*BLANKS                                                       ESL038
+     C           ADCHK2    ANDNE*BLANKS                                                       ESL038
+     C           ADSLSH    ANDEQ'/'                                                           ESL038
+     C           ADSLS2    ANDNE'/'                                                           ESL038
+      *                                                                                       ESL038
+      *  Convert to Upper case                                                                ESL038
+      *                                                                                       ESL038
+     C           ADSLSH    IFNE '/'                                                           ESL038
+     C           AL:ALPHAB XLATES5ACB1    S5ACB1                                              ESL038
+     C                     ELSE                                                               ESL038
+     C           AL:ALPHAB XLATES5ACB2    S5ACB2                                              ESL038
+     C                     END                                                                ESL038
+      *                                                                                       ESL038
+     C                     MOVEL*BLANKS   ADDRSS                                              ESL038
+     C                     MOVELS5ACB     ADDRSS                                              ESL038
+     C                     ENDIF                                                              ESL038
+      *                                                                                       ESL038
       *
       *  If first ten characters used then try to find via SDCUSTPD
       *
@@ -2793,6 +2836,7 @@
      C                     MOVEL'Y'       ADLINE
      C                     MOVEL'FTM2315' ADFLDM
      C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     MOVE V#STMT    WKSTMT  2                       176653
      C                     EXSR ADCHK
       *                                                                   CFT014
       ** Bilateral agreement exists and account line is a clearing code   CFT014
@@ -2884,7 +2928,7 @@
       ** Clearing code exists                                             CFT014
       *                                                                   CFT014
      C           ADNOSN    IFEQ '//'                                      CFT014
-     C           ADCH26    ANDEQ*BLANK                                    CFT014
+     C********** ADCH26    ANDEQ*BLANK                                                 CFT014 250600
      C                     CLEARI#PARM                                    CFT014
      C                     CLEARO#PARM                                    CFT014
      C                     CLEARX#PARM                                    CFT014
@@ -3039,6 +3083,70 @@
       *  /COPY Statement
       *
      C/COPY WNCPYSRC,FT0347RBNC
+      *                                                                                       STP500
+     C           @@CLID    IFEQ EUREXD                                                        STP500
+     C                     MOVELS5BNC1    ##BC11  1                                           STP500
+     C                     MOVEL*BLANKS   ##BN11                                              STP500
+     C           ##BC11    IFEQ '/'                                                           STP500
+     C                     MOVE S5BNC1    ##BN11                                              STP500
+     C                     ELSE                                                               STP500
+     C                     MOVELS5BNC1    ##BN11                                              STP500
+     C                     ENDIF                                                              STP500
+      *                                                                                       STP500
+     C                     MOVEL##BN11    ##BC12  2                                           STP500
+     C           ##BC12    IFNE 'PL'                                                          STP500
+     C           'PL'      CAT  ##BN11    ##BN11                                              STP500
+     C                     ENDIF                                                              STP500
+      *                                                                                       STP500
+     C                     CALL 'AOIBANR5'             90                                     STP500
+     C                     PARM *BLANKS   RTCD    7                                           STP500
+     C                     PARM           ##BN11 34                                           STP500
+      *                                                                                       STP500
+     C           *IN90     IFEQ *OFF                                                          STP500
+     C           RTCD      ANDEQ*BLANKS                                                       STP500
+     C                     MOVEL'A'       F5BNCT                                              STP500
+     C                     ELSE                                                               STP500
+     C                     MOVEL'Y'       E#MSGS                                              STP500
+     C                     MOVELS5BNC1    FTMSDT                                              STP500
+     C                     MOVELE#CPGM    FTPGMQ                                              STP500
+     C                     MOVEL'FTA0123' FTMSID                                              STP500
+     C                     EXSR FTSNMS                                                        STP500
+     C                     MOVEL'Y'       I5BNC1                                              STP500
+     C                     MOVEL'Y'       E#NOUP                                              STP500
+     C                     MOVEA' '       WRN@,9                                              STP500
+     C                     MOVEL*BLANKS   ADDRSS                                              STP500
+     C                     GOTO EXBNC                                                         STP500
+     C                     END                                                                STP500
+     C                     ELSE                                                               STP500
+      *                                                                                       STP500
+     C           @@CLID    IFEQ EUREXC                                                        STP500
+     C                     MOVELS5BNC1    ##BC11  1                                           STP500
+     C                     MOVEL*BLANKS   ##BN11                                              STP500
+     C           ##BC11    IFEQ '/'                                                           STP500
+     C                     MOVE S5BNC1    ##BN11                                              STP500
+     C                     ELSE                                                               STP500
+     C                     MOVELS5BNC1    ##BN11                                              STP500
+     C                     ENDIF                                                              STP500
+     C                     CALL 'AOIBANR5'             90                                     STP500
+     C                     PARM *BLANKS   RTCD    7                                           STP500
+     C                     PARM           ##BN11 34                                           STP500
+      *                                                                                       STP500
+     C           *IN90     IFEQ *OFF                                                          STP500
+     C           RTCD      ANDEQ*BLANKS                                                       STP500
+     C                     MOVEL'A'       F5BNCT                                              STP500
+     C                     ELSE                                                               STP500
+     C                     MOVEL'Y'       E#MSGS                                              STP500
+     C                     MOVELS5BNC1    FTMSDT                                              STP500
+     C                     MOVELE#CPGM    FTPGMQ                                              STP500
+     C                     MOVEL'FTA0123' FTMSID                                              STP500
+     C                     EXSR FTSNMS                                                        STP500
+     C                     MOVEL'Y'       I5BNC1                                              STP500
+     C                     MOVEL'Y'       E#NOUP                                              STP500
+     C                     MOVEA' '       WRN@,9                                              STP500
+     C                     MOVEL*BLANKS   ADDRSS                                              STP500
+     C                     GOTO EXBNC                                                         STP500
+     C                     END                                                                STP500
+     C                     ELSE                                                               STP500
       *
       *  ? not allowed
       *
@@ -3317,10 +3425,10 @@
      C           ADSLSH    IFNE '/'
      C                     MOVEL'Y'       I5BNC1
      C                     MOVELS5BNC1    FTMSDT
-     C                     ELSE
-     C                     MOVEL'Y'       I5BNC2
-     C                     MOVELS5BNC2    FTMSDT
-     C                     END
+     C*****                ELSE                                                               HVB007
+     C*****                MOVEL'Y'       I5BNC2                                              HVB007
+     C*****                MOVELS5BNC2    FTMSDT                                              HVB007
+     C*****                END                                                                HVB007
       *
      C/COPY WNCPYSRC,FT0347C026
      C                     MOVEL'Y'       E#MSGS
@@ -3331,6 +3439,7 @@
      C                     MOVEL'Y'       E#NOUP
      C                     GOTO EXBNC
      C/COPY WNCPYSRC,FT0347C027
+     C                     END                                                                HVB007
      C                     END
      C/COPY WNCPYSRC,FT0347C007
       *
@@ -3342,6 +3451,7 @@
      C*********            MOVEL'Y'       ADSLON  1
      C                     MOVEL'FTM2316' ADFLDM
      C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     MOVE V#STMT    WKSTMT  2                       176653
      C                     EXSR ADCHK
       *
       *  Depending on the indicators, highlight the field in error
@@ -3496,6 +3606,10 @@
      C                     ENDIF                                          CFT004
      C                     ENDIF                                          CFT004
      C                     ENDIF                                          CFT004
+      *                                                                                       STP500
+     C                     ENDIF                                                              STP500
+      *                                                                                       STP500
+     C                     ENDIF                                                              STP500
       *                                                                   CFT004
       ** Validate 59F format if CSW215 is switched on                                         CSW215
       *                                                                                       CSW215
@@ -4597,7 +4711,7 @@
       *
      O/EJECT
 **  CPY@ table
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 **   ALPH  - Array of alphabetic                                          CFT004
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 **   NUMC  - Array of numeric                                             CFT004

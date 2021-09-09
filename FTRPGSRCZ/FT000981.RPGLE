@@ -1,8 +1,7 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas FT Calc. Charge due to a single Charge Code')    *
       *****************************************************************
       *                                                               *
       *  Midas - Funds Transfer Module                                *
@@ -20,13 +19,15 @@
       *             the charge levied on each tier.  Both arrays      *
       *             are in Charges Currency.                          *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 25Jul11               *
+      *                 STP030             Date 28Dec04               *
+      *  Last Amend No. CFT120             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 256564             Date 17Sep08               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
       *                 249111             Date 24Jul07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -40,7 +41,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied STP030 changes                              *
+      *  STP030 - When Add/Deduct charges <> 'D' charge can           *
+      *           exceed total payment amount.                        *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  249111 - Partially applied fixes 241489/241487 and 245709.   *
@@ -58,10 +63,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * FT Payment Charge Definition
      FFTPCHGL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -70,7 +75,7 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,40 +87,40 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array holding Chargeable Amount on each Tier
- 
+
       ** Charge calculation arrays - Start amounts for each tier
       **                           - End amounts for each tier
       **                           - Rate for each tier
@@ -132,24 +137,24 @@
      D MaxArr          S             13P 0 DIM(11)
      D TierCharge      S             21P 0 DIM(11)
      D TierAmount      S             21P 0 DIM(11)
- 
+
      D PowerArr        S              7  3 DIM(7) CTDATA
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Funds Transfer ICD
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       *                                                                                       CFT120
       ** Switchable Features File                                                             CFT120
       *                                                                                       CFT120
@@ -158,7 +163,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Other entry parameters
      D ChargeCode      S                   LIKE(PYCHCD)
      D P_ChargeCode    S                   LIKE(PYCHCD)
@@ -172,7 +177,7 @@
      D PTierAmount     S             13A   DIM(11)
      D ADDC            S                   LIKE(P_ADDC)
      D ChargesDR       S                   LIKE(P_ChargesDR)
- 
+
       ** Payment amount details
      D PayAmt          S             13P 0
      D P_PayAmt        S                   Like(PayAmt)
@@ -181,7 +186,7 @@
      D PayCcyDP        S                   LIKE(A6NBDP)
      D PayCcyMD        S                   LIKE(A6MDIN)
      D PaySpotRate     S                   LIKE(A6SPRT)
- 
+
       * Settlement Currency Details
      D P_SettCcy       S                   Like(PayCcy)
      D P_SettAmt       S                   Like(PayAmt)
@@ -190,7 +195,7 @@
      D SettCcyDP       S                   LIKE(A6NBDP)
      D SettCcyMD       S                   LIKE(A6MDIN)
      D SettSpotRate    S                   LIKE(A6SPRT)
- 
+
       ** Charge Currency details
      D ChgExch         S             13P 8
      D P_ChgExch       S                   Like(ChgExch)
@@ -199,18 +204,18 @@
      D ChgCcyDP        S                   LIKE(A6NBDP)
      D ChgCcyMD        S                   LIKE(A6MDIN)
      D ChgSpotRate     S                   LIKE(A6SPRT)
- 
+
       ** Other Currency details
      D OtherCcy        S              3A
      D OtherSpotRate   S                   LIKE(A6SPRT)
      D OtherCcyDP      S                   LIKE(A6NBDP)
      D OtherCcyMD      S                   LIKE(A6MDIN)
- 
+
       ** Work fields for charge calculation
      D Thousands       S             10P 0
      D TotInChgCcy     S             13P 0
      D x               S              2S 0
- 
+
       ** Parameters for ZRATE
      D ZRATE1          S             13P 8
      D ZRATE2          S             13P 8
@@ -218,15 +223,15 @@
      D ZMDI2           S              1A
      D ZRATEX          S             13P 8
      D ZMDIX           S              1A
- 
+
       * Base Currency Details
      D BaseCcy         S                   LIKE(PayCcy)
      D BaseCcyDP       S                   LIKE(A6NBDP)
      D BaseCcyMD       S                   LIKE(A6MDIN)
- 
+
      D ChgableAmt      S             13P 0
      D ChgDRCcy        S                   LIKE(P_ChgDRCcy)                                   CFT120
- 
+
       *
      D ReferenceCcy    S                   LIKE(PayCcy)
      D ReferenceAmt    S                   LIKE(PayAmt)
@@ -241,15 +246,15 @@
      D OtherTransSpot  S                   Like(ChgExch)
       *
      D ReferenceRange  S              5
- 
+
      D Conv_Rate       S                   Like(ZRATEX)
- 
+
      D TransRate       S                   LIKE(A6SPRT)
- 
+
      D CFT120          S              1A                                                      CFT120
                                                                                               CFT120
      D/COPY FTCPYSRC,FT0010D001
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -267,7 +272,7 @@
       *
       ** Initialise
      C                   EXSR      InitProc
- 
+
      C                   CallB     'FTCALCRNG'
      C                   PARM                    RetCodeIn
      C                   PARM                    PayAmt
@@ -289,9 +294,9 @@
      C                   PARM                    ProArr
      C                   PARM                    MinArr
      C                   PARM                    MaxArr
- 
+
      C                   EXSR      ChkEndArr
- 
+
       *
       ** Decide whether charges are on a Tiered or Threshold basis and
       ** calculate charge per tier.
@@ -322,13 +327,13 @@
      C                   Else
      C                   Eval      PTierCharge(x) = '9999999999999'
      C                   Endif
- 
+
      C                   If        TierAmount(x)  < 9999999999999
      C                   MOVE      TierAmount(x) PTierAmount(x)
      C                   Else
      C                   Eval      PTierAmount(x) = '9999999999999'
      C                   Endif
- 
+
      C                   EVAL      x = x + 1
      C                   ENDDO
       *
@@ -344,7 +349,7 @@
       *           - Save chargeable amount on each tier to TierAmount      *
       **********************************************************************
      C     Threshold     BEGSR
- 
+
      C                   DO        11            x
      C                   IF        PayAmt < StartArr(x) OR
      C                             x > 1 AND StartArr(x) = 0 AND
@@ -352,11 +357,11 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        X > 1
      C                   EVAL      X = X - 1
      C                   ENDIF
- 
+
       *
       ** If not ProMile type, multiply Rate by Pay Amount
       ** If ProMile type, find number of thousands and multiply by ProMile
@@ -367,10 +372,10 @@
      C                   Eval      Thousands = (Payamt *  +
      C                                          PowerArr(ChgCcyDP)) / 1000
      C                   EVAL (H)  TierAmount(x) = Thousands * 1000
- 
+
      C                   EVAL (H)  TierCharge(x) = ProArr(x) * (Thousands / +
      C                                                      PowerArr(ChgCcyDP))
- 
+
      C                   ENDIF
       *
       ** Charge for this tier cannot exceed Maximum or be less than Minimum
@@ -383,7 +388,7 @@
      C                   IF        TierCharge(x) < MinArr(x)
      C                   EVAL      TierCharge(x) = MinArr(x)
      C                   ENDIF
- 
+
       *
       * If by applying the charge the chargeable amount falls below the range start (1)
       *  use the range chargeable amount as the chargeable amount
@@ -426,7 +431,7 @@
       ** If Pay Amount lies above this tier, charge on the End amount of
       ** this tier (using Rate or ProMile as appropriate).
      C                   IF        PayAmt >= EndArr(x)
- 
+
      C                   If        StartArr(x) <>*Zeros
      C                   Eval      TierAmount(x) = (EndArr(x)-StartArr(x))+1
      C                   Else
@@ -439,10 +444,10 @@
      C                   Eval      Thousands = (TierAmount(x) *  +
      C                                          PowerArr(ChgCcyDP)) / 1000
      C                   EVAL (H)  TierAmount(x) = Thousands * 1000
- 
+
      C                   EVAL (H)  TierCharge(x) = ProArr(x) * (Thousands / +
      C                                              PowerArr(ChgCcyDP) )
- 
+
      C                   ENDIF
       *
       ** ... Else Pay Amount falls in this tier - last charge is on portion
@@ -455,7 +460,7 @@
      C                   ELSE
      C                   EVAL      TierAmount(x) = (PayAmt-StartArr(x)) + 1
      C                   ENDIF
- 
+
      C                   IF        TierAmount(x) < *Zeros
      C                   EVAL      TierAmount(x) = *Zeros
      C                   EVAL      TierCharge(x) = *Zeros
@@ -469,7 +474,7 @@
      C                   Eval      Thousands = (TierAmount(x) *  +
      C                                          PowerArr(ChgCcyDP)) / 1000
      C                   EVAL (H)  TierAmount(x) = Thousands * 1000
- 
+
      C                   EVAL (H)  TierCharge(x) = ProArr(x) * (Thousands / +
      C                                              PowerArr(ChgCcyDP) )
      C                   ENDIF
@@ -486,15 +491,16 @@
      C                   IF        TierCharge(x) < MinArr(x)
      C                   EVAL      TierCharge(x) = MinArr(x)
      C                   ENDIF
- 
+
       *
       * If by applying the charge the chargeable amount falls below the range start (1)
       *  use the range chargeable amount as the chargeable amount
      C                   If        X = 1 AND
      C                             Payamt - TierCharge(1) < StartArr(1)
+     C                             And P_ADDC = 'D'                                           STP030
      C                   Eval      TierCharge(1) = TierAmount(1)
      C                   Endif
- 
+
       *
      C                   ENDIF
       **                 (End of 'If EndArr(x) <> *Zeros')
@@ -534,7 +540,7 @@
      C                   IF        CFT120 = 'Y'                                               CFT120
      C                   EVAL      ChgDRCcy = P_ChgDRCcy                                      CFT120
      C                   ENDIF                                                                CFT120
- 
+
      C                   EVAL      ChgAbleAmt = 0
       * ---------------------------------------------------------------
       ** Access Charge Definition file
@@ -548,7 +554,7 @@
      C                   EVAL      DBKey  = ChargeCode
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * ---------------------------------------------------------------
       ** Get Funds Transfer ICD
       *
@@ -584,11 +590,11 @@
      C                   Eval      ChgCcyDP    = A6NBDP
      C                   Eval      ChgCcyMD    = A6MDIN
      C                   Eval      ChgSpotRate = A6SPRT
- 
+
      C                   If        ChgCcyDP = 0
      C                   Eval      ChgCcyDP = 4
      C                   Endif
- 
+
       * ---------------------------------------------------------------
       ** Access Pay Currency details
       *
@@ -636,17 +642,17 @@
       * Check End Array
       *****************************************************************
      C     ChkEndArr     BEGSR
- 
+
      C                   EVAL      x = 1
- 
+
      C                   DO        11            X
      C                   IF        EndArr(x) = 0
      C                   EVAL      EndArr(x) = 9999999999999
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   EVAL      x = 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -762,7 +768,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 **  PowerArr
 0000001
 0000010

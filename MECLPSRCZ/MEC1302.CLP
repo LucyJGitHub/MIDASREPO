@@ -1,35 +1,32 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas ME FT IMM action test')                         */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
 /*       MEC1302  - ME FT IMM Extraction Control - Batch process     */
 /*                                                                   */
-/*       (c) Finastra International Limited 2001                     */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. AR918980           Date 15Mar12              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      AR545296           Date 19Aug14              */
-/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. MD31937            Date 13Jan15              */
+/*       Last Amend No. AR856737           Date 13Sep11              */
+/*       Last Amend No. MM0001            Date 11Jan2005             */
+/*       Last Amend No. AR545296           Date 19Aug14              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*                      CPK015             Date 18Apr02              */
+/*       Last Amend No. CPK015            Date 18Apr02               */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*                      S01408            Date 05May95               */
+/*       Prev Amend No. S01408            Date 05May95               */
 /*                      S01435            Date 21Sep93               */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       AR918980 - When STP job restarted, incorrect data queue     */
-/*                  allocation. Correct data queue name on clear.    */
-/*                  Need to deallocate MEFTIMM *DTAQ.                */
-/*                  (Child: AR922604)                                */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD31937  - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*                - CALL to MEC1027 ends in error - MEMSG not found  */
+/*       MM0001 - Remove  DLYJOB                                     */
 /*       AR545296 - STP job ends after running through items to be   */
 /*                processed. The DTAQ to be cleared is invalid.      */
 /*                Changed it from 'MSFTIMM' to 'MEFTIMM'.            */
@@ -44,7 +41,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited +
+                          Misys International Banking Systems Ltd. +
                           2001')
 /* */
 /* Declare variables */
@@ -87,7 +84,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited')
+                          Misys International Banking Systems Ltd.')
 /* */
 /* Send Message to MRUNQ */
 /* */
@@ -197,7 +194,7 @@ RDTAQ:                                                                          
 /* Delay job by wait time (first time only) */
 /**/
              IF         COND(&WAIT *GE 0) THEN(DO)
-             DLYJOB     DLY(&DELAY_TIME)
+/*           DLYJOB     DLY(&DELAY_TIME)              */                      /* MM0001 */
              ENDDO
 /**/
 /* If no information from prior read of data queue */
@@ -288,9 +285,12 @@ RDTAQ:                                                                          
              RTVJOBA    TYPE(&TYPE)
              IF         COND(&TYPE *EQ '1') THEN(DO)
              CHGVAR     VAR(&MSGDTA) VALUE(' ')
-             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0220' +
+/* *******   CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0220' +
                           'MEMSG    ' &MSGDTA '          ' ' ' +
-                          'MEC1302' 'Y')
+                          'MEC1302' 'Y')                                   ****** */   /*AR856737*/
+             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0220' +
+                          'GBMEMSG   ' &MSGDTA '          ' ' ' +
+                          'MEC1302' 'Y')                                               /*AR856737*/
              ENDDO
 /**/
 /* Try to allocate data queue *EXCL */
@@ -333,9 +333,12 @@ ALCOBJ:                                                                         
              CHGVAR     VAR(&MSGDTA) VALUE(' ')
              CHGVAR     VAR(&MSGDTA) VALUE(&JOB *CAT &USER *CAT +
                           &JOBNBR)
-             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0221' +
+/* *****     CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0221' +
                           'MEMSG    ' &MSGDTA '          ' ' ' +
-                          'MEC1302' 'Y')
+                          'MEC1302' 'Y')                                     ***** */ /*/*AR856737*/
+             CALL       PGM(MEC1027) PARM(&RTN_CODE 'MIN0221' +
+                          'GBMEMSG   ' &MSGDTA '          ' ' ' +
+                          'MEC1302' 'Y')                                                /*AR856737*/
              ENDDO
 /**/
 /* If jobq then *IMMED */
@@ -391,15 +394,10 @@ ALCOBJ:                                                                         
 /* Delete data queue */
 /**/
 /************DLTDTAQ    DTAQ(&DILIB/MEFTIMM)                                           */ /*CPK015*/
-/**********  CALL       PGM(QCLRDTAQ) PARM('MSFTIMM' '*LIBL ')                */ /*CPK015 AR545296*/
+/*********** CALL       PGM(QCLRDTAQ) PARM('MSFTIMM' '*LIBL ')                */ /*CPK015 AR545296*/
              CALL       PGM(QCLRDTAQ) PARM('MEFTIMM' '*LIBL ')                          /*AR545296*/
              CHGDTAARA  DTAARA(MEDTA (191 26)) VALUE(' ')
 /**/
-              DLCOBJ     OBJ((MEFTIMM *DTAQ *EXCL))                                     /*AR918980*/
-              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                 /*AR918980*/
-              DLCOBJ     OBJ((MEFTIMM *DTAQ *SHRUPD))                                   /*AR918980*/
-              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                 /*AR918980*/
-/**/                                                                                    /*AR918980*/
              ENDDO
 /* End 'End' */
              GOTO       CMDLBL(ENDCLPGM)

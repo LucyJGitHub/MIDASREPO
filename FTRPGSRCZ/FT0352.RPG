@@ -1,7 +1,6 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas FT Incoming payments valid. s1/lvl 1')           *
      F*****************************************************************
      F*                                                               *
      F*  Midas - Funds Transfer Module                                *
@@ -13,17 +12,18 @@
      F*                                                               *
      F*  Called By: FT0350  - Incoming Payments Maintenence           *
      F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. AR918985           Date 05Mar12               *
-      *  Prev Amend No. AR918975           Date 21Mar12               *
-      *                 MD055628           Date 13Apr20               *
-      *                 MD046248           Date 27Oct17               *
-      *                 CSW215             Date 06Apr15               *
-      *                 CSW213             Date 03Jun13               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 25Jul11               *
+      *                 MK0556             Date 25May05               *
+      *                 MK0507             Date 07Feb2005             *
+      *                 DJBF02             Date 19Oct2004             *
+      *  Last Amend No. CSW215             Date 06Apr15               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
       *                 MD020161           Date 24Apr13               *
       *                 CRE075             Date 06Dec10               *
-      *                 CER059             Date 19Jul10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24738           Date 06Jul09               *
@@ -74,12 +74,19 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  AR918985 - Correct From/To account formatting for MEINFTPD.  *
-      *             (Child: AR922601)                                 *
-      *  AR918975 - Allow lower case SWIFT characters for STP.        *
-      *             (Child: AR919050)                                 *
-      *  MD055628 - STP IPAY transaction - No authority to any actions*
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *           - Program crashes after call successful call to     *
+      *             ZVACTBU. Prog ZVACTBU switches on *INLR even when *
+      *             this is no error.  Amend this program to remove   *
+      *             indicator 90 from the CALL command.               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           MK0556, MK0507, DJBF02                              *
+      *  MK0556  - Handle Multiple/divide indicator for external      *
+      *            networks.                                          *
+      *  MK0507 - Execute processing for delivery amount when STP     *
+      *           is on.                                              *
+      *  DJBF02 - Correct Beneficiary validation                      *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  MD020161 - Messages sent thru Multicash not processed by STP *
@@ -173,6 +180,9 @@
       *                                                                   CFT014
       ** ISO Country Codes file                                           CFT014
       *                                                                   CFT014
+     FMEINMVV0IF  E           K        DISK         KCOMIT                                    MK0556
+      * Midas ME Message Routing Extensionen                                                  MK0556
+      *                                                                                       MK0556
      E/COPY FTCPYSRC,SFTSWFTF
      F/COPY WNCPYSRC,FT0352DFPG
       *
@@ -370,34 +380,25 @@
      I************DS                                                      CFT014
       *  Accounts likely to be DR/CR for this Incoming                    CFT014
      IDRCRAC      DS                                                      CFT014
-     I**********                              1  18 RCCDS                                   AR918985
-     I**********                             19  36 SNDDS                                   AR918985
-     I**********                             37  54 BNCDS                                   AR918985
-     I**********                             55  72 ACBDS                                   AR918985
-     I**********                             73  90 TRIDS                            CFT014 AR918985
-     I                                        1  24 RCCDS                                   AR918985
-     I                                       25  48 SNDDS                                   AR918985
-     I                                       49  72 BNCDS                                   AR918985
-     I                                       73  96 ACBDS                                   AR918985
-     I                                       97 120 TRIDS                                   AR918985
+     I                                        1  18 RCCDS
+     I                                       19  36 SNDDS
+     I                                       37  54 BNCDS
+     I                                       55  72 ACBDS
+     I                                       73  90 TRIDS                 CFT014
      I/COPY WNCPYSRC,FT0352I003
       *                                                                   CFT014
       *  Accounts likely to be DR/CR for this Incoming                    CFT014
       *
-     I***IMACNT*     DS                             18                                      AR918985
-     IIMACNT      DS                             24                                         AR918985
+     IIMACNT      DS                             18
       *
       *  Define full account to be passed for FT IMM update
       *
      I**********                              1   60IMCNUM                                    CSD027
      I                                        1   6 IMCNUM                                    CSD027
      I                                        7   9 IMCCY
-     I**********                             10  130IMACOD                                  AR918985
-     I**********                             14  150IMACSQ                                  AR918985
-     I**********                             16  18 IMBRCA                                  AR918985
-     I                                       10  190IMACOD                                  AR918985
-     I                                       20  210IMACSQ                                  AR918985
-     I                                       22  24 IMBRCA                                  AR918985
+     I                                       10  130IMACOD
+     I                                       14  150IMACSQ
+     I                                       16  18 IMBRCA
       *
       *                                                                   CGL009
       ** Data Structure to hold Beneficiary as a partial account + CCY    CGL009
@@ -715,6 +716,7 @@
       *  Validate Notified delivery currency                              CEU006
       *                                                                   CEU006
      C           CEU006    IFEQ 'Y'                                       CEU006
+     C           CFT014    OREQ 'Y'                                                           MK0507
      C                     EXSR SRNDCY                                    CEU006
       *                                                                   CEU006
       * If entered and valid                                              CEU006
@@ -882,47 +884,47 @@
       * booking branch
       *
      C**********           CALL 'ZVACTBU'              9090                                 MD020161
-     C**********           CALL 'ZVACTBU'              90                          MD020161 MD055628
-     C**********           PARM S1ACTD    @ACTN   1                                         MD055628
-     C**********           PARM S1BRCA    @BRCD   3                                         MD055628
-     C**********           PARM 0         ERR     10                                        MD055628
-      **********                                                                            MD055628
-      ***If*error on call                                                                   MD055628
-      **********                                                                            MD055628
-     C********** *IN90     IFEQ '1'                                                         MD055628
-     C**********           MOVEL'ZVACTBU 'W0FILE           ***************                  MD055628
-     C**********           MOVEL'*CALL'   W0KEY            * DB ERROR 02 *                  MD055628
-     C**********           Z-ADD2         W0ERNB           ***************                  MD055628
-     C**********           MOVEL'MEM5003' W0MSGD                                            MD055628
-     C**********           MOVEL'MIDAS  ' W0MSGF                                            MD055628
-     C**********           EXSR SRERR                                                       MD055628
-     C**********           END                                                              MD055628
-      **********                                                                            MD055628
-      **User*not authorised to any action codes for this item and branch                    MD055628
-      **********                                                                            MD055628
-     C********** ERR       IFEQ 1                                                           MD055628
-     C**********           MOVEL'Y'       E#MSGS                                            MD055628
-     C**********           MOVELE#CPGM    FTPGMQ                                            MD055628
-     C**********           MOVEL'FTM2023' FTMSID                                            MD055628
-     C**********           EXSR FTSNMS                                                      MD055628
-     C**********           MOVEL'Y'       I1BRCA                                            MD055628
-     C**********           MOVEL'Y'       E#NOUP                                            MD055628
-     C**********           GOTO EXBRCA                                                      MD055628
-     C**********           END                                                              MD055628
-      **********                                                                            MD055628
-      **User*not authorised to action code for this particular item                         MD055628
-      **and*branch                                                                          MD055628
-      **********                                                                            MD055628
-     C********** ERR       IFEQ 2                                                           MD055628
-     C**********           MOVEL'Y'       E#MSGS                                            MD055628
-     C**********           MOVELS1ACTD    FTMSDT                                            MD055628
-     C**********           MOVELE#CPGM    FTPGMQ                                            MD055628
-     C**********           MOVEL'FTM2024' FTMSID                                            MD055628
-     C**********           EXSR FTSNMS                                                      MD055628
-     C**********           MOVEL'Y'       I1BRCA                                            MD055628
-     C**********           MOVEL'Y'       E#NOUP                                            MD055628
-     C**********           GOTO EXBRCA                                                      MD055628
-     C**********           END                                                              MD055628
+     C                     CALL 'ZVACTBU'              90                                   MD020161
+     C                     PARM S1ACTD    @ACTN   1
+     C                     PARM S1BRCA    @BRCD   3
+     C                     PARM 0         ERR     10
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ZVACTBU 'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * User not authorised to any action codes for this item and branch
+      *
+     C           ERR       IFEQ 1
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2023' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I1BRCA
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXBRCA
+     C                     END
+      *
+      * User not authorised to action code for this particular item
+      * and branch
+      *
+     C           ERR       IFEQ 2
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS1ACTD    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2024' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I1BRCA
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXBRCA
+     C                     END
       *
       *  Unwind subroutine stack name
       *
@@ -2192,7 +2194,12 @@
      C                     PARM           P@IBAN 34                       CFT004
      C                     PARM           DSSDY                           CFT004
       *                                                                   CFT004
-     C           @RTCD     IFEQ *BLANKS                                   CFT004
+     C                     SELEC                                          DJBF02
+     C           @RTCD     WHEQ '      6'                                 DJBF02
+     C           S1ACBK    ANDNE*BLANKS                                   DJBF02
+      * Skip and validate as address                                      DJBF02
+     C           @RTCD     WHEQ *BLANKS                                   DJBF02
+     C********** @RTCD     IFEQ *BLANKS                             CFT004DJBF02
      C           3         OCUR OACCNT                                    CFT004
      C                     MOVE *BLANKS   DSSDY                           CFT004
       *                                                                   CFT004
@@ -2205,7 +2212,8 @@
      C           OACCNT    PARM           DSSDY                           CFT004
      C                     MOVE 'I'       F1BNCT                          CFT004
      C*                                                                   CFT004
-     C                     ELSE                                           CFT004
+     C                     OTHER                                          DJBF02
+     C*********            ELSE                                     CFT004DJBF02
      C*                                                                   CFT004
      C** Return code 1 is not an error in this case as can only validate  CFT004
      C** the beneficiary as an IBAN if the ISO country code is correct.   CFT004
@@ -2232,10 +2240,18 @@
      C                     END                                            CFT004
      C                     EXSR FTSNMS                                    CFT004
      C                     MOVEL'Y'       I1BNC1                          CFT004
-     C                     MOVEL'Y'       E#NOUP                          CFT004
+     C***********          MOVEL'Y'       E#NOUP                          DJBF02CFT004
+     C                     MOVEL'Y'       E#WARN                          DJBF02
+     C                     MOVEL'Y'       E#MSGS                          DJBF02
      C                     ENDIF                                          CFT004
-     C                     ENDIF                                          CFT004
-     C                     GOTO EXBNC1                                    CFT004
+     C                     ENDSL                                          DJBF02
+     C**********           ENDIF                                    CFT004DJBF02
+     C                     SELEC                                          DJBF02
+     C           @RTCD     WHEQ '      6'                                 DJBF02
+     C           S1ACBK    ANDNE*BLANKS                                   DJBF02
+     C                     OTHER                                          DJBF02
+     C**********           GOTO EXBNC1                                    DJBF02CFT004
+     C                     ENDSL                                          DJBF02
      C                     ENDIF                                          CFT004
      C                     ENDIF                                          CFT004
       *                                                                   CFT004
@@ -5048,6 +5064,15 @@
      C           S1PCCY    IFEQ V#BCCY
      C                     Z-ADDSCBUY     DRATE
      C                     MOVELSCMDIN    DMDIN
+      *                                                                                       MK0556
+     C           #EXTRN    IFEQ 'Y'                                                           MK0556
+     C           SCMDIN    IFEQ 'M'                                                           MK0556
+     C                     MOVEL'D'       DMDIN                                               MK0556
+     C                     ELSE                                                               MK0556
+     C                     MOVEL'M'       DMDIN                                               MK0556
+     C                     ENDIF                                                              MK0556
+     C                     ENDIF                                                              MK0556
+      *                                                                                       MK0556
      C                     GOTO EXDRAT
      C                     END
       *
@@ -7684,6 +7709,22 @@
       *  Indicate that set up is complete
       *
      C                     SETON                     50
+      *                                                                                       MK0556
+     C           KINMVV    KLIST                                                              MK0556
+     C                     KFLD           MVNWRK                                              MK0556
+     C                     KFLD           MVMTPY                                              MK0556
+     C                     KFLD           MVSNDK                                              MK0556
+      *                                                                                       MK0556
+     C                     MOVELV#NWRK    MVNWRK                                              MK0556
+     C                     MOVELV#MTPY    MVMTPY                                              MK0556
+     C                     MOVEL*BLANKS   MVSNDK                                              MK0556
+      *                                                                                       MK0556
+     C                     MOVE 'N'       #EXTRN  1                                           MK0556
+     C           KINMVV    CHAIN@INMVV0              90                                       MK0556
+     C           *IN90     IFEQ *OFF                                                          MK0556
+     C           MVMCMG    ANDEQ'Y'                                                           MK0556
+     C                     MOVE 'Y'       #EXTRN                                              MK0556
+     C                     ENDIF                                                              MK0556
       *
       *  Unwind subroutine stack name
       *
@@ -7708,7 +7749,7 @@
       *
      O/EJECT
 **  CPY@ table
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 **   ALPH  - Array of alphabetic                                          CFT004
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 **   NUMC  - Array of numeric                                             CFT004

@@ -1,7 +1,6 @@
      H        1
      F*****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas ME Auto-gen criteria analysis')                  *
       *****************************************************************
       *                                                               *
       *  Midas - Message Management Module                            *
@@ -16,15 +15,23 @@
       *  Called By: FT0300  - FT Auto Generation                      *
       *  Calls : Programs in MEUCHKPD                                 *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR936976           Date 13Apr12               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
-      *                 AR928996           Date 27Mar12               *
-      *                 MD046248           Date 27Oct17               *
-      *                 MD022652           Date 07Oct13               *
-      *                 CER059             Date 19Jul10               *
-      *                 CER045             Date 20Jul09               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 29Jul11               *
+      *                 MMFX20             Date 17Sep06               *
+      *                 MKFX01             Date 23Jan06               *
+      *                 EEE065             Date 08Sep2004             *
+      *                 PNL002             Date 22Jul04               *
+      *                 ESL038             Date 01Oct2004             *
+      *                 ERN055             Date 04Sep2003             *
+      *                 ERN054             Date 15Jul2003             *
+      *                 EEE058             Date 05Feb2003             *
+      *                 DJB001             Date 07Nov2002             *
+      *                 PL0001             Date 02Oct2001             *
+      *  Last Amend No. MD022652           Date 07Oct13               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER045             Date 20Jul09               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
@@ -70,16 +77,44 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR936976 - STP Rules not being processed. Variables used     *
-      *             in SRUCHK to keep array limits corrupted          *
-      *             in SRECHK. WB and WE in SRECHK renamed.           *
-      *             (Child: AR936977)                                 *
-      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
-      *             data structure field to have the correct length.  *
-      *             (Child: AR928997A)                                *
-      *  AR928996 - Data lost due to rate field :36: being truncated. *
-      *             (Child: AR928997)                                 *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           - In SRUCHK call to CHECK functions are occasional  *
+      *             skipped. Added changes to store begining of array.*
+      *         - Corrected parameter list for call to @CKPGM in      *
+      *           SR/SRUCHK                                           *
+      *           Applied following changes:                          *
+      *           PL0001, DJB001, EEE058, ERN054, ERN055,             *
+      *           ESL038, EE0468, EEE065, MKFX01, MMFX20              *
+      *  MMFX20 - Wrong Processing for field 32B for MT203            *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  EEE065 - Change to FTGNEXP0 (Recompile)                      *
+      *  PNL002 - Changes to MultiCash interface.                     *
+      *           Recompile due to changes in /copy SME1100P.         *
+      *  ESL038 - ING STP Development                                 *
+      *  ERN055 - Change *AMNT  check                                 *
+      *  ERN054 - Agent Message Changes ADD *WDAY                     *
+      *           Format *WDAYnnccclll                                *
+      *           where nn is number of days                          *
+      *                 ccc is override currency                      *
+      *                 lll is override location                      *
+      *           i.e *WDAY02PLNPLR                                   *
+      *                2 working days in PLN for location PLR         *
+      *  EEE058 - Add processing for *AMNT test                       *
+      *           Allow for contains                                  *
+      *           Add copy hook ME1501DB01                            *
+      *           Add copy hook ME1501DB02                            *
+      *           Add copy hook ME1501DB03                            *
+      *           use copy hook ME1501C039                            *
+      *           Add copy hook ME1501DB04                            *
+      *           Add copy hook ME1501DB05                            *
+      *           Add copy hook ME1501DB06                            *
+      *           Add copy hook ME1501DB07                            *
+      *           Use copy hook ME1501F001                            *
+      *  DJB001 - Change call to client program,                      *
+      *           new copy hooks                                      *
+      *  PL0001 - Add parent customer test                            *
       *  MD022652 - Excluded Phase Processing                         *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
@@ -94,7 +129,7 @@
       *  CSD025 - Customer De-Activation                              *
       *  CSW037 - Additional Field Data on MT300/MT320                *
       *  CSW036 - Dual SWIFT BIC held on Client Details               *
-      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CLE025 - Credit Lines (Recompile)                            *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *           (Recompile)                                         *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -230,6 +265,9 @@
      E/COPY ZSRSRC,ZDATE1Z1
      E/COPY ZSRSRC,ZHOLE
      E/COPY MECPYSRC,SRERRE
+      /EJECT                                                                                  EEE065
+     I@INDTS2     70                                                                          EEE065
+     I@IN35S2     71                                                                          EEE065
       /EJECT
       *
      ICPYR@#      DS
@@ -256,6 +294,33 @@
       *
       *  Return Criteria Details to calling program
       *
+     IACCINF    E DSACCNTAB                                                                   EMRMK9
+     I              LCD                             IFLCD                                     EMRMK9
+      *                                                                                       EMRMK9
+      *  Account Information                                                                  EMRMK9
+      *                                                                                       EMRMK9
+     IDSCURR    E DSSDCURRPD                                                                  EEE058
+      *                                                                                       EEE058
+      * Data Structures for Currency Definition                                               EEE058
+      *                                                                                       EEE058
+     ID#DTA       DS                            256                                           EEE058
+      *                                                                                       EEE058
+      *  Calling parameter data structure for AOCCYCV0                                        EEE058
+      *                                                                                       EEE058
+      *                                       From Currency & amount                          EEE058
+     I                                        1   3 D#FCCY                                    EEE058
+     I                                    P   4  110D#FAMT                                    EEE058
+      *                                       To Currency & amount                            EEE058
+     I                                       12  14 D#TCCY                                    EEE058
+     I                                    P  15  220D#TAMT                                    EEE058
+      *                                       Rate and multi/div ind.                         EEE058
+     I                                       23  23 D#MDIN                                    EEE058
+     I                                    P  24  368D#RATE                                    EEE058
+      *                            Output     Rate and multi/div ind.                         EEE058
+      *                                       If no in rate                                   EEE058
+     I                                       37  37 O#MDIN                                    EEE058
+     I                                    P  38  508O#RATE                                    EEE058
+      *                                                                                       EEE058
      I            DS
       *
       *  Split the detail fields into field tag name and contents
@@ -285,6 +350,15 @@
      I                                       28  30 WUBRCA                                    CGL029
      I                                       31 256 WUORIG                                    CGL029
      I                                       31 256 WUO                                       CGL029
+     I                                       25  30 U#CNUA                                   DJB001
+     I                                       31  33 U#CURR                                   DJB001
+     I                                       34  37 U#ACCA                                   DJB001
+     I                                       38  39 U#ACSA                                   DJB001
+     I                                       40  42 U#BRCA                                   DJB001
+     I                                       25  30 P#CNUA                                   DJB001
+     I                                       31  34 P#ACCA                                   DJB001
+     I                                       35  36 P#ACSA                                   DJB001
+     I                                       37  39 P#BRCA                                   DJB001
       ** For FONTIS tag 72 is bigger (no translation possible)            CGL009
      I                                        7 246 F72                   CGL009
      I**********                             25  35 WUSWFT                                    CGL029
@@ -350,6 +424,9 @@
      I                                        1   6 WUFUN6                                    CFT004
      I                                        1   7 WUFUN7                                    CFT004
      I                                        8  35 WIBANV                                    CFT004
+     I                                        6   8 T#BRCA                                    DJB001
+     I                                        6   8 WUCCY1                                    EEE058
+     I                                        9  21 WUAMT1                                    EEE058
      I                                        5   7 WUSLEA
      I                                        5   70WUSLEN
      I                                        8   8 WUBLNK
@@ -513,6 +590,7 @@
       *
       *  Position to first Criteria Set
       *
+     C                     MOVE 'N'       MCFLDS  1                                           EMRMK9
      C                     Z-ADD*ZEROS    GNMSET
      C           KYGNCR    SETLL@GNCRPD              60
      C           *IN60     IFEQ '0'
@@ -530,10 +608,12 @@
      C           KYGNCR    SETLL@GNCRPD              60
      C           *IN60     DOWEQ'0'
      C           WUPYTP    ANDEQ*BLANKS
+     C/COPY WNCPYSRC,ME1501C039
       *
       *  Access Auto-Gen Criteria Control File
       *
      C           KYGNC2    READE@GNCRPD                  60
+     C/COPY WNCPYSRC,ME1501DB03                                                               EEE058
       *                                                                   CRE008
      C                     MOVE *BLANKS   WFRULE  1                       CRE008
       *
@@ -541,7 +621,6 @@
       *
      C           *IN60     IFEQ '0'
       *                                                                   CGL009
-     C/COPY WNCPYSRC,MEH00018
       * FONTIS and SWIFT can have the same message type (100) so          CGL009
       * we take account of the network in the criteria selection          165126
      C           GNNWRK    IFNE PNWRK                                     165126
@@ -555,6 +634,7 @@
       *
      C                     MOVE GNPYTP    WUPYTP
      C                     MOVE GNPYST    WUPYST                          CRE008
+     C/COPY WNCPYSRC,ME1501C040
       *
       *  Position to first tag in the Criteria Set
       *
@@ -609,6 +689,7 @@
       *
      C                     ENDDO
      C                     ENDIF
+     C/COPY WNCPYSRC,ME1501C041
      C                     ENDIF
      C                     ENDDO
      C                     ENDIF
@@ -746,6 +827,7 @@
      C                     OTHER
      C                     MOVEL*BLANKS   W0ACT
      C                     ENDSL
+     C/COPY WNCPYSRC,ME1501DB02                                                               EEE058
       *
       *  Produce audit list
       *
@@ -1216,15 +1298,21 @@
      C                     EXSR #HFDDT
       *
      C                     OTHER                           Other details
+     C                     Z-ADD1         WKPART                                              EEE065
      C           KYINDT    SETLLMEINDTS2                 99
+     C                     MOVEL'00'      *IN,70                                              EEE065
      C           *IN99     IFEQ '1'
      C           KYINDT    READEMEINDTS2                 99
      C           *IN99     IFEQ '0'
-     C           GDMTAG    IFEQ '2:   '
+     C*********  GDMTAG    IFEQ '2:   '                                                       EEE065
+     C           *IN70     IFEQ *ON                                                           EEE065
      C                     MOVELDTMFLD    WUFDDT
+     C                     MOVELDTMFLD    WUORIG                                              EEE065
      C                     ELSE
      C                     MOVELDSMF35    WUFDDT
+     C                     MOVELDSMF35    WUORIG                                              EEE065
      C                     ENDIF
+     C                     MOVELGDMTAG    WUMTAG                                              EEE065
      C                     MOVE WUMTAG    HK5,H4
      C                     MOVE WUORIG    HK6,H4
      C                     ENDIF
@@ -1313,6 +1401,7 @@
      C           H2        DOWLEWUCRNO
       *
      C           WUCRIT    IFNE *BLANKS
+     C/COPY WNCPYSRC,ME1501DB04                                                               EEE058
       *
       *  General checking - no special value used
       *
@@ -1322,6 +1411,7 @@
      C           WUORIG    OREQ WUCRIT
      C                     MOVE 'Y'       WUMATH
      C                     ENDIF
+     C/COPY WNCPYSRC,ME1501DB01                                                               EEE058
       *
      C                     ELSE
       *
@@ -1630,6 +1720,49 @@
      C                     MOVE 'Y'       WUMATH
      C                     ENDIF
      C                     ENDIF
+      *                                                                                DJB001
+      * Check for account entered but not decoded                                      DJB001
+     C           WUFUNC    WHEQ '*FA/C'                                                DJB001
+     C                     MOVELU#CNUA    U@CNUM                                       DJB001
+     C                     MOVELU#CURR    U@CURR                                       DJB001
+     C                     MOVELU#ACCA    U@ACCD                                       DJB001
+     C                     MOVELU#ACSA    U@ACSQ                                       DJB001
+     C                     MOVELU#BRCA    U@BRCA                                       DJB001
+     C           KYACCF    CHAINACCNTABF             90                                DJB001
+     C           *IN90     IFEQ '0'                                                    DJB001
+     C           RECI      ANDEQ'D'                                                    DJB001
+     C                     MOVE 'Y'       WUMATH                                       DJB001
+     C                     ENDIF                                                       DJB001
+      * Check for account entered as partial but not decoded                           DJB001
+     C           WUFUNC    WHEQ '*PA/C'                                                DJB001
+      * Get currency from message                                                      DJB001
+     C           KYMPL1    CHAIN@INMPL1              90
+     C           *IN90     IFEQ '0'
+     C                     MOVELP#CNUA    U@CNUM                                       DJB001
+     C                     MOVELMPCYCD    U@CURR                                       DJB001
+     C                     MOVELP#ACCA    U@ACCD                                       DJB001
+     C                     MOVELP#ACSA    U@ACSQ                                       DJB001
+     C                     MOVELP#BRCA    U@BRCA                                       DJB001
+     C           KYACCF    CHAINACCNTABF             90                                DJB001
+     C           *IN90     IFEQ '0'                                                    DJB001
+     C           RECI      ANDEQ'D'                                                    DJB001
+     C                     MOVE 'Y'       WUMATH                                       DJB001
+     C                     ENDIF                                                       DJB001
+     C                     ENDIF                                                       DJB001
+      *                                                                                DJB001
+      * Check for account being in a branch                                            DJB001
+     C           WUFUNC    WHEQ '*BRCA'                                                DJB001
+     C           T#BRCA    ANDNE*BLANKS                                                DJB001
+     C           T#BRCA    IFEQ WUBRCA                                                 DJB001
+     C           T#BRCA    OREQ U#BRCA                                                 DJB001
+     C                     MOVE 'Y'       WUMATH                                       DJB001
+     C                     ENDIF                                                       DJB001
+      * Check for partial account being in a branch                                    DJB001
+     C           WUFUNC    WHEQ '*BRCP'                                                DJB001
+     C           T#BRCA    ANDNE*BLANKS                                                DJB001
+     C           T#BRCA    IFEQ P#BRCA                                                 DJB001
+     C                     MOVE 'Y'       WUMATH                                       DJB001
+     C                     ENDIF                                                       DJB001
       *
      C           WUFUNC    WHEQ '*BICN'
      C********** WUCNUM    IFNE *ZEROS                                                        CSD027
@@ -1680,6 +1813,22 @@
      C                     MOVE 'Y'       WUMATH
      C                     ENDIF
      C                     ENDIF
+      *                                                                   PL0001
+      * Parent customer                                                   PL0001
+     C           WUFUNC    WHEQ '*PTCT'                                   PL0001
+     C           WUCNUM    IFNE *ZEROS                                    PL0001
+     C           WUCNUA    ANDNE*BLANKS                                   PL0001
+     C                     CALL 'AOCUSTR0'                                PL0001
+     C                     PARM *BLANKS   @RTCD   7                       PL0001
+     C                     PARM '*KEY   ' @OPTN   7                       PL0001
+     C                     PARM WUCNUA    @KEY1  10                       PL0001
+     C                     PARM *BLANK    @KYST   7                       PL0001
+     C           SDCUST    PARM SDCUST    DSSDY                           PL0001
+     C           6         SUBSTWUCRIT:7  ##006A  6                       PL0001
+     C           BBPCNB    IFEQ ##006A                                    PL0001
+     C                     MOVE 'Y'       WUMATH                          PL0001
+     C                     ENDIF                                          PL0001
+     C                     ENDIF                                          PL0001
       *
      C           WUFUNC    WHEQ '*LCCY'
      C           BJLCCY    IFEQ WUCURR
@@ -1855,6 +2004,7 @@
      C                     ENDIF
      C                     ENDIF
       *
+     C/COPY WNCPYSRC,ME1501DB05                                                               EEE058
      C                     ADD  1         H2
      C           H2        IFLE WUCRNO
      C                     MOVELHK2,H2    WUCRIT
@@ -1904,6 +2054,7 @@
      C           H2        DOWLEWUCRNO
       *
      C           WUCRIT    IFNE *BLANKS
+     C/COPY WNCPYSRC,ME1501DB06                                                               EEE058
       *
       *  General checking - no special value used
       *
@@ -1934,6 +2085,7 @@
      C                     ENDIF                                                              162380
       *                                                                   CFT006
      C           GDMTAG    IFEQ ':32B:'                                   CFT006
+     C           GDMTPY    ANDNE'203'                                     MMFX20
      C           GDMTAG    OREQ ':33B:'                                   CFT006
      C           GDMTAG    OREQ ':71F:'                                   CFT006
      C           GDMTAG    OREQ ':71G:'                                   CFT006
@@ -1981,6 +2133,7 @@
      C           KYMPL1    CHAIN@INMPL1              90
       *                                                                   CFT006
      C           GDMTAG    IFEQ ':32B:'                                   CFT006
+     C           GDMTPY    ANDNE'203'                                     MMFX20
      C           GDMTAG    OREQ ':33B:'                                   CFT006
      C           GDMTAG    OREQ ':71F:'                                   CFT006
      C           GDMTAG    OREQ ':71G:'                                   CFT006
@@ -2007,6 +2160,7 @@
      C           GDMTAG    ANDNE':33B:'                                   CFT006
      C           GDMTAG    ANDNE':71F:'                                   CFT006
      C           GDMTAG    ANDNE':71G:'                                   CFT006
+     C           GDMTPY    OREQ '203'                                     MMFX20
       *                                                                   CFT006
      C                     SELEC
      C           GDOPER    WHEQ 'EQ'
@@ -2039,6 +2193,7 @@
      C           WUFUNC    WHEQ '*CCY '
       *                                                                   CFT006
      C           GDMTAG    IFEQ ':32B:'                                   CFT006
+     C           GDMTPY    ANDNE'203'                                     MMFX20
      C           GDMTAG    OREQ ':33B:'                                   CFT006
      C           GDMTAG    OREQ ':71F:'                                   CFT006
      C           GDMTAG    OREQ ':71G:'                                   CFT006
@@ -2058,6 +2213,7 @@
      C           WUFUNC    WHEQ '*LCCY'
       *                                                                   CFT006
      C           GDMTAG    IFEQ ':32B:'                                   CFT006
+     C           GDMTPY    ANDNE'203'                                     MMFX20
      C           GDMTAG    OREQ ':33B:'                                   CFT006
      C           GDMTAG    OREQ ':71F:'                                   CFT006
      C           GDMTAG    OREQ ':71G:'                                   CFT006
@@ -2073,6 +2229,93 @@
      C                     ENDIF
       *                                                                   CFT006
      C                     ENDIF                                          CFT006
+      *                                                                                       EEE058
+      * Test for Amount test                                                                  EEE058
+      *                                                                                       EEE058
+     C           WUFUNC    WHEQ '*AMNT'                                                       EEE058
+     C           WUCCY1    ANDNE*BLANKS                                                       EEE058
+     C           WUAMT1    ANDNE*BLANKS                                                       EEE058
+      *                                                                                       EEE058
+     C                     CLEARD#DTA                                                         EEE058
+      * get part information                                                                  EEE058
+     C           KYMPL1    CHAIN@INMPL1              90                                       EEE058
+     C           *IN90     IFEQ '0'                                                           EEE058
+      * Get currency details of message                                                       EEE058
+     C                     MOVELMPCYCD    @CCY             Message currency                   EEE058
+      *                                                                                       EEE058
+     C                     CALL 'AOCURRR0'                                                    EEE058
+     C                     PARM *BLANKS   @RTCD   7                                           EEE058
+     C                     PARM '*KEY   ' @OPTN   7                                           EEE058
+     C                     PARM           @CCY    3                                           EEE058
+     C           DSCURR    PARM DSCURR    DSSDY                                               EEE058
+      *                                                                                       FT0001
+     C                     SELEC                                                              FT0001
+     C           A6NBDP    WHEQ 0                                                             FT0001
+     C                     Z-ADDMPPYAM    D#FAMT                                              FT0001
+     C           A6NBDP    WHEQ 1                                                             FT0001
+     C           MPPYAM    MULT 10        D#FAMT                                              FT0001
+     C           A6NBDP    WHEQ 2                                                             FT0001
+     C           MPPYAM    MULT 100       D#FAMT                                              FT0001
+     C           A6NBDP    WHEQ 3                                                             FT0001
+     C           MPPYAM    MULT 1000      D#FAMT                                              FT0001
+     C                     ENDSL                                                              FT0001
+      *                                                                                       FT0001
+     C                     MOVELMPCYCD    D#FCCY                                              FT0001
+      * Get currency details of amount to convert                                             EEE058
+     C                     MOVELWUCCY1    @CCY             Message currency                   EEE058
+      *                                                                                       EEE058
+     C                     CALL 'AOCURRR0'                                                    EEE058
+     C                     PARM *BLANKS   @RTCD   7                                           EEE058
+     C                     PARM '*KEY   ' @OPTN   7                                           EEE058
+     C                     PARM           @CCY    3                                           EEE058
+     C           DSCURR    PARM DSCURR    DSSDY                                               EEE058
+      * Continue if found                                                                     FT0001
+     C           @RTCD     IFEQ *BLANKS                                                       EEE058
+     C                     MOVELWUCCY1    D#TCCY                                              FT0001
+      * Convert currency                                                                      FT0001
+      *                                                                                       EEE058
+     C                     CALL 'AOCCYCV0'             9090                                   EEE058
+     C                     PARM *BLANKS   O#RTN   7                                           EEE058
+     C                     PARM '*F*T*SPT'W0ACT   8                                           EEE058
+     C           D#DTA     PARM D#DTA     O#DTA 256                                           EEE058
+      *                                                                                       EEE058
+      * get amount entered                                                                    FT0001
+     C                     MOVEL*BLANKS   ZFIELD           B:Check Field                      ERN055
+     C                     MOVELWUAMT1    ZFIELD           B:Check Field                      EEE058
+     C                     Z-ADDA6NBDP    ZADEC   10       I:No Of Decs                       EEE058
+     C           13        SUB  A6NBDP    ZADIG   20       I:No Of Digits                     EEE058
+      *                                                                                       EEE058
+     C                     CALL 'ZALIGN'               90                                     EEE058
+     C                     PARM *BLANKS   ZRTN    7        B:Return Code                      EEE058
+     C                     PARM           ZFIELD 16        B:Check Field                      EEE058
+     C                     PARM           ZADEC   10       I:No Of Decs                       EEE058
+     C                     PARM           ZADIG   20       I:No Of Digits                     EEE058
+     C                     PARM *BLANKS   ZAFLD  16        O:Check Field                      EEE058
+      *                                                                                       EEE058
+      * only check if entered amount is correct                                               EEE058
+     C           ZRTN      IFEQ *BLANKS                                                       EEE058
+      * Set up amount                                                                         EEE058
+     C                     MOVE ZFIELD    ##CAMT 130                                          EEE058
+     C                     SELEC                                                              EEE058
+     C           GDOPER    WHEQ 'EQ'                                                          EEE058
+     C           D#TAMT    ANDEQ##CAMT                                                        EEE058
+     C                     MOVE 'Y'       WUMATH                                              EEE058
+     C           GDOPER    WHEQ 'LE'                                                          EEE058
+     C           D#TAMT    ANDLE##CAMT                                                        EEE058
+     C                     MOVE 'Y'       WUMATH                                              EEE058
+     C           GDOPER    WHEQ 'LT'                                                          EEE058
+     C           D#TAMT    ANDLT##CAMT                                                        EEE058
+     C                     MOVE 'Y'       WUMATH                                              EEE058
+     C           GDOPER    WHEQ 'GE'                                                          EEE058
+     C           D#TAMT    ANDGE##CAMT                                                        EEE058
+     C                     MOVE 'Y'       WUMATH                                              EEE058
+     C           GDOPER    WHEQ 'GT'                                                          EEE058
+     C           D#TAMT    ANDGT##CAMT                                                        EEE058
+     C                     MOVE 'Y'       WUMATH                                              EEE058
+     C                     ENDSL                                                              EEE058
+     C                     ENDIF                                                              EEE058
+     C                     ENDIF                                                              EEE058
+     C                     ENDIF                                                              EEE058
       *
       *  Working day checking (Ccy + date checking)
       *
@@ -2085,6 +2328,7 @@
      C           GDMTAG    ANDNE':33B:'                                   CFT006
      C           GDMTAG    ANDNE':71F:'                                   CFT006
      C           GDMTAG    ANDNE':71G:'                                   CFT006
+     C           GDMTPY    OREQ '203'                                     MMFX20
       *                                                                   CFT006
      C                     MOVE BJLCCY    ZCCY
      C                     MOVE *BLANKS   ZLOC
@@ -2103,6 +2347,7 @@
      C           GDMTAG    ANDNE':33B:'                                   CFT006
      C           GDMTAG    ANDNE':71F:'                                   CFT006
      C           GDMTAG    ANDNE':71G:'                                   CFT006
+     C           GDMTPY    OREQ '203'                                     MMFX20
       *                                                                   CFT006
      C                     MOVE TVCCY     ZCCY
      C                     MOVE *BLANKS   ZLOC
@@ -2112,6 +2357,96 @@
      C                     ENDIF
       *                                                                   CFT006
      C                     ENDIF                                          CFT006
+      *                                                                                       ERN054
+      *  Working days forward                                                                 ERN054
+      *                                                                                       ERN054
+     C           WUFUNC    WHEQ '*WDAY'                                                       ERN054
+      *                                                                                       ERN054
+     C           GDMTAG    IFNE ':32B:'                                                       ERN054
+     C           GDMTAG    ANDNE':33B:'                                                       ERN054
+     C           GDMTAG    ANDNE':71F:'                                                       ERN054
+     C           GDMTAG    ANDNE':71G:'                                                       ERN054
+     C           GDMTPY    OREQ '203'                                     MMFX20
+      *                                                                                       ERN054
+      * Number of days                                                                        ERN054
+     C           2         SUBSTWUCODE:1  ##WNDA  2                                           ERN054
+     C                     MOVEL##WNDA    ##WNDY  20                                          ERN054
+      *                                                                                       ERN054
+      * Override Currency                                                                     ERN054
+     C           3         SUBSTWUCODE:3  ##WCCY  3                                           ERN054
+     C           ##WCCY    IFEQ *BLANKS                                                       ERN054
+     C                     MOVELTVCCY     ZCCY                                                ERN054
+     C                     ELSE                                                               ERN054
+     C                     MOVEL##WCCY    ZCCY                                                ERN054
+     C                     ENDIF                                                              ERN054
+      * Override Location                                                                     ERN054
+     C           3         SUBSTWUCODE:6  ##WLOC  3                                           ERN054
+     C           ##WLOC    IFEQ *BLANKS                                                       ERN054
+     C                     MOVEL*BLANKS   ZLOC                                                ERN054
+     C                     ELSE                                                               ERN054
+     C                     MOVEL##WLOC    ZLOC                                                ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+      *  Find day number of the forward day                                                   ERN054
+      **************       Z-ADDWUSLDN    ZDAYNO                                              ERN054
+     C                     Z-ADDWURDNB    ZDAYNO                                              ERN054
+     C                     Z-ADD0         ##NDYS  30                                          ERN054
+     C           ##WNDY    IFGE 0                                                             ERN054
+     C                     DO   *HIVAL                                                        ERN054
+     C                     EXSR ZCHKH                                                         ERN054
+      *                                                                                       ERN054
+      * Check holiday                                                                         ERN054
+     C           ZIND      IFEQ 'H'                                                           ERN054
+     C                     ADD  1         ZDAYNO                                              ERN054
+     C                     ELSE                                                               ERN054
+     C                     ADD  1         ##NDYS                                              ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+      * If zero days then looking for the first working day                                   ERN054
+     C           ##WNDY    IFEQ 0                                                             ERN054
+     C           ##NDYS    ANDNE0                                                             ERN054
+     C                     LEAVE                                                              ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+      * If > 0 days then looking for number of days forward                                   ERN054
+     C           ##WNDY    IFNE 0                                                             ERN054
+     C           ##NDYS    ANDGT##WNDY                                                        ERN054
+     C           ##NDYS    ORGT 98                                                            ERN054
+     C                     LEAVE                                                              ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+      * Check holiday                                                                         ERN054
+     C           ZIND      IFNE 'H'                                                           ERN054
+     C                     ADD  1         ZDAYNO                                              ERN054
+     C                     ENDIF                                                              ERN054
+     C                     ENDDO                                                              ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+      * Check condition                                                                       ERN054
+     C                     SELEC                                                              ERN054
+     C           GDOPER    WHEQ 'EQ'                                                          ERN054
+      ***        ZDAYNO    ANDEQWURDNB                                                        ERN054
+     C           ZDAYNO    ANDEQWUSLDN                                                        ERN054
+     C                     MOVE 'Y'       WUMATH                                              ERN054
+     C           GDOPER    WHEQ 'LE'                                                          ERN054
+      ***        ZDAYNO    ANDLEWURDNB                                                        ERN054
+     C           WUSLDN    ANDLEZDAYNO                                                        ERN054
+     C                     MOVE 'Y'       WUMATH                                              ERN054
+     C           GDOPER    WHEQ 'LT'                                                          ERN054
+      **         ZDAYNO    ANDLTWURDNB                                                        ERN054
+     C           WUSLDN    ANDLTZDAYNO                                                        ERN054
+     C                     MOVE 'Y'       WUMATH                                              ERN054
+     C           GDOPER    WHEQ 'GE'                                                          ERN054
+      ***        ZDAYNO    ANDGEWURDNB                                                        ERN054
+     C           WUSLDN    ANDGEZDAYNO                                                        ERN054
+     C                     MOVE 'Y'       WUMATH                                              ERN054
+     C           GDOPER    WHEQ 'GT'                                                          ERN054
+      ****       ZDAYNO    ANDGTWURDNB                                                        ERN054
+     C           WUSLDN    ANDGTZDAYNO                                                        ERN054
+     C                     MOVE 'Y'       WUMATH                                              ERN054
+     C                     ENDSL                                                              ERN054
+      *                                                                                       ERN054
+     C                     ENDIF                                                              ERN054
       *
       *
       ** Process function *STRxxx   where xxx = 000,...,999
@@ -2129,6 +2464,7 @@
      C                     ENDIF
      C                     ENDIF
       *
+     C/COPY WNCPYSRC,ME1501DB07                                                               EEE058
      C                     ADD  1         H2
      C           H2        IFLE WUCRNO
      C                     MOVELHK2,H2    WUCRIT
@@ -4136,7 +4472,6 @@
      C           *LIKE     DEFN WE        WS
      C           *LIKE     DEFN WE        WF
      C           *LIKE     DEFN WE        WP
-     C           *LIKE     DEFN WE        WEB                                               AR936976
       *
      C                     SORTA@CK
       *
@@ -4144,11 +4479,17 @@
      C                     Z-ADD1         WB
      C           WB        DOWLTWE
      C           @CK,WB    IFNE *BLANK
+      ** Store the begining of the Array for future checks                                  AR856737
+     C                     Z-ADDWB        W#WB    30                                        AR856737
      C                     LEAVE
      C                     ENDIF
      C                     ADD  1         WB
      C                     ENDDO
       *
+     C                     ELSE                                                             AR856737
+      **  The Array has been sorted before and so restor the begining of array value        AR856737
+     C                     Z-ADDW#WB      WB                                                AR856737
+      *                                                                                     AR856737
      C                     ENDIF
       *
       ** SEARCH
@@ -4191,14 +4532,49 @@
      C           @CKFNC    WHEQ WUFNCT                                                        162508
      C           *LIKE     DEFN WUTGCK    P#CHKP
      C/COPY WNCPYSRC,ME1501C037
+     C           PNWRK     IFEQ 'MTCASH'                                                      EMRMK9
+     C           @CKPGM    ANDEQ'MEP0020'                                                     EMRMK9
+     C           MCFLDS    ANDEQ'N'                                                           EMRMK9
+     C                     MOVE 'Y'       MCFLDS  1                                           EMRMK9
+     C                     MOVE P23E      @SWFT1210                                           EMRMK9
+     C                     MOVEL@SWFT1    @SWFT   4                                           EMRMK9
+     C                     MOVE P50       @RETL1232                                           EMRMK9
+     C                     MOVEL@RETL1    P@RETL                                              EMRMK9
+     C           @SWFT     IFEQ 'SWFT'                                                        EMRMK9
+     C                     MOVELP50       P54                                                 EMRMK9
+     C                     MOVEL':P54:'   P54                                                 EMRMK9
+     C                     CALL 'AOACCTR0'             90                                     EMRMK9
+     C                     PARM *BLANKS   P@RTCD  7                                           EMRMK9
+     C                     PARM '*KEY   ' P@OPTN  7                                           EMRMK9
+     C                     PARM           P@RETL 10                                           EMRMK9
+     C                     PARM *BLANKS   P@CNUM  6                                           EMRMK9
+     C                     PARM *BLANKS   P@CUCD  3                                           EMRMK9
+     C                     PARM *BLANKS   P@ACCD  4                                           EMRMK9
+     C                     PARM *BLANKS   P@ACSQ  2                                           EMRMK9
+     C                     PARM *BLANKS   P@BRCA  3                                           EMRMK9
+     C                     PARM           ACCINF                                              EMRMK9
+     C****                 ENDIF                                                              EMRMK9
+      *                                                                                       EMRMK9
+     C                     MOVEL*BLANKS   @@IBAN232                                           EMRMK9
+     C           '/'       CAT  IBAN      @@IBAN232                                           EMRMK9
+     C                     MOVEL':50:'    @@P50  24                                           EMRMK9
+     C           @@P50     CAT  @@IBAN    P50                                                 EMRMK9
+      *                                                                                       EMRMK9
+     C                     ENDIF                                                              EMRMK9
+     C                     ENDIF                                                              EMRMK9
+      *                                                                                       EMRMK9
      C                     CALL @CKPGM                 90
      C                     PARM *BLANK    P#RETN  7
-     C                     PARM           PHEAD                                               CSW209
-     C                     PARM           PDATA                                               CSW209
-     C                     PARM           PDAT2                                               CSW209
+     C*****                PARM           PHEAD                                     CSW209 AR856737
+     C*****                PARM           PDATA                                     CSW209 AR856737
+     C*****                PARM           PDAT2                                     CSW209 AR856737
      C                     PARM WUTGCK    P#CHKP
      C                     PARM           P#PTTN 32                                           162508
      C                     PARM           GDOPER                                              162508
+     C                     PARM           PHEAD                                             AR856737
+     C                     PARM           PDATA                                             AR856737
+     C                     PARM           PDAT2                                             AR856737
+     C                     PARM           PCRIT                                             AR856737
      C/COPY WNCPYSRC,ME1501C038
      C           P#RETN    IFEQ 'T'
      C           *IN90     ANDEQ'0'
@@ -4288,22 +4664,17 @@
      C                     MOVEL'Y'       WSRTCE  1                       CRE008
       *                                                                   CRE008
       ** Length of @CE = end of the array                                 CRE008
-     C**********           Z-ADD200       WE      30                                 CRE008 AR936976
-     C                     Z-ADD200       WEE     30                                        AR936976
+     C                     Z-ADD200       WE      30                      CRE008
       *                                                                   CRE008
      C                     SORTA@CE                                       CRE008
       *                                                                   CRE008
       ** Determine the beginning of the Array                             CRE008
-     C**********           Z-ADD1         WB                                         CRE008 AR936976
-     C********** WB        DOWLTWE                                                   CRE008 AR936976
-     C********** @CE,WB    IFNE *BLANK                                               CRE008 AR936976
-     C                     Z-ADD1         WEB                                               AR936976
-     C           WEB       DOWLTWEE                                                         AR936976
-     C           @CE,WEB   IFNE *BLANK                                                      AR936976
+     C                     Z-ADD1         WB                              CRE008
+     C           WB        DOWLTWE                                        CRE008
+     C           @CE,WB    IFNE *BLANK                                    CRE008
      C                     LEAVE                                          CRE008
      C                     ENDIF                                          CRE008
-     C**********           ADD  1         WB                                         CRE008 AR936976
-     C                     ADD  1         WEB                                               AR936976
+     C                     ADD  1         WB                              CRE008
      C                     ENDDO                                          CRE008
       *                                                                   CRE008
      C                     ENDIF                                          CRE008
@@ -4334,10 +4705,8 @@
      C                     GOTO SRECKF                                    CRE008
      C                     ENDIF                                          CRE008
       *                                                                   CRE008
-     C**********           Z-ADDWB        WS                                         CRE008 AR936976
-     C**********           Z-ADDWE        WF                                         CRE008 AR936976
-     C                     Z-ADDWEB       WS                                                AR936976
-     C                     Z-ADDWEE       WF                                                AR936976
+     C                     Z-ADDWB        WS                              CRE008
+     C                     Z-ADDWE        WF                              CRE008
      C           WS        DOWLEWF                                        CRE008
       ** WP = (WS + WF) / 2                                               CRE008
      C           WS        ADD  WF        WP                              CRE008
@@ -4563,6 +4932,18 @@
      C                     KFLD           WUACSQ
      C                     KFLD           WUBRCA
      C                     MOVEL*BLANKS   WBMSEQ                                              CSW209
+      * New key for accounts                                                           DJB001
+     C           KYACCF    KLIST                                                       DJB001
+     C                     KFLD           U@CNUM                                       DJB001
+     C                     KFLD           U@CURR                                       DJB001
+     C                     KFLD           U@ACCD                                       DJB001
+     C                     KFLD           U@ACSQ                                       DJB001
+     C                     KFLD           U@BRCA                                       DJB001
+     C           *LIKE     DEFN WUCNUM    U@CNUM                                       DJB001
+     C           *LIKE     DEFN WUCURR    U@CURR                                       DJB001
+     C           *LIKE     DEFN WUACCD    U@ACCD                                       DJB001
+     C           *LIKE     DEFN WUACSQ    U@ACSQ                                       DJB001
+     C           *LIKE     DEFN WUBRCA    U@BRCA                                       DJB001
       *
       * Set keylist for Message tag description
       *
@@ -4783,7 +5164,7 @@
      C/COPY MECPYSRC,SMESNMSC
       /EJECT
 **  CPY@ table
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

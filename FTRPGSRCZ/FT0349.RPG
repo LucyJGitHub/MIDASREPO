@@ -1,7 +1,6 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas FT Outgoing payments valid. S3 level 2')         *
       *****************************************************************
       *                                                               *
       *  Midas - Funds Transfer Module                                *
@@ -19,16 +18,16 @@
       *                                                               *
       *  Called By: FT0345  - Outgoing Payments Maintenance Level 2   *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD058213           Date 27May21               *
-      *  Prev Amend No. CFT162             Date 08Sep17               *
-      *                 AR918975           Date 21Mar12               *
-      *                 AR920171           Date 21Mar12               *
-      *                 MD046248           Date 27Oct17               *
-      *                 MD033624           Date 03Jun15               *
-      *                 CFT120             Date 28Sep12               *
-      *                 CER059             Date 19Jul10               *
+      *  Last Amend No. MD033624           Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 26JUL11               *
+      *                 STP033             Date 14Mar03               *
+      *                 200943             Date 14Mar03               *
+      *                 STP017             Date 20Nov04               *
+      *                 EEE058             Date 26Mar2003             *
+      *  Last Amend No. CFT120             Date 28Sep12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24724           Date 03Jul09               *
@@ -65,16 +64,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058213 - FT0349 Compile Error Due to Same Field Names      *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
-      *  AR918975 - Allow lower case SWIFT characters for STP.        *
-      *             (Child: AR919050)                                 *
-      *  AR920171 - Validation error when details of charges is SHA   *
-      *             Suppress FTM5211. Partially remove 200949         *
-      *             (Child: AR920180)                                 *
-      *  MD046248 - Finastra Rebranding                               *
-      *  MD033624 - Error during Compilation due to conflict in field *
-      *             definition. Renamed fields from OTPAYDD           *
+      *  MD033624 - Upgrade STP enhancements to BF Midas 2.1          *
+      *             Program failes to compile due to fields introduced*
+      *             by CFT157 in OTPAYDD. The changes were part of    *
+      *             SP6 for BF Midas 2.1. The data structure built    *
+      *             over OTPAYDD was not considered.                  *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           200943, STP017, EEE058                              *
+      *         - FT0349MK01 not required                             *
+      *  200943 - If Mt103 then default to SHA                        *
+      *  STP017 - STP flags: 'Y' = STP, 'N' = Manual.                 *
+      *  EEE058 - Incoming STP                                        *
+      *           Default to SHA if CFT014                            *
+      *           Copy hook added - FT0349DB01, FT0349MK01            *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature                            *
@@ -536,9 +539,12 @@
      I              OPEXC4                          MOEXC4                                    CER030
      I              OPEXC5                          MOEXC5                                    CER030
      I              OPEXC6                          MOEXC6                                    CER030
-     I              DATE                            MDATE                                   MD033624
-     I              SUSR                            MSUSR                                   MD033624
-     I              SAUS                            MSAUS                                   MD033624
+     **                                                                                     MD033624
+     ****  Changes CFT157 introduced by SP6 for BF Midas 2.1 added extra fields but         MD033624
+     **    these fields are not included in this program.                                   MD033624
+     I              DATE                            MODATE                                  MD033624
+     I              SUSR                            MOSUSR                                  MD033624
+     I              SAUS                            MOSAUS                                  MD033624
       *                                                                   CFT009
       *  WORKING Outgoing Payments Details Extension data structure       CFT009
       *                                                                   CFT009
@@ -683,10 +689,6 @@
      I              OPOCB4                          WWOCB4                                    CSW209
      I              OPOCB5                          WWOCB5                                    CSW209
      I              OPOCB6                          WWOCB6                                    CSW209
-     I              OPR900                          WWR900                                  MD058213
-     I              OPR910                          WWR910                                  MD058213
-     I              OPG900                          WWG900                                  MD058213
-     I              OPG910                          WWG910                                  MD058213
       *                                                                   CFT009
       *                                                                   CFT009
      I/COPY FTCPYSRC,SFTVALDI
@@ -1069,7 +1071,8 @@
       ** If CFT009 on and STP, clear working DS                           CFT009
       *                                                                   CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
-     C           STP       ANDEQ'S'                                       CFT009
+     C*****      STP       ANDEQ'S'                                 CFT009STP017
+     C           STP       ANDEQ'Y'                                       STP017
      C                     CLEARWOTPYD                                    CFT009
      C                     CLEARWOTPXD                                    CFT009
      C                     ENDIF                                          CFT009
@@ -1801,6 +1804,8 @@
       *
      C                     ADD  1         Q
      C                     MOVEL'SRPROC'  @STK,Q
+      *                                                                                       STP033
+     C           STP       IFNE 'Y'                                                           STP033
       *
       ** Move warning array passed to WRN@ and error indicators
       *
@@ -1814,7 +1819,8 @@
       ** Retrieve the saved file fields from the defaulted codes          CFT009
       *                                                                   CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
-     C           STP       ANDNE'S'                                       CFT009
+     C*****      STP       ANDNE'S'                                 CFT009STP017
+     C           STP       ANDNE'Y'                                       STP017
       *                                                                   CFT009
      C           S7PREF    CHAINOTPAY                90                   CFT009
       *                                                                   CFT009
@@ -1855,7 +1861,8 @@
       ** against default values (NOT FOR STP)                             CFT009
       *                                                                   CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
-     C           STP       ANDNE'S'                                       CFT009
+     C*****      STP       ANDNE'S'                                 CFT009STP017
+     C           STP       ANDNE'Y'                                       STP017
      C                     EXSR DEFLT                                     CFT009
      C                     ENDIF                                          CFT009
       *
@@ -1941,15 +1948,21 @@
      C                     ENDIF
       *
       ** Check that Total Charges do not exceed payment amount
+      *                                                                                       STP033
+     C                     ENDIF                                                              STP033
       *
      C                     EXSR SRTOT
       *
      C           CFT014    IFEQ 'Y'
       *
       ** Validate Receiver's Charges Remitted
+      *                                                                                       STP033
+     C           STP       IFNE 'Y'                                                           STP033
       *
      C                     EXSR SRRCRM
-      *
+      *                                                                                       STP033
+     C                     ENDIF                                                              STP033
+      *                                                                                       STP033
       ** Validate Sender's Charges Deducted
       *
      C                     EXSR SRSNCD
@@ -2360,6 +2373,7 @@
       *
       ** Details of Charges optional, Defaults to BEN
       *
+     C/COPY WNCPYSRC,FT0349DB01
      C           S7DETC    IFEQ *BLANKS
       *                                                                                       219241
       ** If CFT014 is installed, use the default value from the                               219241
@@ -2372,6 +2386,12 @@
      C/COPY WNCPYSRC,FT0349C005
      C                     ENDIF                                                              219241
       *                                                                                       219241
+      *                                                                   200943
+      * If Mt103 then default to SHAre                                    200943
+      *                                                                   200943
+     C           CFT014    IFEQ 'Y'                                       200943
+     C                     MOVEL'SHA'     S7DETC                          200943
+     C                     ENDIF                                          200943
      C                     ELSE
       *
       ** Valid entries are 'OUR' or 'BEN'
@@ -2399,19 +2419,19 @@
      C                     MOVEL'Y'       E#NOUP
      C                     ENDIF
       *
-      ***'SHA'*not*allowed*if*OP*will*potentially*create*a*MT100*******              200949 AR920171
-      *****************************************************************              200949 AR920171
-     C********** WSHA      IFEQ 'Y'                                                  200949 AR920171
-     C********** V#M103    ANDNE'Y'                                                  200949 AR920171
-     C**********           MOVEL'Y'       E#MSGS                                     200949 AR920171
-     C**********           MOVELS7DETC    FTMSDT                                     200949 AR920171
-     C**********           MOVELE#CPGM    FTPGMQ                                     200949 AR920171
-     C**********           MOVEL'FTM5211' FTMSID                                     200949 AR920171
-     C**********           EXSR FTSNMS                                               200949 AR920171
-     C**********           MOVEL'Y'       I7DETC                                     200949 AR920171
-     C**********           MOVEL'Y'       E#NOUP                                     200949 AR920171
-     C**********           ENDIF                                                     200949 AR920171
-      *****************************************************************              200949 AR920171
+      ** 'SHA' not allowed if OP will potentially create a MT100                              200949
+      *                                                                                       200949
+     C           WSHA      IFEQ 'Y'                                                           200949
+     C           V#M103    ANDNE'Y'                                                           200949
+     C                     MOVEL'Y'       E#MSGS                                              200949
+     C                     MOVELS7DETC    FTMSDT                                              200949
+     C                     MOVELE#CPGM    FTPGMQ                                              200949
+     C                     MOVEL'FTM5211' FTMSID                                              200949
+     C                     EXSR FTSNMS                                                        200949
+     C                     MOVEL'Y'       I7DETC                                              200949
+     C                     MOVEL'Y'       E#NOUP                                              200949
+     C                     ENDIF                                                              200949
+      *                                                                                       200949
      C                     ENDIF
       *
       ** Unwind subroutine stack name
@@ -6810,6 +6830,7 @@
       ** Issue this error message only if payment type is not regular payments.               187058
       *
      C           V#PDAM    IFEQ *ZERO
+     C           F7RCRM    ANDNE*ZERO                                                         EEE058
      C           V#PYTP    ANDNE'RP'                                                          187058
      C           V#M103    IFEQ 'Y'                                                           200949
      C                     MOVEL'Y'       E#MSGS
@@ -8241,4 +8262,4 @@
      C/COPY FTCPYSRC,SRERRC
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,20 +1,22 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas FT Generation of account keys')                  *
       *****************************************************************
       *                                                               *
       *  Midas - Funds Transfer Module                                *
       *                                                               *
       *  RPG/FT0210 - Generation of Account Keys                      *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
-      *                 MD046248           Date 27Oct17               *
-      *                 CAP212             Date 15Sep14               *
-      *                 CFT120             Date 28Sep12               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 25Jul11               *
+      *                 ESL038             Date 16Feb05               *
+      *                 EEE065             Date 05Oct04               *
+      *                 244500             Date 30Jan07               *
+      *                 197392             Date 27Mar02               *
+      *  Last Amend No. CAP212             Date 15Sep14               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
       *                 AR821740           Date 29Aug11               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -116,9 +118,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
-      *  CSW220 - SWIFT Changes 2020                                  *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied ESL038 and EEE065                           *
+      *  ESL038 - Funds Transfer STP Enhancements                     *
+      *           Hooks: FT0210FFPG FT0210CCP3 FT0210CP12             *
+      *  EEE065 - FT Payment Routing                                  *
+      *           Hooks: FT0210C003 FT0210C005 FT0210FFPG             *
+      *  244500 - Because of Increased ACOD length MOVEL field BNC1   *
+      *  197392 - Associated Customer processing revised as follows:  *
+      *           For Outgoing Payment, Associated Customer will be:  *
+      *              - Ordering Customer, if valid. Otherwise,        *
+      *              - MT100 Customer, if valid. Otherwise,           *
+      *              - Ordering Bank, if valid. Otherwise,            *
+      *              - value obtained from original processing.       *
+      *           For Incoming Payment, Associated Customer will be:  *
+      *              - Beneficiary customer if valid. Otherwise,      *
+      *              - value obtained from original processing.       *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *  AR821740 - COB - No stamp tax account keys generated         *
@@ -396,6 +412,10 @@
      F            ACCNTACF                          KIGNORE
      FACNUMA  IF  E           K        DISK
      F            ACCNTABF                          KRENAMEACNUMAF
+      *                                                                                       197392
+     FSDCUSTL7IF  E           K        DISK                                                   197392
+      ** Customer details file - keyed by SWIFT ID                                            197392
+      *                                                                                       197392
      FFPKEYDD O   E                    DISK                      A
      FFPKEYZZ O   E                    DISK                      A
      FACKEY   IF  E           K        DISK                               094407
@@ -432,6 +452,7 @@
      F* 19   FIRST CYCLE                                                  S01117
      F*
      F* 21-25 WORKING INDICATORS                                          S01117
+      * 29   CHAIN fail to SDCUSTL7                                                           197392
      F*                                                                   S01117
      F* 30   TRAILER ERROR
      F*
@@ -796,7 +817,6 @@
      I** Funds Transfer Settlement Fields Extractor Program Name                              CGL020
      I*                                                                                       CGL020
      I              'ZAAMLSETFT'          C         SETFT                                     CGL020
-     I              'SWIFTACTV'           C         SWIFT                                     CSW220
       *                                                                   056031
      C                     MOVEACPY@      BIS@   80
      C/EJECT
@@ -1408,18 +1428,6 @@
      C                     MOVEL'N'       CSW207                                              CSW207
      C                     ENDIF                                                              CSW207
       *                                                                                       CSW207
-      ** Determine if Swift 2020 is activated                                                 CSW220
-      *                                                                                       CSW220
-     C                     CALL SWIFT                                                         CSW220
-     C                     PARM 'CSW220'  PARMSW  6                                           CSW220
-     C                     PARM *BLANKS   PRTNCD  7                                           CSW220
-      *                                                                                       CSW220
-     C           PRTNCD    IFEQ 'CSWACTV'                                                     CSW220
-     C                     MOVE 'Y'       CSW220  1                                           CSW220
-     C                     ELSE                                                               CSW220
-     C                     MOVE 'N'       CSW220                                              CSW220
-     C                     ENDIF                                                              CSW220
-      *                                                                                       CSW220
      C*                                                                   S01408
      C** Core hook for externalisation.                                   S01408
      C/COPY WNCPYSRC,FT0210CCP1                                           S01408
@@ -1481,15 +1489,15 @@
      C* CREATE Request for Transfer Account Keys                          CFT006
      C************************************************************        CFT006
      C           RFTHDR    BEGSR                                          CFT006
-      *                                                                   CFT006
+      *?                                                                  CFT006
       * Only process in MT101 active                                      CFT006
      C           CFT006    IFNE 'Y'                                       CFT006
      C                     GOTO RFTEND                                    CFT006
      C                     ENDIF                                          CFT006
-      *                                                                   CFT006
+      *?                                                                  CFT006
      C                     SETON                     26                   178061
      C                     Z-ADD25        A                               178061
-      *                                                                   CFT006
+      *?                                                                  CFT006
      C* WHEN LAST RECORD IS READ FROM PREVIOUS MAINTENANCE FILE,          CFT006
      C* WRITE REPORT CLOSING DETAIL AND CLOSE REPORT FT0210P1             CFT006
      C*                                                                   CFT006
@@ -1502,21 +1510,21 @@
      C                     SETON                     51                   CFT006
      C*                                                                   CFT006
      C                     EXSR CHGBR                                     CFT006
+      *?                                                                  CFT006
+      *?Note that for Outgoing RFT's, only 1 account key is generated     CFT006
+      *? for the handling charge.                                         CFT006
       *                                                                   CFT006
-      * Note that for Outgoing RFT's, only 1 account key is generated     CFT006
-      *  for the handling charge.                                         CFT006
-      *                                                                   CFT006
-      * Are there outstanding account keys to be generated ?              CFT006
+      *?Are there outstanding account keys to be generated ?              CFT006
      C           AKEYAL    IFNE 'Y'                                       CFT006
       *                                                                   CFT006
      C                     MOVEL'N'       RFTHCG  1                       CFT006
       *                                                                   CFT006
       *                                                                   CFT006
-      * Determine the type of the RFT                                     CFT006
+      *?Determine the type of the RFT                                     CFT006
      C                     SELEC                                          CFT006
      C           PYTP      WHEQ 'RO'                       Outward        CFT006
       *                                                                   CFT006
-      * Generate handling charge account key if required.                 CFT006
+      *?Generate handling charge account key if required.                 CFT006
      C           HANDCG    IFGT *ZERO                                     CFT006
      C           AKEYHC    ANDNE'Y'                                       CFT006
       *                                                                   CFT006
@@ -1543,7 +1551,7 @@
      C                     EXSR SETTLE                                    CFT006
      C                     MOVELSETAC     SEAC                            CFT006
       *                                                                   CFT006
-      * Set remaining fields                                              CFT006
+      *?Set remaining fields                                              CFT006
      C                     MOVEL'D'       RECI                            CFT006
      C                     MOVELRFTID     PREF                            CFT006
      C                     Z-ADD*ZEROS    CQSQ                            CFT006
@@ -1560,17 +1568,17 @@
      C                     MOVE *BLANKS   OCCY                            CFT006
      C                     Z-ADD*ZEROS    OAMT                            CFT006
       *                                                                   CFT006
-      * Write account key record                                          CFT006
+      *?Write account key record                                          CFT006
      C                     EXSR WRIT                                      CFT006
       *                                                                   CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      * Determine account keys for incoming RFT's                         CFT006
+      *?Determine account keys for incoming RFT's                         CFT006
      C           PYTP      WHEQ 'RI'                       Inward         CFT006
       *                                                                   CFT006
      C                     SETOF                         97               CFT006
       *                                                                   CFT006
-      * Read RFT Detail Records                                           CFT006
+      *?Read RFT Detail Records                                           CFT006
      C           RFTID     SETLLFT101DL0                                  CFT006
      C           RFTID     READEFT101DL0                 97               CFT006
      C           *IN97     DOWEQ*OFF                                      CFT006
@@ -1583,20 +1591,20 @@
       *                                                                   CFT006
      C                     MOVEL'N'       DTLCHG  1                       CFT006
       *                                                                   CFT006
-      * If input date not processed                                       CFT006
+      *?If input date not processed                                       CFT006
      C           RHINDT    IFLE RUND                                      CFT006
      C           AKEYID    ANDNE'Y'                                       CFT006
      C                     EXSR RFTIND                                    CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      * If debit value date not processed                                 CFT006
+      *?If debit value date not processed                                 CFT006
      C***********DBTVDT    IFLE RUND                                CFT006187218
      C           DBTVDT    IFLE EDAT                                      187218
      C           AKEYDD    ANDNE'Y'                                       CFT006
      C                     EXSR RFTDBT                                    CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      * If credit value date not processed                                CFT006
+      *?If credit value date not processed                                CFT006
      C***********EXDATE    IFLE RUND                                CFT006187218
      C********** EXDATE    IFLE EDAT                                                   187218 218411
      C           CRDVDT    IFLE EDAT                                                          218411
@@ -1605,14 +1613,14 @@
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
       *                                                                   CFT006
-      * Update detail record if required                                  CFT006
+      *?Update detail record if required                                  CFT006
       *                                                                   CFT006
      C           DTLCHG    IFEQ 'Y'                                       CFT006
      C           RMODE     ANDEQ'N'                                       185700
      C                     UPDATFT101DD0                                  CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      * If all detail account keys generated, update header.              CFT006
+      *?If all detail account keys generated, update header.              CFT006
      C           AKEYID    IFEQ 'Y'                                       CFT006
      C           AKEYDD    ANDEQ'Y'                                       CFT006
      C           AKEYCD    ANDEQ'Y'                                       CFT006
@@ -1620,7 +1628,7 @@
      C                     MOVEL'Y'       AKEYAL                          CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      * Keep totals for hash processing                                   CFT006
+      *?Keep totals for hash processing                                   CFT006
      C           *LIKE     DEFN TRNAMT    SAVAMT                          CFT006
      C                     ADD  TRNAMT    SAVAMT                          CFT006
       *                                                                   CFT006
@@ -1628,18 +1636,18 @@
      C           RFTID     READEFT101DL0                 97               CFT006
      C                     ENDDO                                          CFT006
       *                                                                   CFT006
-      * End of RI's                                                       CFT006
+      *?End of RI's                                                       CFT006
       *                                                                   CFT006
      C                     ENDSL                                          CFT006
       *                                                                   CFT006
-      * Update RFTHCG                                                     CFT006
+      *?Update RFTHCG                                                     CFT006
       *                                                                   CFT006
      C           RFTHCG    IFEQ 'Y'                                       CFT006
      C           RMODE     ANDEQ'N'                                       185700
      C                     UPDATFT101HD0                                  CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      * End ALL account keys generated.                                   CFT006
+      *?End ALL account keys generated.                                   CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
      C           RFTEND    TAG                                            CFT006
@@ -1651,16 +1659,16 @@
      C************************************************************        CFT006
      C           RFTIND    BEGSR                                          CFT006
       *                                                                   CFT006
-      * Only generate if not previously created                           CFT006
+      *?Only generate if not previously created                           CFT006
      C           AKEYID    IFNE 'Y'                                       CFT006
       *                                                                   CFT006
      C                     MOVEL'Y'       AKEYID                          CFT006
      C                     MOVEL'Y'       DTLCHG                          CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * On input date :                                                   CFT006
-      * 1. Payment amount, Payment ccy, (one per credit), Excluding any   CFT006
-      *    charges : BENEFICIARY / INTERMEDIARY / ACCOUNT WITH INST       CFT006
+      *?On input date :                                                   CFT006
+      *?1. Payment amount, Payment ccy, (one per credit), Excluding any   CFT006
+      *?   charges : BENEFICIARY / INTERMEDIARY / ACCOUNT WITH INST       CFT006
       *                                                                   CFT006
      C                     MOVEL'RI'      PYTP                            CFT006
      C                     MOVEL'I'       KDATE                           CFT006
@@ -1668,17 +1676,17 @@
      C                     MOVEL'P'       KPYRE                           CFT006
      C                     MOVE *BLANK    KCCY                            CFT006
       *                                                                   CFT006
-      * Set remaining fields                                              CFT006
+      *?Set remaining fields                                              CFT006
      C                     MOVEL'D'       RECI                            CFT006
      C                     MOVELRFTID     PREF                            CFT006
      C                     Z-ADD*ZEROS    CQSQ                            CFT006
      C***********          Z-ADDRUND      EDAT                      CFT006187218
       *                                                                   CFT006
-      * Do not subtract charges from this amount as excluded              CFT006
+      *?Do not subtract charges from this amount as excluded              CFT006
      C                     Z-ADDPAYAMT    EAMT                            CFT006
       *                                                                   CFT006
      C                     SELEC                                          CFT006
-      * Intermediary ?                                                    CFT006
+      *?Intermediary ?                                                    CFT006
      C           INTTTP    WHEQ 'I'                        Iban           CFT006
      C                     MOVELTINST1    P@IBAN                          CFT006
      C                     EXSR SRIBAN                                    CFT006
@@ -1691,7 +1699,7 @@
      C                     EXSR FMTACC                                    CFT006
      C                     EXSR SETTLE                                    CFT006
      C                     MOVELSETAC     SEAC                            CFT006
-      * Account With Institution ?                                        CFT006
+      *?Account With Institution ?                                        CFT006
      C           AWITTP    WHEQ 'I'                        Iban           CFT006
      C                     MOVELTACA35    P@IBAN                          CFT006
      C                     EXSR SRIBAN                                    CFT006
@@ -1703,7 +1711,7 @@
      C                     EXSR FMTACC                                    CFT006
      C                     EXSR SETTLE                                    CFT006
      C                     MOVELSETAC     SEAC                            CFT006
-      * Beneficiary ?                                                     CFT006
+      *?Beneficiary ?                                                     CFT006
      C           BENTTP    WHEQ 'I'                        Iban           CFT006
      C                     MOVELTBNA35    P@IBAN                          CFT006
      C                     EXSR SRIBAN                                    CFT006
@@ -1729,12 +1737,12 @@
      C                     MOVE *BLANKS   OCCY                            CFT006
      C                     Z-ADD*ZEROS    OAMT                            CFT006
       *                                                                   CFT006
-      * Write account key record                                          CFT006
+      *?Write account key record                                          CFT006
      C                     EXSR WRIT                                      CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * 2. Transfer amount, Transfer ccy, (one per debit), Excluding      CFT006
-      *    any charges : ORDERING CUSTOMER                                CFT006
+      *?2. Transfer amount, Transfer ccy, (one per debit), Excluding      CFT006
+      *?   any charges : ORDERING CUSTOMER                                CFT006
       *                                                                   CFT006
      C                     MOVEL'RI'      PYTP                            CFT006
      C                     MOVEL'I'       KDATE                           CFT006
@@ -1742,17 +1750,17 @@
      C                     MOVE *BLANK    KCTYP                           CFT006
      C                     MOVEL'T'       KPYRE                           CFT006
       *                                                                   CFT006
-      * Set remaining fields                                              CFT006
+      *?Set remaining fields                                              CFT006
      C                     MOVEL'D'       RECI                            CFT006
      C                     MOVELRFTID     PREF                            CFT006
      C                     Z-ADD*ZEROS    CQSQ                            CFT006
      C                     Z-ADDRUND      EDAT                            CFT006
       *                                                                   CFT006
-      * Do not subtract charges from this amount as excluded              CFT006
+      *?Do not subtract charges from this amount as excluded              CFT006
      C                     Z-ADDTRNAMT    EAMT                            CFT006
       *                                                                   CFT006
-      * The ordering customer may either be in the HEADER or DETAIL       CFT006
-      *  record.                                                          CFT006
+      *?The ordering customer may either be in the HEADER or DETAIL       CFT006
+      *? record.                                                          CFT006
      C                     SELEC                                          CFT006
       *                                                                   CFT006
      C           CUSTTP    WHNE *BLANK                                    CFT006
@@ -1781,7 +1789,7 @@
      C                     Z-ADD*ZEROS    OAMT                            CFT006
       *                                                                   CFT006
      C                     EXSR WRIT                                      CFT006
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
@@ -1792,27 +1800,27 @@
      C************************************************************        CFT006
      C           RFTDBT    BEGSR                                          CFT006
       *                                                                   CFT006
-      * Only process if not already done.                                 CFT006
+      *?Only process if not already done.                                 CFT006
      C           AKEYDD    IFNE 'Y'                                       CFT006
       *                                                                   CFT006
      C                     MOVEL'Y'       AKEYDD                          CFT006
      C                     MOVEL'Y'       DTLCHG                          CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * Set default account key data                                      CFT006
+      *?Set default account key data                                      CFT006
      C                     MOVEL'RI'      PYTP                            CFT006
      C                     MOVEL'D'       KDATE                           CFT006
      C                     MOVE *BLANK    KCCY                            CFT006
      C                     MOVE *BLANK    KCTYP                           CFT006
       *                                                                   CFT006
-      * Set Default Data                                                  CFT006
+      *?Set Default Data                                                  CFT006
      C                     MOVEL'D'       RECI                            CFT006
      C                     MOVELRFTID     PREF                            CFT006
      C                     Z-ADD*ZEROS    CQSQ                            CFT006
      C***********          Z-ADDRUND      EDAT                      CFT006187218
       *                                                                   CFT006
-      * The ordering customer may either be in the HEADER or DETAIL       CFT006
-      *  record.                                                          CFT006
+      *?The ordering customer may either be in the HEADER or DETAIL       CFT006
+      *? record.                                                          CFT006
      C                     SELEC                                          CFT006
       *                                                                   CFT006
      C           CUSTTP    WHNE *BLANK                                    CFT006
@@ -1842,17 +1850,17 @@
       *                                                                   CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                    ORDERING CUSTOMER                              CFT006
-      * 1.  Transfer amount, Transfer ccy, (one per debit), Excluding     CFT006
-      *     any charges                                                   CFT006
+      *?1.  Transfer amount, Transfer ccy, (one per debit), Excluding     CFT006
+      *?    any charges                                                   CFT006
      C                     MOVEL'T'       KPYRE                           CFT006
       *                                                                   CFT006
-      * Do not subtract charges from this amount as excluded              CFT006
+      *?Do not subtract charges from this amount as excluded              CFT006
      C                     Z-ADDTRNAMT    EAMT                            CFT006
       *                                                                   CFT006
      C                     EXSR WRIT                                      CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * 2.  BCEQ transfer amount, Base ccy, (one per debit)               CFT006
+      *?2.  BCEQ transfer amount, Base ccy, (one per debit)               CFT006
      C                     MOVELTRNCCY    KCCY                            CFT006
      C                     MOVEL'B'       KPYRE                           CFT006
       *                                                                   CFT006
@@ -1880,13 +1888,13 @@
      C                     Z-ADD0         OAMT                            CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * 3.  Net transfer amount, Transfer ccy, (one per debit).           CFT006
-      *     If SHA or OUR and the message contains a non-blank 'charges   CFT006
-      *      account' then 'Transfer amount'.                             CFT006
-      *     If  BEN then 'Transfer amount'.                               CFT006
-      *     If SHA or OUR and the message contains a blank 'charges       CFT006
-      *      account' then 'Transfer amount' plus 'receiver's charges'    CFT006
-      *      in transfer currency, else 'transfer amount'.                CFT006
+      *?3.  Net transfer amount, Transfer ccy, (one per debit).           CFT006
+      *?    If SHA or OUR and the message contains a non-blank 'charges   CFT006
+      *?     account' then 'Transfer amount'.                             CFT006
+      *?    If  BEN then 'Transfer amount'.                               CFT006
+      *?    If SHA or OUR and the message contains a blank 'charges       CFT006
+      *?     account' then 'Transfer amount' plus 'receiver's charges'    CFT006
+      *?     in transfer currency, else 'transfer amount'.                CFT006
       *                                                                   CFT006
      C                     MOVE *BLANKS   KCCY                            CFT006
      C                     MOVEL'N'       KPYRE                           CFT006
@@ -1901,7 +1909,7 @@
       *                                                                   CFT006
      C                     SELEC                                          CFT006
       *                                                                   CFT006
-      * Transfer Amount                                                   CFT006
+      *?Transfer Amount                                                   CFT006
      C           TDCHGS    WHEQ 'SHA'                                     CFT006
      C           CHGACC    ANDNE*BLANKS                                   CFT006
      C           TDCHGS    OREQ 'OUR'                                     CFT006
@@ -1938,8 +1946,8 @@
      C                     EXSR WRIT                                      CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * 4. Receiver's charge amount.  Transfer ccy.  Transfer ccy         CFT006
-      *    (one per debit) Only generated if SHA or OUR.                  CFT006
+      *?4. Receiver's charge amount.  Transfer ccy.  Transfer ccy         CFT006
+      *?   (one per debit) Only generated if SHA or OUR.                  CFT006
       *                                                                   CFT006
      C                     SELEC                                          CFT006
       *                                                                   CFT006
@@ -1993,7 +2001,7 @@
      C************************************************************        CFT006
      C           RFTCRD    BEGSR                                          CFT006
       *                                                                   CFT006
-      * Only process if not already done.                                 CFT006
+      *?Only process if not already done.                                 CFT006
      C           AKEYCD    IFNE 'Y'                                       CFT006
       *                                                                   CFT006
      C                     MOVEL'RI'      PYTP                            CFT006
@@ -2009,8 +2017,8 @@
      C                     Z-ADD*ZEROS    CQSQ                                                218411
       *                                                                                       218411
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
-      * If an outgoing payment has been generated, use suspense A/c       CFT006
-      *  else use customer account                                        CFT006
+      *?If an outgoing payment has been generated, use suspense A/c       CFT006
+      *? else use customer account                                        CFT006
      C           GOPFLG    IFEQ 'Y'                                       CFT006
      C                     MOVELBRCA      #BRCA                           CFT006
      C                     MOVELPAYCCY    S#CCY   3                       CFT006
@@ -2018,7 +2026,7 @@
      C                     ELSE                                           CFT006
       *                                                                   CFT006
      C                     SELEC                                          CFT006
-      * Intermediary ?                                                    CFT006
+      *?Intermediary ?                                                    CFT006
      C           INTTTP    WHEQ 'I'                        Iban           CFT006
      C                     MOVELTINST1    P@IBAN                          CFT006
      C                     EXSR SRIBAN                                    CFT006
@@ -2031,7 +2039,7 @@
      C                     EXSR FMTACC                                    CFT006
      C                     EXSR SETTLE                                    CFT006
      C                     MOVELSETAC     SEAC                            CFT006
-      * Account With Institution ?                                        CFT006
+      *?Account With Institution ?                                        CFT006
      C           AWITTP    WHEQ 'I'                        Iban           CFT006
      C                     MOVELTACA35    P@IBAN                          CFT006
      C                     EXSR SRIBAN                                    CFT006
@@ -2043,7 +2051,7 @@
      C                     EXSR FMTACC                                    CFT006
      C                     EXSR SETTLE                                    CFT006
      C                     MOVELSETAC     SEAC                            CFT006
-      * Beneficiary ?                                                     CFT006
+      *?Beneficiary ?                                                     CFT006
      C           BENTTP    WHEQ 'I'                        Iban           CFT006
      C                     MOVELTBNA35    P@IBAN                          CFT006
      C                     EXSR SRIBAN                                    CFT006
@@ -2060,9 +2068,9 @@
       *                                                                   CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
-      * 1. Payment amount.  Payment ccy.  (one per credit).               CFT006
-      *    Excluding any charges                                          CFT006
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
+      *?1. Payment amount.  Payment ccy.  (one per credit).               CFT006
+      *?   Excluding any charges                                          CFT006
       *                    Account Key                                    CFT006
      C                     MOVEL'P'       KPYRE                           CFT006
      C                     MOVE *BLANKS   KCCY                            CFT006
@@ -2078,14 +2086,14 @@
      C                     Z-ADD*ZEROS    BRCD                            CFT006
      C                     Z-ADD*ZEROS    OAMT                            CFT006
       *                                                                   CFT006
-      *                    Payment Data                                   CFT006
+      *?                   Payment Data                                   CFT006
      C                     MOVELPAYCCY    ECCY                            CFT006
      C                     Z-ADDPAYAMT    EAMT                            CFT006
       *                                                                   CFT006
-      * Write account key record                                          CFT006
+      *?Write account key record                                          CFT006
      C                     EXSR WRIT                                      CFT006
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
-      *  2.  BCEQ payment amount.  Base ccy.  (one per credit).           CFT006
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
+      *? 2.  BCEQ payment amount.  Base ccy.  (one per credit).           CFT006
       *                                                                   CFT006
      C                     MOVELPAYCCY    KCCY                            CFT006
      C                     MOVEL'B'       KPYRE                           CFT006
@@ -2113,9 +2121,9 @@
      C                     Z-ADD0         OAMT                            CFT006
       *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
       *                                                                   CFT006
-      * 3.  Net payment amount.  Payment ccy.  (one per credit).          CFT006
-      *     If  SHA or OUR then 'payment amount', else 'payment           CFT006
-      *     amount' MINUS 'receiver's charges' in payment currency.       CFT006
+      *?3.  Net payment amount.  Payment ccy.  (one per credit).          CFT006
+      *?    If  SHA or OUR then 'payment amount', else 'payment           CFT006
+      *?    amount' MINUS 'receiver's charges' in payment currency.       CFT006
       *                                                                   CFT006
      C                     Z-ADD*ZERO     OAMT                            CFT006
      C                     MOVE *BLANKS   OCCY                            CFT006
@@ -2150,9 +2158,9 @@
      C                     ENDIF                                                              CGL020
       *                                                                   CFT006
      C                     EXSR WRIT                                      CFT006
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
-      *  4.  Receiver's charge amount.  Payment ccy.  (one per credit).   CFT006
-      *      Only generated if BEN.                                       CFT006
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
+      *? 4.  Receiver's charge amount.  Payment ccy.  (one per credit).   CFT006
+      *?     Only generated if BEN.                                       CFT006
       *                                                                   CFT006
       *  If charges account <> Blank, use;  else default (current)        CFT006
      C           CHGACC    IFNE *BLANKS                                   CFT006
@@ -2186,7 +2194,7 @@
      C                     EXSR WRIT                                      CFT006
       *                                                                   CFT006
      C                     ENDIF                                          CFT006
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT006
      C                     ENDIF                                          CFT006
       *                                                                   CFT006
      C                     ENDSR                                          CFT006
@@ -2228,17 +2236,17 @@
       *                                                                   CFT008
      C                     MOVELCCTTYP    PYTP                            CFT008
       *                                                                   CFT008
-      * Split amounts by ordering customer                                CFT008
+      *?Split amounts by ordering customer                                CFT008
      C           CCTTYP    IFEQ 'BO'                                      CFT008
      C                     EXSR SUMOCA                                    CFT008
      C                     ENDIF                                          CFT008
       *                                                                   CFT008
-      * Input Date                                                        CFT008
+      *?Input Date                                                        CFT008
      C           CHINDT    IFLE RUND                                      CFT008
      C                     EXSR CCTIND                                    CFT008
      C                     ENDIF                                          CFT008
       *                                                                   CFT008
-      * Debit Date                                                        CFT008
+      *?Debit Date                                                        CFT008
      C***********DBTVDT    IFLE RUND                                CFT008187218
      C           DBTVDT    IFLE EDAT                                      187218
      C           CCTTYP    ANDEQ'BO'                                      187218
@@ -2247,7 +2255,7 @@
      C                     EXSR CCTDVD                                    CFT008
      C                     ENDIF                                          CFT008
       *                                                                   CFT008
-      * Credit Date                                                       CFT008
+      *?Credit Date                                                       CFT008
      C***********TTVDTE    IFLE RUND                                CFT008187218
      C           TTVDTE    IFLE EDAT                                      187218
      C           CCTTYP    ANDEQ'BO'                                      187218
@@ -2265,7 +2273,7 @@
       *                                                                   CFT008
      C                     ENDIF                                          CFT008
       *                                                                   CFT008
-      * If header changed, update                                         CFT008
+      *?If header changed, update                                         CFT008
      C           CCTHCG    IFEQ 'Y'                                       CFT008
      C           RMODE     ANDEQ'N'                                       185700
      C                     UPDATFT102HD0                                  CFT008
@@ -2455,19 +2463,19 @@
      C                     MOVE TRNSID    FPTRID                          CDE002
      C                     ENDIF                                          CDE002
       *                                                                   CFT008
-      *    Sum Total Receivers Charges (Transfer Ccy)                     CFT008
+      *?   Sum Total Receivers Charges (Transfer Ccy)                     CFT008
      C                     ADD  RCVCTF    TOTRCT                          CFT008
       *                                                                   CFT008
-      * 1. Transfer amount, with receiver's charges deducted.             CFT008
-      *    Credit ccy.  (one per credit).                                 CFT008
-      *    'Credit ccy' is the currency of the account to be credited     CFT008
-      *    with the transfer (beneficiary or account with institution).   CFT008
+      *?1. Transfer amount, with receiver's charges deducted.             CFT008
+      *?   Credit ccy.  (one per credit).                                 CFT008
+      *?   'Credit ccy' is the currency of the account to be credited     CFT008
+      *?   with the transfer (beneficiary or account with institution).   CFT008
       *                                                                   CFT008
-      *    Get settlement account                                         CFT008
-      *    Account With Institution ?                                     CFT008
+      *?   Get settlement account                                         CFT008
+      *?   Account With Institution ?                                     CFT008
      C                     SELEC                                          CFT008
-      * If an outgoing payment has been generated, use suspense A/c       187215
-      *  else use customer account                                        187215
+      *?If an outgoing payment has been generated, use suspense A/c       187215
+      *? else use customer account                                        187215
      C           GOPFLG    WHEQ 'Y'                                       187215
      C                     MOVELBRCA      #BRCA                           187215
      C                     MOVELPAYCCY    S#CCY   3                       187215
@@ -2483,7 +2491,7 @@
      C                     EXSR FMTACC                                    CFT008
      C                     EXSR SETTLE                                    CFT008
      C                     MOVELSETAC     SEAC                            CFT008
-      * Beneficiary ?                                                     CFT008
+      *?Beneficiary ?                                                     CFT008
      C           BENTTD    WHEQ 'I'                        Iban           CFT008
      C                     MOVELBENF1     P@IBAN                          CFT008
      C                     EXSR SRIBAN                                    CFT008
@@ -2517,18 +2525,18 @@
      C                     MOVELCCY       ECCY                            CFT008
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
       *                                                                   CFT008
      C           CCTID     READEFT102DL0                 97               CFT008
      C                     ENDDO                                          CFT008
       *                                                                   CFT008
-      * 2. Total transfer amount less total receiver's charges.           CFT008
-      *    Transfer ccy.  (one per MT102).                                CFT008
+      *?2. Total transfer amount less total receiver's charges.           CFT008
+      *?   Transfer ccy.  (one per MT102).                                CFT008
      C                     MOVE *BLANKS   KCCY                            CFT008
      C                     MOVEL'T'       KPYRE                           CFT008
      C                     MOVELHTFCCY    ECCY                            CFT008
       *                                                                   CFT008
-      *     Find Settlement Account : Must be a header record item        CFT008
+      *?    Find Settlement Account : Must be a header record item        CFT008
      C                     SELEC                                          CFT008
      C           DSTTYP    WHEQ 'I'                                       CFT008
      C                     MOVELCCTDST    P@IBAN                          CFT008
@@ -2587,12 +2595,12 @@
      C/COPY WNCPYSRC,FT0210C053
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
       *                                                                   CFT008
      C           CCTTYP    WHEQ 'BO'                                      CFT008
       *                                                                   CFT008
-      * 1.  Total transfer amount. Transfer ccy.  (one per MT102).        CFT008
-      *     This is the total amount remitted to the nostro.              CFT008
+      *?1.  Total transfer amount. Transfer ccy.  (one per MT102).        CFT008
+      *?    This is the total amount remitted to the nostro.              CFT008
       *                                                                   CFT008
      C                     SELEC                                          CFT008
      C           DSTTYP    WHEQ 'I'                                       CFT008
@@ -2655,17 +2663,17 @@
      C                     MOVE *BLANKS   KCCY                            CFT008
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
       *                                                                   CFT008
-      * 2.  Sum of the transfer amounts for each ordering customer/       CFT008
-      *     inst less the sender's charges for these amounts plus the     CFT008
-      *     receiver's charges where OUR.                                 CFT008
-      *     Debit ccy.  (one per ordering cust/inst).                     CFT008
-      *     'Debit ccy' is the currency of the account to be debited      CFT008
-      *     for the transfer (ordering customer or ordering institution   CFT008
-      *     This is the amount debited from the customer's account        CFT008
-      *     excluding the sender's charges, but including the receiver'   CFT008
-      *     charges (if any).                                             CFT008
+      *?2.  Sum of the transfer amounts for each ordering customer/       CFT008
+      *?    inst less the sender's charges for these amounts plus the     CFT008
+      *?    receiver's charges where OUR.                                 CFT008
+      *?    Debit ccy.  (one per ordering cust/inst).                     CFT008
+      *?    'Debit ccy' is the currency of the account to be debited      CFT008
+      *?    for the transfer (ordering customer or ordering institution   CFT008
+      *?    This is the amount debited from the customer's account        CFT008
+      *?    excluding the sender's charges, but including the receiver'   CFT008
+      *?    charges (if any).                                             CFT008
       *                                                                   CFT008
      C                     MOVEL'O'       KPYRE                           CFT008
       *                                                                   CFT008
@@ -2688,7 +2696,7 @@
      C/COPY WNCPYSRC,FT0210C054
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
       *                                                                   CFT008
      C                     ENDDO                                          CFT008
       *                                                                   CFT008
@@ -2702,12 +2710,12 @@
      C* Process for Debit Value Date                                      CFT008
      C************************************************************        CFT008
      C           CCTDVD    BEGSR                                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
       * Only generate if not created previously                           CFT008
      C           AKEYDD    IFNE 'Y'                                       CFT008
      C                     MOVE 'Y'       AKEYDD                          CFT008
      C                     MOVEL'Y'       CCTHCG                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
       * Set default values                                                CFT008
      C                     MOVELCCTTYP    PYTP                            CFT008
      C                     MOVELCCTTST    PYST                            CFT008
@@ -2738,10 +2746,10 @@
      C                     Z-ADDRUND      EPSD                            CFT008
      C                     MOVE *BLANKS   OCCY                            CFT008
      C                     Z-ADD*ZEROS    OAMT                            CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     SELEC                                          CFT008
      C           CCTTYP    WHEQ 'BI'                                      CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
       * Determine settlement account                                      CFT008
      C                     SELEC                                          CFT008
      C           SINSTT    WHEQ 'I'                                       CFT008
@@ -2805,8 +2813,8 @@
      C                     EXSR SETTLE                                    CFT008
      C                     MOVELSETAC     SEAC                            CFT008
      C                     ENDSL                                          CFT008
-      *                                                                   CFT008
-      *  Sum receivers charges                                            CFT008
+      *?                                                                  CFT008
+      *? Sum receivers charges                                            CFT008
      C                     Z-ADD0         TOTRCT                          CFT008
      C/COPY WNCPYSRC,FT0210C055
      C                     SETOF                         33               CFT008
@@ -2823,10 +2831,10 @@
      C/COPY WNCPYSRC,FT0210C056
      C           CCTID     READEFT102DL0                 33               CFT008
      C                     ENDDO                                          CFT008
-      *                                                                   CFT008
-      *                                                                   CFT008
-      * 1. Total transfer amount less total receiver's charges.           CFT008
-      *    Transfer ccy.  (one per MT102).                                CFT008
+      *?                                                                  CFT008
+      *?                                                                  CFT008
+      *?1. Total transfer amount less total receiver's charges.           CFT008
+      *?   Transfer ccy.  (one per MT102).                                CFT008
      C                     MOVEL'T'       KPYRE                           CFT008
      C           CGL020    IFEQ 'Y'                                                           CGL020
      C                     Z-ADD0         WKNUME                                              CGL020
@@ -2852,11 +2860,11 @@
      C                     ENDIF                                                              CGL020
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
-      *                                                                   CFT008
-      * 2. BCEQ total transfer amount less total receiver's charges       CFT008
-      *    Base ccy.  (one per MT102)                                     CFT008
-      *                                                                   CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?                                                                  CFT008
+      *?2. BCEQ total transfer amount less total receiver's charges       CFT008
+      *?   Base ccy.  (one per MT102)                                     CFT008
+      *?                                                                  CFT008
      C                     MOVEL'B'       KPYRE                           CFT008
       *                                                                   CFT008
      C                     Z-ADDHTFAMT    INPAMT                          CFT008
@@ -2890,23 +2898,23 @@
      C                     EXSR WRIT                                      CFT008
      C                     MOVE *BLANKS   OCCY                            CFT008
      C                     Z-ADD0         OAMT                            CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
-      * 3. Total receiver's charges. Transfer ccy.  (one per MT102)       CFT008
-      *                                                                   CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?3. Total receiver's charges. Transfer ccy.  (one per MT102)       CFT008
+      *?                                                                  CFT008
      C                     Z-ADD0         OAMT                            CFT008
      C                     MOVEL*BLANKS   OCCY                            CFT008
      C                     Z-ADDTOTRCT    EAMT                            CFT008
      C                     MOVEL'R'       KPYRE                           CFT008
      C                     MOVELHTFCCY    ECCY                            CFT008
      C                     MOVE *BLANKS   KCCY                            CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C/COPY WNCPYSRC,FT0210C059
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
-      *                                                                   CFT008
-      * 4. Total transfer amount.                                         CFT008
-      *    Transfer ccy. (one per MT102).                                 CFT008
-      *    This is the amount debited from the nostro                     CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?                                                                  CFT008
+      *?4. Total transfer amount.                                         CFT008
+      *?   Transfer ccy. (one per MT102).                                 CFT008
+      *?   This is the amount debited from the nostro                     CFT008
      C                     Z-ADD0         OAMT                            CFT008
      C                     MOVEL*BLANKS   OCCY                            CFT008
      C                     MOVEL'I'       KPYRE                           CFT008
@@ -2916,16 +2924,16 @@
      C/COPY WNCPYSRC,FT0210C060
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
-      *                                                                   CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?                                                                  CFT008
      C           CCTTYP    WHEQ 'BO'                                      CFT008
-      *                                                                   CFT008
-      * 1. Sum of the transfer amounts for each ordering customer/inst    CFT008
-      *    less the sender's charges for these amounts plus the           CFT008
-      *    receiver's charges where OUR.  Debit ccy.  (one per ordering   CFT008
-      *    cust/inst).  'Debit ccy' is the currency of the account to     CFT008
-      *    be debited for the transfer (ordering customer or ordering     CFT008
-      *    institution).                                                  CFT008
+      *?                                                                  CFT008
+      *?1. Sum of the transfer amounts for each ordering customer/inst    CFT008
+      *?   less the sender's charges for these amounts plus the           CFT008
+      *?   receiver's charges where OUR.  Debit ccy.  (one per ordering   CFT008
+      *?   cust/inst).  'Debit ccy' is the currency of the account to     CFT008
+      *?   be debited for the transfer (ordering customer or ordering     CFT008
+      *?   institution).                                                  CFT008
      C                     Z-ADD0         Y                               CFT008
      C                     DO   I         Y                               CFT008
      C           Y         OCUR MOCDS                                     CFT008
@@ -2940,10 +2948,10 @@
      C                     MOVELSPYCCY    ECCY                            CFT008
      C                     MOVE *BLANKS   KCCY                            CFT008
      C                     EXSR WRIT                                      CFT008
-      *                                                                   CFT008
-      * 2. Sum of the transfer amounts for each ordering customer/inst    CFT008
-      *    plus sender's charges if OUR or SHA plus receiver's charges    CFT008
-      *    charges if OUR.  Debit ccy.  (one per ordering cust/inst).     CFT008
+      *?                                                                  CFT008
+      *?2. Sum of the transfer amounts for each ordering customer/inst    CFT008
+      *?   plus sender's charges if OUR or SHA plus receiver's charges    CFT008
+      *?   charges if OUR.  Debit ccy.  (one per ordering cust/inst).     CFT008
      C                     Z-ADD0         OAMT                            CFT008
      C                     MOVEL*BLANKS   OCCY                            CFT008
      C                     MOVEL'S'       KPYRE                           CFT008
@@ -2985,11 +2993,11 @@
      C                     ENDIF                                                              CGL020
       *                                                                                       CGL020
      C                     EXSR WRIT                                      CFT008
-      *                                                                   CFT008
-      * 3. BCEQ of sum of the transfer amounts for each ordering          CFT008
-      *    customer/inst plus sender's charges plus                       CFT008
-      *    receiver's charges if OUR.  Base ccy.  (one per ordering       CFT008
-      *    cust/inst)                                                     CFT008
+      *?                                                                  CFT008
+      *?3. BCEQ of sum of the transfer amounts for each ordering          CFT008
+      *?   customer/inst plus sender's charges plus                       CFT008
+      *?   receiver's charges if OUR.  Base ccy.  (one per ordering       CFT008
+      *?   cust/inst)                                                     CFT008
      C/COPY WNCPYSRC,FT0210C063
      C                     Z-ADDEAMT      OAMT                            CFT008
      C                     MOVELSPYCCY    OCCY                            CFT008
@@ -2998,7 +3006,7 @@
      C                     Z-ADDPABCQS    CVTRAT                          187220
      C                     MOVELBCCY      TOCCY                           CFT008
      C                     MOVELSPYCCY    FRMCCY                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C           TOCCY     IFNE FRMCCY                                    CFT008
      C                     EXSR GETBAS                                    CFT008
      C                     Z-ADDOUTAMT    EAMT                            CFT008
@@ -3012,9 +3020,9 @@
      C                     EXSR WRIT                                      CFT008
      C                     MOVE *BLANKS   OCCY                            CFT008
      C                     Z-ADD0         OAMT                            CFT008
-      *                                                                   CFT008
-      * 4. Sum of sender's charges for each ordering customer/inst.       CFT008
-      *    Debit ccy.  (one per ordering cust/inst)                       CFT008
+      *?                                                                  CFT008
+      *?4. Sum of sender's charges for each ordering customer/inst.       CFT008
+      *?   Debit ccy.  (one per ordering cust/inst)                       CFT008
      C                     Z-ADD0         OAMT                            CFT008
      C                     MOVEL*BLANKS   OCCY                            CFT008
      C                     MOVEL'C'       KPYRE                           CFT008
@@ -3024,9 +3032,9 @@
      C                     MOVE *BLANKS   KCCY                            CFT008
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *                                                                   CFT008
-      * 5. BEQ of sum of sender's charges for each ordering customer/     CFT008
-      *    inst.  Base ccy.  (one per ordering cust/inst).                CFT008
+      *?                                                                  CFT008
+      *?5. BEQ of sum of sender's charges for each ordering customer/     CFT008
+      *?   inst.  Base ccy.  (one per ordering cust/inst).                CFT008
      C*********            Z-ADDSUMSC     OAMT                      CFT008185701
      C                     Z-ADDSNDOSH    OAMT                            185701
      C                     MOVELSPYCCY    OCCY                            CFT008
@@ -3036,7 +3044,7 @@
      C                     Z-ADDPABCQS    CVTRAT                          187220
      C                     MOVELBCCY      TOCCY                           CFT008
      C                     MOVELSPYCCY    FRMCCY                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C           TOCCY     IFNE FRMCCY                                    CFT008
      C                     EXSR GETBAS                                    CFT008
      C                     Z-ADDOUTAMT    EAMT                            CFT008
@@ -3050,9 +3058,9 @@
      C                     EXSR WRIT                                      CFT008
      C                     MOVE *BLANKS   OCCY                            CFT008
      C                     Z-ADD0         OAMT                            CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     ENDDO                                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     ENDSL                                          CFT008
       *                                                                   CFT008
      C                     ENDIF                                          CFT008
@@ -3120,14 +3128,14 @@
      C                     MOVEL'Y'       AKEYCD                          CFT008
      C                     Z-ADDCRDVDT    VDAT                            187218
       *                                                                   CFT008
-      *  1. Transfer amount, with receiver's charges deducted             CFT008
-      *     This is the amount that will be credited for the transfer.    CFT008
-      *     'Credit ccy' is the currency of the account to be credited    CFT008
-      *     with the transfer (beneficiary or account with institution)   CFT008
+      *? 1. Transfer amount, with receiver's charges deducted             CFT008
+      *?    This is the amount that will be credited for the transfer.    CFT008
+      *?    'Credit ccy' is the currency of the account to be credited    CFT008
+      *?    with the transfer (beneficiary or account with institution)   CFT008
       *                                                                   CFT008
      C                     SELEC                                          CFT008
-      * If an outgoing payment has been generated, use suspense A/c       187215
-      *  else use customer account                                        187215
+      *?If an outgoing payment has been generated, use suspense A/c       187215
+      *? else use customer account                                        187215
      C           GOPFLG    WHEQ 'Y'                                       187215
      C                     MOVELBRCA      #BRCA                           187215
      C                     MOVELPAYCCY    S#CCY   3                       187215
@@ -3192,14 +3200,14 @@
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
      C/COPY WNCPYSRC,FT0210C064
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
       *                                                                   CFT008
-      * 2.  BCEQ transfer amount, with receiver's charges deducted if     CFT008
-      *     BEN or SHA.  Base ccy.  (one per credit).                     CFT008
-      *     It is ESSENTIAL that the total of each of these BCEQ amount   CFT008
-      *     EXACTLY equals the BCEQ amount for the total transfer         CFT008
-      *     generated on debit date.                                      CFT008
-      *                                                                   CFT008
+      *?2.  BCEQ transfer amount, with receiver's charges deducted if     CFT008
+      *?    BEN or SHA.  Base ccy.  (one per credit).                     CFT008
+      *?    It is ESSENTIAL that the total of each of these BCEQ amount   CFT008
+      *?    EXACTLY equals the BCEQ amount for the total transfer         CFT008
+      *?    generated on debit date.                                      CFT008
+      *?                                                                  CFT008
      C                     MOVELPAYCCY    KCCY                            CFT008
      C                     MOVEL'B'       KPYRE                           CFT008
       *                                                                   CFT008
@@ -3227,7 +3235,7 @@
      C                     EXSR WRIT                                      CFT008
      C                     MOVE *BLANKS   OCCY                            CFT008
      C                     Z-ADD0         OAMT                            CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
       *                                                                   CFT008
      C           RMODE     IFEQ 'N'                                       185700
      C                     UPDATFT102DD0                                  CFT008
@@ -3242,14 +3250,14 @@
       *                                                                   CFT008
      C           CCTID     READEFT102DL0                 97               CFT008
      C                     ENDDO                                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
       *                                                                   CFT008
      C           CCTTYP    WHEQ 'BO'                                      CFT008
      C           AKEYCH    ANDNE'Y'                                       CFT008
      C                     MOVEL'Y'       AKEYCH                          CFT008
       *                                                                   CFT008
-      * 1.  Total transfer amount.  Transfer ccy.  (one per MT102).       CFT008
-      *     This is the total amount remitted to the nostro.              CFT008
+      *?1.  Total transfer amount.  Transfer ccy.  (one per MT102).       CFT008
+      *?    This is the total amount remitted to the nostro.              CFT008
       *                                                                   CFT008
      C                     SELEC                                          CFT008
       *                                                                   CFT008
@@ -3351,10 +3359,10 @@
      C                     MOVEL'T'       KPYRE                           CFT008
       *                                                                   CFT008
      C                     EXSR WRIT                                      CFT008
-      *   = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
-      *                                                                   CFT008
-      * 2.  BCEQ total transfer amount.  Base ccy.  (one per MT102).      CFT008
-      *                                                                   CFT008
+      *?  = = = = = = = = = = = = = = = = = = = = = = = = = = = =         CFT008
+      *?                                                                  CFT008
+      *?2.  BCEQ total transfer amount.  Base ccy.  (one per MT102).      CFT008
+      *?                                                                  CFT008
      C/COPY WNCPYSRC,FT0210C065
      C                     MOVELHTFCCY    FRMCCY                          CFT008
       *                                                                   CFT008
@@ -3372,17 +3380,17 @@
      C                     ELSE                                           CFT008
      C                     Z-ADDINPAMT    EAMT                            CFT008
      C                     ENDIF                                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     MOVELBCCY      ECCY                            CFT008
      C                     MOVELHTFCCY    KCCY                            CFT008
      C                     MOVEL'B'       KPYRE                           CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     EXSR WRIT                                      CFT008
      C                     MOVE *BLANKS   OCCY                            CFT008
      C                     Z-ADD0         OAMT                            CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     ENDSL                                          CFT008
-      *                                                                   CFT008
+      *?                                                                  CFT008
      C                     ENDSR                                          CFT008
      C************************************************************        CFT008
      C* SRIBAN SR.                                                        CFT006
@@ -3674,7 +3682,24 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0210CP40                                           S01408
      C*                                                                   S01408
+     C                     MOVE *BLANKS   W#ORDC  6                                           197392
+     C                     MOVE *BLANKS   W#ORDB  6                                           197392
+     C                     MOVE *BLANKS   OPASOC  6                                           197392
+      *                                                                                       197392
      C                     MOVE SMCY      CCCY
+      *                                                                                       197392
+     C           ORCT      IFEQ 'C'                                                           197392
+     C                     MOVELORC1      W#ORDC                                              197392
+     C                     ELSE                                                               197392
+     C           ORCT      IFEQ 'R'                                                           197392
+     C           ORCT      OREQ 'P'                                                           197392
+     C                     MOVE ORCT      PRT1T                                               197392
+ JM  C                     MOVELORC1      PRT1                                                197392
+     C                     EXSR SETTLE                                                        197392
+     C                     MOVELCNUM      W#ORDC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
      C                     MOVE ORBT      PRT1T
      C*********************MOVELORBK      PRT1                            S01117
      C**********           MOVE *BLANKS   WRK15  15                                    S01117 CGL029
@@ -3700,6 +3725,30 @@
      C                     ENDIF                                                              CFT032
      C                     ENDIF                                                              CFT032
      C                     EXSR SETTLE
+      *                                                                                       197392
+      ** If no 6-digit customer number was obtained from the Ordering                         197392
+      ** Customer, save the customer number obtained from the Ordering                        197392
+      ** Bank.                                                                                197392
+      *                                                                                       197392
+     C           W#ORDC    IFEQ *BLANKS                                                       197392
+     C                     MOVELCNUM      W#ORDB                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
+      ** Check which of the Ordering Customer, MT100 Customer and                             197392
+      ** Ordering Bank has valid 6-digit customer and move it into                            197392
+      ** the OPASOC variable for checking in the WRIT subroutine.                             197392
+      *                                                                                       197392
+     C           W#ORDC    IFNE *BLANKS                                                       197392
+     C                     MOVELW#ORDC    OPASOC                                              197392
+     C                     ELSE                                                               197392
+     C           ODMT      IFNE *BLANKS                                                       197392
+     C                     MOVELODMT      OPASOC                                              197392
+     C                     ELSE                                                               197392
+     C           W#ORDB    IFNE *BLANKS                                                       197392
+     C                     MOVELW#ORDB    OPASOC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0210CP41                                           S01408
      C*                                                                   S01408
@@ -4441,9 +4490,9 @@
      C                     EXSR WRIT                                      S01501
      C*                                                                   S01501
       *                                                                   CFT009
-      * New account keys for CFT009 Fees and Charges                      CFT009
+      *?New account keys for CFT009 Fees and Charges                      CFT009
       *                                                                   CFT009
-      * Swift Standard Charge                                             CFT009
+      *?Swift Standard Charge                                             CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C                     MOVE 'S'       KCTYP                           CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
@@ -4456,7 +4505,7 @@
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
       *                                                                   CFT009
-      * Miscellaneous charge 1                                            CFT009
+      *?Miscellaneous charge 1                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC1     OREQ 'N'                                       CFT009
@@ -4469,7 +4518,7 @@
      C                     Z-ADDMISC01    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 2                                            CFT009
+      *?Miscellaneous charge 2                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC2     OREQ 'N'                                       CFT009
@@ -4482,7 +4531,7 @@
      C                     Z-ADDMISC02    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 3                                            CFT009
+      *?Miscellaneous charge 3                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC3     OREQ 'N'                                       CFT009
@@ -4495,7 +4544,7 @@
      C                     Z-ADDMISC03    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 4                                            CFT009
+      *?Miscellaneous charge 4                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC4     OREQ 'N'                                       CFT009
@@ -4508,7 +4557,7 @@
      C                     Z-ADDMISC04    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 5                                            CFT009
+      *?Miscellaneous charge 5                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC5     OREQ 'N'                                       CFT009
@@ -4524,7 +4573,7 @@
       *                                                                   CFT009
      C                     MOVE *BLANK    KCTYP                           CFT009
       *                                                                   CFT009
-      * END CFT009                                                        CFT009
+      *?END CFT009                                                        CFT009
      C                     MOVE 'U'       KPYRE                           S01501
      C                     Z-ADDOPVATT    EAMT                            S01501
      C                     EXSR WRIT                                      S01501
@@ -5038,8 +5087,8 @@
      C                     Z-ADDOPVATT    EAMT                            S01501
      C                     EXSR WRIT                                      S01501
      C*                                                                   S01501
-      * New account keys for FT Fees and Charges                          CFT009
-      * S.W.I.F.T. standard charge                                        CFT009
+      *?New account keys for FT Fees and Charges                          CFT009
+      *?S.W.I.F.T. standard charge                                        CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTSWSC    OREQ 'N'                                       CFT009
@@ -5052,7 +5101,7 @@
      C                     Z-ADDSWSCHG    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 1                                            CFT009
+      *?Miscellaneous charge 1                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC1     OREQ 'N'                                       CFT009
@@ -5065,7 +5114,7 @@
      C                     Z-ADDMISC01    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 2                                            CFT009
+      *?Miscellaneous charge 2                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC2     OREQ 'N'                                       CFT009
@@ -5078,7 +5127,7 @@
      C                     Z-ADDMISC02    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 3                                            CFT009
+      *?Miscellaneous charge 3                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC3     OREQ 'N'                                       CFT009
@@ -5091,7 +5140,7 @@
      C                     Z-ADDMISC03    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 4                                            CFT009
+      *?Miscellaneous charge 4                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC4     OREQ 'N'                                       CFT009
@@ -5104,7 +5153,7 @@
      C                     Z-ADDMISC04    EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 5                                            CFT009
+      *?Miscellaneous charge 5                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VMIC5     OREQ 'N'                                       CFT009
@@ -5377,6 +5426,8 @@
      C                     MOVE '01'      ACSQX
      C                     MOVE BRCA      BRCHX                           S01117
      C                     ELSE
+      *                                                                                       197392
+     C                     MOVE *BLANKS   IPASOC  6                                           197392
       *                                                                   CFT004
       *** If CFT004 is on and the beneficiary field contains an IBAN      CFT004
       *                                                                   CFT004
@@ -5397,6 +5448,7 @@
      C                     Z-ADDS4ACOD    ACODX                           CFT004
      C                     Z-ADDS4ACSQ    ACSQX                           CFT004
      C                     MOVE S4BRCA    BRCHX                           CFT004
+     C                     MOVELS4CNUM    IPASOC                                              197392
      C                     ELSE                                           CFT004
      C                     MOVELBIBAN     WKEY             ***************CFT004
      C                     MOVE 'AOIBANR4'WFILE            * DB ERROR 30 *CFT004
@@ -5409,6 +5461,30 @@
      C/COPY WNCPYSRC,FT0210CP44                                           S01408
      C*                                                                   S01408
      C                     MOVE PCCY      CCCY
+      *                                                                                       197392
+     C           BNCT      IFEQ 'C'                                                           197392
+     C                     MOVELBNC1      IPASOC                                              197392
+     C                     ELSE                                                               197392
+      *                                                                                       197392
+     C           BNCT      IFEQ 'S'                                                           197392
+     C                     MOVELBNC1      W#BENE 12                                           197392
+     C           W#BENE    CHAINSDCUSTL7             29                                       197392
+     C           *IN29     IFEQ '0'                                                           197392
+     C                     MOVELBBCUST    IPASOC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ELSE                                                               197392
+      *                                                                                       197392
+     C           BNCT      IFEQ 'R'                                                           197392
+     C           BNCT      OREQ 'P'                                                           197392
+     C                     MOVE BNCT      PRT1T                                               197392
+     C***************      MOVE BNC1      PRT1                                         197392 244500
+     C                     MOVELBNC1      PRT1                                         197392 244500
+     C                     EXSR SETTLE                                                        197392
+     C                     MOVELCNUM      IPASOC                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
      C                     MOVE ACBT      PRT1T
      C*********************MOVELACBK      PRT1                            S01117
      C                     MOVE *BLANKS   WRK15                           S01117
@@ -6142,8 +6218,8 @@
      C*                                                                   S01501
      C                     Z-ADDINCHCM    EAMT                            S01501
      C                     EXSR WRIT                                      S01501
-      * Fees and Charges.  New account Keys                               CFT009
-      * Miscellaneous charge 1                                            CFT009
+      *?Fees and Charges.  New account Keys                               CFT009
+      *?Miscellaneous charge 1                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC1    OREQ 'N'                                       CFT009
@@ -6157,7 +6233,7 @@
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
       *                                                                   CFT009
-      * Miscellaneous charge 2                                            CFT009
+      *?Miscellaneous charge 2                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC2    OREQ 'N'                                       CFT009
@@ -6170,7 +6246,7 @@
      C                     Z-ADDMSC02     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 3                                            CFT009
+      *?Miscellaneous charge 3                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC3    OREQ 'N'                                       CFT009
@@ -6183,7 +6259,7 @@
      C                     Z-ADDMSC03     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 4                                            CFT009
+      *?Miscellaneous charge 4                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC4    OREQ 'N'                                       CFT009
@@ -6196,7 +6272,7 @@
      C                     Z-ADDMSC04     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 5                                            CFT009
+      *?Miscellaneous charge 5                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC5    OREQ 'N'                                       CFT009
@@ -6686,7 +6762,7 @@
      C                     Z-ADDINCHCM    EAMT                            S01501
      C                     EXSR WRIT                                      S01501
       *                                                                   CFT009
-      * Miscellaneous charge 1                                            CFT009
+      *?Miscellaneous charge 1                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC1    OREQ 'N'                                       CFT009
@@ -6699,7 +6775,7 @@
      C                     Z-ADDMSC01     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 2                                            CFT009
+      *?Miscellaneous charge 2                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC2    OREQ 'N'                                       CFT009
@@ -6712,7 +6788,7 @@
      C                     Z-ADDMSC02     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 3                                            CFT009
+      *?Miscellaneous charge 3                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC3    OREQ 'N'                                       CFT009
@@ -6725,7 +6801,7 @@
      C                     Z-ADDMSC03     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 4                                            CFT009
+      *?Miscellaneous charge 4                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC4    OREQ 'N'                                       CFT009
@@ -6738,7 +6814,7 @@
      C                     Z-ADDMSC04     EAMT                            CFT009
      C                     EXSR WRIT                                      CFT009
      C                     ENDIF                                          CFT009
-      * Miscellaneous charge 5                                            CFT009
+      *?Miscellaneous charge 5                                            CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
      C           CFT011    IFEQ 'N'                                       CFT009
      C           VTMIC5    OREQ 'N'                                       CFT009
@@ -9315,9 +9391,6 @@
      C                     MOVEL*BLANKS   FTTOGL           Funds To       S01435
       *                                                                   S01435
      C                     MOVEL*BLANKS   W2NWRK           Network        S01435
-     C           CSW220    IFEQ 'Y'                                                           CSW220
-     C                     MOVEL'Z'       FTM199                                              CSW220
-     C                     ENDIF                                                              CSW220
       *                                                                   S01435
       *  N.B. Audit Stamp details are determined in called program        S01435
       *                                                                   S01435
@@ -9758,6 +9831,16 @@
      C                     MOVE *BLANKS   WKASOC  6                                           CSD027
      C           *IN01     IFEQ '1'                                       051400
      C           *IN02     OREQ '1'                                       051400
+      *                                                                                       197392
+     C           *IN01     IFEQ '1'                                                           197392
+     C           OPASOC    ANDNE*BLANKS                                                       197392
+     C                     MOVELOPASOC    WKASOC                                              197392
+     C                     ELSE                                                               197392
+     C           *IN02     IFEQ '1'                                                           197392
+     C           IPASOC    ANDNE*BLANKS                                                       197392
+     C                     MOVELIPASOC    WKASOC                                              197392
+     C                     ELSE                                                               197392
+      *                                                                                       197392
      C           ADDC      IFEQ 'A'                                       051400
      C***********          MOVELSTLAC     FPASOC                    051400164670
      C                     MOVELSTLAC     WKASOC                          164670
@@ -9767,6 +9850,10 @@
      C                     MOVELPAYAC     WKASOC                          164670
      C                     END                                            051400
      C                     END                                            051400
+      *                                                                                       197392
+     C                     ENDIF                                                              197392
+     C                     ENDIF                                                              197392
+      *                                                                                       197392
      C                     END                                            051400
       *                                                                   051400
       * Cheques are processed by Settlement Account                       051400
@@ -10441,7 +10528,7 @@
      C*                                                                   S01408
      C/EJECT
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 ** POWER
 0000001
 0000010

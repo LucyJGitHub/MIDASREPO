@@ -1,0 +1,259 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FTP960 - FT hold PCAT customer group                         *
+     F*                                                               *
+     F*  (C) Copyright Misys International Banking Systems 2003       *
+     F*                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+     F*  Last Amend No. AR856737           Date 13Sep11               *
+     F*  Last Amend No. ERN054             Date 16Jul2003             *
+     F*  Prev Amend No. EEE058 *Create     Date 05Feb2003             *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+     F*  ERN054 - Agent message changes                               *
+     F*  EEE058 - Incoming STP changes                                *
+     F*                                                               *
+     F*****************************************************************
+     FFTPEXTV0UF  E           K        DISK         KCOMIT       A
+      *
+      *  Extension data for transaction
+      *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     IFTPEXT    E DSFTPEXTP0
+      *
+      * FT PCAT extension details
+      *
+     ISDCURR    E DSSDCURRPD
+     ISVCURR      DS                            800
+     I                                        1   3 SVCCY
+      *
+      * Currencies structure for saving
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Switchable Features Descriptions *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I              'ABCDEFGHIJ'          C         ##DEF
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RTN    7
+     C                     PARM           FTPEXT
+      *
+      * Initialise program
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If Car active process table
+      *
+     C           EEE058    IFEQ 'EEE058'
+      *
+     C                     SELEC
+     C           @RTN      WHEQ 'STORE  '
+      *
+      * store data
+      *
+     C           *LIKE     DEFN FTPEXT    SVPEXT
+     C                     MOVELFTPEXT    SVPEXT
+     C           @RTN      WHEQ 'RTV    '
+      *
+      * Set key
+      *
+     C           KPEXT     CHAIN@PEXTV0              90
+     C           *IN90     IFEQ *ON
+     C                     CLEARFTPEXT
+     C                     ENDIF
+     C           KPEXT     SETLL@PEXTV0              90
+      *
+     C                     MOVELFTPEXT    SVPEXT
+      *
+      * Write data
+      *
+     C           @RTN      WHEQ 'WRITE  '
+      *
+      * Save passed reference
+      *
+     C           *LIKE     DEFN PXPREF    WRPREF
+     C                     MOVELPXPREF    WRPREF
+      *
+      * Check existence of data
+      *
+     C           KPEXT     KLIST
+     C                     KFLD           PXPREF
+     C           KPEXT     CHAIN@PEXTV0              90
+      *
+      * Get retained data
+      *
+     C                     MOVELSVPEXT    FTPEXT
+      *
+      * write/update data held if reference is the same else write clear record
+      *
+     C                     SELEC
+      *
+      * Write/update saved record if reference passed is equal to stored record
+      *
+     C           PXPREF    WHEQ WRPREF
+     C           *IN90     IFEQ *ON
+     C                     WRITE@PEXTV0
+     C                     ELSE
+     C                     UPDAT@PEXTV0
+     C                     ENDIF
+      * Write/update blank record if reference passed is not blank
+     C           WRPREF    WHNE *BLANKS
+     C                     CLEARFTPEXT
+     C                     MOVELWRPREF    PXPREF
+     C           *IN90     IFEQ *ON
+     C                     WRITE@PEXTV0
+     C                     ELSE
+     C                     UPDAT@PEXTV0
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     OTHER
+      *  Return customer group for PCAT
+     C                     MOVELSVPEXT    FTPEXT
+     C                     ENDSL
+      *
+     C                     ENDIF
+     C***U1                DUMP
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       #FIRST  1
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Access SAR details file to see if PL0001 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'EEE058'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Car active
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           EEE058    ANDEQ*BLANKS
+     C                     MOVEL'EEE058'  EEE058  6
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Define data areas
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 30 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+      *
+      /EJECT
+**  CPY@ table
+(C) Copyright Misys International Banking Systems 2001

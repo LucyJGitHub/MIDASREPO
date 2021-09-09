@@ -1,0 +1,203 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0092T - Repair Instruction Code. Only for TARGET BALANCE  *
+      *             Field 23E could contain invalid Instruction Code  *
+      *                                                               *
+      *  Function: This program remove invalid Instruction code       *
+      *            from field 23E.                                    *
+      *            If 23E does not contain 'INTC' then for resulting  *
+      *            Outgoing Payment this program adds code 'INTC'     *
+      *                                                               *
+      *            This program is similar to MEP0092 but only for TB *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2011       *
+      *                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 10Nov11               *
+      *  Last Amend No. HVB010  *CREATE    Date 06Sep11               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP Enhancements to Midas Plus level.     *
+      *  HVB010 -   Repair Function for Field 23E - Target Balance    *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Valid Instruction Code
+     E                    TABICD  1  13  4
+      *
+     E                    WINC        5 35
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IP#RPP1      DS
+     I                                        1   1 FLAG1
+     I                                       26  60 INSTL1
+     I                                       61  95 INSTL2
+     I                                       96 130 INSTL3
+     I                                      131 165 INSTL4
+     I                                      166 200 INSTL5
+     I                                      201 251 REST1
+      *  REPAIRED TAGG DESCRIPTION
+      *
+     IP#RPP2      DS
+     I                                        1   1 FLAG2
+     I                                       26  60 INST1
+     I                                       61  95 INST2
+     I                                       96 130 INST3
+     I                                      131 165 INST4
+     I                                      166 200 INST5
+     I                                       26 200 INSTA
+     I                                      201 251 REST2
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+      *
+      * Criteria rule hit
+     IPCRIT     E DSMEGNCRPD
+     I                                        1   3 W#MTPY
+     I                                        7  12 W#NWRK
+     I                                       13  14 W#PYTP
+     I                                       21  22 W#PYST
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      *  Process field
+      *
+     C                     MOVEL*BLANKS   P#RETN
+     C                     MOVELFLAG1     FLAG2
+      *
+     C                     Z-ADD1         Q       10
+     C                     MOVE *BLANKS   WINC
+      *
+      ** Line 1
+     C                     MOVE *BLANKS   WICODE  4
+     C                     MOVELINSTL1    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL1    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 2
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL2    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL2    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 3
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL3    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL3    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 4
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL4    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL4    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 5
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL5    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL5    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+     C                     MOVEAWINC      INSTA
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+      ** If INTC does not appear on the incoming IN3 and it results in an
+      *  Outgoing TB payment then add INTC to the Instruction code.
+      *
+     C           'INTC'    SCAN INSTA                    75
+     C           *IN75     IFEQ '0'
+      *
+     C           W#MTPY    IFEQ 'IN3'
+     C           W#NWRK    ANDEQ'SWIFT'
+     C           W#PYTP    ANDEQ'OP'
+      ** Add INTC to empty line
+     C                     SELEC
+     C           INST1     WHEQ *BLANKS
+     C                     MOVEL'INTC'    INST1
+     C           INST2     WHEQ *BLANKS
+     C                     MOVEL'INTC'    INST2
+     C           INST3     WHEQ *BLANKS
+     C                     MOVEL'INTC'    INST3
+     C           INST4     WHEQ *BLANKS
+     C                     MOVEL'INTC'    INST4
+     C           INST5     WHEQ *BLANKS
+     C                     MOVEL'INTC'    INST5
+     C                     ENDSL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *  Exit program
+      *
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2011
+**  TABICD
+BONL
+CHQB
+CORT
+HOLD
+INTC
+PHON
+PHOB
+PHOI
+SDVA
+TELE
+TELB
+TELI
+REPA

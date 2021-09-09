@@ -1,0 +1,669 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FTP950 - FT Update control spread set                        *
+     F*                                                               *
+     F*  (C) Copyright Misys International Banking Systems 2003       *
+     F*                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+     F*  Last Amend No. AR856737           Date 13Sep11               *
+     F*  Last Amend No. ESL038             Date 04Oct2004             *
+     F*  Prev Amend No. EEE058 *Create     Date 05Feb2003             *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+     F*  ESL038 - ING STP Development                                 *
+     F*  EEE058 - Incoming STP changes                                *
+     F*                                                               *
+     F*****************************************************************
+     FSDCURRL0IF  E           K        DISK
+      *  Currencies tabele
+      *
+     FFTXTRDL0UF  E           K        DISK
+     F                                              KCOMIT
+      *  FX Currencies table
+      *
+     FFTFXSPV1IF  E           K        DISK
+      *  FX Currencies spreads
+      *
+     FSDCYRTL0IF  E           K        DISK
+      *  FX Upload Currencies spreads - BASE
+      *
+     FSDCYRTL1IF  E           K        DISK
+      *  FX Upload Currencies spreads - PREFERNTIAL
+      *
+     FSDCYRTP0IF  E           K        DISK
+      *  FX Upload Currencies spreads
+      *
+      *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+      *
+      *  Copyright table
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     ISDCURR    E DSSDCURRPD
+     ISVCURR      DS                            800
+     I                                        1   3 SVCCY
+      *
+      * Currencies structure for saving
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Switchable Features Descriptions *
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I              'ABCDEFGHIJ'          C         ##DEF
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM *BLANKS   @RTN    7
+      *
+      * Initialise program
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If Car active process table
+      *
+     C           ESL038    IFEQ 'ESL038'
+      *
+      *  Update base sets
+      *
+     C                     MOVEL*BLANKS   A6CYCD
+     C           A6CYCD    SETLL@A6REA4
+     C                     READ @A6REA4                  91
+     C           *IN91     DOUEQ*ON
+      *
+      *  Process currency
+      *
+     C                     MOVELSDCURR    SVCURR
+      * only do defined sets
+     C                     MOVEL*BLANKS   FXSSET
+     C           FXSSET    SETLL@FXSPV1
+     C                     READ @FXSPV1                  92
+     C           *IN92     DOUEQ*ON
+     C                     MOVEL*BLANKS   SPRDR   1
+     C                     MOVEL*BLANKS   SPRDB   1
+     C                     MOVEL*BLANKS   SPRDP   1
+      * Check for update
+     C           FXUPDF    IFNE 'N'
+      *
+     C                     MOVELSVCURR    SDCURR
+     C                     MOVELFXSSET    SPRDCD
+     C                     SELEC
+     C           FXUPDF    WHEQ 'R'
+     C                     MOVEL'Y'       SPRDR
+     C                     EXSR SRCCYR
+      *
+     C           FXUPDF    WHEQ 'B'
+     C                     MOVEL'Y'       SPRDB
+     C                     EXSR SRCCYB
+      *
+     C           FXUPDF    WHEQ 'P'
+     C                     MOVEL'Y'       SPRDP
+     C                     EXSR SRCCYP
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     READ @FXSPV1                  92
+     C                     ENDDO
+      *
+     C                     READ @A6REA4                  91
+     C                     ENDDO
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCCYR   : Process currency                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCCYR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCCYR'  @STK,Q
+      *
+      *  Get data from data area
+      *
+     C********   KCCY      CHAINFTXTRDD0             90                                       EEE058
+     C           KCCY      KLIST
+     C                     KFLD           SPRDCD
+     C                     KFLD           XRSCCY
+      *
+     C                     MOVELA6CYCD    XRSCCY
+      *
+     C           ESL038    IFEQ 'ESL038'
+      *
+     C           A6CYCD    CHAIN@CYRTP0              89
+      *
+     C           *IN89     IFEQ *OFF
+      * If no mid rate then Spot rate is as on table.
+      *
+     C           CYMDRT    IFEQ 0
+      * Spot rate is mid of buy sell
+     C           CYBYRT    ADD  CYSLRT    WKSPRT 138       Set Buy Spread
+     C                     DIV  2         WKSPRT    H      Set Buy Spread
+      * Spread is against Midas spot
+     C           CYBYRT    SUB  WKSPRT    WKBYSR 138       Set Buy Spread
+     C           CYSLRT    SUB  WKSPRT    WKSLSR 138       Set Sell Spread
+     C                     ELSE                            Else
+      * Mid rate is spot rate
+     C                     Z-ADDCYMDRT    WKSPRT           Set Buy Spread
+      * Spread is against Mid rate
+     C           CYBYRT    SUB  CYMDRT    WKBYSR           Set Buy Spread
+     C           CYSLRT    SUB  CYMDRT    WKSLSR           Set Sell Spread
+      *
+     C                     ENDIF                           Else
+      *
+     C                     Z-ADDWKSPRT    A6SPRT           Set Spot rate
+      *
+     C           WKBYSR    IFLT 0                          If Buy Sprd -ve
+     C                     Z-SUBWKBYSR    WKBYSR            Revrse Sign
+     C                     MOVE '-'       WKBYSS  1         Set Sign
+     C                     ELSE                            Else
+     C           WKBYSR    IFGT 0                           If Buy Sprd-ve
+     C                     MOVE '+'       WKBYSS             Set Sign
+     C                     ELSE                             Else
+     C                     MOVE ' '       WKBYSS             Set Sign
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDWKBYSR    A6BYSR            Revrse Sign
+     C                     MOVELWKBYSS    A6BYSS            Set Sign
+      *
+     C           WKSLSR    IFLT 0                          If Sell Spd -ve
+     C                     Z-SUBWKSLSR    WKSLSR            Revrse Sign
+     C                     MOVE '-'       WKSLSS  1         Set Sign
+     C                     ELSE                            Else
+     C           WKSLSR    IFGT 0                           If Sell Spd-ve
+     C                     MOVE '+'       WKSLSS             Set Sign
+     C                     ELSE                             Else
+     C                     MOVE ' '       WKSLSS             Set Sign
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDWKSLSR    A6SLSR            Revrse Sign
+     C                     MOVELWKSLSS    A6SLSS            Set Sign
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           KCCY      CHAINFTXTRDD0             90
+     C           *IN90     IFEQ *OFF
+      * Adjust spread using control fields
+     C           SPRDR     IFEQ 'Y'
+     C                     SELEC
+     C           FXSBSN    WHEQ '+'
+      * calcuate spread ( 1 + FX pref)
+     C           1         ADD  FXSBPC    ##RATE 138H
+     C********** A6BYSR    MULT ##RATE    A6BYSR    H                                         EEE058
+      * calcuate rate x FX pref
+     C********** A6SPRT    MULT FXSBPC    ##RATE    H                                         EEE058
+      * calcuate new spread
+     C           A6BYSS    IFEQ '+'
+     C           A6SPRT    ADD  A6BYSR    ##NRAT 138H                                         EEE058
+     C**********           ADD  ##RATE    A6BYSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6BYSR    H                                         EEE058
+     C                     ELSE
+     C           A6SPRT    SUB  A6BYSR    ##NRAT    H                                         EEE058
+     C**********           SUB  ##RATE    A6BYSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6BYSR    H                                         EEE058
+     C                     ENDIF
+     C           FXSBSN    WHEQ '-'
+      * calcuate spread ( 1 - FX pref)
+     C           1         SUB  FXSBPC    ##RATE    H
+     C********** A6BYSR    MULT ##RATE    A6BYSR    H                                         EEE058
+      * calcuate rate x FX pref
+     C********** A6SPRT    MULT FXSBPC    ##RATE    H                                         EEE058
+      * calcuate new spread
+     C           A6BYSS    IFEQ '+'
+     C           A6SPRT    ADD  A6BYSR    ##NRAT    H                                         EEE058
+     C**********           ADD  ##RATE    A6BYSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6BYSR    H                                         EEE058
+     C                     ELSE
+     C           A6SPRT    SUB  A6BYSR    ##NRAT    H                                         EEE058
+     C**********           SUB  ##RATE    A6BYSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6BYSR    H                                         EEE058
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     SELEC
+     C           FXSSSN    WHEQ '+'
+      * calcuate spread ( 1 + FX pref)
+     C           1         ADD  FXSSPC    ##RATE    H
+     C********** A6SLSR    MULT ##RATE    A6SLSR    H                                         EEE058
+      * calcuate rate x FX pref
+     C********** A6SPRT    MULT FXSBPC    ##RATE    H                                         EEE058
+      * calcuate new spread
+     C           A6SLSS    IFEQ '+'
+     C           A6SPRT    ADD  A6SLSR    ##NRAT    H                                         EEE058
+     C**********           ADD  ##RATE    A6SLSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6SLSR    H                                         EEE058
+     C                     ELSE
+     C           A6SPRT    SUB  A6SLSR    ##NRAT    H                                         EEE058
+     C**********           SUB  ##RATE    A6SLSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6SLSR    H                                         EEE058
+     C                     ENDIF
+     C           FXSSSN    WHEQ '-'
+      * calcuate spread ( 1 - FX pref)
+     C           1         SUB  FXSSPC    ##RATE    H
+     C********** A6SLSR    MULT ##RATE    A6SLSR    H                                         EEE058
+      * calcuate rate x FX pref
+     C********** A6SPRT    MULT FXSSPC    ##RATE    H                                         EEE058
+      * calcuate new spread
+     C           A6SLSS    IFEQ '+'
+     C           A6SPRT    ADD  A6SLSR    ##NRAT    H                                         EEE058
+     C**********           ADD  ##RATE    A6SLSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6SLSR    H                                         EEE058
+     C                     ELSE
+     C           A6SPRT    SUB  A6SLSR    ##NRAT    H                                         EEE058
+     C**********           SUB  ##RATE    A6SLSR    H                                         EEE058
+     C           ##NRAT    MULT ##RATE    ##NRAT    H                                         EEE058
+     C           ##NRAT    SUB  A6SPRT    A6SLSR    H                                         EEE058
+     C                     ENDIF
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C           A6BYSR    IFLT 0                                                             EEE058
+     C                     Z-SUBA6BYSR    A6BYSR                                              EEE058
+     C                     MOVEL'-'       MANBSN                                              EEE058
+     C                     ELSE                                                               EEE058
+     C                     MOVEL'-'       MANBSN                                              EEE058
+     C                     ENDIF                                                              EEE058
+     C           A6BYSR    DIV  A6SPRT    MANBPC    H
+     C                     Z-ADD0         MANBPC    H
+     C                     Z-ADDA6BYSR    MANBSP
+     C**********           MOVELA6BYSS    MANBSN                                              EEE058
+      *
+     C           A6SLSR    IFLT 0                                                             EEE058
+     C                     Z-SUBA6SLSR    A6SLSR                                              EEE058
+     C                     MOVEL'-'       MANSSN                                              EEE058
+     C                     ELSE                                                               EEE058
+     C                     MOVEL'+'       MANSSN                                              EEE058
+     C                     ENDIF                                                              EEE058
+     C           A6SLSR    DIV  A6SPRT    MANSPC    H
+     C                     Z-ADD0         MANSPC    H
+     C                     Z-ADDA6SLSR    MANSSP
+     C**********           MOVELA6SLSS    MANSSN                                              EEE058
+      *
+     C                     UPDATFTXTRDD0
+      *
+     C                     ENDIF
+      *
+     C                     COMIT
+      *  Unwind subroutine stack name
+      *
+     C           EXCCYR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCCYB   : Process currency                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCCYB    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCCYB'  @STK,Q
+      *
+      *  Get data from data area
+      *
+     C********   KCCY      CHAINFTXTRDD0             90                                       EEE058
+      *
+     C                     MOVELA6CYCD    XRSCCY
+      *
+     C           ESL038    IFEQ 'ESL038'
+      *
+     C           A6CYCD    CHAIN@CYRTL0              89
+      *
+     C           *IN89     IFEQ *OFF
+      * If no mid rate then Spot rate is as on table.
+      *
+     C           CYMDRT    IFEQ 0
+      * Spot rate is mid of buy sell
+     C           CYBYRT    ADD  CYSLRT    WKSPRT 138       Set Buy Spread
+     C                     DIV  2         WKSPRT    H      Set Buy Spread
+      * Spread is against Midas spot
+     C           CYBYRT    SUB  WKSPRT    WKBYSR 138       Set Buy Spread
+     C           CYSLRT    SUB  WKSPRT    WKSLSR 138       Set Sell Spread
+     C                     ELSE                            Else
+      * Mid rate is spot rate
+     C                     Z-ADDCYMDRT    WKSPRT           Set Buy Spread
+      * Spread is against Mid rate
+     C           CYBYRT    SUB  CYMDRT    WKBYSR           Set Buy Spread
+     C           CYSLRT    SUB  CYMDRT    WKSLSR           Set Sell Spread
+      *
+     C                     ENDIF                           Else
+      *
+     C                     Z-ADDWKSPRT    A6SPRT           Set Spot rate
+      *
+     C           WKBYSR    IFLT 0                          If Buy Sprd -ve
+     C                     Z-SUBWKBYSR    WKBYSR            Revrse Sign
+     C                     MOVE '-'       WKBYSS  1         Set Sign
+     C                     ELSE                            Else
+     C           WKBYSR    IFGT 0                           If Buy Sprd-ve
+     C                     MOVE '+'       WKBYSS             Set Sign
+     C                     ELSE                             Else
+     C                     MOVE ' '       WKBYSS             Set Sign
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDWKBYSR    A6BYSR            Revrse Sign
+     C                     MOVELWKBYSS    A6BYSS            Set Sign
+      *
+     C           WKSLSR    IFLT 0                          If Sell Spd -ve
+     C                     Z-SUBWKSLSR    WKSLSR            Revrse Sign
+     C                     MOVE '-'       WKSLSS  1         Set Sign
+     C                     ELSE                            Else
+     C           WKSLSR    IFGT 0                           If Sell Spd-ve
+     C                     MOVE '+'       WKSLSS             Set Sign
+     C                     ELSE                             Else
+     C                     MOVE ' '       WKSLSS             Set Sign
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDWKSLSR    A6SLSR            Revrse Sign
+     C                     MOVELWKSLSS    A6SLSS            Set Sign
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           KCCY      CHAINFTXTRDD0             90
+     C           *IN90     IFEQ *OFF
+      * Adjust spreads
+     C           SPRDB     IFEQ 'Y'
+      *
+     C                     Z-ADD0         MANBPC
+     C                     Z-ADD0         MANSPC
+     C                     Z-ADDA6BYSR    MANBSP
+     C                     MOVELA6BYSS    MANBSN
+     C                     Z-ADDA6SLSR    MANSSP
+     C                     MOVELA6SLSS    MANSSN
+     C                     UPDATFTXTRDD0
+      *
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *  Unwind subroutine stack name
+      *
+     C           EXCCYB    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCCYP   : Process currency                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCCYP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCCYP'  @STK,Q
+      *
+      *  Get data from data area
+      *
+     C********   KCCY      CHAINFTXTRDD0             90                                       EEE058
+      *
+     C                     MOVELA6CYCD    XRSCCY
+      *
+     C           ESL038    IFEQ 'ESL038'
+      *
+     C           A6CYCD    CHAIN@CYRTL1              89
+      *
+     C           *IN89     IFEQ *OFF
+      * If no mid rate then Spot rate is as on table.
+      *
+     C           CYMDRT    IFEQ 0
+      * Spot rate is mid of buy sell
+     C           CYBYRT    ADD  CYSLRT    WKSPRT 138       Set Buy Spread
+     C                     DIV  2         WKSPRT    H      Set Buy Spread
+      * Spread is against Midas spot
+     C           CYBYRT    SUB  WKSPRT    WKBYSR 138       Set Buy Spread
+     C           CYSLRT    SUB  WKSPRT    WKSLSR 138       Set Sell Spread
+     C                     ELSE                            Else
+      * Mid rate is spot rate
+     C                     Z-ADDCYMDRT    WKSPRT           Set Buy Spread
+      * Spread is against Mid rate
+     C           CYBYRT    SUB  CYMDRT    WKBYSR           Set Buy Spread
+     C           CYSLRT    SUB  CYMDRT    WKSLSR           Set Sell Spread
+      *
+     C                     ENDIF                           Else
+      *
+     C                     Z-ADDWKSPRT    A6SPRT           Set Spot rate
+      *
+     C           WKBYSR    IFLT 0                          If Buy Sprd -ve
+     C                     Z-SUBWKBYSR    WKBYSR            Revrse Sign
+     C                     MOVE '-'       WKBYSS  1         Set Sign
+     C                     ELSE                            Else
+     C           WKBYSR    IFGT 0                           If Buy Sprd-ve
+     C                     MOVE '+'       WKBYSS             Set Sign
+     C                     ELSE                             Else
+     C                     MOVE ' '       WKBYSS             Set Sign
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDWKBYSR    A6BYSR            Revrse Sign
+     C                     MOVELWKBYSS    A6BYSS            Set Sign
+      *
+     C           WKSLSR    IFLT 0                          If Sell Spd -ve
+     C                     Z-SUBWKSLSR    WKSLSR            Revrse Sign
+     C                     MOVE '-'       WKSLSS  1         Set Sign
+     C                     ELSE                            Else
+     C           WKSLSR    IFGT 0                           If Sell Spd-ve
+     C                     MOVE '+'       WKSLSS             Set Sign
+     C                     ELSE                             Else
+     C                     MOVE ' '       WKSLSS             Set Sign
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *
+     C                     Z-ADDWKSLSR    A6SLSR            Revrse Sign
+     C                     MOVELWKSLSS    A6SLSS            Set Sign
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           KCCY      CHAINFTXTRDD0             90
+     C           *IN90     IFEQ *OFF
+      * Adjust spreads
+     C           SPRDP     IFEQ 'Y'
+      *
+     C                     Z-ADD0         MANBPC
+     C                     Z-ADD0         MANSPC
+     C                     Z-ADDA6BYSR    MANBSP
+     C                     MOVELA6BYSS    MANBSN
+     C                     Z-ADDA6SLSR    MANSSP
+     C                     MOVELA6SLSS    MANSSN
+     C                     UPDATFTXTRDD0
+      *
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *  Unwind subroutine stack name
+      *
+     C           EXCCYP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       #FIRST  1
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Access SAR details file to see if PL0001 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'ESL038'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Car active
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           ESL038    ANDEQ*BLANKS
+     C                     MOVEL'ESL038'  ESL038  6
+     C                     ENDIF
+      *
+      *  Access SAR details file to see if E00046 is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'E00046'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Car active
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C           E00046    ANDEQ*BLANKS
+     C                     MOVEL'E00046'  E00046  6
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Define data areas
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 30 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+      *
+      /EJECT
+**  CPY@ table
+(C) Copyright Misys International Banking Systems 2001

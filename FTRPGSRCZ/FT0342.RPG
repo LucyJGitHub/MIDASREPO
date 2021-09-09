@@ -1,7 +1,6 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas FT Outgoing payments valid. S1/LVL 1')           *
      F*****************************************************************
      F*                                                               *
      F*  Midas - Funds Transfer Module                                *
@@ -13,15 +12,26 @@
      F*                                                               *
      F*  Called By: FT0340  - Outgoing Payments Maintenence           *
      F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1001980          Date 28Jun12               *
-      *  Prev Amend No. AR930698           Date 21Mar12               *
-      *                 AR918975           Date 21Mar12               *
-      *                 MD050514           Date 18Apr18               *
-      *                 MD046248           Date 27Oct17               *
-      *                 CSW213             Date 03Jun13               *
-      *                 MD020161           Date 24Apr13               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. HVB006             Date 05Oct11               *
+      *  Last Amend No. HVB001             Date 05Oct11               *
+      *  Prev Amend No. AR856737           Date 14Sep11               *
+      *                 258186A            Date 21May09               *
+      *                 258186             Date 01Apr09               *
+      *                 246751             Date 22May07               *    *                  MK0564
+      *      *******    STP500  ******     Date 04May05    Need to ch *
+     F*                 STP015             Date 25Nov2004             *
+     F*                 STP004             Date 19Nov2004             *
+      *                 MK0564             Date 02Jun05               *
+     F*                 STP022             Date 15Dec2004             *
+     F*                 EEE065             Date 01Jan2004             *
+     F*                 EEE058             Date 26Mar2003             *
+      *                 176653             Date 25May00               *
+      *                 BUG26225           Date 29Sep09               *
+      *  Last Amend No. CSW213             Date 03Jun13               *
+      *  Prev Amend No. MD020161           Date 24Apr13               *
       *                 AR928992           Date 21Feb13               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -83,17 +93,47 @@
      F*                 S01435             DATE 22AUG93               *
      F*                                                               *
      F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *           - Program crashes after call successful call to     *
+      *             ZVACTBU. Prog ZVACTBU switches on *INLR even when *
+      *             this is no error.  Amend this program to remove   *
+      *             indicator 90 from the CALL command.               *
+     F*  HVB006 - Target Balance - allow standard validation for      *
+     F*           message tagged 'Targer Balance (TB)'                *
+     F*           Amended /COPY FT0342STMT                            *
+     F*  HVB001 - Errors in Ordering Customer validation              *
+     F*           when Midas IBAN specified.                          *
+     F*         - For blank Ordering Bank the Ordering Customer       *
+     F*           was not getting validated correctly.                *
+     F*  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           - Added changes to check for Blocked, Inactive,
+      *             Bad and Bankrupt account                          *
+      *  258186A - Database error in file AOIBANR4, key *CALL, in     *
+      *            FT0110, at 013 due to P@IBAN not cleared.          *
+      *  258186 - Field Ordering Customer is not filled correctly.    *
       *                                                               *
-      *  AR1001980  Invalid call to AOIBANR4 without setting up       *
-      *             IBAN string (Child: AR1002970)                    *
-      *  AR930698 - Apply STP changes for CFT047.                     *
-      *             MT202 debit transactions for non-bank customer.   *
-      *             Allow both ordering customer/ordering bank.       *
-      *             (Child: AR930700)                                 *
-      *  AR918975 - Allow lower case SWIFT characters for STP.        *
-      *             (Child: AR919050)                                 *
-      *  MD050514 - Authority issue with xxOWNER user profile         *
-      *  MD046248 - Finastra Rebranding                               *
+      *  246751 -  Extend validation for PLNELIXIR to match that for  *                       MK0564
+      *            manually input payments. Amend /COPYs FT0342XVAL   *                       MK0564
+      *            and FT0342STMT.                                    *
+      *  STP500  - Validation changes.                                *
+      *  MK0564  - Improve validation of destination for local        *
+      *            clearing payments.                                 *
+      *            Changes in /copies: FT0342C006, FT0342DIPG,        *
+      *            FT0342DFPG, FT0342XVAL.                            *
+     F*  STP022 - Set Add/Deduct Charges to 'A' for OUR and SHA       *
+     F*           and to 'D' for BEN.                                 *
+     F*  STP015 - Change processing for MTCASH network.               *
+     F*  STP004 - Allow 8 digit customer number in destination field. *
+     F*           Changes in /COPY: FT0342DFPG, SFTADDRI              *
+     F*           Added /COPY: FT0342MK05, FT0342MK06.                *
+     F*  EEE065 - FT Payment Routing                                  *
+     F*           Use Copy hook FT0342C025                            *
+     F*  EEE058 - Incoming STP                                        *
+     F*           Recompile over new SFTVALCS                         *
+      *  176653  - New Settlement Field used in cpysrc SFTADDRC.      *
+      *          - Recompiled over changes in  cpysrc SFTADDRC.       *
+      *  BUG26225 - Missing branch while validating against OMFM      *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  MD020161 - Messages sent thru Multicash not processed by STP *
       *             Added hooks:                                      *
@@ -207,8 +247,12 @@
       *                                                                   CFT014
       ** ISO Country Codes file                                           CFT014
       *                                                                   CFT014
+     FSDCUSTZ1IF  E           K        DISK                                                   STP500
+      * Midas SD Customer Details Etension File.                                              STP500
+      *                                                                                       STP500
      E/COPY FTCPYSRC,SFTSWFTF
      F/COPY WNCPYSRC,FT0342DFPG
+     E/COPY ZSRSRC,FFPRVLZ2                                                                   STP015
       *
       *  /Copy point for File Definition
       *
@@ -499,7 +543,13 @@
      I#MSTX2      DS
      I                                        1 256 #MSTXA
      I                                      257 512 #MSTXB
+      *                                                                                       STP500
+     I              'EURELIXIR '          C         EUREXD                                    STP500
+     I              'EURELIXIRC'          C         EUREXC                                    STP500
+     I              'EURSORBNET'          C         EURSRB                                    STP500
      E/COPY FTCPYSRC,SFTVALCS
+     I/COPY ZSRSRC,FFSRDSZ1                                                                   STP015
+     I/COPY ZSRSRC,FFPRVLZ3                                                                   STP015
      I/EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -521,6 +571,7 @@
      C                     PARM           E#DATA
      C                     PARM           C#DATA
      C                     PARM           I4DATA
+     C                     PARM           @@CLID 10                                           STP500
       *                                                                                       CFT032
       ** Parameter List for calling AOOUFMR0                                                  CFT032
       *                                                                                       CFT032
@@ -986,53 +1037,52 @@
       * address later on                                                  177284
       *                                                                   177284
      C                     MOVE A8BICN    SNBICN  6                       177284
-      **********                                                                            MD050514
-      **Check*user*is*authorised*to*perform*action*code*on*                                 MD050514
-      **booking*branch*                                                                     MD050514
-      **********                                                                            MD050514
-     C**********           CALL 'ZVACTBU'              9090                                 MD020161
-     C**********           CALL 'ZVACTBU'              90                          MD020161 MD050514
-     C**********           PARM S4ACTD    @ACTN   1                                         MD050514
-     C**********           PARM S4BRCA    @BRCD   3                                         MD050514
-     C**********           PARM 0         ERR     10                                        MD050514
-     C**********           Z-ADD0         ERR                                               MD050514
-      **********                                                                            MD050514
-      ***If*error*on*call*                                                                  MD050514
-      **********                                                                            MD050514
-     C********** *IN90     IFEQ '1'                                                         MD050514
-     C**********           MOVEL'ZVACTBU 'W0FILE           ***************                  MD050514
-     C**********            MOVEL'*CALL'   W0KEY            * DB ERROR 02 *                 MD050514
-     C**********           Z-ADD2         W0ERNB           ***************                  MD050514
-     C**********           MOVEL'MEM5003' W0MSGD                                            MD050514
-     C**********           MOVEL'MIDAS  ' W0MSGF                                            MD050514
-     C**********           EXSR SRERR                                                       MD050514
-     C**********           END                                                              MD050514
-      **********                                                                            MD050514
-      **User*not*authorised*to*any*action*codes*for*this*item*and*branch*                   MD050514
-      **********                                                                            MD050514
-     C********** ERR       IFEQ 1                                                           MD050514
-     C**********           MOVEL'Y'       E#MSGS                                            MD050514
-     C**********           MOVELE#CPGM    FTPGMQ                                            MD050514
-     C**********           MOVEL'FTM2023' FTMSID                                            MD050514
-     C**********           EXSR FTSNMS                                                      MD050514
-     C**********           MOVEL'Y'       I4BRCA                                            MD050514
-     C**********           MOVEL'Y'       E#NOUP                                            MD050514
-     C**********           GOTO EXBRCA                                                      MD050514
-     C**********           END                                                              MD050514
-      **********                                                                            MD050514
-      **User*not authorised*to*action*code*for*this*particular*item*                        MD050514
-      **and*branch*                                                                         MD050514
-      **********                                                                            MD050514
-     C********** ERR       IFEQ 2                                                           MD050514
-     C**********           MOVEL'Y'       E#MSGS                                            MD050514
-     C**********           MOVELS4ACTD    FTMSDT                                            MD050514
-     C**********           MOVELE#CPGM    FTPGMQ                                            MD050514
-     C**********           MOVEL'FTM2024' FTMSID                                            MD050514
-     C**********           EXSR FTSNMS                                                      MD050514
-     C**********           MOVEL'Y'       I4BRCA                                            MD050514
-     C**********           MOVEL'Y'       E#NOUP                                            MD050514
-     C**********           GOTO EXBRCA                                                      MD050514
-     C**********            END                                                             MD050514
+      *
+      * Check user is authorised to perform action code on
+      * booking branch
+      *
+     C*****                CALL 'ZVACTBU'              9090                                 MD31937
+     C                     CALL 'ZVACTBU'                                                   MD31937
+     C                     PARM S4ACTD    @ACTN   1
+     C                     PARM S4BRCA    @BRCD   3
+     C                     PARM 0         ERR     10
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ZVACTBU 'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * User not authorised to any action codes for this item and branch
+      *
+     C           ERR       IFEQ 1
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2023' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4BRCA
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXBRCA
+     C                     END
+      *
+      * User not authorised to action code for this particular item
+      * and branch
+      *
+     C           ERR       IFEQ 2
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4ACTD    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'FTM2024' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4BRCA
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO EXBRCA
+     C                     END
       *
       *  Unwind subroutine stack name
       *
@@ -1476,6 +1526,7 @@
      C                     MOVELS4STMT    FTMSDT
      C                     MOVELE#CPGM    FTPGMQ
      C                     MOVEL'FTM2229' FTMSID
+     C/COPY WNCPYSRC,FT0342MK01                                         PL0001
      C                     EXSR FTSNMS
      C                     MOVEL'Y'       I4STMT
      C                     MOVEL'Y'       E#NOUP
@@ -1489,10 +1540,14 @@
      C           S4STMT    ANDNE'10'
      C           S4STMT    ANDNE'12'
      C           S4STMT    ANDNE'13'
+     C/COPY WNCPYSRC,FT0342C050
+      *                                                                 PL0001
+     C/COPY WNCPYSRC,FT0342DB01                                         PL0001
      C                     MOVEL'Y'       E#MSGS
      C                     MOVELS4STMT    FTMSDT
      C                     MOVELE#CPGM    FTPGMQ
      C                     MOVEL'FTM2230' FTMSID
+     C/COPY WNCPYSRC,FT0342MK02                                         PL0001
      C                     EXSR FTSNMS
      C                     MOVEL'Y'       I4STMT
      C                     MOVEL'Y'       E#NOUP
@@ -1640,6 +1695,7 @@
      C                     END
       *
      C                     END
+     C/COPY WNCPYSRC,FT0342MK05
       *
       *  If first 6 Characters are numeric but rest is blank
       *  validate as a customer reference
@@ -1701,6 +1757,7 @@
      C                     END
       *
      C                     END
+     C/COPY WNCPYSRC,FT0342MK06
       *
       *  If first 10 Characters are numeric but rest is blank
       *  validate as a retail account
@@ -2028,6 +2085,7 @@
       *
      C                     MOVEL'FTM2340' ADFLDM
      C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     MOVE S4STMT    WKSTMT  2                       176653
      C                     EXSR ADCHK
       *
       *  Depending on the indicators, highlight the field in error
@@ -2649,6 +2707,7 @@
      CSR         SRORC     BEGSR
       *
      C                     MOVE 'N'       @@IBAN  1                                           CFT032
+     C                     MOVE *BLANKS   P@IBAN                                             258186A
      C                     MOVE *BLANKS   WORC1  34                                           CFT032
      C                     MOVELS4ORC1    WSLSH   1                                           CFT032
      C           WSLSH     IFEQ '/'                                                           CFT032
@@ -2662,6 +2721,66 @@
      C                     ADD  1         Q       50
      C                     MOVEL'SRORC '  @STK,Q
       *
+      *                                                                                       STP500
+     C*****      @@CLID    IFEQ EUREXD                                                        STP500
+     C*****      @@CLID    OREQ EUREXC                                                        STP500
+     C*****      @@CLID    OREQ EURSRB                                                        STP500
+      * Add '/' in front of Ordering Customer.                                                STP500
+     C*****                MOVELS4ORC1    ##OC01  1                                           STP500
+     C*****      ##OC01    IFNE '/'                                                           STP500
+     C*****                MOVE *BLANKS   ##ORC1 34                                           STP500
+     C*****                MOVE S4ORC1    ##ORC1                                              STP500
+     C*****                MOVEL*BLANKS   S4ORC1                                              STP500
+     C*****      '/'       CAT  ##ORC1    S4ORC1                                              STP500
+     C*****                ENDIF                                                              STP500
+     C*****                ENDIF                                                              STP500
+      *                                                                                       STP500
+     C           @@CLID    IFEQ EUREXC                                                        STP500
+     C                     MOVE *BLANKS   ##ORC1                                              STP500
+     C                     MOVE S4ORC1    ##ORC1                                              STP500
+     C*****                Z-ADD0         ##ORC8  80                                    STP500MKEMR1
+     C                     MOVEL*BLANKS   ##ORC8  8                                           MKEMR1
+     C                     MOVEL*BLANKS   ##ORC6 26                                           STP500
+     C                     MOVEL##ORC1    ##ORC8                                              STP500
+     C                     MOVE ##ORC1    ##ORC6                                              STP500
+     C                     MOVE *ON       *IN90                                               STP500
+     C           ##ORC6    IFEQ *BLANKS                                                       STP500
+     C           ##ORC8    CHAINSDCUSTD1             90                                       STP500
+     C                     ENDIF                                                              STP500
+     C           *IN90     IFEQ *OFF                                                          STP500
+     C                     MOVEL'A'       F4ORCT                                              STP500
+     C                     ELSE                                                               STP500
+     C                     CALL 'AOIBANR5'             90                                     STP500
+     C                     PARM *BLANKS   RTCD    7                                           STP500
+     C                     PARM           ##ORC1 34                                           STP500
+     C           RTCD      IFEQ *BLANKS                                                       STP500
+     C                     MOVEL'A'       F4ORCT                                              STP500
+     C                     ELSE                                                               STP500
+     C                     MOVEL*BLANKS   ##OC02 36                                           STP500
+     C                     MOVE ##ORC1    ##OC02                                              STP500
+     C                     MOVEL'PL'      ##OC02                                              STP500
+     C                     MOVEL*BLANKS   ##OC03 34                                           STP500
+     C                     MOVEL##OC02    ##OC03                                              STP500
+     C                     CALL 'AOIBANR5'             90                                     STP500
+     C                     PARM *BLANKS   RTCD    7                                           STP500
+     C                     PARM           ##OC03 34                                           STP500
+     C           RTCD      IFNE *BLANKS                                                       STP500
+     C                     MOVEL'Y'       E#MSGS                                              STP500
+     C                     MOVELS4ORC1    FTMSDT                                              STP500
+     C                     MOVELE#CPGM    FTPGMQ                                              STP500
+     C                     MOVEL'PR10398' FTMSID                                              STP500
+     C                     EXSR FTSNMS                                                        STP500
+     C                     MOVEL'Y'       I4ORC                                               STP500
+     C                     MOVEL'Y'       E#NOUP                                              STP500
+     C                     GOTO EXORC                                                         STP500
+     C                     ELSE                                                               STP500
+     C                     MOVEL*BLANKS   S4ORC1                                              STP500
+     C           '/'       CAT  ##OC03    S4ORC1                                              STP500
+     C                     MOVEL'A'       F4ORCT                                              STP500
+     C                     ENDIF                                                              STP500
+     C                     ENDIF                                                              STP500
+     C                     ENDIF                                                              STP500
+     C                     ELSE                                                               STP500
       *  /COPY Statement
       *
      C/COPY WNCPYSRC,FT0342RORC
@@ -2695,6 +2814,7 @@
      C                     MOVEL'Y'       E#NOUP
      C                     GOTO EXORC
      C                     END
+     C/COPY WNCPYSRC,FT0342C051
       *                                                                   CGL009
       **  If the message is from the FONTIS and the first line is         CGL009
       **  a partial account, we have appended the currency at the end.    CGL009
@@ -2752,6 +2872,7 @@
      C                     MOVEL'FTM2341' ADFLDM
      C                     MOVEL'FTUSRMSG'ADFLDF
      C                     MOVE 'Y'       ADLINE                                            BUG14771
+     C                     MOVE S4STMT    WKSTMT  2                       176653
      C                     EXSR ADCHK
       *
       *  Depending on the indicators, highlight the field in error
@@ -2916,10 +3037,16 @@
       *                                                                                     BUG15037
       * Store in occurrance data structure 2 any information                                BUG15037
       *                                                                                     BUG15037
-      * Set Iban to be that of account in Ordering customer                                AR1001980
-     C                     MOVELWORC1     P@IBAN    P                                      AR1001980
-      *                                                                                    AR1001980
      C           2         OCUR OACCNT                                                      BUG15037
+     C                     MOVEL*BLANKS   PIBAN                                               HVB001
+     C                     MOVEL*BLANKS   P@IBAN                                              HVB001
+     C                     MOVELWORC1     PIBAN                                               HVB001
+     C                     CALL 'AOIBANR3'                                                    HVB001
+     C                     PARM *BLANKS   @RTCD                                               HVB001
+     C                     PARM           PIBAN                                               HVB001
+     C                     PARM           POWITH                                              HVB001
+     C           P@IBAN    PARM           PONOBL                                              HVB001
+      *                                                                                       CFT032
      C                     CALL 'AOIBANR4'                                                    CFT032
      C                     PARM *BLANKS   @RTCD                                               CFT032
      C                     PARM '*KEY   ' @OPTN                                               CFT032
@@ -2927,6 +3054,21 @@
      C           OACCNT    PARM           DSSDY                                               CFT032
      C           @RTCD     IFEQ *BLANKS                                                       CFT032
      C           RECI      ANDEQ'D'                                                           CFT032
+      *                                                                                       HVB001
+      * If Ordering Bank is blank currency must equal settle currency                         HVB001
+      *                                                                                       HVB001
+     C           S4ORBK    IFEQ *BLANK                                                        HVB001
+     C           CCY       ANDNES4SMCY                                                        HVB001
+     C                     MOVEL'Y'       E#MSGS                                              HVB001
+     C           S4SMCY    CAT  S4ORC1    FTMSDT    P                                         HVB001
+     C                     MOVELE#CPGM    FTPGMQ                                              HVB001
+     C                     MOVEL'FTM2247' FTMSID                                              HVB001
+     C                     EXSR FTSNMS                                                        HVB001
+     C                     MOVEL'Y'       I4ORC1                                              HVB001
+     C                     MOVEL'Y'       E#NOUP                                              HVB001
+     C                     GOTO EXORC                                                         HVB001
+     C                     END                                                                HVB001
+      *                                                                                       HVB001
      C                     MOVE 'I'       F4ORCT                                              CFT032
      C                     MOVE 'Y'       @@IBAN                                              CFT032
      C                     ENDIF                                                              CFT032
@@ -3160,11 +3302,11 @@
      C                     ELSE                                                               CFT032
      C                     MOVELADCUST    @KEY1                                               CFT032
      C                     ENDIF                                                              CFT032
-      *                                                                                     BUG15042
-     C                     MOVEL@KEY1     W1ST    1                                         BUG15042
-     C                     TESTN          W1ST       95                                     BUG15042
-      *                                                                                     BUG15042
-     C           *IN95     IFEQ *OFF                                                        BUG15042
+      *****************************************************************              BUG15042 258186
+     C**********           MOVEL@KEY1     W1ST    1                                  BUG15042 258186
+     C**********           TESTN          W1ST       95                              BUG15042 258186
+      *****************************************************************              BUG15042 258186
+     C********** *IN95     IFEQ *OFF                                                 BUG15042 258186
       *
       * Check if name exists
       *
@@ -3207,7 +3349,7 @@
      C                     MOVEL*BLANK    S4ORC1
      C                     MOVELBBCUST    S4ORC1
       *
-     C                     ENDIF                                                            BUG26138
+     C*****                ENDIF                                                    BUG26138  HVB001
      C                     END
       *
       *  If 15 char have been entered and multi branched , or
@@ -3349,6 +3491,7 @@
       *
      C                     MOVEL'FTM2341' ADFLDM
      C                     MOVEL'FTUSRMSG'ADFLDF
+     C                     MOVE S4STMT    WKSTMT  2                       176653
      C                     MOVE 'Y'       ADLINE                                            BUG14771
      C                     EXSR ADCHK
       *
@@ -3399,6 +3542,7 @@
       *
      C           F4ORCT    IFEQ 'R'
      C           F4ORCT    OREQ 'P'
+     C           F4ORCT    OREQ 'I'                                                           HVB001
      C**********           Z-ADDCNUM      IMCNUM                                              CSD027
      C                     MOVE CNUM      IMCNUM                                              CSD027
      C                     MOVE CCY       IMCCY
@@ -3430,13 +3574,15 @@
      C                     ENDIF                                                              CFT032
      C                     ENDIF                                                            BUG14771
       *                                                                                       CFT032
-     C           F4ORCT    IFEQ 'I'                                                           CFT032
-     C                     MOVELIMACNT    ORCDS                                               CFT032
-     C                     ENDIF                                                              CFT032
+     ****        F4ORCT    IFEQ 'I'                                                    CFT032 HVB001
+     ****                  MOVELIMACNT    ORCDS                                        CFT032 HVB001
+     ****                  ENDIF                                                       CFT032 HVB001
       ** Process FT001000 validation                                                          CSW207
      C/COPY OFCPYSRCZ,CFT148_029                                                            MD020161
      C                     EXSR SRSWF2                                                        CSW207
      C/COPY OFCPYSRCZ,CFT148_030                                                            MD020161
+      *                                                                                       STP500
+     C                     ENDIF                                                              STP500
       *
       *  Unwind subroutine stack name
       *
@@ -3466,6 +3612,7 @@
      C                     MOVEL*BLANK    PATYP                                               CSW207
      C                     MOVEL*BLANKS   PCUST                                               CSW207
      C                     MOVEL*BLANKS   PNWRK                                               250600
+     C                     MOVELBRCA      PBRCH                                             BUG26225
       * Check if / is needed in S4ORC1                                                        CSW207
      C**********           MOVEL*BLANKS   WAC    24                                    CSW207 250600
      C**********           Z-ADD0         WACLN   20                                   CSW207 250600
@@ -3510,6 +3657,7 @@
      C**********           MOVEL'G'       PATYP                                        CSW207 250600
      C                     MOVEL'P'       PATYP                                               250600
      C**********           MOVELACNO      PACCT                                        CSW207 250600
+     C                     MOVEL'P'       PATYP                                               250600
      C                     MOVEL@2ACNT    PACCT                                               250600
      C                     MOVELBRCA      PBRCH                                               CSW207
      C                     ENDIF                                                              CSW207
@@ -3533,6 +3681,9 @@
      C                     ENDSL                                                              250600
      C           V#MTPY    IFNE *BLANKS                                                       250600
      C                     MOVELV#MTPY    PMSGTP                                              250600
+     C           V#MTPY    IFEQ 'IN3'                                                         HVB001
+     C                     MOVEL'103'     PMSGTP                                              HVB001
+     C                     ENDIF                                                              HVB001
      C                     ELSE                                                               250600
      C           S4ORC1    IFEQ ORCFLD                                                        250600
      C                     MOVEL'202'     PMSGTP                                              250600
@@ -4144,6 +4295,62 @@
      C           F4FAIN    OREQ *BLANK
      C                     MOVEL'R'       F4FAIN
      C                     END
+      *                                                                                     AR856737
+      ** Check for a Blocked Debit Account                                                  AR856737
+      *                                                                                     AR856737
+     C                     TESTB'2'       RETB           78                                 AR856737
+     C           *IN78     IFEQ '1'                                                         AR856737
+     C                     MOVEL'Y'       E#MSGS                                            AR856737
+     C                     MOVELS4PYAM    FTMSDT                                            AR856737
+     C                     MOVELE#CPGM    FTPGMQ                                            AR856737
+     C                     MOVEL'FTM0014' FTMSID                                            AR856737
+     C                     EXSR FTSNMS                                                      AR856737
+     C                     MOVEL'Y'       I4PYAM                                            AR856737
+     C                     MOVEL'Y'       E#NOUP                                            AR856737
+     C                     GOTO EXPYAM                                                      AR856737
+     C                     ENDIF                                                            AR856737
+      *                                                                                     AR856737
+      ** Check for a Bankrupt/Liquidated Account                                            AR856737
+      *                                                                                     AR856737
+     C                     TESTB'6'       RETB           78                                 AR856737
+     C           *IN78     IFEQ '1'                                                         AR856737
+     C                     MOVEL'Y'       E#MSGS                                            AR856737
+     C                     MOVELS4PYAM    FTMSDT                                            AR856737
+     C                     MOVELE#CPGM    FTPGMQ                                            AR856737
+     C                     MOVEL'FTM0015' FTMSID                                            AR856737
+     C                     EXSR FTSNMS                                                      AR856737
+     C                     MOVEL'Y'       I4PYAM                                            AR856737
+     C                     MOVEL'Y'       E#NOUP                                            AR856737
+     C                     GOTO EXPYAM                                                      AR856737
+     C                     ENDIF                                                            AR856737
+      *                                                                                     AR856737
+      ** Check for a bad Debt Account                                                       AR856737
+      *                                                                                     AR856737
+     C                     TESTB'7'       RETB           78                                 AR856737
+     C           *IN78     IFEQ '1'                                                         AR856737
+     C                     MOVEL'Y'       E#MSGS                                            AR856737
+     C                     MOVELS4PYAM    FTMSDT                                            AR856737
+     C                     MOVELE#CPGM    FTPGMQ                                            AR856737
+     C                     MOVEL'FTM0016' FTMSID                                            AR856737
+     C                     EXSR FTSNMS                                                      AR856737
+     C                     MOVEL'Y'       I4PYAM                                            AR856737
+     C                     MOVEL'Y'       E#NOUP                                            AR856737
+     C                     GOTO EXPYAM                                                      AR856737
+     C                     ENDIF                                                            AR856737
+      *                                                                                     AR856737
+      ** Check for a Inactive Account                                                       AR856737
+      *                                                                                     AR856737
+     C                     TESTB'4'       RETB           78                                 AR856737
+     C           *IN78     IFEQ '1'                                                         AR856737
+     C                     MOVEL'Y'       E#MSGS                                            AR856737
+     C                     MOVELS4PYAM    FTMSDT                                            AR856737
+     C                     MOVELE#CPGM    FTPGMQ                                            AR856737
+     C                     MOVEL'FTM0017' FTMSID                                            AR856737
+     C                     EXSR FTSNMS                                                      AR856737
+     C                     MOVEL'Y'       I4PYAM                                            AR856737
+     C                     MOVEL'Y'       E#NOUP                                            AR856737
+     C                     GOTO EXPYAM                                                      AR856737
+     C                     ENDIF                                                            AR856737
       *
       *  Unwind subroutine stack name
       *
@@ -5349,8 +5556,14 @@
      C/COPY WNCPYSRC,FT0342ADDC
       *
       *  Optional field defaults to 'A'
+      *                                                                                       STP022
+     C           V#DETC    IFEQ 'BEN'                                                         STP022
+     C                     MOVEL'D'       S4ADDC                                              STP022
+     C                     ENDIF                                                              STP022
       *
      C           S4ADDC    IFEQ *BLANKS
+     C           V#DETC    OREQ 'SHA'                                                         STP022
+     C           V#DETC    OREQ 'OUR'                                                         STP022
      C                     MOVEL'A'       S4ADDC
      C                     END
       *
@@ -7140,6 +7353,7 @@
      C                     Z-ADDF4SMAM    P#DBAM                          CEU006
      C                     MOVE S4PCCY    P#CRCY                          CEU006
      C                     Z-ADDF4PYAM    P#CRAM                          CEU006
+     C/COPY WNCPYSRC,FT0342MK07
       ** Original amount / Original currency are passed right from        CFT014
       ** the beginning (difference with pay amount on the screen is       CFT014
       ** due to the exchange rate) but because of presence of charges     CFT014
@@ -7192,6 +7406,13 @@
      C                     MOVE *OFF      *IN89                           CGL009
      C                     ENDIF                                          CEU006
       *                                                                   CEU006
+      * Ignore rate tollerance error for MultiCash.                       STP015
+     C           V#NWRK    IFEQ 'MTCASH'                                  STP015
+     C           RESULT    ANDEQ5                                         STP015
+     C                     MOVE *OFF      *IN89                           STP015
+     C                     Z-ADD0         RESULT                          STP015
+     C                     ENDIF                                          STP015
+      *                                                                   STP015
      C           *IN89     IFEQ *ON                                       CEU006
      C                     MOVE 'Y'       I4NDCY                          CEU006
      C                     MOVE 'Y'       I4NDAM                          CEU006
@@ -7212,6 +7433,7 @@
       *                                                                   166199
      C                     MOVEL'Y'       E#MSGS                          CEU006
      C                     MOVELE#CPGM    FTPGMQ                          CEU006
+     C                     MOVEL'FTM2611' FTMSID                          STP015
      C*********************MOVEL'FTM2604' FTMSID                    CEU006166199
      C                     EXSR FTSNMS                                    CEU006
      C                     MOVEL'Y'       E#NOUP                          CEU006
@@ -7664,7 +7886,6 @@
       *
      C           BBBNBI    IFNE 'Y'
      C           BBBSIN    ANDEQ*BLANKS                                   068088
-     C           CFT047    IFNE 'Y'                                                         AR930698
      C                     MOVEL'Y'       E#MSGS
      C                     MOVEL'Y'       E#NOUP
      C           S4ORBK    CAT  S4ORBB    FTMSDT    P
@@ -7672,7 +7893,6 @@
      C                     MOVEL'FTM2109' FTMSID
      C                     EXSR FTSNMS
      C                     GOTO EXXVAL
-     C                     ENDIF                                                            AR930698
      C                     END
       *
      C                     END
@@ -7884,7 +8104,6 @@
      C           F4ORCT    OREQ 'P'                                       E35508
      C           F4ORCT    OREQ 'I'                                                           CFT032
      C           S4ORBK    IFNE *BLANKS                                   E35508
-     C           CFT047    ANDNE'Y'                                                         AR930698
      C                     MOVEL'Y'       E#MSGS
      C                     MOVELS4ORC1    FTMSDT
      C                     MOVELE#CPGM    FTPGMQ
@@ -8251,6 +8470,7 @@
      C                     MOVELS4STMT    R#STMT
       *
      C           V#NWRK    IFNE 'FONTIS'                                  CGL009
+     C/COPY WNCPYSRC,FT0342MK08
       *                                                                   CGL009
      C           V#RCHK    IFNE R#RCHK
      C           K#SMAM    ANDNE*BLANKS
@@ -8891,7 +9111,11 @@
      C                     GOTO EXORTE                                    CFT014
      C                     END                                            CFT014
       *                                                                   CFT014
+     C           V#NWRK    IFEQ 'MTCASH'                                                      STP015
+     C                     Z-ADD1         F4OEXR                                              STP015
+     C                     ELSE                                                               STP015
      C                     MOVE ZFIELD    F4OEXR                          CFT014
+     C                     ENDIF                                                              STP015
       *                                                                   CFT014
       ** Original Rate not entered.                                       CFT014
       *                                                                   CFT014
@@ -9800,28 +10024,6 @@
      C                     MOVEL'N'       CSW024                                              CFT032
      C                     ENDIF                                                              CFT032
      C/COPY OFCPYSRCZ,CFT148_031                                                            MD020161
-      *                                                                                     AR930698
-      ** Access SAR details to see if CFT047 is enabled.                                    AR930698
-      *                                                                                     AR930698
-     C                     CALL 'AOSARDR0'                                                  AR930698
-     C                     PARM *BLANKS   @RTCD                                             AR930698
-     C                     PARM '*VERIFY' @OPTN                                             AR930698
-     C                     PARM 'CFT047'  @SARD                                             AR930698
-     C           SCSARD    PARM SCSARD    DSFDY                                             AR930698
-     C           @RTCD     IFNE *BLANKS                                                     AR930698
-     C           @RTCD     ANDNE'*NRF   '                                                   AR930698
-     C                     MOVEL'CFT047'  W0KEY                                             AR930698
-     C                     MOVEL'SCSARDPD'W0FILE                                            AR930698
-     C                     Z-ADD74        W0ERNB                                            AR930698
-     C                     EXSR SRERR                                                       AR930698
-     C                     ENDIF                                                            AR930698
-      *                                                                                     AR930698
-     C           @RTCD     IFEQ *BLANKS                                                     AR930698
-     C                     MOVEL'Y'       CFT047  1                                         AR930698
-     C                     ELSE                                                             AR930698
-     C                     MOVEL'N'       CFT047                                            AR930698
-     C                     ENDIF                                                            AR930698
-      *                                                                                     AR930698
       * Check CSW207 feature                                                                  CSW207
      C                     CALL 'SWIF2007'                                                    CSW207
      C                     PARM *BLANKS   @RTCD                                               CSW207
@@ -9891,7 +10093,7 @@
       *
      O/EJECT
 **  CPY@ table
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 **   NDY  - DAY IN MONTH TABLE
 01020304050607080910111213141516171819202122232425262728293031
 **   POWER - ARRAY OF POWERS OF 10 FOR CURRENCY CONVERSIONS

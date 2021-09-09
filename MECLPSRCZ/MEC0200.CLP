@@ -1,23 +1,22 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI *  TEXT('Midas ME Drop historic messages')                     */
 /********************************************************************/
 /*                                                                  */
 /*       Midas     - MESSAGE MANAGEMENT                             */
 /*                                                                  */
 /*       MEC0200 - Drop historic messages                           */
 /*                                                                  */
-/*       (c) Finastra International Limited 2001                     */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. MD31937            Date 13Jan15              */
+/*       Last Amend No. AR856737           Date 13Sep11              */
+/*       Last Amend No. EEE065             Date 01Oct2004            */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 10Aug04              */
+/*       Last Amend No. 228542             Date 10Aug04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*                      183583             Date 27Jun01              */
+/*       Prev Amend No. 183583             Date 27Jun01              */
 /*                      171060             Date 27Feb01              */
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      190127             Date 28Feb01             */
@@ -33,7 +32,11 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD31937  - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       EEE065 - Free Fmt Messages: user who created/generated the  */
+/*                msg should not be able to release the same message */
+/*                Used /COPY  MEC0200002 and MEC0200004              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       183583 - Add processing for extension file backup.          */
 /*       171060 - Remove dropping of CFFEEDPD records as this        */
@@ -56,7 +59,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(1) VALUE(' ')      /*066991*/
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) VALUE('CMT001') /*CMT001*/
@@ -64,21 +67,21 @@
              DCL       VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ') /*101137*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*101137*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited +
+                          Misys International Banking Systems Ltd. +
                           2001')
 /*/COPY WNCPYSRC,MEC0200003                                          */
- 
+
 /* Global monitor message */
              MONMSG  MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ERR)
- 
+
 /* Send message to MRUNQ */
              SNDPGMMSG  MSG('Message Management - Drop historic +
                           messages') TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,MEC0200007                                          */
- 
+
 /* Set-off Data Base Error Switches. */
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*  Access PF/SDMMODPD to determine which modules are live  */        /*101137*/
 /**/                                                                  /*101137*/
              CALL       PGM(AOMMODR0) PARM(&RETCOD &OPTN &FMT)        /*101137*/
@@ -90,7 +93,7 @@
                           TOMSGQ(MOPERQ)                              /*101137*/
              GOTO       CMDLBL(END)                                   /*101137*/
              ENDDO                                                    /*101137*/
- 
+
 /* Clear Outgoing Message backup files */
              CLRPFM     FILE(MGOREFBK)
              CLRPFM     FILE(MGOMSGBK)
@@ -102,24 +105,24 @@
 /**********  CLRPFM     FILE(CFFEEDBK) */                                          /*078777 171060*/
                                                                       /*078777*/
 /*/COPY WNCPYSRC,MEC0200001                                          */
- 
+
 /* Call MEC0200 (Drop historic messages) */
 /**********  CALL PGM(ME0200) */                                      /*066991*/
              CALL       PGM(ME0200) PARM(&RTCD)                       /*066991*/
- 
+
 /* If database error detected recover data from LDA and send message */
 /* to MOPERQ.                                                        */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                  RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                  SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
                               TOMSGQ(MOPERQ)
                  GOTO END
              ENDDO
- 
+
 /*/COPY WNCPYSRC,MEC0200005                                          */
 /* Reorganize Midas-Orion interface file if Telex records to delete   /*066991*/
- 
+
 /* If Telex module is Switched On.                                    /*101137*/
              IF         COND(%SST(&FMT 15 1) *EQ 'Y') THEN(DO)        /*101137*/
              IF         COND(&RTCD *EQ 'Y') THEN(DO)                  /*066991*/
@@ -153,14 +156,14 @@
                                                                                           /*228542*/
              ENDDO                                                    /*066991*/
              ENDDO                                                    /*101137*/
- 
+
 /* Copy from back up file to MGOREFPD */
              CPYF     FROMFILE(MGOREFBK) TOFILE(*LIBL/MGOREFPD) +
                           MBROPT(*REPLACE) CRTFILE(*NO)
 /**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) */      /*E33134 183583*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(MGOREFPD))                             /*183583*/
- 
+
 /* Copy from back up file to MGOMSGPD */
              CPYF     FROMFILE(MGOMSGBK) TOFILE(*LIBL/MGOMSGPD) +
                           MBROPT(*REPLACE) CRTFILE(*NO)
@@ -196,15 +199,15 @@
 /*/COPY WNCPYSRC,MEC0200008                                          */
                                                                       /*078777*/
              GOTO END
- 
+
  ERR:        SNDPGMMSG  MSG('Message Management - Drop Historic +
                           Messages ENDED ABNORMALLY') TOPGMQ(*EXT) +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG MSGID(CPF0000 MCH0000)
              CHGJOB SWS(XXXXXX11)
              MONMSG MSGID(CPF0000 MCH0000)
- 
+
  END:        RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited')
+                          Misys International Banking Systems Ltd.')
              ENDPGM

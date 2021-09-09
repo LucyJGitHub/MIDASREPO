@@ -1,0 +1,104 @@
+      *****************************************************************
+      *   Last Amend No. MD31937            Date 13Jan15              *
+      *   Last Amend No. AR856737           Date 13Sep11              *
+      *   Last Amend No. ESL038              Date  16Feb05            *
+      *---------------------------------------------------------------*
+      *   MD31937  - Upgrade STP enhancements to BF Midas 2.1         *
+      *   AR856737 - Upgrade STP enhancements to Midas Plus level     *
+      *   ESL038 - Funds Transfer STP Enhancements                    *
+      *****************************************************************
+      *
+      **  Check if record exists on MT191 extension file
+     C           PREF      CHAINFTPAYY0              90
+      *
+      **  Generate account key if record exists and non zero charge
+     C           *IN90     IFEQ *OFF
+     C           X1AMNT    ANDNE*ZERO
+     C           X1M199    ANDNE'Y'
+     C           X1RECI    ANDNE'*'
+      *
+      **  Save existing account key and settlement account details
+     C                     MOVELAKEY      ##AKEY 10
+     C                     MOVELSETAC     ##SETL 18
+      *
+      **  Set up payment details
+     C                     MOVE 'R'       KPYRE
+     C********             MOVE X1CCCY    KCCY
+     C                     MOVE 'O'       KCTYP
+     C           DTCH      IFEQ 'OUR'
+     C                     MOVE '1'       KPYRE
+     C                     ELSE
+     C                     MOVE '2'       KPYRE
+     C                     ENDIF
+     C                     Z-ADDX1AMNT    EAMT
+     C                     Z-ADDEDAT      VDAT
+     C                     MOVE X1CCCY    ECCY
+      *
+      **  Get settlement account details from Bank Correspondent detail
+     C           K0BCOR    KLIST
+     C                     KFLD           BDBICC
+     C                     KFLD           BDBICB
+      *
+     C           8         SUBSTX1SND1:1  BDBICC
+     C           3         SUBSTX1SND1:9  BDBICB
+     C           BDBICB    IFEQ *BLANKS
+     C                     MOVE 'XXX'     BDBICB
+     C                     ENDIF
+      *
+      **  Check if bank correspondent details exist first
+     C           K0BCOR    CHAIN@BCORV0              90
+     C           *IN90     IFEQ *ON
+     C                     MOVE '???'     BDBICB
+     C           K0BCOR    CHAIN@BCORV0              90
+     C                     ENDIF
+      *
+      **  If bank correspondent details found set up settlement account
+     C           *IN90     IFEQ *OFF
+     C                     MOVE BDACST    CNUMX
+     C                     MOVE X1CCCY    CCYX
+     C                     MOVE BDACCD    ACODX
+     C                     MOVE BDACSQ    ACSQX
+     C                     MOVE BDABRC    BRCHX
+      *
+      **  Check account exists
+     C                     MOVE BDACST    CNUM
+     C                     MOVE X1CCCY    CCY
+     C                     MOVE BDACCD    ACOD
+     C                     MOVE BDACSQ    ACSQ
+     C                     MOVE BDABRC    BRCAAC
+     C           ACNK      CHAINACCNT                90
+      *
+      **  If account does not exist use suspense account
+     C           *IN90     IFEQ *ON
+      *
+      **  Get branch internal customer for booking branch
+     C                     MOVE *BLANKS   KEY
+     C                     MOVEL'10    '  KEY
+     C                     MOVE BRCA      KEY
+     C           KEY       CHAINTABFP                89
+      *
+      **  Set up rest of account details
+     C                     MOVE BICN      CNUMX
+     C                     MOVE X1CCCY    CCYX
+     C                     MOVE BTIOSA    ACODX
+     C                     MOVE '01'      ACSQX
+     C                     MOVE BRCA      BRCHX
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVELSETAC     SEAC
+      **  Write account key record
+     C                     EXSR WRIT
+     C           *IN50     IFEQ *ON
+     C                     MOVEL'Y'       X1M199
+     C                     UPDATFTPAYX0F
+     C                     ENDIF
+      *
+      **  Restore previous account key and settlement account details
+     C                     MOVEL##AKEY    AKEY
+     C                     MOVEL##SETL    SETAC
+      *
+     C                     ENDIF
+      *

@@ -1,0 +1,70 @@
+      *---------------------------------------------------------------*
+      *   Last Amend No. MD31937            Date 13Jan15              *
+      *   Last Amend No. AR856737           Date 13Sep11              *
+      *   Last Amend No. ESL038              Date  01Oct2004          *
+      *   Prev Amend No. EEE058   *Amend     Date  12Jun2003          *
+      *                  EEE058   *Create    Date  18Feb2003          *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   MD31937  - Upgrade STP enhancements to BF Midas 2.1         *
+      *   AR856737 - Upgrade STP enhancements to Midas Plus level     *
+      *   ESL038 - ING STP Development                                *
+      *   EEE058 - Correct Incoming test of queue.                    *
+      *   EEE058 - Incoming STP                                       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+      *
+      *  Get queue record and update
+      *
+     C           KYINFT    CHAIN@MESQV0              60
+      *
+      *  Get queue details
+      *
+     C           *IN60     IFEQ *OFF
+     C           SQSTPQ    CHAIN@STPQV1              61
+      *
+      *  If found change queue depending on details
+      *
+     C           *IN61     IFEQ *OFF
+     C                     SELEC
+      * Transaction is live
+     C           F#INFG    WHEQ 'MIN0030'
+     C           SQSTPT    ANDNE*BLANKS
+     C                     MOVELSQSTPT    SQSTPQ                                              EEE058
+     C           F#OTFG    WHEQ 'MIN0030'
+     C           SQSTPT    ANDNE*BLANKS
+     C                     MOVELSQSTPT    SQSTPQ
+      * Transaction is live
+     C           F#INFG    WHEQ 'MIN0032'
+     C           SQSTPA    ANDNE*BLANKS
+     C                     MOVELSQSTPA    SQSTPQ                                              EEE058
+     C           F#OTFG    WHEQ 'MIN0032'
+     C           SQSTPA    ANDNE*BLANKS
+     C                     MOVELSQSTPA    SQSTPQ
+     C                     ENDSL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Update details
+      *
+     C           *IN60     IFEQ *OFF
+     C                     MOVELF#INFG    Q#INFG
+     C                     MOVELF#IPRF    Q#IPRF
+     C                     MOVELF#OTFG    Q#OTFG
+     C                     MOVELF#OPRF    Q#OPRF
+     C                     UPDAT@MESQV0
+     C                     ELSE
+     C                     CLEARMESQ
+     C                     Z-ADDFTMSGR    SQMSGR
+     C                     Z-ADDFTKPRT    SQKPRT
+     C                     MOVELF#INFG    Q#INFG
+     C                     MOVELF#IPRF    Q#IPRF
+     C                     MOVELF#OTFG    Q#OTFG
+     C                     MOVELF#OPRF    Q#OPRF
+     C                     WRITE@MESQV0
+     C                     ENDIF
+      *
+      *---------------------------------------------------------------*
+      * copy hook end ME1050DB01                                      *
+      *---------------------------------------------------------------*

@@ -1,0 +1,133 @@
+      **********************************************************************                  MK0564
+      *  Last Amend No. MD31937            Date 13Jan15                    *                  MK0564
+      *  Last Amend No. 246751             Date 18May07                    *                  MK0564
+      *  Prev Amend No. MK0564             Date 02Jun05                    *                  MK0564
+      *--------------------------------------------------------------------*                  MK0564
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1       r                          MK0564
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level   r                          MK0564
+      *  246751 -  Extend validation for PLNELIXIR to match that for                          MK0564
+      *            manually input payments.                                                   MK0564
+      *  MK0564 -  Improve validation of destination for local clearing    *                  MK0564
+      *            payments.                                               *                  MK0564
+      **********************************************************************                  MK0564
+      *                                                                                       MK0564
+      * Validate Local Clearing Destination.                                                  MK0564
+      *                                                                                       MK0564
+      ** Define key fields                                                                    MK0564
+      *                                                                                       MK0564
+     C           KLCCD     KLIST                                                              MK0564
+     C                     KFLD           LCCLID                                              MK0564
+     C                     KFLD           K@CUST                                              MK0564
+     C           *LIKE     DEFN BBCUST    K@CUST                                              MK0564
+      *                                                                                       MK0564
+      ** For local clearing destination must be local clearing customer                       MK0564
+      *                                                                                       MK0564
+     C           ##LCLR    IFEQ 'Y'                                                           MK0564
+     C           LCCLID    ANDNE'EURO1'                                                       MK0564
+     C           LCCLID    ANDNE'STEP1'                                                       MK0564
+     C           LCCLID    ANDNEEEC                                                           MK0564
+     C           LCCLID    ANDNEPLNAE                                                         MK0564
+     C           LCCLID    ANDNEPLNAS                                                         MK0564
+      *                                                                                       MK0564
+     C           KLCCD     CHAIN@LCCDL1              90                                       MK0564
+     C           *IN90     IFEQ *ON                                                           MK0564
+      *                                                                                       MK0564
+     C                     MOVE 'N'       LCCLOK  1                                           MK0564
+      *                                                                                       MK0564
+     C           LCCLID    IFEQ PLNEL                                                         MK0564
+     C           LCCLID    OREQ PLNSO                                                         MK0564
+      *                                                                                       MK0564
+     C           KCUST0    KLIST                                                              MK0564
+     C                     KFLD           K@CUST                                              MK0564
+      *                                                                                       MK0564
+     C           KCUST0    CHAINSDCUSTD2             90                                       MK0564
+      *                                                                                       MK0564
+     C                     MOVE 'Y'       LCCLOK                                              MK0564
+      *                                                                                       MK0564
+     C           *IN90     IFEQ *ON                                                           MK0564
+     C                     MOVE 'N'       LCCLOK                                              MK0564
+     C                     ENDIF                                                              MK0564
+      *                                                                                       MK0564
+     C           *IN90     IFEQ *OFF                                                          MK0564
+     C           I4PVDT    ANDEQ*BLANK                                                        MK0564
+      *                                                                                       EMRMK1
+     C                     MOVE BBEDST    FRDATE                                              EMRMK1
+     C                     MOVE FRYER     TOYER                                               EMRMK1
+     C                     MOVE FRMTH     TOMTH                                               EMRMK1
+     C                     MOVE FRDAY     TODAY                                               EMRMK1
+     C                     MOVE TODATE    ZDATE                                               EMRMK1
+      *                                                                                       EMRMK1
+     C                     CALL 'ZDATE1'               9090                                   EMRMK1
+     C                     PARM *BLANKS   ZERR    7        error code                         EMRMK1
+     C                     PARM           ZDATE   60       Value date                         EMRMK1
+     C                     PARM           ZDATFM  1        Date format ind                    EMRMK1
+     C                     PARM *ZEROS    ZDAYNO  50       Value date                         EMRMK1
+      *                                                                                       EMRMK1
+     C                     Z-ADDZDAYNO    BBDSTR  50                                          EMRMK1
+      *                                                                                       EMRMK1
+      *  If error on call                                                                     EMRMK1
+      *                                                                                       EMRMK1
+     C           *IN90     IFEQ '1'                                                           EMRMK1
+     C                     MOVEL'ZDATE1  'W0FILE           ***************                    EMRMK1
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 99 *                    EMRMK1
+     C                     Z-ADD99        W0ERNB           ***************                    EMRMK1
+     C                     MOVEL'MEM5003' W0MSGD                                              EMRMK1
+     C                     MOVEL'MIDAS  ' W0MSGF                                              EMRMK1
+     C                     EXSR SRERR                                                         EMRMK1
+     C                     END                                                                EMRMK1
+      *                                                                                       EMRMK1
+     C                     MOVE BBEDEX    FRDATE                                              EMRMK1
+     C                     MOVE FRYER     TOYER                                               EMRMK1
+     C                     MOVE FRMTH     TOMTH                                               EMRMK1
+     C                     MOVE FRDAY     TODAY                                               EMRMK1
+     C                     MOVE TODATE    ZDATE                                               EMRMK1
+      *                                                                                       EMRMK1
+     C                     CALL 'ZDATE1'               9090                                   EMRMK1
+     C                     PARM *BLANKS   ZERR    7        error code                         EMRMK1
+     C                     PARM           ZDATE   60       Value date                         EMRMK1
+     C                     PARM           ZDATFM  1        Date format ind                    EMRMK1
+     C                     PARM *ZEROS    ZDAYNO  50       Value date                         EMRMK1
+      *                                                                                       EMRMK1
+     C                     Z-ADDZDAYNO    BBDEXP  50                                          EMRMK1
+      *                                                                                       EMRMK1
+      *  If error on call                                                                     EMRMK1
+      *                                                                                       EMRMK1
+     C           *IN90     IFEQ '1'                                                           EMRMK1
+     C                     MOVEL'ZDATE1  'W0FILE           ***************                    EMRMK1
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 98 *                    EMRMK1
+     C                     Z-ADD98        W0ERNB           ***************                    EMRMK1
+     C                     MOVEL'MEM5003' W0MSGD                                              EMRMK1
+     C                     MOVEL'MIDAS  ' W0MSGF                                              EMRMK1
+     C                     EXSR SRERR                                                         EMRMK1
+     C                     END                                                                EMRMK1
+      *                                                                                       EMRMK1
+     C*****      BBMFLG    IFEQ 'Y'                                                     MK0564MKEMR1
+     C*****      BBMFLG    IFEQ 'Y'                                                     MK0564MKEMR1
+     C           BBELMF    IFEQ 'Y'                                                           MKEMR1
+     C           F4PVDT    ANDLTBBDSTR                                                        MK0564
+     C*****      BBMFLG    OREQ 'Y'                                                     MK0564MKEMR1
+     C           BBELMF    OREQ 'Y'                                                           MKEMR1
+     C           F4PVDT    ANDGTBBDEXP                                                        MK0564
+     C           BBELMF    ORNE 'Y'                                                           246751
+     C                     MOVE 'N'       LCCLOK                                              MK0564
+     C                     ENDIF                                                              MK0564
+     C                     ENDIF                                                              MK0564
+      *                                                                                       MK0564
+     C                     ENDIF                                                              MK0564
+      *                                                                                       MK0564
+     C           LCCLOK    IFEQ 'N'                                                           MK0564
+      *                                                                                       MK0564
+     C                     MOVEL'Y'       E#MSGS                                              MK0564
+     C                     MOVELS4DST1    FTMSDT                                              MK0564
+     C                     MOVELE#CPGM    FTPGMQ                                              MK0564
+     C                     MOVEL'PR10399' FTMSID                                              MK0564
+     C                     MOVEL'FTUSRMSG'FTMSGF                                              MK0564
+     C                     EXSR FTSNMS                                                        MK0564
+     C                     MOVEL'Y'       I4DST1                                              MK0564
+     C                     MOVEL'Y'       E#NOUP                                              MK0564
+     C                     GOTO EXXVAL                                                        MK0564
+     C                     ENDIF                                                              MK0564
+      *                                                                                       MK0564
+     C                     ENDIF                                                              MK0564
+      *                                                                                       MK0564
+     C                     ENDIF                                                              MK0564

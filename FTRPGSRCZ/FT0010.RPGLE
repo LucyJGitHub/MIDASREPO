@@ -1,8 +1,7 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas FT Validate and calculate currencies')           *
       *****************************************************************
       *                                                               *
       *  Midas - Funds Transfer Module                                *
@@ -41,18 +40,16 @@
       *  an entered amount.                                           *
       *  (phase(s)) I/C                                               *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD056477           Date 22Sep20               *
-      *  Prev Amend No. MD056483           Date 15Sep20               *
-      *                 MD053553           Date 21Jan20               *
-      *                 MD050134           Date 21Mar18               *
-      *                 MD046248           Date 27Oct17               *
-      *                 MD045094           Date 10May17               *
-      *                 MD030406           Date 27Oct14               *
-      *                 258369             Date 06Jun13               *
-      *                 AR787421           Date 27Sep12               *
-      *                 AR737259           Date 27Sep12               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. MD030406           Date 27Oct14               *
+      *  Last Amend No. AR856737           Date 25Jul11               *
+      *                 ESL038             Date 04Oct2004             *
+      *                 CEUFT1             Date 03Spr2003             *
+      *  Last Amend No. 258369             Date 06Jun13               *
+      *  Last Amend No. AR787421           Date 27Sep12               *
+      *  Prev Amend No. AR737259           Date 27Sep12               *
       *                 CRE072             Date 30Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -85,18 +82,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056477 - In SrVAmtNR9DSR, if P#RATE is zero, use ZRATEX.   *
-      *  MD056483 - Validate credit/debit amount using                *
-      *             rate +/- 0.000000005                              *
-      *  MD053553 - FT Incoming EUR-USD: Invalid Pay Amount           *
-      *  MD050134 - A serious midas error encountered when exchange   *
-      *             rate exceeds tolerance level                      *
-      *  MD046248 - Finastra Rebranding                               *
-      *  MD045094 - Credit and Debit amount are incorrect             *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
       *  MD030406 - Cross Currency Outgoing Payment, pay amount not   *
       *             automatically calculated & show 0 in confirmation *
       *             screen. FT0010 should not return to calling       *
       *             program if warning encountered.                   *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           ESL038, CEUFT1.                                     *
+      *  ESL038 - ING STP Development                                 *
+      *  CEUFT1 - Incoming STP FZ quotation conventions               *
       *  258369 - Consider the inverse rate. (Reopen)                 *
       *         - Applied for AR737259B. (Child: AR787421)            *
       *  AR787421 - Incorrect calculation in currency conversion      *
@@ -140,6 +135,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+     FFTQUTEPD  IF   E           K DISK    USROPN                                             CEUFT1
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -227,43 +223,6 @@
      D NBDP            S              1  0 DIM(4)
       ** Array containing Currency number of d.p.'s
       *
-     D WINVER          S              1A                                                    MD045094
-     D NRATE           S             14  9                                                  MD053553
-     D D9              S              1  0                                                  MD053553
-     D WMODE           S              1  0                                                  MD056483
-     D W1DIFF          S             15  0                                                  MD056483
-     D W2DIFF          S             15  0                                                  MD056483
-     D W1PASS          S              1A                                                    MD056483
-     D W2PASS          S              1A                                                    MD056483
-     D WMOD21          S              1A                                                    MD056483
-     D WMOD22          S              1A                                                    MD056483
-     D WMOD31          S              1A                                                    MD056483
-     D WMOD32          S              1A                                                    MD056483
-     D OKAmtTolr       S              1A                                                    MD056483
-     D WAmtTolr        S              1A                                                    MD056483
-      *                                                                                     MD056483
-      ** Parameters to call AOSVALR0                                                        MD056483
-     D PSValK1         S             20A                                                    MD056483
-     D PSValK2         S             20A                                                    MD056483
-     D PSValK3         S             20A                                                    MD056483
-     D PSValK4         S             20A                                                    MD056483
-     D PSValK5         S             20A                                                    MD056483
-     D PSValK6         S             20A                                                    MD056483
-     D PSValK7         S             20A                                                    MD056483
-     D PSValK8         S             20A                                                    MD056483
-     D PSValK9         S             20A                                                    MD056483
-     D PSValK10        S             20A                                                    MD056483
-     D PSVal1          S            200A                                                    MD056483
-     D PSVal2          S            200A                                                    MD056483
-     D PSVal3          S            200A                                                    MD056483
-     D PSVal4          S            200A                                                    MD056483
-     D PSVal5          S            200A                                                    MD056483
-     D PSVal6          S            200A                                                    MD056483
-     D PSVal7          S            200A                                                    MD056483
-     D PSVal8          S            200A                                                    MD056483
-     D PSVal9          S            200A                                                    MD056483
-     D PSVal10         S            200A                                                    MD056483
-     D SValK1          C                   CONST('FT2UnitAmtTolerance')                     MD056483
       /SPACE 3
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -347,10 +306,10 @@
      C     *ENTRY        PLIST
      C                   PARM                    P#0010
       *
-     C                   SETOFF                                       55                    MD030406
-      *                                                                                     MD030406
       ** Set up copyright parameter
       *
+     C                   SETOFF                                       55                    MD030406
+      *                                                                                     MD030406
      C                   MOVEA     CPY@          CPY2@            80
       *
       ***  Initialise LDA field.
@@ -412,45 +371,48 @@
      C                   ENDIF                                                                CRE072
      C                   ENDIF                                                                CRE072
       *                                                                                       CRE072
-     C                   CALL      'AOSVALR0'                                               MD056483
-     C                   PARM      *BLANKS       PRtcd                                      MD056483
-     C                   PARM      SValK1        PSValK1                                    MD056483
-     C                   PARM                    PSVal1                                     MD056483
-     C                   PARM      *BLANKS       PSValK2                                    MD056483
-     C                   PARM                    PSVal2                                     MD056483
-     C                   PARM      *BLANKS       PSValK3                                    MD056483
-     C                   PARM                    PSVal3                                     MD056483
-     C                   PARM      *BLANKS       PSValK4                                    MD056483
-     C                   PARM                    PSVal4                                     MD056483
-     C                   PARM      *BLANKS       PSValK5                                    MD056483
-     C                   PARM                    PSVal5                                     MD056483
-     C                   PARM      *BLANKS       PSValK6                                    MD056483
-     C                   PARM                    PSVal6                                     MD056483
-     C                   PARM      *BLANKS       PSValK7                                    MD056483
-     C                   PARM                    PSVal7                                     MD056483
-     C                   PARM      *BLANKS       PSValK8                                    MD056483
-     C                   PARM                    PSVal8                                     MD056483
-     C                   PARM      *BLANKS       PSValK9                                    MD056483
-     C                   PARM                    PSVal9                                     MD056483
-     C                   PARM      *BLANKS       PSValK10                                   MD056483
-     C                   PARM                    PSVal10                                    MD056483
-      *                                                                                     MD056483
-     C                   IF        PRTCD <> *BLANKS                                         MD056483
-     C     *LOCK         IN        LDA                                                      MD056483
-     C                   MOVEL     'SDSVALPD'    DBFILE                                     MD056483
-      *                                                                                     MD056483
-     C                   IF        PSVal1 = '*NRF  '                                        MD056483
-     C                   MOVE      '009'         DBASE                                      MD056483
-     C                   MOVEL     SValK1        DBKEY                                      MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   OUT       LDA                                                      MD056483
-     C                   EXSR      *PSSR                                                    MD056483
-      *                                                                                     MD056483
-     C                   ELSE                                                               MD056483
-     C                   EVAL      WAmtTolr = PSVal1                                        MD056483
-     C                   ENDIF                                                              MD056483
      C/COPY WNCPYSRC,FT0010C009
+      *                                                                                       CEUFT1
+      ** Switchable feature for inverse rates                                                 CEUFT1
+     C                   CALL      'AOSARDR0'                                                 CEUFT1
+     C                   PARM      *BLANKS       PRTCD                                        CEUFT1
+     C                   PARM      '*VERIFY'     POPTN                                        CEUFT1
+     C                   PARM      'CEUFT1'      PSARD                                        CEUFT1
+     C                   MOVE      'N'           CEUFT1            1                          CEUFT1
+     C*                                                                                       CEUFT1
+     C** If feature is switched ON, set on indicator that will                                CEUFT1
+     C** condition the rest of the processing                                                 CEUFT1
+     C*                                                                                       CEUFT1
+     C     PRTCD         IFEQ      *BLANKS                                                    CEUFT1
+     C                   MOVE      'Y'           CEUFT1                                       CEUFT1
+      *                                                                                       CEUFT1
+      * Open quotation convention file                                                        CEUFT1
+      *                                                                                       CEUFT1
+     C     $$FRST        IFEQ      *BLANKS                                                    CEUFT1
+     C                   OPEN      FTQUTEPD                                                   CEUFT1
+     C                   MOVEL     'Y'           $$FRST            1                          CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      * Define Key                                                                            CEUFT1
+      *                                                                                       CEUFT1
+     C     KQUTE         KLIST                                                                CEUFT1
+     C                   KFLD                    FTFCCY                                       CEUFT1
+     C                   KFLD                    FTTCCY                                       CEUFT1
+      *                                                                                       CEUFT1
+     C                   ELSE                                                                 CEUFT1
+     C*                                                                                       CEUFT1
+     C** else, database error (return code other than *NRF)                                   CEUFT1
+     C*                                                                                       CEUFT1
+     C     PRTCD         IFNE      '*NRF   '                                                  CEUFT1
+     C     *LOCK         IN        LDA                                                        CEUFT1
+     C                   Z-ADD     999           DBASE                                        CEUFT1
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CEUFT1
+     C                   MOVEL     'CEUFT1'      DBKEY                                        CEUFT1
+     C                   OUT       LDA                                                        CEUFT1
+     C                   EXSR      *PSSR                                                      CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
       *
       ***  Setup array CCY
       *
@@ -670,15 +632,6 @@
      C                   Endif                                                  187222
      C                   Eval      FTMSID = *Blanks                             187222
       *                                                                         187222
-      ** Clear pass variables                                                               MD056483
-      *                                                                                     MD056483
-     C                   EVAL      W1PASS = *BLANKS                                         MD056483
-     C                   EVAL      W2PASS = *BLANKS                                         MD056483
-     C                   EVAL      WMOD21 = *BLANKS                                         MD056483
-     C                   EVAL      WMOD22 = *BLANKS                                         MD056483
-     C                   EVAL      WMOD31 = *BLANKS                                         MD056483
-     C                   EVAL      WMOD32 = *BLANKS                                         MD056483
-     C                   EVAL      OKAmtTolr = *BLANKS                                      MD056483
      C                   ENDSR
       *
       /EJECT
@@ -709,10 +662,8 @@
      C                   MOVE      *ON           *IN02
      C                   MOVE      *ON           *IN03
      C                   MOVEL     'FTM2572'     FTMSID
-     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
-     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
       *
      C                   ENDDO
@@ -1024,7 +975,6 @@
      C                   ENDSL
      C                   MOVE      '1'           *IN07                                        171706
      C                   ENDIF
-     C                   EVAL      WINVER = 'N'                                             MD045094
      C                   Z-ADD     0             WGRATE                                     AR787421
      C     P#RATE        IFNE      0                                                        AR787421
      C     P#RATE        IFLT      1                                                        AR787421
@@ -1033,7 +983,6 @@
      C     ZRATEX        ANDLT     1                                                        AR787421
      C                   Z-ADD     P#RATE        WGRATE                                     AR787421
      C     1             DIV       P#RATE        P#RATE                                     AR787421
-     C                   EVAL      WINVER = 'Y'                                             MD045094
      C                   ENDIF                                                              AR787421
      C                   ENDIF                                                              AR787421
       *
@@ -1087,6 +1036,8 @@
      C*****P#OVRT        IFNE      'Y'                                                      AR737259
      C*****ZRATEX        ANDNE     P#RATE                                                   AR737259
      C                   Z-ADD     0             NEWRAT           13 8
+      ** If Switchable feature off then do as before                                          CEUFT1
+     C     CEUFT1        IFEQ      'N'                                                        CEUFT1
       *
      C     P#RATE        SUB       ZRATEX        DIFF1            13 8                       BUG4227
      C     DIFF1         IFLT      0                                                         BUG4227
@@ -1168,6 +1119,185 @@
      C**********         EXSR      RETURN                                                    BUG4227
      C**********         ENDIF                                                               BUG4227
      C**********         ENDSL                                                               BUG4227
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** If switchable feature installed                                                      CEUFT1
+      ** and either the settle or pay currencies are OUT                                      CEUFT1
+b1   C     CEUFT1        IFEQ      'Y'                                                        CEUFT1
+     C     TYPE(2)       ANDEQ     'OT'                                                       CEUFT1
+     C     CEUFT1        OREQ      'Y'                                                        CEUFT1
+     C     TYPE(3)       ANDEQ     'OT'                                                       CEUFT1
+      *                                                                                       CEUFT1
+      * Check if quotation convention required                                                CEUFT1
+      *                                                                                       CEUFT1
+     C                   MOVEL     CCY(2)        FTFCCY                                       CEUFT1
+     C                   MOVEL     CCY(3)        FTTCCY                                       CEUFT1
+     C     KQUTE         CHAIN     @QUTEPD                            90                      CEUFT1
+     C     *IN90         IFEQ      *OFF                                                       CEUFT1
+     C                   MOVEL     FTCFLG        W#QFLG                                       CEUFT1
+     C                   ELSE                                                                 CEUFT1
+     C     *LIKE         DEFINE    FTCFLG        W#QFLG                                       CEUFT1
+     C                   MOVEL     *BLANKS       W#QFLG                                       CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Calculate the top and bottom ranges for the rate                                     CEUFT1
+      ** using the following formula                                                          CEUFT1
+      **                                                                                      CEUFT1
+      ** ZRATEX * (1 + P#RTDS) = Top (W#TOP)                                                  CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        W#TOP                                        CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        W#BOT                                        CEUFT1
+     C     P#RTDS        ADD       1             W#TOP                                        CEUFT1
+     C     ZRATEX        MULT      W#TOP         W#TOP                                        CEUFT1
+      ** ZRATEX * (1 - P#RTDS) = Bottom (W#BOT)                                               CEUFT1
+     C     1             SUB       P#RTDS        W#BOT                                        CEUFT1
+     C     ZRATEX        MULT      W#BOT         W#BOT                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Calculate the inverse rates for the top & bottom                                     CEUFT1
+      ** using the following formula                                                          CEUFT1
+      **                                                                                      CEUFT1
+      ** 1/W#TOP = I#TOP                                                                      CEUFT1
+      ** 1/W#BOT = I#BOT                                                                      CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        I#TOP                                        CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        I#BOT                                        CEUFT1
+     C     1             DIV       W#TOP         I#TOP                                        CEUFT1
+     C     1             DIV       W#BOT         I#BOT                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Check whether the passed rates are within tolerance                                  CEUFT1
+b2   C                   SELECT                                                               CEUFT1
+      *                                                                                       CEUFT1
+      ** Quotation Convention                                                                 CEUFT1
+b3   C     W#QFLG        WHENNE    *BLANKS                                                    CEUFT1
+b2   C                   SELECT                                                               CEUFT1
+      * No rate entered and convention is Divide                                              CEUFT1
+     C     W#QFLG        WHENEQ    'D '                                                       CEUFT1
+     C     P#RATE        ANDEQ     0                                                          CEUFT1
+     C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+     C     1             DIV       ZRATEX        ZRATEX                                       CEUFT1
+     C                   MOVEL     'M'           ZMDIX                                        CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      * No rate entered and convention is Multiply                                            CEUFT1
+     C     W#QFLG        WHENEQ    'M '                                                       CEUFT1
+     C     P#RATE        ANDEQ     0                                                          CEUFT1
+     C     ZMDIX         IFEQ      'D'                                                        CEUFT1
+     C     1             DIV       ZRATEX        ZRATEX                                       CEUFT1
+     C                   MOVEL     'M'           ZMDIX                                        CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      ** Quotation Convention is divide                                                       CEUFT1
+b3   C     W#QFLG        WHENEQ    'D '                                                       CEUFT1
+      *                                                                                       CEUFT1
+     C                   MOVEL     'D'           W#MDIN                                       CEUFT1
+      ** Default rate is divide                                                               CEUFT1
+     C     ZMDIX         IFEQ      'D'                                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LT Top & GT Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFGT      W#TOP                                                      CEUFT1
+     C     P#RATE        ORLT      W#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+      ** Default rate is multiply                                                             CEUFT1
+     C                   ELSE                                                                 CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LE Top & GE Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFLT      I#TOP                                                      CEUFT1
+     C     P#RATE        ORGT      I#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Quotation Convention is multiply                                                     CEUFT1
+b3   C     W#QFLG        WHENEQ    'M '                                                       CEUFT1
+      *                                                                                       CEUFT1
+     C                   MOVEL     'M'           W#MDIN                                       CEUFT1
+      ** Default rate is divide                                                               CEUFT1
+     C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LT Top & GT Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFGT      W#TOP                                                      CEUFT1
+     C     P#RATE        ORLT      W#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+      ** Default rate is multiply                                                             CEUFT1
+     C                   ELSE                                                                 CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LE Top & GE Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFLT      I#TOP                                                      CEUFT1
+     C     P#RATE        ORGT      I#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+b2   C                   ENDSL                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LE Top & GE Bottom rate range                                                   CEUFT1
+b3   C     P#RATE        WHENLE    W#TOP                                                      CEUFT1
+     C     P#RATE        ANDGE     W#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Set up Mult/Div indicator                                                            CEUFT1
+     C     *LIKE         DEFINE    ZMDIX         W#MDIN                                       CEUFT1
+     C                   MOVEL     ZMDIX         W#MDIN                                       CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate GE Top & LE Inverse Bottom rate range                                           CEUFT1
+b3   C     P#RATE        WHENGE    I#TOP                                                      CEUFT1
+     C     P#RATE        ANDLE     I#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+b4   C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+     C                   MOVEL     'D'           W#MDIN                                       CEUFT1
+x4   C                   ELSE                                                                 CEUFT1
+     C                   MOVEL     'M'           W#MDIN                                       CEUFT1
+e4   C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Otherwise this is an error                                                           CEUFT1
+x3   C                   OTHER                                                                CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   MOVEL     ZMDIX         W#MDIN                                       CEUFT1
+      *                                                                                       CEUFT1
+      *  If rate looks like reciprocal then                                                   CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+b4   C     P#RATE        IFLT      1                                                          CEUFT1
+b4   C     W#QFLG        ANDEQ     *BLANKS                                                    CEUFT1
+b4   C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+     C                   MOVEL     'D'           W#MDIN                                       CEUFT1
+x4   C                   ELSE                                                                 CEUFT1
+     C                   MOVEL     'M'           W#MDIN                                       CEUFT1
+e4   C                   ENDIF                                                                CEUFT1
+e4   C                   ENDIF                                                                CEUFT1
+e2   C                   ENDSL                                                                CEUFT1
+e1   C                   ENDIF                                                                CEUFT1
       *
      C**********         ENDIF                                                              AR737259
      C                   ENDIF
@@ -1399,10 +1529,8 @@
      C                   MOVE      *ON           *IN03
      C                   MOVE      *ON           *IN04
      C                   ENDIF
-     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
-     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1499,10 +1627,8 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
-     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
-     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1588,10 +1714,8 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
-     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
-     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1633,10 +1757,8 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
-     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
-     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1718,10 +1840,8 @@
      C     AMNT(F)       ORLT      LOWER
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
-     C                   SETON                                        55                    MD050134
      C                   MOVEL     'FTM2582'     FTMSID
      C                   EXSR      SNDMSG
-     C                   SETOFF                                       55                    MD050134
      C                   EXSR      RETURN
      C                   ENDIF
      C                   ENDIF
@@ -1734,19 +1854,18 @@
       *
      C     P#RATE        IFNE      *ZERO
      C                   Z-ADD     P#RATE        ZCRSRT                         Cross Ccy Exch
-      *                                                                                     MD045094
-      ** If rate is inverse, use the original rate for calculation,                         MD045094
-      ** then inverse M/D indicator for precision                                           MD045094
-      *                                                                                     MD045094
-     C                   IF        WINVER = 'Y'                                             MD045094
-     C                   EVAL      ZCRSRT = WGRATE                                          MD045094
-     C     ZMDIX         IFEQ      'M'                                                      MD045094
-     C                   MOVE      'D'           ZMDIX                                      MD045094
-     C                   ELSE                                                               MD045094
-     C                   MOVE      'M'           ZMDIX                                      MD045094
-     C                   ENDIF                                                              MD045094
-     C                   ENDIF                                                              MD045094
-      *                                                                                     MD045094
+      ** If switchable feature installed
+      ** and either the settle or pay currencies are OUT                                      CEUFT1
+b1   C     CEUFT1        IFEQ      'Y'                                                        CEUFT1
+     C     TYPE(2)       ANDEQ     'OT'                                                       CEUFT1
+     C     CEUFT1        OREQ      'Y'                                                        CEUFT1
+     C     TYPE(3)       ANDEQ     'OT'                                                       CEUFT1
+      *                                                                                       CEUFT1
+      ** Only do if value set up                                                              CEUFT1
+     C                   IF        W#MDIN <> *BLANKS                                          CEUFT1
+     C                   MOVEL     W#MDIN        ZMDIX                                        CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
      C                   ELSE
      C                   Z-ADD     ZRATEX        ZCRSRT
      C                   ENDIF
@@ -1814,39 +1933,13 @@
      C                   EXSR      SrVAmtInvR                                                 258369
      C                   ENDIF                                                                258369
       *                                                                                       258369
-      ** If amounts still don't agree, try the rate with 9 decimal places                   MD053553
-      *                                                                                     MD053553
-     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
-     C                   EXSR      SrVAmtNR9D                                               MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-      ** If amounts still don't agree, try the rate +/- 0.000000005                         MD056483
-      ** if system value 'FT2UnitAmtTolerance' = 'Y'                                        MD056483
-      *                                                                                     MD056483
-     C                   IF        WAmtTolr = 'Y'                                           MD056483
-     C                   EVAL      OKAmtTolr = 'N'                                          MD056483
-     C     AMNT(T)       IFNE      ZAMTT                                                    MD056483
-     C                   EVAL      WMODE = 2                                                MD056483
-     C                   EXSR      SRVAmtRPM5                                               MD056483
-     C                   EVAL      WMODE = 3                                                MD056483
-     C                   EXSR      SRVAmtRPM5                                               MD056483
-     C                   IF        WMOD21 = 'Y' OR WMOD22 = 'Y' OR                          MD056483
-     C                             WMOD31 = 'Y' OR WMOD32 = 'Y'                             MD056483
-     C                   EVAL      OKAmtTolr = 'Y'                                          MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
      C                   IF        CRE072 = 'Y'                                               CRE072
      C                   EXSR      SETHILO                                                    CRE072
      C                   ENDIF                                                                CRE072
       *
      C*****AMNT(T)       IFNE      ZAMTT                                                      CRE072
      C                   IF        AMNT(T) <> ZAMTT AND                                       CRE072
-     C**********                   (CRE072 = 'N' OR                                  CRE072 MD056483
-     C                             ((CRE072 = 'N' AND WAmtTolr  <> 'Y') OR                  MD056483
-     C                              (CRE072 = 'N' AND WAmtTolr  =  'Y'                      MD056483
-     C                                            AND OkAmtTolr =  'N') OR                  MD056483
+     C                             (CRE072 = 'N' OR                                           CRE072
       *                                                                                       CRE072
       ** If CRE072 is ON, check if amount is not within tolerance                             CRE072
       *                                                                                       CRE072
@@ -1856,10 +1949,8 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
-     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
-     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -2077,300 +2168,7 @@
       *                                                                                       258369
      C                   ENDSR                                                                258369
       *****************************************************************                       258369
-      *                                                                                     MD053553
-      *****************************************************************                     MD053553
-      *                                                               *                     MD053553
-      *  SrVAmtNR9D - Validate amounts using rate with 9 decimal      *                     MD053553
-      *           places                                              *                     MD053553
-      *                                                               *                     MD053553
-      *  Called By:TRNAMT                                             *                     MD053553
-      *  Calls: SrCalcAmnt                                            *                     MD053553
-      *                                                               *                     MD053553
-      *****************************************************************                     MD053553
-     C     SrVAmtNR9D    BEGSR                                                              MD053553
-      *                                                                                     MD053553
-      ** Get 9th decimal place from the input amounts                                       MD053553
-      *                                                                                     MD053553
-     C                   EVAL      NRATE = AMNT(T) / AMNT(F)                                MD053553
-     C                   MOVE      NRATE         D9                                         MD053553
-      *                                                                                     MD056477
-      ** Check if rate is zero                                                              MD056477
-      *                                                                                     MD056477
-     C                   IF        P#RATE = 0                                               MD056477
-     C                   MOVEL     ZRATEX        NRATE                                      MD056477
-     C                   ELSE                                                               MD056477
-     C                   IF        WINVER = 'Y'                                             MD056477
-     C                   MOVEL     WGRATE        NRATE                                      MD056477
-     C                   ELSE                                                               MD056477
-     C                   MOVEL     P#RATE        NRATE                                      MD053553
-     C                   ENDIF                                                              MD056477
-     C                   ENDIF                                                              MD056477
-      *                                                                                     MD053553
-      ** Adjustment if original exchange rate was rounded up.                               MD053553
-      *                                                                                     MD053553
-     C                   IF        D9 > 4                                                   MD053553
-     C                   EVAL      NRATE -= 0.00000001                                      MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-     C                   EXSR      SrCalcAmnt                                               MD053553
-      *                                                                                     MD053553
-     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
-      *                                                                                     MD053553
-     C                   IF        ZCRSMD = 'M'                                             MD053553
-     C                   EVAL      ZCRSMD = 'D'                                             MD053553
-     C                   ELSE                                                               MD053553
-     C                   EVAL      ZCRSMD = 'M'                                             MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-     C                   EXSR      SrCalcAmnt                                               MD053553
-     C                   ELSE                                                               MD053553
-     C                   LEAVESR                                                            MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-      ** Input amounts may have been reversed.                                              MD053553
-      *                                                                                     MD053553
-     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
-      *                                                                                     MD053553
-     C                   IF        F = 2                                                    MD053553
-     C                   EVAL      F = 3                                                    MD053553
-     C                   EVAL      T = 2                                                    MD053553
-     C                   ELSE                                                               MD053553
-     C                   EVAL      F = 2                                                    MD053553
-     C                   EVAL      T = 3                                                    MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-      ** Get 9th decimal place from the input amounts                                       MD053553
-      *                                                                                     MD053553
-     C                   EVAL      NRATE = AMNT(T) / AMNT(F)                                MD053553
-     C                   MOVE      NRATE         D9                                         MD053553
-      *                                                                                     MD056477
-      ** Check if rate is zero                                                              MD056477
-      *                                                                                     MD056477
-     C                   IF        P#RATE = 0                                               MD056477
-     C                   MOVEL     ZRATEX        NRATE                                      MD056477
-     C                   ELSE                                                               MD056477
-     C                   IF        WINVER = 'Y'                                             MD056477
-     C                   MOVEL     WGRATE        NRATE                                      MD056477
-     C                   ELSE                                                               MD056477
-     C                   MOVEL     P#RATE        NRATE                                      MD053553
-     C                   ENDIF                                                              MD056477
-     C                   ENDIF                                                              MD056477
-      *                                                                                     MD053553
-      ** Adjustment if original exchange rate was rounded up.                               MD053553
-      *                                                                                     MD053553
-     C                   IF        D9 > 4                                                   MD053553
-     C                   EVAL      NRATE -= 0.00000001                                      MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-     C                   EXSR      SrCalcAmnt                                               MD053553
-     C                   ELSE                                                               MD053553
-     C                   LEAVESR                                                            MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-     C     AMNT(T)       IFNE      ZAMTT                                                    MD053553
-      *                                                                                     MD053553
-     C                   IF        ZCRSMD = 'M'                                             MD053553
-     C                   EVAL      ZCRSMD = 'D'                                             MD053553
-     C                   ELSE                                                               MD053553
-     C                   EVAL      ZCRSMD = 'M'                                             MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-     C                   EXSR      SrCalcAmnt                                               MD053553
-     C                   ENDIF                                                              MD053553
-     C                   ENDSR                                                              MD053553
-      *                                                                                     MD053553
-      *****************************************************************                     MD053553
-      *                                                               *                     MD053553
-      *  SrCalcAmnt - Calculates amount based M/D Indicator           *                     MD053553
-      *                                                               *                     MD053553
-      *  Called By: SrVAmtNR9D                                        *                     MD053553
-      *  Calls: None                                                  *                     MD053553
-      *                                                               *                     MD053553
-      *****************************************************************                     MD053553
-     C     SrCalcAmnt    BEGSR                                                              MD053553
-     C                   IF        ZCRSMD = 'M'                                             MD053553
-     C                   Z-ADD     AMNT(F)       ZAMTT                                      MD053553
-     C                   EVAL(H)   ZAMTT *= NRATE                                           MD053553
-     C                   ENDIF                                                              MD053553
-      *                                                                                     MD053553
-     C                   IF        ZCRSMD = 'D'                                             MD053553
-     C                   Z-ADD     AMNT(F)       ZAMTT                                      MD053553
-     C                   EVAL(H)   ZAMTT /= NRATE                                           MD053553
-     C                   ENDIF                                                              MD053553
-     C                   ENDSR                                                              MD053553
       /EJECT
-      *****************************************************************                     MD056483
-      *                                                               *                     MD056483
-      *  SrVAmtRPM5 - Validate amounts using rate +/- 0.000000005     *                     MD056483
-      *                                                               *                     MD056483
-      *  Called By:TRNAMT                                             *                     MD056483
-      *  Calls: SrCalcAmtXR                                           *                     MD056483
-      *                                                               *                     MD056483
-      *****************************************************************                     MD056483
-     C     SrVAmtRPM5    BEGSR                                                              MD056483
-      *                                                                                     MD056483
-      ** If input rate is zero, use ZRATEX                                                  MD056483
-      *                                                                                     MD056483
-     C                   IF        P#RATE <> 0                                              MD056483
-     C                   Z-ADD     P#RATE        NRATE                                      MD056483
-      *                                                                                     MD056483
-     C                   IF        WINVER = 'Y'                                             MD056483
-     C                   Z-ADD     WGRATE        NRATE                                      MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   ELSE                                                               MD056483
-     C                   Z-ADD     ZRATEX        NRATE                                      MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   IF        WMODE = 2                                                MD056483
-     C                   EVAL      NRATE += 0.000000005                                     MD056483
-     C                   ENDIF                                                              MD056483
-     C                   IF        WMODE = 3                                                MD056483
-     C                   EVAL      NRATE -= 0.000000005                                     MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-      ** Reset differences (between actual and calculated amounts)                          MD056483
-      *                                                                                     MD056483
-     C                   EVAL      W1DIFF = 1                                               MD056483
-     C                   EVAL      W2DIFF = 1                                               MD056483
-      *                                                                                     MD056483
-      ** Initialize pass variables that will check if cross validation                      MD056483
-      ** passes the 2 units tolerance test                                                  MD056483
-      *                                                                                     MD056483
-     C                   EVAL      W1PASS = 'N'                                             MD056483
-     C                   EVAL      W2PASS = 'N'                                             MD056483
-      *                                                                                     MD056483
-     C                   IF        AMNT(2) <> 0                                             MD056483
-     C                   EVAL      F = 2                                                    MD056483
-     C                   EVAL      T = 3                                                    MD056483
-     C                   EVAL      ZCRSMD = ZMDIX                                           MD056483
-     C                   ELSE                                                               MD056483
-     C                   EVAL      F = 3                                                    MD056483
-     C                   EVAL      T = 2                                                    MD056483
-     C                   IF        ZMDIX = 'M'                                              MD056483
-     C                   EVAL      ZCRSMD = 'D'                                             MD056483
-     C                   ELSE                                                               MD056483
-     C                   EVAL      ZCRSMD = 'M'                                             MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-      ** Calculate amount in one currency to another currency using an                      MD056483
-      ** exchange rate between the two currencies                                           MD056483
-      *                                                                                     MD056483
-     C                   EVAL      ZAMTF = AMNT(F)                                          MD056483
-     C                   EVAL      ZCDPF = NBDP(F)                                          MD056483
-     C                   EVAL      ZCDPT = NBDP(T)                                          MD056483
-     C                   EXSR      SRCalcAmtXR                                              MD056483
-      *                                                                                     MD056483
-     C                   SELECT                                                             MD056483
-     C                   WHEN      AMNT(T) = 0                                              MD056483
-     C                   EVAL      AMNT(T) = ZAMTT                                          MD056483
-     C                   EVAL      W1PASS = 'Y'                                             MD056483
-     C                   EVAL      W2PASS = 'Y'                                             MD056483
-      *                                                                                     MD056483
-     C                   WHEN      AMNT(T) <> ZAMTT                                         MD056483
-     C                   EVAL      W1DIFF = ZAMTT - AMNT(T)                                 MD056483
-      *                                                                                     MD056483
-     C                   IF        W1DIFF >= -2 AND W1DIFF <=2                              MD056483
-     C                   EVAL      W1PASS = 'Y'                                             MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   IF        W1PASS = 'N'                                             MD056483
-      *                                                                                     MD056483
-      ** Try the calculation in the opposite direction                                      MD056483
-      *                                                                                     MD056483
-     C                   IF        F = 3                                                    MD056483
-     C                   EVAL      F = 2                                                    MD056483
-     C                   EVAL      T = 3                                                    MD056483
-     C                   EVAL      ZMDIX = ZCRSMD                                           MD056483
-     C                   ELSE                                                               MD056483
-     C                   EVAL      F = 3                                                    MD056483
-     C                   EVAL      T = 2                                                    MD056483
-     C                   IF        ZMDIX = 'M'                                              MD056483
-     C                   EVAL      ZCRSMD = 'D'                                             MD056483
-     C                   ELSE                                                               MD056483
-     C                   EVAL      ZCRSMD = 'M'                                             MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   EVAL      ZAMTF = AMNT(F)                                          MD056483
-     C                   EVAL      ZCDPF = NBDP(F)                                          MD056483
-     C                   EVAL      ZCDPT = NBDP(T)                                          MD056483
-     C                   EXSR      SRCalcAmtXR                                              MD056483
-      *                                                                                     MD056483
-     C                   EVAL      W2DIFF = ZAMTT - AMNT(T)                                 MD056483
-      *                                                                                     MD056483
-     C                   IF        W2DIFF >= -2 AND W2DIFF <=2                              MD056483
-     C                   EVAL      W2PASS = 'Y'                                             MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-                                                                                            MD056483
-     C                   ENDSL                                                              MD056483
-      *                                                                                     MD056483
-      ** Save values of pass variables                                                      MD056483
-      *                                                                                     MD056483
-     C                   IF        WMODE = 2                                                MD056483
-     C                   EVAL      WMOD21 = W1PASS                                          MD056483
-     C                   EVAL      WMOD22 = W2PASS                                          MD056483
-     C                   ENDIF                                                              MD056483
-     C                   IF        WMODE = 3                                                MD056483
-     C                   EVAL      WMOD31 = W1PASS                                          MD056483
-     C                   EVAL      WMOD32 = W2PASS                                          MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   ENDSR                                                              MD056483
-      /EJECT                                                                                MD056483
-      *****************************************************************                     MD056483
-      *                                                               *                     MD056483
-      *  SrCalcAmtXR - Calculates amount in one currency to another   *                     MD056483
-      *                currency using the exchange rate between the   *                     MD056483
-      *                two currencies (same as SR/ZCCYXR, but uses    *                     MD056483
-      *                NRATE)                                         *                     MD056483
-      *                                                               *                     MD056483
-      *  Called By: SrVAmtRPM5                                        *                     MD056483
-      *  Calls: None                                                  *                     MD056483
-      *                                                               *                     MD056483
-      *****************************************************************                     MD056483
-     C     SrCalcAmtXR   BEGSR                                                              MD056483
-      *                                                                                     MD056483
-     C                   IF        ZCDPF = ZCDPT                                            MD056483
-      *                                                                                     MD056483
-     C                   IF        ZCRSMD = 'D'                                             MD056483
-     C                   EVAL      ZAMTT = ZAMTF                                            MD056483
-     C                   EVAL(H)   ZAMTT /= NRATE                                           MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   IF        ZCRSMD = 'M'                                             MD056483
-     C                   EVAL      ZAMTT = ZAMTF                                            MD056483
-     C                   EVAL(H)   ZAMTT *= NRATE                                           MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   IF        ZCDPF <> ZCDPT                                           MD056483
-     C                   EVAL      ZWKPX = ZCDPT - ZCDPF                                    MD056483
-     C                   EVAL      B = ZWKPX + 4                                            MD056483
-     C                   IF        POWER(B) < 1                                             MD056483
-     C                   EVAL      ZWK153 = POWER(B) * ZAMTF                                MD056483
-     C                   IF        ZCRSMD = 'D'                                             MD056483
-     C                   EVAL(H)   ZAMTT = ZWK153 / NRATE                                   MD056483
-     C                   ENDIF                                                              MD056483
-     C                   IF        ZCRSMD = 'M'                                             MD056483
-     C                   EVAL(H)   ZAMTT = ZWK153 * NRATE                                   MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-     C                   IF        POWER(B) > 1                                             MD056483
-     C                   EVAL      ZAMTF *= POWER(B)                                        MD056483
-     C                   IF        ZCRSMD = 'D'                                             MD056483
-     C                   EVAL(H)   ZAMTT = ZAMTF / NRATE                                    MD056483
-     C                   ENDIF                                                              MD056483
-     C                   IF        ZCRSMD = 'M'                                             MD056483
-     C                   EVAL(H)   ZAMTT = ZAMTF * NRATE                                    MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-     C                   ENDIF                                                              MD056483
-      *                                                                                     MD056483
-     C                   ENDSR                                                              MD056483
-       /EJECT                                                                               MD056483      
       *****************************************************************
       *                                                               *
       *  RETURN - Sets parameters to be returned and returns control  *
@@ -2428,10 +2226,8 @@
      C     P#PMSQ        OREQ      W2PMSQ                                       CAP031
      C     P#PMSQ        OREQ      W3PMSQ                                       CAP136
      C     P#PMSQ        OREQ      W4PMSQ                                       CFT014
-     C     *IN55         IFEQ      *OFF                                                     MD050134
      C                   MOVE      *BLANKS       P#PMSQ                         CAP031
      C                   MOVEL     FTMSID        P#PMSQ                         CAP031
-     C                   ENDIF                                                              MD050134
      C                   ENDIF                                                  CAP031
       *                                                                         187222
       * If P#PMSQ is equal to 'PassBack' blank out                              187222
@@ -2481,7 +2277,7 @@
       /COPY ZSRSRC,ZCCYXR_ILE
       ** +--- The converted ZCCYXR ends here ------------------------------+
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
 0000001
 0000010

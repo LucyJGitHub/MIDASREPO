@@ -1,24 +1,23 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas ME Submit ME FT IMM auto generation job')       */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
 /*       MEC1303  - Submit ME FT IMM Auto Gen job                    */
 /*                                                                   */
-/*       (c) Finastra International Limited 2001                     */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD043618           Date 07Dec17              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      MD027770           Date 27Jun14              */
-/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. MD31937A           Date 30Sept15            */
+/*       Last Amend No. MD31937            Date 13Jan15              */
+/*       Last Amend No. AR856737           Date 13Sep11              */
+/*       Last Amend No. MKCAR9            Date 22Mar06               */
+/*       Last Amend No. MD027770           Date 27Jun14              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*                      CSC023             Date 30Jan04              */
+/*       Last Amend No. CSC023             Date 30Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*                      CPK015             Date 18Apr02              */
+/*       Prev Amend No. CPK015             Date 18Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             Date 05May95              */
@@ -26,10 +25,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD043618 - Job ME_FT_IMM when started manually it is        */
-/*                  submitted  with user’s profile and not system    */
-/*                  owner profile -Formalization of onsite fix.      */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD31937A - Submit job using the system owner profile        */
+/*                  rather than Users profile                        */
+/*       MD31937  - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       MKCAR9 - New dataarea for storing STP status.               */
 /*       MD027770 - Job ME_FT_IMM dumps due to xxOWNER not found     */
 /*                  in MUSER. Use the current user in SBMJOB command */
 /*                  as xxOWNER is no longer added to file MUSER.     */
@@ -45,7 +45,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited +
+                          Misys International Banking Systems Ltd. +
                           2001')
 /* */
 /* Declare variables */
@@ -64,6 +64,7 @@
              DCL        VAR(&USER1) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JOBNBR1) TYPE(*CHAR) LEN(6)
              DCL        VAR(&THIS_JOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&STPSTAT) TYPE(*CHAR) LEN(5)                                  /*MKCAR9*/
 /* */
 /* Global Monitor Message */
 /* */
@@ -73,7 +74,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited')
+                          Misys International Banking Systems Ltd.')
 /* */
 /* Send Message to MRUNQ */
 /* */
@@ -98,6 +99,9 @@
              RTVJOBA    JOB(&JOB1) USER(&USER1) NBR(&JOBNBR1)
              CHGVAR     VAR(&THIS_JOB) VALUE(&JOB1 *CAT &USER1 *CAT +
                           &JOBNBR1)
+             RTVDTAARA  DTAARA(MESTPSTAT (1 5)) RTNVAR(&STPSTAT)                          /*MKCAR9*/
+             IF         COND(&STPSTAT *NE 'START') THEN(GOTO +
+                          CMDLBL(ENDCLPGM))                                               /*MKCAR9*/
              RTVDTAARA  DTAARA(MEDTA  (191 10)) RTNVAR(&TEMP)
              CHGVAR     VAR(%SST(&JOB 1 10)) VALUE(&TEMP)
              RTVDTAARA  DTAARA(MEDTA  (201 10)) RTNVAR(&TEMP)
@@ -152,14 +156,14 @@
 /************             JOBD(MEFTJOBD) JOBQ(MEJOBQ) USER(*JOBD) +  */                 /*MD027770*/
 /************             RTGDTA(MEFTIMM) INLLIBL(*JOBD) MSGQ(MOPERQ) +                 /*MD027770*/
 /************             OUTQ(*JOBD)                                */          /*CSC023 MD027770*/
-/**********  SBMJOB     CMD(CALL PGM(MEC1301)) JOB(ME_FT_IMM) +
-/**********               JOBD(MEFTJOBD) JOBQ(MEJOBQ) OUTQ(*JOBD) +
-/**********               USER(*CURRENT) RTGDTA(MEFTIMM) +
-/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                          /*MD027770 MD043618*/
+/*****       SBMJOB     CMD(CALL PGM(MEC1301)) JOB(ME_FT_IMM) +                         /*MD31937A*/
+/*****                    JOBD(MEFTJOBD) JOBQ(MEJOBQ) OUTQ(*JOBD) +                     /*MD31937A*/
+/*****                    USER(*CURRENT) RTGDTA(MEFTIMM) +                              /*MD31937A*/
+/*****                    INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD31937A*/
              SBMJOB     CMD(CALL PGM(MEC1301)) JOB(ME_FT_IMM) +
                           JOBD(MEFTJOBD) JOBQ(MEJOBQ) OUTQ(*JOBD) +
                           USER(*JOBD   ) RTGDTA(MEFTIMM) +
-                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD043618*/
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD31937A*/
              RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) +
                           MSGID(&MSGID)
 /**/

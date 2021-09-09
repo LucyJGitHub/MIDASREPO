@@ -1,0 +1,352 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FTP0781 - Midas FT Payment Routes List - Selection Criteria  *
+      *                                                               *
+      *  Function:  This program prompts for date                     *
+      *                                                               *
+      *  Called By: FTCP0780 (FT Payment Routes List - Control)       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 13Sep11               *
+      *  Last Amend No. EEE065  *CREATE    Date 17Jun2004             *
+      *  Prev Amend No. xxxxxx             Date ddmmmyyyy             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancement to Midas Plus level.      *
+      *  EEE065 - FT Payment Routing                                  *
+      *                                                               *
+      *****************************************************************
+     FFTP781DFCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      * DSP: Input Selection Criteria
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*  Array containing Copyright statement
+     E*
+     E/COPY FTCPYSRC,SRERRE
+      /EJECT
+     I/COPY FTCPYSRC,SRERRI
+     I*
+     I*
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IRUNDTA    E DSRUNDAT
+     I* Rundate  *
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     IDSFDY     E DSDSFDY
+      /EJECT
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for invalid report date
+     I                                        1   6 ZA0001
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7        Return Code
+     C                     PARM           PMODE   1        Mode
+     C                     PARM           O#FDAT  50       Report From Date
+     C                     PARM           O#TDAT  50       Report To Date
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      *
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *
+      *  Input parameters data structure
+      *
+      *           From selection date
+     C                     Z-ADD#FDATE    O#FDAT
+      *
+      *           To selection date
+     C                     Z-ADD#TDATE    O#TDAT
+      *
+      * Exit program
+     C                     EXSR ZXEXPG
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      *  Validate dates entered
+      *
+      * Validate From date
+     C                     MOVEL#DATE1    ZDATE            From date
+     C           *LIKE     DEFN ZDAYNO    #FDATE           From date
+      *
+     C                     CALL 'ZDATE1'                   Entry parameter
+     C                     PARM *BLANKS   ZERR    7        Error code
+     C                     PARM           ZDATE   60       From date
+     C                     PARM WUDFF     ZDATFM  1        Date format ind
+     C           #FDATE    PARM *ZEROS    ZDAYNO  50       From date
+      *
+      * Setup message data for message
+     C           ZERR      IFNE *BLANKS
+     C                     MOVEL#DATE1    ZA0001           From date
+      * Send message 'Invalid date'
+     C                     MOVEL'CL10007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+     C                     END
+      *
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      *
+      * Date must not be forward valued
+     C           ZDAYNO    IFGT WURDNB                     IF
+     C                     MOVEL#DATE1    ZA0001           From date
+      * Send message 'Date in the future'
+     C                     MOVEL'CL10187' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+     C                     END                             FI
+      *
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      *
+      * Validate To date
+     C                     MOVEL#DATE2    ZDATE            To date
+     C           *LIKE     DEFN ZDAYNO    #TDATE           To date
+      *
+     C                     CALL 'ZDATE1'                   Entry parameter
+     C                     PARM *BLANKS   ZERR    7        Error code
+     C                     PARM           ZDATE   60       To date
+     C                     PARM WUDFF     ZDATFM  1        Date format ind
+     C           #TDATE    PARM *ZEROS    ZDAYNO  50       To date
+      *
+      * Setup message data for message
+     C           ZERR      IFNE *BLANKS
+     C                     MOVEL#DATE2    ZA0001           To date
+      * Send message 'Invalid date'
+     C                     MOVEL'CL10007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+     C                     END
+      *
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      *
+      * Date must not be forward valued
+     C           ZDAYNO    IFGT WURDNB                     IF
+     C                     MOVEL#DATE2    ZA0001           To date
+      * Send message 'Date in the future'
+     C                     MOVEL'CL10187' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+     C                     END                             FI
+      *
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+      *
+     C                     MOVEL*BLANK    #DATE1           From date
+     C                     MOVEL*BLANK    #DATE2           To date
+      *
+      * Set up date
+     C                     CALL 'ZDATE2'
+     C                     PARM WURDNB    ZDAYNO  50       Rundate Input
+     C                     PARM WUDFF     ZDATFM  1        Date format ind
+     C                     PARM *ZEROS    ZDATE   60       Rundate Output
+     C                     PARM *BLANKS   ZADATE  7        Run-date in DDM
+      *
+     C                     MOVELZDATE     #DATE1           From Date
+     C                     MOVELZDATE     #DATE2           To Date
+      *
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+     C                     MOVEL*BLANKS   PRTCD
+      *
+      * CASE: CTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' PRTCD            *Return code
+     C                     END                             *FI
+      *
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANKS   PRTCD
+      * Initialise indicators for re-entry
+     C                     MOVE '0'       *IN
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'FTUSRMSG'ZADFMF 10
+     C                     Z-ADD0         Q       50
+     C*
+     C*  Set up copyright parameter
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*  Set screen indicators depending on mode
+     C                     SELEC
+     C           PMODE     WHEQ '1'
+     C                     MOVEL*OFF      *IN41
+     C           PMODE     WHEQ '2'
+     C                     MOVEL*ON       *IN41
+     C                     ENDSL
+     C*
+     C* Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get Base currency  *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * Load screen
+     C                     EXSR MALDSC
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     C/EJECT
+     C*
+     C/COPY FTCPYSRC,SRERRC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

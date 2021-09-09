@@ -1,32 +1,33 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
-/*EXI    TEXT('Midas FT Menu option control')                        */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas   - Funds Transfer Module                             */
 /*                                                                   */
 /*       FTC0051 - FT Menu Option Control Program                    */
 /*                                                                   */
-/*       (c) Finastra International Limited 2001                     */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CSD102             Date 08Jan19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      MD021757           Date 14Aug13              */
-/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. MD31937            Date 13Jan15              */
+/*       Last Amend No. AR856737           Date 13Sep11              */
+/*       Last Amend No. 238249             Date 19May06              */
+/*       Last Amend No. MD021757           Date 14Aug13              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*                      CSC022             Date 24Feb04              */
+/*       Last Amend No. CSC022             Date 24Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*                      CFT014             Date 25May00              */
+/*       Prev Amend No. CFT014             Date 25May00              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CAP136  *CREATE    Date 15Nov99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CSD102 - Password Length Extension                          */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD31937  - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*                - Applied fix 238249                               */
+/*       238249 - Record locking problem due to incoming payment     */
+/*                transaction data area in XXDPLIB. Apply fix 042167.*/
 /*       MD021757 - CAP211 Override OTXL0                            */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*       CFT014 - Straight-through Processing Phase 2 MT103          */
@@ -36,37 +37,41 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PROG &ACTION &PREF &RTNCD &LINK &LEVEL)
- 
+
              DCL        VAR(&PROG) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(15)
              DCL        VAR(&RTNCD) TYPE(*CHAR) LEN(1)
              DCL        VAR(&LINK) TYPE(*CHAR) LEN(1)
              DCL        VAR(&LEVEL) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&EMACT) TYPE(*CHAR) LEN(7)
              DCL        VAR(&EMMOR) TYPE(*CHAR) LEN(28)
              DCL        VAR(&EMMIR) TYPE(*CHAR) LEN(28)
              DCL        VAR(&EMRTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&EMMSGR) TYPE(*DEC) LEN(8 0)
              DCL        VAR(&EMPART) TYPE(*DEC) LEN(3 0)
- 
+
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&FRUN) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited +
+                          Misys International Banking Systems Ltd. +
                           2001')
- 
+
 /** Return code for call to ZAGETACTGP */
- 
+
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
- 
+
 /** The activation group that the called program runs in */
- 
+
              DCL        VAR(&ACTGRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODULE) TYPE(*CHAR) LEN(2)                                   /*238249*/
+             DCL        VAR(&TRNREF) TYPE(*CHAR) LEN(15)                                  /*238249*/
+             DCL        VAR(&RINFOR) TYPE(*CHAR) LEN(80)                                  /*238249*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*238249*/
                                                                                           /*CSC022*/
              DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)                                    /*CSC022*/
              DCL        VAR(&SCCMTJOB) TYPE(*CHAR) LEN(256)                               /*CSC022*/
@@ -89,13 +94,13 @@
              DCL        VAR(&CRSKIP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
                                                                                           /*CSC022*/
 /*/COPY WNCPYSRC,FTC0051001                                          */
- 
+
 /** Monitor for error messages not trapped in the rest of the */
 /** program.  If they occur reclaim resources and exit.       */
- 
+
              MONMSG     MSGID(CPF0000 CPA0000 MCH0000 RPG0000) +
                           EXEC(GOTO CMDLBL(ERR))
- 
+
              CHGVAR     VAR(&CSC022) VALUE('N')                                           /*CSC022*/
              CHGVAR     VAR(&CRSKIP) VALUE('N')                                           /*CSC022*/
              CHGVAR     VAR(&RTNCDE) VALUE('       ')                                     /*CSC022*/
@@ -103,7 +108,7 @@
              CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
                                                                                           /*CSC022*/
 /** Reset job switches. */
- 
+
              CHGJOB     SWS(XXXXXX00)
  /**/                                                                                     /*CSC022*/
  /** Call AO Switchable features  */                                                      /*CSC022*/
@@ -167,56 +172,54 @@
              ENDDO                                                                        /*CSC022*/
                                                                                           /*CSC022*/
              ENDDO                                                                        /*CSC022*/
- 
+
 /** Override files. */
- 
+
              OVRDBF     FILE(INPAY)    SHARE(*NO)
              OVRDBF     FILE(INPAYXL0)    SHARE(*NO)                  /*CFT014*/
 /** If Incoming Payment, then override OTXL0 introduced by CAP211 */                    /*MD021757*/
-/*           IF         COND(&PROG *EQ 'FTIPAYSIN') THEN(DO)                     /*MD021757 CSD102*/
-             IF         COND((&PROG *EQ 'FTIPAYSIN') *OR (&PROG *EQ +
-                          'FTIPAYRPR')) THEN(DO)                                          /*CSD102*/
+             IF         COND(&PROG *EQ 'FTIPAYSIN') THEN(DO)                            /*MD021757*/
              OVRDBF     FILE(OTXL0) TOFILE(OTPAYXL0) SHARE(*NO)                         /*MD021757*/
              OVRDBF     FILE(OTPAYOVR) TOFILE(OTPAY) SHARE(*NO)                         /*MD021757*/
              ENDDO                                                                      /*MD021757*/
 /*/COPY WNCPYSRC,FTC0051002                                          */
- 
+
 /** Call program. */
- 
+
              CALL       PGM(&PROG) PARM(&ACTION &PREF &RTNCD +
                                         &LINK &LEVEL)
- 
+
 /** Delete overrides. */
- 
+
              DLTOVR     FILE(INPAY)
              DLTOVR     FILE(INPAYXL0)                                /*CFT014*/
              DLTOVR     FILE(OTXL0)                                                     /*MD021757*/
              DLTOVR     FILE(OTPAYOVR)                                                  /*MD021757*/
- 
+
 /** Destroy the activation group used by the program, and ensure */
 /** that no files were left open in OPM programs called from it. */
 /** First, retrieve the name of the activation group that the    */
 /** program runs in.                                             */
- 
+
              CALL       PGM(ZAGETACTGP) PARM(&RETURNCODE &ACTGRP &PROG)
- 
+
              IF         COND(&RETURNCODE = ' ') THEN(DO)
                 RCLACTGRP  ACTGRP(&ACTGRP)
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              RCLRSC
- 
+
 /** For Database Errors, recover Data from LDA. */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
- 
+
                 RTVDTAARA  DTAARA(*LDA (134 50)) RTNVAR(&MSG)
                 SNDPGMMSG  MSGID(DBM0001) MSGF(DRSMM) MSGDTA(&MSG) +
                              TOMSGQ(MOPERQ)
- 
+
 /** Call SCC0010 to send abnormal termination screen. */
- 
+
                 RTVMSG     MSGID(SCM0087) MSGF(MIDASMSG) MSG(&MESSAGE)
                 MONMSG     MSGID(CPF0000 MCH0000)
                 CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
@@ -229,7 +232,7 @@
                 MONMSG     MSGID(CPF0000 MCH0000)
                 CALL       PGM(SCC0010) PARM('FTC0051' 'ENTER' &NOREPLY)
                 MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  /**/                                                                                     /*CSC022*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSC022*/
  /**   job is not currently running in batch mode */                                      /*CSC022*/
@@ -246,24 +249,24 @@
              ENDDO                                                                        /*CSC022*/
              ENDDO                                                                        /*CSC022*/
                                                                                           /*CSC022*/
- 
+
              ENDDO
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited')
- 
+                          Misys International Banking Systems Ltd.')
+
              GOTO       CMDLBL(END)
- 
+
 ERR:
              RCLACTGRP  ACTGRP(*ELIGIBLE)
              RCLRSC
- 
+
 END:
- 
+
 /** Call ME1070 to remove any remaining reserved electronic msgs. */
- 
+
              IF         COND(&FRUN = ' ') THEN(DO)
- 
+
                 CHGVAR     VAR(&FRUN) VALUE('Y')
  /**/                                                                                     /*CSC022*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSC022*/
@@ -299,7 +302,13 @@ END:
                           *AND &CRSKIP *EQ 'N'))) THEN(DO)                                /*CSC022*/
                 COMMIT
              ENDDO                                                                        /*CSC022*/
- 
+
              ENDDO
- 
+             CHGVAR     VAR(&MODULE) VALUE('FT')                                          /*238249*/
+             CHGVAR     VAR(&TRNREF) VALUE('               ')                             /*238249*/
+             CHGVAR     VAR(&RINFOR) VALUE('    ')                                        /*238249*/
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')                                     /*238249*/
+             CALL       PGM(AOC8000) PARM(&RTNCDE &MODULE &TRNREF +
+                          &RINFOR)                                                        /*238249*/
+
              ENDPGM

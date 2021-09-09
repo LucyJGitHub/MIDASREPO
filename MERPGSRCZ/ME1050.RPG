@@ -1,7 +1,6 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas ME Update I.M.M. FT part detail status')
      F*****************************************************************
      F*                                                               *
      F*  Midas - Message Management Module
@@ -14,16 +13,19 @@
      F*                                                               *
      F*  Called By: mmCnnnn - (program name)                          *
      F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Last Amend No. AR856737           Date 28Jul11               *
+      *                 247197             Date 21Aug07               *
+      *                 ESL038             Date 30Nov2004             *
+      *                 DJB002             Date 15Nov2004             *
+      *                 EEE058             Date 14Feb2003             *
+      *                 DJB001             Date 16May2002             *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSC022             Date 24Feb04               *
-      *                 CGL029             Date 01Sep03               *
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -33,8 +35,20 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  CSW220 - SWIFT Changes 2020                                  *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           247197, ESL038, DJB002, EEE058, DJB001,             *
+      *  247197 - Set the new field FTSTPF = 'Y' for processed records*
+      *           (routed or not). Applied fix 238276.                *
+      *  ESL038 - ING FT STP Development                              *
+      *  DJB002 - Mark rejected from auto generation on delete  OP    *
+      *  EEE058 - Incoming STP                                        *
+      *           Use copy hook ME1050C001                            *
+      *           Use copy hook ME1050DFPG                            *
+      *           Use copy hook ME1050DIPG                            *
+      *           Add copy hook ME1050DB01                            *
+     F*  DJB001 - Mark rejected from auto generation on delete        *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  CGL029 - Increase Account Code to 10 digits                  *
      F*  CFT002 - Straight Through Processing Phase 1                 *
@@ -113,7 +127,7 @@
      I              FTARDT                          F#ARDT
      I              FTAACT                          F#AACT
      I              FTRDNB                          F#RDNB
-     I              FTM199                          F#M199                                    CSW220
+     I              FTSTPF                          F#STPF                                    247197
       *
      I/COPY WNCPYSRC,ME1050DIPG
       *
@@ -159,11 +173,6 @@
      ISCCMT       DS                            256                                           CSC022
      I                                        1   30CMTNUM                                    CSC022
      I                                        4 103 CMTARR                                    CSC022
-      *                                                                                       CSW220
-      ** DECLARE SWIFTACTV CONSTANT                                                           CSW220
-      *                                                                                       CSW220
-     I              'SWIFTACTV'           C         SWIFT                                     CSW220
-      *                                                                                       CSW220
      I/EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -181,8 +190,8 @@
      C                     PARM           W0CPGM 10
      C                     PARM           W0NWRK  6
      C                     PARM           W0LMSG  7
-     C********** INFT      PARM           W0DATA129                                           CSW220
-     C           INFT      PARM           W0DATA178                                           CSW220
+     C********** INFT      PARM           W0DATA129                                           247197
+     C           INFT      PARM           W0DATA130                                           247197
      C                     PARM           W0RTN   7
       *
       *  Set up primary reference
@@ -216,6 +225,7 @@
      C           W0ACT     CASEQ'*FT OUT 'SROUT
      C                     CAS            SRACT
      C                     END
+     C/COPY WNCPYSRC,ME1050DB01                                                               EEE058
       *
       *  Unwind subroutine stack name
       *
@@ -257,14 +267,6 @@
      C                     MOVELFTINFG    F#INFG           Processing Flag
      C                     MOVELFTIPRF    F#IPRF           Incoming Ref
      C                     MOVELFTBRCA    F#BRCA           Branch
-     C           CSW220    IFEQ 'Y'                                                           CSW220
-     C           *IN60     IFEQ *ON                                                           CSW220
-     C           FTM199    ORNE *BLANKS                                                       CSW220
-     C           *IN60     ANDEQ*OFF                                                          CSW220
-     C           F#M199    ANDNE'O'                                                           CSW220
-     C                     MOVELFTM199    F#M199                                              CSW220
-     C                     ENDIF                                                              CSW220
-     C                     ENDIF                                                              CSW220
       *
       *  Only update Funds if not blank
       *
@@ -288,11 +290,19 @@
       *
      C           FTINFG    IFEQ 'MIN0031'                                 CFT002
      C                     MOVEL*BLANKS   F#INFG                          CFT002
+     C                     MOVEL'MIN0083' F#INFG                          DJB001
      C                     MOVEL*BLANKS   F#IPRF                          CFT002
+     C                     MOVEL*BLANKS   F#OTFG                          DJB001
+     C                     MOVEL*BLANKS   F#OPRF                          DJB001
      C                     MOVEL*BLANKS   F#FRGL                          CFT002
      C                     MOVEL*BLANKS   F#TOGL                          CFT002
      C                     ENDIF                                          CFT002
      C*                                                                   CFT002
+      *                                                                                       247197
+      ** set FTSTPF to 'Y' for processed records (routed or not)                              247197
+      *                                                                                       247197
+     C                     MOVE 'Y'       F#STPF                                              247197
+      *                                                                                       247197
      C  N60                UPDAT@INFTL0
      C   60                WRITE@INFTL0
       *
@@ -343,14 +353,6 @@
      C                     MOVELFTOTFG    F#OTFG           Processing Flag
      C                     MOVELFTOPRF    F#OPRF           Outgoing Ref
      C                     MOVELFTBRCA    F#BRCA           Branch
-     C           CSW220    IFEQ 'Y'                                                           CSW220
-     C           *IN60     IFEQ *ON                                                           CSW220
-     C           FTM199    ORNE *BLANKS                                                       CSW220
-     C           *IN60     ANDEQ*OFF                                                          CSW220
-     C           F#M199    ANDNE'O'                                                           CSW220
-     C                     MOVELFTM199    F#M199                                              CSW220
-     C                     ENDIF                                                              CSW220
-     C                     ENDIF                                                              CSW220
       *
       *  Only update Funds to if not blank
       *
@@ -382,12 +384,18 @@
       *
      C           FTOTFG    IFEQ 'MIN0031'                                 CFT002
      C           F#IPRF    ANDEQ*BLANKS                                   CFT002
+     C                     MOVEL'MIN0083' F#INFG                          DJB002
      C                     MOVEL*BLANKS   F#OTFG                          CFT002
      C                     MOVEL*BLANKS   F#OPRF                          CFT002
      C                     MOVEL*BLANKS   F#FRGL                          CFT002
      C                     MOVEL*BLANKS   F#TOGL                          CFT002
      C                     ENDIF                                          CFT002
      C*                                                                   CFT002
+      *                                                                                       247197
+      ** set FTSTPF to 'Y' for processed records (routed or not)                              247197
+      *                                                                                       247197
+     C                     MOVE 'Y'       F#STPF                                              247197
+      *                                                                                       247197
      C  N60                UPDAT@INFTL0
      C   60                WRITE@INFTL0
       *
@@ -644,18 +652,6 @@
      C                     ELSE                                                               CSC022
      C                     MOVE 'N'       CSC022                                              CSC022
      C                     ENDIF                                                              CSC022
-      *                                                                                       CSW220
-      ** Determine if Swift 2020 is activated                                                 CSW220
-      *                                                                                       CSW220
-     C                     CALL SWIFT                                                         CSW220
-     C                     PARM 'CSW220'  PSWIFT  6                                           CSW220
-     C                     PARM *BLANKS   PRTCD   7                                           CSW220
-      *                                                                                       CSW220
-     C           PRTCD     IFEQ 'CSWACTV'                                                     CSW220
-     C                     MOVE 'Y'       CSW220  1                                           CSW220
-     C                     ELSE                                                               CSW220
-     C                     MOVE 'N'       CSW220                                              CSW220
-     C                     ENDIF                                                              CSW220
       *
       *  Define fields
       *
@@ -728,6 +724,6 @@
       *  /Copy point for Outputs
       *
 **  CPY@ table
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001
 ** Command Array
 OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

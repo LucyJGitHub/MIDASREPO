@@ -18,7 +18,7 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 29Jul11               *
-      *                 ERZ093             Date  01Oct2004            *                      ERZ093
+      *                 ERZ093             Date 01Oct2004             *
       *                 MK0521             Date 15Feb2005             *
       *                 EEE065             Date 26Aug03               *
       *                 EEE056             Date 22Oct02               *
@@ -5536,81 +5536,81 @@
      C*
      C                   ENDSR
       /EJECT
-      *================================================================
-      *                                                               *
-      *  SRWIND   : Control Window Processing                         *
-      *                                                               *
-      *================================================================
-     CSR   SRWIND        BEGSR
-      *
-      * If window processing call WN0010
-      *
-     C     BGWDPR        IFEQ      'Y'
-      *
-      *    /copy to move data into the data structure fields passed
-      *     as a parameter to the window controller
-      *
-      /COPY WNCPYSRC,ME1540MOV1
-      *
-     C                   CALL      'WN0010'
-     C                   PARM      ##PGM         O#PGM            10
-     C                   PARM      *BLANKS       O#CMD             2
-     C                   PARM      #HACTC        O#ACTN            1
-     C                   PARM                    DATA
-     C     R#RTN         PARM      *BLANKS       O#RTN             7
-     C                   PARM                    EXTRA           256
-      *
-      *   /copy to move data back from the data structure fields passed
-      *    as a parameter to the window controller and control user
-      *    defined processing.
-      *
-      /COPY WNCPYSRC,ME1540MOV2
-      *
-     C     *LIKE         DEFINE    O#RTN         R#RTN
-     C     R#RTN         CABEQ     *BLANKS       EXWIND
-      *
-      *  Check return code and send message on action
-      *  - set no update as some action has been specified.
-      *
-     C                   MOVEL     *ON           *IN99
-     C                   ROLBK                                          90
-      *
-     C                   SELECT
-      *
-      * *Return code is *User QUIT requested
-      *
-     C     R#RTN         WHENEQ    'Y2U9999'
-     C                   MOVEL     'Y2U9999'     P0RTN
-     C                   MOVEL     'Y2U9999'     ZAMSID
-     C                   MOVEL     'Y2USRMSG'    ZAMSGF
-     C                   EXSR      ZASNMS
-     C                   EXSR      ZYEXPG
-      *
-      * *Return code is WN Window Error
-      *
-     C     R#RTN         WHENEQ    'USR0563'
-     C                   MOVEL     'USR0563'     ZAMSID
-     C                   MOVEL     'SDUSRMSG'    ZAMSGF
-     C                   EXSR      ZASNMS
-      *
-      * *Return code is *DBF update error
-      *
-     C     R#RTN         WHENEQ    'USR0567'
-     C                   MOVEL     'USR0567'     ZAMSID
-     C                   MOVEL     'SDUSRMSG'    ZAMSGF
-     C                   EXSR      ZASNMS
-      *
-      * *Return code is *Previous Screen
-      *
-     C     R#RTN         WHENEQ    'USR0790'
-     C                   MOVEL     'MIN0001'     ZAMSID
-     C                   EXSR      ZASNMS
-     C                   ENDSL
-      *
-     C                   END
-      *
+      *================================================================                       EEE058
+      *                                                               *                       EEE058
+      *  SRWIND   : Control Window Processing                         *                       EEE058
+      *                                                               *                       EEE058
+      *================================================================                       EEE058
+     CSR   SRWIND        BEGSR                                                                EEE058
+      *                                                                                       EEE058
+      * If window processing call WN0010                                                      EEE058
+      *                                                                                       EEE058
+     C     BGWDPR        IFEQ      'Y'                                                        EEE058
+      *                                                                                       EEE058
+      *    /copy to move data into the data structure fields passed                           EEE058
+      *     as a parameter to the window controller                                           EEE058
+      *                                                                                       EEE058
+      /COPY WNCPYSRC,ME1540MOV1                                                               EEE058
+      *                                                                                       EEE058
+     C                   CALL      'WN0010'                                                   EEE058
+     C                   PARM      ##PGM         O#PGM            10                          EEE058
+     C                   PARM      *BLANKS       O#CMD             2                          EEE058
+     C                   PARM      #HACTC        O#ACTN            1                          EEE058
+     C                   PARM                    DATA                                         EEE058
+     C     R#RTN         PARM      *BLANKS       O#RTN             7                          EEE058
+     C                   PARM                    EXTRA           256                          EEE058
+      *                                                                                       EEE058
+      *   /copy to move data back from the data structure fields passed                       EEE058
+      *    as a parameter to the window controller and control user                           EEE058
+      *    defined processing.                                                                EEE058
+      *                                                                                       EEE058
+      /COPY WNCPYSRC,ME1540MOV2                                                               EEE058
+      *                                                                                       EEE058
+     C     *LIKE         DEFINE    O#RTN         R#RTN                                        EEE058
+     C     R#RTN         CABEQ     *BLANKS       EXWIND                                       EEE058
+      *                                                                                       EEE058
+      *  Check return code and send message on action                                         EEE058
+      *  - set no update as some action has been specified.                                   EEE058
+      *                                                                                       EEE058
+     C                   MOVEL     *ON           *IN99                                        EEE058
+     C                   ROLBK                                          90                    EEE058
+      *                                                                                       EEE058
+     C                   SELECT                                                               EEE058
+      *                                                                                       EEE058
+      * *Return code is *User QUIT requested                                                  EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'Y2U9999'                                                  EEE058
+     C                   MOVEL     'Y2U9999'     P0RTN                                        EEE058
+     C                   MOVEL     'Y2U9999'     ZAMSID                                       EEE058
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+     C                   EXSR      ZYEXPG                                                     EEE058
+      *                                                                                       EEE058
+      * *Return code is WN Window Error                                                       EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'USR0563'                                                  EEE058
+     C                   MOVEL     'USR0563'     ZAMSID                                       EEE058
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+      *                                                                                       EEE058
+      * *Return code is *DBF update error                                                     EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'USR0567'                                                  EEE058
+     C                   MOVEL     'USR0567'     ZAMSID                                       EEE058
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+      *                                                                                       EEE058
+      * *Return code is *Previous Screen                                                      EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'USR0790'                                                  EEE058
+     C                   MOVEL     'MIN0001'     ZAMSID                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+     C                   ENDSL                                                                EEE058
+      *                                                                                       EEE058
+     C                   END                                                                  EEE058
+      *                                                                                       EEE058
      C     EXWIND        TAG                                                                  EEE058
-     CSR                 ENDSR
+     CSR                 ENDSR                                                                EEE058
      C/EJECT
       *================================================================
      C*

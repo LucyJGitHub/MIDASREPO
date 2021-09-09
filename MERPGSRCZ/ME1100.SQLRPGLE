@@ -183,7 +183,7 @@
      D**********          TFLD    1  68 10   TPRM    5                                 CSW209 CER030
      D TFLD            S             10    DIM(69) CTDATA PERRCD(1)
      D TPRM            S              5    DIM(69) ALT(TFLD)
-     D/COPY WNCPYSRC,ME1100MK01
+     D/COPY WNCPYSRC,ME1100MK01                                                               PNL002
       *
       *  Field / Parameter Data Structure relationship
       *
@@ -288,8 +288,8 @@
      D****************************************7 246 OT72            CGL009175479
      D  OT72                   7    256                                         175479
      D                                     DIM(250)                                              175
-      *                                                                   STP012
-     D MEINDT        E DS                  EXTNAME(MEINMPL1)                    STP012
+      *                                                                                       STP012
+     D MEINDT        E DS                  EXTNAME(MEINMPL1)                                  STP012
       *
      D SCCMT           DS           256
      D  CMTNUM                 1      3  0
@@ -466,10 +466,10 @@
      C                   MOVEL     *BLANKS       KFMSQN
      C                   ENDIF
      C                   EXSR      SRMAP
-      *                                                                   EEE058
-      *  Extract Receiver information and place in data structure         EEE058
-      *                                                                   EEE058
-     C/COPY WNCPYSRC,ME1100LRG                                            EEE058
+      *                                                                                       EEE058
+      *  Extract Receiver information and place in data structure                             EEE058
+      *                                                                                       EEE058
+     C/COPY WNCPYSRC,ME1100LRG                                                                EEE058
       *
       *          **************************************
       *
@@ -1120,7 +1120,7 @@
      C/COPY WNCPYSRC,ME1100C003
       *
      C                   MOVEL     DSTRAN        PDCA
-     C/COPY WNCPYSRC,ME1100MK02
+     C/COPY WNCPYSRC,ME1100MK02                                                               PNL002
       *
      C     PRMDS         WHENEQ    'P20 '
      C                   MOVEL     DSTRAN        DSIN

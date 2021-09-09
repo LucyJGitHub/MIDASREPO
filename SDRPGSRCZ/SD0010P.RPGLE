@@ -2144,7 +2144,7 @@
       * Synchronize screen field names with report field names.                              248936B
       * Format Birth Date to print in DDMMMCCYY.                                             248936B
       *                                                                                      248936B
-     C     CGL031        IFEQ 'Y'                                                            248936B
+     C     CGL031        IFEQ      'Y'                                                       248936B
      C                   SETON                                        92                     248936B
      C     A5BRTH        IFNE      *BLANKS                                                   248936B
      C     E5BRT2        ANDNE     *BLANKS                                                   248936B

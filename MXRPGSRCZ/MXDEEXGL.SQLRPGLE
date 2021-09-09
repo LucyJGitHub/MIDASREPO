@@ -2,14 +2,13 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***********BASEMOD                                                   *                       260324
-/**** *  CRTRPGMOD                                                    *                     MD056612
+/********CRTRPGMOD*****************************************************            MD056612 MD053540
 /*STD *  RPGSQLMOD                                                    *                     MD056612
 /*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD056612
 /*CRT *  MODULE(**********/**********)                                *                       260324
 /*CRT *  SRCFILE(**********/**********)                               *                       260324
 /*CRT *  SRCMBR(*MODULE) OUTPUT(*PRINT)                               *                       260324
 /*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD053540
-/*STD *  RPGBASEMO2                                                   *                     MD053540
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
       *****************************************************************
       *                                                               *

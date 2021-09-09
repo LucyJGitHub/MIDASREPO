@@ -40,7 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -167,6 +167,34 @@
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CIR020
+     D CurrScnBlrt     DS                                                                     CIR020
+     D  @DDBLRT                       1A                                                      CIR020
+     D  @DDRFRR                      10A                                                      CIR020
+     D  @DDCALM                       4A                                                      CIR020
+     D  @DDBADJ                      13A                                                      CIR020
+     D  @DDFLOR                      13A                                                      CIR020
+     D  @DDLBDY                       2A                                                      CIR020
+     D  @DDLODY                       2A                                                      CIR020
+     D  @DDOPSH                       1A                                                      CIR020
+     D  @DDRRDP                       2A                                                      CIR020
+     D  @DDDBAV                       1A                                                      CIR020
+     D  @DDRTKN                       1A                                                      CIR020
+                                                                                              CIR020
+      ** New Backward-Looking Rate Fields Screen Fields                                       CIR020
+     D InTranBlrt      DS                                                                     CIR020
+     D  DDBLRT                        1A                                                      CIR020
+     D  DDRFRR                       10A                                                      CIR020
+     D  DDCALM                        4A                                                      CIR020
+     D  DDBADJ                       13A                                                      CIR020
+     D  DDFLOR                       13A                                                      CIR020
+     D  DDLBDY                        2A                                                      CIR020
+     D  DDLODY                        2A                                                      CIR020
+     D  DDOPSH                        1A                                                      CIR020
+     D  DDRRDP                        2A                                                      CIR020
+     D  DDDBAV                        1A                                                      CIR020
+     D  DDRTKN                        1A                                                      CIR020
+                                                                                              CIR020
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -187,6 +215,7 @@
       ** Switchable Features Entry Parameters
      D CIR001          S              1A
      D CIR006          S              1A
+     D CIR020          S              1A                                                      CIR020
 
       ** Output Parameters
      D PIdx            S              3P 0
@@ -209,6 +238,9 @@
      D  WkFld1         S             11  7                                                    209379
      D  WkFld2         S             11  7                                                    209379
                                                                                               209379
+     D BChar           DS                                                                     CIR020
+     D   BLen                  1      2B 0                                                    CIR020
+     D   LenStr                1      2
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -699,6 +731,20 @@
       ** #0ICFD - Our Rate Change Day in Month
       ** Business Day Convention Fields
 
+     C     CIR020        IFEQ      'Y'                                                        CIR020
+                                                                                              CIR020
+      ** Rates Known Flag cannot be amended                                                   CIR020
+                                                                                              CIR020
+     C     DDRTKN        IFNE      @DDRTKN                                                    CIR020
+     C                   ADD       1             WIdx                                         CIR020
+     C                   EVAL      FldNameArr(WIdx) = 'DDRTKN'                                CIR020
+     C                   EVAL      MsgIDArr(WIdx) = '5049469'                                 CIR020
+     C                   EVAL      BLen = %Len(%Trim(@DDRTKN))                                CIR020
+     C                   EVAL      MsgDtaArr(WIdx) = LenStr +%TRIM(@DDRTKN)                   CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -932,6 +978,14 @@
 
      C                   PARM                    CrIRScnFmt
 
+      ** New Backward-Looking Rate fields in Screen Format                                    CIR020
+                                                                                              CIR020
+     C                   PARM                    InTranBlrt                                   CIR020
+                                                                                              CIR020
+      ** (Current) Backward-Looking Rate fields in Screen Format                              CIR020
+                                                                                              CIR020
+     C                   PARM                    CurrScnBlrt                                  CIR020
+                                                                                              CIR020
       ** Current Deal in file format
 
      C                   PARM                    CrIRFilFmt
@@ -1038,6 +1092,19 @@
      C                   ELSE                                                                 CDL039
      C                   MOVEL     'N'           CDL039                                       CDL039
      C                   END                                                                  CDL039
+                                                                                              CIR020
+      ** Determine if CIR020 feature is installed                                             CIR020
+                                                                                              CIR020
+     C                   MOVEL     'N'           CIR020                                       CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       @RTCD                                        CIR020
+     C                   PARM      '*VERIFY'     @OPTN                                        CIR020
+     C                   PARM      'CIR020'      @SARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+      *                                                                                       CIR020
+     C     @RTCD         IFEQ      *BLANK                                                     CIR020
+     C                   MOVEL     'Y'           CIR020                                       CIR020
+     C                   END                                                                  CIR020
 
      C                   ENDSR
       *****************************************************************

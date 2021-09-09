@@ -80,7 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054117 - Principal change Increase/Decrease capability     *
@@ -304,6 +304,8 @@
      D  WVRPDet2            1344   2126
      D  WVRtFxCcy           2097   2126
      D  WVRPDet3            2551   2602                                                       CDL028
+     D  WVOurBlrt           2607   2641                                                       CIR020
+     D  WVThrBlrt           2648   2682                                                       CIR020
 
       ** Deals file - Caps/Collars/Floors
      D DEALS         E DS                  EXTNAME(DEALSDG)
@@ -314,6 +316,8 @@
      D  WFRPPay3            1134   1343
      D  WFRPDet2            1344   2126
      D  WFRPDet3            2551   2602                                                       CDL028
+     D  WFOurBlrt           2607   2641                                                       CIR020
+     D  WFThrBlrt           2648   2682                                                       CIR020
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSD015
       ** External DS for Customer Details                                                     CSD015
@@ -536,6 +540,7 @@
      D CSD015          S              1A                                                      CSD015
      D CCF001          S              1A   INZ('N')                                           CSD015
      D CDL028          S              1A                                                      CDL028
+     D CIR020          S              1A                                                      CIR020
 
      D PkDBRC          S              3A
      D PModeOfOp       S              6A                                                      CAP056
@@ -1131,6 +1136,24 @@
                                                                                               CDL038
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
+                                                                                              CIR020
+      ** Backward-Looking Rate Fields                                                         CIR020
+                                                                                              CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   MOVEL     WVOurBlrt     WFOurBlrt                                    CIR020
+     C                   MOVEL     WVThrBlrt     WFThrBlrt                                    CIR020
+     C                   MOVEL     RPURTKN       URTKN                                        CIR020
+     C                   MOVEL     RPTRTKN       TRTKN                                        CIR020
+                                                                                              CIR020
+      ** Set Backward-Looking Rate Change Date                                                CIR020
+                                                                                              CIR020
+     C                   IF        RPUBLRT = 'Y'                                              CIR020
+     C                   Z-ADD     BJRDNB        URCHG                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   IF        RPTBLRT = 'Y'                                              CIR020
+     C                   Z-ADD     BJRDNB        TRCHG                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
 
       ** Set up required fields on DEALSDG that were not set up on
       ** Valid File
@@ -1512,6 +1535,33 @@
                                                                                               CDL038
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
+                                                                                              CIR020
+      ** Backward-Looking Rate Fields                                                         CIR020
+                                                                                              CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   MOVEL     WVOurBlrt     WFOurBlrt                                    CIR020
+     C                   MOVEL     WVThrBlrt     WFThrBlrt                                    CIR020
+                                                                                              CIR020
+      ** Set Rate Change Date to Rundate if deal is amended from                              CIR020
+      ** forward-looking to backward-looking                                                  CIR020
+                                                                                              CIR020
+     C                   IF        UBLRT <> 'Y' and RPUBLRT = 'Y'                             CIR020
+     C                   Z-ADD     BJRDNB        URCHG                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   IF        TBLRT <> 'Y' and RPTBLRT = 'Y'                             CIR020
+     C                   Z-ADD     BJRDNB        TRCHG                                        CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+      ** Set Rate Change Date to zero if deal is amended from                                 CIR020
+      ** backward-looking to forward-looking                                                  CIR020
+                                                                                              CIR020
+     C                   IF        UBLRT = 'Y' and RPUBLRT <> 'Y'                             CIR020
+     C                   Z-ADD     *ZEROS        URCHG                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   IF        TBLRT = 'Y' and RPTBLRT <> 'Y'                             CIR020
+     C                   Z-ADD     *ZEROS        TRCHG                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
 
       ** Set up required fields on DEALSDG that were not set up on valid file
 
@@ -3879,6 +3929,19 @@
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
                                                                                               CSD083
+      ** Access SAR details file to determine if CIR020 is on                                 CIR020
+                                                                                              CIR020
+     C                   MOVE      'N'           CIR020                                       CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRTCD                                        CIR020
+     C                   PARM      '*VERIFY '    POPTN                                        CIR020
+     C                   PARM      'CIR020'      PSARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+      *                                                                                       CIR020
+     C     PRTCD         IFEQ      *BLANK                                                     CIR020
+     C                   MOVE      'Y'           CIR020                                       CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   CALLB     'AOSVALR0'                                               MD054117
      C                   PARM      *BLANKS       PRtCd                                      MD054117
      C                   PARM                    PSysVal01                                  MD054117

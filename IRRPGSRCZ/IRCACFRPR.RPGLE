@@ -65,7 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
@@ -384,6 +384,12 @@
      D PErrorFndPr     DS                                                                     CAP043
      D   OurPrinEr             1      1                                                       CAP043
      D   ThrPrinEr             2      2                                                       CAP043
+                                                                                              CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CIR020
+     D CurrScnBlrt     DS            50                                                       CIR020
+                                                                                              CIR020
+      ** New Backward-Looking Rate Screen Fields                                              CIR020
+     D InTranBlrt      DS            50                                                       CIR020
 
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -1315,6 +1321,8 @@
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    NwIRScnFmt
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    InTranBlrt                                   CIR020
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C                   PARM                    CrIRFilFmt
      C                   PARM      'Y'           PResetErrs
      C                   PARM                    BJRDNB
@@ -1352,6 +1360,7 @@
      C                   PARM      RPPONS        PayNostro
      C                   PARM                    ExtData
      C                   PARM                    WValBDC
+     C                   PARM                    InTranBlrt                                   CIR020
      C                   PARM                    SDBANK
      C                   PARM                    SDMMOD
      C                   PARM                    SDDEAL
@@ -2307,9 +2316,10 @@
      C                   PARM                    BGPFMG
      C                   PARM                    BNDCSP
      C                   PARM                    NwIRScnFmt
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C                   PARM                    DDSTS
-      ** Sign of Short Term Rate                                                             BUG5707
-     C                   PARM                    #0SIGN                                      BUG5707
+      ***Sign*of*Short*Term*Rate***************************************               BUG5707 CIR020
+     C**********         PARM                    #0SIGN                               BUG5707 CIR020
 
       ** Update Current deal with deal in Screen format
 
@@ -2640,6 +2650,7 @@
      C                   PARM      RPPONS        PayNostro
      C                   PARM                    ExtData
      C                   PARM                    WValBDC
+     C                   PARM                    InTranBlrt                                   CIR020
      C                   PARM                    SDBANK
      C                   PARM                    SDMMOD
      C                   PARM                    SDDEAL

@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /**** *  RPGBASEBND                                                   *                     MD056612
-/*STD *  RPGSQLBND                                                    *                     MD056612
+/*S*D****RPGSQLBND*****************************************************            MD056612 MD041126
 /*STD *  RPGSQLMOD                                                    *                     MD041126
 /*EXI *  TEXT('Midas TI Update MX Files for Trade Finance')           *
       *****************************************************************

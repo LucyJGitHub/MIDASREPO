@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058404           Date 06Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058513           Date 09Sep21               *
+      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
       *                 MD057930           Date 26Apr21               *
       *                 MD057934           Date 23Apr21               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058513 - Rate known flag not saved                         *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -1505,6 +1507,8 @@
      C                             TransCHTP = 'I'                                            CLE172
      C                   EVAL      DDRTKN = 'N'                                               CLE172
      C                   EVAL      VRTKN = 'N'                                                CLE172
+     C                   ELSE                                                               MD058513
+     C                   EVAL      VRTKN = DDRTKN                                           MD058513
      C                   ENDIF                                                                CLE172
                                                                                               CLE172
      C                   ENDSR                                                                CLE172

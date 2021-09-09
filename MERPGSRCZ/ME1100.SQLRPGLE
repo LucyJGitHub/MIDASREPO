@@ -2053,4 +2053,3 @@ PAY DETL:BPB70                                                                  
 BNKTOBNK:BPB72                                                                                CSW209
 ORGCCYAM:BPB33B                                                                               CSW209
 EXT NARR  PEXN                                                                                CER030
-     X/COPY WNCPYSRC,ME1100MK03

@@ -642,7 +642,6 @@
      C     KYGNCR        SETLL     @GNCRPD                            60
      C     *IN60         DOWEQ     '0'
      C     WUPYTP        ANDEQ     *BLANKS
-     C/COPY WNCPYSRC,ME1501C039
       *
       *  Access Auto-Gen Criteria Control File
       *
@@ -669,7 +668,6 @@
       *
      C                   MOVE      GNPYTP        WUPYTP
      C                   MOVE      GNPYST        WUPYST                                        CRE00
-     C/COPY WNCPYSRC,ME1501C040
       *
       *  Position to first tag in the Criteria Set
       *
@@ -724,7 +722,6 @@
       *
      C                   ENDDO
      C                   ENDIF
-     C/COPY WNCPYSRC,ME1501C041
      C                   ENDIF
      C                   ENDDO
      C                   ENDIF

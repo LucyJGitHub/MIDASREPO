@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058547           Date 10Aug21               *
-      *  Prev Amend No. MD058448           Date 14Jul21               *
+      *  Last Amend No. MD058734           Date 03Sep21               *
+      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *                 MD058448           Date 14Jul21               *
       *                 MD058379           Date 12Jul21               *
       *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058734 - Default value for Day Basis Average based         *
+      *             from Calculation Method 3,4 and 5.                *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add DDACTN on call to  *
       *             MMVACTINTR.                                       *
@@ -3316,6 +3319,7 @@
      C                   PARM      *BLANKS       RetCodeOut                                   CDL102
      C     RetCodeOut    IFNE      'Error'                                                    CDL102
                                                                                               CDL102
+     C                   MOVEL     TempInpDS     TranScnBlrt                                MD058734
      C                   MOVEL     TempOutDS     FUNDValBlrt                                  CDL102
      C                   MOVEL     WCLBLRT       N1BLRT                                       CDL102
      C                   MOVEL     WCLRFRR       N1RFRR                                       CDL102

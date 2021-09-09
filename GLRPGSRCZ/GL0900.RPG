@@ -10,8 +10,9 @@
 0007 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                                  *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058366           Date 23Jul21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CRE005             Date 18Jan10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,8 @@
 0009 F*                                                               *
 0012 F********************************************************************
 0009 F*                                                                  *
+      *  MD058366 - Failed component GLC48 - Terminated Abnormally.      *
+      *           - If FVT106 is ON, do not clear NOCL.                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -50,6 +53,7 @@
 0022 F*ABGL   IF  E           K        DISK                               S01154
 0021 F*                                                                                       CRE005
 0018 FRERCHHPAO   E                    DISK                      A                            CRE005
+     FACCNTL18IF  E           K        DISK                                                 MD058366
 0026 F/SPACE 3                                                            S01154
 0027 F*                                                                  *
 0028 F* ID F  C  M  L    FUNCTION OF INDICATORS                          *
@@ -131,7 +135,59 @@
      I                                       11  150NBTRAN
      I                                       26  300NSTRAN
 0122 I/SPACE 2
+     ISDBANK    E DSSDBANKPD                                                                MD058366
+      *                                                                                     MD058366
+      ** Bank Details                                                                       MD058366
+      *                                                                                     MD058366
+     ILDA       E DSLDA                                                                     MD058366
+      *                                                                                     MD058366
+      ** Local Data Area                                                                    MD058366
+      *                                                                                     MD058366
      C                     MOVEACPY@      BIS@   80
+      *                                                                                     MD058366
+      ** Define LDA Dtaara                                                                  MD058366
+      *                                                                                     MD058366
+     C           *NAMVAR   DEFN           LDA                                               MD058366
+      *                                                                                     MD058366
+      ** Read Bank details via Access program                                               MD058366
+      *                                                                                     MD058366
+     C                     CALL 'AOBANKR0'                                                  MD058366
+     C                     PARM '*MSG   ' RTCD    7                                         MD058366
+     C                     PARM '*KEY   ' OPTN    7                                         MD058366
+     C           SDBANK    PARM           SDBANK                                            MD058366
+      *                                                                                     MD058366
+      ** If record not found, exit via DBERR subroutine                                     MD058366
+      *                                                                                     MD058366
+     C           RTCD      IFNE *BLANK                                                      MD058366
+     C           *LOCK     IN   LDA                                                         MD058366
+     C                     MOVEL'GL0900'  DBPGM                                             MD058366
+     C                     MOVEL'SDBANKPD'DBFILE                                            MD058366
+     C                     Z-ADD1         DBASE                                             MD058366
+     C                     MOVELOPTN      DBKEY                                             MD058366
+     C                     OUT  LDA                                                         MD058366
+     C                     EXSR *PSSR                                                       MD058366
+     C                     ENDIF                                                            MD058366
+      *                                                                                     MD058366
+      ** Access Switchable Features File for FVT106                                         MD058366
+      *                                                                                     MD058366
+     C                     Z-ADD0         WNOCL   50                                        MD058366
+     C                     MOVE '0'       *IN26                                             MD058366
+     C                     CALL 'AOSARDR0'                                                  MD058366
+     C                     PARM *BLANKS   RTCD                                              MD058366
+     C                     PARM '*VERIFY' OPTN                                              MD058366
+     C                     PARM 'FVT106'  WSARD   6                                         MD058366
+     C           RTCD      IFEQ *BLANK                                                      MD058366
+     C                     MOVE '1'       *IN26                                             MD058366
+     C           *LOVAL    SETLLACCNTL18                                                    MD058366
+     C                     READ ACCNTL18                 99                                 MD058366
+     C           *IN99     DOWEQ'0'                                                         MD058366
+     C           RECI      IFEQ 'D'                                                         MD058366
+     C           DACC      ANDEQBJRDNB                                                      MD058366
+     C                     ADD  1         WNOCL                                             MD058366
+     C                     ENDIF                                                            MD058366
+     C                     READ ACCNTL18                 99                                 MD058366
+     C                     ENDDO                                                            MD058366
+     C                     ENDIF                                                            MD058366
 0129 C**
 0130 C**   ALL THE PROCESSING IS COMPLETED DURING THE FIRST RPG CYCLE.
 0131 C**   SETON LR TO END THE PROGRAM AT END OF CYCLE.
@@ -235,6 +291,27 @@
      C                     WRITERERCHHA0                                                      CRE005
 0232 C           END       TAG                             **  END TAG  **
 0233 C*
+     C/SPACE 3                                                                              MD058366
+      ********************************************************************                  MD058366
+      *                                                                                     MD058366
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS                           MD058366
+      *                                                                                     MD058366
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                                       MD058366
+      *                                                                                     MD058366
+      *  CALLS: NOTHING                                                                     MD058366
+      *                                                                                     MD058366
+      ********************************************************************                  MD058366
+      *                                                                                     MD058366
+     C           *PSSR     BEGSR                                                            MD058366
+      *                                                                                     MD058366
+     C           @RUN      IFEQ *BLANKS                                                     MD058366
+     C                     MOVE 'Y'       @RUN    1                                         MD058366
+     C                     DUMP                                                             MD058366
+     C                     SETON                     U7U8LR                                 MD058366
+     C                     RETRN                                                            MD058366
+     C                     ENDIF                                                            MD058366
+      *                                                                                     MD058366
+     C                     ENDSR                                                            MD058366
 0234 C********************************************************************
 0235 O**   A C C N T   F I L E
 0236 O**
@@ -248,7 +325,9 @@
 0244 O                         NOOA      31P
 0245 O                         ZERO05    34P
 0246 O                         ZERO05    37P
-0247 O                         ZERO05    40P
+0247 O**********               ZERO05    40P                                                MD058366
+     O                N26      ZERO05    40P                                                MD058366
+     O                 26      WNOCL     40P                                                MD058366
 0248 O                         NOOA      43P
 0249 O                         ZERO05    46P
 0250 O                         ZERO05    49P

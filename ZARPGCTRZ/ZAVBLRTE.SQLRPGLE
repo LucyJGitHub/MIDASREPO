@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058623           Date 23Aug21               *
-      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *  Last Amend No. MD058734           Date 03Sep21               *
+      *  Prev Amend No. MD058623           Date 23Aug21               *
+      *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
       *                 MD057930           Date 26Apr21               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058734 - Default value or Day Basis Average based          *
+      *             from Calculation Method 3,4 and 5.                *
       *  MD058623 - Added validation for API DEAM                     *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
@@ -1458,7 +1461,9 @@
       ** default from the Interest Calculation Basis (ICBS)                                   CLE172
       ** Map ICBS 3 & 5 to Act/360, 4 to Act/365                                              CLE172
      C                   IF        DDDBAVOK <> 'N'                                            CLE172
-     C                   IF        ApiName = 'CLIP' and                                       CLE172
+     C                   IF        (ApiName = 'CLIP' or                              CLE172 MD058734
+     C                             ApiName = 'FUND' or                                      MD058734
+     C                             ApiName = 'LDNI') and                                    MD058734
      C                             WDBAV = 0                                                  CLE172
                                                                                               CLE172
      C                   SELECT                                                               CLE172

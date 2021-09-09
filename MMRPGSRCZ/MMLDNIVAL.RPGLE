@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058644           Date 31Aug21               *
-      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *  Last Amend No. MD058734           Date 03Sep21               *
+      *  Prev Amend No. MD058644           Date 31Aug21               *
+      *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
       *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -162,6 +163,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058734 - Default value for Day Basis Average based         *
+      *             from Calculation Method 3,4 and 5.                *
       *  MD058644 - Unable to set CD maturity date due to             *
       *             'Negative Interest' validation error              *
       *  MD058547 - User cannot amend a call notice deposit taken     *
@@ -4328,14 +4331,15 @@
      C                   EXSR      RESETERRS                                                  CDL102
      C                   CLEAR                   TempInpDS                                    CDL102
                                                                                               CDL102
-     C                   MOVE      IKICMT        PICBS                                        CDL102
+     C**********         MOVE      IKICMT        PICBS                               CDL102 MD058734
      C                   CALLB     'ZAVBLRTE'                                                 CDL102
      C                   PARM      'LDNI'        ApiName           4                          CDL102
      C                   PARM                    DDDLNO            6                          CDL102
      C                   PARM      DDTYPE        PTransType        2                          CDL102
      C                   PARM      DDCCY         PCCY              3                          CDL102
      C                   PARM      DDBSRC        PBRTT             2                          CDL102
-     C                   PARM                    PICBS             1 0                        CDL102
+     C**********         PARM                    PICBS             1 0               CDL102 MD058734
+     C                   PARM                    DDICMT                                     MD058734
      C                   PARM      IKCHTP        PCHTP             1                          CDL102
      C                   PARM      TranScnBlrt   TempInpDS       200                          CDL102
      C                   PARM                    Idx                                          CDL102
@@ -4345,6 +4349,7 @@
      C                   PARM      *BLANKS       RetCodOut         7                          CDL102
                                                                                               CDL102
      C     RetCodOut     IFNE      'Error'                                                    CDL102
+     C                   MOVEL     TempInpDS     TranScnBlrt                                MD058734
      C                   MOVEL     TempOutDS     BLRTValFlds                                  CDL102
      C                   MOVEL     VBLRT         IKBLRT                                       CDL102
      C                   MOVEL     VRFRR         IKRFRR                                       CDL102

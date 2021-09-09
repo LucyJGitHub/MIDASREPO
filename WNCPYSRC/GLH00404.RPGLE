@@ -4,11 +4,14 @@
       *                                                               *
       *  GLH00404 - Midas GL Retrieve Postings by Network Account     *
       *                                                               *
-      *  Last Amend No. MD058751        Date 03Sep21                  *
-      *  Prev Amend No. UUC103 *CREATE  Date 20Oct20                  *
+      *  Last Amend No. MD058767        Date 07Sep21                  *
+      *  Prev Amend No. MD058751        Date 03Sep21                  *
+      *                 UUC103 *CREATE  Date 20Oct20                  *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058767 - MT940s are producing many extra spaces in tag 86. *
+      *             Upgraded CAR UUC061 fix MD030976.                 *
       *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
       *             CAR UUC103. Alphanumeric batch numbers not        *
       *             checked correctly.                                *
@@ -16,6 +19,7 @@
       *           UUC061 - SWIFT Statement Enhancement                *
       *                                                               *
       *****************************************************************
+     C                   MOVEL     *Blanks       WKEXRF           35                        MD058767
      C                   Z-ADD     1             TOTL              1 0          UUC103
      C                   IF        @DTA = '#'                                   UUC103
      C                             AND UUC103 ='Y'                              UUC103
@@ -56,7 +60,18 @@
      C                   MOVEL     ' '           ZAEXRF                         UUC103
      C                   ENDIF                                                  UUC103
       *                                                                         UUC103
+     c                   IF        %Subst(WKEXRF:35:1) = ' '                                MD058767
      C                   EVAL      GLExtNarr = %Trim(GLExtNarr) + ' ' + ZAEXRF  UUC103
+     c                   ELSE                                                               MD058767
+     c                   EVAL      GLExtNarr = %Trim(GLExtNarr) +  ZAEXRF                   MD058767
+     C                   ENDIF                                                              MD058767
+      *                                                                                     MD058767
+      ** Make sure first char is not blank                                                  MD058767
+      *                                                                                     MD058767
+     c                   EVAL      GLExtNarr = %Trim(GLExtNarr)                             MD058767
+      *                                                                                     MD058767
+     c                   MOVEL     ZAEXRF        WKEXRF                                     MD058767
+      *                                                                                     MD058767
      C                   ENDIF                                                  UUC103
       *                                                                         UUC103
      C                   ENDIF                                                  UUC103
@@ -141,6 +156,68 @@
      C                   PARM                    POSTD                          UUC103
      C                   PARM                    FTREF                          UUC103
      C                   MOVE      BKBRCA        BRCA              3            UUC103
+      *                                                                                     MD058767
+     c                   IF        getp = 'G'                                               MD058767
+     c                   MOVE      *blanks       wkftref                                    MD058767
+     c                   EVAL      ftrefxx(1) = FTREF2                                      MD058767
+     c                   EVAL      ftrefxx(2) = FTREF3                                      MD058767
+     c                   EVAL      ftrefxx(3) = FTREF5                                      MD058767
+     c                   EVAL      ftrefxx(4) = FTREF6                                      MD058767
+     c                   Z-ADD     1             @xx               1 0                      MD058767
+     c                   Z-ADD     0             @yy               1 0                      MD058767
+      *                                                                                     MD058767
+     c                   DOW       @xx < 5                                                  MD058767
+     c                   IF        ftrefxx(@xx) = *blanks                                   MD058767
+     c                   LEAVE                                                              MD058767
+     c                   ENDIF                                                              MD058767
+      *                                                                                     MD058767
+     c                   IF        %subst(WKEXRF:34:2) = '  '                               MD058767
+     c                             and @xx > 1                                              MD058767
+      *                                                                                     MD058767
+     c                   IF        wkftre1 <> *blanks                                       MD058767
+     c                   ADD       1             @yy                                        MD058767
+     c                   EVAL      MGADXX(@yy) = wkftre1                                    MD058767
+     c                   ENDIF                                                              MD058767
+     c                   IF        wkftre2 <> *blanks                                       MD058767
+     c                   ADD       1             @yy                                        MD058767
+     c                   EVAL      MGADXX(@yy) = wkftre2                                    MD058767
+     c                   ENDIF                                                              MD058767
+     c                   IF        wkftre3 <> *blanks                                       MD058767
+     c                   ADD       1             @yy                                        MD058767
+     c                   EVAL      MGADXX(@yy) = wkftre3                                    MD058767
+     c                   ENDIF                                                              MD058767
+                                                                                            MD058767
+     c                   MOVE      *blanks       wkftref                                    MD058767
+     C                   EVAL      wkftref = ftrefxx(@xx)                                   MD058767
+                                                                                            MD058767
+     c                   ELSE                                                               MD058767
+     c                   EVAL      wkftref = %Trim(wkftref) +  ftrefxx(@xx)                 MD058767
+     C                   ENDIF                                                              MD058767
+      *                                                                                     MD058767
+      ** Make sure first char is not blank                                                  MD058767
+      *                                                                                     MD058767
+     c                   EVAL      wkftref = %Trim(wkftref)                                 MD058767
+      *                                                                                     MD058767
+     c                   MOVEL     ftrefxx(@xx)  WKEXRF                                     MD058767
+     c                   ADD       1             @xx                                        MD058767
+     c                   ENDDO                                                              MD058767
+      *                                                                                     MD058767
+     c                   IF        wkftre1 <> *blanks                                       MD058767
+     c                   ADD       1             @yy                                        MD058767
+     c                   EVAL      MGADXX(@yy) = wkftre1                                    MD058767
+     c                   ENDIF                                                              MD058767
+     c                   IF        wkftre2 <> *blanks                                       MD058767
+     c                   ADD       1             @yy                                        MD058767
+     c                   EVAL      MGADXX(@yy) = wkftre2                                    MD058767
+     c                   ENDIF                                                              MD058767
+     c                   IF        wkftre3 <> *blanks                                       MD058767
+     c                   ADD       1             @yy                                        MD058767
+     c                   EVAL      MGADXX(@yy) = wkftre3                                    MD058767
+     c                   ENDIF                                                              MD058767
+      *                                                                                     MD058767
+      ** Skip following codes                                                               MD058767
+      *                                                                                     MD058767
+     c                   ELSE                                                               MD058767
      C                   IF        FTREF2 <> ' '                                UUC103
      C                   MOVEL     FTREF2        ZAEXRF                         UUC103
      C                   EXSR      ACTION                                       UUC103
@@ -162,6 +239,9 @@
      C                   END                                                    UUC103
      C                   END                                                    UUC103
      C                   END                                                    UUC103
+      *                                                                                     MD058767
+     c                   ENDIF                                                              MD058767
+      *                                                                                     MD058767
      C                   END                                                    UUC103
      C                   END                                                    UUC103
 

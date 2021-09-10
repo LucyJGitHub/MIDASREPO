@@ -1,173 +1,173 @@
-000100210908     H DEBUG
-000101210908     H
-000102210908      *****************************************************************
-000103210908/*STD *  RPGBASEMOD                                                   *
-000104210908/*EXI *  TEXT('Midas XX TAB001 upload to XXACHOMTD')                  *
-000105210908      *****************************************************************
-000106210908      *                                                               *
-000107210908      *  Midas - General Ledger Module                                *
-000108210908      *                                                               *
-000109210908      *  XX005005 - Midas XX TAB001 upload to XXACHOMTD               *
-000110210908      *                                                               *
-000111210908      *  (c) Finastra International Limited 2021                      *
-000112210908      *                                                               *
-000113210908      *  Last Amend No. DRI005  *CREATE    Date 13Apr21               *
-000114210908      *                                                               *
-000115210908      *---------------------------------------------------------------*
-000116210908      *                                                               *
-000117210908      *  DRI005 - HO and EDW Extracts                                 *
-000118210908      *                                                               *
-000119210908      *****************************************************************
-000120210908      *
-000121210908     FTAB001L0  IF   E           K Disk    InfSR(*PSSR)
-000122210908      *
-000123210908     FXXACHOML0 UF A E           K Disk    InfSR(*PSSR)
-000124210908      *
-000125210908      /Title Function of indicators
-000126210908     F*****************************************************************
-000127210908     F*                                                               *
-000128210908     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
-000129210908     F*                                                               *
-000130210908     F*                                                               *
-000131210908     F*  90-99 - Used by Standard Subroutines                         *
-000132210908     F*                                                               *
-000133210908     F*  U7+U8 - Database Error                                       *
-000134210908     F*                                                               *
-000135210908     F*****************************************************************
-000136210908      /Title Subroutine Index
-000137210908     F*****************************************************************
-000138210908     F*                                                               *
-000139210908     F*  S U B R O U T I N E   I N D E X                              *
-000140210908     F*                                                               *
-000141210908     F*  Init      - Initial Processing                               *
-000142210908     F*  Proces    - Main processing                                  *
-000143210908     F*                                                               *
-000144210908     F*  *PSSR     - Program error handling routine                   *
-000145210908     F*                                                               *
-000146210908     F*****************************************************************
-000147210908     D/Title D-Specifications
-000148210908     D CPY@            S             80    Dim(1) CTData PerRCD(1)
-000149210908      ***  Array for Object Copyright Statement.
-000150210908      *
-000151210908     D SDBANK        E DS                  ExtName(SDBANKPD)
-000152210908      ** Bank Details
-000153210908      *
-000154210908     D DSSDY         E DS                  ExtName(DSSDY)
-000155210908      ** Second DS For Access Programs, Long Data Structure
-000156210908      *
-000157210908     D DBERR           DS           256
-000158210908      * Data structure for data-base error processing
-000159210908     D  DBFILE               134    141
-000160210908     D  DBKEY                142    170
-000161210908     D  DBPGM                171    180
-000162210908     D  DBASE                181    183  0
-000163210908      *
-000164210908
-000165210908     C/Title Main Processing
-000166210908      *================================================================
-000167210908      *  P R O G R A M     S T A R T                                  *
-000168210908      *================================================================
-000169210908      *
-000170210908      * Perform Initialisation.
-000171210908     C                   ExSR      Init
-000172210908      *
-000173210908      * Perform Upload from TAB001
-000174210908     C                   ExSR      UpLoad
-000175210908      *
-000176210908     C                   SetOn                                        LR
-000177210908     C                   Return
-000178210908      *================================================================
-000179210908      *  P R O G R A M     E N D                                      *
-000180210908      *================================================================
-000181210908      /Title SR/Init
-000182210908      *****************************************************************
-000183210908      *                                                               *
-000184210908      *  Init   - Subroutine to do Program Initialisation.            *
-000185210908      *                                                               *
-000186210908      *  Called By: Main Processing                                   *
-000187210908      *  Calls    : None                                              *
-000188210908      *                                                               *
-000189210908      *****************************************************************
-000190210908      *
-000191210908     C     Init          BegSR
-000192210908      *
-000193210908      ***  Copyright Statement.
-000194210908     C                   MoveA     CPY@          BIS@             80
-000195210908      *
-000196210908      ** Klist to access the XXFEEDDTD file
-000197210908     C     KACHOD        KList
-000198210908     C                   KFld                    KACOD            10 0
-000199210908      *
-000200210908     C                   EndSR
-000201210908      *****************************************************************
-000202210908      /Title SR/Feeder
-000203210908      *****************************************************************
-000204210908      *                                                               *
-000205210908      *  UpLoad - Subroutine to upload recs from TAB001 to XXACHOMTD  *
-000206210908      *                                                               *
-000207210908      *  Called By: Main Processing                                   *
-000208210908      *  Calls:                                                       *
-000209210908      *                                                               *
-000210210908      *****************************************************************
-000211210908      *
-000212210908     C     UpLoad        BegSR
-000213210908      *
-000214210908      ** Access TAB001
-000215210908      ** Write to XXACHOMTD
-000216210908     C     *LOVAL        SETLL     TAB001L0
-000217210908     C                   READ      TAB001L0                               50
-000218210908     C                   Dow       *IN50 = '0'
-000219210908      *
-000220210908     C                   MOVEL     ACODE         WKACOD           10
-000221210908     C                   MOVE      '000000'      WKACOD
-000222210908     C                   MOVEL     WKACOD        KACOD
-000223210908     C     KACHOD        CHAIN     XXACHOML0                          51
-000224210908     C                   if        *IN51 = '1'
-000225210908     C                   Z-ADD     KACOD         XXMACOD
-000226210908     C                   Z-ADD     ACODE1        XXMHOAC
-000227210908     C                   MOVEL     PRCODE1       XXMHOPC
-000228210908     C                   MOVEL     MKCODE1       XXMHOMC
-000229210908     C                   MOVEL     'N'           XXMEXCL
-000230210908     C                   WRITE     XXACHOMD0
-000231210908     C                   ENDIF
-000232210908      *
-000233210908     C                   READ      TAB001L0                               50
-000234210908     C                   ENDDO
-000235210908      *
-000236210908     C                   EndSR
-000237210908      *
-000238210908      *****************************************************************
-000239210908      /Title SR/*PSSR
-000240210908      *****************************************************************
-000241210908      *                                                               *
-000242210908      *  *PSSR  - Program Error Processing Subroutine.                *
-000243210908      *                                                               *
-000244210908      *  Called By: Various                                           *
-000245210908      *                                                               *
-000246210908      *****************************************************************
-000247210908      *
-000248210908     C     *PSSR         BegSR                                                  *** *PSSR  ***
-000249210908      *
-000250210908      ***  Check to see that *PSSR has not already been called.
-000251210908     C                   If        WRUN = *BLANK
-000252210908     C                   Move      'Y'           WRUN              1
-000253210908     C                   MoveL     'XX005005'    DBPGM
-000254210908      *
-000255210908     C     *DTAARA       Define    LDA           WLDA            256
-000256210908     C     *Lock         In        WLDA
-000257210908     C                   MoveL     DBERR         WLDA
-000258210908     C                   Out       WLDA
-000259210908     C                   SetOn                                        U7U8LR
-000260210908      *
-000261210908     C                   Dump
-000262210908     C                   EndIf
-000263210908      *
-000264210908      ** Exit program
-000265210908     C                   Return
-000266210908      *
-000267210908     C                   EndSR
-000268210908      *
-000269210908      *****************************************************************
-000270210908      ***
-000271210908**  CPY@
-000272210908(c) Finastra Ltd 2021
+     H DEBUG
+     H
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas XX TAB001 upload to XXACHOMTD')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  XX005005 - Midas XX TAB001 upload to XXACHOMTD               *
+      *                                                               *
+      *  (c) Finastra International Limited 2021                      *
+      *                                                               *
+      *  Last Amend No. DRI005  *CREATE    Date 13Apr21               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DRI005 - HO and EDW Extracts                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FTAB001L0  IF   E           K Disk    InfSR(*PSSR)
+      *
+     FXXACHOML0 UF A E           K Disk    InfSR(*PSSR)
+      *
+      /Title Function of indicators
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /Title Subroutine Index
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Init      - Initial Processing                               *
+     F*  Proces    - Main processing                                  *
+     F*                                                               *
+     F*  *PSSR     - Program error handling routine                   *
+     F*                                                               *
+     F*****************************************************************
+     D/Title D-Specifications
+     D CPY@            S             80    Dim(1) CTData PerRCD(1)
+      ***  Array for Object Copyright Statement.
+      *
+     D SDBANK        E DS                  ExtName(SDBANKPD)
+      ** Bank Details
+      *
+     D DSSDY         E DS                  ExtName(DSSDY)
+      ** Second DS For Access Programs, Long Data Structure
+      *
+     D DBERR           DS           256
+      * Data structure for data-base error processing
+     D  DBFILE               134    141
+     D  DBKEY                142    170
+     D  DBPGM                171    180
+     D  DBASE                181    183  0
+      *
+
+     C/Title Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      * Perform Initialisation.
+     C                   ExSR      Init
+      *
+      * Perform Upload from TAB001
+     C                   ExSR      UpLoad
+      *
+     C                   SetOn                                        LR
+     C                   Return
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      /Title SR/Init
+      *****************************************************************
+      *                                                               *
+      *  Init   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C     Init          BegSR
+      *
+      ***  Copyright Statement.
+     C                   MoveA     CPY@          BIS@             80
+      *
+      ** Klist to access the XXFEEDDTD file
+     C     KACHOD        KList
+     C                   KFld                    KACOD            10 0
+      *
+     C                   EndSR
+      *****************************************************************
+      /Title SR/Feeder
+      *****************************************************************
+      *                                                               *
+      *  UpLoad - Subroutine to upload recs from TAB001 to XXACHOMTD  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     UpLoad        BegSR
+      *
+      ** Access TAB001
+      ** Write to XXACHOMTD
+     C     *LOVAL        SETLL     TAB001L0
+     C                   READ      TAB001L0                               50
+     C                   Dow       *IN50 = '0'
+      *
+     C                   MOVEL     ACODE         WKACOD           10
+     C                   MOVE      '000000'      WKACOD
+     C                   MOVEL     WKACOD        KACOD
+     C     KACHOD        CHAIN     XXACHOML0                          51
+     C                   if        *IN51 = '1'
+     C                   Z-ADD     KACOD         XXMACOD
+     C                   Z-ADD     ACODE1        XXMHOAC
+     C                   MOVEL     PRCODE1       XXMHOPC
+     C                   MOVEL     MKCODE1       XXMHOMC
+     C                   MOVEL     'N'           XXMEXCL
+     C                   WRITE     XXACHOMD0
+     C                   ENDIF
+      *
+     C                   READ      TAB001L0                               50
+     C                   ENDDO
+      *
+     C                   EndSR
+      *
+      *****************************************************************
+      /Title SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BegSR                                                  *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C                   If        WRUN = *BLANK
+     C                   Move      'Y'           WRUN              1
+     C                   MoveL     'XX005005'    DBPGM
+      *
+     C     *DTAARA       Define    LDA           WLDA            256
+     C     *Lock         In        WLDA
+     C                   MoveL     DBERR         WLDA
+     C                   Out       WLDA
+     C                   SetOn                                        U7U8LR
+      *
+     C                   Dump
+     C                   EndIf
+      *
+      ** Exit program
+     C                   Return
+      *
+     C                   EndSR
+      *
+      *****************************************************************
+      ***
+**  CPY@
+(c) Finastra Ltd 2021

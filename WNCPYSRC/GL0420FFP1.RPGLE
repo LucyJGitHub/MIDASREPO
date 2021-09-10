@@ -1,23 +1,23 @@
-000100210908      *****************************************************************
-000101210908      *                                                               *
-000102210908      *  Midas - General Ledger                                       *
-000103210908      *                                                               *
-000104210908      *  GL0420 - Balance Statements                                  *
-000105210908      *                                                               *
-000106210908      *  (c) Finastra International Limited 2020                      *
-000107210908      *                                                               *
-000108210908      *  Last amend No. LRI100  *CREATE    Date 17Mar20               *
-000109210908      *  Prev Amend No. XXXXXX             Date DDMMMYY               *
-000110210908      *                                                               *
-000111210908      *---------------------------------------------------------------*
-000112210908      *                                                               *
-000113210908      *  LRI100 - Statement Format Changes.                           *
-000114210908      *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
-000115210908      *                                                               *
-000116210908      *****************************************************************
-000117210908     F*                                                                                       LRI100
-000118210908     F*/OMITEND                                                                               LRI100
-000119210908     O*                                                                                       LRI100
-0001202109080028 FGL0420P1  O    F   96        PRINTER INFDS(SPOOL1)                                      LRI100
-000121210908     F                                     OFLIND(*INOE)                                      LRI100
-000122210908     F                                     USROPN                                             LRI100
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger                                       *
+      *                                                               *
+      *  GL0420 - Balance Statements                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last amend No. LRI100  *CREATE    Date 17Mar20               *
+      *  Prev Amend No. XXXXXX             Date DDMMMYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LRI100 - Statement Format Changes.                           *
+      *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
+      *                                                               *
+      *****************************************************************
+     F*                                                                                       LRI100
+     F*/OMITEND                                                                               LRI100
+     O*                                                                                       LRI100
+0028 FGL0420P1  O    F   96        PRINTER INFDS(SPOOL1)                                      LRI100
+     F                                     OFLIND(*INOE)                                      LRI100
+     F                                     USROPN                                             LRI100

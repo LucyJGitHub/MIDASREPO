@@ -14,8 +14,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. AR1088283          Date 20Mar13               *
-      *  Prev Amend No. BUG25122B          Date 13Oct09               *
+      *  Last Amend No. LRI100   *AMEND    Date 05May20               *
+      *  Prev Amend No. LRI100             Date 17Mar20               *      
+      *                 AR1088283          Date 20Mar13               *
+      *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
       *                 BUG25122A          Date 02Sep09               *
       *                 MD055733           Date 03Jul20               *
@@ -164,6 +166,10 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  LRI100 - Additional info. entries not statemented since      *
+      *           exists on history file                              *
+      *  LRI100 - Statement Format Changes                            *
+      *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *      
       *  AR1088283 - Group Account narrative appears unconditionally. *
       *              Must take consideration hierarchy level setting  *
       *              for Top ob Balance Sheet (Child: AR1088286)      *

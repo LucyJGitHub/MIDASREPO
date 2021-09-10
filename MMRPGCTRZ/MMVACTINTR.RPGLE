@@ -48,7 +48,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
-      *              Compute WAIR when DDAIR is blanks.               *
+      *              Compute DDAIR/IKINTR when action type is Insert. *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add BADJ to INTR/WAIR  *
       *             only if deal is a backward looking rate and       *
@@ -395,7 +395,7 @@
      C     DDAIR         ANDEQ     *BLANKS                                                   BUG5169
      C     CDL102        OREQ      'Y'                                                        CDL102
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
-     C     DDAIR         ANDEQ     *BLANKS                                                 MD058543A
+     C     DDACTN        ANDEQ     'I'                                                     MD058543A
                                                                                              BUG5169
      C     WkBaseRate    ADD       IKSPRD        IKINTR
      C**********         EVAL      IKINTR = IKINTR + wBADJ                           CDL102 MD058547

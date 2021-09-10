@@ -16,8 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD31937            Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE058             Date 11Feb2003             *
+      *                 MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD022652           Date 07Oct13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -45,6 +49,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD31937  - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE058 - Incoming STP idenifier is Elixir customer           *
+      *           Allow field tags to be the same                     *      
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022652 - Excluded Phase Processing                         *
@@ -1457,20 +1466,21 @@
       *
       *** Validate message tags
       *
-     C     S2RTAG        IFNE      *BLANKS
-     C     S2ITAG        ANDNE     *BLANKS
-     C     S2RTAG        IFEQ      S2ITAG
-     C     CSW209        ANDEQ     'N'
-     C     S2RTAG        OREQ      S2ITAG
-     C     S2IMSQ        ANDEQ     S2RMSQ
-     C     CSW209        ANDEQ     'Y'
-     C                   MOVE      *ON           *IN63
-     C                   MOVE      *ON           *IN64
-     C                   MOVEL     'MEM7020'     ZAMSID
-     C                   EXSR      ZASNMS
-     C                   ENDIF
-      *
-     C                   ENDIF
+      *  Allow tags to be the same                                                            EEE058
+     C*********  S2RTAG    IFNE *BLANKS                                                       EEE058
+     C*********  S2ITAG    ANDNE*BLANKS                                                       EEE058
+     C*********  S2RTAG    IFEQ S2ITAG                                                        EEE058
+     C*********  CSW209    ANDEQ'N'                                                   CSW209  EEE058
+     C*********  S2RTAG    OREQ S2ITAG                                                CSW209  EEE058
+     C*********  S2IMSQ    ANDEQS2RMSQ                                                CSW209  EEE058
+     C*********  CSW209    ANDEQ'Y'                                                   CSW209  EEE058
+     C*********            MOVE *ON       *IN63                                               EEE058
+     C*********            MOVE *ON       *IN64                                               EEE058
+     C*********            MOVEL'MEM7020' ZAMSID                                              EEE058
+     C*********            EXSR ZASNMS                                                        EEE058
+     C*********            ENDIF                                                              EEE058
+      *********                                                                               EEE058
+     C*********            ENDIF                                                              EEE058
       *
       *** If there are no errors
       *

@@ -1,0 +1,54 @@
+      *****************************************************************
+      *                                                               *
+      *   Last Amend No. MD031937           Date 13Jan15              *
+      *   Prev Amend No. AR856737           Date 13Sep11              *
+      *                  ERZ093             Date  01Oct2004           *
+      *                  EEE065             Date 26Aug03              *
+      *                  EEE046  *Create    Date 11Apr01              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *                      ERZ088
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *                      ERZ088
+      *   ERZ093 - MT101's processing STP                             *                      ERZ088
+      *  EEE065 - Polish Features Upgrade R4                          *
+      *  EEE046 - Polish Clearing Enhancement                         *
+      *                                                               *
+      *****************************************************************
+      *================================================================
+      ** START of /COPY ME1540C005
+      *================================================================
+      *                                                                                       EEE046
+      ** Check if EEE046 is active.                                                           EEE046
+      *                                                                                       EEE046
+     C                   CALL      'AOSARDR0'                                                 EEE046
+     C                   PARM      *BLANKS       @RTCD             7                          EEE046
+     C                   PARM      '*VERIFY'     @OPTN             7                          EEE046
+     C                   PARM      'EEE046'      @SARD             6                          EEE046
+     C     SCSARD        PARM      SCSARD        DSFDY                                        EEE046
+      *                                                                                       EEE046
+     C     @RTCD         IFEQ      *BLANKS                                                    EEE046
+     C                   MOVE      'Y'           EEE046            1                          EEE046
+     C                   ELSE                                                                 EEE046
+     C                   MOVE      'N'           EEE046                                       EEE046
+     C                   ENDIF                                                                EEE046
+      *                                                                                       EEE046
+      *                                                                                       ERZ093
+      *                                                                                       ERZ093
+      ** Access SAR details file to determine if ERZ088 is switched ON                        ERZ093
+      *                                                                                       ERZ093
+     C                   CALL      'AOSARDR0'                                                 ERZ093
+     C                   PARM      *BLANKS       @RTCD             7                          ERZ093
+     C                   PARM      '*VERIFY'     @OPTN             7                          ERZ093
+     C                   PARM      'ERZ093'      @SARD             6                          ERZ093
+     C     SCSARD        PARM      SCSARD        DSFDY                                        ERZ093
+      *                                                                                       ERZ093
+     C     @RTCD         IFEQ      *BLANKS                                                    ERZ093
+     C                   MOVEL     'Y'           ERZ093            1                          ERZ093
+     C                   ELSE                                                                 ERZ093
+     C                   MOVEL     'N'           ERZ093                                       ERZ093
+     C                   ENDIF                                                                ERZ093
+      *                                                                                       ERZ093
+      *================================================================
+      ** END of /COPY ME1540C005
+      *================================================================

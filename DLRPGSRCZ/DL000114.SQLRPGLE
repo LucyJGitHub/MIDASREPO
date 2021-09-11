@@ -180,6 +180,9 @@
 
      C                   IF        WCOMPUTE = 'Y'
      C                   EXSR      CAL1DY
+     C                   IF        TRCALM = 'CCR' or TRCALM = 'SAVG'
+     C                   EVAL      DL_AIAP = 0
+     C                   ENDIF
      C                   EVAL      DL_AIAN = WAIAN
      C                   UPDATE    DEALSDCF
      C                   ENDIF

@@ -1,0 +1,885 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB User Defined Events')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB4000 - Midas CB User Defined Events                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CCB019  *CREATE    Date 20Mar12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB019 - Close of business Scheduler Enhancement             *
+      *           Upgrade IPL089                                      *
+      *                                                               *
+      *****************************************************************
+     FCB4000DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE CB4000S0
+     FCBUDCFL2IF  E           K        DISK
+     F            CBUDCFPF                          KRENAMEREC3
+     FCBUDCFL0UF  E           K        DISK                      A
+      *
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      *
+      *****************************************************************
+      *
+      ** Initialise 1st Screen
+     C                     EXSR INIT1
+      *
+      ** Repeat until F3 Pressed
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITECB4000F0
+     C                     EXFMTCB4000C0
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C           *INKC     IFEQ *OFF
+      *
+     C           *INKD     IFEQ *ON
+     C                     EXFMTCB4000W0
+     C                     ENDIF
+      *
+      ** IF F9 Pressed Then create new Event thing
+     C           *INKI     IFEQ *ON
+     C                     MOVE 'Z'       S0OPT
+     C                     EXSR NEWEVT
+     C                     ENDIF
+      ** Process any entries on screen
+     C                     EXSR CHGS
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C/EJECT
+      *****************************************************************
+      ** INIT1 SUBROUTINE
+      *****************************************************************
+     C           INIT1     BEGSR
+      *
+     C                     MOVE *BLANKS   QUEU   10
+     C                     MOVE *BLANKS   QULI   10
+      ** 1st Delete Anything in subfile
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *ON       *IN82
+     C                     WRITECB4000C0
+     C                     MOVE *OFF      *IN82
+      *
+      ** Now Build Subfile
+      *
+      ** 1. Point to start of everything
+     C                     Z-ADD1         RRN     50
+     C           *LOVAL    SETLLREC3
+     C                     READ REC3                     99
+      *
+      ** 2. Go thru each record in file
+     C           *IN99     DOWEQ*OFF
+      ** Set off all the SFL Indictaors
+     C                     MOVE *OFF      *IN92            LO Intensity
+      *
+     C                     MOVE *BLANKS   S0OPT
+      ** Move File Fields to Screen
+     C                     EXSR FILE2S
+      ** If component being ignored then Lo Intensity
+     C           SIGNO     IFEQ 'Y'
+     C                     MOVE *ON       *IN92
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   SWHEN
+     C           SCOBI     IFEQ 'C'
+     C                     MOVEL'ANCH'    SWHEN
+     C                     MOVE SCLOC     SWHEN
+     C                     ELSE
+     C                     MOVELSITIM     SWHEN
+     C                     ENDIF
+      ** New SFL record
+     C                     WRITECB4000S0
+     C                     ADD  1         RRN
+     C                     MOVE *ON       *IN80
+      *
+     C                     READ REC3                     99
+     C                     ENDDO
+      ** Position to 1st Record
+     C                     Z-ADD1         S0RLRN
+     C                     MOVE *ON       *IN81
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ** FILE2S SUBROUTINE
+      *****************************************************************
+     C           FILE2S    BEGSR
+      *
+     C                     MOVE CMSEQN    SSEQN
+     C                     MOVE CMNAME    SNAME
+     C                     MOVE CMLIBR    SLIBR
+     C                     MOVE CMMQ      SMQ
+     C                     MOVE CMDESC    SDESC
+     C                     MOVE CMCOBI    SCOBI
+     C                     MOVE CMLOCK    SLOCK
+     C                     MOVE CMFREQ    SFREQ
+     C                     MOVE CMCLOC    SCLOC
+     C                     MOVE CMITIM    SITIM
+     C                     MOVE CMCFRL    SCFRL
+     C                     MOVE CMCFRF    SCFRF
+     C                     MOVE CMCTOL    SCTOL
+     C                     MOVE CMCTOF    SCTOF
+     C                     MOVE CMADDR    SADDR
+     C                     MOVE CMIGNO    SIGNO
+     C                     MOVE CMALER    SALER
+     C                     MOVE CMAIMD    SAIMD
+     C                     MOVE CMPAR0    SPAR0
+     C                     MOVE CMPAR1    SPAR1
+     C                     MOVE CMPAR2    SPAR2
+     C                     MOVE CMPAR3    SPAR3
+     C                     MOVE CMPAR4    SPAR4
+     C                     MOVE CMPAR5    SPAR5
+     C                     MOVE CMPAR6    SPAR6
+     C                     MOVE CMPAR7    SPAR7
+     C                     MOVE CMPAR8    SPAR8
+     C                     MOVE CMPAR9    SPAR9
+     C                     MOVE CMSUCC    SSUCC
+     C                     MOVE CMLRTI    SLRTI
+     C                     MOVE CMLRDT    SLRDT
+     C                     MOVE CMQUEU    SQUEU
+     C                     MOVE CMQULI    SQULI
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      ** SCRN2F SUBROUTINE
+      *****************************************************************
+     C           SCRN2F    BEGSR
+      *
+     C                     MOVE SSEQN     CMSEQN
+     C                     MOVE SNAME     CMNAME
+     C                     MOVE SLIBR     CMLIBR
+     C                     MOVE SMQ       CMMQ
+     C                     MOVE SDESC     CMDESC
+     C                     MOVE SCOBI     CMCOBI
+     C                     MOVE SLOCK     CMLOCK
+     C                     MOVE SFREQ     CMFREQ
+     C                     MOVE SCLOC     CMCLOC
+     C                     MOVE SITIM     CMITIM
+     C                     MOVE SCFRL     CMCFRL
+     C                     MOVE SCFRF     CMCFRF
+     C                     MOVE SCTOL     CMCTOL
+     C                     MOVE SCTOF     CMCTOF
+     C                     MOVE SADDR     CMADDR
+     C                     MOVE SIGNO     CMIGNO
+     C                     MOVE SALER     CMALER
+     C                     MOVE SAIMD     CMAIMD
+     C                     MOVE SPAR0     CMPAR0
+     C                     MOVE SPAR1     CMPAR1
+     C                     MOVE SPAR2     CMPAR2
+     C                     MOVE SPAR3     CMPAR3
+     C                     MOVE SPAR4     CMPAR4
+     C                     MOVE SPAR5     CMPAR5
+     C                     MOVE SPAR6     CMPAR6
+     C                     MOVE SPAR7     CMPAR7
+     C                     MOVE SPAR8     CMPAR8
+     C                     MOVE SPAR9     CMPAR9
+     C                     MOVE SSUCC     CMSUCC
+     C                     MOVE SLRTI     CMLRTI
+     C                     MOVE SLRDT     CMLRDT
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      ** NEWEVT SUBROUTINE
+      *****************************************************************
+     C           NEWEVT    BEGSR
+      *
+     C                     MOVE *OFF      *IN91
+     C                     MOVE *OFF      *IN70
+      *
+     C                     MOVE S0OPT     SOPT    1
+     C           S0OPT     IFNE '3'
+     C                     EXSR BLKSCR
+     C                     MOVE 'Z'       S0OPT
+     C                     ENDIF
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKJ     ANDEQ*OFF
+      *
+     C                     WRITE#MSGCTL
+     C           CMMQ      IFEQ 'Q'
+     C                     MOVE *ON       *IN67
+     C                     ENDIF
+     C                     EXFMTCB4000F1
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C                     EXSR VALS2
+     C           *INKJ     IFEQ *ON
+     C           ERR       IFEQ ' '
+     C                     EXSR SCRN2F
+      ** Move COB scheduler OUTQ value to file fields
+     C                     MOVE SQUEU     CMQUEU 10
+     C                     MOVE SQULI     CMQULI 10
+     C                     WRITECBUDCFPF
+     C           SOPT      IFNE '3'
+     C                     EXSR INIT1
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *OFF      *INKJ
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           KSEQ      KLIST
+     C                     KFLD           SCLOC
+     C                     KFLD           SSEQN
+      *
+     C                     MOVE *OFF      *INKI
+     C                     MOVE *OFF      *INKL
+     C                     MOVE *OFF      *INKJ
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ** BLKSCR SUBROUTINE
+      *****************************************************************
+     C           BLKSCR    BEGSR
+      *
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN54
+     C                     MOVE *OFF      *IN55
+     C                     MOVE *OFF      *IN56
+     C                     MOVE *OFF      *IN57
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN59
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+      *
+     C                     MOVE *BLANKS   SSEQN
+     C                     MOVE *BLANKS   SNAME
+     C                     MOVE *BLANKS   SLIBR
+     C                     MOVE *BLANKS   SMQ
+     C                     MOVE *BLANKS   SDESC
+     C                     MOVE *BLANKS   SCOBI
+     C                     MOVE *BLANKS   SLOCK
+     C                     MOVE *BLANKS   SFREQ
+     C                     MOVE *BLANKS   SCLOC
+     C                     MOVE *BLANKS   SITIM
+     C                     MOVE *BLANKS   SCFRL
+     C                     MOVE *BLANKS   SCFRF
+     C                     MOVE *BLANKS   SCTOL
+     C                     MOVE *BLANKS   SCTOF
+     C                     MOVE *BLANKS   SADDR
+     C                     MOVE *BLANKS   SIGNO
+     C                     MOVE *BLANKS   SALER
+     C                     MOVE *BLANKS   SAIMD
+     C                     MOVE *BLANKS   SPAR0
+     C                     MOVE *BLANKS   SPAR1
+     C                     MOVE *BLANKS   SPAR2
+     C                     MOVE *BLANKS   SPAR3
+     C                     MOVE *BLANKS   SPAR4
+     C                     MOVE *BLANKS   SPAR5
+     C                     MOVE *BLANKS   SPAR6
+     C                     MOVE *BLANKS   SPAR7
+     C                     MOVE *BLANKS   SPAR8
+     C                     MOVE *BLANKS   SPAR9
+     C                     MOVE *BLANKS   SSUCC
+     C                     MOVE *BLANKS   SLRTI
+     C                     MOVE *BLANKS   SLRDT
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ** CHGS   SUBROUTINE
+      *****************************************************************
+     C           CHGS      BEGSR
+      *
+     C           *IN80     IFEQ *ON
+     C                     READCCB4000S0                 99
+      *
+     C           *IN99     DOWEQ*OFF
+     C           *INKC     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           SSEQN     CHAINCBUDCFL0             88
+      *
+     C           S0OPT     IFEQ 'D'
+     C           SLOCK     ANDEQ' '
+     C           *INKJ     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C                     EXFMTCB4000W1
+     C                     ENDDO
+     C           *INKJ     IFEQ *ON
+     C                     DELETCBUDCFPF
+     C                     ENDIF
+     C                     MOVE *OFF      *INKL
+     C                     MOVE *OFF      *INKJ
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ 'C'
+     C           CMAIMD    ANDEQ'Y'
+     C                     UNLCKCBUDCFL0
+     C                     CALL 'CBC4001'
+     C                     PARM           SSEQN
+     C                     PARM           RTN     1
+      *** Change OUTQ for print if entered on COB SCHED
+     C                     CALL 'CBC4006'
+     C                     PARM           SQUEU
+     C                     PARM           SQULI
+     C                     PARM           SNAME
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ 'V'
+     C                     CALL 'CBC4007'
+     C                     PARM           CMNAME
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ 'Q'
+     C                     CALL 'CBC4008'
+     C                     PARM           CMCTOL
+     C                     PARM           CMCTOF
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ '3'
+     C                     EXSR FILE2S
+     C                     MOVE *BLANKS   SSEQN
+     C                     EXSR VALS2
+     C                     EXSR NEWEVT
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ 'E'
+     C           S0OPT     OREQ 'A'
+     C           *IN88     IFEQ *OFF
+     C                     MOVE *OFF      *IN91
+     C                     EXSR FILE2S
+     C           SLOCK     IFEQ 'Y'
+     C           S0OPT     OREQ 'E'
+     C                     MOVE 'E'       S0OPT
+     C                     MOVE *ON       *IN91
+     C                     ENDIF
+     C           S0OPT     IFEQ 'E'
+     C                     EXFMTCB4000F1
+     C                     MOVE SQUEU     CMQUEU 10
+     C                     MOVE SQULI     CMQULI 10
+     C                     ENDIF
+     C           S0OPT     IFEQ 'A'
+     C                     EXSR AMEND
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ 'I'
+     C           SLOCK     ANDNE'Y'
+     C                     EXSR FILE2S
+     C                     MOVE 'Y'       SIGNO
+     C                     EXSR SCRN2F
+      ** Move COB scheduler OUTQ value to file fields
+     C                     MOVE SQUEU     CMQUEU 10
+     C                     MOVE SQULI     CMQULI 10
+     C                     UPDATCBUDCFPF
+     C                     ENDIF
+      *
+     C           S0OPT     IFEQ 'R'
+     C                     EXSR FILE2S
+     C                     MOVE ' '       SIGNO
+     C                     EXSR SCRN2F
+     C                     UPDATCBUDCFPF
+     C                     ENDIF
+      *
+     C           SIGNO     IFEQ 'Y'
+     C                     MOVE *ON       *IN92
+     C                     ELSE
+     C                     MOVE *OFF      *IN92
+     C                     ENDIF
+      *
+     C                     MOVE ' '       S0OPT
+     C                     UPDATCB4000S0
+      *
+     C                     READCCB4000S0                 99
+     C                     ENDDO
+      *
+     C                     EXSR INIT1
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ** VALS2  SUBROUTINE
+      *****************************************************************
+     C           VALS2     BEGSR
+      *
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN54
+     C                     MOVE *OFF      *IN55
+     C                     MOVE *OFF      *IN56
+     C                     MOVE *OFF      *IN57
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN59
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN66
+      *
+     C                     MOVE ' '       ERR     1
+      *
+     C           *IN70     IFEQ *OFF
+      ** SEQUENCE NUMBER
+      ** Check for sequence number entered
+     C           SSEQN     IFEQ *BLANKS
+     C                     MOVE *ON       *IN50
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0253' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      *
+      ** Check for unique sequence number
+     C           SSEQN     CHAINCBUDCFL0             88
+     C           *IN88     IFEQ *OFF
+     C                     MOVE *ON       *IN50
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0254' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** PROGRAM LIBRARY
+      ** Check for blanks
+     C           SLIBR     IFEQ *BLANKS
+     C                     MOVE *ON       *IN51
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0255' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** PROGRAM NAME
+      ** Check for blanks
+     C           SNAME     IFEQ *BLANKS
+     C                     MOVE *ON       *IN52
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0256' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     MOVE SQUEU     CMQUEU 10
+     C                     MOVE SQULI     CMQULI 10
+      ** COB or I/C Flag
+      ** Check for blanks
+     C           SCOBI     IFEQ *BLANKS
+     C                     MOVE *ON       *IN53
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0257' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      ** Check for 'I' or 'C'
+     C           SCOBI     IFNE 'C'
+     C           SCOBI     ANDNE'I'
+     C                     MOVE *ON       *IN53
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0258' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** COB LOCATION
+      ** If Above is 'C' must be entered
+     C           SCOBI     IFEQ 'C'
+     C           SCLOC     ANDEQ' '
+     C                     MOVE *ON       *IN54
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0259' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** If Above is 'I' then cant be enetered
+     C           SCOBI     IFEQ 'I'
+     C           SCLOC     ANDNE' '
+     C                     MOVE *ON       *IN54
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0260' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** COB FREQUENCY
+      ** If Above is 'C' must be entered
+     C           SCOBI     IFEQ 'C'
+     C           SFREQ     ANDEQ'  '
+     C                     MOVE *ON       *IN55
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0261' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** If Above is 'I' then cant be enetered
+     C           SCOBI     IFEQ 'I'
+     C           SFREQ     ANDNE'  '
+     C                     MOVE *ON       *IN55
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0262' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** MIDAS Q FLAG
+      ** Must be entered
+     C           SMQ       IFEQ ' '
+     C                     MOVE *ON       *IN56
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0263' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** Must be 'P'or 'Q'
+     C           SMQ       IFNE 'P'
+     C           SMQ       ANDNE'Q'
+     C                     MOVE *ON       *IN56
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0264' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SMQ       IFEQ 'Q'
+     C                     MOVE *ON       *IN67
+     C                     ELSE
+     C                     MOVE *OFF      *IN67
+     C                     ENDIF
+     C           SMQ       IFEQ 'Q'
+     C           SPAR0     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR0
+     C                     ENDIF
+     C           SPAR1     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR1
+     C                     ENDIF
+     C           SPAR2     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR2
+     C                     ENDIF
+     C           SPAR3     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR3
+     C                     ENDIF
+     C           SPAR4     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR4
+     C                     ENDIF
+     C           SPAR5     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR5
+     C                     ENDIF
+     C           SPAR6     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR6
+     C                     ENDIF
+     C           SPAR7     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR7
+     C                     ENDIF
+     C           SPAR8     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR8
+     C                     ENDIF
+     C           SPAR9     IFEQ ' '
+     C                     MOVEL'*BLANKS' SPAR9
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** IGNORE COB ERROR
+      ** Must be entered
+     C           SALER     IFEQ ' '
+     C           SCOBI     ANDEQ'C'
+     C                     MOVE *ON       *IN57
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0265' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** Must be 'Y' or 'N'
+     C           SALER     IFNE 'Y'
+     C           SALER     ANDNE'N'
+     C           SCOBI     ANDEQ'C'
+     C                     MOVE *ON       *IN57
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0266' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** Must be blank if 'I'
+     C           SALER     IFNE ' '
+     C           SCOBI     ANDEQ'I'
+     C                     MOVE *ON       *IN57
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0267' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** I/C RUN TIME
+      ** Must be entered if 'I'
+     C           SITIM     IFEQ *BLANKS
+     C           SCOBI     ANDEQ'I'
+     C                     MOVE *ON       *IN58
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0268' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** Must be blank if 'C'
+     C           SITIM     IFNE *BLANKS
+     C           SCOBI     ANDEQ'C'
+     C                     MOVE *ON       *IN58
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0269' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** ALLOW IMMEDIATE RUN
+      ** Cannot be blank
+     C           SAIMD     IFEQ *BLANKS
+     C                     MOVE *ON       *IN59
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0270' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+      ** Must be 'Y' or 'N'
+     C           SAIMD     IFNE 'Y'
+     C           SAIMD     ANDNE'N'
+     C                     MOVE *ON       *IN59
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0271' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      ** OUTQ LIBRARY
+      ** If Blank but OUTQ entered then error
+     C           SQULI     IFEQ *BLANKS
+     C           SQUEU     ANDNE*BLANKS
+     C                     MOVE *ON       *IN65
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0278' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** SPOOL OUTQ
+      ** If Blank but LIBRARY enetered then error
+     C           SQUEU     IFEQ *BLANKS
+     C           SQULI     ANDNE*BLANKS
+     C                     MOVE *ON       *IN66
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0277' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** FROM LIBRARY
+      ** If Blank but file entered then error
+     C           SCFRL     IFEQ *BLANKS
+     C           SCFRF     ANDNE*BLANKS
+     C           SMQ       ANDNE'Q'
+     C                     MOVE *ON       *IN60
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0272' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** FROM LIBRARY defaults to QTEMP if IBM Query
+     C           SMQ       IFEQ 'Q'
+     C           SCFRF     ANDNE*BLANKS
+     C           SCFRL     ANDNE'QTEMP'
+     C                     MOVE *BLANKS   SCFRL
+     C                     MOVEL'QTEMP'   SCFRL
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0280' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** FROM FILE
+      ** If Blank but Library entered then error
+     C           SCFRF     IFEQ *BLANKS
+     C           SCFRL     ANDNE*BLANKS
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0273' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** TO LIBRARY
+      ** If Blank but file entered then error
+     C           SCTOL     IFEQ *BLANKS
+     C           SCTOF     ANDNE*BLANKS
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0272' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** TO FILE
+      ** If Blank but Library entered then error
+     C           SCTOF     IFEQ *BLANKS
+     C           SCTOL     ANDNE*BLANKS
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0273' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      ** TO FILE/LIB And FROM FILE/LIB
+      ** If one set of details entered then the other must be
+      **  unless it's an IBM Query
+     C           SCTOF     IFEQ *BLANKS
+     C           SCTOL     ANDEQ*BLANKS
+     C           SCFRL     ANDNE*BLANKS
+     C           SCFRF     ANDNE*BLANKS
+     C           SMQ       ANDNE'Q'
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0274' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C           SCFRF     IFEQ *BLANKS
+     C           SCFRL     ANDEQ*BLANKS
+     C           SCTOL     ANDNE*BLANKS
+     C           SCTOF     ANDNE*BLANKS
+     C                     MOVE *ON       *IN60
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'CBM0274' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       ERR
+     C                     ENDIF
+      ** ADD/REPLACE Flag
+      ** If file entered then field must be entered
+     C           SADDR     IFEQ ' '
+     C           SCTOF     IFNE *BLANKS
+     C                     MOVE *ON       *IN64
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0275' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ELSE
+     C           SADDR     IFNE 'A'
+     C           SADDR     ANDNE'R'
+     C                     MOVE *ON       *IN64
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0276' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If no TOFILE entered then Add/Replace Ind must be Blank
+     C           SADDR     IFNE ' '
+     C           SCTOF     ANDEQ*BLANKS
+     C                     MOVE *ON       *IN64
+     C                     MOVE 'Y'       ERR
+     C                     MOVEL'CBM0279' ZAMSID
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ** AMEND  SUBROUTINE
+      *****************************************************************
+     C           AMEND     BEGSR
+      *
+     C                     EXSR BLKSCR
+     C                     EXSR FILE2S
+      *
+     C                     MOVE *OFF      *IN91
+     C                     MOVE *ON       *IN70
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           *INKJ     ANDEQ*OFF
+      *
+     C                     WRITE#MSGCTL
+     C           CMMQ      IFEQ 'Q'
+     C                     MOVE *ON       *IN67
+     C                     ENDIF
+     C                     EXFMTCB4000F1
+      ** Move COB scheduler OUTQ value to file fields
+     C                     MOVE SQUEU     CMQUEU 10
+     C                     MOVE SQULI     CMQULI 10
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C                     EXSR VALS2
+     C           *INKJ     IFEQ *ON
+     C           ERR       IFEQ ' '
+     C                     EXSR SCRN2F
+     C                     UPDATCBUDCFPF
+     C                     ELSE
+     C                     MOVE *OFF      *INKJ
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *INKI
+     C                     MOVE *OFF      *INKL
+     C                     MOVE *OFF      *INKJ
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      ** ZASNMS SUBROUTINE
+      ** Send message to program's message queue
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      ** Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     CSR         ZAEXIT    ENDSR
+      *

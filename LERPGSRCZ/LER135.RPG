@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057939           Date 17May21               *
-      *  Prev Amend No. MD058204           Date 24Jul21               *
+      *  Last Amend No. MD058499           Date 09Sep21               *
+      *  Prev Amend No. MD057939           Date 17May21               *
+      *                 MD058204           Date 24Jul21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057078           Date 03Mar21               *
@@ -307,6 +308,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058499 - Calculated facility fee with payment date due on  *
+      *             next working date appears on LER160P1 report.     *
+      *             Introduce system value CalcFeePayDueDatProc that  *
+      *             determines when fee payment due date processing   *
+      *             for the next working date is performed during COB.*
+      *             Options for system value setting:                 *
+      *             1. NWD - Process until next working date, or      *
+      *             2. APD - Process until accruals profit date.      *
       *  MD057939 - Two postings was generated but cancel each other  *
       *             out. Ensure that the program will generate correct*
       *             accrual/accrual account key when next payment date*
@@ -2467,6 +2476,7 @@
      I              'LER135002'           C         SECTN2                                    CFC006
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I              'AutoEndCalcLoanFee'  C         WPARM1                                  MD046370
+     I              'CalcFeePayDueDatProc'C         WPARM2                                  MD058499
      I              'LoanCustOriginPurch' C         WPARM                                   MD055481
       *
      IWVCATC      DS                                                                          CLE164
@@ -3860,9 +3870,31 @@
       ** correct accrual figure between a specific period.  Up until                          258414
       ** this date the program accrues on a daily basis.                                      258414
       *                                                                                       258414
+     C           CODT      ADD  1         OMCODT  50                                        MD058499
      C           FENPYD    IFLE BJDNWD                                                        258414
      C           FENPYD    ANDNE0                                                             258414
+     C           PRCDUE    ANDEQ'NWD'                                                       MD058499
      C           FEPEND    ORLE BJDNWD                                                        258414
+     C           PRCDUE    ANDEQ'NWD'                                                       MD058499
+     C           FENPYD    ORLT BJDNWD                                                      MD058499
+     C           FENPYD    ANDNE0                                                           MD058499
+     C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           FENPYD    OREQ BJDNWD                                                      MD058499
+     C           OMCODT    ANDEQBJDNWD                                                      MD058499
+     C           FENPYD    ANDNE0                                                           MD058499
+     C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           FENPYD    OREQ BJDNWD                                                      MD058499
+     C           FENPYD    ANDNE0                                                           MD058499
+     C           BKANWD    ANDEQ'2'                                                         MD058499
+     C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           FEPEND    ORLT BJDNWD                                                      MD058499
+     C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           FEPEND    OREQ BJDNWD                                                      MD058499
+     C           OMCODT    ANDEQBJDNWD                                                      MD058499
+     C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           FEPEND    OREQ BJDNWD                                                      MD058499
+     C           BKANWD    ANDEQ'2'                                                         MD058499
+     C           PRCDUE    ANDEQ'APD'                                                       MD058499
       *****************************************************************                209380 258414
      C/COPY WNCPYSRC,LER135C002
      C*                                                                   100428
@@ -10261,7 +10293,8 @@
      C                     PARM *BLANKS   @RTCD                                             MD046370
      C                     PARM WPARM1    P@OP01                                            MD046370
      C                     PARM *BLANKS   P@VL01                                            MD046370
-     C                     PARM *BLANKS   P@OP02                                            MD046370
+     C**********           PARM *BLANKS   P@OP02                                   MD046370 MD058499
+     C                     PARM WPARM2    P@OP02                                            MD058499
      C                     PARM *BLANKS   P@VL02                                            MD046370
      C                     PARM *BLANKS   P@OP03                                            MD046370
      C                     PARM *BLANKS   P@VL03                                            MD046370
@@ -10288,6 +10321,7 @@
      C                     EXSR *PSSR                                                       MD046370
      C                     ELSE                                                             MD046370
      C                     MOVELP@VL01    AUENFE  1                                         MD046370
+     C                     MOVELP@VL02    PRCDUE  3                                         MD058499
      C                     ENDIF                                                            MD046370
       *                                                                                     MD055481
       ** Check System Value: Use Original Borrower or Purchased From?                       MD055481

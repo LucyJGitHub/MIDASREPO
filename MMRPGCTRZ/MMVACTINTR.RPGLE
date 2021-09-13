@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058547           Date 10Aug21               *
-      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *  Last Amend No. MD058543A          Date 09Sep21               *
+      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058543A - BADJ not included in DDAIR during amend of deal. *
+      *              Compute DDAIR/IKINTR when action type is Insert. *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add BADJ to INTR/WAIR  *
       *             only if deal is a backward looking rate and       *
@@ -392,6 +395,7 @@
      C     DDAIR         ANDEQ     *BLANKS                                                   BUG5169
      C     CDL102        OREQ      'Y'                                                        CDL102
      C     DDBSRC        ANDNE     *BLANKS                                                   BUG5169
+     C     DDACTN        ANDEQ     'I'                                                     MD058543A
                                                                                              BUG5169
      C     WkBaseRate    ADD       IKSPRD        IKINTR
      C**********         EVAL      IKINTR = IKINTR + wBADJ                           CDL102 MD058547

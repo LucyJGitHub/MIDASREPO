@@ -83,7 +83,8 @@
      F*DLCHISPD**O  A F 2039        DISK                                             233324 BUG24989
      F***DLCHISPD  O  A F 2083        DISK                                         BUG24989 AR782597
      F***DLCHISPD  O  A F 2090        DISK                                           AR782597 CRE073
-     FDLCHISPD  O  A F 2139        DISK                                                       CRE073
+     F***DLCHISPD  O  A F 2139        DISK                                             CRE073 CDL102
+     FDLCHISPD  O  A F 2424        DISK                                                       CDL102
       *                                                                                       CAS001
      F***DLDHISPDO   F    1167            DISK                      A                  CAS001 CAS005
      F*DLDHISPD*O  A F 1244        DISK                                                       CDL038
@@ -778,7 +779,8 @@
      I/COPY WNCPYSRC,DLH00151
      I**********                        1 2083  UCDATA                               BUG24989 CRE073
      I/COPY WNCPYSRC,DLH00152
-     I                                  1 2139  UCDATA                                        CRE073
+     I**********                        1 2139  UCDATA                                 CRE073 CDL102
+     I                                  1 2424  UCDATA                                        CDL102
 0204 I                                  1    1  RECR
 0205 I                                  2    7 0DLNO
 0206 I                                  8    8  RCDT
@@ -33459,7 +33461,8 @@
      O**********             UCDATA            2039                                  233324 BUG24989
      O**********             UCDATA            2083                                BUG24989 AR782597
      O**********             UCDATA            2090                                  AR782597 CRE073
-     O                       UCDATA            2139                                           CRE073
+     O**********             UCDATA            2139                                    CRE073 CDL102
+     O                       UCDATA            2424                                           CDL102
      O                       LCD                396P                            S01444
      O*                                                                   S01444
      ODLDHISPD  EADD         DLDHIS                                             S01444

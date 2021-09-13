@@ -18,6 +18,7 @@
       *                                                               *
       *  Last Amend No. MD058543A          Date 09Sep21               *
       *  Prev Amend No. MD058734           Date 03Sep21               *
+      *                 MD058644           Date 31Aug21               *
       *                 MD058547           Date 10Aug21               *
       *                 MD058379           Date 12Jul21               *
       *                 MD058404           Date 06Jul21               *
@@ -168,6 +169,8 @@
       *              is not equal to '.0000000'.                      *
       *  MD058734 - Default value for Day Basis Average based         *
       *             from Calculation Method 3,4 and 5.                *
+      *  MD058644 - Unable to set CD maturity date due to             *
+      *             'Negative Interest' validation error              *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add DDACTN on call to  *
       *             MMVACTINTR.                                       *
@@ -2986,12 +2989,14 @@
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
                                                                                               208051
+     C     DDACTN        IFNE      'A'                                                      MD058644
       ** Set the negative indicator in step with the sign of the interest amount              208051
      C     IKMTTI        IFLT      0                                                          208051
      C                   MOVE      'Y'           DDNGVI                                       208051
      C                   ELSE                                                                 208051
      C                   MOVE      ' '           DDNGVI                                       208051
      C                   ENDIF                                                                208051
+     C                   ENDIF                                                              MD058644
      C                   ENDIF                                                  CAP004
 
       /COPY WNCPYSRC,MMLDNIV047

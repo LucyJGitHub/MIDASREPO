@@ -12,11 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058708           Date 31Aug21               *
-      *  Prev Amend No. CDL102  *CREATE    Date 01Jun21               *
+      *  Last Amend No. MD058708A          Date 09Sep21               *
+      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *                 CDL102  *CREATE    Date 01Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058708A - Base Rate Code changed via BC deal amendment     *
+      *              still not reflected on the report. Use BRTT from *
+      *              the extract file SDBJEXPD. Fix for printer over- *
+      *              flow is also added.                              *
       *  MD058708 - SD001110P2 does not reflect BC specific changes   *
       *             (base rate code and ARR parameters). Retrieve the *
       *             ARR parameters to BLRT Extract File SDBJEXPD.     *
@@ -25,6 +30,7 @@
       *****************************************************************
 
      FSD001110P2O    E             PRINTER OFLIND(*IN50)
+     F                                     INFDS(SPOOL1)                                   MD058708A
       ** Midas SD Compounding Rate History Details Report
 
      FDEALSC    IF   E           K DISK    INFSR(*PSSR)
@@ -59,6 +65,10 @@
       ** Data Structure for Backward-Looking Rate Loans                                     MD058708
      D TransBLRT     E DS                  EXTNAME(SDBJEXPD)                                MD058708
                                                                                             MD058708
+     D SPOOL1          DS                                                                  MD058708A
+     D  OFLINE               188    189B 0                                                 MD058708A
+     D  PRTLNE               367    368B 0                                                 MD058708A
+                                                                                           MD058708A
      D pDSSDY          S            200A
 
       ** Parameters for ZDATE2
@@ -91,6 +101,8 @@
      D pOption         S              7A
                                                                                             MD058708
      D dealExists      S              1A                                                    MD058708
+     D DIFLNE          S              3  0                                                 MD058708A
+     D RQDLNE          S              3  0                                                 MD058708A
 
       ** Temporary DS for SDHSDRTD
 
@@ -234,7 +246,9 @@
       *
      C                   EVAL      P1MTDT = ZADate
      C                   EVAL      P1CCY  = CCY
-     C                   EVAL      P1BRAT = BRTT
+     C**********         EVAL      P1BRAT = BRTT                                           MD058708A
+     C                   EVAL      P1BRAT = TRBRTT                                         MD058708A
+                                                                                           MD058708A
       ** Format amount
 
      C                   CALL      'AOCURRR0'
@@ -376,6 +390,15 @@
       *
      C                   EVAL      P1ENDT = ZADate
       *
+      ** Check that sufficient lines remain for the format                                 MD058708A
+      *                                                                                    MD058708A
+     C                   EVAL      RQDLNE = 22                                             MD058708A
+      *                                                                                    MD058708A
+     C                   EVAL      DIFLNE = OFLINE - PRTLNE                                MD058708A
+     C                   IF        DIFLNE <= RQDLNE                                        MD058708A
+     C                   WRITE     SD001110H1                                              MD058708A
+     C                   ENDIF                                                             MD058708A
+      *                                                                                    MD058708A
      C                   WRITE     SD001110D2
      C                   WRITE     SD001110H3
       *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD057003           Date 19Oct20               *
-      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *  Last Amend No. MD056808           Date 20Sep20               *
+      *  Prev Amend No. MD057003           Date 19Oct20               *
+      *                 CGL194             Date 01Aug20               *
       *                 MD056237           Date 20Jul20               *
       *                 MD056131           Date 05Jul20               *
       *                 MD054940           Date 18Feb20               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056808 - Deliverable Data Split for SDEXMAPD               *
       *  MD057003 - Incorrect controlling person details, finish      *
       *             processing all records in the file                *
       *  CGL194 - CRS XML 2.0 Schema                                  *
@@ -73,7 +75,7 @@
      FSDCRNHL0  IF   E           K DISK    INFSR(*PSSR)
 
       ** SD Exception Management Detail
-     FSDEXMAL0  IF   E           K DISK    INFSR(*PSSR)
+     F*SDEXMAL0* IF   E           K DISK    INFSR(*PSSR)                                    MD056808
 
       ** Midas GL Excluded Account Records File
      FGLCRMIL0  IF   E           K DISK    INFSR(*PSSR)

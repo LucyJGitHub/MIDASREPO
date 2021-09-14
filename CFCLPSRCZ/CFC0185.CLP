@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056206           Date 24Sep20              */
-/*       Prev Amend No. MD055267           Date 16Mar20              */
+/*       Last Amend No. MD058833           Date 14Sep21              */
+/*       Prev Amend No. MD056206           Date 24Sep20              */
+/*                      MD055267           Date 16Mar20              */
 /*                      CSW051             Date 15Mar18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
@@ -47,6 +48,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058833 - Incorporate fixes from FCLIB of client - 247251  */
+/*       247251   - (LEUFIX17) Do not call CF0120 as MMM sends       */
+/*                  confs to TRAM instead. Also no need to copy to   */
+/*                  CFWOCMPD as no longer used and will only create  */
+/*                  large journals.                                  */
 /*       MD056206 - CFCONTROL job for London SpA ends abruptly.      */
 /*                - TRAMSWFT.DAT in use during Copy To PC Documemt   */
 /*                  command. Issue monitor message and retry the     */
@@ -389,7 +395,9 @@ DLTDOC:
              GOTO TRY
 
 /* Clear temporary file  */
-CONT2:       CLRPFM     FILE(CFWOCMPD)
+/**********CONT2:       CLRPFM     FILE(CFWOCMPD)           */                            /*247251*/
+CONT2:       IF (&CSW025 *NE 'Y') THEN(DO)                                                /*247251*/
+             CLRPFM     FILE(CFWOCMPD)                                                    /*247251*/
 
 /* If folder has not been collected, copy back to file to add new ones */
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWOCMPD) +
@@ -423,6 +431,7 @@ CONT2:       CLRPFM     FILE(CFWOCMPD)
 /**********  CPYTOPCD   FROMFILE(CFWOCMPD) TOFLR(&FLR) +
 /**********               TODOC(TRAMHOST.DAT) REPLACE(*YES) +
 /**********               TRNFMT(*NOTEXT)                                                /*245314A*/
+             ENDDO                                                                       /*247251*/
 /*/COPY WNCPYSRC,CFC0185014                                          */
                                                                      /*CCF001*/
                                                                      /*CCF001*/

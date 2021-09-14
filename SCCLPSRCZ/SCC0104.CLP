@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD039086           Date 24Oct16              */
-/*       Prev Amend No. MD055683           Date 21May20              */
+/*       Last Amend No. MD058833           Date 14Sep21              */
+/*       Prev Amend No. MD039086           Date 24Oct16              */
+/*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
@@ -49,6 +50,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058833 - Incorporate fixes from FCLIB of client           */
+/*                  LEUFIX34 - UDC_PRTGEN is not restarted           */
 /*       MD039086 - Submit GO_ONL_ABC background updater             */
 /*                  Applied for MD-57273.                            */
 /*       MD055683 - SWIFT jobs will now run based on configurations  */
@@ -618,6 +621,15 @@
              MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD027386*/
              ENDDO                                                                      /*MD027386*/
                                                                                         /*MD027386*/
+/* Start the UDC jobs */                                                                /*LEUFIX34*/
+                                                                                        /*MD058833*/
+             IF         COND((%SST(&FMT 101 1) *EQ 'Y') *AND +
+                        (&MPHAS *EQ 'A')) THEN(DO)                                      /*MD058833*/
+             CALL       PGM(CGC5203) PARM('')                       /*UDC_PRTGEN*/      /*MD058833*/
+             CALL       PGM(CGC5273) PARM('')                       /*UDC_CHARGE*/      /*MD058833*/
+             CALL       PGM(CGC5214) PARM('')                       /*UDC_IMMEDS*/      /*MD058833*/
+             ENDDO                                                                      /*MD058833*/
+                                                                                        /*MD058833*/
 /*/COPY WNCPYSRC,SCC0104MPE                                          */
 
              GOTO       CMDLBL(END)

@@ -4333,7 +4333,23 @@
      C     BRTT          IFNE      *BLANKS                                                    CSD103
      C                   Z-ADD     VDAT          A2HISD                                       CDL034
      C                   Z-ADD     0             A2AINP                                       CDL034
+      *                                                                                     MD058739
+     C                   MOVEL     'N'           WSKIP             1                        MD058739
+     C                   IF        CDL102 = 'Y' and                                         MD058739
+     C                             BLRT = 'Y' and                                           MD058739
+     C                             ORED <= BJRDNB and                                       MD058739
+     C                             VDAT <= EVCD                                             MD058739
+     C                   Z-ADD     VDAT          KDATE                                      MD058739
+     C     IRHKEY        CHAIN     DLDIRHPD                                                 MD058739
+     C                   IF        %FOUND(DLDIRHPD)                                         MD058739
+     C                   MOVEL     'Y'           WSKIP                                      MD058739
+     C                   ENDIF                                                              MD058739
+     C                   ENDIF                                                              MD058739
+      *                                                                                     MD058739
+     C                   IF        WSKIP = 'N'                                              MD058739
      C                   EXSR      WRTIRH                                                     CDL034
+     C                   ENDIF                                                              MD058739
+      *                                                                                     MD058739
      C                   ENDIF                                                                CDL034
      C                   ENDIF                                                                CDL034
 0910 C*

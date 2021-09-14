@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058734           Date 03Sep21               *
-      *  Prev Amend No. MD058623           Date 23Aug21               *
+      *  Last Amend No. MD058513           Date 09Sep21               *
+      *  Prev Amend No. MD058734           Date 03Sep21               *
+      *                 MD058623           Date 23Aug21               *
       *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058513 - Rate known flag not saved                         *
       *  MD058734 - Default value or Day Basis Average based          *
       *             from Calculation Method 3,4 and 5.                *
       *  MD058623 - Added validation for API DEAM                     *
@@ -1520,6 +1522,8 @@
      C                             TransCHTP = 'I'                                            CLE172
      C                   EVAL      DDRTKN = 'N'                                               CLE172
      C                   EVAL      VRTKN = 'N'                                                CLE172
+     C                   ELSE                                                               MD058513
+     C                   EVAL      VRTKN = DDRTKN                                           MD058513
      C                   ENDIF                                                                CLE172
                                                                                               CLE172
      C                   ENDSR                                                                CLE172

@@ -12,8 +12,12 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058443             Date 12Jul21             *
-      *  Prev Amend No. MD058177             Date 27May21             *
+      *  Last Amend No. MD056602             Date 04Sep20             *
+      *  Prev Amend No. MD056891             Date 21Aug21             *
+      *                 MD054346             Date 18Jul21             *
+      *                 MD055891             Date 01Sep20             *
+      *                 MD058443             Date 12Jul21             *
+      *                 MD058177             Date 27May21             *
       *                 MD056565             Date 21Jan21             *
       *                 MD056751             Date 20Sep20             *
       *                 MD056613             Date 20Sep20             *
@@ -27,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056602 - Deliverable Data Split for T_APICFG               *
+      *  MD056891 - Deliverable Data Split for T_WIPACT               *
+      *  MD054346 - Switchable Features Password Encryption           *
+      *  MD055891 - Deliverable Data Split for COB                    *
       *  MD058443 - Remove record from SDSCOBTD as it was made        *
       *             redundant                                         *
       *  MD058177 - Error for RPTRAQPD take-on. Use DISTINCT          *
@@ -106,10 +114,13 @@
      C                   exsr      SR_SDIPVCTD                                              MD056613
                                                                                             MD056613
      C                   Other                                                              MD055681
+     C                   If        XINDEX <> 'CBDPRCTD'                                     MD055891
+     C                             and XINDEX <> 'CBMEXCTD'                                 MD055891
       * Update Extension file with content of 'old file'
      C                   If        %SUBST(XINDEX:2:4) <> 'PDFL'                             MD056565
      C                   exsr      SR_UpdExt
      C                   Endif                                                              MD056565
+     C                   endif                                                              MD055891
 
       * Add Bespoke record if not found in core file
      C                   exsr      SR_AddBsp
@@ -237,8 +248,11 @@
      C                   endif                                                              MD058177
      C                   eval      First = 'N'
      C                   ELSE
+     C                   If        WHFLDI = 'DHCPCA'                                        MD055891
+     C                   else                                                               MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                              MD055891
      C                   ENDIF
      C                   ENDIF
       *
@@ -345,6 +359,7 @@
      C                   eval      First = 'N'
      C                   ELSE
      C                   IF        WHFLDI = 'AXPROT'                                        MD055681
+     C                             or WHFLDI = 'DHCPCA'                                     MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD055681
      C                   eval      PSELECT = %trimr(PSELECT) + ', ' + '''Y'''               MD055681
      C                   else                                                               MD055681
@@ -369,12 +384,28 @@
      C+ close GetFieldsB
      C/end-exec
 
+      * for GPSECCTD migration, the bespoke record will come from GPNSECPD                  MD054346
+     C                   if        EXTINDEX = 'GPSECBTD'                                    MD054346
+     C                   eval      OLDFILE = 'GPNSECPD'                                     MD054346
+     C                   endif                                                              MD054346
+                                                                                            MD054346
+      * for T_WIPACT migration                                                              MD056891
+     C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
+     C                             or EXTINDEX = 'T_APIBTD'                                 MD056602
+     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD056891
+     C                             ' overriding user value (select ' +                      MD056891
+     C                             %trimr(PSELECT) + ' from ' + OLDFILE +                   MD056891
+     C                             ' A where not exists (select * from ' +                  MD056891
+     C                             XINDEX +  ' B ' + %trimr(WHERE) + '))'                   MD056891
+     C                   else                                                               MD056891
+                                                                                            MD056891
      C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +
      C                             ' (select ' +
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +
      C                             ' A where not exists (select * from ' +
      C                             XINDEX +  ' B ' + %trimr(WHERE) + '))'
 
+     C                   endif                                                              MD056891
      C/EXEC SQL
      C+ prepare DynSQLStmnt
      C+ from :SQLDynStmt
@@ -395,6 +426,16 @@
 
       ** If records were added in Bespoke, records must be added in Extension file too
      C                   If        TotRow > 0
+                                                                                            MD055891
+      * if COB file, set unique number to the highest                                       MD055891
+     C                   if        XINDEX = 'CBDPRCTD'                                      MD055891
+     C                             or XINDEX = 'CBMEXCTD'                                   MD055891
+     C                             or XINDEX = 'CBMDCCTD'                                   MD055891
+     C                   CALL      'UP0888'                                                 MD055891
+     C                   PARM                    XINDEX                                     MD055891
+     C                   PARM                    ERROR                                      MD055891
+     C                   Endif                                                              MD055891
+                                                                                            MD055891
      C                   exsr      SR_AddExt
      C                   ENDIF
      C
@@ -987,5 +1028,4 @@
                                                                                             MD056613
      C                   ENDSR                                                              MD056613
                                                                                             MD056613
-      /EJECT                                                                                MD056613
-      *****************************************************************                     MD056613
+      /EJECT                                                                                MD055681

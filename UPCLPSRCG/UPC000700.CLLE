@@ -9,8 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD057707           Date 21Jan21              */
-/*       Prev Amend No. MD057599           Date 21Jan21              */
+/*       Last Amend No. MD056808           Date 20Sep20              */
+/*       Prev Amend No. MD056602           Date 04Sep20              */
+/*                      MD056891           Date 21Aug21              */
+/*                      MD056561           Date 31Aug20              */
+/*                      MD054346           Date 18Jul21              */
+/*                      MD056555           Date 31Aug20              */
+/*                      MD055891           Date 01Sep20              */
+/*                      MD057707           Date 21Jan21              */
+/*                      MD057599           Date 21Jan21              */
 /*                      MD056612           Date 12Sep20              */
 /*                      MD056557           Date 31Aug20              */
 /*                      MD056565           Date 21Jan21              */
@@ -54,6 +61,13 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056808 - Deliverable Data Split for SDEXMAPD              */
+/*       MD056602 - Deliverable Data Split for T_APICFG              */
+/*       MD056891 - Deliverable Data Split for T_WIPACT              */
+/*       MD056561 - Deliverable Data Split for SFMENUPD and GPMTXTPD */
+/*       MD054346 - Switchable Features Password Encryption          */
+/*       MD056555 - Deliverable Data Split for SAR group             */
+/*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD057707 - Deliverable Data Split for SDOREFPD              */
 /*       MD057599 - Deliverable Data Split for Bridge and Util files */
 /*       MD056612 - Deliverable Data Split for MX group              */
@@ -146,10 +160,19 @@
              ENDDO
              ENDDO                                                                      /*MD054955*/
 
+/* If COB files, update unique sequence in the Bespoke first */                         /*MD055891*/
+             IF         COND(&FILE *EQ 'CBDPRCTD' *OR &FILE *EQ +
+                          'CBMEXCTD' *OR &FILE *EQ 'CBMDCCTD') +
+                          THEN(DO)                                                      /*MD055891*/
+             CALL       PGM(UP0888) PARM(&FILE &ERROR)                                  /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
 /* Copy deliverable data *REPLACE. */
              CPYF       FROMFILE(&NEWLIB/&FILE) +
                           TOFILE(&OLDLIB/&FILE) MBROPT(*REPLACE) +
                           FMTOPT(*NOCHK)
+/* File like GPSRNCTD may be empty */                                                   /*MD056555*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD056555*/
 
 /* Run synchronization program. */
              CALL       PGM(UP000701) PARM(&ERROR &FILE &OLDLIB)
@@ -1461,6 +1484,416 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD057707*/
              ENDDO                                                                      /*MD057707*/
                                                                                         /*MD057707*/
+/* CBCMPCTD */                                                                          /*MD055891*/
+             IF         COND(&FILE *EQ 'CBCMPCTD') THEN(DO)                             /*MD055891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD055891*/
+             CHKOBJ     OBJ(&LIBMOV/CBCMPNPD) OBJTYPE(*FILE)                            /*MD055891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD055891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBCMPNPD')                                           /*MD055891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
+/* CBDPRCTD */                                                                          /*MD055891*/
+             IF         COND(&FILE *EQ 'CBDPRCTD') THEN(DO)                             /*MD055891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD055891*/
+             CHKOBJ     OBJ(&LIBMOV/CBDPRLPD) OBJTYPE(*FILE)                            /*MD055891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD055891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBDPRLPD')                                           /*MD055891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
+/* CBMEXCTD */                                                                          /*MD055891*/
+             IF         COND(&FILE *EQ 'CBMEXCTD') THEN(DO)                             /*MD055891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD055891*/
+             CHKOBJ     OBJ(&LIBMOV/CBMEXCPD) OBJTYPE(*FILE)                            /*MD055891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD055891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBMEXCPD')                                           /*MD055891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
+/* CBMDCCTD */                                                                          /*MD055891*/
+             IF         COND(&FILE *EQ 'CBMDCCTD') THEN(DO)                             /*MD055891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD055891*/
+             CHKOBJ     OBJ(&LIBMOV/CBMDCNPD) OBJTYPE(*FILE)                            /*MD055891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD055891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBMDCNPD')                                           /*MD055891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
+/* CBRUNCTD */                                                                          /*MD055891*/
+             IF         COND(&FILE *EQ 'CBRUNCTD') THEN(DO)                             /*MD055891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD055891*/
+             CHKOBJ     OBJ(&LIBMOV/CBRUNCPD) OBJTYPE(*FILE)                            /*MD055891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD055891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBRUNCPD')                                           /*MD055891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
+/* CBTPGCTD */                                                                          /*MD055891*/
+             IF         COND(&FILE *EQ 'CBTPGCTD') THEN(DO)                             /*MD055891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD055891*/
+             CHKOBJ     OBJ(&LIBMOV/CBTPGMPD) OBJTYPE(*FILE)                            /*MD055891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD055891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD055891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'CBTPGMPD')                                           /*MD055891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
+/* GPSRICTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'GPSRICTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/GPSARIPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPSARIPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* GPSRNCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'GPSRNCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/GPSARNPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPSARNPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* GPSRPCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'GPSRPCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/GPSARPPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPSARPPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* GPSRVCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'GPSRVCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/GPSARVPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPSARVPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* GPSRWCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'GPSRWCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/GPSARWPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPSARWPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRBCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRBCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARBPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARBPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRCCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRCCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARCPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARCPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRICTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRICTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARIPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARIPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRMCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRMCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARMPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARMPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRNCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRNCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARNPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARNPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRPCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRPCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARPPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARPPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSROCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSROCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSAROPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSAROPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRRCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRRCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARRPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARRPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRVCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRVCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARVPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARVPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRWCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRWCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARWPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARWPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* SCSRXCTD */                                                                          /*MD056555*/
+             IF         COND(&FILE *EQ 'SCSRXCTD') THEN(DO)                             /*MD056555*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056555*/
+             CHKOBJ     OBJ(&LIBMOV/SCSARXPD) OBJTYPE(*FILE)                            /*MD056555*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056555*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056555*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056555*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCSARXPD')                                           /*MD056555*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056555*/
+             ENDDO                                                                      /*MD056555*/
+                                                                                        /*MD056555*/
+/* GPSECCTD */                                                                          /*MD054346*/
+             IF         COND(&FILE *EQ 'GPSECCTD') THEN(DO)                             /*MD054346*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD054346*/
+             CHKOBJ     OBJ(&LIBMOV/GPCSECPD) OBJTYPE(*FILE)                            /*MD054346*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD054346*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD054346*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD054346*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD054346*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPCSECPD')                                           /*MD054346*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD054346*/
+             ENDDO                                                                      /*MD054346*/
+                                                                                        /*MD054346*/
+/* GPMNUCTD */                                                                          /*MD056561*/
+             IF         COND(&FILE *EQ 'GPMNUCTD') THEN(DO)                             /*MD056561*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056561*/
+             CHKOBJ     OBJ(&LIBMOV/GPMENUPD) OBJTYPE(*FILE)                            /*MD056561*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056561*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056561*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056561*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056561*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPMENUPD')                                           /*MD056561*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056561*/
+             ENDDO                                                                      /*MD056561*/
+                                                                                        /*MD056561*/
+/* GPMTXCTD */                                                                          /*MD056561*/
+             IF         COND(&FILE *EQ 'GPMTXCTD') THEN(DO)                             /*MD056561*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056561*/
+             CHKOBJ     OBJ(&LIBMOV/GPMTXTPD) OBJTYPE(*FILE)                            /*MD056561*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056561*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056561*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056561*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056561*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPMTXTPD')                                           /*MD056561*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056561*/
+             ENDDO                                                                      /*MD056561*/
+                                                                                        /*MD056561*/
+/* SFMNUCTD */                                                                          /*MD056561*/
+             IF         COND(&FILE *EQ 'SFMNUCTD') THEN(DO)                             /*MD056561*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056561*/
+             CHKOBJ     OBJ(&LIBMOV/SFMENUPD) OBJTYPE(*FILE)                            /*MD056561*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056561*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056561*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056561*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056561*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SFMENUPD')                                           /*MD056561*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056561*/
+             ENDDO                                                                      /*MD056561*/
+                                                                                        /*MD056561*/
+/* GPWATCTD */                                                                          /*MD056891*/
+             IF         COND(&FILE *EQ 'GPWATCTD') THEN(DO)                             /*MD056891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056891*/
+             CHKOBJ     OBJ(&LIBMOV/T_WIPACT) OBJTYPE(*FILE)                            /*MD056891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056891*/
+             RESETMAXID FILE(GPWATBTD) RSTOPT(1000)                                     /*MD056891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'T_WIPACT')                                           /*MD056891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056891*/
+             ENDDO                                                                      /*MD056891*/
+                                                                                        /*MD056891*/
+/* T_APICTD */                                                                          /*MD056602*/
+             IF         COND(&FILE *EQ 'T_APICTD') THEN(DO)                             /*MD056602*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056602*/
+             CHKOBJ     OBJ(&LIBMOV/T_APICFG) OBJTYPE(*FILE)                            /*MD056602*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056602*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056602*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056602*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056602*/
+             RESETMAXID FILE(T_APIBTD) RSTOPT(10000)                                    /*MD056602*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056602*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'T_APICFG')                                           /*MD056602*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056602*/
+             ENDDO                                                                      /*MD056602*/
+                                                                                        /*MD056602*/
+/* SDEXMCTD */                                                                          /*MD056808*/
+             IF         COND(&FILE *EQ 'SDEXMCTD') THEN(DO)                             /*MD056808*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056808*/
+             CHKOBJ     OBJ(&LIBMOV/SDEXMAPD) OBJTYPE(*FILE)                            /*MD056808*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056808*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056808*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056808*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056808*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SDEXMAPD')                                           /*MD056808*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056808*/
+             ENDDO                                                                      /*MD056808*/
+                                                                                        /*MD056808*/
              ENDDO                                                                      /*MD054560*/
                                                                                         /*MD054955*/
 /* If No Display Condition fields */                                                    /*MD056564*/
@@ -1477,6 +1910,17 @@
              CALL       PGM(GPCCRTNDFL)                                                 /*MD056565*/
              ENDDO                                                                      /*MD056565*/
                                                                                         /*MD056564*/
+/* If COB files, reset unique sequence */                                               /*MD055891*/
+             IF         COND(&FILE *EQ 'CBDPRCTD') THEN(DO)                             /*MD055891*/
+             CALL       PGM(UP0809)                                                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+             IF         COND(&FILE *EQ 'CBMEXCTD') THEN(DO)                             /*MD055891*/
+             CALL       PGM(UP0814)                                                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+             IF         COND(&FILE *EQ 'CBMDCCTD') THEN(DO)                             /*MD055891*/
+             CALL       PGM(UP0819)                                                     /*MD055891*/
+             ENDDO                                                                      /*MD055891*/
+                                                                                        /*MD055891*/
              GOTO       CMDLBL(END)
 
 ABNOR:

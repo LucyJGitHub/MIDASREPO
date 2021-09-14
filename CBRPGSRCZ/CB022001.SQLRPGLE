@@ -11,13 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041010            Date 18Sep16              *
+      *  Last Amend No. MD058745            Date 12Sep21              *
+      *  Prev Amend No. MD046248            Date 27Oct17              *
+      *                 MD041010            Date 18Sep16              *
       *                 MD024652            Date 07May14              *
       *                 MD024006A *CREATE   Date 08Jan14              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058745 - Facility activity enquiry does not show future    *
+      *             loan maturity. Use ADDLFM with DTAMBRS(*ALL) for  *
+      *             LEFCAML8 or LEFCAMLB logical files.               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041010 - Component CBC022001 00686 failed during COB       *
       *  MD024652 - Missing members of REHIS* files.                  *
@@ -41,6 +45,7 @@
      D DoLoop          S              5  0
      D Quote           S              1    INZ('''')
      D Recursive       S              1
+     D WExfile         S              1    INZ('N')                                         MD058745
       *
      D MBR           E DS                  EXTNAME(UPFDMBTPD)
      D                                     PREFIX(X)
@@ -191,9 +196,16 @@
      C                   EVAL      PADDLFM = 'ADDLFM FILE(' + PFile
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) + ')'
 
+
+     C                   EVAL      WExfile = 'N'                                            MD058745
+     C                   IF        PFile = 'LEFCAML8' OR PFile = 'LEFCAMLB'                 MD058745
+     C                   EVAL      WExfile = 'Y'                                            MD058745
+     C                   ENDIF                                                              MD058745
+                                                                                            MD058745
       ** If there is only one member then DTAAMBRS(*ALL) can be used.
 
      C                   IF        MBNSCM = 0
+     C                             OR WExfile = 'Y'                                         MD058745
      C                   EVAL      PNoOfMbrs = 1
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             ' MBR(' + MBNAME
@@ -288,9 +300,15 @@
      C                   EVAL      PADDLFM = 'ADDLFM FILE(' + PFile
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) + ')'
 
+     C                   EVAL      WExfile = 'N'                                            MD058745
+     C                   IF        PFile = 'LEFCAML8' OR PFile = 'LEFCAMLB'                 MD058745
+     C                   EVAL      WExfile = 'Y'                                            MD058745
+     C                   ENDIF                                                              MD058745
+                                                                                            MD058745
       ** If there is only one member then DTAAMBRS(*ALL) can be used.
 
      C                   IF        MBNSCM = 0
+     C                             OR WExfile = 'Y'                                         MD058745
      C                   EVAL      PNoOfMbrs = 1
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             ' MBR(' + MBNAME

@@ -25,8 +25,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD058494           Date 14Sep21               *
+      *  Prev Amend No. BUG26197           Date 14Sep21               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD053332           Date 12Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -69,6 +71,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058494 - Correct update of ACCNTAB for Multicash accounts  *
+      *             Applied part of BUG24792.                         *
+      *  BUG26197 - Missing Statement in Correspondence Manager       *
+      *             Amend to generate UDC statement instead of GL     *
+      *             statements.                                       *
+      *             Applied for MD-58494                              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -725,14 +733,14 @@
       **  If a Statement is to be produced, check if the statement is
       **  to be suppressed.
      C                     EXSR SRSUPU
-      *                                                                                     BUG24792
-      ** Multicash accounts of this category are treated as NORMAL, so                      BUG24792
-      ** must be suppressed in this section...             MC frequency                     BUG24792
-      *                                                                                     BUG24792
-     C           #FSTFQ    IFNE ' '                                                         BUG24792
-     C           #FSTFQ    ANDNE'E'                        <> E & blank                     BUG24792
-     C                     MOVE 'N'       ##SUDC           suppress                         BUG24792
-     C                     END                                                              BUG24792
+      **********                                                                   BUG24792 BUG26197
+      ***Multicash*accounts*of*this*category*are*treated*as*NORMAL,*so*            BUG24792 BUG26197
+      ***must*be*suppressed*in*this*section...*************MC*frequency            BUG24792 BUG26197
+      **********                                                                   BUG24792 BUG26197
+     C********** #FSTFQ    IFNE ' '                                                BUG24792 BUG26197
+     C********** #FSTFQ    ANDNE'E'                        <> E & blank            BUG24792 BUG26197
+     C**********           MOVE 'N'       ##SUDC           suppress                BUG24792 BUG26197
+     C**********           END                                                     BUG24792 BUG26197
       *
       **  Produce a UDC Statement, if not to be suppressed.
      C           ##SUDC    IFEQ 'Y'
@@ -1407,6 +1415,11 @@
      C                     ENDIF
      C                     ENDIF
      C                     ENDIF
+      * Suppress Monthly NORMAL statement for Turnover - UDC                                MD058494
+      * BUT do this only if no multicash account with FSTFQ <> "E".                         MD058494
+      * In that case a NORMAL paper statement is quite legal.                               MD058494
+      *                                                                                     MD058494
+     C                     EXSR SRMULT                     access file                      MD058494
       *                                                                                     MD036269
       ** Only applicable if CER030 is on                                                    MD036269
       *                                                                                     AR886391
@@ -1414,9 +1427,13 @@
      C           ##SUDC    ANDEQ'Y'                                                         AR886391
      C           STFQ      ANDEQ'E'                                                         AR886391
      C           CER030    ANDEQ'Y'                                                         MD036269
+      *                                                                                     MD058494
+     C           #FSTFQ    IFEQ 'E'                        standard multic                  MD058494
+     C           #FSTFQ    OREQ ' '                        not multicash                    MD058494
      C                     MOVE 'N'       ##SUDC                                            AR886391
      C                     MOVE 'Y'       R#DUDC                                            AR886391
      C                     MOVEL##TXT,10  R#RDUD                                            AR886391
+     C                     ENDIF                                                            MD058494
      C                     ENDIF                                                            AR886391
       *
       **  If the statement is still to be produced for UDC, check for
@@ -1557,19 +1574,37 @@
       *                                                                                     BUG24792
      C                     MOVEL*BLANKS   #FSTFQ  1                                         BUG24792
      C           ##ACKY    CHAINGLNW94L8             51                                     BUG24792
-     C           *IN51     IFEQ *OFF                                                        BUG24792
-     C           N4DSTN    IFNE *BLANKS                    participant                      BUG24792
+     C********** *IN51     IFEQ *OFF                                               BUG24792 BUG26197
+     C********** N4DSTN    IFNE *BLANKS                    participant             BUG24792 BUG26197
+     C           *IN51     DOWEQ*OFF                                                        BUG26197
      C                     CALL 'AONWRKR1'                                                  AR864876
      C                     PARM *BLANKS   ##RTCD                                            AR864876
      C                     PARM '*KEY'    ##OPTN                                            AR864876
      C                     PARM N4NWRK    PNWRK   6                                         AR864876
      C           SDNWRK    PARM SDNWRK    DSLDY                                             AR864876
+      *                                                                                     BUG26197
+     C           ##RTCD    IFNE *BLANKS                                                     BUG26197
+     C           *LOCK     IN   LDA                                                         BUG26197
+     C                     Z-ADD998       DBASE                                             BUG26197
+     C                     MOVEL'SDNWRKPD'DBFILE                                            BUG26197
+     C                     MOVELN4NWRK    DBKEY                                             BUG26197
+     C                     MOVEL'CG4700'  DBPGM                                             BUG26197
+     C                     OUT  LDA                                                         BUG26197
+     C                     EXSR *PSSR                                                       BUG26197
+     C                     ENDIF                                                            BUG26197
+      *                                                                                     BUG26197
      C           ##RTCD    IFEQ *BLANKS                                                     AR864876
      C           EDMCNW    ANDEQ'Y'                                                         AR864876
+     C           N40SFR    ANDNE'E'                                                         BUG26197
+     C           N4DSTN    IFNE *BLANKS                    participant                      BUG26197
      C                     MOVELN40SFR    #FSTFQ           Save for updat                   BUG24792
+     C                     ENDIF                                                            BUG24792
+     C                     GOTO EXMULT                                                      BUG26197
+     C                     ELSE                                                             BUG26197
+     C           ##ACKY    READEGLNW94L8                 51                                 BUG26197
      C                     ENDIF                                                            AR864876
-     C                     ENDIF                                                            BUG24792
-     C                     ENDIF                                                            BUG24792
+     C                     ENDDO                                                            BUG26197
+     C**********           ENDIF                                                   BUG24792 BUG26197
       *................................................................                     BUG24792
      C           EXMULT    TAG                                                              BUG24792
       *                                                                                     BUG24792

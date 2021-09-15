@@ -1,0 +1,72 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Call COB Jobs')                               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB4010 - Midas CB Call COB Jobs                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CCB019  *CREATE    Date 20Mar12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB019 - Close of business Scheduler Enhancement             *
+      *           Upgrade IPL089                                      *
+      *                                                               *
+      *****************************************************************
+     FCBUDCFL1IF  E           K        DISK
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PHASE   1
+     C                     PARM           FREQ    2
+      *
+     C           'C'       SETLLCBUDCFL1
+      *
+     C           'C'       READECBUDCFL1                 90
+      ** CHANGE OUTQ FOR REPORT IF MQREP AND OUT ENTERED ON COB SCHED.
+     C                     MOVE CMQUEU    AQUEU  10
+     C                     MOVE CMQULI    AQULI  10
+     C                     MOVE CMNAME    ANAME  10
+     C           AQUEU     IFNE *BLANKS
+     C                     CALL 'CBC4002'
+     C                     PARM           AQUEU
+     C                     PARM           AQULI
+     C                     PARM           ANAME
+     C                     ENDIF
+      *
+     C           *IN90     DOWEQ*OFF
+     C           CMIGNO    IFNE 'Y'
+     C           CMCLOC    ANDEQPHASE
+     C           CMFREQ    ANDEQFREQ
+     C           CMSUCC    ANDNE'Y'
+     C                     CALL 'CBC4011'
+     C                     PARM           CMNAME
+     C                     PARM           CMSEQN
+     C                     PARM           CMITIM
+     C                     PARM           RETURN  1
+     C           RETURN    IFNE ' '
+     C                     CALL 'CBC4012'
+     C                     PARM           CMNAME
+     C                     PARM           CMSEQN
+     C           CMALER    IFNE 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO GONE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C           'C'       READECBUDCFL1                 90
+     C                     ENDDO
+     C           GONE      TAG
+      ** RESET OUTQ ON JOB TO MPRINT IN LIBL
+     C           AQUEU     IFNE *BLANKS
+     C                     CALL 'CBC4006'
+     C                     PARM           AQUEU
+     C                     PARM           AQULI
+     C                     PARM           ANAME
+     C                     ENDIF
+     C                     MOVE *ON       *INLR

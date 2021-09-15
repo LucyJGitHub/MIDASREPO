@@ -17,8 +17,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 25Jul11               *
+      *                 MKCAR1             Date 04Aug2005             *
+      *                 URGIND             Date 21Jul2005             *
+      *                 STP989             Date 15Apr2005             *
+      *                 STP997             Date 25Mar2005             *
+      *                 MK0510             Date 07Feb2004             *
+      *                 MK0509             Date 07Feb2004             *
+      *                 MK0506             Date 03Feb2004             *
+      *                 STP017             Date 20Nov2004             *
+      *                 ESL038             Date 06Dec2004             *
+      *                 ERN054             Date 20Jun2003             *
+      *                 EEE058             Date 11Feb2003             *
+      *                 241259             Date 28Aug06               *
+      *                 CFT162             Date 08Sep17               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE075             Date 06Dec10               *
@@ -60,6 +74,31 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Added field DSMSEQ due to CSW209 changes.           *
+      *           Applied following changes:                          *
+      *           MKCAR1, URGIND, STP989, STP997,                     *
+      *           MK0510, MK0509, MK0506, STP017, ESL038,             *
+      *           ERN054, EEE058.                                     *
+      *  MKCAR1 - Handle clearing settlement methods.                 *
+      *  URGIND - Urgent Flag processing.                             *
+      *  STP989 - Set Override indicator to 'yes' when calling FT0010 *
+      *           when rate set.                                      *
+      *  STP997 - Do not recalculate pay amount for external networks *
+      *  MK0510 - Correct Foreign Destination processing.             *
+      *  MK0509 - Use customer marketing information for customer     *
+      *           group retrieval for outgoing payments as well as    *
+      *           for incoming.                                       *
+      *  MK0506 - Enlarge #Search variable, so that it is able to     *
+      *           keep all the needed data.                           *
+      *  STP017 - STP flags: 'Y' = STP, 'N' = Manual.                 *
+      *  ESL038 - ING STP Development                                 *
+      *         - Correct Foreign Destination processing.             *
+      *  ERN054 - Agency message changes                              *
+      *           Introduce new defaulting extensions                 *
+      *  EEE058 - Incoming STP corrections                            *
+      *  241259 - Calculate instructed and pay amounts correctly.     *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -167,6 +206,23 @@
      FFTPYCGLB  IF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FTPYCGD0:PYCGLB)
 
+      * FT Extended Payment Charge Defaults                                                   ERN054
+     FFTPYCGV1  IF   E           K DISK    INFSR(*PSSR)                                       ERN054
+     F                                     Rename(FTPYCGD0:PYCGV0)                            ERN054
+      *                                                                                       ERN054
+     FMEINCRL1  IF   E           K DISK                                                       ERN054
+      *                                                                                       ERN054
+      *  Message header for sender of message                                                 ERN054
+      *                                                                                       ERN054
+     FMEINDTS2  IF   E           K DISK                                                       ERN054
+      *                                                                                       ERN054
+      *  Message details in message/part/tag order                                            ERN054
+      *                                                                                       ERN054
+                                                                                              ERN054
+     FFTLOOKV0  IF   E           K DISK                                                       ERN054
+      *                                                                                       ERN054
+      *  FT Look Up searches                                                                  ERN054
+      *                                                                                       ERN054
       * FT Payment Charge Defaults for STP
      FMEGNCRL1  IF   E           K DISK    INFSR(*PSSR)
 
@@ -179,6 +235,20 @@
       * Customer Marketing Groups                                                             246583
      FSDCMRKL1  IF   E           K DISK    INFSR(*PSSR)                                       246583
                                                                                               246583
+      * Customer marketing codes                                                              EEE058
+     FSDCMRKL0  IF   E           K DISK    INFSR(*PSSR)                                       EEE058
+                                                                                              EEE058
+     FMEBICPV0  IF   E           K DISK                                                       EEE058
+     F                                     INFSR(*PSSR)                                       EEE058
+      * RTV : BIC Plus data                                                                   EEE058
+                                                                                              EEE058
+     FMEBICDL2  IF   E           K DISK                                                       EEE058
+     F                                     INFSR(*PSSR)                                       EEE058
+      * RTV : BIC Directory                                                                   EEE058
+                                                                                              EEE058
+     FMEINMVV0  IF   E           K DISK                                                       STP997
+      * Midas ME Message Routing Extensionen                                                  STP997
+      *                                                                                       STP997
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -214,7 +284,54 @@
       ** +--------------------------------------+
 
       *****************************************************************
-
+                                                                                              ERN054
+      *               1 BRANCH                                                                ERN054
+      *               2 CUSTOM                                                                ERN054
+      *               3 CURRCY                                                                ERN054
+      *               4 TRNTYP                                                                ERN054
+      *               5 TRSBTY                                                                ERN054
+      *               6 CSGRCD                                                                ERN054
+      *               7 NETWRK                                                                ERN054
+      *               8 PAYTYP                                                                ERN054
+      *               9 MSGTYP                                                                ERN054
+      *              10 STMTMD                                                                ERN054
+      *              11 DRACTP                                                                ERN054
+      *              12 CRACTP                                                                ERN054
+      *              13 ADDDED                                                                ERN054
+      *              14 FXTRAN                                                                ERN054
+      *              15 TdCtry                                                                ERN054
+      *              16 UrgFlg                                                                URGIND
+      *                                                                                       ERN054
+     D**Search#        S             20A   DIM(10)                                     ERN054 EMRFIX
+     D  Search#        S             20A   DIM(50)                                            EMRFIX
+     D  SearchNbr      S              5  0                                                    ERN054
+     D  KeySV          S              1A   DIM(20)                                            ERN054
+     D  Idx            S              5  0                                                    ERN054
+     D  KeysComb       S              1                                                       ERN054
+      * Key fields                                                                            ERN054
+     D Keys            DS                                                                     ERN054
+     D  KeBRANCH                           LIKE(BRANCH)                                       ERN054
+     D  KeCUSTOM                           LIKE(CUSTOM)                                       ERN054
+     D  KeCURRCY                           LIKE(CURRCY)                                       ERN054
+     D  KeTRNTYP                           LIKE(TRNTYP)                                       ERN054
+     D  KeTRSBTY                           LIKE(TRSBTY)                                       ERN054
+     D  KeCSGRCD                           LIKE(CSGRCD)                                       ERN054
+     D  KeNETWRK                           LIKE(NETWRK)                                       ERN054
+     D  KePAYTYP                           LIKE(PAYTYP)                                       ERN054
+     D  KeMSGTYP                           LIKE(MSGTYP)                                       ERN054
+     D  KeSTMTMD                           LIKE(STMTMD)                                       ERN054
+     D  KeDRACTP                           LIKE(DRACTP)                                       ERN054
+     D  KeCRACTP                           LIKE(CRACTP)                                       ERN054
+     D  KeADDDED                           LIKE(ADDDED)                                       ERN054
+     D  KeFXTRAN                           LIKE(FXTRAN)                                       ERN054
+     D  KeTdCtry                           LIKE(TdCtry)                                       ERN054
+     D  KeUrgFlg                           LIKE(UrgFlg)                                       URGIND
+                                                                                              ERN054
+     D FTLOOK        E DS                  EXTNAME(FTLOOKP0)                                  ERN054
+      * FTLOOKP0 - Look Up searches                                                           ERN054
+     D**##Search              16     25                                                ERN054 MK0506
+     D  ##Search              16     35                                                       MK0506
+      *                                                                                       ERN054
       *****************************************************************
 
       ** +--------------------------------------+
@@ -276,6 +393,15 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
 
+      ** Country code details                                                                 CFT017
+     D SDCTRY        E DS                  EXTNAME(SDCTRYPD)                                  CFT017
+      *                                                                                       CFT017
+     **  Payment extension data                                                               EEE058
+     D P9Pext        E DS                  EXTNAME(FTPEXTP0)                                  EEE058
+                                                                                              EEE058
+                                                                                              EEE058
+      **  Data Structure for input/output parameters                                          EEE058
+     D/COPY FTCPYSRC,FT0010D001                                                               EEE058
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
@@ -391,6 +517,17 @@ L011 D P               S              3P 0
      D K_Trntyp        S                   LIKE(TRNTYP)
      D K_Trsbty        S                   LIKE(TRSBTY)
      D K_Csgrcd        S                   LIKE(CSGRCD)
+      * Extra keys for extended payment charging                                              ERN054
+     D  K_NETWRK       S                   LIKE(NETWRK)                                       ERN054
+     D  K_PAYTYP       S                   LIKE(PAYTYP)                                       ERN054
+     D  K_MSGTYP       S                   LIKE(MSGTYP)                                       ERN054
+     D  K_STMTMD       S                   LIKE(STMTMD)                                       ERN054
+     D  K_DRACTP       S                   LIKE(DRACTP)                                       ERN054
+     D  K_CRACTP       S                   LIKE(CRACTP)                                       ERN054
+     D  K_ADDDED       S                   LIKE(ADDDED)                                       ERN054
+     D  K_FXTRAN       S                   LIKE(FXTRAN)                                       ERN054
+     D  K_TdCtry       S                   LIKE(TdCtry)                                       ERN054
+     D  K_UrgFlg       S                   LIKE(UrgFlg)                                       URGIND
 
      D K_D6snbr        S                   LIKE(D6SNBR)
 
@@ -452,6 +589,17 @@ L011 D P               S              3P 0
      D Euro            S                   Like(BkEuro)
      D SettIn          S                   Like(A6INCY)
      D PayIn           S                   Like(A6INCY)
+                                                                                              EEE058
+      ** Data structure for information on OUR processing                                     EEE058
+     D O2Parm          DS           256                                                       EEE058
+     D  O2Msgr                             LIKE(O_OPMSGR)                                     EEE058
+     D  O2Kprt                             LIKE(O_OPKPRT)                                     EEE058
+     D  O2Acod                             LIKE(E_ACOD)                                       EEE058
+     D  O2Gpcd                             LIKE(PXGPCD)                                       EEE058
+     D  O2Coma                       13S 0                                                    EEE058
+     D  O2Penf                             LIKE(PXPENF)                                       EEE058
+     D  O2M900                        1A                                                      EEE058
+     D  O2M191                        1A                                                      EEE058
                                                                                               246583
      D ChkGrp          S                   Like(D7GPC1)                                       246583
       *                                                                                       CFT120
@@ -465,6 +613,9 @@ L011 D P               S              3P 0
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
+                                                                                              ERN054
+     I@INDTS2       01                                                                        ERN054
+     I@IN35S2       02                                                                        ERN054
 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -472,6 +623,20 @@ L011 D P               S              3P 0
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
+                                                                                              EEE058
+     C                   IF        EEE058 = *BLANKS                                           EEE058
+     C                   CALLB     'AOSARDR0'                                                 EEE058
+     C                   PARM      *BLANKS       @Rtcd                                        EEE058
+     C                   PARM      '*VERIFY'     @Optn                                        EEE058
+     C                   PARM      'EEE058'      @Sard             6                          EEE058
+     C     SCSARD        PARM      SCSARD        Dssdy                                        EEE058
+                                                                                              EEE058
+     C                   IF        @Rtcd = *BLANKS                                            EEE058
+     C                   MOVEL     'EEE058'      EEE058            6                          EEE058
+     C                   ELSE                                                                 EEE058
+     C                   MOVEL     '*NRF  '      EEE058            6                          EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
 
       ** Move entry records to correct data structure for transaction and
       ** work out if customer is 1,2 or(B)oth for default charges.
@@ -531,7 +696,8 @@ L011 D P               S              3P 0
 
       ** Get default charges for STP.
 
-     C                   IF        P_ProcMthd = 'S'
+     C*****              IF        P_ProcMthd = 'S'                                           STP017
+     C                   IF        P_ProcMthd = 'Y'                                           STP017
      C                   EXSR      Dft_STP
      C                   ENDIF
 
@@ -2453,6 +2619,11 @@ L011 D P               S              3P 0
      C                   ENDSL
 
      C                   Eval      K_Custom = K_CustNum
+                                                                                              ERN054
+      ** Ignore all below for ERN054, it is incorrect                                         ERN054
+                                                                                              ERN054
+     C                   IF        ERN054 <> 'ERN054'                                         ERN054
+                                                                                              ERN054
 
      C     Kftpycgl0     CHAIN     PYCGL0                             99
 
@@ -2472,6 +2643,10 @@ L011 D P               S              3P 0
       ** access customer grouping codes file and chain using codes
       ** with set number = 1.
 
+      ** Ignore all below for EEE058, it is incorrect                                         EEE058
+                                                                                              EEE058
+     C                   IF        EEE058 <> 'EEE058'                                         EEE058
+                                                                                              EEE058
      C***********        EVAL      Cus_Grp = *blanks                                          248174
      C                   EVAL      K_D6snbr = '1'
 
@@ -2581,6 +2756,72 @@ L011 D P               S              3P 0
      C                   ENDDO
 
      C                   ENDIF
+                                                                                              EEE058
+     C                   Else                                                                 EEE058
+                                                                                              EEE058
+      ** get Group of PCAT if needed                                                          EEE058
+                                                                                              EEE058
+     C                   CALL      'FTP960'                                                   EEE058
+     C                   PARM                    RetCodeOut                                   EEE058
+     C                   PARM                    P9Pext                                       EEE058
+                                                                                              EEE058
+      ** Find customer market information for customer if no PCAT data                        EEE058
+     C                   MOVEL     *Off          *In98                                        EEE058
+     C                   IF        PXGPCD = *blanks                                           EEE058
+     C     K_CustNum     CHAIN     SDCMRKL0                           98                      EEE058
+                                                                                              EEE058
+      ** If EEE058 and no specific set up for customer                                        EEE058
+                                                                                              EEE058
+     C                   IF        EEE058 = 'EEE058' and                                      EEE058
+     C                             (P_TransType = 'IN' or P_TransType = 'OP')                 EEE058
+     C                             and *in98 = *on                                            EEE058
+      *                                                                                       EEE058
+      * Call program for OUR charge processing when linked to a messaeg                       EEE058
+      *                                                                                       EEE058
+     C                   Clear                   O2Parm                                       EEE058
+     C                   Eval      O2Penf = PXPENF                                            EEE058
+     C                   Eval      O2Acod = E_Acod                                            EEE058
+     C                   If        P_TransType = 'OP'                                         EEE058
+     C                   Eval      O2msgr = O_OPMSGR                                          EEE058
+     C                   Eval      O2Kprt = O_OPKPRT                                          EEE058
+     C                   Else                                                                 EEE058
+     C                   Eval      O2msgr = I_INMSGR                                          EEE058
+     C                   Eval      O2Kprt = I_INKPRT                                          EEE058
+     C                   Endif                                                                EEE058
+      *                                                                                       EEE058
+     C                   Call      'FTP860'                                                   EEE058
+     C                   Parm                    RetFtp860         7                          EEE058
+     C                   Parm                    O2Parm                                       EEE058
+      *                                                                                       EEE058
+      ** if account account set use                                                           EEE058
+     C                   If        RetFtp860 =  *blanks and O2Gpcd <> *blanks                 EEE058
+     C                   Eval      D7GPC1 = O2Gpcd                                            EEE058
+     C                   MOVEL     *Off          *In98                                        EEE058
+     C                   Endif                                                                EEE058
+     C                   Endif                                                                EEE058
+      * use code from PCAT                                                                    EEE058
+     C                   Else                                                                 EEE058
+     C                   EVAL      D7GPC1 = PXGPCD                                            EEE058
+     C                   Endif                                                                EEE058
+                                                                                              EEE058
+     C                   IF        *In98 = *Off and D7GPC1 <> *blanks                         EEE058
+     C                   EVAL      K_Csgrcd = D7GPC1                                          EEE058
+     C     Kftpycgl2     CHAIN     PYCGL2                             99                      EEE058
+     C                   IF        *In99 = *On                                                EEE058
+     C     Kftpycgl3     CHAIN     PYCGL3                             99                      EEE058
+     C                   IF        *In99 = *On                                                EEE058
+     C     Kftpycgl8     CHAIN     PYCGL8                             99                      EEE058
+     C                   IF        *In99 = *On                                                EEE058
+     C     Kftpycgl9     CHAIN     PYCGL9                             99                      EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
+     C                   ENDIF                                                                EEE058
+                                                                                              EEE058
+     C                   ENDIF                                                                EEE058
+                                                                                              EEE058
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
+                                                                                              EEE058
 
      C                   IF        *In99 = *On
      C     Kftpycgl4     CHAIN     PYCGL4                             99
@@ -2597,6 +2838,336 @@ L011 D P               S              3P 0
      C                   IF        *In99 = *On
      C     Kftpycglb     CHAIN     PYCGLB                             99
      C                   ENDIF
+                                                                                              ERN054
+      ** ERN054 Extended Payment Defaulting                                                   ERN054
+                                                                                              ERN054
+     C                   Else                                                                 ERN054
+                                                                                              ERN054
+      ** get Group of PCAT if needed                                                          ERN054
+                                                                                              ERN054
+     C                   CALL      'FTP960'                                                   ERN054
+     C                   PARM                    RetCodeOut                                   ERN054
+     C                   PARM                    P9Pext                                       ERN054
+                                                                                              ERN054
+      ** Find customer market information for customer if no PCAT data                        ERN054
+     C                   IF        PXGPCD = *blanks                                           ERN054
+     C     K_CustNum     CHAIN     SDCMRKL0                           98                      ERN054
+                                                                                              ERN054
+      ** No specific set up for customer                                                      ERN054
+                                                                                              ERN054
+     C                   If        (P_TransType = 'IN' or P_TransType = 'OP')                 ERN054
+     C                             and *in98 = *on                                            EEE058
+      *                                                                                       ERN054
+      * Call program for OUR charge processing when linked to a messaege                      ERN054
+      *                                                                                       ERN054
+     C                   Clear                   O2Parm                                       ERN054
+     C                   Eval      O2Penf = PXPENF                                            ERN054
+     C                   Eval      O2Acod = E_Acod                                            ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      O2msgr = O_OPMSGR                                          ERN054
+     C                   Eval      O2Kprt = O_OPKPRT                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      O2msgr = I_INMSGR                                          ERN054
+     C                   Eval      O2Kprt = I_INKPRT                                          ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+     C                   Call      'FTP860'                                                   ERN054
+     C                   Parm                    RetFtp860         7                          ERN054
+     C                   Parm                    O2Parm                                       ERN054
+      *                                                                                       ERN054
+      ** if account set use                                                                   ERN054
+     C                   If        RetFtp860 =  *blanks and O2Gpcd <> *blanks                 ERN054
+     C                   Eval      K_csgrcd = O2Gpcd                                          ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+      * use code from PCAT                                                                    ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_csgrcd = PXGPCD                                          ERN054
+     C                   Endif                                                                ERN054
+                                                                                              MK0509
+     C                   IF        *In98 = *Off and D7GPC1 <> *blanks                         MK0509
+     C                   EVAL      K_Csgrcd = D7GPC1                                          MK0509
+     C     Kftpycgl2     CHAIN     PYCGL2                             99                      MK0509
+     C                   IF        *In99 = *On                                                MK0509
+     C     Kftpycgl3     CHAIN     PYCGL3                             99                      MK0509
+     C                   IF        *In99 = *On                                                MK0509
+     C     Kftpycgl8     CHAIN     PYCGL8                             99                      MK0509
+     C                   IF        *In99 = *On                                                MK0509
+     C     Kftpycgl9     CHAIN     PYCGL9                             99                      MK0509
+     C                   ENDIF                                                                MK0509
+     C                   ENDIF                                                                MK0509
+     C                   ENDIF                                                                MK0509
+                                                                                              MK0509
+     C                   ENDIF                                                                MK0509
+                                                                                              MK0509
+                                                                                              ERN054
+     C                   Eval      *In99 = *On                                                ERN054
+     C                   Eval      K_netwrk = *blanks                                         ERN054
+     C                   Eval      K_paytyp = *blanks                                         ERN054
+     C                   Eval      K_msgtyp = *blanks                                         ERN054
+     C                   Eval      K_stmtmd = *blanks                                         ERN054
+     C                   Eval      K_dractp = *blanks                                         ERN054
+     C                   Eval      K_cractp = *blanks                                         ERN054
+     C                   Eval      K_fxtran = *blanks                                         ERN054
+     C                   Eval      K_tdctry = *blanks                                         ERN054
+     C                   Eval      K_UrgFlg = *blanks                                         URGIND
+      *                                                                                       ERN054
+     C     KIncrl1       KLIST                                                                ERN054
+     C                   Kfld                    CRMSGR                                       ERN054
+      *                                                                                       ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      CRMSGR = O_OPMSGR                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      CRMSGR = I_INMSGR                                          ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+     C     KIncrl1       Chain     @INCRL1                                                    ERN054
+      * If found get message 26T details                                                      ERN054
+     C                   If        %Found                                                     ERN054
+      * Set network and message type                                                          ERN054
+     C                   Eval      K_netwrk = CRNWRK                                          ERN054
+     C                   Eval      K_msgtyp = CRMTPY                                          ERN054
+      * Set part and :26T: and find                                                           ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      O2Kprt = O_OPKPRT                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      O2Kprt = I_INKPRT                                          ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+      * Get message details                                                                   ERN054
+      *                                                                                       ERN054
+     C     KIndts2a      KLIST                                                                ERN054
+     C                   Kfld                    DSMSGR                                       ERN054
+     C                   Kfld                    DSPART                                       ERN054
+     C                   Kfld                    DSMTG                                        ERN054
+     C                   Kfld                    DSMSEQ                                     AR856737
+     C                   Kfld                    DSSEQN                                       ERN054
+      *                                                                                       ERN054
+     C     KIndts2b      KLIST                                                                ERN054
+     C                   Kfld                    DSMSGR                                       ERN054
+     C                   Kfld                    DSPART                                       ERN054
+     C                   Kfld                    DSMTG                                        ERN054
+      *                                                                                       ERN054
+     C                   Eval      DSMSGR = CRMSGR                                            ERN054
+     C                   Eval      DSPART = O2KPRT                                            ERN054
+     C                   Eval      DSMTG  = ':26T:'                                           ERN054
+     C                   Eval      DSSEQN = 0                                                 ERN054
+     C                   EVAL      DSMSEQ = *blanks                                         AR856737
+     C                   Movel     *OFF          *In01                                        ERN054
+     C                   Movel     *OFF          *In02                                        ERN054
+      *                                                                                       ERN054
+     C     KIndts2a      Setll     Meindts2                                                   ERN054
+     C     KIndts2b      Reade     Meindts2                               90                  ERN054
+      * If found check for 26T                                                                ERN054
+     C                   If        *in90 = *off                                               ERN054
+      * Now fill pay type                                                                     ERN054
+     C                   Select                                                               ERN054
+     C                   When      (*in01 = *ON and DTMFLD <> *blanks)                        ERN054
+     C                   Eval      K_paytyp = DTMFLD                                          ERN054
+     C                   When      (*in02 = *ON and DSMF35 <> *blanks)                        ERN054
+     C                   Eval      K_paytyp = DSMF35                                          ERN054
+     C                   Endsl                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+      * Set Fx Tran                                                                           ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   If        O_SMCY <> O_PCCY                                           ERN054
+     C                   Eval      K_fxtran = 'Y'                                             ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_fxtran = 'N'                                             ERN054
+     C                   Endif                                                                ERN054
+     C                   Else                                                                 ERN054
+     C                   If        I_SMCY <> I_PCCY                                           ERN054
+     C                   Eval      K_fxtran = 'Y'                                             ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_fxtran = 'N'                                             ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ESL038
+     C                   If        P_TransType = 'IN'                                         ESL038
+     C                   Eval      W_BNC1 = I_Snd1                                            ESL038
+     C                   Eval      W_BNCT = I_SnTp                                            ESL038
+     C                   EndIf                                                                ESL038
+                                                                                              ESL038
+     C                   If        P_TransType = 'OP'                                         ESL038
+     C                   Eval      W_BNC1 = O_Dst1                                            ESL038
+     C                   Eval      W_BNCT = O_DstT                                            ESL038
+     C                   EndIf                                                                ESL038
+                                                                                              ESL038
+     C                   Eval      DSMTG  = '2:   '                                           ERN054
+     C                   Eval      DSSEQN = 2                                                 ERN054
+     C                   Eval      DSPART = 0                                                 ERN054
+     C                   Movel     *OFF          *In01                                        ERN054
+     C                   Movel     *OFF          *In02                                        ERN054
+      *                                                                                       ERN054
+     C     KIndts2a      Setll     Meindts2                                                   ERN054
+     C     KIndts2b      Reade     Meindts2                               90                  ERN054
+      * If found check for Urgent                                                             ERN054
+     C                   If        *in90 = *off                                               ERN054
+      * Now fill pay type                                                                     ERN054
+     C                   Select                                                               ERN054
+     C                   When      (*in01 = *ON and DTMFLD <> *blanks)                        ERN054
+     C                   MoveL     DTMFLD        #URFLC1          47                          URGIND
+     C                   Move      #URFLC1       #URFLC2           1                          URGIND
+     C                   When      (*in02 = *ON and DSMF35 <> *blanks)                        ERN054
+     C                   Movel     DSMF35        #URFLC3          35                          ERN054
+     C                   Move      #URFLC3       #URFLC2                                      URGIND
+     C                   Endsl                                                                ERN054
+     C                   Endif                                                                ERN054
+      *                                                                                       ERN054
+     C                   If        #URFLC2 = 'U'                                              URGIND
+     C                   Eval      K_UrgFlg = 'U'                                             URGIND
+     C                   Else                                                                 URGIND
+     C                   Eval      K_UrgFlg = 'N'                                             URGIND
+     C                   EndIf                                                                URGIND
+                                                                                              ESL038
+     C                   If        W_BNCT = 'S'                                               ESL038
+     C                   If        %Subst(W_BNC1:5:2) = 'PL'                                  ESL038
+     C                   Eval      K_tdCtry = 'PL'                                            ESL038
+     C                   Else                                                                 ESL038
+     C                   Eval      K_tdCtry = 'F '                                            ESL038
+     C                   EndIf                                                                ESL038
+     C                   Else                                                                 ESL038
+                                                                                              ESL038
+     C                   ExSr      Customer                                                   ESL038
+                                                                                              ERN054
+     C                   If        WCustNo <> *Blanks                                         MK0510
+     C     WCustNo       Chain     SDCUSTL1                                                   MK0510
+     C                   Else                                                                 MK0510
+     C     K_CustNum     CHAIN     SDCUSTL1                                                   ERN054
+     C                   EndIf                                                                MK0510
+                                                                                              MK0510
+     C                   Select                                                               ERN054
+     C                   When      Not %Found                                                 ERN054
+     C                   Eval      K_TdCtry = 'N '                                            ERN054
+     C                   When      BbCsid <> *blanks                                          ERN054
+     C                             and %Subst(BbCsid:5:2) = 'PL'                              ERN054
+     C                   Eval      K_tdCtry = 'PL'                                            ERN054
+     C                   When      BbCsid <> *blanks                                          ERN054
+     C                             and %Subst(BbCsid:5:2) <> 'PL'                             ERN054
+     C                   Eval      K_tdCtry = 'F '                                            ERN054
+     C                   When      BbCsid = *blanks                                           ERN054
+     C                             and BbColc = 'PL'                                          ERN054
+     C                   Eval      K_tdCtry = 'PL'                                            ERN054
+     C                   When      BbCsid = *blanks                                           ERN054
+     C                             and BbColc <> 'PL'                                         ERN054
+     C                   Eval      K_tdCtry = 'F '                                            ERN054
+     C                   Other                                                                ERN054
+     C                   Eval      K_tdCtry = 'N '                                            ERN054
+     C                   Endsl                                                                ERN054
+     C                   EndIf                                                                ESL038
+      * Set settlement method                                                                 ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Movel     O_STMT        K_stmtmd                                     ERN054
+      * Set for extended types, Elixir and MC Rocket                                          ERN054
+     C                   Select                                                               ERN054
+     C                   When      K_stmtmd = '18'                                            ERN054
+     C                   Eval      K_stmtmd = 'EX'                                            ERN054
+      *                                                                                       STP009
+      * STP009 remove code for MC and BA as coding conflics with Nordlb                       STP009
+      *                                                                                       STP009
+     C**********         When      K_stmtmd = '91' and PXPCAT = 'Y'                     STP009ERN054
+     C**********         Eval      K_stmtmd = 'MC'                                      STP009ERN054
+     C**********         When      K_stmtmd = '91' and PXPCAT <> 'Y'                    STP009ERN054
+     C**********         Eval      K_stmtmd = 'BA'                                      STP009ERN054
+     C                   When      K_stmtmd = '91'                                            STP009
+     C                   Eval      K_stmtmd = 'EC'                                            STP009
+     C                   When      K_stmtmd = '95'                                            STP009
+     C                   Eval      K_stmtmd = 'ZC'                                            STP009
+     C                   When      K_stmtmd = '97'                                            STP009
+     C                   Eval      K_stmtmd = 'TP'                                            STP009
+     C                   Endsl                                                                ERN054
+     C                   If        O_STMT = 8 And P_ClrStmt <> *Blanks                        MKCAR1
+     C                   Eval      K_stmtmd = P_ClrStmt                                       MKCAR1
+     C                   EndIf                                                                MKCAR1
+     C                   Else                                                                 ERN054
+     C                   Eval      K_stmtmd = '00'                                            ERN054
+     C                   Endif                                                                ERN054
+      * Set add deduct                                                                        ERN054
+     C                   If        P_TransType = 'OP'                                         ERN054
+     C                   Eval      K_addded = O_ADDC                                          ERN054
+     C                   Else                                                                 ERN054
+     C                   Eval      K_addded = I_ADDC                                          ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ERN054
+     C                   Do        SearchNbr     Idx                                          ERN054
+     C                   Clear                   Keys                                         ERN054
+     C                   Movea     Search#(Idx)  KeySV(1)                                     ERN054
+     C                   If        KeySV(1) = 'Y'                                             ERN054
+     C                   Eval      KeBRANCH = K_branch                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(2) = 'Y'                                             ERN054
+     C                   Eval      KeCUSTOM = K_custom                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(3) = 'Y'                                             ERN054
+     C                   Eval      KeCURRCY = K_currcy                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(4) = 'Y'                                             ERN054
+     C                   Eval      KeTRNTYP = K_trntyp                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(5) = 'Y'                                             ERN054
+     C                   Eval      KeTRSBTY = K_trsbty                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(6) = 'Y'                                             ERN054
+     C                   Eval      KeCSGRCD = K_csgrcd                                        ERN054
+     C                   If        KeCSGRCD = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(7) = 'Y'                                             ERN054
+     C                   Eval      KeNETWRK = K_netwrk                                        ERN054
+     C                   If        KeNETWRK = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(8) = 'Y'                                             ERN054
+     C                   Eval      KePAYTYP = K_paytyp                                        ERN054
+     C                   If        KePAYTYP = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(9) = 'Y'                                             ERN054
+     C                   Eval      KeMSGTYP = K_msgtyp                                        ERN054
+     C                   If        KeMSGTYP = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(10) = 'Y'                                            ERN054
+     C                   Eval      KeSTMTMD = K_stmtmd                                        ERN054
+     C                   If        KeSTMTMD = *blanks                                         ERN054
+     C                   Iter                                                                 ERN054
+     C                   Endif                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(11) = 'Y'                                            ERN054
+     C                   Eval      KeDRACTP = K_dractp                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(12) = 'Y'                                            ERN054
+     C                   Eval      KeCRACTP = k_cractp                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(13) = 'Y'                                            ERN054
+     C                   Eval      KeADDDED = K_addded                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(14) = 'Y'                                            ERN054
+     C                   Eval      KeFXTRAN = K_fxtran                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(15) = 'Y'                                            ERN054
+     C                   Eval      KeTdCtry = K_tdctry                                        ERN054
+     C                   Endif                                                                ERN054
+     C                   If        KeySV(16) = 'Y'                                            URGIND
+     C                   Eval      KeUrgFlg = K_UrgFlg                                        URGIND
+     C                   Endif                                                                URGIND
+      *                                                                                       ERN054
+     C     KeyV0         Chain     PYCGV0                                                     ERN054
+      * If found use as default                                                               ERN054
+     C                   If        %Found                                                     ERN054
+     C                   Eval      *In99 = *Off                                               ERN054
+     C                   Leave                                                                ERN054
+     C                   Endif                                                                ERN054
+     C                   Enddo                                                                ERN054
+      *                                                                                       ERN054
+                                                                                              ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ERN054
 
       ** If charge code default record found move file data structure
       ** to work data structure to extract codes array
@@ -2617,6 +3188,27 @@ L011 D P               S              3P 0
      C                   ENDIF
 
      C                   ENDDO
+                                                                                              EEE058
+      ** Get FX rate default                                                                  EEE058
+                                                                                              EEE058
+     C                   IF        EEE058 = 'EEE058'                                          EEE058
+                                                                                              EEE058
+     C                   CALL      'FTP960'                                                   EEE058
+     C                   PARM                    RetCodeOut                                   EEE058
+     C                   PARM                    P9Pext                                       EEE058
+      * If not blank use                                                                      EEE058
+     C                   IF        PXFXSP <> *blanks                                          EEE058
+     C                   MOVEL     PXFXSP        Cus1_Dft(1)                                  EEE058
+     C                   MOVEL     PXFXSP        Cus2_Dft(1)                                  EEE058
+     C                   Endif                                                                EEE058
+      *                                                                                       EEE058
+      * If not blank use                                                                      ESL038
+     C                   IF        PXDOCD <> *blanks                                          ESL038
+     C                   MOVEL     PXDOCD        Cus1_Dft(2)                                  ESL038
+     C                   MOVEL     PXDOCD        Cus2_Dft(2)                                  ESL038
+     C                   Endif                                                                ESL038
+                                                                                              EEE058
+     C                   Endif                                                                EEE058
 
      C                   ENDSR
 
@@ -2653,6 +3245,21 @@ L011 D P               S              3P 0
 
      C                   MOVEA     W_ArrayS      CusS_Dft
      C                   ENDIF
+      *                                                                                       STP997
+     C     KINMVV        KLIST                                                                STP997
+     C                   KFLD                    MVNWRK                                       STP997
+     C                   KFLD                    MVMTPY                                       STP997
+     C                   KFLD                    MVSNDK                                       STP997
+      *                                                                                       STP997
+     C                   MOVEL     GNNWRK        MVNWRK                                       STP997
+     C                   MOVEL     GNMTPY        MVMTPY                                       STP997
+     C                   MOVEL     *BLANKS       MVSNDK                                       STP997
+      *                                                                                       STP997
+     C     KINMVV        CHAIN     @INMVV0                            90                      STP997
+     C     *IN90         IFEQ      *OFF                                                       STP997
+     C     MVMCMG        ANDEQ     'Y'                                                        STP997
+     C                   MOVE      'Y'           #EXTRN                                       STP997
+     C                   ENDIF                                                                STP997
 
      C                   ENDSR
 
@@ -2686,10 +3293,12 @@ L011 D P               S              3P 0
 
      C                   SELECT
 
-     C                   WHEN      CusS_dft(Z) = '*****' and P_ProcMthd = 'S'
+     C*****              WHEN      CusS_dft(Z) = '*****' and P_ProcMthd = 'S'                 STP017
+     C                   WHEN      CusS_dft(Z) = '*****' and P_ProcMthd = 'Y'                 STP017
      C                   EVAL      Cus1_dft(Z) = *blanks
 
-     C                   WHEN      CusS_dft(Z) <> *blanks and P_ProcMthd = 'S'
+     C*****              WHEN      CusS_dft(Z) <> *blanks and P_ProcMthd = 'S'                STP017
+     C                   WHEN      CusS_dft(Z) <> *blanks and P_ProcMthd = 'Y'                STP017
      C                   EVAL      Cus1_dft(Z) = CusS_dft(Z)
 
      C                   ENDSL
@@ -5078,6 +5687,12 @@ L011 D P               S              3P 0
 
      C                   If        P_SpreadCde <> *Blanks
 
+     C     P_Transtype   Ifeq      'IN'                                                       241259
+     C                   Z-ADD     I_Rate        P_ExRate                                     241259
+     C                   EndIf                                                                241259
+     C     P_Transtype   Ifeq      'OP'                                                       241259
+     C                   Z-ADD     O_Rate        P_ExRate                                     241259
+     C                   EndIf                                                                241259
      C                   CALLB     'FT000982'
      C                   PARM                    RetCode982
      C                   PARM                    P_SpreadCde
@@ -5120,12 +5735,40 @@ L011 D P               S              3P 0
      C                   Endif
 
      C                   EXSR      Convert2
+                                                                                              EEE058
+     C                   Clear                   P#0010                                       EEE058
+     C     BTPCRD        DIV       100           P#RTDS                                       EEE058
+     C                   Z-Add     I_SLDT        P#FRDT                                       EEE058
+     C                   Z-Add     I_SLDT        P#TODT                                       EEE058
+     C*****              Movel     I_SMCY        P#FRCY                                 EEE058STP997
+     C*****              IF        RetCode980 = *Blanks OR                              EEE058STP997
+     C*****                        RetCode980 = '*CALCPAY  '                            EEE058STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
+     C                   Z-Add     I_SMAM        P#FRAM                                       EEE058
+     C                   Else                                                                 EEE058
+     C                   Z-Add     I_PYAM        P#TOAM                                       EEE058
+     C                   Endif                                                                EEE058
+     C                   Movel     I_SMCY        P#FRCY                                       STP997
+     C                   Movel     I_PCCY        P#TOCY                                       EEE058
+     C                   Z-Add     P_ExRate      P#RATE                                       EEE058
+     C                   If        P#RATE <> 0                                                STP989
+     C                   Eval      P#OVRT = 'Y'                                               STP989
+     C                   EndIf                                                                STP989
+     C                   Call      'FT0010'                                                   EEE058
+     C                   Parm                    P#0010                                       EEE058
 
-     C                   IF        RetCode980 = *Blanks OR
-     C                             RetCode980 = '*CALCPAY  '
+     C*****              IF        RetCode980 = *Blanks OR                                    STP997
+     C*****                        RetCode980 = '*CALCPAY  '                                  STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
      C                   EVAL      I_PYAM = OUTAMT
+     C                   EVAL      I_PYAM = P#TOAM                                            EEE058
      C                   Else
      C                   EVAL      I_SMAM = OUTAMT
+     C                   EVAL      I_SMAM = P#FRAM                                            EEE058
      C                   Endif
      C                   Endif
 
@@ -5155,12 +5798,41 @@ L011 D P               S              3P 0
      C                   Endif
 
      C                   EXSR      Convert2
+                                                                                              EEE058
+     C                   Clear                   P#0010                                       EEE058
+     C     BTPCRD        DIV       100           P#RTDS                                       EEE058
+     C                   Z-Add     O_SLDT        P#FRDT                                       EEE058
+     C                   Z-Add     O_SLDT        P#TODT                                       EEE058
+     C*****              Movel     O_SMCY        P#FRCY                                 EEE058STP997
+     C*****              IF        RetCode980 = *Blanks OR                              EEE058STP997
+     C*****                        RetCode980 = '*CALCPAY  '                            EEE058STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
+     C                   Z-Add     O_SMAM        P#FRAM                                       EEE058
+     C                   Else                                                                 EEE058
+     C                   Z-Add     O_PYAM        P#TOAM                                       EEE058
+     C                   Endif                                                                EEE058
+     C                   Movel     O_SMCY        P#FRCY                                       STP997
+     C                   Movel     O_PCCY        P#TOCY                                       EEE058
+     C                   Z-Add     P_ExRate      P#RATE                                       EEE058
+     C                   If        P#RATE <> 0                                                STP989
+     C                   Eval      P#OVRT = 'Y'                                               STP989
+     C                   EndIf                                                                STP989
+     C                   Call      'FT0010'                                                   EEE058
+     C                   Parm                    P#0010                                       EEE058
 
-     C                   IF        RetCode980 = *Blanks OR
-     C                             RetCode980 = '*CALCPAY  '
+     C*****              IF        RetCode980 = *Blanks OR                                    STP997
+     C*****                        RetCode980 = '*CALCPAY  '                                  STP997
+     C                   IF        (RetCode980 = *Blanks OR                                   STP997
+     C                             RetCode980 = '*CALCPAY  ')                                 STP997
+     C                             And #Extrn <> 'Y'                                          STP997
      C                   EVAL      O_PYAM = OUTAMT
+     C                   EVAL      O_NDAM = OUTAMT                                            241259
+     C                   EVAL      O_PYAM = P#TOAM                                            EEE058
      C                   Else
      C                   EVAL      O_SMAM = OUTAMT
+     C                   EVAL      O_SMAM = P#FRAM                                            EEE058
      C                   Endif
      C                   Endif
 
@@ -5306,36 +5978,139 @@ L011 D P               S              3P 0
      C     Convert2      BEGSR
 
       * If base currency
-     C                   If        (BaseCcy = FRMCCY    And
-     C                             ZMDI1    = 'M'       And
-     C                             ZMDI2    = 'M'       And
-     C                             ZRATEX   < 1   )     Or
-     C                             (BaseCcy = TOCCY     And
-     C                             ZMDI1    = 'M'       And
-     C                             ZMDI2    = 'M'       And
-     C                             ZRATEX   < 1   )
+     C**********         If        (BaseCcy = FRMCCY    And                                   241259
+     C**********                   ZMDI1    = 'M'       And                                   241259
+     C**********                   ZMDI2    = 'M'       And                                   241259
+     C**********                   ZRATEX   < 1   )     Or                                    241259
+     C**********                   (BaseCcy = TOCCY     And                                   241259
+     C**********                   ZMDI1    = 'M'       And                                   241259
+     C**********                   ZMDI2    = 'M'       And                                   241259
+     C**********                   ZRATEX   < 1   )                                           241259
+      *****************************************************************                       241259
+     C**********         Eval      BASMD = 'D'                                                241259
+      *****************************************************************                       241259
+     C**********         Endif                                                                241259
 
-     C                   Eval      BASMD = 'D'
+      *****
+      ** Work out Multiply/Divide Indicator for a cross-ccy transaction.             246723   EFIXFM
+     C*****              If        FRMCCY <> BaseCcy                                 246723   EFIXFM
+     C*****                        and TOCCY <> BaseCcy                              246723   EFIXFM
+     C*****                        and ZMDI1 = ZMDI2                                 246723   EFIXFM
+     C*****                        and ZRATEX < 1                                    246723   EFIXFM
+     C*****              Eval      BASMD = 'D'                                       246723   EFIXFM
+     C*****              Endif                                                       246723   EFIXFM
 
+     C                   If        BaseCcy = FRMCCY                                           241259
+     C                   Eval      BASMD = ZMDI1                                              241259
+     C                   Else                                                                 241259
+     C                   If        BaseCcy = TOCCY                                            241259
+     C                   Eval      BASMD = ZMDI2                                              241259
+     C                   Endif                                                                241259
+     C                   Endif                                                                241259
+      *                                                                                       241259
+     C                   CALLB     'ZCONVZ1'                                                  241259
+     C                   PARM                    INPAMT           15 0                        241259
+     C                   PARM                    CVTRAT           13 8                        241259
+     C                   PARM                    BASMD             1                          241259
+     C                   PARM                    FRMCCY            3                          241259
+     C                   PARM                    TOCCY             3                          241259
+     C                   PARM                    FRMDEC            1 0                        241259
+     C                   PARM                    TODEC             1 0                        241259
+     C                   PARM                    OUTAMT           15 0                        241259
+
+     C                   ENDSR
+
+      *****************************************************************
+      *                                                               *
+      * Chec_STP - Check if ING STP conditions are met. Set STP Flag. *
+      *                                                               *
+      * Called by: SR981                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     Check_STP     BEGSR
+
+     C     KBicdL2       Klist
+     C                   Kfld                    BDBICC
+     C                   Kfld                    BDBICB
+
+     C     KBicpV0       Klist
+     C                   Kfld                    BIKEY
+      *
+
+     C                   Move      'Y'           STP_Cond          1
+     C                   Move      *Blanks       @@CTRY            2
+      *
+     C                   If        %Subst(O_ACB1:1:1) <> '/'
+     C                   Eval      BDBICC = %Subst(O_ACB1:1:8)
+     C                   Eval      BDBICB = %Subst(O_ACB1:9:3)
+     C                   If        %Subst(O_ACB1:9:3) = *blanks
+     C                   Eval      BDBICB = 'XXX'
+     C                   Endif
+     C                   Else                                                                 ESL038
+     C                   Eval      BDBICC = %Subst(O_ACB2:1:8)                                ESL038
+     C                   Eval      BDBICB = %Subst(O_ACB2:9:3)                                ESL038
+     C                   If        %Subst(O_ACB2:9:3) = *blanks                               ESL038
+     C                   Eval      BDBICB = 'XXX'                                             ESL038
+     C                   Endif                                                                ESL038
+     C                   Endif                                                                ESL038
+      *
+     C     KBicdL2       Chain     @BicdL2
+     C                   If        %Found
+     C                   Eval      @@CTRY = %Subst(BDBICC:5:2)
+     C                   Else
+      *
+      * Check if BIC Plus key has been supplied
+     C                   If        %Subst(O_ACB1:9:3) = *blanks
+     C                   Eval      BIKEY = %Subst(O_ACB1:1:8)
+     C     KBicpV0       Chain     @Bicppd
+     C                   If        not %Found or BiBic = *blanks
+     C                   Eval      STP_Cond = 'N'
+     C                   Endif
+     C                   If        %Found and BiBic <> *blanks
+     C                   Eval      @@CTRY = %Subst(BiBic:5:2)
+     C                   Endif
+     C                   Else
+     C                   Eval      STP_Cond = 'N'
+     C                   Endif
      C                   Endif
 
-      ** Work out Multiply/Divide Indicator for a cross-ccy transaction.                      246723
-     C                   If        FRMCCY <> BaseCcy                                          246723
-     C                             and TOCCY <> BaseCcy                                       246723
-     C                             and ZMDI1 = ZMDI2                                          246723
-     C                             and ZRATEX < 1                                             246723
-     C                   Eval      BASMD = 'D'                                                246723
-     C                   Endif                                                                246723
 
-     C                   CALLB     'ZCONVZ1'
-     C                   PARM                    INPAMT           15 0
-     C                   PARM                    CVTRAT           13 8
-     C                   PARM                    BASMD             1
-     C                   PARM                    FRMCCY            3
-     C                   PARM                    TOCCY             3
-     C                   PARM                    FRMDEC            1 0
-     C                   PARM                    TODEC             1 0
-     C                   PARM                    OUTAMT           15 0
+      * If BIC Found check if Country has IBAN, if yes validate
+     C                   If        STP_Cond = 'Y'
+
+     C                   CALL      'AOCTRYR0'                                                 CFT017
+     C                   PARM      *BLANKS       PRTCD             7                          CFT017
+     C                   PARM      '*KEY   '     POPTN             7                          CFT017
+     C                   PARM      @@CTRY        PCTCD             2                          CFT017
+     C     SDCTRY        PARM      SDCTRY        DSFDY                                        CFT017
+      *                                                                                       CFT017
+     C                   If        PRTCD = *Blanks
+     C                             and A4BBAN <> 0
+
+     C     1             SUBST     O_BNC1:1      U#0001            1
+     C     U#0001        IFEQ      '/'
+     C     34            SUBST(P)  O_BNC1:2      P@IBAN
+     C                   ELSE
+     C     34            SUBST(P)  O_BNC1:1      P@IBAN
+     C                   ENDIF
+     C
+      ** Check IBAN format                                                      CFT004
+     C                   Call      'AOIBANR5'                           90      CFT004
+     C                   Parm      *Blanks       @Rcode            7            CFT004
+     C                   Parm                    P@IBAN           34            CFT004
+
+     C     *In90         Ifeq      *On                                          CFT004
+     C     @Rcode        orne      *Blanks                                      CFT004
+     C                   Eval      STP_Cond = 'N'
+     C                   Endif
+     C                   Endif
+     C                   Endif
+
+
+     C                   Eval      STP = STP_Cond
 
      C                   ENDSR
 
@@ -5396,6 +6171,7 @@ L011 D P               S              3P 0
      C                   PARM                    P_ProcMthd
      C                   PARM                    P_MessType
      C                   PARM                    P_SetNum
+     C                   PARM                    P_ClrStmt         2                          MKCAR1
 
       ** Paramater list for ZEDIT
 
@@ -5577,6 +6353,100 @@ L011 D P               S              3P 0
      C                   ENDIF
 
      C                   Eval      Euro = BkEuro
+                                                                                              ERN054
+      *                                                                                       ERN054
+      * Check for ERN054 Extended Payment defaulting                                          ERN054
+     C                   IF        ERN054 = *BLANKS                                           ERN054
+     C                   CALLB     'AOSARDR0'                                                 ERN054
+     C                   PARM      *BLANKS       @Rtcd                                        ERN054
+     C                   PARM      '*VERIFY'     @Optn                                        ERN054
+     C                   PARM      'EEE058'      @Sard             6                          ERN054
+     C     SCSARD        PARM      SCSARD        Dssdy                                        ERN054
+                                                                                              ERN054
+     C                   IF        @Rtcd = *BLANKS                                            ERN054
+     C                   MOVEL     'ERN054'      ERN054            6                          ERN054
+     C                   ELSE                                                                 ERN054
+     C                   MOVEL     '*NRF  '      ERN054            6                          ERN054
+     C                   ENDIF                                                                ERN054
+     C                   ENDIF                                                                ERN054
+      *                                                                                       ERN054
+      * Set Searches                                                                          ERN054
+      *               1 BRANCH                                                                ERN054
+      *               2 CUSTOM                                                                ERN054
+      *               3 CURRCY                                                                ERN054
+      *               4 TRNTYP                                                                ERN054
+      *               5 TRSBTY                                                                ERN054
+      *               6 CSGRCD                                                                ERN054
+      *               7 NETWRK                                                                ERN054
+      *               8 PAYTYP                                                                ERN054
+      *               9 MSGTYP                                                                ERN054
+      *              10 STMTMD                                                                ERN054
+      *              11 DRACTP                                                                ERN054
+      *              12 CRACTP                                                                ERN054
+      *              13 ADDDED                                                                ERN054
+      *              14 FXTRAN                                                                ERN054
+      *              15 TdCtry                                                                ERN054
+      *              16 UrgFlg                                                                URGIND
+     C                   Clear                   Search20         20                          ERN054
+      *                                        12345678901234567890                           ERN054
+                                                                                              ERN054
+      *                                                                                       ERN054
+      * Define Look Up key                                                                    ERN054
+     C     Klook1        Klist                                                                ERN054
+     C                   Kfld                    LPKEY                                        ERN054
+     C                   Kfld                    LPSEQN                                       ERN054
+     C     Klook2        Klist                                                                ERN054
+     C                   Kfld                    LPKEY                                        ERN054
+      *                                                                                       ERN054
+     C                   Eval      LPKEY = 'Charge Def'                                       ERN054
+     C                   Clear                   LPSEQN                                       ERN054
+      *                                                                                       ERN054
+      * Look to see if specific customer search required                                      ERN054
+     C     Klook1        Setll     @Lookv0                                                    ERN054
+     C     Klook2        Reade     @Lookv0                                90                  ERN054
+     C                   If        *in90 = *off                                               ERN054
+     C                   Eval      SearchNbr = 0                                              ERN054
+     C                   Dou       *in90 = *on                                                ERN054
+     C                   Eval      SearchNbr = SearchNbr + 1                                  ERN054
+     C                   Eval      Idx = SearchNbr                                            ERN054
+     C                   Movea     ##Search      Search#(Idx)                                 ERN054
+     C     Klook2        Reade     @Lookv0                                90                  ERN054
+     C                   Enddo                                                                ERN054
+     C                   Else                                                                 ERN054
+      *                                                                                       ERN054
+     C                   Eval      SearchNbr = 5                                              ERN054
+     C                   Eval      Search20 = 'YNNYNYYYYYNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(1)                                   ERN054
+     C                   Eval      Search20 = 'YNNYNNYYYYNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(2)                                   ERN054
+     C                   Eval      Search20 = 'YNNYYNNNNNNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(3)                                   ERN054
+     C                   Eval      Search20 = 'YNNNNYNNNNNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(4)                                   ERN054
+     C                   Eval      Search20 = 'YNNNNNNNNNNNNNNNNNNN'                          ERN054
+     C                   Movea     Search20      Search#(5)                                   ERN054
+     C                   Endif                                                                ERN054
+                                                                                              ERN054
+     C     KeyV0         Klist                                                                ERN054
+     C                   Kfld                    KeBRANCH                                     ERN054
+     C                   Kfld                    KeCUSTOM                                     ERN054
+     C                   Kfld                    KeCURRCY                                     ERN054
+     C                   Kfld                    KeTRNTYP                                     ERN054
+     C                   Kfld                    KeTRSBTY                                     ERN054
+     C                   Kfld                    KeCSGRCD                                     ERN054
+     C                   Kfld                    KeNETWRK                                     ERN054
+     C                   Kfld                    KePAYTYP                                     ERN054
+     C                   Kfld                    KeMSGTYP                                     ERN054
+     C                   Kfld                    KeSTMTMD                                     ERN054
+     C                   Kfld                    KeDRACTP                                     ERN054
+     C                   Kfld                    KeCRACTP                                     ERN054
+     C                   Kfld                    KeADDDED                                     ERN054
+     C                   Kfld                    KeFXTRAN                                     ERN054
+     C                   Kfld                    KeTdCtry                                     ERN054
+     C                   Kfld                    KeUrgFlg                                     URGIND
+                                                                                              ERN054
+      *                                                                                       ERN054
+     C                   Move      'N'           #EXTRN            1                          STP997
 
       *                                                                                       CFT120
       ** Check if CFT120 is switched on                                                       CFT120

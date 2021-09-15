@@ -1,0 +1,171 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2021')
+      *****************************************************************
+/*STD *  RPGSQLBND                                                    *
+/*EXI *  TEXT('Midas IR Initialise BckwrdLookng Rate Fld in Deals')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation Module                                *
+      *                                                               *
+      *  IR001111 - Initialise Backward-Looking Rate Field in         *
+      *              Deals File (CIR020 Take-On Program)              *
+      *                                                               *
+      *  Function:  This program will run during Post Database        *
+      *             Upgrade. It will select all existing base rates   *
+      *             from Deals File. Then, it will set the            *
+      *             Backward-Looking rate fields into their default   *
+      *             values if they do not initially contain values    *
+      *                                                               *
+      *  (c) Finastra International Limited 2021                      *
+      *                                                               *
+      *  Last Amend No. CIR020    *CREATE  Date 02Aug21               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
+      *                                                               *
+      *****************************************************************
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+
+     D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+
+     D/COPY ZACPYSRC,PSDS
+      ** Program Status Data Structure
+
+      ** Program Variable
+     D @RUN            S              1A
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+
+      ** ---------------------------------------------- **
+      ** Default the Backward-Looking Rate field to 'N' **
+      ** ---------------------------------------------- **
+
+      ** GZDEALSDG **
+     C/EXEC SQL
+     C+ update GZDEALSDG
+     C+ set UBLRT = 'N', URTKN = 'N', UOPSH = 'N', TBLRT = 'N', TRTKN = 'N'
+     C+     , TOPSH = 'N'
+     C+ where UBLRT <> 'Y' OR  TBLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 1
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+      ** DEALSDG **
+     C/EXEC SQL
+     C+ update DEALSDG
+     C+ set UBLRT = 'N', URTKN = 'N', UOPSH = 'N', TBLRT = 'N', TRTKN = 'N'
+     C+     , TOPSH = 'N'
+     C+ where UBLRT <> 'Y' OR  TBLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 2
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+      ** GZDLGHISPD **
+     C/EXEC SQL
+     C+ update GZDLGHISPD
+     C+ set UBLRT = 'N', URTKN = 'N', UOPSH = 'N', TBLRT = 'N', TRTKN = 'N'
+     C+     , TOPSH = 'N'
+     C+ where UBLRT <> 'Y' OR  TBLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 3
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+      ** DLGHISPD **
+     C/EXEC SQL
+     C+ update DLGHISPD
+     C+ set UBLRT = 'N', URTKN = 'N', UOPSH = 'N', TBLRT = 'N', TRTKN = 'N'
+     C+     , TOPSH = 'N'
+     C+ where UBLRT <> 'Y' OR  TBLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 4
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+
+     C                   ENDSR
+      *****************************************************************

@@ -1,0 +1,173 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME Repair Instruction Code')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0092 - Repair Instruction Code.                           *
+      *            Field 23E could contain invalid Instruction Code   *
+      *                                                               *
+      *  Function: This program remove invalid Instruction code       *
+      *            from field 23E.                                    *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2011       *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 10Nov11               *
+      *                 HVB010   *CREATE   Date 06Sep11               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP Enhancements to Midas Plus level.     *
+      *  HVB010 - Cash Pooling - Repair Function for Field 23E        *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Valid Instruction Code
+     E                    TABICD  1  13  4
+      *
+     E                    WINC        5 35
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IP#RPP1      DS
+     I                                        1   1 FLAG1
+     I                                       26  60 INSTL1
+     I                                       61  95 INSTL2
+     I                                       96 130 INSTL3
+     I                                      131 165 INSTL4
+     I                                      166 200 INSTL5
+     I                                      201 251 REST1
+      *  REPAIRED TAGG DESCRIPTION
+      *
+     IP#RPP2      DS
+     I                                        1   1 FLAG2
+     I                                       26  60 INST1
+     I                                       61  95 INST2
+     I                                       96 130 INST3
+     I                                      131 165 INST4
+     I                                      166 200 INST5
+     I                                       26 200 INSTA
+     I                                      201 251 REST2
+      *
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+     IDSSDY     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+      *
+     IPCRIT     E DSMEGNCRPD
+      * Criteria rule hit
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      *  Process field
+      *
+     C                     MOVEL*BLANKS   P#RETN
+     C                     MOVELFLAG1     FLAG2
+      *
+     C                     Z-ADD1         Q       10
+     C                     MOVE *BLANKS   WINC
+      *
+      ** Line 1
+     C                     MOVE *BLANKS   WICODE  4
+     C                     MOVELINSTL1    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL1    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 2
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL2    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL2    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 3
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL3    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL3    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 4
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL4    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL4    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+      ** Line 5
+     C                     MOVE *BLANKS   WICODE
+     C                     MOVELINSTL5    WICODE
+     C           WICODE    LOKUPTABICD                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE INSTL5    WINC,Q
+     C                     ADD  1         Q
+     C                     ENDIF
+      *
+     C                     MOVEAWINC      INSTA
+     C                     MOVEL'*MAP'    P#RETN    P
+      *
+      *  Exit program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2002
+**  TABICD
+BONL
+CHQB
+CORT
+HOLD
+INTC
+PHON
+PHOB
+PHOI
+SDVA
+TELE
+TELB
+TELI
+REPA

@@ -1,0 +1,162 @@
+      **********************************************************************
+      *  Last Amend No. MD031937           Date 13Jan15                    *
+      *  Prev Amend No. AR856737           Date 13Sep11                    *
+      *                 STP015   *CREATE   Date 04Dec04                    *
+      *--------------------------------------------------------------------*
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level           *
+      *  STP015 -  Local Clearing Interface                                *
+      **********************************************************************
+     C           CVTNUM    BEGSR                                                     STP015
+     C**                                                                             STP015
+     C**    DEFINE INPUT FIELDS                                                      STP015
+     C**                                                                             STP015
+     C                     SETOF                     89                              STP015
+     C**                                                                             STP015
+     C**    INITIALISE O/P FIELD FFPRIC                                              STP015
+     C**                                                                             STP015
+     C                     Z-ADD0         FFPRIC 158                                 STP015
+     C**                                                                             STP015
+     C**    NO FURTHER PROCESSING IF FIELD ENTERED IS BLANK                          STP015
+     C**                                                                             STP015
+     C           FFSPRC    IFNE *BLANKS                                              STP015
+     C                     Z-ADD0         I       20                                 STP015
+     C                     Z-ADD0         P       20                                 STP015
+     C                     Z-ADD0         N       20                                 STP015
+     C**                                                                             STP015
+     C**   CHECK ARRAY FOR FIRST NON-BLANK CHARACTER                                 STP015
+     C**                                                                             STP015
+     C                     Z-ADD1         J       20                                 STP015
+     C**                                                                             STP015
+     C           FFSP,J    DOWEQ' '                                                  STP015
+     C                     ADD  1         J                                          STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   LOOP TO PROCESS NON-BLANK CHARACTERS                                      STP015
+     C**                                                                             STP015
+     C                     Z-ADD0         FFCNT1  10                                 STP015
+     C                     Z-ADD0         FFCNT2  10                                 STP015
+     C                     Z-ADD0         FFCNT3  10                                 STP015
+     C                     MOVE *BLANK    FFPRDL  1                                  STP015
+     C                     Z-ADDJ         K       20                                 STP015
+     C           K         DOWLT17                                                   STP015
+     C           FFSP,K    ANDNE' '                                                  STP015
+     C**                                                                             STP015
+     C**   IF CHARACTER IS A NUMBER, ADD 1 TO RELEVANT COUNT                         STP015
+     C**                                                                             STP015
+     C           FFSP,K    IFGE '0'                                                  STP015
+     C           FFSP,K    ANDLE'9'                                                  STP015
+     C**                                                                             STP015
+     C           I         IFEQ 0                                                    STP015
+     C                     ADD  1         FFCNT1                                     STP015
+     C                     ELSE                                                      STP015
+      *                                                                              STP015
+      ** Check that position of the first digit after the second                     STP015
+      ** delimeter is zero before adding 1 to counter 2, otherwise                   STP015
+      ** add 1 to counter 3                                                          STP015
+      *                                                                              STP015
+     C           P         IFEQ 0                                                    STP015
+     C                     ADD  1         FFCNT2                                     STP015
+     C                     ELSE                                                      STP015
+     C                     ADD  1         FFCNT3                                     STP015
+     C                     ENDIF                                                     STP015
+      *                                                                              STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   IF COUNT IS TOO HIGH, THERE IS AN ERROR                                   STP015
+     C**                                                                             STP015
+     C**                                                                             STP015
+     C           FFCNT1    IFGT 7                                                    STP015
+     C           FFCNT2    ORGT 8                                                    STP015
+     C                     SETON                         89                          STP015
+     C                     GOTO CVTEND                                               STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C                     ELSE                                                      STP015
+     C**                                                                             STP015
+     C**   IF CHARACTER IS A DECIMAL DELIMITER                                       STP015
+     C**                                                                             STP015
+     C           FFSP,K    IFEQ '.'                                                  STP015
+     C**                                                                             STP015
+     C**   IT IS AN ERROR IF A PREVIOUS DELIMITER HAS BEEN FOUND                     STP015
+     C**                                                                             STP015
+     C           I         IFGT 0                                                    STP015
+     C                     SETON                         89                          STP015
+     C                     GOTO CVTEND                                               STP015
+     C                     ELSE                                                      STP015
+     C           K         ADD  1         I                                          STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   IF CHARACTER IS NEITHER NUMBER OR DELIMITER IT IS AN ERROR                STP015
+     C**                                                                             STP015
+     C                     ELSE                                                      STP015
+     C                     SETON                         89                          STP015
+     C                     GOTO CVTEND                                               STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   IF NO ERROR, CHECK NEXT CHARACTER                                         STP015
+     C**                                                                             STP015
+     C                     ADD  1         K                                          STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   ERROR IF EMBEDDED BLANK IS FOUND                                          STP015
+     C**                                                                             STP015
+     C           K         IFLT 16                                                   STP015
+     C                     MOVE *BLANKS   FFTEST 15                                  STP015
+     C                     MOVEAFFSP,K    FFTEST                                     STP015
+     C**                                                                             STP015
+     C           FFTEST    IFNE *BLANKS                                              STP015
+     C                     SETON                         89                          STP015
+     C                     GOTO CVTEND                                               STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   IF BOTH COUNTS ARE 0 IT IS AN ERROR                                       STP015
+     C**                                                                             STP015
+     C           FFCNT1    IFEQ 0                                                    STP015
+     C           FFCNT2    ANDEQ0                                                    STP015
+     C           FFCNT3    ANDEQ0                                                    STP015
+     C                     SETON                         89                          STP015
+     C                     GOTO CVTEND                                               STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**                                                                             STP015
+     C**   SET UP THE 15,8 OUTPUT PRICE - INTEGER COMPONENT                          STP015
+     C**                                                                             STP015
+     C**   FFPRIC WAS ZEROISED AT START OF ROUTINE SO IT IS ALREADY                  STP015
+     C**   CORRECT IF COUNT1 IS 0                                                    STP015
+     C**                                                                             STP015
+     C           FFCNT1    IFNE 0                                                    STP015
+     C           8         SUB  FFCNT1    L       20                                 STP015
+     C                     MOVEAFFSP,J    FFIN,L                                     STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   DECIMAL COMPONENT                                                         STP015
+     C**                                                                             STP015
+     C           K         IFLT 17                                                   STP015
+     C                     MOVEA*ZEROS    FFSP,K                                     STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   FFPRIC WAS ZEROISED AT START OF ROUTINE SO IT IS ALREADY                  STP015
+     C**   CORRECT IF COUNT2 IS 0                                                    STP015
+     C**                                                                             STP015
+     C           FFCNT2    IFNE 0                                                    STP015
+     C                     MOVEAFFSP,I    FFDECA                                     STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C**   ADJUST DECIMAL COMPONENT TO ALLOW FOR MISSING LEADING                     STP015
+     C**   ZEROS IF TICKS DENOMINATOR ISN'T 100                                      STP015
+     C**                                                                             STP015
+     C**   ZEROISE OUTPUT FIELD IF ERROR OCCURRED                                    STP015
+     C**                                                                             STP015
+     C           CVTEND    TAG                             * CVTEND TAG *            STP015
+     C           *IN89     IFEQ '1'                                                  STP015
+     C                     MOVE *ZERO     FFPRIC                                     STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C                     END                                                       STP015
+     C**                                                                             STP015
+     C                     ENDSR                                                     STP015

@@ -1,0 +1,37 @@
+      *****************************************************************
+      * Start of copy hook ME1100LRG                                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management                                   *
+      *                                                               *
+      *  ME1100 - Add mapping of receiver                             *
+      *                                                               *
+      *  (C) Copyright Misys International Banking Systems Ltd. 2002  *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 ESL038             Date 01Oct2004             *
+      *                 ESL038             Date 01Oct2004             *
+      *                 LRG074   *Create   Date 30Apr2000             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  ESL038 -  ING STP Development                                *
+      *  LRG074  - FT STP Enhancements                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C                   MOVEL     *BLANKS       SVTAG                                        LRG074
+     C                   MOVEL     'RCVR'        SVTAG                                        LRG074
+     C                   MOVEL     *BLANKS       TRTAG                                        LRG074
+     C                   MOVEL     'RCVR'        TRTAG                                        LRG074
+     C     8             SUBST     CRMOR:7       ##008A            8                          LRG074
+     C     3             SUBST     CRMOR:16      ##003A            3                          LRG074
+     C     ##008A        CAT(P)    ##003A:0      TMLIN                                        LRG074
+     C                   EXSR      SRMAP                                                      LRG074
+      *
+      *****************************************************************
+      * End of copy hook ME1100LRG                                    *
+      *****************************************************************

@@ -1,0 +1,146 @@
+      **********************************************************************
+      *  Last Amend No. MD031937           Date 13Jan15                    *
+      *  Prev Amend No. AR856737           Date 13Sep11                    *
+      *                 HVB006             Date 24Oct11                    *
+      *                 246751             Date 22May07                    *
+      *                 EBB013   *CREATE   Date 27Oct04                    *
+      *--------------------------------------------------------------------*
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1       essage  *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level   essage  *
+      *  HVB006 -  Target Balance - allow standard processing for message  *
+      *            tagged 'Target Balance (TB)'.                           *
+      *  246751 -  Use correct Settlement Method for chain to SDLCSDL1.    *
+      *  EBB013 -  Local Clearing Interface                                *
+      **********************************************************************
+      *                                                                                       246751
+      ** Access SAR details file to determine if EEE046 is switched ON                        246751
+      *                                                                                       246751
+     C           EEE046    IFEQ *BLANKS                                                       246751
+     C                     CALL 'AOSARDR0'                                                    246751
+     C                     PARM *BLANKS   @RTRN                                               246751
+     C                     PARM '*VERIFY' @OPTN                                               246751
+     C                     PARM 'EEE046'  @SARD                                               246751
+     C           SCSARD    PARM SCSARD    DSFDY                                               246751
+      *                                                                                       246751
+      ** If core feature is switched ON, set a variable field to                              246751
+      ** condition the rest of the processing.                                                246751
+      *                                                                                       246751
+     C           @RTRN     IFEQ *BLANKS                                                       246751
+     C                     MOVE 'Y'       EEE046  1                                           246751
+     C                     ELSE                                                               246751
+     C                     MOVE 'N'       EEE046                                              246751
+      *                                                                                       246751
+      ** else, database error (return code other than *NRF)                                   246751
+      *                                                                                       246751
+     C           @RTRN     IFNE '*NRF   '                                                     246751
+     C                     MOVEL'SCSARDPD'W0FILE           ************                       246751
+     C                     MOVEL'*VERIFY' W0KEY            * DBERR 999*                       246751
+     C                     Z-ADD999       W0ERNB           ************                       246751
+     C                     EXSR SRERR                      *ABORT PGM*                        246751
+     C                     ENDIF                                                              246751
+     C                     ENDIF                                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+      ** Access SAR details file to determine if EEE056 is switched ON                        246751
+      *                                                                                       246751
+     C           EEE056    IFEQ *BLANKS                                                       246751
+     C                     CALL 'AOSARDR0'                                                    246751
+     C                     PARM *BLANKS   @RTRN                                               246751
+     C                     PARM '*VERIFY' @OPTN                                               246751
+     C                     PARM 'EEE056'  @SARD                                               246751
+     C           SCSARD    PARM SCSARD    DSFDY                                               246751
+      *                                                                                       246751
+      ** If core feature is switched ON, set a variable field to                              246751
+      ** condition the rest of the processing.                                                246751
+      *                                                                                       246751
+     C           @RTRN     IFEQ *BLANKS                                                       246751
+     C                     MOVE 'Y'       EEE056  1                                           246751
+     C                     ELSE                                                               246751
+     C                     MOVE 'N'       EEE056                                              246751
+      *                                                                                       246751
+      ** else, database error (return code other than *NRF)                                   246751
+      *                                                                                       246751
+     C           @RTRN     IFNE '*NRF   '                                                     246751
+     C                     MOVEL'SCSARDPD'W0FILE           ************                       246751
+     C                     MOVEL'*VERIFY' W0KEY            * DBERR 999*                       246751
+     C                     Z-ADD999       W0ERNB           ************                       246751
+     C                     EXSR SRERR                      *ABORT PGM*                        246751
+     C                     ENDIF                                                              246751
+     C                     ENDIF                                                              246751
+     C                     ENDIF                                                              246751
+      *
+      **  Reset local clearing payment indicator
+      *
+     C                     MOVE 'N'       ##LCLR  1
+      *
+      **  Determine if payment is a local clearing payment
+      *
+     C           KLCSD1    KLIST
+     C                     KFLD           LCCYCD
+     C                     KFLD           LCSETM
+      *
+     C           S4PCCY    IFEQ *BLANKS
+     C                     MOVELS4SMCY    LCCYCD
+     C                     ELSE
+     C                     MOVELS4PCCY    LCCYCD
+     C                     ENDIF
+      *
+     C                     MOVELS4STMT    LCSETM
+      *                                                                                       246751
+      ** If EEE046 is on, translate its specific settlement methods from                      246751
+      ** their file value into their display value                                            246751
+      *                                                                                       246751
+     C           EEE046    IFEQ 'Y'                                                           246751
+      *                                                                                       246751
+     C           LCSETM    IFEQ '91'                                                          246751
+     C                     MOVE 'EC'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C           LCSETM    IFEQ '92'                                                          246751
+     C                     MOVE 'ED'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C           LCSETM    IFEQ '93'                                                          246751
+     C                     MOVE 'SC'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C           LCSETM    IFEQ '94'                                                          246751
+     C                     MOVE 'ER'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C           LCSETM    IFEQ '95'                                                          246751
+     C                     MOVE 'ZC'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C           LCSETM    IFEQ '96'                                                          246751
+     C                     MOVE 'ET'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C           EEE056    IFEQ 'Y'                                                           246751
+     C           LCSETM    ANDEQ'97'                                                          246751
+     C                     MOVE 'TP'      LCSETM                                              246751
+     C                     ENDIF                                                              246751
+      *                                                                                       246751
+     C                     ENDIF                                                              246751
+      *
+     C*********  S4STMT    CHAINSDLCSDL1             90
+     C           KLCSD1    CHAINSDLCSDL1             90
+      *
+      **  Set local clearing payment indicator
+      *
+     C           *IN90     IFEQ *OFF
+     C           LCCLID    ANDNE'EURTB'                                                       HVB006
+      *
+      **  Set flag to indicate payment is a local clearing payment
+      *
+     C                     MOVE 'Y'       ##LCLR  1
+     C           *LIKE     DEFN S4STMT    ##STMT
+     C                     MOVELS4STMT    ##STMT
+     C           LCSTMU    IFEQ *BLANKS
+     C                     MOVEL'08'      ##STMT
+     C                     ELSE
+     C                     MOVELLCSTMU    S4STMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *

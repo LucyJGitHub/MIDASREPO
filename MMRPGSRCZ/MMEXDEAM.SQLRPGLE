@@ -3,7 +3,7 @@
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  DATFMT(*ISO)                                                 *                     MD037445
-/*EXI *  TEXT('Midas MM Drop records from T_GZDEAMEX per zone')
+/*EXI *  TEXT('Midas MM Drop records from T_GZDEAMEX per zone')       *
       *****************************************************************
       *                                                               *
       *  Midas - Money Market Module                                  *
@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037445           Date 11May16               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037445           Date 11May16               *
       *                 CSF011             Date 12Sep11               *
       *                 AR828639           Date 13Sep11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037445 - Failed component SCC041119 00001 during COB run   *
       *  CSF011 - Customer Name on Inputs (Recompile)                 *

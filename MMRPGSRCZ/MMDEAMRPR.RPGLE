@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -336,6 +338,10 @@
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(MMDAEXPD)                    CAP004
       * MM DEAM Extra Data - File (D/B) format                                  CAP004
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
 
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
@@ -1115,6 +1121,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * If errors returned
       *
@@ -1369,6 +1376,10 @@
       *
       * Deal Status
      C                   PARM                    DDSTS            24
+      *                                                                                       CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+      *                                                                                       CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * Update 'Current' Deal with Deal in Screen Format
       *
@@ -1845,6 +1856,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM      *ZERO         WIdx              3 0
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    DeamScnBlrt                                  CDL102
       *
       * If transaction is valid output message 'Press enter to accept'
       *

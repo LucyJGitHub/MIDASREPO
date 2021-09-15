@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -65,12 +67,12 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,95 +84,99 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DEAMFilFmt    E DS                  EXTNAME(MMVDEAMPD)
       ** Midas MM Deal Amendment
- 
+
      D DEAMScnFmt    E DS                  EXTNAME(MMDEAMPD)
       ** Midas MM API DEAM Format Definition File
- 
+
      D PAYFilFmt     E DS                  EXTNAME(SDESFPPD)
       ** Midas SD File Extended Settlement Instruction - Pay
- 
+
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
       ** Midas SD Screen Extended Settlement Instruction - Pay
- 
+
      D RECFilFmt     E DS                  EXTNAME(SDESFRPD)
       ** Midas SD File Extended Settlement Instruction - Receive
- 
+
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
       ** Midas SD Screen Extended Settlement Instruction - Receive
- 
+
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
- 
+
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
- 
+
      D DEAMInfDta    E DS                  EXTNAME(MMDAIFPD)
       ** Midas MM DEAM Interface Data Format Definition Layout
- 
+
      D DEAMExtDta    E DS                  EXTNAME(MMDAEXPD)
       ** Midas MM DEAM Extra Data Layout File
- 
+      *                                                                                       CDL102
+      ** DEAM Backward-Looking Rate Fields                                                    CDL102
+      *                                                                                       CDL102
+     D DeamScnBlrt     DS            49                                                       CDL102
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PACTN           S              1A
      D PSTS            S             24A
      D TRANSDTL        S           5800A
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -183,26 +189,30 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
- 
+
      C                   EVAL      DDACTN = PACTN
- 
+
      C                   EXSR      SRSETD
- 
+
      C                   CALLB     'MMDEAMCVT'
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DEAMFilFmt
      C                   PARM                    DEAMScnFmt
      C                   PARM                    PSTS
- 
+      *                                                                                       CDL102
+      ** Backward-Looking Rate Fields                                                         CDL102
+      *                                                                                       CDL102
+     C                   PARM                    DeamScnBlrt                                  CDL102
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
      C                   PARM                    PAYFilFmt
      C                   PARM                    RECFilFmt
      C                   PARM      *BLANKS       FRIRFilFmt
@@ -211,21 +221,21 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      DDCCY         InRCCY                                      CSF011A
      C                   PARM      DDCCY         InPCCY                                      CSF011A
- 
+
       ** If insert, sequence number must be blank
- 
+
      C                   IF        DDACTN = 'I'
      C                   EVAL      DDDS38 = *Blanks
      C                   ENDIF
- 
+
      C                   EVAL      TRANSDTL = DEAMScnFmt + RECScnFmt +
      C                                        PAYScnFmt + DEAMInfDta +
      C                                        DEAMExtDta
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -238,9 +248,9 @@
       *                                                               *
       *****************************************************************
      C     SRSETD        BEGSR
- 
+
       ** Payment Fields
- 
+
      C                   EVAL      FLPSTM = IGPSTM
      C                   EVAL      FLPONS = IGPONS
      C                   EVAL      FLPIBN = IGPIBN
@@ -268,9 +278,9 @@
      C                   EVAL      FLCVMR = IGCVMR
      C                   EVAL      FLPSCY = IGSTCY
      C                   EVAL      FLIC72 = IGIC72
- 
+
       ** Receipt Fields
- 
+
      C                   EVAL      FLRSTM = IGRSTM
      C                   EVAL      FLRONS = IGRONS
      C                   EVAL      FLRIBN = IGRIBN
@@ -279,9 +289,9 @@
      C                   EVAL      FLROCN = IGROCN
      C                   EVAL      FLROBR = IGOSBR
      C                   EVAL      FLRSCY = IGSTCY
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -293,34 +303,34 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Action Code
      C                   PARM                    PACTN
- 
+
       ** Midas MM Valid Deal Amendments
      C                   PARM                    DEAMFilFmt
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Data Replication Details Screen Format
      C                   PARM                    TRANSDTL
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

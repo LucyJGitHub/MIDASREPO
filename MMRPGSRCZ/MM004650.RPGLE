@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056838           Date 01Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056838 - Amend SFNUM type to packed decimal                *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -154,7 +156,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas FD Deal type/subtype file
      FFDDTSTL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Hedging ICD File
@@ -210,65 +212,65 @@
      F                                     USROPN
       ** Non-Linear Fee Amortisation Audit Report
      FMM004650AUO    E             PRINTER INFDS(SPOOLU)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for Midas SD Bank details ICD file
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Midas GL ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External data structure for Currency Details File
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Branch Details File
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Fee codes
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** External data structure for Customer Details File
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CAS011
- 
+
       ** External data structure for EIR File (Current)
      D EIRCurrFmt    E DS                  EXTNAME(MMEIRDPD)
- 
+
       ** External data structure for EIR File (History)
      D EIRHistFmt    E DS                  EXTNAME(MMEIRHPD)
      D                                     PREFIX(HI:2)
@@ -284,7 +286,7 @@
      D  SFNUM2               123    124B 0
      D  OFLLN2               188    189B 0
      D  PRTLN2               367    368B 0
- 
+
       ** File Information Data Structure for MM004650AU
      D SPOOLU          DS
      D  SFILEU                83     92
@@ -300,7 +302,7 @@
      ** File Status Data Structure for DLFEEDLH                                               232928
      D FEE2SDS         DS                                                                     232928
      D  FEE2REC          *RECORD                                                              232928
- 
+
      D WkAkey          DS
      D  WkDtyp                 1      2
      D  WkTyp1                 3      3
@@ -342,7 +344,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WkAmount1       S             13P 0 DIM(99)
      D WkAmount2       S             13P 0 DIM(99)
      D WkBackAmt       S             13P 0 DIM(99)
@@ -375,7 +377,7 @@
      D WkVlDec         S              3  0
      D***WKSUBEA         S             15P 0                                      BUG13085C BUG13578
      D***WkKeyAmtADD     S             13S 0                                      BUG13085C BUG13578
- 
+
       ** Fields used in GLZADD/GLZSUM
      D ZZAMT           S             15  3
      D ZZAMTI          S             15  0
@@ -385,11 +387,11 @@
      D ZZWk2           S              4  0
      D ZZWk3           S             15  0
      D ZZNEGD          S              5
- 
+
      D PRetCode        S              7A
      D POption         S              7A
      D PCurrency       S              3A
- 
+
      D WEvCD           S              5P 0
      D WAmortAmnt      S             20P 0
      D RQDLN1          S              3S 0
@@ -436,7 +438,7 @@
      D WkAmtd2         S                   LIKE(DFAMTD)
      D WkMult          S              3  0
      D WSavprocType    S              1                                                    BUG13085A
- 
+
      D KDate           S              5P 0                                                    232928
      D KTran           S              6S 0                                                    232928
      D KFeeSeq         S              2S 0                                                    232928
@@ -448,13 +450,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Perform Initialisation.
- 
+
      C                   EXSR      Init
       ** Exit program when amortisation method is Linear
      C                   IF        FSAMRM = 'L'
@@ -470,7 +472,7 @@
      C                   IF        %EOF(DEALSL8)                                              CAS011
      C                   EXSR      SrAudit
      C                   ELSE
- 
+
      C**********         DOW       NOT %EOF(DEALSL5)                                          CAS011
      C                   DOW       NOT %EOF(DEALSL8)                                          CAS011
      C     DTSTKY        CHAIN     FDDTSTL1
@@ -480,18 +482,18 @@
      C                   IF        %FOUND(MMEIRDL0) AND EIFDPA <> *ZERO
      C                   IF        BRCA <> SvBRCA
       ** Close the previous branch's spool files
- 
+
      C                   IF        SvBRCA <> *BLANKS
      C                   EXSR      ClsP1
      C                   EXSR      ClsP2
      C                   ENDIF
       ** Access the next Branch's Details
- 
+
      C                   EVAL      PBRCA = BRCA
      C                   EXSR      SrBranch
- 
+
       ** Open the next branch's spool files
- 
+
      C                   EXSR      OpnP1
      C                   EXSR      OpnP2
      C                   EVAL      SvBRCA = BRCA
@@ -515,7 +517,7 @@
      C**********         READ      DEALSL5                                                    CAS011
      C                   READ      DEALSL8                                                    CAS011
      C                   ENDDO
- 
+
      C                   SETON                                        32
       ** Close Spool Files
       ** Only write if the file is being written before                                       231271
@@ -527,7 +529,7 @@
      C                   EXSR      ClsP2
      C                   ENDIF                                                                231271
       ** Update Trailer File
- 
+
      C                   EXSR      SRUpdTrl
       ** Write to trailer
      C                   EXSR      SrAudit
@@ -535,7 +537,7 @@
      C     EXIT          TAG
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -543,17 +545,17 @@
       * SrProcess - Process deal records                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SrProcess     BEGSR
- 
+
      C                   IF        FREC = 'DEALSDCF' OR FREC = 'DEALSDDF'
      C                   EXSR      SrFeeReverse
      C                   ELSE
      C                   EXSR      SrDealReverse
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -561,7 +563,7 @@
       * SrFeeReverse - Generate account key for Fee Reversal.         *
       *                                                               *
       *****************************************************************
- 
+
      C     SrFeeReverse  BEGSR
      C     DLNO          SETLL     DLFEEDL1
      C     DLNO          READE     DLFEEDL1
@@ -643,7 +645,7 @@
      C                   ENDDO                                                                233601
                                                                                               233601
      C     EndFeeRev     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -652,9 +654,9 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrDealReverse BEGSR
- 
+
      C                   EVAL      EIRECI = '*'
       ** Generate reversal account key when Non-Linear Amortised discount
       ** to date is not zero.
@@ -691,7 +693,7 @@
      C                   EXSR      SrUpdAkey
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -699,7 +701,7 @@
       * SrAmortise - Compute amount to amortise for the period        *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAmortise    BEGSR
       *                                                                                       232928
       ** Codes Relevant to the Computation of the Amortisation Amount has                     232928
@@ -1166,7 +1168,7 @@
      C                   IF        WkSumAll <> *ZERO
      C                   EXSR      SrAmortFDP
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1176,7 +1178,7 @@
       *              for each Fee, Discount or Premium.               *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAmortFDP    BEGSR
      C**********         EVAL      WId2 = 1                                                   232928
       ** Compute for the proportioned amount of total discount
@@ -1471,7 +1473,7 @@
       * SrUpdAkey - Update DKEYSDP                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrUpdAkey     BEGSR
      C
      C                   EVAL      WkDtyp = DTYP
@@ -1526,13 +1528,13 @@
      C                   WRITE     DKEYSDPF
      C                   EXSR      SrWriteP2
       ** Update Totals
- 
+
      C                   EVAL      ZZAMT = WkKeyAmt / 1000
- 
+
      C                   IF        ZZAMT < 0
      C                   Z-SUB     ZZAMT         ZZAMT
      C                   ENDIF
- 
+
      C                   Z-ADD     WkVlInt       ZZTOTI
      C                   Z-ADD     WkVlDec       ZZTOTD
      C                   EXSR      GLZADD
@@ -1546,7 +1548,7 @@
       * SrAccKey1 - Generate Account Key  for Fee Reversal            *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAccKey1     BEGSR
      C
      C                   EVAL      WkDtyp = DTYP
@@ -1605,13 +1607,13 @@
      C                   EVAL      DKSTCY = DFSCCY
      C                   WRITE     DKEYSDPF
       ** Update Totals
- 
+
      C                   EVAL      ZZAMT = WkKeyAmt / 1000
- 
+
      C                   IF        ZZAMT < 0
      C                   Z-SUB     ZZAMT         ZZAMT
      C                   ENDIF
- 
+
      C                   Z-ADD     WkVlInt       ZZTOTI
      C                   Z-ADD     WkVlDec       ZZTOTD
      C                   EXSR      GLZADD
@@ -1625,7 +1627,7 @@
       * SrAccKey2 - Generate Account Key  for Deal Reversal           *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAccKey2     BEGSR
      C
       ** Generate account key for Negotiable Assets Purchased Interest Bearing
@@ -1734,7 +1736,7 @@
       * SrAccKey3 - Generate Account Key  for amortisation            *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAccKey3     BEGSR
      C
      C                   EVAL      WkDtyp = DTYP
@@ -1793,13 +1795,13 @@
      C                   EVAL      DKSTCY = DFSCCY
      C                   WRITE     DKEYSDPF
       ** Update Totals
- 
+
      C                   EVAL      ZZAMT = WkKeyAmt / 1000
- 
+
      C                   IF        ZZAMT < 0
      C                   Z-SUB     ZZAMT         ZZAMT
      C                   ENDIF
- 
+
      C                   Z-ADD     WkVlInt       ZZTOTI
      C                   Z-ADD     WkVlDec       ZZTOTD
      C                   EXSR      GLZADD
@@ -1920,17 +1922,17 @@
      C                   EVAL      RAMNT  = ZOUT21
      C                   EVAL      RCCY = CCY
      C                   EVAL      RRIND = '1'
- 
+
       ** Write P1 Header if required
- 
+
      C                   Z-ADD     2             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write P1
- 
+
      C                   WRITE     DETAIL11
      C                   ENDSR
       *****************************************************************
@@ -1953,17 +1955,17 @@
      C                   EXSR      ZSEdit
      C                   EVAL      RAMNT  = ZOUT21
      C                   EVAL      RCCY = CCY
- 
+
       ** Write P2 Header if required
- 
+
      C                   Z-ADD     2             RQDLN2
      C     OFLLN2        SUB       PRTLN2        DIFLN2
      C     DIFLN2        IFLE      RQDLN2
      C                   WRITE     HEADP2
      C                   ENDIF
- 
+
       ** Write P2
- 
+
      C                   WRITE     DETAIL21
      C                   ENDSR
       *****************************************************************
@@ -1992,17 +1994,17 @@
      C                   EVAL      RAMNT  = ZOUT21
      C                   EVAL      RCCY = CCY
      C                   EVAL      RRIND = '0'
- 
+
       ** Write P1 Header if required
- 
+
      C                   Z-ADD     2             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write P1
- 
+
      C                   WRITE     DETAIL11
      C                   ENDSR
       *****************************************************************
@@ -2012,19 +2014,19 @@
       *  SrBranch - Call to  AOBRCHR1                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SrBranch      BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM                    PBRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        (PRtCd <> *BLANKS)
- 
+
       ** Data base error in file SDBRCHPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBRCHPD'
      C                   EVAL      DBKEY  =  PBRCA
@@ -2032,9 +2034,9 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2046,13 +2048,13 @@
       *****************************************************************
       *
      C     ClsP1         BEGSR
- 
+
      C                   IF        RCOUNTF = *ZERO
      C                   WRITE     DETAIL13
      C                   ELSE
       ** Check that sufficient lines remain for the Totals. If not,
       ** write out the Header on a new page.
- 
+
      C                   Z-ADD     6             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
@@ -2076,7 +2078,7 @@
      C                   CLOSE     MM004650P1
      C                   MOVE      'N'           P1OPEN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2088,19 +2090,19 @@
       *****************************************************************
       *
      C     ClsP2         BEGSR
- 
+
      C                   IF        RCOUNTF = *ZERO
      C                   WRITE     DETAIL23
      C                   ELSE
       ** Check that sufficient lines remain for the Totals. If not,
       ** write out the Header on a new page.
- 
+
      C                   Z-ADD     6             RQDLN2
      C     OFLLN2        SUB       PRTLN2        DIFLN2
      C     DIFLN2        IFLE      RQDLN2
      C                   WRITE     HEADP2
      C                   ENDIF
- 
+
       ** Write Total
      C                   WRITE     DETAIL22
      C                   ENDIF
@@ -2112,16 +2114,16 @@
      C                   WRITE     HEADP2
      C                   ENDIF
       ** Write Footer
- 
+
      C                   WRITE     TRAILP2
- 
+
       ** Close the spool file
- 
+
      C     P2OPEN        IFEQ      'Y'
      C                   CLOSE     MM004650P2
      C                   MOVE      'N'           P2OPEN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2130,38 +2132,38 @@
       *  OpnP1  - Open P1 processing.                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     OpnP1         BEGSR
- 
+
      C                   IF        P1OPEN = 'N'
      C                   OPEN      MM004650P1
      C                   EVAL      P1OPEN = 'Y'
      C                   EVAL      RCOUNTF = *ZERO
      C                   ENDIF
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUM1        ZSNUM             6 0
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILE1
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR             1
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** Write Header
- 
+
      C                   WRITE     HEADP1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2170,17 +2172,17 @@
       *  OpnP2  - Open P2 processing.                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     OpnP2         BEGSR
- 
+
      C                   IF        P2OPEN = 'N'
      C                   OPEN      MM004650P2
      C                   EVAL      P2OPEN = 'Y'
      C                   EVAL      RCOUNTD = *ZERO
      C                   ENDIF
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUM2        ZSNUM             6 0
       *
      C                   CALL      'ZSFILE'
@@ -2189,19 +2191,19 @@
      C                   PARM                    SFILE2
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR             1
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** Write Header
- 
+
      C                   WRITE     HEADP2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2212,24 +2214,24 @@
       *****************************************************************
       *
      C     GLZADD        BEGSR
- 
+
      C                   Z-ADD     ZZAMT         ZZAMT                    91
- 
+
      C                   IF        *IN91 = *ON
      C                   GOTO      ZZAEND
      C                   ENDIF
- 
+
       ** Split ZZAMT into integer and decimal fields
- 
+
      C                   Z-ADD     ZZAMT         ZZAMTI
      C                   MOVE      ZZAMT         ZZAMTD
- 
+
       ** Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
- 
+
      C                   EXSR      GLZSUM
- 
+
      C     ZZAEND        ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2237,9 +2239,9 @@
       * GLZSUM - Subroutine to carry out the additon for subroutine   *
       *                                                               *
       *****************************************************************
- 
+
      C     GLZSUM        BEGSR
- 
+
      C                   Z-ADD     ZZTOTI        ZZTOTI
      C                   Z-ADD     ZZTOTD        ZZTOTD
      C                   EVAL      *IN91 = *OFF
@@ -2248,219 +2250,219 @@
      C                   EVAL      *IN94 = *OFF
      C                   EVAL      *IN95 = *OFF
      C                   EVAL      *IN99 = *OFF
- 
+
       ** Determine sign of ZZAMTI & D, 92 if neg.
- 
+
      C     ZZAMTI        COMP      0                                    9293
- 
+
      C                   IF        *IN93 = *ON
      C     ZZAMTD        COMP      0                                    9293
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON
      C                   GOTO      ZZSEND
      C                   ENDIF
- 
+
       ** Determine sign of ZZTOTI & D, 91 if neg.
- 
+
      C     ZZTOTI        COMP      0                                    9193
- 
+
      C                   IF        *IN93 = *ON
      C     ZZTOTD        COMP      0                                    9193
      C                   ENDIF
- 
+
       ** If ZZTOTAL is zero, return ZZAMOUNT.
- 
+
      C                   IF        *IN93 = *ON
      C                   Z-ADD     ZZAMTI        ZZTOTI
      C                   Z-ADD     ZZAMTD        ZZTOTD
      C                   GOTO      ZZSEND
      C                   ENDIF
- 
+
       ** If signs differ bypass overflow checks.
- 
+
      C                   IF        *IN91 = *ON AND
      C                             *IN92 = *OFF OR
      C                             *IN91 = *OFF AND
      C                             *IN92 = *ON
      C                   GOTO      ZZOFPS
      C                   ENDIF
- 
+
      C     ZZAMTD        ADD       ZZTOTD        ZZWk2
      C     ZZWk2         COMP      999                                93
- 
+
      C                   IF        *IN93 = *OFF
      C     ZZWk2         COMP      -999                                 93
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON AND
      C                             *IN92 = *OFF
      C     ZZAMTI        ADD       1             ZZWk3
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON AND
      C                             *IN92 = *ON
      C     ZZAMTI        SUB       1             ZZWk3
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON
      C     ZZTOTI        ADD       ZZWk3         ZZWk3
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *OFF
      C     ZZTOTI        ADD       ZZAMTI        ZZWk3
      C                   ENDIF
- 
+
       ** If the modulus of ZZWk3 is lt mod. ZZTOTI then O/F has occurred
- 
+
      C                   IF        *IN92 = *OFF
      C     ZZWk3         COMP      ZZTOTI                               99
      C                   ENDIF
- 
+
      C                   IF        *IN92 = *ON
      C     ZZWk3         COMP      ZZTOTI                             99
      C                   ENDIF
- 
+
      C                   IF        *IN99 = *OFF
      C                   Z-ADD     ZZWk2         ZZTOTD
      C                   Z-ADD     ZZWk3         ZZTOTI
      C                   ENDIF
- 
+
       ** If O/F zeroise ZZAMT, ind '99' set and ZZTOT fields left intact
- 
+
      C                   IF        *IN99 = *ON
      C                   Z-ADD     0             ZZAMT
      C                   ENDIF
- 
+
      C                   GOTO      ZZSEND
- 
+
       ** The 'SIGNS' are different
- 
+
      C     ZZOFPS        TAG
- 
+
       ** If ZZAMT was negative, make it pos. to comp with ZZTOT
- 
+
      C                   IF        *IN92 = *ON
      C                   Z-SUB     ZZAMTI        ZZAMTI
      C                   Z-SUB     ZZAMTD        ZZAMTD
      C                   ENDIF
- 
+
       ** If ZZTOT was negative, make it pos. to comp with ZZAMT.
- 
+
      C                   IF        *IN91 = *ON
      C                   Z-SUB     ZZTOTI        ZZTOTI
      C                   Z-SUB     ZZTOTD        ZZTOTD
      C                   ENDIF
- 
+
       ** Both ZZAMT and ZZTOT are noe positive
- 
+
      C     ZZTOTI        COMP      ZZAMTI                             93  95
- 
+
      C                   IF        *IN95 = *ON
      C     ZZTOTD        COMP      ZZAMTD                             93  95
      C                   ENDIF
- 
+
       ** If ZZTOT eq. ZZAMT return zero.
- 
+
      C                   IF        *IN95 = *ON
      C                   Z-ADD     0             ZZTOTI
      C                   Z-ADD     0             ZZTOTD
      C                   GOTO      ZZSEND
      C                   ENDIF
- 
+
       ** If ZZTOT gt. ZZAMT.
- 
+
      C                   IF        *IN93 = *ON
      C     ZZAMTD        COMP      ZZTOTD                             94
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON AND
      C                             *IN94 = *ON
      C     ZZTOTI        SUB       1             ZZTOTI
      C     ZZTOTD        ADD       1000          ZZWk2
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON
      C     ZZTOTI        SUB       ZZAMTI        ZZTOTI
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON AND
      C                             *IN94 = *ON
      C     ZZWk2         SUB       ZZAMTD        ZZTOTD
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *ON AND
      C                             *IN94 = *OFF
      C     ZZTOTD        SUB       ZZAMTD        ZZTOTD
      C                   ENDIF
- 
+
       ** If ZZAMT gt. ZZTOT.
- 
+
      C                   IF        *IN93 = *OFF
      C     ZZTOTD        COMP      ZZAMTD                             94
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *OFF AND
      C                             *IN94 = *ON
      C     ZZAMTI        SUB       1             ZZWk3
      C     ZZAMTD        ADD       1000          ZZWk2
      C     ZZWk3         SUB       ZZTOTI        ZZTOTI
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *OFF AND
      C                             *IN94 = *OFF
      C     ZZAMTI        SUB       ZZTOTI        ZZTOTI
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *OFF AND
      C                             *IN94 = *ON
      C     ZZWk2         SUB       ZZTOTD        ZZTOTD
      C                   ENDIF
- 
+
      C                   IF        *IN93 = *OFF AND
      C                             *IN94 = *OFF
      C     ZZAMTD        SUB       ZZTOTD        ZZTOTD
      C                   ENDIF
- 
+
       ** Reverse sign of ZZTOT if larger I/P fields were negative
- 
+
      C                   EVAL      *IN94 = *OFF
- 
+
      C                   IF        *IN93 = *ON AND
      C                             *IN91 = *ON OR
      C                             *IN93 = *OFF AND
      C                             *IN92 = *ON
      C                   EVAL      *IN94 = *ON
      C                   ENDIF
- 
+
      C                   IF        *IN94 = *ON
      C                   Z-SUB     ZZTOTI        ZZTOTI
      C                   Z-SUB     ZZTOTD        ZZTOTD
      C                   ENDIF
- 
+
       ** Restore sign of ZZAMTI & ZZAMTD If It was reversed.
- 
+
      C                   IF        *IN92 = *ON
      C                   Z-SUB     ZZAMTI        ZZAMTI
      C                   Z-SUB     ZZAMTD        ZZAMTD
      C                   ENDIF
- 
+
      C     ZZSEND        TAG
- 
+
       ** If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.
- 
+
      C                   EVAL      *IN96 = *OFF
- 
+
      C     ZZTOTD        COMP      0                                      91
- 
+
      C                   IF        *IN91 = *ON
      C     ZZTOTI        COMP      0                                    96
      C                   ENDIF
- 
+
      C                   IF        *IN96 = *ON
      C                   MOVE      '.000-'       ZZNEGD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2468,7 +2470,7 @@
       *  SrZINTDY - Compute number of days between 2 dates            *
       *****************************************************************
      C     SrZINTDY      BEGSR
- 
+
      C                   CALLB     'ZINTDY'
      C                   PARM                    RetCodeOut       10
      C                   PARM                    PZINDY            5 0
@@ -2477,7 +2479,7 @@
      C                   PARM                    PZCALC            1
      C**********         PARM                    INT6DY           15 7                        242286
      C                   PARM                    INT6DY           15 9                        242286
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2506,15 +2508,15 @@
       * SrCurr - Call to AOCCURR0                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCurr        BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCurrency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDCURRPD'
@@ -2531,56 +2533,56 @@
       * SRAudit - Print Audit Report                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUMU        ZSNUM             6 0
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILEU
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR             1
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** Output Report Header.
- 
+
      C                   WRITE     HEADAU
- 
+
      C                   SELECT
- 
+
       ** If there is a DB Error, output the DB Error Information.
- 
+
      C                   WHEN      (*INU7 = *ON)
      C                   WRITE     DBERROR
- 
+
       ** If no records read, Output "No Details" message.
- 
+
      C                   WHEN      (RCOUNT = 0)
      C                   WRITE     NODTLS
- 
+
       ** If records are read, Output the details information
- 
+
      C                   WHEN      (RCOUNT > 0)
      C                   WRITE     CONTROL
- 
+
      C                   ENDSL
- 
+
       ** End Program and Return.
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2589,15 +2591,15 @@
       * SRUpdTrl - Update Trailer File                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdTrl      BEGSR
- 
+
      C                   EVAL      DZNORE = RCOUNT + WRCOUNT
      C                   EVAL      DZHRWN = WkVlInt
      C                   EVAL      DZHRDC = WkVlDec
      C                   UPDATE    DKEYSZZF
      C                   MOVE      RCOUNT        RNOREC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2606,19 +2608,19 @@
       *  ZSEdit - Call to 'ZSEDIT'                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ZSEdit        BEGSR
- 
+
      C                   EXSR      AOCURR
      C                   EVAL      ZDECS = A6NBDP
- 
+
      C**********         CALLB     'ZSEDIT'                                                 BUG13306
      C                   CALL      'ZSEDIT'                                                 BUG13306
      C                   PARM                    ZFLD15           15 0
      C                   PARM                    ZDECS             1 0
      C                   PARM      *BLANK        ZECODE            1
      C                   PARM                    ZOUT21           21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2627,19 +2629,19 @@
       *  AOCURR - Call to 'AOCURRR0                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     AOCURR        BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    CCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        (PRtCd <> *BLANKS)
- 
+
       ** Data base error in file SDCURRPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDCURRPD'
      C                   EVAL      DBKEY  =  CCY
@@ -2647,9 +2649,9 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2661,26 +2663,26 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     Init          BEGSR
- 
+
      C                   MOVE      'N'           P1OPEN            1
      C                   MOVE      'N'           P2OPEN            1
- 
+
       ** Report Work fields.
- 
+
      C                   Z-ADD     0             RQDLN1
      C                   Z-ADD     0             DIFLN1
- 
+
      C                   Z-ADD     0             RQDLN2
      C                   Z-ADD     0             DIFLN2
- 
+
      C                   Z-ADD     0             RCOUNT
      C                   Z-ADD     0             RCOUNTF
      C                   Z-ADD     0             RCOUNTD
- 
+
      C                   MOVE      *BLANKS       SvBRCA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2689,10 +2691,10 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       ** Set up Local Data Area
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = *BLANKS
      C                   EVAL      DbKey = *BLANKS
@@ -2700,7 +2702,7 @@
      C                   EVAL      DbPGM = 'MM004650'
      C                   EVAL      Dbase = *ZERO
      C                   OUT       LDA
- 
+
      C     DTSTKY        KLIST
      C                   KFLD                    DTYP
      C                   KFLD                    DLST
@@ -2708,7 +2710,7 @@
      C                   KFLD                    WkDLNO
      C                   KFLD                    WkFSEQ
      C                   KFLD                    WkSdat
- 
+
       ** Key list for MMEIRAL3 keyed on loan number and fee sequence                          232928
      C     KFee          KLIST                                                                232928
      C                   KFLD                    KTran                                        232928
@@ -2733,7 +2735,7 @@
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
@@ -2749,7 +2751,7 @@
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
      C                   IF        PRetCode <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDGELRPD'
@@ -2758,7 +2760,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Determine if Amortisation is Non-Linear or Linear or Both.
      C                   READ      SDHEDGPD
       ** Determine the interest calculation basis.
@@ -2785,14 +2787,14 @@
      C**********         OTHER                                                                232928
      C**********         EVAL      WkICBSH = *BLANK                                           232928
      C**********         ENDSL                                                                232928
- 
+
       ** Access the Midas Modules
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDMMOD        PARM      SDMMOD        DSSDY
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDMMODPD'
@@ -2801,20 +2803,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check System if Multi-Branch environment
- 
+
      C                   IF        BGMBIN = 'Y'
      C                   SETON                                        32
      C                   ENDIF
- 
+
       ** Determine N.A. accrual indiccator from DL ICD
      C                   READ      SDDEALPD
- 
+
       ** Read Trailer file of DKEYSZZ
- 
+
      C                   READ      DKEYSZZ
- 
+
      C                   IF        %EOF(DKEYSZZ)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'DKEYSZZ'
@@ -2833,17 +2835,17 @@
      C                   IF        BKAPDT < WkEvcd
      C                   EVAL      WkEvcd = BKAPDT
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

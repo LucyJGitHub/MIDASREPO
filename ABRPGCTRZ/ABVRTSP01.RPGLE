@@ -17,8 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CRE073             Date 06Dec10               *
@@ -37,6 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -154,6 +159,21 @@
      D  N2RONSQQ     E                     EXTFLD(QQRONS)                                     CGL029
      D  N2PONSQQ     E                     EXTFLD(QQPONS)                                     CGL029
      D  N2INSAQQ     E                     EXTFLD(QQINSA)                                     CGL029
+                                                                                              CDL102
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+      *                                                                                       CDL102
+     D wBADJ           S             11  7                                                    CDL102
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -225,6 +245,13 @@
      C                   EVAL      RetCodeIn = 'ERROR'
 
      C                   ELSE
+
+     C                   MONITOR                                                              CDL102
+     C                   EVAL      wBADJ = %DEC(DDBADJ:11:7)                                  CDL102
+     C                   ON-ERROR                                                             CDL102
+     C                   EVAL      wBADJ = 0                                                  CDL102
+     C                   END                                                                  CDL102
+     C                   EVAL      WIntRate = WIntRate + wBADJ                                CDL102
 
      C                   EVAL      N1INTR = WIntRate
      C                   EVAL      N1SPRD = WRateSpred
@@ -395,6 +422,8 @@
 
       ** New Deal in File Format of associated deal
      C                   PARM                    NwDlFilFmt2
+      ** New Deal in File Format of associated deal
+     C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

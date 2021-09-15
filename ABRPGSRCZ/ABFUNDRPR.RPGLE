@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058379           Date 12Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -55,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -502,6 +507,11 @@
      D CDL020          S              1A                                                      CDL020
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
+                                                                                              CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
+                                                                                              CDL102
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CDL102
+     D CurrScnBlrt     DS            50                                                       CDL102
       *                                                                                       CGL029
                                                                                               CDL020
       /COPY WNCPYSRC,ABFUNDR002
@@ -1487,6 +1497,9 @@
       ** Deal Status
 
      C                   PARM                    NwDlScnFmt
+      ** Backward-Looking Rate Fields from file                                               CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
+
      C                   PARM                    PStatus
 
       ** Profit Centre Description 1
@@ -1631,6 +1644,10 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    NwDlScnFmt
      C                   PARM                    CrDlScnFmt
+      ** Incoming Backward-Looking Rate fields in Screen Format :                             CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+      ** (Current) Backward-Looking Rate fields in Screen Format :                            CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM      'Y'           PResetErrs
      C                   PARM                    BKOBRU
      C                   PARM                    BNDCSP
@@ -1769,6 +1786,9 @@
      C                   PARM                    CDL019                                       CDL019
                                                                                               CDL020
      C                   PARM                    CDL020                                       CDL020
+                                                                                              CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+
 
       ** Output
       ** ======

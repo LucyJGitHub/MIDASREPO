@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR797731           Date 02Jul21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Mar15               *
       *                 AR814519           Date 10Mar15               *
       *                 CDL096             Date 22Sep14               *
@@ -79,6 +81,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR797731 - Error in the MM Maintenance Screen. Reverse       *
+      *             BUG5169. Part of CDL020's functionality is to     *
+      *             give the user option to amend the system          *
+      *             defeaulted Actual Interest Rate. (Child: AR955995)*
+      *           - Applied for MD058403                              *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -160,10 +168,10 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FMMCDAFLL  IF   E             DISK    INFSR(*PSSR)
- 
+
      FMMLVDMLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMDEAMP0:MMLVDMP0)
- 
+
      FDEALSC    IF   E           K DISK    INFSR(*PSSR)                                     AR324867
       ** LF of DEALSDC keyed by DLNO                                                        AR324867
       *                                                                                     AR324867
@@ -185,49 +193,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array to contain input rate                                                          211926
      D AlpRate         S              1    DIM(12)                                            211926
       ** Array to integer part of rate                                                        211926
@@ -237,18 +245,18 @@
                                                                                               211926
       * New Deal in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
- 
+
       * (Current) Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMLDNIPD)
      D                                     PREFIX(@)
- 
+
       * (Current) Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDELDPP)
      D/COPY WNCPYSRC,MMLDNIAD01
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
@@ -256,25 +264,25 @@
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
       **
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       **  Data structure for Portfolio Management ICD File
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
@@ -286,7 +294,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for AlpRate                                                                    211926
      D @AR             S              2  0                                                    211926
       ** Index for IntRate                                                                    211926
@@ -296,7 +304,7 @@
                                                                                               211926
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDActnOK                      1A
@@ -378,37 +386,37 @@
      D  OKPDC                         1A                                                      CDL096
      D  OKAMC                         1A                                                      CDL096
                                                                                               CDL096
- 
-      ** Flags to indicate whether transaction fields are valid                              BUG5169
-     D OKFlagsDS2      DS                                                                    BUG5169
-     D  DDSOFDOK                      1A                                                     BUG5169
-     D  DDFBRTOK                      1A                                                     BUG5169
-     D  DDAIROK                       1A                                                     BUG5169
+
+      ** Flags to indicate whether transaction fields are valid                     BUG5169 AR797731
+     D*OKFlagsDS2      DS                                                           BUG5169 AR797731
+     D**DDSOFDOK                      1A                                            BUG5169 AR797731
+     D**DDFBRTOK                      1A                                            BUG5169 AR797731
+     D**DDAIROK                       1A                                            BUG5169 AR797731
                                                                                              BUG5169
       ** Define for compilation purpose                                                       CDL016
      D DDNgvIOK        S              1A                                                      CDL016
                                                                                               CDL016
       ** Date out
      D DateOut         S              6P 0
- 
+
       ** Deal Amendment Value Date in Midas Dayno. format
      D DeamValDat      S              5P 0
- 
+
       ** Deal Transaction Date in Midas Dayno. format
      D TransDate       S              5P 0
- 
+
       ** Last Interest Date in Midas Dayno. format
      D LstIntDate      S              5P 0
- 
+
       ** Interest Accrual Date in Midas Dayno. format
      D IntAccDate      S              5P 0
- 
+
       ** New Maturity Date in Midas Dayno. format
      D NewMatDate      S              5P 0
- 
+
       ** New Next Interest Date in Midas Dayno. format
      D NewNxInDte      S              5P 0
- 
+
       ** Dealing fiduciary                                                      CDL006
      D CDL006          S              1A   IMPORT                               CDL006
                                                                                 CDL006
@@ -733,14 +741,14 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0388'
      C                   EVAL      ddMDATok        = 'N'
      C                   ENDIF
- 
+
      C** If the deal type is CD,CL or DL, the maturity date on file is
      C** present, and no date has been entered, this is an error.
- 
+
      C     DDTYPE        IFEQ      'CD'
      C     DDTYPE        OREQ      'CL'
      C     DDTYPE        OREQ      'DL'
- 
+
      C     HKMDMM        IFNE      *ZEROS
      C     DDMDAT        ANDEQ     *BLANK
       *                                                                                     AR324867
@@ -778,7 +786,7 @@
       *                                                                                     AR324867
      C                   END
      C                   END
- 
+
       ** Same maturity date validation but for fiduciary deals.                 CDL006
                                                                                 CDL006
      C     DDTYPE        IFEQ      'DT'                                         CDL006
@@ -800,13 +808,13 @@
                                                                                 CDL006
      C     DDMDAT        IFNE      *BLANKS
       **  If a new maturity date has been entered
- 
+
      C**  The new maturity date must be after the (existing)
      C**  last interest date and the interest accrual control date
      C**  (subject to the Japanese Sub Module being installed)
- 
+
      C     DDIPFQ        IFNE      'N'
- 
+
      C*****NewMatDate    IFLE      IntAccDate                                                 219642
      C     NewMatDate    IFLT      IntAccDate                                                 219642
      C     S01391        ANDNE     'Y'
@@ -822,7 +830,7 @@
      C     DDTYPE        ANDNE     'FL'                                         CDL006
      C     CDL006        ANDEQ     'Y'                                          CDL006
      C     NewMatDate    ORLT      IntAccDate
- 
+
      C*****NewMatDate    ORLE      LstIntDate                                                 219642
      C     NewMatDate    ORLT      LstIntDate                                                 219642
      C     S01391        ANDNE     'Y'
@@ -844,12 +852,12 @@
      C                   EVAL      ddMDATok        = 'N'
      C                   END
      C                   END
- 
+
      C**  Access the deal amendments file for the last amendment
      C**  to the deal being processed.
- 
+
      C                   Z-ADD     0             DeamValDat
- 
+
      C**  Set value for key of file to be greater than value required.
      C                   MOVE      HKDN38        @DEAMN
      C                   MOVE      '9999'        @VDYY
@@ -857,11 +865,11 @@
      C                   MOVE      '99'          @VDDD
      C                   MOVE      '999'         @DEAMS
      C     @DEAMK        SETGT     MMLVDMLL
- 
+
      C**  Read the previous record on file.  (Should be the latest deal
      C**  amendment.)
      C                   READP     MMLVDMLL                               65
- 
+
      C**  If a record is found with the correct deal number, convert
      C**  its value date to a MIDAS day no.
      C     *IN65         IFEQ      '0'
@@ -869,11 +877,11 @@
      C                   Z-ADD     HNVDYY        @YEAR
      C                   Z-ADD     HNVDMM        @MNTH
      C                   Z-ADD     HNVDDD        @DAY
- 
+
      C     @DATE         IFEQ      0
      C                   Z-ADD     0             DeamValDat
      C                   ELSE
- 
+
      C                   Z-ADD     @DATE         DateIn
      C                   CALLB     'ZA0770'
      C                   PARM                    RetCodeOut
@@ -881,7 +889,7 @@
      C                   PARM                    BJDFIN
      C                   PARM                    DateOut
      C                   MOVE      DateOut       @DAT              6 0
- 
+
      C                   CALLB     'ZA0270'
      C                   PARM                    @DAT
      C                   PARM                    BJDFIN
@@ -889,7 +897,7 @@
      C                   PARM                    DeamValDat
      C                   END
      C                   END
- 
+
      C**  If the new maturity date is not later than the value date,
      C**  it is an error.
      C     NewMatDate    IFLE      DeamValDat
@@ -898,10 +906,10 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0136'
      C                   EVAL      ddMDATok        = 'N'
      C                   END
- 
+
      C                   ENDIF
      C/COPY WNCPYSRC,MMLDNIAC06
- 
+
      C*-----------------------------------------*
      C* Notice Days                             *
      C*-----------------------------------------*
@@ -1027,18 +1035,18 @@
      C                   ENDIF
      C                   ENDIF                                                                211926
      C*
-     C*-----------------------------------------*                                            BUG5169
-     C* Actual Interest Rate                    *                                            BUG5169
-     C*-----------------------------------------*                                            BUG5169
-     C** This field is NOT AMENDABLE.                                                        BUG5169
-     C*                                                                                      BUG5169
-     C     DDAIR         IFNE      @DDAIR                                                    BUG5169
-     C     CDL020        ANDEQ     'Y'                                                       BUG5169
-     C                   ADD       1             Idx                                         BUG5169
-     C                   EVAL      FldNameArr(Idx) = 'DDAIR'                                 BUG5169
-     C                   EVAL      MsgIDArr(Idx)   = 'MMM0379'                               BUG5169
-     C                   EVAL      ddAIRok         = 'N'                                     BUG5169
-     C                   ENDIF                                                               BUG5169
+     C*-----------------------------------------***********************             BUG5169 AR797731
+     C**Actual*Interest*Rate*******************************************             BUG5169 AR797731
+     C*-----------------------------------------***********************             BUG5169 AR797731
+     C***This*field*is*NOT*AMENDABLE.**********************************             BUG5169 AR797731
+     C*****************************************************************             BUG5169 AR797731
+     C*****DDAIR         IFNE      @DDAIR                                           BUG5169 AR797731
+     C*****CDL020        ANDEQ     'Y'                                              BUG5169 AR797731
+     C**********         ADD       1             Idx                                BUG5169 AR797731
+     C**********         EVAL      FldNameArr(Idx) = 'DDAIR'                        BUG5169 AR797731
+     C**********         EVAL      MsgIDArr(Idx)   = 'MMM0379'                      BUG5169 AR797731
+     C**********         EVAL      ddAIRok         = 'N'                            BUG5169 AR797731
+     C**********         ENDIF                                                      BUG5169 AR797731
      C*-----------------------------------------*
      C* Interest Calculation Method             *
      C*-----------------------------------------*
@@ -1155,7 +1163,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0442'
      C                   EVAL      ddNDATok        = 'N'
      C                   END
- 
+
      C     NewNxInDte    IFLE      IntAccDate
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDNDAT'
@@ -1448,7 +1456,7 @@
      C                   ENDIF
      C*
      C                   ENDIF
- 
+
      C*-----------------------------------------*                                             CDL038
      C* Class                                   *                                             CDL038
      C*-----------------------------------------*                                             CDL038
@@ -1570,11 +1578,11 @@
      C                   MOVEL     @DDSPRT       DDSPRT
      C                   END
       *
-      * Actual Interest Rate                                                                 BUG5169
-     C     ddAIROK       IFEQ      'N'                                                       BUG5169
-     C     CDL020        ANDEQ     'Y'                                                       BUG5169
-     C                   MOVEL     @DDAIR        DDAIR                                       BUG5169
-     C                   END                                                                 BUG5169
+      **Actual*Interest*Rate*******************************************             BUG5169 AR797731
+     C*****ddAIROK       IFEQ      'N'                                              BUG5169 AR797731
+     C*****CDL020        ANDEQ     'Y'                                              BUG5169 AR797731
+     C**********         MOVEL     @DDAIR        DDAIR                              BUG5169 AR797731
+     C**********         END                                                        BUG5169 AR797731
                                                                                              BUG5169
       * Interest Calculation Method
      C     ddICMTOK      IFEQ      'N'
@@ -1847,9 +1855,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -1898,7 +1906,7 @@
      C                   KFLD                    @VDMM             2 0
      C                   KFLD                    @VDDD             2 0
      C                   KFLD                    @DEAMS            3 0
- 
+
      C     *LIKE         DEFINE    HKDDND        ZZMDNO
      C*
      C**  GET RUNDAT to access MULTI-BRANCHING flag.

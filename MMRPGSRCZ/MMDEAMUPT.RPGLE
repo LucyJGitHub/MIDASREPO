@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -81,7 +83,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -99,24 +101,24 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       **  DEAMS FILE - DEAL AMENDMENTS
      D MMDEAM        E DS                  EXTNAME(MMDEAMPP)
@@ -130,7 +132,7 @@
      D  @DEAM7               932    934
      D  @DEAM8               935    942
      D  @DEAM9              1065   1172                                                       CGL029
- 
+
       **  DEALS FILE - LOANS/DEPOSITS & NAS ISSUED
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
      D MMDELDDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -140,7 +142,7 @@
      D MMDELDRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D MMDELDPONS    E                     EXTFLD(QQPONS)                                     CGL029
      D  @HKVDY                50     57  0
- 
+
       **  DEALS FILE - NAS PURCHASED
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
      D MMDENBDORI    E                     EXTFLD(DORIQQ)                                     CGL029
@@ -150,7 +152,7 @@
      D MMDENBRONS    E                     EXTFLD(RONSQQ)                                     CGL029
      D MMDENBPONS    E                     EXTFLD(PONSQQ)                                     CGL029
      D  @HLVDY                50     57  0
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR LOANS & DEPOSITS
      D MMSTDL        E DS                  EXTNAME(MMSTDLPP)
      D MMSTDLDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -160,7 +162,7 @@
      D MMSTDLRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D MMSTDLPONS    E                     EXTFLD(QQPONS)                                     CGL029
      D MMSTDLINSA    E                     EXTFLD(QQINSA)                                     CGL029
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR NA BOUGHT FORMAT
      D MMSTDB        E DS                  EXTNAME(MMSTDBPP)
      D MMSTDBDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -171,7 +173,7 @@
      D MMSTDBBOPI    E                     EXTFLD(QQBOPI)                                     CGL029
      D MMSTDBRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D MMSTDBPONS    E                     EXTFLD(QQPONS)                                     CGL029
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR NA SOLD FORMAT
      D MMSTDS        E DS                  EXTNAME(MMSTDSPP)
      D MMSTDSDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -182,7 +184,7 @@
      D MMSTDSROPI    E                     EXTFLD(QQROPI)                                     CGL029
      D MMSTDSRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D MMSTDSPONS    E                     EXTFLD(QQPONS)                                     CGL029
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR DEAL AMENDMENTS
      D MMSTDA        E DS                  EXTNAME(MMSTDAPP)
      D MMSTDADORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -204,7 +206,7 @@
      D  @STDA7              1210   1212
      D  @STDA8              1214   1221
      D  @STDA9              1228   1407                                                       CGL029
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURES FOR TEMPLATE FILES FOR
       **  PROJECTED ACCOUNT MOVEMENTS UPDATES
      D Z#BSTS        E DS                  EXTNAME(Z#BST)

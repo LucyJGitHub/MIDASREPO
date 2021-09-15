@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058540           Date 24Aug21               *
-      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD058540           Date 24Aug21               *
+      *                 MD031031           Date 24Feb15               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
@@ -356,6 +360,8 @@
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM (LDNI) Extra Data - File (D/B) format
  
+      ** Incoming Backward-Looking Rate Screen Fields                                         CDL102
+     D TranScnBlrt     DS            50                                                       CDL102
      D/COPY QWINDSRC,MMLDNISDTA
  
      D/COPY ZACPYSRC,APICTLARR
@@ -1462,6 +1468,7 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+     C                   PARM                    TranScnBlrt                                  CDL102
       *
       * Deal Status
      C                   PARM                    DDSTS            24

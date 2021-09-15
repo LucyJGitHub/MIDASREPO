@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD053472           Date 27Oct20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 30May14               *
       *                 MD024110           Date 13Dec13               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053472 - Payment settlement details cleared for Early      *
       *             Maturity                                          *
@@ -103,7 +105,7 @@
      FMMEIRDL0  UF   E           K DISK                                                       CAS009
      F                                     COMMIT                                             CAS009
      F/COPY WNCPYSRC,MMDEAMDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -122,26 +124,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Data Structure for SAR Details                                                       CAS009
      D CAS009          S              1A                                                      CAS009
      D PRetCode        S              7A                                                      CAS009
@@ -202,6 +204,8 @@
      D WEvent          S              8A                                                      CRE020
      D WNew            S              1A                                                      CRE020
      D CRE073          S              1A                                                      CRE073
+      ** Switchable feature CDL102                                                            CDL102
+     D CDL102          S              1A                                                      CDL102
      D*
      D* DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
      D*
@@ -537,6 +541,19 @@
      C                   EVAL      RDMT = IGRDMT                                              CRE073
      C                   EVAL      RDFD = IGRDFD                                              CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                       CDL102
+     C                   IF        CDL102 = 'Y'                                               CDL102
+     C                   EVAL      BLRT = IGBLRT                                              CDL102
+     C                   EVAL      RFRR = IGRFRR                                              CDL102
+     C                   EVAL      CALM = IGCALM                                              CDL102
+     C                   EVAL      BADJ = IGBADJ                                              CDL102
+     C                   EVAL      FLOR = IGFLOR                                              CDL102
+     C                   EVAL      LBDY = IGLBDY                                              CDL102
+     C                   EVAL      LODY = IGLODY                                              CDL102
+     C                   EVAL      OPSH = IGOPSH                                              CDL102
+     C                   EVAL      RRDP = IGRRDP                                              CDL102
+     C                   EVAL      DBAV = IGDBAV                                              CDL102
+     C                   ENDIF                                                                CDL102
       *
       * WRITE DEAL AMENDMENT
       *
@@ -1408,6 +1425,30 @@
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+      *                                                                                       CDL102
+      ** Check if CDL102 is installed                                                         CDL102
+      *                                                                                       CDL102
+     C                   EVAL      CDL102 = 'N'                                               CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       PRetCode                                     CDL102
+     C                   PARM      '*VERIFY'     POption                                      CDL102
+     C                   PARM      'CDL102'      PSard                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+      ** Database error                                                                       CDL102
+      *                                                                                       CDL102
+     C                   IF        PRetCode <> *BLANKS AND                                    CDL102
+     C                             PRetCode <> '*NRF   '                                      CDL102
+     C                   EVAL      DBKEY = 'CDL102'                                           CDL102
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CDL102
+     C                   EVAL      DBASE = 7                                                  CDL102
+     C                   EXSR      SRERR                                                      CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
+     C                   IF        PRetCode = *BLANKS                                         CDL102
+     C                   EVAL      CDL102 = 'Y'                                               CDL102
+     C                   ENDIF                                                                CDL102
+                                                                                              CDL102
      C/COPY WNCPYSRC,MMH00005
      C                   ENDSR
      C****************************************************************

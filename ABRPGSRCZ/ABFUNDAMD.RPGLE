@@ -21,8 +21,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1083027          Date 31Jan13               *
+      *  Last Amend No. MD058567           Date 12Aug21               *
+      *  Prev Amend No. MD058419           Date 05Jul21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR1083027          Date 31Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24231           Date 18Jun09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +42,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058567 - Error message is displayed when user authorise    *
+      *             a FUND Backward Looking rate                      *
+      *  MD058419 - Error in the MM Maintenance Screen.               *
+      *             Reverse BUG5169. Part of CDL020's functionality   *
+      *             is to give the user option to amend the system    *
+      *             defeaulted Actual Interest Rate.                  *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1083027 - Fix Base Rate error appeared when another field  *
       *              is being amended                                 *
@@ -73,21 +83,21 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **
       ** Standard D-specs
       ** ================
@@ -101,60 +111,88 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** The following /COPY includes the MM standard declares:
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** New Deal Screen Format
      D NewDealScnFmt E DS                  EXTNAME(ABFUNDPD)
      D                                     PREFIX(DD:2)
- 
+     D TranScnBlrt     DS                                                                     CDL102
+     D  DDBLRT                        1A                                                      CDL102
+     D  DDRFRR                       10A                                                      CDL102
+     D  DDCALM                        4A                                                      CDL102
+     D  DDBADJ                       13A                                                      CDL102
+     D  DDFLOR                       13A                                                      CDL102
+     D  DDLBDY                        2A                                                      CDL102
+     D  DDLODY                        2A                                                      CDL102
+     D  DDOPSH                        1A                                                      CDL102
+     D  DDRRDP                        2A                                                      CDL102
+     D  DDDBAV                        1A                                                      CDL102
+     D  DDRTKN                        1A                                                      CDL102
+      ***  New Backward-Looking Rate Fields Screen Fields                                     CDL102
+      *                                                                                       CDL102
+                                                                                              CDL102
+     D CurrScnBlrt     DS                                                                     CDL102
+     D  @DDBLRT                       1A                                                      CDL102
+     D  @DDRFRR                      10A                                                      CDL102
+     D  @DDCALM                       4A                                                      CDL102
+     D  @DDBADJ                      13A                                                      CDL102
+     D  @DDFLOR                      13A                                                      CDL102
+     D  @DDLBDY                       2A                                                      CDL102
+     D  @DDLODY                       2A                                                      CDL102
+     D  @DDOPSH                       1A                                                      CDL102
+     D  @DDRRDP                       2A                                                      CDL102
+     D  @DDDBAV                       1A                                                      CDL102
+     D  @DDRTKN                       1A                                                      CDL102
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CDL102
+
       ** Current Deal Screen Format
      D CurDealScnFmt E DS                  EXTNAME(ABFUNDPD)
      D                                     PREFIX(Cr:2)
- 
+
       ** Externally described DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL039
       ** EXTERNAL DS FOR SAR DETAILS                                                          CDL039
                                                                                               CDL039
@@ -163,46 +201,50 @@
                                                                                               CDL039
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Internal Funding Deals Error Indicators File
      D OkFlags       E DS                  EXTNAME(ABEFUNDPD)
- 
-      **                                                                                    BUG24231
-     D                 DS                                                                   BUG24231
-     D XAIR                    1     12                                                     BUG24231
-     D YAIR                    2     12                                                     BUG24231
-                                                                                            BUG24231
+
+      ****************************************************************             BUG24231 MD058419
+     D**********       DS                                                          BUG24231 MD058419
+     D*XAIR                    1     12                                            BUG24231 MD058419
+     D*YAIR                    2     12                                            BUG24231 MD058419
+      ****************************************************************             BUG24231 MD058419
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D PKey            S              3A
      D AmendOk         S              1
      D ResetErrs       S              1
- 
+      **                                                                                      CDL102
+     D BChar           DS                                                                     CDL102
+     D   BLen                  1      2B 0                                                    CDL102
+     D   LenStr                1      2                                                       CDL102
+
       ** Index for arrays of error message ids
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids
      D WIdx            S              3P 0
- 
+
       ** Originating Branch fiels from SDGELRPD
      D BKOBRU          S              1
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
      D  MBIN                  13     13
- 
+
       ** Parameters for ZA0921
      D WAmountIn       S             15  0
      D WDecPlcIn       S              1  0
      D BNDCSP          S              1
      D WAmountOS       S             16A
      D WAmountOU       S             17A
- 
+
       ** Parameters for ZA0840
      D PRetCode        S                   LIKE(ReturnCode)
      D PAlpha          S             16A
@@ -211,54 +253,57 @@
      D PIMTID          S              1A
      D POErrCde        S              1  0
      D POAmount        S             15  0
- 
+
      D PValFlg         S              1A
- 
+     D Num1            S              2S 0                                                  MD058567
+     D Num2            S              2S 0                                                  MD058567
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C                   EXSR      SRCompFlds
- 
+
       ** If any errors were found:
       **   Set Amendments OK Indicator to 'N'
- 
+
      C                   IF        Idx > 0
      C                   EVAL      AmendOK = 'N'
      C                   ELSE
      C                   EVAL      AmendOK = 'Y'
      C                   ENDIF
- 
+
       ** If any errors were found:
       ** - and reset of fields in error required, do this
- 
+
      C                   IF        Idx > 0 and ResetErrs = 'Y'
      C                   EXSR      SRResetFld
      C                   ENDIF
- 
+
       ** Return to calling program
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -271,21 +316,21 @@
       *                                                               *
       *****************************************************************
      C     SRCompFlds    BEGSR
- 
+
       ** Branch Code #1
       ** Booking branch code validation only when Multi-branching
       ** indicator is on.
- 
+
      C                   IF        MBIN = 'Y' and DDBRC1 <> CrBRC1
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1BRC1'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0551'
      C                   EVAL      OkBRC1          = 'N'
      C                   ENDIF
- 
+
       ** Deal sub-type #1
       ** Amendable if CDL039 is ON                                                            CDL039
- 
+
      C                   IF        DDSTP1 <> CrSTP1
      C                             AND CDL039  = 'N'                                          CDL039
      C                   ADD       1             Idx
@@ -293,28 +338,28 @@
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0552'
      C                   EVAL      OkSTP1          = 'N'
      C                   ENDIF
- 
+
       ** Associated Deal Number
- 
+
      C                   IF        DDDADN <> CrDADN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1DADN'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0566'
      C                   EVAL      OkDADN          = 'N'
      C                   ENDIF
- 
+
       ** Branch Code #2
- 
+
      C                   IF        DDBRC2 <> CrBRC2
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1BRC2'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0553'
      C                   EVAL      OkBRC2          = 'N'
      C                   ENDIF
- 
+
       ** Deal sub-type #2
       ** Amendable if CDL039 is ON                                                            CDL039
- 
+
      C                   IF        DDSTP2 <> CrSTP2
      C                             AND CDL039  = 'N'                                          CDL039
      C                   ADD       1             Idx
@@ -322,27 +367,27 @@
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0554'
      C                   EVAL      OkSTP2          = 'N'
      C                   ENDIF
- 
+
       ** Deal Date
- 
+
      C                   IF        DDDDAT <> CrDDAT
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1DDAT'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0555'
      C                   EVAL      OkDDAT          = 'N'
      C                   ENDIF
- 
+
       ** Value Date
- 
+
      C                   IF        DDVDAT <> CrVDAT
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1VDAT'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0556'
      C                   EVAL      OkVDAT          = 'N'
      C                   ENDIF
- 
+
       ** Notice Days
- 
+
      C                   IF        DDNTCE <> CrNTCE AND
      C                             PValFlg <>  'Y'
      C                   ADD       1             Idx
@@ -350,51 +395,51 @@
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0557'
      C                   EVAL      OkNTCE          = 'N'
      C                   ENDIF
- 
+
       ** Currency Code
- 
+
      C                   IF        DDCCY <> CrCCY
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1CCY'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0558'
      C                   EVAL      OkCCY           = 'N'
      C                   ENDIF
- 
+
       ** Principal Amount
- 
+
      C                   EXSR      SRFmtAmnp
- 
+
      C                   IF        DDAMNP <> CrAMNP
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1AMNP'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0559'
      C                   EVAL      OkAMNP          = 'N'
      C                   ENDIF
- 
+
       ** Rate/Spread
- 
+
      C                   EXSR      SRFmtRTSP
- 
+
      C                   IF        DDRTSP <> CrRTSP
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1RTSP'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0560'
      C                   EVAL      OkRTSP          = 'N'
      C                   ENDIF
- 
+
       ** Interest Calculation Basis
- 
+
      C                   IF        DDICBS <> CrICBS
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1ICBS'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0561'
      C                   EVAL      OkICBS          = 'N'
      C                   ENDIF
- 
+
       ** Total Interest
- 
+
      C                   EXSR      SRFmtTOTI
- 
+
      C                   IF        DDTOTI <> CrTOTI  and
      C                             DDMDAT =  CrMDAT
      C                   ADD       1             Idx
@@ -402,18 +447,18 @@
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0562'
      C                   EVAL      OkTOTI          = 'N'
      C                   ENDIF
- 
+
       ** Capitalise Interest Indicator
- 
+
      C                   IF        DDCPTI <> CrCPTI
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = '#1CPTI'
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0563'
      C                   EVAL      OkCPTI          = 'N'
      C                   ENDIF
- 
+
       ** Originating Branch Code
- 
+
      C                   IF        MBIN = 'Y' and BKOBRU = 'Y' and
      C                             DDORBR <>  CRORBR
      C                   ADD       1             Idx
@@ -436,18 +481,18 @@
      C                   ENDIF                                                                CDL019
      C                   ENDIF                                                                CDL019
                                                                                               CDL020
-      ** Actual Interest Rate                                                                 CDL020
-                                                                                              CDL020
-     C                   IF        CDL020 = 'Y'                                               CDL020
-     C                   MOVE      DDAIR         XAIR                                       BUG24231
+      ***Actual Interest Rate****************************************                CDL020 MD058419
+      ***************************************************************                CDL020 MD058419
+     C**********         IF        CDL020 = 'Y'                                      CDL020 MD058419
+     C**********         MOVE      DDAIR         XAIR                              BUG24231 MD058419
      C**********         IF        DDAIR <> CrAIR                                    CDL020 BUG24231
-     C                   IF        YAIR  <> CrAIR                                           BUG24231
-     C                   ADD       1             Idx                                          CDL020
-     C                   EVAL      FldNameArr(Idx) = '#1AIR'                                  CDL020
-     C                   EVAL      MsgIDArr(Idx)   = 'ABM0570'                                CDL020
-     C                   EVAL      OkAIR           = 'N'                                      CDL020
-     C                   ENDIF                                                                CDL020
-     C                   ENDIF                                                                CDL020
+     C**********         IF        YAIR  <> CrAIR                                  BUG24231 MD058419
+     C**********         ADD       1             Idx                                 CDL020 MD058419
+     C**********         EVAL      FldNameArr(Idx) = '#1AIR'                         CDL020 MD058419
+     C**********         EVAL      MsgIDArr(Idx)   = 'ABM0570'                       CDL020 MD058419
+     C**********         EVAL      OkAIR           = 'N'                             CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
                                                                                               CDL038
       ** Deal class #1                                                                        CDL038
       ** Amendable if CDL039 is ON                                                            CDL039
@@ -470,7 +515,164 @@
      C                   EVAL      MsgIDArr(Idx)   = 'ABM0572'                                CDL038
      C                   EVAL      OkCLS2          = 'N'                                      CDL038
      C                   ENDIF                                                                CDL038
- 
+      *                                                                                       CDL102
+     C     CDL102        IFEQ      'Y'                                                        CDL102
+      *                                                                                       CDL102
+      ** Backward-Looking Rate                                                                CDL102
+      *                                                                                       CDL102
+     C     DDBLRT        IFNE      @DDBLRT                                                    CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDBLRT'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049460'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDBLRT))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDBLRT)                   CDL102
+     C                   EVAL      OKBLRT          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Risk Free Rate                                                                       CDL102
+      *                                                                                       CDL102
+     C     DDRFRR        IFNE      @DDRFRR                                                    CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDRFRR'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049459'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDRFRR))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRFRR)                   CDL102
+     C                   EVAL      OKRFRR          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Calculation Method                                                                   CDL102
+      *                                                                                       CDL102
+     C     DDCALM        IFNE      @DDCALM                                                    CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDCALM'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049463'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDCALM))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDCALM)                   CDL102
+     C                   EVAL      OKCALM          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Benchmark Adjustment                                                                 CDL102
+      *                                                                                       CDL102
+     C     DDBADJ        IFNE      *BLANKS                                                    CDL102
+     C                   CALLB     'ZCMPAMTS'                                                 CDL102
+     C                   PARM      DDBADJ        ZCMPAMT1         25                          CDL102
+     C                   PARM      @DDBADJ       ZCMPAMT2         25                          CDL102
+     C                   PARM      'N'           ZCMPAMTDif        1                          CDL102
+      *                                                                                       CDL102
+     C     ZCMPAMTDif    IFEQ      'Y'                                                        CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDBADJ'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049464'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDBADJ))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBADJ)                    CDL102
+     C                   EVAL      OKBADJ          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Floor                                                                                CDL102
+      *                                                                                       CDL102
+     C     DDFLOR        IFNE      *BLANKS                                                    CDL102
+     C                   CALLB     'ZCMPAMTS'                                                 CDL102
+     C                   PARM      DDFLOR        ZCMPAMT1                                     CDL102
+     C                   PARM      @DDFLOR       ZCMPAMT2                                     CDL102
+     C                   PARM      'N'           ZCMPAMTDif                                   CDL102
+      *                                                                                       CDL102
+     C     ZCMPAMTDif    IFEQ      'Y'                                                        CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDFLOR'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049465'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDFLOR))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDFLOR)                    CDL102
+     C                   EVAL      OKFLOR          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Lookback Days                                                                        CDL102
+      *                                                                                       CDL102
+     C                   EVAL      Num1 = %INT(DDLBDY)                                      MD058567
+     C                   EVAL      Num2 = %INT(@DDLBDY)                                     MD058567
+     C     DDLBDY        IFNE      *BLANKS                                                    CDL102
+     C*****DDLBDY        IFNE      @DDLBDY                                           CDL102 MD058567
+     C     Num1          IFNE      Num2                                                     MD058567
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDLBDY'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049461'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDLBDY))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDLBDY)                   CDL102
+     C                   EVAL      OKLBDY          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Lockout Days                                                                         CDL102
+      *                                                                                       CDL102
+     C                   EVAL      Num1 = %INT(DDLODY)                                      MD058567
+     C                   EVAL      Num2 = %INT(@DDLODY)                                     MD058567
+     C     DDLODY        IFNE      *BLANKS                                                    CDL102
+     C*****DDLODY        IFNE      @DDLODY                                           CDL102 MD058567
+     C     Num1          IFNE      Num2                                                     MD058567
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDLODY'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049462'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDLODY))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDLODY)                   CDL102
+     C                   EVAL      OKLODY          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Observation Period Shift                                                             CDL102
+      *                                                                                       CDL102
+     C     DDOPSH        IFNE      @DDOPSH                                                    CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDOPSH'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049466'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDOPSH))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDOPSH)                   CDL102
+     C                   EVAL      OKOPSH          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Rate Rounding Decimal Places                                                         CDL102
+      *                                                                                       CDL102
+     C                   EVAL      Num1 = %INT(DDRRDP)                                      MD058567
+     C                   EVAL      Num2 = %INT(@DDRRDP)                                     MD058567
+     C     DDRRDP        IFNE      *BLANKS                                                    CDL102
+     C*****DDRRDP        IFNE      @DDRRDP                                           CDL102 MD058567
+     C     Num1          IFNE      Num2                                                     MD058567
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDRRDP'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049467'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDRRDP))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRRDP)                   CDL102
+     C                   EVAL      OKRRDP          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Day Basis for Average                                                                CDL102
+      *                                                                                       CDL102
+     C     DDDBAV        IFNE      *BLANKS                                                    CDL102
+     C     DDDBAV        IFNE      @DDDBAV                                                    CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDDBAV'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049468'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDDBAV))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDDBAV)                   CDL102
+     C                   EVAL      OKDBAV          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+      ** Rates Known                                                                          CDL102
+      *                                                                                       CDL102
+     C     DDRTKN        IFNE      @DDRTKN                                                    CDL102
+     C                   ADD       1             Idx                                          CDL102
+     C                   EVAL      FldNameArr(Idx) = 'DDRTKN'                                 CDL102
+     C                   EVAL      MsgIDArr(Idx)   = '5049469'                                CDL102
+     C                   EVAL      BLen = %Len(%Trim(@DDRTKN))                                CDL102
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRTKN)                   CDL102
+     C                   EVAL      OKRTKN          = 'N'                                      CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+     C                   ENDIF                                                                CDL102
+      *                                                                                       CDL102
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -484,93 +686,93 @@
       *                                                               *
       *****************************************************************
      C     SRResetFld    BEGSR
- 
+
       ** Branch Code #1
- 
+
      C                   IF        OkBRC1 = 'N'
      C                   EVAL      DDBRC1 = CrBRC1
      C                   ENDIF
- 
+
       ** Deal sub-type #1
- 
+
      C                   IF        OkSTP1 = 'N'
      C                   EVAL      DDSTP1 = CrSTP1
      C                   ENDIF
- 
+
       ** Associated Deal Number
- 
+
      C                   IF        OkDADN = 'N'
      C                   EVAL      DDDADN = CrDADN
      C                   ENDIF
- 
+
       ** Branch Code #2
- 
+
      C                   IF        OkBRC2 = 'N'
      C                   EVAL      DDBRC2 = CrBRC2
      C                   ENDIF
- 
+
       ** Deal sub-type #2
- 
+
      C                   IF        OkSTP2 = 'N'
      C                   EVAL      DDSTP2 = CrSTP2
      C                   ENDIF
- 
+
       ** Deal Date
- 
+
      C                   IF        OkDDAT = 'N'
      C                   EVAL      DDDDAT = CrDDAT
      C                   ENDIF
- 
+
       ** Value Date
- 
+
      C                   IF        OkVDAT = 'N'
      C                   EVAL      DDVDAT = CrVDAT
      C                   ENDIF
- 
+
       ** Notice Days
- 
+
      C                   IF        OkNTCE = 'N'
      C                   EVAL      DDNTCE = CrNTCE
      C                   ENDIF
- 
+
       ** Currency Code
- 
+
      C                   IF        OkCCY  = 'N'
      C                   EVAL      DDCCY = CrCCY
      C                   ENDIF
- 
+
       ** Principal Amount
- 
+
      C                   IF        OkAMNP = 'N'
      C                   EVAL      DDAMNP = CrAMNP
      C                   ENDIF
- 
+
       ** Rate/Spread
- 
+
      C                   IF        OkRTSP = 'N'
      C                   EVAL      DDRTSP = CrRTSP
      C                   ENDIF
- 
+
       ** Interst Calculation Basis
- 
+
      C                   IF        OkICBS = 'N'
      C                   EVAL      DDICBS = CrICBS
      C                   ENDIF
- 
+
       ** Total Interest
- 
+
      C                   IF        OkTOTI = 'N'
      C                   EVAL      DDTOTI = CrTOTI
      C                   ENDIF
- 
+
       ** Capitalise Interest Indicator
- 
+
      C                   IF        OkCPTI = 'N'
      C                   EVAL      DDCPTI = CrCPTI
      C                   ENDIF
- 
+
       ** Originating Branch Code
- 
+
      C                   IF        OkORBR = 'N'
      C                   EVAL      DDORBR = CrORBR
      C                   ENDIF
@@ -585,11 +787,11 @@
                                                                                               CDL020
       ** Actual Interest Rate                                                                 CDL020
                                                                                               CDL020
-     C                   IF        CDL020 = 'Y'                                               CDL020
-     C                   IF        OkAIR = 'N'                                                CDL020
-     C                   EVAL      DDAIR = CrAIR                                              CDL020
-     C                   ENDIF                                                                CDL020
-     C                   ENDIF                                                                CDL020
+     C**********         IF        CDL020 = 'Y'                                      CDL020 MD058419
+     C**********         IF        OkAIR = 'N'                                       CDL020 MD058419
+     C**********         EVAL      DDAIR = CrAIR                                     CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
+     C**********         ENDIF                                                       CDL020 MD058419
                                                                                               CDL038
       ** Deal class #1                                                                        CDL038
                                                                                               CDL038
@@ -602,7 +804,7 @@
      C                   IF        OkCLS2 = 'N'                                               CDL038
      C                   EVAL      DDCLS2 = CrCLS2                                            CDL038
      C                   ENDIF                                                                CDL038
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -616,33 +818,33 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmnp     BEGSR
- 
+
       ** Get the no. of Decimal place
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY'        POptn
      C                   PARM      CrCCY         PKey
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Format Principal Amount
- 
+
      C                   Z-ADD     A6NBDP        PIDP
      C     13            Sub       PIDP          PIINT
      C                   MOVE      *Blanks       PAlpha
      C                   MOVE      DDAMNP        PAlpha
      C                   Z-ADD     *Zero         POAmount
      C                   MOVE      'Y'           PIMTID
- 
+
      C                   EXSR      SRZA0840
- 
+
      C                   Z-ADD     POAmount      WAmountIn
      C                   Z-ADD     A6NBDP        WDecPlcIn
- 
+
      C                   EXSR      SRZA0921
- 
+
      C                   MOVE      WAmountOS     DDAMNP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -656,23 +858,23 @@
       *                                                               *
       *****************************************************************
      C     SRFmtRTSP     BEGSR
- 
+
      C                   Z-ADD     7             PIDP
      C                   Z-ADD     4             PIINT
      C                   MOVE      *Blanks       PAlpha
      C                   MOVE      DDRTSP        PAlpha
      C                   Z-ADD     *Zero         POAmount
      C                   MOVE      'N'           PIMTID
- 
+
      C                   EXSR      SRZA0840
- 
+
      C                   Z-ADD     POAMount      WAmountIn
      C                   Z-ADD     7             WDecPlcIn
- 
+
      C                   EXSR      SRZA0921
- 
+
      C                   MOVE      WAmountOS     DDRTSP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -686,23 +888,23 @@
       *                                                               *
       *****************************************************************
      C     SRFmtTOTI     BEGSR
- 
+
      C                   Z-ADD     A6NBDP        PIDP
      C     13            Sub       PIDP          PIINT
      C                   MOVE      *Blanks       PAlpha
      C                   MOVE      DDTOTI        PAlpha
      C                   Z-ADD     *Zero         POAmount
      C                   MOVE      'N'           PIMTID
- 
+
      C                   EXSR      SRZA0840
- 
+
      C                   Z-ADD     POAmount      WAmountIn
      C                   Z-ADD     A6NBDP        WDecPlcIn
- 
+
      C                   EXSR      SRZA0921
- 
+
      C                   MOVE      WAmountOS     DDTOTI
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -715,9 +917,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZA0840      BEGSR
- 
+
      C                   CALLB     'ZA0840'
      C                   PARM                    PRetCode
      C                   PARM                    PAlpha
@@ -727,9 +929,9 @@
      C                   PARM                    POErrCde
      C                   PARM                    POAmount
      C                   PARM                    BNDCSP
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -742,7 +944,7 @@
       *                                                               *
       *****************************************************************
      C     SRZA0921      BEGSR
- 
+
      C                   CALLB     'ZA0921'
      C                   PARM                    PRTCD
      C                   PARM                    WAmountIn
@@ -750,7 +952,7 @@
      C                   PARM                    BNDCSP
      C                   PARM                    WAmountOS
      C                   PARM                    WAmountOU
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -763,28 +965,34 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Inputs
       ** Return Code
       ** New Deal in Screen Format
       ** Current Deal in Screen Format
       ** Reset of Fields in Error Required (Y/N)
- 
+
      C                   PARM                    RetCodeIn
      C                   PARM                    NewDealScnFmt
      C                   PARM                    CurDealScnFmt
+      *                                                                                       CDL102
+      ***  New Backward-Looking Rate fields in Screen Format :                                CDL102
+     C                   PARM                    TranScnBlrt                                  CDL102
+      *                                                                                       CDL102
+      ***  (Current) Backward-Looking Rate fields in Screen Format :                          CDL102
+     C                   PARM                    CurrScnBlrt                                  CDL102
      C                   PARM                    ResetErrs
- 
+
       ** Originating Branch Used
- 
+
      C                   PARM                    BKOBRU
- 
+
       ** SDDEALPD: Decimal Separator
- 
+
      C                   PARM                    BNDCSP
                                                                                               CDL019
       ** Allow Base Rate Changes on Fixed Deposits/Loans                                      CDL019
@@ -792,24 +1000,24 @@
                                                                                               CDL020
       ** Apply Base Rate at Value Date                                                        CDL020
      C                   PARM                    CDL020            1                          CDL020
- 
+
       ** Output
       ** Field Ok Flags from/to caller
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    OkFlags
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
- 
+
       ** Amendments Ok
- 
+
      C                   PARM                    AmendOk
- 
+
       ** Amended by validation module flag
- 
+
      C                   PARM                    PValFlg
       *                                                                                       CDL039
       ** ACCESS SAR DETAILS FILE TO DETERMINE IF CDL039 IS INSTALLED                          CDL039
@@ -825,27 +1033,41 @@
      C                   ELSE                                                                 CDL039
      C                   MOVEL     'N'           CDL039                                       CDL039
      C                   END                                                                  CDL039
- 
+      *
+      ** Determine if CDL102 feature is installed                                             CDL102
+      *                                                                                       CDL102
+     C                   MOVEL     'N'           CDL102            1                          CDL102
+     C                   CALLB     'AOSARDR0'                                                 CDL102
+     C                   PARM      *BLANKS       @RTCD                                        CDL102
+     C                   PARM      '*VERIFY'     @OPTN                                        CDL102
+     C                   PARM      'CDL102'      @SARD                                        CDL102
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL102
+      *                                                                                       CDL102
+     C     @RTCD         IFEQ      *BLANK                                                     CDL102
+     C                   MOVEL     'Y'           CDL102                                       CDL102
+     C                   END                                                                  CDL102
+      *                                                                                       CDL102
+
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001

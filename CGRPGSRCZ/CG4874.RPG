@@ -10,12 +10,17 @@
      F*                                                               *
      F*  (c) Finastra International Limited 2021                      *
      F*                                                               *
-     F*  Last Amend No. AR693727           Date 09Feb21               *
-     F*  Prev Amend No. AR649507           Date 09Feb21               *
+      *  Last Amend No. MD058223           Date 07Sep21               *
+      *  Prev Amend No. AR693727           Date 09Feb21               *
+      *                 AR649507           Date 09Feb21               *
      F*                 EMP107    *CREATE  Date 09Feb21               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD058223 - When the interest in the CR side is negative,     *
+      *             the negative interest is not reflected in the     *
+      *             <DebitInterest> thus it shows zero value in       *
+      *             CGUXMLPD.                                         *
       *  AR693727 - Use ACCEA and CHDBE when advice is generated not  *
       *             on the capitalisation date. (Child: AR693728)     *
      F*  AR649507 - Incorrect Interest output to Ticket D'Agio.       *
@@ -207,6 +212,10 @@
      ISPOOL       DS
      I                                       83  92 SFILE
      I                                    B 123 1240SFNUM
+      *                                                                                     MD058223
+      ** Constant value for Retail Negative Interest                                        MD058223
+      *                                                                                     MD058223
+     I              'RetailNegativeIntDsp'C         WPARM                                   MD058223
       *****************************************************************
       * Process     :  MAINLINE                                       *
       * Function    :  Mainline processing                            *
@@ -395,6 +404,40 @@
       *
      C           ENDRDC    TAG                             ** ENDRDC TAG**
      C                     SETOF                     21
+      *                                                                                     MD058223
+      ** Check system value to determine if RetailNegaticeIntDsp is 'Y' or 'N'              MD058223
+      *                                                                                     MD058223
+     C                     MOVELWPARM     SVALK1                                            MD058223
+      *                                                                                     MD058223
+     C                     CALL 'AOSVALR0'                                                  MD058223
+     C                     PARM           RTNCDE  7                                         MD058223
+     C                     PARM           SVALK1 20                                         MD058223
+     C                     PARM           SVAL1 200                                         MD058223
+     C                     PARM           SVALK2 20                                         MD058223
+     C                     PARM           SVAL2 200                                         MD058223
+     C                     PARM           SVALK3 20                                         MD058223
+     C                     PARM           SVAL3 200                                         MD058223
+     C                     PARM           SVALK4 20                                         MD058223
+     C                     PARM           SVAL4 200                                         MD058223
+     C                     PARM           SVALK5 20                                         MD058223
+     C                     PARM           SVAL5 200                                         MD058223
+     C                     PARM           SVALK6 20                                         MD058223
+     C                     PARM           SVAL6 200                                         MD058223
+     C                     PARM           SVALK7 20                                         MD058223
+     C                     PARM           SVAL7 200                                         MD058223
+     C                     PARM           SVALK8 20                                         MD058223
+     C                     PARM           SVAL8 200                                         MD058223
+     C                     PARM           SVALK9 20                                         MD058223
+     C                     PARM           SVAL9 200                                         MD058223
+     C                     PARM           SVALK0 20                                         MD058223
+     C                     PARM           SVAL10200                                         MD058223
+      * If the system value is not found then default value to 'N'                          MD058223
+     C           RTNCDE    IFNE '        '                                                  MD058223
+     C                     MOVE 'N'       WNEGIN                                            MD058223
+     C                     ELSE                                                             MD058223
+      * Isolate the first character of SVAL1 which = 'Y' or 'N'.                            MD058223
+     C                     MOVELSVAL1     WNEGIN  1                                         MD058223
+     C                     ENDIF                                                            MD058223
       *................................................................
       *
      C           EXINIT    TAG
@@ -687,16 +730,56 @@
       ** INTERETS DEBITEURS
       *
      C           TDINTN    IFGT 0
+     C           TDINTN    OREQ 0                                                           MD058223
+     C           CCAIC     ANDLT0                                                           MD058223
+     C           CSCCI     ANDNE*BLANKS                                                     MD058223
+     C           WNEGIN    ANDEQ'Y'                                                         MD058223
      C           CSGADI    ORNE 0
+     C           CSGADI    OREQ 0                                                           MD058223
+     C           CDAIC     ANDLT0                                                           MD058223
+     C           CSDCI     ANDNE*BLANKS                                                     MD058223
+     C           WNEGIN    ANDEQ'Y'                                                         MD058223
+      *                                                                                     MD058223
      C           CSGADI    IFLT 0
+     C           CSGADI    OREQ 0                                                           MD058223
+     C           CDAIC     ANDLT0                                                           MD058223
+     C           CSDCI     ANDNE*BLANKS                                                     MD058223
+     C           WNEGIN    ANDEQ'Y'                                                         MD058223
      C*****                SUB  CSGADI    Z13                                               AR649507
      C                     Z-SUBCSGADI    Z13                                               AR649507
+      *                                                                                     MD058223
+     C           CDAIC     IFLT 0                                                           MD058223
+     C           WNEGIN    ANDEQ'Y'                                                         MD058223
+     C           CSDCI     IFEQ 'Y'                                                         MD058223
+     C           CSDCI     OREQ 'I'                                                         MD058223
+     C           CSDCI     OREQ 'A'                                                         MD058223
+     C           CSDCI     OREQ 'L'                                                         MD058223
+     C                     SUB  CDAIC     Z13                                               MD058223
+     C                     ENDIF                                                            MD058223
+     C                     ENDIF                                                            MD058223
+      *                                                                                     MD058223
+     C           WNEGIN    IFEQ 'Y'                                                         MD058223
+     C                     MOVE Z13       DSICR                                             MD058223
+     C                     ELSE                                                             MD058223
      C                     MOVE Z13       DSICR
      C                     MOVE TDINTN    DSIDB
+     C                     ENDIF                                                            MD058223
+      *                                                                                     MD058223
      C                     ELSE
      C                     Z-ADDTDINTN    Z13
      C                     SUB  CSGACI    Z13
      C                     ADD  CSGADI    Z13
+      *                                                                                     MD058223
+     C           CCAIC     IFLT 0                                                           MD058223
+     C           WNEGIN    ANDEQ'Y'                                                         MD058223
+     C           CSCCI     IFEQ 'Y'                                                         MD058223
+     C           CSCCI     OREQ 'I'                                                         MD058223
+     C           CSCCI     OREQ 'A'                                                         MD058223
+     C           CSCCI     OREQ 'L'                                                         MD058223
+     C                     SUB  CCAIC     Z13                                               MD058223
+     C                     ENDIF                                                            MD058223
+     C                     ENDIF                                                            MD058223
+      *                                                                                     MD058223
      C                     MOVE Z13       DSIDB
      C                     ENDIF
      C                     SETON                       9997

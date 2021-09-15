@@ -12,15 +12,25 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CDL102  *CREATE    Date 01Jun21               *
+      *  Last Amend No. MD058708A          Date 09Sep21               *
+      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *                 CDL102  *CREATE    Date 01Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058708A - Base Rate Code changed via BC deal amendment     *
+      *              still not reflected on the report. Use BRTT from *
+      *              the extract file SDBJEXPD. Fix for printer over- *
+      *              flow is also added.                              *
+      *  MD058708 - SD001110P2 does not reflect BC specific changes   *
+      *             (base rate code and ARR parameters). Retrieve the *
+      *             ARR parameters to BLRT Extract File SDBJEXPD.     *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *                                                               *
       *****************************************************************
 
      FSD001110P2O    E             PRINTER OFLIND(*IN50)
+     F                                     INFDS(SPOOL1)                                   MD058708A
       ** Midas SD Compounding Rate History Details Report
 
      FDEALSC    IF   E           K DISK    INFSR(*PSSR)
@@ -52,6 +62,13 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long Data Structure
 
+      ** Data Structure for Backward-Looking Rate Loans                                     MD058708
+     D TransBLRT     E DS                  EXTNAME(SDBJEXPD)                                MD058708
+                                                                                            MD058708
+     D SPOOL1          DS                                                                  MD058708A
+     D  OFLINE               188    189B 0                                                 MD058708A
+     D  PRTLNE               367    368B 0                                                 MD058708A
+                                                                                           MD058708A
      D pDSSDY          S            200A
 
       ** Parameters for ZDATE2
@@ -82,6 +99,10 @@
       ** +--------------------------------------+
      D pReturnCode     S              7A
      D pOption         S              7A
+                                                                                            MD058708
+     D dealExists      S              1A                                                    MD058708
+     D DIFLNE          S              3  0                                                 MD058708A
+     D RQDLNE          S              3  0                                                 MD058708A
 
       ** Temporary DS for SDHSDRTD
 
@@ -137,11 +158,33 @@
       ** Start loop
       *
      C                   DOW       EndOfFile = False
+      *                                                                                     MD058708
+      ** Check if deal exists on Backward-Looking Rate Extract File                         MD058708
+      *                                                                                     MD058708
+     C                   EVAL      dealExists = 'N'                                         MD058708
+     C/exec SQL                                                                             MD058708
+     C+ select * into :transBLRT                                                            MD058708
+     C+ from SDBJEXPD                                                                       MD058708
+     C+ where                                                                               MD058708
+     C+     TRMODI = 'DL'                                                                   MD058708
+     C+ and TRTRAN = digits(:DLNO)                                                          MD058708
+     C/end-exec                                                                             MD058708
+     C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD058708
+     C                   EVAL      DBFILE = 'SDBJEXPD'                                      MD058708
+     C                   EVAL      DBKEY  = 'SQL ERROR'                                     MD058708
+     C                   EVAL      DBASE  = 003                                             MD058708
+     C                   EXSR      *PSSR                                                    MD058708
+     C                   ENDIF                                                              MD058708
+      *                                                                                     MD058708
+     C                   IF        SQLCODE = 0                                              MD058708
+     C                   EVAL      dealExists = 'Y'                                         MD058708
+     C                   ENDIF                                                              MD058708
       *
       ** Process Report Lines
       *
-     C     BLRT          IFEQ      'Y'
-     C     RECI          ANDEQ     'D'
+     C*****BLRT*         IFEQ      'Y'                                                      MD058708
+     C*****RECI*         ANDEQ     'D'                                                      MD058708
+     C                   IF        DealExists = 'Y'                                         MD058708
      C                   EXSR      SRPrint
      C                   ENDIF
       *
@@ -203,7 +246,9 @@
       *
      C                   EVAL      P1MTDT = ZADate
      C                   EVAL      P1CCY  = CCY
-     C                   EVAL      P1BRAT = BRTT
+     C**********         EVAL      P1BRAT = BRTT                                           MD058708A
+     C                   EVAL      P1BRAT = TRBRTT                                         MD058708A
+                                                                                           MD058708A
       ** Format amount
 
      C                   CALL      'AOCURRR0'
@@ -225,33 +270,47 @@
 
      C                   EVAL      P1RTSP = RTSP
      C                   EVAL      P1SPRD = *BLANKS
-     C                   EVAL      P1BADJ = BADJ
+     C**********         EVAL      P1BADJ = BADJ                                            MD058708
       *
-     C                   EVAL      P1RFRT = RFRR
-     C                   EVAL      P1LKBD = LBDY
-     C                   EVAL      P1LOUT = LODY
-     C                   EVAL      P1RTRO = RRDP
-     C                   EVAL      P1DBFA = DBAV
+     C**********         EVAL      P1RFRT = RFRR                                            MD058708
+     C**********         EVAL      P1LKBD = LBDY                                            MD058708
+     C**********         EVAL      P1LOUT = LODY                                            MD058708
+     C**********         EVAL      P1RTRO = RRDP                                            MD058708
+     C**********         EVAL      P1DBFA = DBAV                                            MD058708
+      *                                                                                     MD058708
+     C                   EVAL      P1BADJ = TRBADJ                                          MD058708
+     C                   EVAL      P1RFRT = TRRFRR                                          MD058708
+     C                   EVAL      P1LKBD = TRLBDY                                          MD058708
+     C                   EVAL      P1LOUT = TRLODY                                          MD058708
+     C                   EVAL      P1RTRO = TRRRDP                                          MD058708
+     C                   EVAL      P1DBFA = TRDBAV                                          MD058708
       *
-     C     DBAV          IFEQ      0
+     C*****DBAV*         IFEQ      0
+     C     TRDBAV        IFEQ      0
      C                   EVAL      P1AVDS = 'Zero'
      C                   ENDIF
-     C     DBAV          IFEQ      1
+     C*****DBAV*         IFEQ      1
+     C     TRDBAV        IFEQ      1
      C                   EVAL      P1AVDS = 'Actual/365'
      C                   ENDIF
-     C     DBAV          IFEQ      2
+     C*****DBAV*         IFEQ      2
+     C     TRDBAV        IFEQ      2
      C                   EVAL      P1AVDS = 'Actual/360'
      C                   ENDIF
-     C     DBAV          IFEQ      6
+     C*****DBAV*         IFEQ      6
+     C     TRDBAV        IFEQ      6
      C                   EVAL      P1AVDS = 'Actual/Actual'
      C                   ENDIF
       *
-     C                   EVAL      P1OBSP = OPSH
+     C**********         EVAL      P1OBSP = OPSH                                            MD058708
+     C                   EVAL      P1OBSP = TROPSH                                          MD058708
      C                   EVAL      P1RAKI = RTKN
-     C                   IF        FLOR = CFLR
+     C**********         IF        FLOR = CFLR                                              MD058708
+     C                   IF        TRFLOR = CFLR
      C                   EVAL      P1FLOR = *BLANKS
      C                   ELSE
-     C                   MOVE      FLOR          ARR
+     C**********         MOVE      FLOR          ARR                                        MD058708
+     C                   MOVE      TRFLOR        ARR
      C                   MOVE      ARR           ZFLD15
      C                   EVAL      ZDECS = 7
 
@@ -331,6 +390,15 @@
       *
      C                   EVAL      P1ENDT = ZADate
       *
+      ** Check that sufficient lines remain for the format                                 MD058708A
+      *                                                                                    MD058708A
+     C                   EVAL      RQDLNE = 22                                             MD058708A
+      *                                                                                    MD058708A
+     C                   EVAL      DIFLNE = OFLINE - PRTLNE                                MD058708A
+     C                   IF        DIFLNE <= RQDLNE                                        MD058708A
+     C                   WRITE     SD001110H1                                              MD058708A
+     C                   ENDIF                                                             MD058708A
+      *                                                                                    MD058708A
      C                   WRITE     SD001110D2
      C                   WRITE     SD001110H3
       *

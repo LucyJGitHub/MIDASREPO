@@ -41,7 +41,7 @@
       *  PKO001 - Zorba changes                                       *
       *  ERN054 - Agent message changes (Recompile)                   *
       *  DB0001 - Substring IBAN for search                           *
-	  *  EEE058 - Incoming STP idenifier is Elixir customer           *
+      *  EEE058 - Incoming STP idenifier is Elixir customer           *
       *                                                               *
       *****************************************************************
      F/EJECT

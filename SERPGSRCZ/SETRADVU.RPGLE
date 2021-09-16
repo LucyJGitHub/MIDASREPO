@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057753           Date 01Jul21               *
-      *  Prev Amend No. MD057789           Date 19May21               *
+      *  Last Amend No. MD058653           Date 16Sep21               *
+      *  Prev Amend No. MD057753           Date 01Jul21               *
+      *                 MD057789           Date 19May21               *
       *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
       *                 247524             Date 22May20               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058653 - Reversal of MD057789 fix                          *
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
       *           - When Associated Front Office ID is not blanks     *
@@ -389,7 +391,7 @@
      D TranInSett    E DS                  EXTNAME(SETRSTPD)
      D DDCLTY2       E                     EXTFLD(DDCLTY)
      D TranInChCm    E DS                  EXTNAME(SETRCCPD)
-     D  TranInChC2             1    216                                                     MD057789
+     D**TranInChC2             1    216                                            MD057789 MD058653
      D TranInSwfA    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(A)
      D TranInSwfB    E DS                  EXTNAME(SETRSWPD)
@@ -3271,7 +3273,8 @@
      C                             and DDAUTS = *blanks)                                    MD056627
      C**********                   and TranInChCm = *blanks                        BUG10021 MD049746
      C**********                   or TranInChCm = *blanks                         MD049746 MD057789
-     C                             OR TranInChC2 = *BLANKS                                  MD057789
+     C**********                   OR TranInChC2 = *BLANKS                         MD057789 MD058653
+     C                             or TranInChCm = *blanks                                  MD058653
                                                                                              BUG8690
      C                   IF        WDDCLTY2  <> *BLANKS                                     BUG11529
      C                   EVAL      DDCLTY2 = WDDCLTY2                                       BUG11529
@@ -4013,7 +4016,8 @@
 
       ** CHARGE/COMMISSION DEFAULTING
      C**********         IF        TranInChCm = *BLANKS                            MD049746 MD057789
-     C                   IF        TranInChC2 = *BLANKS                                     MD057789
+     C**********         IF        TranInChC2 = *BLANKS                            MD057789 MD058653
+     C                   IF        TranInChCm = *BLANKS                                     MD058653
 
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'

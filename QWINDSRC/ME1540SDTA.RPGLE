@@ -6,25 +6,22 @@
       *                                                               *
       *  Last Amend No. MD031937           Date 13Jan15               *
       *  Prev Amend No. AR856737           Date 13Sep11               *
-      *                 EEE065   *CREATE   Date 06Apr2004             *      
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE058  *CREATE    Date 26Mar2003             *
+      * Midas Release 4 --------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
       *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
-      *  EEE065 - FT Payment Routing                                  *      
+      *  ESL038 - ING STP Development                                 *
+      *  EEE058 - Incoming STP                                        *
       *                                                               *
       *****************************************************************
-      *
-      *  Piece of source included by /COPY statement and used to
-      *        pass data to the window program
-      *
-     IDATA        DS                           1024
-      *                                                                                       EEE065
-     I                                        1   6 #1NWRK                                    EEE065
-     I                                        7   9 #1MTPY                                    EEE065
-     I                                       10  29 #1SNDK                                    EEE065      
-      *
+     D*
+     D DATA            DS          1024
+     D  #1MTPY                 1      3
+     D  #1MSET                 4      6
       *****************************************************************
-      * End of /COPY XXXXXXX                                          *
+      * End of /COPY ME1540WDTA                                       *
       *****************************************************************

@@ -29,8 +29,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 27Nov19               *
-      *  Prev Amend No. MD051744           Date 19Nov18               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. RRSTP1             Date 27Jul11               *
+      *                 MD041126           Date 27Nov19               *
+      *                 MD051744           Date 19Nov18               *
       *                 MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
@@ -85,6 +87,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *           - Applied RRSTP1 fix to MS6110M                     *
+      *  RRSTP1 - STP Project                                         *
+      *           Add type IN3 (pseudo MTI03) in TABTYP to extract    *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD054674.                             *
       *  MD051744 - Added system value 'UseSysPrefixInHeader' to check*
@@ -224,8 +230,10 @@
      D*tabcas**********S              1    dim(20) alt(tabtyp)           184427 CRE008
      D*tabtyp**********S              3    dim(21) ctdata perrcd(1)                    CRE008 CSW212
      D*tabcas**********S              1    dim(21) alt(tabtyp)                         CRE008 CSW212
-     D tabtyp          S              3    dim(23) ctdata perrcd(1)                           CSW212
-     D tabcas          S              1    dim(23) alt(tabtyp)                                CSW212
+     D*tabtyp*****     S              3    dim(23) ctdata perrcd(1)                    CSW212 RRSTP1
+     D*tabcas*****     S              1    dim(23) alt(tabtyp)                         CSW212 RRSTP1
+     D tabtyp          S              3    dim(24) ctdata perrcd(1)                           RRSTP1
+     D tabcas          S              1    dim(24) alt(tabtyp)                                RRSTP1
       ** Message type specific processes
       *
      D tabty2          S              3    dim(1) ctdata perrcd(1)                            CSW212
@@ -734,6 +742,7 @@
 
       ** Send message
      C**********         Z-ADD     MQPUT         CID                                        MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C**********         CALL      'QMQM'                                                   MD041126
      C**********         PARM                    CID               9 0                      MD041126
      C**********         PARM                    HCONN             9 0                      MD041126
@@ -1507,6 +1516,8 @@
      C     w@mtpy        andge     '100'
      C     w@mtpy        andle     '999'
      C     w@96n         andne     '96'
+     C     *in60         oreq      *off                                                      RRSTP1
+     C     w@mtpy        andeq     'IN3'                                                     RRSTP1
       *
       ** Set up the MOR date from the incoming date
      C                   move      MODE          w@mord
@@ -2973,12 +2984,14 @@
      C*                                                                         184427
      C** tabtyp add MT340, MT341, MT360, MT361 and MT362.                       184427
      C** tabtyp add MT103                                                       CRE008
+     C** tabtyp add MTIN3                                                       RRSTP1
       /COPY MSCPYSRC,SRERRC
 **CTDATA cpy@
 (c) Finastra International Limited 2001
 **CTDATA tabtyp
 100A
 103A
+IN3A
 200A
 201B
 202A

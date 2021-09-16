@@ -14,8 +14,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD058751           Date 03Sep21               *
-      *  Prev Amend No. AR1068690          Date 14Dec12               *
+      *  Last Amend No. MD058792           Date 15Sep21               *
+      *  Prev Amend No. MD058791           Date 15Sep21               *
+      *                 MD058751           Date 03Sep21               *
+      *                 AR1068690          Date 14Dec12               *
       *                 260897             Date 19Oct12               *
       *                 244144             Date 19Oct12               *
       *                 UUC105             Date 19Oct20               *
@@ -167,6 +169,13 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058792 - STPG not printed due to incorrect hook placement. *
+      *             Replace hook GL042OOOP7 with UUC102_008.          *
+      *             Replace hook GL042OOOP9 with UUC102_009.          *
+      *             Replace hook GL042OOO10 with UUC102_010.          *
+      *             Replace hook GL042OOO11 with UUC102_011.          *
+      *  MD058791 - '/' statement page separator is not printed.      *
+      *             Amended hook GLH00439.                            *
       *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
       *           CAR UUC103. Alphanumeric batch numbers not checked  *
       *           correctly.                                          *
@@ -6442,6 +6451,7 @@
 1752 O                       RUNA                87
      O/COPY WNCPYSRC,GL0420O055
 1753 O                       STPA          3    108
+     O/COPY WNCPYSRC,UUC102_008
      O          E    62 84 05                 11                                              220877
      O                       RIBAN               60                                           220877
      O*                                                                   S01408
@@ -7033,6 +7043,7 @@
 1930 O                       RUNA                85
      O/COPY WNCPYSRC,GL0420O065
 1931 O                       STPA          3     98
+     O/COPY WNCPYSRC,UUC102_009
      O          E    66 84 05                 11                                              220877
      O                       RIBAN               70                                           220877
      O** Core hook for externalisation.                                   S01408
@@ -7291,6 +7302,7 @@
 2015 O                                          102 'PAGE'
      O/COPY WNCPYSRC,GL0420O066
 2016 O                       STPA          3    108
+     O/COPY WNCPYSRC,UUC102_010
      O          E    80 84 05                 11                                              220877
      O                       RIBAN               60                                           220877
      O** Core hook for externalisation.                                   S01408
@@ -7636,6 +7648,7 @@
 2119 O                       RUNA                87
      O/COPY WNCPYSRC,GL0420O067
 2120 O                       STPA          3    107
+     O/COPY WNCPYSRC,UUC102_011
      O          E    87 84 05                 11                                              220877
      O                       RIBAN               60                                           220877
      O** Core hook for externalisation.                                   S01408

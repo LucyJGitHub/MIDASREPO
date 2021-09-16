@@ -23,7 +23,10 @@
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
       *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD058404           Date 06Jul21               *
+      *  Prev Amend No. MD058513           Date 09Sep21               *
+      *                 MD058734           Date 03Sep21               *
+      *                 MD058623           Date 23Aug21               *
+      *                 MD058404           Date 06Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD057871           Date 08Apr21               *
       *                 MD057930           Date 26Apr21               *
@@ -38,6 +41,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CIR020 - LIBOR Deregulation - IRS                            *
+      *  MD058513 - Rate known flag not saved                         *
+      *  MD058734 - Default value or Day Basis Average based          *
+      *             from Calculation Method 3,4 and 5.                *
+      *  MD058623 - Added validation for API DEAM                     *
       *  MD058404 - Replace the event codes used by CDL102 with new   *
       *             event codes.                                      *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -784,7 +791,9 @@
                                                                                               CLE172
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   EVAL      WNumBADJ = DLBADJ                                          CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL                                                                CLE172
      C                   ENDIF                                                                CLE172
@@ -1084,7 +1093,9 @@
                                                                                               CLE172
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   MOVE      DLLBDY        WDAY                                         CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL                                                                CLE172
 
@@ -1205,7 +1216,9 @@
                                                                                               CLE172
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   MOVE      DLLODY        WDAY                                         CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL                                                                CLE172
 
@@ -1495,7 +1508,9 @@
                                                                                               CDL102
       ** Default value from deal details                                                      CDL102
      C                   WHEN      ApiName = 'DEAM'                                           CDL102
+     C                   IF        DDBLRT = 'Y'                                             MD058623
      C                   MOVE      DLRRDP        WDAY                                         CDL102
+     C                   ENDIF                                                              MD058623
                                                                                               CDL102
      C                   ENDSL
 
@@ -1684,7 +1699,14 @@
       ** default from the Interest Calculation Basis (ICBS)                                   CLE172
       ** Map ICBS 3 & 5 to Act/360, 4 to Act/365                                              CLE172
      C                   IF        DDDBAVOK <> 'N'                                            CLE172
-     C                   IF        ApiName = 'CLIP' and                                       CLE172
+     C                   IF        (ApiName = 'CLIP' or                              CLE172 MD058734
+     C                             ApiName = 'FUND' or                                      MD058734
+     C**********                   ApiName = 'LDNI') and                             MD058734 CIR020
+     C                             ApiName = 'CIR1'  or                                       CIR020
+     C                             ApiName = 'CIR2'  or                                       CIR020
+     C                             ApiName = 'SIR1'  or                                       CIR020
+     C                             ApiName = 'SIR2'  or                                       CIR020
+     C                             ApiName = 'CACF') and                                      CIR020
      C                             WDBAV = 0                                                  CLE172
                                                                                               CLE172
      C                   SELECT                                                               CLE172
@@ -1694,10 +1716,29 @@
      C                   WHEN      TransICBS = 4                                              CLE172
      C**********         Z-ADD     3             WDBAV                               CLE172 MD057930
      C                   Z-ADD     1             WDBAV                                      MD057930
-     C                   OTHER                                                                CLE172
-     C                   Z-ADD     TransICBS     WDBAV                                        CLE172
+     C**********         OTHER                                                         CLE172 CIR020
+     C**********         Z-ADD     TransICBS     WDBAV                                 CLE172 CIR020
      C                   ENDSL                                                                CLE172
                                                                                               CLE172
+      ** Zero value in DBAV field at transaction level is not valid                           CIR020
+     C                   IF        WDBAV = 0                                                  CIR020
+     C                   EVAL      DDDBAVOK = 'N'                                             CIR020
+     C                   EVAL      Idx = Idx + 1                                              CIR020
+     C                   SELECT                                                               CIR020
+     C                   WHEN      ApiName = 'LERI'                                           CLE172
+     C                   EVAL      FldNamXAr(Idx) = 'DDNDBAV'                                 CLE172
+     C                   WHEN      Apiname = 'CIR1' OR                                        CIR020
+     C                             Apiname = 'SIR1'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'SUDBAV'                                  CIR020
+     C                   WHEN      Apiname = 'CIR2' OR                                        CIR020
+     C                             Apiname = 'SIR2'                                           CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'STDBAV'                                  CIR020
+     C                   OTHER                                                                CIR020
+     C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'                                  CIR020
+     C                   ENDSL                                                                CIR020
+     C                   EVAL      MsgIdXAr(Idx) = '5049417'                                  CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
 
@@ -1754,6 +1795,8 @@
      C                             TransCHTP = 'I'                                            CLE172
      C                   EVAL      DDRTKN = 'N'                                               CLE172
      C                   EVAL      VRTKN = 'N'                                                CLE172
+     C                   ELSE                                                               MD058513
+     C                   EVAL      VRTKN = DDRTKN                                           MD058513
      C                   ENDIF                                                                CLE172
                                                                                               CLE172
      C                   ENDSR                                                                CLE172

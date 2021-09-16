@@ -2200,6 +2200,7 @@
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
+     C                   PARM                    D1BLRT                                       CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2484,6 +2485,8 @@
      C**********         PARM                    SUCUCY                            BUG11457 MD033488
      C                   PARM                    RXORED                                     MD051346
      C                   PARM                    SACCD                                      MD051346
+     C                   PARM                    D1BLRT                                       CIR020
+     C                   PARM                    D1CALM                                       CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -3190,6 +3193,7 @@
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
+     C                   PARM                    D2BLRT                                       CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -3482,6 +3486,8 @@
      C**********         PARM                    STCUCY                            BUG11457 MD033488
      C                   PARM                    RXORED                                     MD051346
      C                   PARM                    SACCD                                      MD051346
+     C                   PARM                    D2BLRT                                       CIR020
+     C                   PARM                    D2CALM                                       CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -4126,7 +4132,7 @@
       *                                                                                       CIR020
      C                   MOVEL     SDTYP         TransTP                                      CIR020
      C                   CALLB     'ZAVBLRTE'                                                 CIR020
-     C                   PARM      'CIRS'        ApiName           4                          CIR020
+     C                   PARM      'CIR1'        ApiName           4                          CIR020
      C                   PARM                    DDDLNO            6                          CIR020
      C                   PARM                    TransTP           2                          CIR020
      C                   PARM                    SUCUCY                                       CIR020
@@ -4134,14 +4140,15 @@
      C                   PARM                    SUICBS                                       CIR020
      C                   PARM                    SACCD                                        CIR020
      C                   PARM      TranScnBlrt1  TempInpDS       200                          CIR020
-     C                   PARM      *ZEROS        Idx                                          CIR020
-     C                   PARM                    FldNamXAr                                    CIR020
-     C                   PARM                    MsgIDXAr                                     CIR020
+     C                   PARM                    Idx                                          CIR020
+     C                   PARM                    FldNameArr                                   CIR020
+     C                   PARM                    MsgIDArr                                     CIR020
      C                   PARM                    TempOutDS       200                          CIR020
      C                   PARM      *BLANKS       RetCodeOut                                   CIR020
       *                                                                                       CIR020
      C     RetCodeOut    IFNE      'Error'                                                    CIR020
                                                                                               CIR020
+     C                   MOVEL     TempInpDS     TranScnBlrt1                                 CIR020
      C                   MOVEL     TempOutDS     CIRSValBlrt1                                 CIR020
      C                   MOVEL     W1LBLRT       RXUBLR                                       CIR020
      C                   MOVEL     W1LRFRR       RXURFR                                       CIR020
@@ -4176,7 +4183,7 @@
                                                                                               CIR020
       ** Initialise Backward-Looking Rate field to N                                          CIR020
       *                                                                                       CIR020
-     C                   MOVEL     'N'           RXUBLR                                       CIR020
+     C                   MOVEL     'N'           RXTBLR                                       CIR020
                                                                                               CIR020
      C                   CALLB     'AOBSRTR0'                                                 CIR020
      C                   PARM      *BLANK        PRTCD                                        CIR020
@@ -4214,7 +4221,7 @@
       *                                                                                       CIR020
      C                   MOVEL     SDTYP         TransTP                                      CIR020
      C                   CALLB     'ZAVBLRTE'                                                 CIR020
-     C                   PARM      'CIRS'        ApiName           4                          CIR020
+     C                   PARM      'CIR2'        ApiName           4                          CIR020
      C                   PARM                    SDLNO             6                          CIR020
      C                   PARM                    TransTP           2                          CIR020
      C                   PARM                    STCUCY                                       CIR020
@@ -4222,14 +4229,15 @@
      C                   PARM                    STICBS                                       CIR020
      C                   PARM                    SACCD                                        CIR020
      C                   PARM      TranScnBlrt2  TempInpDS       200                          CIR020
-     C                   PARM      *ZEROS        Idx                                          CIR020
-     C                   PARM                    FldNamXAr                                    CIR020
-     C                   PARM                    MsgIDXAr                                     CIR020
+     C                   PARM                    Idx                                          CIR020
+     C                   PARM                    FldNameArr                                   CIR020
+     C                   PARM                    MsgIDArr                                     CIR020
      C                   PARM                    TempOutDS       200                          CIR020
      C                   PARM      *BLANKS       RetCodeOut                                   CIR020
       *                                                                                       CIR020
      C     RetCodeOut    IFNE      'Error'                                                    CIR020
                                                                                               CIR020
+     C                   MOVEL     TempInpDS     TranScnBlrt2                                 CIR020
      C                   MOVEL     TempOutDS     CIRSValBlrt2                                 CIR020
      C                   MOVEL     W2LBLRT       RXTBLR                                       CIR020
      C                   MOVEL     W2LRFRR       RXTRFR                                       CIR020

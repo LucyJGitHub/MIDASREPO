@@ -1702,6 +1702,7 @@
      C                   IF        (ApiName = 'CLIP' or                              CLE172 MD058734
      C                             ApiName = 'FUND' or                                      MD058734
      C**********                   ApiName = 'LDNI') and                             MD058734 CIR020
+     C                             ApiName = 'LDNI'  or                                       CIR020
      C                             ApiName = 'CIR1'  or                                       CIR020
      C                             ApiName = 'CIR2'  or                                       CIR020
      C                             ApiName = 'SIR1'  or                                       CIR020

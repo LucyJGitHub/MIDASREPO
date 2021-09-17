@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058547           Date 10Aug21               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD055010           Date 04Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -59,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058547 - User cannot amend a call notice deposit taken     *
+      *             because of error 45049507. Add DDACTN on call to  *
+      *             MMVACTINTR.                                       *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -1819,6 +1823,7 @@
      C                   PARM                    IKINTR                                     BUG10810
      C                   PARM                    TranScnBlrt                                  CDL102
      C                   PARM                    CDL102            1                          CDL102
+     C                   PARM                    DDACTN                                     MD058547
                                                                                             BUG10810
      C                   IF        MSG1 <> *Blanks                                          BUG10810
      C                   EVAL      Idx = Idx + 1                                            BUG10810

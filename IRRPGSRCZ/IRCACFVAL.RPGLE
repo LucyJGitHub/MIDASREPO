@@ -3317,7 +3317,7 @@
      C                   MOVEL     'N'           OKAVRM                                       CIR020
      C                   ADD       1             Idx                                          CIR020
      C                   MOVEL     '#0AVRM'      FldNamXAr(Idx)                               CIR020
-     C                   MOVEL     '5049458'     MsgIDXAr(Idx)                                CIR020
+     C                   MOVEL     '5049518'     MsgIDXAr(Idx)                                CIR020
      C                   MOVEL     'Error'       RetCodeOut                                   CIR020
      C                   ENDIF                                                                CIR020
                                                                                               CIR020

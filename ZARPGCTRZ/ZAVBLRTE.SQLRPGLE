@@ -1736,7 +1736,7 @@
      C                   OTHER                                                                CIR020
      C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'                                  CIR020
      C                   ENDSL                                                                CIR020
-     C                   EVAL      MsgIdXAr(Idx) = '5049417'                                  CIR020
+     C                   EVAL      MsgIdXAr(Idx) = '5049517'                                  CIR020
      C                   ENDIF                                                                CIR020
                                                                                               CIR020
      C                   ENDIF                                                                CLE172

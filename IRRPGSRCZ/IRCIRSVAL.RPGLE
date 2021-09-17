@@ -3434,15 +3434,6 @@
      C                   PARM                    StICFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
-      *                                                                                       CIR020
-      ** Validate backward-looking rate fields if CIR020 is ON (Theirs)                       CIR020
-      *                                                                                       CIR020
-     C                   IF        CIR020 = 'Y' and                                           CIR020
-     C                             StBrttOK  <> 'N' and                                       CIR020
-     C                             StIcbsOK  <> 'N'                                           CIR020
-     C                   EXSR      SRTBLRT                                                    CIR020
-     C                   ENDIF                                                                CIR020
-                                                                                              CIR020
       /COPY WNCPYSRC,IRCIRSV089                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------*

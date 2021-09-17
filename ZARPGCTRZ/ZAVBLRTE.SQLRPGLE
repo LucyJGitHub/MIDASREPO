@@ -41,7 +41,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CIR020 - LIBOR Deregulation - IRS                            *
-      *  MD058513 - Rate known flag not saved                         *
+      *  MD058513 - Rate known flag not saved.                        *
       *  MD058734 - Default value or Day Basis Average based          *
       *             from Calculation Method 3,4 and 5.                *
       *  MD058623 - Added validation for API DEAM                     *

@@ -11,5 +11,5 @@
       *  MD058791 - STPG not printed due to incorrect hook placement. *
       *                                                               *
       *****************************************************************
-     O               KP                         110 '/'                                     MD058792
-     O               KP      STPG          3    113                                         MD058792
+     O               KP                         110 '/'                                     MD058791
+     O               KP      STPG          3    113                                         MD058791

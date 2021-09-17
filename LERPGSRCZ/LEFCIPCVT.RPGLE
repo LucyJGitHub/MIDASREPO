@@ -84,7 +84,7 @@
       *  BUG3723- Missing Rule of 78s (CLE028) change in the Lending  *
       *           APIs as description in the amendment history.       *
       *  CGP001 - Credit agreement exchange rate truncated if rate    *
-      *           is greater than 999                                 *
+      *           is greater than 999.                                *
       *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
       *  CAP073 - Conversion of MN inputs into modular structure to   *
       *           use as APIs. Facility input Transaction Details     *

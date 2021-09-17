@@ -4108,12 +4108,12 @@
       *                                                                                       CIR020
      C     D1BLRT        IFEQ      'Y'                                                        CIR020
      C     SUBRTT        IFEQ      *BLANKS                                                    CIR020
-     C     SUBCXR        ORNE      *BLANKS                                                    CIR020
+     C     SUBRTT        ORNE      *BLANKS                                                    CIR020
      C     BABLRT        ANDNE     'Y'                                                        CIR020
      C                   MOVEL     'N'           OKUBLRT                                      CIR020
      C                   ADD       1             Idx                                          CIR020
-     C                   MOVEL     'D1BLRT'      FldNamXAr(Idx)                               CIR020
-     C                   MOVEL     '5049505'     MsgIDXAr(Idx)                                CIR020
+     C                   EVAL      FldNameArr(Idx)  = 'D1BLRT'                                CIR020
+     C                   MOVEL     '5049505'     MsgIDArr(Idx)                                CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
@@ -4197,12 +4197,12 @@
       *                                                                                       CIR020
      C     D2BLRT        IFEQ      'Y'                                                        CIR020
      C     STBRTT        IFEQ      *BLANKS                                                    CIR020
-     C     STBCXR        ORNE      *BLANKS                                                    CIR020
+     C     STBRTT        ORNE      *BLANKS                                                    CIR020
      C     BABLRT        ANDNE     'Y'                                                        CIR020
      C                   MOVEL     'N'           OKTBLRT                                      CIR020
      C                   ADD       1             Idx                                          CIR020
-     C                   MOVEL     'D2BLRT'      FldNamXAr(Idx)                               CIR020
-     C                   MOVEL     '5049505'     MsgIDXAr(Idx)                                CIR020
+     C                   EVAL      FldNameArr(Idx)  = 'D2BLRT'                                CIR020
+     C                   MOVEL     '5049505'     MsgIDArr(Idx)                                CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020

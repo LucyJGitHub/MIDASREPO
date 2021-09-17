@@ -11,11 +11,13 @@
 --    *        Replace all gg with the MMM system's correct           *
 --    *        global prefix before executing on the command line.    *
 --    *                                                               *
---    *   Last Amend No. MD057187A            Date 04Feb21            *
---    *   Prev Amend No. MD057187             Date 11Nov20            *
+--    *   Last Amend No. MD058288             Date 28Jul21            *
+--    *   Prev Amend No. MD057187A            Date 04Feb21            *
+--    *                  MD057187             Date 11Nov20            *
 --    *                  AR1084152 *Create    Date 31Jan13            *
 --    *                                                               *
 --    *---------------------------------------------------------------*
+--    *  MD058288 - NSTP99 add CSM_AUDITS.                            *
 --    *  MD057187A - Patch NOR5K0004 installation issues (Reopen)     *
 --    *  MD057187 - Patch NOR5K0004 installation issues               *
 --    *  AR1084152 - Automate MPM dbase and archiving during CoB      *
@@ -209,6 +211,25 @@ Insert Into
       Signal SqlState '01001'
              Set Message_Text = #SignalString;
  
+ /* Start MD058288 - NSTP99 add CSM_AUDITS */
+Insert Into ggARC4/Csm_Audits
+     Select *
+         From ggMPM4/Csm_Audits a
+     Where Exists
+     (
+         Select
+           MessageId
+         From ggMPM4/ArchiveKey b
+         Where
+              a.MessageId = b.MessageId
+     );
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString = #Recs_Count ;
+        Set #SignalString =
+        #Recs_Count || ' rows archived from ggMPM4/Csm_Audits';
+        Signal SqlState '01001'
+               Set Message_Text = #SignalString;
+ /* End MD058288 - NSTP99 add CSM_AUDITS */
  
 Insert Into
     ggARC4/MessageNotes
@@ -230,6 +251,26 @@ Insert Into
       Signal SqlState '01001'
              Set Message_Text = #SignalString;
  
+ /* Start MD058288 - NSTP99 add CSM_AUDITS */
+Delete From
+    ggMPM4/Csm_Audits a
+Where Exists
+(
+    Select
+        MessageId
+    From
+        ggMPM4/ArchiveKey b
+    Where
+        a.MessageId = b.MessageId
+);
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows deleted from ggMPM4/Csm_Audits';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ /* End MD058288 - NSTP99 add CSM_AUDITS */
+
 /* Delete all the data that has just been moved into the Archive library */
 Delete From
     ggMPM4/Audits a

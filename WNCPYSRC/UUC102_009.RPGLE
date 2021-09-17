@@ -4,11 +4,11 @@
       *                                                               *
       *  UUC102_009 - Midas GL Balance Statements                     *
       *                                                               *
-      *  Last Amend No. MD058792 *CREATE   Date 15Sep21               *
+      *  Last Amend No. MD058791 *CREATE   Date 15Sep21               *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD058792 - STPG not printed due to incorrect hook placement. *
+      *  MD058791 - STPG not printed due to incorrect hook placement. *
       *                                                               *
       *****************************************************************
      O               KP                         110 '/'                                     MD058792

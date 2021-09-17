@@ -14,9 +14,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD058792           Date 15Sep21               *
-      *  Prev Amend No. MD058791           Date 15Sep21               *
-      *                 MD058751           Date 03Sep21               *
+      *  Last Amend No. MD058791           Date 15Sep21               *
+      *  Prev Amend No. MD058751           Date 03Sep21               *
       *                 AR1068690          Date 14Dec12               *
       *                 260897             Date 19Oct12               *
       *                 244144             Date 19Oct12               *
@@ -169,12 +168,12 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
-      *  MD058792 - STPG not printed due to incorrect hook placement. *
+      *  MD058791 - STPG not printed due to incorrect hook placement. *
       *             Replace hook GL042OOOP7 with UUC102_008.          *
       *             Replace hook GL042OOOP9 with UUC102_009.          *
       *             Replace hook GL042OOO10 with UUC102_010.          *
       *             Replace hook GL042OOO11 with UUC102_011.          *
-      *  MD058791 - '/' statement page separator is not printed.      *
+      *           - '/' statement page separator is not printed.      *
       *             Amended hook GLH00439.                            *
       *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
       *           CAR UUC103. Alphanumeric batch numbers not checked  *

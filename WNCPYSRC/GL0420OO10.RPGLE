@@ -4,12 +4,12 @@
       *                                                               *
       *  GL0420OO10 - Midas GL Balance Statements                     *
       *                                                               *
-      *  Last Amend No. MD058792           Date 15Sep21               *
+      *  Last Amend No. MD058791           Date 15Sep21               *
       *  Prev Amend No. UUC102 *CREATE     Date 16Oct20               *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD058792 - STPG not printed due to incorrect hook placement. *
+      *  MD058791 - STPG not printed due to incorrect hook placement. *
       *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
       *           UUC063 - Balance Statement Enhancement              *
       *                                                               *

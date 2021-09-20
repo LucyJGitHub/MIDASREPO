@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. AR994776           Date 04Apr19               *
+      *  Last Amend No. CAP240             Date 23Jun21               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 AR994776           Date 04Apr19               *
       *                 MD054906           Date 15Jan20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP240 - SD Non-account holder JAVA (NAHL)                   *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -1854,6 +1856,26 @@
      C                   PARM                    MsgFArray                                    CAP212
      C                   PARM                    APIRetC                                      CAP212
                                                                                               CAP212
+      * SD NAHL                                                                               CAP240
+                                                                                              CAP240
+     C     TransTYPE     WHENEQ    'NAHL'                                                     CAP240
+                                                                                              CAP240
+     C                   MOVEL     TransID       DDNAHO_In                                    CAP240
+                                                                                              CAP240
+     C                   CALL      'SDNAHLR'                                                  CAP240
+     C                   PARM                    AuthComp                                     CAP240
+     C                   PARM                    FwdBck                                       CAP240
+     C                   PARM                    DDNAHO_In        10                          CAP240
+     C                   PARM                    Buffer9999                                   CAP240
+     C                   PARM                    FldNameArr                                   CAP240
+     C                   PARM                    MsgIDArr                                     CAP240
+     C                   PARM                    MsgDtaArr                                    CAP240
+     C                   PARM                    MsgFArray                                    CAP240
+     C                   PARM                    APIRetC                                      CAP240
+                                                                                              CAP240
+     C                   MOVEL     Buffer9999    Buffer                                       CAP240
+     C                   MOVE      Buffer9999    Buffer2                                      CAP240
+
       * If unknown API requested, make sure this is reported back
      C                   OTHER
      C                   EXSR      *PSSR

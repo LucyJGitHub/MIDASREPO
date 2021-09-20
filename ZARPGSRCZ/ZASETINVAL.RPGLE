@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052922           Date 03Mar19               *
-      *  Prev Amend No. MD022945           Date 18Oct13               *
+      *  Last Amend No. CSW221             Date 05Apr21               *
+      *  Prev Amend No. MD052922           Date 03Mar19               *
+      *                 MD022945           Date 18Oct13               *
       *                 MD051877A          Date 02Oct18               *
       *                 MD051877           Date 22Sep18               *
       *                 MD051932           Date 22Sep18               *
@@ -142,6 +143,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW221   - SWIFT Changes 2021                                *
       *  MD052922 - Settlement Payment Customer details blank on WIP  *
       *             during dummy amend and reverse (SETL API).        *
       *  MD022945 - Incorrect message shown for /SRCE/ validation.    *
@@ -852,6 +854,13 @@
      D WRecPMRT        S                   LIKE(A6PMRT)                                       CMG003
                                                                                               CMG003
      D CSW214          S              1A                                                      CSW214
+      *                                                                                       CSW221
+      ** SWIFT 2021 Paremeters                                                                CSW221
+     D CSW221          S              1A                                                      CSW221
+     D PSWIFT          S              6A                                                      CSW221
+      *                                                                                       CSW221
+      ** Return Code                                                                          CSW221
+     D PMReturnCode    S              7A                                                      CSW221
      D/COPY WNCPYSRC,ZASETNVD03
       /EJECT
      C*******************************************************************
@@ -7696,8 +7705,11 @@
      C     DDAGTY        ANDNE     'ISDA'                                                     CSW212
      C     DDAGTY        ANDNE     'OTHER'                                                    CSW212
      C     DDAGTY        ANDNE     'ISDACN'                                                   CSW214
+     C     DDAGTY        ANDNE     'ISDACS'                                                   CSW221
      C     DDAGTY        OREQ      'ISDACN'                                                   CSW214
      C     CSW214        ANDEQ     'N'                                                        CSW214
+     C     DDAGTY        OREQ      'ISDACS'                                                   CSW221
+     C     CSW221        ANDEQ     'N'                                                        CSW221
      C                   ADD       1             Idx                                          CSW212
      C                   EVAL      FldNameArr(Idx) = 'DDAGTY'                                 CSW212
      C                   EVAL      MsgIDArr(Idx) = '5045748'                                  CSW212
@@ -9697,6 +9709,20 @@
      C                   EVAL      CSW214 = 'N'                                               CSW214
      C                   ENDIF                                                                CSW214
       *                                                                                       CSW214
+      *                                                                                       CSW214
+      *                                                                                       CSW221
+      ** Check if SWIFT2021 is enabled                                                        CSW221
+      *                                                                                       CSW221
+     C                   EVAL      CSW221 = 'N'                                               CSW221
+     C                   CALL      'SWIFTACTV'                                                CSW221
+     C                   PARM      'CSW221'      PSWIFT                                       CSW221
+     C                   PARM      *BLANKS       PMReturnCode                                 CSW221
+      *                                                                                       CSW221
+     C                   IF        PMReturnCode = 'CSWACTV'                                   CSW221
+     C                   EVAL      CSW221 = 'Y'                                               CSW221
+     C                   ELSE                                                                 CSW221
+     C                   EVAL      CSW221 = 'N'                                               CSW221
+     C                   ENDIF                                                                CSW221
      C/COPY WNCPYSRC,ZASETINV21                                                               CUT009
       *                                                                                       CLE168
       ** Access SAR details file                                                              CLE168

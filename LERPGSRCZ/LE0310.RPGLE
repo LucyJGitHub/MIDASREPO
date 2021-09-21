@@ -18,7 +18,7 @@
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD034915           Date 26Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -5027,13 +5027,13 @@ STOP  *                                                                   CLE004
      O                                           97 'OBSERVATION PERIOD'                      CLE172
      O                                          103 ' SHIFT'                                  CLE172
      O                       ROPSH              113                                           CLE172
-     O          D    30    21               1                                                CLE172
+     O          D    30    21               1                                                 CLE172
      O                                           24 'RATE ROUNDING DECML'                     CLE172
      O                                           31 'PLACES'                                  CLE172
      O                       RRRDP               37                                           CLE172
      O                                           60 'DAY BASIS FOR AVERAGE'                   CLE172
      O                       RDBAV              113                                           CLE172
-     O          D    30    21               1                                                CLE172
+     O          D    30    21               1                                                 CLE172
      O                                           16 'RATES KNOWN'                             CLE172
      O                       RTKN                37                                           CLE172
       *                                                                                       CLE172

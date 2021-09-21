@@ -178,11 +178,11 @@
      C                   EVAL      thisSQL4 = 'Delete from SDHSDRTD where +                   CIR020
      C                              CMODID = ''IR'' AND CTRNID not in +                       CIR020
      C                              (select DLNO from DEALSDG) AND +                          CIR020
-     C                              CTRNID not in (select DLNO from DLCHISPD)'                CIR020
+     C                              CTRNID not in (select DLNO from DLGHISPD)'                CIR020
      C                   EVAL      thisSQL5 = 'Delete from SDARRLOGTD where +                 CIR020
      C                              SJMODI = ''IR'' AND SJTREF not in +                       CIR020
      C                              (select DLNO from DEALSDG) AND +                          CIR020
-     C                              SJTREF not in (select DLNO from DLCHISPD)'                CIR020
+     C                              SJTREF not in (select DLNO from DLGHISPD)'                CIR020
       *                                                                                       CIR020
      C/EXEC SQL                                                                               CIR020
      C+ EXECUTE IMMEDIATE :thisSQL4                                                           CIR020

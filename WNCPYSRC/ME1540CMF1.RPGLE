@@ -1,0 +1,37 @@
+      *---------------------------------------------------------------*                      ERZ093
+      *   Last Amend No. MD031937           Date 13Jan15              *                      ERZ093
+      *   Prev Amend No. AR856737           Date 13Sep11              *                      ERZ093
+      *                  ERZ093   *CREATE   Date 01Oct2004            *                      ERZ093
+      *---------------------------------------------------------------*                      ERZ093
+      *                                                               *                      ERZ093
+      *   MD031937 - Upgrade STP enhancements to BF Midas 2.1         *                      ERZ093
+      *   AR856737 - Upgrade STP enhancements to Midas Plus level     *                      ERZ093
+      *   ERZ093 - MT101's STP processing                             *                      ERZ093
+      *                                                               *                      ERZ093
+      *---------------------------------------------------------------*                      ERZ093
+     C     ERZ093        IFEQ      'Y'                                                       ERZ093
+      *                                                                                      ERZ093
+      ** Payment type must be OP for 101 if ERZ093 is on                                     ERZ093
+      *                                                                                      ERZ093
+     C     #1MTPY        IFEQ      '101'                                                     ERZ093
+     C     #1PYTP        ANDNE     'OP'                                                      ERZ093
+     C     #1PYTP        ANDNE     '++'                                                      ERZ093
+     C     #1PYTP        ANDNE     '**'                                                      ERZ093
+     C     W0PMT         IFEQ      'N'                                                       ERZ093
+      *                                                                                      ERZ093
+      **  Send message 'Payment type is invalid'                                             ERZ093
+      *                                                                                      ERZ093
+     C                   MOVEL     'MIN0398'     ZAMSID                                      ERZ093
+     C                   MOVEL     'MEMSG'       ZAMSGF                                      ERZ093
+     C                   MOVEL     'OP'          ZAMSDA                                      ERZ093
+     C                   EXSR      ZASNMS                                                    ERZ093
+     C                   MOVE      *ON           *IN32                                       ERZ093
+     C                   MOVE      *ON           *IN99                                       ERZ093
+     C                   ENDIF                                                               ERZ093
+      *                                                                                      ERZ093
+     C                   ENDIF                                                               ERZ093
+     C                   ELSE                                                                ERZ093
+      *                                                                                      ERZ093
+      *---------------------------------------------------------------*                      ERZ093
+      * copy hook end ME1540CMF1                                      *                      ERZ093
+      *---------------------------------------------------------------*                      ERZ093

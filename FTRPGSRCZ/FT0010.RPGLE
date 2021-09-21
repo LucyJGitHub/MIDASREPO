@@ -43,8 +43,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057650           Date 31Mar21               *
-      *  Prev Amend No. MD056477           Date 22Sep20               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 25Jul11               *
+      *                 ESL038             Date 04Oct2004             *
+      *                 CEUFT1             Date 03Spr2003             *
+      *                 MD057650           Date 31Mar21               *
+      *                 MD056477           Date 22Sep20               *
       *                 MD056483           Date 15Sep20               *
       *                 MD053553           Date 21Jan20               *
       *                 MD050134           Date 21Mar18               *
@@ -86,6 +90,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           ESL038, CEUFT1.                                     *
+      *  ESL038 - ING STP Development                                 *
+      *  CEUFT1 - Incoming STP FZ quotation conventions               *
       *  MD057650 - A serious midas error encountered when settlement *
       *             and pay amounts are both blank                    *
       *  MD056477 - In SrVAmtNR9DSR, if P#RATE is zero, use ZRATEX.   *
@@ -143,6 +153,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+     FFTQUTEPD  IF   E           K DISK    USROPN                                             CEUFT1
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -454,6 +465,47 @@
      C                   EVAL      WAmtTolr = PSVal1                                        MD056483
      C                   ENDIF                                                              MD056483
      C/COPY WNCPYSRC,FT0010C009
+      *                                                                                       CEUFT1
+      ** Switchable feature for inverse rates                                                 CEUFT1
+     C                   CALL      'AOSARDR0'                                                 CEUFT1
+     C                   PARM      *BLANKS       PRTCD                                        CEUFT1
+     C                   PARM      '*VERIFY'     POPTN                                        CEUFT1
+     C                   PARM      'CEUFT1'      PSARD                                        CEUFT1
+     C                   MOVE      'N'           CEUFT1            1                          CEUFT1
+     C*                                                                                       CEUFT1
+     C** If feature is switched ON, set on indicator that will                                CEUFT1
+     C** condition the rest of the processing                                                 CEUFT1
+     C*                                                                                       CEUFT1
+     C     PRTCD         IFEQ      *BLANKS                                                    CEUFT1
+     C                   MOVE      'Y'           CEUFT1                                       CEUFT1
+      *                                                                                       CEUFT1
+      * Open quotation convention file                                                        CEUFT1
+      *                                                                                       CEUFT1
+     C     $$FRST        IFEQ      *BLANKS                                                    CEUFT1
+     C                   OPEN      FTQUTEPD                                                   CEUFT1
+     C                   MOVEL     'Y'           $$FRST            1                          CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      * Define Key                                                                            CEUFT1
+      *                                                                                       CEUFT1
+     C     KQUTE         KLIST                                                                CEUFT1
+     C                   KFLD                    FTFCCY                                       CEUFT1
+     C                   KFLD                    FTTCCY                                       CEUFT1
+      *                                                                                       CEUFT1
+     C                   ELSE                                                                 CEUFT1
+     C*                                                                                       CEUFT1
+     C** else, database error (return code other than *NRF)                                   CEUFT1
+     C*                                                                                       CEUFT1
+     C     PRTCD         IFNE      '*NRF   '                                                  CEUFT1
+     C     *LOCK         IN        LDA                                                        CEUFT1
+     C                   Z-ADD     999           DBASE                                        CEUFT1
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CEUFT1
+     C                   MOVEL     'CEUFT1'      DBKEY                                        CEUFT1
+     C                   OUT       LDA                                                        CEUFT1
+     C                   EXSR      *PSSR                                                      CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
       *
       ***  Setup array CCY
       *
@@ -1090,6 +1142,8 @@
      C*****P#OVRT        IFNE      'Y'                                                      AR737259
      C*****ZRATEX        ANDNE     P#RATE                                                   AR737259
      C                   Z-ADD     0             NEWRAT           13 8
+      ** If Switchable feature off then do as before                                          CEUFT1
+     C     CEUFT1        IFEQ      'N'                                                        CEUFT1
       *
      C     P#RATE        SUB       ZRATEX        DIFF1            13 8                       BUG4227
      C     DIFF1         IFLT      0                                                         BUG4227
@@ -1171,6 +1225,185 @@
      C**********         EXSR      RETURN                                                    BUG4227
      C**********         ENDIF                                                               BUG4227
      C**********         ENDSL                                                               BUG4227
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** If switchable feature installed                                                      CEUFT1
+      ** and either the settle or pay currencies are OUT                                      CEUFT1
+b1   C     CEUFT1        IFEQ      'Y'                                                        CEUFT1
+     C     TYPE(2)       ANDEQ     'OT'                                                       CEUFT1
+     C     CEUFT1        OREQ      'Y'                                                        CEUFT1
+     C     TYPE(3)       ANDEQ     'OT'                                                       CEUFT1
+      *                                                                                       CEUFT1
+      * Check if quotation convention required                                                CEUFT1
+      *                                                                                       CEUFT1
+     C                   MOVEL     CCY(2)        FTFCCY                                       CEUFT1
+     C                   MOVEL     CCY(3)        FTTCCY                                       CEUFT1
+     C     KQUTE         CHAIN     @QUTEPD                            90                      CEUFT1
+     C     *IN90         IFEQ      *OFF                                                       CEUFT1
+     C                   MOVEL     FTCFLG        W#QFLG                                       CEUFT1
+     C                   ELSE                                                                 CEUFT1
+     C     *LIKE         DEFINE    FTCFLG        W#QFLG                                       CEUFT1
+     C                   MOVEL     *BLANKS       W#QFLG                                       CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Calculate the top and bottom ranges for the rate                                     CEUFT1
+      ** using the following formula                                                          CEUFT1
+      **                                                                                      CEUFT1
+      ** ZRATEX * (1 + P#RTDS) = Top (W#TOP)                                                  CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        W#TOP                                        CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        W#BOT                                        CEUFT1
+     C     P#RTDS        ADD       1             W#TOP                                        CEUFT1
+     C     ZRATEX        MULT      W#TOP         W#TOP                                        CEUFT1
+      ** ZRATEX * (1 - P#RTDS) = Bottom (W#BOT)                                               CEUFT1
+     C     1             SUB       P#RTDS        W#BOT                                        CEUFT1
+     C     ZRATEX        MULT      W#BOT         W#BOT                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Calculate the inverse rates for the top & bottom                                     CEUFT1
+      ** using the following formula                                                          CEUFT1
+      **                                                                                      CEUFT1
+      ** 1/W#TOP = I#TOP                                                                      CEUFT1
+      ** 1/W#BOT = I#BOT                                                                      CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        I#TOP                                        CEUFT1
+     C     *LIKE         DEFINE    ZRATEX        I#BOT                                        CEUFT1
+     C     1             DIV       W#TOP         I#TOP                                        CEUFT1
+     C     1             DIV       W#BOT         I#BOT                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Check whether the passed rates are within tolerance                                  CEUFT1
+b2   C                   SELECT                                                               CEUFT1
+      *                                                                                       CEUFT1
+      ** Quotation Convention                                                                 CEUFT1
+b3   C     W#QFLG        WHENNE    *BLANKS                                                    CEUFT1
+b2   C                   SELECT                                                               CEUFT1
+      * No rate entered and convention is Divide                                              CEUFT1
+     C     W#QFLG        WHENEQ    'D '                                                       CEUFT1
+     C     P#RATE        ANDEQ     0                                                          CEUFT1
+     C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+     C     1             DIV       ZRATEX        ZRATEX                                       CEUFT1
+     C                   MOVEL     'M'           ZMDIX                                        CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      * No rate entered and convention is Multiply                                            CEUFT1
+     C     W#QFLG        WHENEQ    'M '                                                       CEUFT1
+     C     P#RATE        ANDEQ     0                                                          CEUFT1
+     C     ZMDIX         IFEQ      'D'                                                        CEUFT1
+     C     1             DIV       ZRATEX        ZRATEX                                       CEUFT1
+     C                   MOVEL     'M'           ZMDIX                                        CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      ** Quotation Convention is divide                                                       CEUFT1
+b3   C     W#QFLG        WHENEQ    'D '                                                       CEUFT1
+      *                                                                                       CEUFT1
+     C                   MOVEL     'D'           W#MDIN                                       CEUFT1
+      ** Default rate is divide                                                               CEUFT1
+     C     ZMDIX         IFEQ      'D'                                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LT Top & GT Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFGT      W#TOP                                                      CEUFT1
+     C     P#RATE        ORLT      W#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+      ** Default rate is multiply                                                             CEUFT1
+     C                   ELSE                                                                 CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LE Top & GE Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFLT      I#TOP                                                      CEUFT1
+     C     P#RATE        ORGT      I#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Quotation Convention is multiply                                                     CEUFT1
+b3   C     W#QFLG        WHENEQ    'M '                                                       CEUFT1
+      *                                                                                       CEUFT1
+     C                   MOVEL     'M'           W#MDIN                                       CEUFT1
+      ** Default rate is divide                                                               CEUFT1
+     C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LT Top & GT Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFGT      W#TOP                                                      CEUFT1
+     C     P#RATE        ORLT      W#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+      ** Default rate is multiply                                                             CEUFT1
+     C                   ELSE                                                                 CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LE Top & GE Bottom rate range                                                   CEUFT1
+     C     P#RATE        IFLT      I#TOP                                                      CEUFT1
+     C     P#RATE        ORGT      I#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Error if not overriden                                                               CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
+b2   C                   ENDSL                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate LE Top & GE Bottom rate range                                                   CEUFT1
+b3   C     P#RATE        WHENLE    W#TOP                                                      CEUFT1
+     C     P#RATE        ANDGE     W#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Set up Mult/Div indicator                                                            CEUFT1
+     C     *LIKE         DEFINE    ZMDIX         W#MDIN                                       CEUFT1
+     C                   MOVEL     ZMDIX         W#MDIN                                       CEUFT1
+      *                                                                                       CEUFT1
+      ** Rate GE Top & LE Inverse Bottom rate range                                           CEUFT1
+b3   C     P#RATE        WHENGE    I#TOP                                                      CEUFT1
+     C     P#RATE        ANDLE     I#BOT                                                      CEUFT1
+      *                                                                                       CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+b4   C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+     C                   MOVEL     'D'           W#MDIN                                       CEUFT1
+x4   C                   ELSE                                                                 CEUFT1
+     C                   MOVEL     'M'           W#MDIN                                       CEUFT1
+e4   C                   ENDIF                                                                CEUFT1
+      *                                                                                       CEUFT1
+      ** Otherwise this is an error                                                           CEUFT1
+x3   C                   OTHER                                                                CEUFT1
+     C     P#OVRT        IFNE      'Y'                                                        CEUFT1
+     C                   MOVE      *ON           *IN05                                        CEUFT1
+     C                   MOVEL     'FTM2578'     FTMSID                                       CEUFT1
+     C                   EXSR      SNDMSG                                                     CEUFT1
+     C                   EXSR      RETURN                                                     CEUFT1
+e2   C                   ENDIF                                                                CEUFT1
+     C                   MOVEL     ZMDIX         W#MDIN                                       CEUFT1
+      *                                                                                       CEUFT1
+      *  If rate looks like reciprocal then                                                   CEUFT1
+      ** Change Mult/Div indicator                                                            CEUFT1
+b4   C     P#RATE        IFLT      1                                                          CEUFT1
+b4   C     W#QFLG        ANDEQ     *BLANKS                                                    CEUFT1
+b4   C     ZMDIX         IFEQ      'M'                                                        CEUFT1
+     C                   MOVEL     'D'           W#MDIN                                       CEUFT1
+x4   C                   ELSE                                                                 CEUFT1
+     C                   MOVEL     'M'           W#MDIN                                       CEUFT1
+e4   C                   ENDIF                                                                CEUFT1
+e4   C                   ENDIF                                                                CEUFT1
+e2   C                   ENDSL                                                                CEUFT1
+e1   C                   ENDIF                                                                CEUFT1
       *
      C**********         ENDIF                                                              AR737259
      C                   ENDIF
@@ -1737,6 +1970,18 @@
       *
      C     P#RATE        IFNE      *ZERO
      C                   Z-ADD     P#RATE        ZCRSRT                         Cross Ccy Exch
+      ** If switchable feature installed                                                      CEUFT1
+      ** and either the settle or pay currencies are OUT                                      CEUFT1
+b1   C     CEUFT1        IFEQ      'Y'                                                        CEUFT1
+     C     TYPE(2)       ANDEQ     'OT'                                                       CEUFT1
+     C     CEUFT1        OREQ      'Y'                                                        CEUFT1
+     C     TYPE(3)       ANDEQ     'OT'                                                       CEUFT1
+      *                                                                                       CEUFT1
+      ** Only do if value set up                                                              CEUFT1
+     C                   IF        W#MDIN <> *BLANKS                                          CEUFT1
+     C                   MOVEL     W#MDIN        ZMDIX                                        CEUFT1
+     C                   ENDIF                                                                CEUFT1
+     C                   ENDIF                                                                CEUFT1
       *                                                                                     MD045094
       ** If rate is inverse, use the original rate for calculation,                         MD045094
       ** then inverse M/D indicator for precision                                           MD045094

@@ -1,0 +1,111 @@
+      *****************************************************************
+/*STD *  LFBASE                                                       *
+/*EXS *  LF_IMIP                                                      *
+/*EXI *  TEXT('Midas Incoming Message FT Data')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module
+      *                                                               *
+      *  LF/MEINFTL2 - Incoming Message FT Data  (To be processed)    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 EEE065             Date 07Sep2004             *
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE058   *CREATE   Date 14Feb2003             *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  EEE065 - FT Payment Routing                                  *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+     A          R @INFTL2
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2003')
+     A                                      JFILE(FTMESQP0 +
+     A                                            MEINFTPD)
+     A*---------------------------------------------------------------------
+     A* Join from STP Queues to FT data
+     A          J                           JOIN(1 2)
+     A                                      JFLD(SQMSGR FTMSGR)
+     A                                      JFLD(SQKPRT FTKPRT)
+     A*---------------------------------------------------------------------
+     A            FTMSGR                    TEXT('Msg Unique Reference')
+     A                                      JREF(1)
+     A                                      RENAME(SQMSGR)
+     A            FTKPRT                    TEXT('Part Number (Key)')
+     A                                      JREF(1)
+     A                                      RENAME(SQKPRT)
+     A            FTBRCA                    TEXT('Branch Code')
+     A                                      JREF(2)
+     A            FTINFG                    TEXT('Incoming Flag')
+     A                                      JREF(1)
+     A            FTIPRF                    TEXT('Incoming Payment Ref.')
+     A                                      JREF(1)
+     A            FTOTFG                    TEXT('Outgoing Flag')
+     A                                      JREF(1)
+     A            FTOPRF                    TEXT('Outgoing Payment Ref.')
+     A                                      JREF(1)
+     A            FTFRGL                    TEXT('Funds From')
+     A                                      JREF(2)
+     A            FTTOGL                    TEXT('Funds To')
+     A                                      JREF(2)
+     A            FTAJOB                    TEXT('Job name')
+     A                                      JREF(2)
+     A            FTAUSR                    TEXT('User name')
+     A                                      JREF(2)
+     A            FTATIM                    TEXT('Action Time')
+     A                                      JREF(2)
+     A            FTARDT                    TEXT('Action Date')
+     A                                      JREF(2)
+     A            FTAACT                    TEXT('Action Type')
+     A                                      JREF(2)
+     A            FTRDNB                    TEXT('Run day number')
+     A                                      JREF(2)
+     A            SQSTPQ                    TEXT('STP Queue Name')
+     A                                      JREF(1)
+      *>> Start EEE065
+     A            SQSTAT                    TEXT('STP Queue Status')
+     A                                      JREF(1)
+      *>> End EEE065
+     A            CRMODE                    TEXT('Message Received Date')
+     A                                      JREF(1)
+     A            CRMOTM                    TEXT('Message Received Time')
+     A                                      JREF(1)
+     A            CRMDEC                    TEXT('Century of Msg Received Date')
+     A                                      JREF(1)
+     A*.....................................................................
+     A* Key fields
+     A          K SQSTPQ
+     A          K CRMDEC
+     A          K CRMODE
+     A          K CRMOTM
+     A          K FTMSGR
+     A          K FTKPRT
+     A*.....................................................................
+     A*   OMIT: Omit all Incoming Transactions already in FT
+     A* Field    : Incoming Payment Ref.
+     A* Condition: Not Blank
+     A          O FTIPRF                    COMP(NE ' ')
+     A*.....................................................................
+     A*   OMIT: Omit all Outgoing Transactions already in FT
+     A* Field    : Outgoing Payment Ref.
+     A* Condition: Not Blank
+     A          O FTOPRF                    COMP(NE ' ')
+     A*.....................................................................
+     A*   OMIT: Omit if ignored
+     A* Field    : Incoming Flag
+     A* Condition: Not Blank
+     A          O FTINFG                    COMP(NE ' ')
+     A* Field    : Incoming Flag
+     A* Condition: Failed Auto Gen
+     A            FTINFG                    COMP(NE 'MIN0083')
+     A*=====================================================================

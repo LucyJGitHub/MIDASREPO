@@ -23,8 +23,15 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058361           Date 26Jun21               *
-      *  Prev Amend No. MD056752           Date 20Sep20               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 28Jul11               *
+      *                 MKFX01             Date 23Jan06               *
+      *                 STP012             Date 24Nov04               *
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE058             Date 30Apr2002             *
+      *                 PNL002             Date 22Jul04               *
+      *                 MD058361           Date 26Jun21               *
+      *                 MD056752           Date 20Sep20               *
       *                 MD056560           Date 31Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -61,6 +68,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes: PNL002, MKFX01, ESL038   *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *  STP012 - STP Changes                                         *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE058 - Incominng STP                                       *
+      *  PNL002 - Changes to MultiCash interface.                     *
       *  MD058361 - Correct SQL request to access MEINFJW0            *
       *  MD056752 - Deliverable Data Split for MEINFMPD               *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
@@ -168,6 +183,7 @@
      D**********          TFLD    1  68 10   TPRM    5                                 CSW209 CER030
      D TFLD            S             10    DIM(69) CTDATA PERRCD(1)
      D TPRM            S              5    DIM(69) ALT(TFLD)
+     D/COPY WNCPYSRC,ME1100MK01                                                               PNL002
       *
       *  Field / Parameter Data Structure relationship
       *
@@ -272,6 +288,8 @@
      D****************************************7 246 OT72            CGL009175479
      D  OT72                   7    256                                         175479
      D                                     DIM(250)                                              175
+      *                                                                                       STP012
+     D MEINDT        E DS                  EXTNAME(MEINMPL1)                                  STP012
       *
      D SCCMT           DS           256
      D  CMTNUM                 1      3  0
@@ -324,6 +342,7 @@
      C                   PARM                    PDAT2
      C                   PARM                    W0RTN             7            Return Code
      C/COPY WNCPYSRC,ME1100C013
+     C                   MOVE      *BLANKS       MEINDT                                        STP01
       *
       *  Set up primary reference
       *
@@ -447,6 +466,10 @@
      C                   MOVEL     *BLANKS       KFMSQN
      C                   ENDIF
      C                   EXSR      SRMAP
+      *                                                                                       EEE058
+      *  Extract Receiver information and place in data structure                             EEE058
+      *                                                                                       EEE058
+     C/COPY WNCPYSRC,ME1100LRG                                                                EEE058
       *
       *          **************************************
       *
@@ -1097,6 +1120,7 @@
      C/COPY WNCPYSRC,ME1100C003
       *
      C                   MOVEL     DSTRAN        PDCA
+     C/COPY WNCPYSRC,ME1100MK02                                                               PNL002
       *
      C     PRMDS         WHENEQ    'P20 '
      C                   MOVEL     DSTRAN        DSIN

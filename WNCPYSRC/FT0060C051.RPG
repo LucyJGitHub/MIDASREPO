@@ -1,0 +1,397 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. LUC105                  Date 20May15          *
+      *  Prev Amend No. MD031937                Date 13Jan15          *
+      *                 AR856737                Date 13Sep11          *
+      *                 PNL012                  Date 16Sep05          *
+      *                 233571                  Date 29Jun05          *
+      *                 ESL038                  Date 21Oct2004        *
+      *                 STP050                  Date 03Jan2005        *
+      *                 ESL038                  Date 04Oct2004        *
+      *                 E00030                  Date 12Dec2003        *
+      *                 EEE058    *CREATE       Date 10Feb2003        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LUC105 - Amendment to FT Account Balance Check               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  PNL012 - Account Payments Authorisation Processing           *
+      *  233571 - Only display the screen for Debit account.          *
+      *  ESL038 - ING STP Development                                 *
+      *           Condition ERN054 on EEE058 being switched on        *
+      *  STP050 - When STP050 on - check insufficien funds separately *
+      *           for debit and credit accounts.                      *
+      *  ESL038 - ING STP Development                                 *
+      *  E00030 - FX Rate verification                                *
+      *  ERN055 - Prevent authorisation of back value OP 08 Trans     *
+      *  EEE058 - Incoming STP                                        *
+      *                                                               *
+      *****************************************************************
+      ******                                                                                  LUC105
+      ** Overdraft Limit                                                                      LUC105
+     C******               PARM *ZEROS    @ODLN  140                                          LUC105
+      ** Cleared Balance                                                                      LUC105
+     C******               PARM *ZEROS    @CLBL  150                                          LUC105
+      *******                                                                                 LUC105
+      ** Total Postings                                                                       LUC105
+     C******               PARM *ZEROS    @TOTP  150                                          LUC105
+      ******                                                                                  LUC105
+      *****************************************************************                       LUC105
+      *                                                                                       STP050
+      ** Access SAR details file to determine if ERN054 is switched ON                        STP050
+      *                                                                                       STP050
+     C           STP050    IFEQ *BLANKS                                                       STP050
+     C                     CALL 'AOSARDR0'                                                    STP050
+     C                     PARM *BLANKS   @RTCD                                               STP050
+     C                     PARM '*VERIFY' @OPTN                                               STP050
+     C                     PARM 'STP050'  @SARD                                               STP050
+     C           SCSARD    PARM SCSARD    DSFDY                                               STP050
+      *                                                                                       STP050
+     C           @RTCD     IFEQ *BLANKS                                                       STP050
+     C                     MOVEL'Y'       STP050  1                                           STP050
+     C                     ELSE                                                               STP050
+     C                     MOVEL'N'       STP050                                              STP050
+     C                     ENDIF                                                              STP050
+      *                                                                                       STP050
+     C                     ENDIF                                                              STP050
+      *                                                                                       STP050
+     C           STP050    IFEQ 'Y'                                                           STP050
+      *
+     C                     MOVEL'N'       @RCD
+     C                     ENDIF                                                              STP050
+      *                                                                                       ERN054
+      ** Access SAR details file to determine if ERN054 is switched ON                        ERN054
+      *                                                                                       ERN054
+     C           ERN054    IFEQ *BLANKS                                                       ERN054
+     C                     CALL 'AOSARDR0'                                                    ERN054
+     C                     PARM *BLANKS   @RTCD                                               ERN054
+     C                     PARM '*VERIFY' @OPTN                                               ERN054
+     C****                 PARM 'ERN054'  @SARD                                        ERN054 ESL038
+     C                     PARM 'EEE058'  @SARD                                               ESL038
+     C           SCSARD    PARM SCSARD    DSFDY                                               ERN054
+      *                                                                                       ERN054
+     C           @RTCD     IFEQ *BLANKS                                                       ERN054
+     C                     MOVEL'Y'       ERN054  1                                           ERN054
+     C                     ELSE                                                               ERN054
+     C******               MOVEL'Y'       ERN054  1                                           ERN054
+     C                     MOVEL'N'       ERN054  1                                           ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+     C                     ENDIF                                                              ERN054
+      *                                                                                       ERN054
+      ** If ERN054 call validator                                                             ERN054
+      *                                                                                       ERN054
+     C           ERN054    IFEQ 'Y'                                                           ERN054
+      *                                                                                       ERN054
+      * Clear parameters                                                                      ERN054
+     C                     CLEARP@IDTA                                                        ERN054
+     C                     CLEARP@ODTA                                                        ERN054
+     C                     CLEARSOODTA                                                        ERN054
+      *
+      ** Set first authorisation flag
+     C                     MOVE *BLANK    P@AUTH  1
+     C           AUP2      IFEQ *BLANKS
+     C           PNL012    ANDNE'Y'                                                           PNL012
+     C           AUP2      OREQ *BLANKS                                                       PNL012
+     C           AUP1      ANDNE*BLANKS                                                       PNL012
+     C           PNL012    ANDEQ'Y'                                                           PNL012
+     C                     MOVE 'N'       P@AUTH
+     C                     ELSE
+     C                     MOVE 'Y'       P@AUTH
+     C                     ENDIF
+      *
+      * If STP, the counter is alpha, then jump to 2nd auth                                   PNL012
+     C           PNL012    IFEQ 'Y'                                                           PNL012
+     C                     MOVE PREF      WPREF8  8                                           PNL012
+     C                     MOVELWPREF8    WPRTST  4                                           PNL012
+     C                     TESTN          WPRTST     767778                                   PNL012
+     C           *IN76     IFEQ *ON                                                           PNL012
+     C           *IN77     ANDEQ*OFF                                                          PNL012
+     C           *IN78     ANDEQ*OFF                                                          PNL012
+     C                     ELSE                                                               PNL012
+     C                     MOVE 'Y'       P@AUTH                                              PNL012
+     C                     ENDIF                                                              PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+      * Debit side                                                                            ERN054
+      * Incoming Payments                                                                     ERN054
+     C                     SELEC                                                              ERN054
+     C           PYTP      WHEQ 'IN'                                                          ERN054
+      * Party one                                                                             ERN054
+     C                     MOVELSNTP      PITP1                                               ERN054
+     C                     MOVELSND1      PIPRY1                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC1                                              ERN054
+      * Party two                                                                             ERN054
+     C                     MOVELINRCRT    PITP2                                               ERN054
+     C                     MOVELINRCO1    PIPRY2                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC2                                              ERN054
+      * Party three                                                                           ERN054
+     C                     MOVELINTRIT    PITP3                                               ERN054
+     C                     MOVELINTRIB    PIPRY3                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC3                                              ERN054
+      *                                                                                       ERN054
+      * Outgoing Payments                                                                     ERN054
+     C           PYTP      WHEQ 'OP'                                                          ERN054
+      * Party one                                                                             ERN054
+     C                     MOVELORCT      PITP1                                               ERN054
+     C                     MOVELORC1      PIPRY1                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC1                                              ERN054
+      * Party two                                                                             ERN054
+     C                     MOVELORBT      PITP2                                               ERN054
+     C                     MOVELORBK      PIPRY2                                              ERN054
+     C                     MOVELORBB      PIBRC2                                              ERN054
+      * Party three                                                                           ERN054
+     C                     MOVEL*BLANKS   PITP3                                               ERN054
+     C                     MOVEL*BLANKS   PIPRY3                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC3                                              ERN054
+     C                     ENDSL                                                              ERN054
+      *                                                                                       ERN054
+      * Account currency, amount, date                                                        ERN054
+     C                     MOVELSMCY      PICCY                                               ERN054
+     C                     Z-ADDSMAM      PIAMNT                                              ERN054
+      *
+      * Include Charges
+      *
+     C                     SELEC
+     C           PYTP      WHEQ 'IN'                                                          ERN054
+     C           ADDC      ANDEQ'A'
+     C*****      CDRO      ANDEQ0                                                            MD31937
+     C           CDRO      ANDEQ*BLANKS                                                      MD31937
+     C                     ADD  TRCM      PIAMNT
+     C                     ADD  TXCH      PIAMNT
+     C                     ADD  CQCH      PIAMNT
+     C                     ADD  ADCH      PIAMNT
+     C                     ADD  TLCH      PIAMNT
+     C                     ADD  MSCH      PIAMNT
+     C                     ADD  MSC01     PIAMNT
+     C                     ADD  MSC02     PIAMNT
+     C                     ADD  MSC03     PIAMNT
+     C                     ADD  MSC04     PIAMNT
+     C                     ADD  MSC05     PIAMNT
+     C                     ADD  INVATT    PIAMNT
+     C           PYTP      WHEQ 'OP'                                                          ERN054
+     C           ADDC      ANDEQ'A'
+     C*****      CDRO      ANDEQ0                                                            MD31937
+     C           CDRO      ANDEQ*BLANKS                                                      MD31937
+     C                     ADD  TRCM      PIAMNT
+     C                     ADD  TXCH      PIAMNT
+     C                     ADD  CQCH      PIAMNT
+     C                     ADD  CSTA      PIAMNT
+     C                     ADD  SPCH      PIAMNT
+     C                     ADD  MISC01    PIAMNT
+     C                     ADD  MISC02    PIAMNT
+     C                     ADD  MISC03    PIAMNT
+     C                     ADD  MISC04    PIAMNT
+     C                     ADD  MISC05    PIAMNT
+     C                     ADD  OPVATT    PIAMNT
+     C                     ADD  SWSCHG    PIAMNT
+     C                     ADD  OPRCSC    PIAMNT
+     C                     ENDSL
+      *
+     C                     Z-ADDSLDT      PIPDTE                                              ERN054
+      * Payment Reference and type                                                            ERN054
+     C                     MOVELPREF      PIPREF                                              ERN054
+     C                     MOVELPYTP      PIPTYP                                              ERN054
+     C                     MOVELBRCA      PIBRCB                                              ERN054
+      *
+      ** Clear return code holders.
+     C                     MOVEL*BLANKS   U0RTCE
+     C                     MOVEL*BLANKS   U1RTCE
+      *                                                                                       ERN054
+     C           STP050    IFEQ 'Y'                                                           STP050
+      * Call validator                                                                        ERN054
+     C                     CALL 'FTP780'                                                      ERN054
+     C                     PARM           P@RTCE  7                                           ERN054
+     C                     PARM 'YES'     P@DSP   3                                           ERN054
+     C                     PARM           P@IDTA                                              ERN054
+     C                     PARM           P@ODTA                                              ERN054
+     C                     PARM           P@AUTH                                              PNL012
+      *                                                                                       ERN054
+     C                     MOVELP@ODTA    SOODTA256                                           ERN054
+      *                                                                                       ERN054
+     C           P@RTCE    IFNE '*NOCHK '                                                     ERN054
+     C           P@RTCE    ANDNE*BLANKS                                                       ERN054
+     C           P@RTCE    ANDNE'*OVER  '                                                     ERN054
+     C           P@RTCE    ANDNE'*EXCEED'                                                     ESL038
+     C           PNL012    ANDEQ'N'                                                           PNL012
+     C           P@RTCE    ORNE '*NOCHK '                                                     PNL012
+     C           P@RTCE    ANDNE*BLANKS                                                       PNL012
+     C           P@RTCE    ANDNE'*OVER  '                                                     PNL012
+     C           PNL012    ANDEQ'Y'                                                           PNL012
+     C           P@RTCE    CAT  P@ODTA    FTMSDT                                              ERN054
+     C                     MOVEL'STP0036' FTMSID                                              ERN054
+     C                     MOVEL'XXUSRMSG'FTMSGF                                              ERN054
+     C                     EXSR FTSNMS                                                        ERN054
+     C*****                MOVEL'Y'       USERR                                        ERN054 PNL012
+     C                     MOVEL'Y'       @RCD                                                ERN054
+     C                     ENDIF                                                              ERN054
+     C                     ENDIF                                                              STP050
+      *                                                                                       ESL038
+     C           PNL012    IFEQ 'Y'                                                           PNL012
+     C           CDRT      IFNE *BLANKS                                                       PNL012
+     C*****      CDRO      ORNE 0                                                     PNL012 MD31937
+     C           CDRO      ORNE *BLANKS                                                      MD31937
+     C           CDBR      ORNE *BLANKS                                                       PNL012
+      * Party one                                                                             PNL012
+     C                     MOVEL*BLANKS   PITP1                                               PNL012
+     C                     MOVEL*BLANKS   PIPRY1                                              PNL012
+     C                     MOVEL*BLANKS   PIBRC1                                              PNL012
+      * Party two                                                                             PNL012
+     C                     MOVEL*BLANKS   PITP2                                               PNL012
+     C                     MOVEL*BLANKS   PIPRY2                                              PNL012
+     C                     MOVEL*BLANKS   PIBRC2                                              PNL012
+      * Party three                                                                           PNL012
+     C                     MOVELCDRT      PITP3                                               PNL012
+     C                     MOVELCDRO      PIPRY3                                              PNL012
+     C                     MOVELCDBR      PIBRC3                                              PNL012
+      *                                                                                       PNL012
+      * Account currency, amount, date                                                        PNL012
+     C*****                MOVELSMCY      PICCY                                               PNL012
+     C                     MOVELCCYA      PICCY                                               PNL012
+      *                                                                                       PNL012
+     C*****                Z-ADDSMAM      PIAMNT                                              PNL012
+     C                     Z-ADDDUMA1     PIAMNT                                              PNL012
+     C                     ADD  DUMA2     PIAMNT                                              PNL012
+     C                     ADD  DUMA3     PIAMNT                                              PNL012
+     C                     ADD  DUMA4     PIAMNT                                              PNL012
+     C                     ADD  DUMA5     PIAMNT                                              PNL012
+     C                     ADD  DUMA6     PIAMNT                                              PNL012
+     C                     ADD  SWSCCC    PIAMNT                                              PNL012
+     C                     ADD  MISCC1    PIAMNT                                              PNL012
+     C                     ADD  MISCC2    PIAMNT                                              PNL012
+     C                     ADD  MISCC3    PIAMNT                                              PNL012
+     C                     ADD  MISCC4    PIAMNT                                              PNL012
+     C                     ADD  MISCC5    PIAMNT                                              PNL012
+      *                                                                                       PNL012
+     C                     Z-ADDSLDT      PIPDTE                                              PNL012
+      * Payment Reference and type                                                            PNL012
+     C                     MOVELPREF      PIPREF                                              PNL012
+     C                     MOVELPYTP      PIPTYP                                              PNL012
+     C                     MOVELBRCA      PIBRCB                                              PNL012
+      *                                                                                       PNL012
+      ** Clear return code holders.                                                           PNL012
+     C                     MOVEL*BLANKS   U0RTCE                                              PNL012
+     C                     MOVEL*BLANKS   U1RTCE                                              PNL012
+      *                                                                                       PNL012
+     C           STP050    IFEQ 'Y'                                                           STP050
+      * Call validator                                                                        PNL012
+     C                     CALL 'FTP780'                                                      PNL012
+     C                     PARM           P@RTCE  7                                           PNL012
+     C                     PARM 'YES'     P@DSP   3                                           PNL012
+     C                     PARM           P@IDTA                                              PNL012
+     C                     PARM           P@ODTA                                              PNL012
+     C                     PARM           P@AUTH                                              PNL012
+      *                                                                                       PNL012
+     C                     MOVELP@ODTA    SOODTA256                                           PNL012
+      *                                                                                       PNL012
+     C           P@RTCE    IFNE '*NOCHK '                                                     PNL012
+     C           P@RTCE    ANDNE*BLANKS                                                       PNL012
+     C           P@RTCE    ANDNE'*OVER  '                                                     PNL012
+     C           P@RTCE    ANDNE'*EXCEED'                                                     PNL012
+     C           PNL012    ANDEQ'N'                                                           PNL012
+     C           P@RTCE    ORNE '*NOCHK '                                                     PNL012
+     C           P@RTCE    ANDNE*BLANKS                                                       PNL012
+     C           P@RTCE    ANDNE'*OVER  '                                                     PNL012
+     C           PNL012    ANDEQ'Y'                                                           PNL012
+     C           P@RTCE    CAT  P@ODTA    FTMSDT                                              PNL012
+     C                     MOVEL'STP0036' FTMSID                                              PNL012
+     C                     MOVEL'XXUSRMSG'FTMSGF                                              PNL012
+     C                     EXSR FTSNMS                                                        PNL012
+     C*****                MOVEL'Y'       USERR                                               PNL012
+     C                     MOVEL'Y'       @RCD                                                PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     ENDIF                                                              STP050
+      *                                                                                       STP050
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C                     ENDIF                                                              PNL012
+      *                                                                                       PNL012
+     C           *LIKE     DEFN P@RTCE    U0RTCE                                              ESL038
+     C                     MOVELP@RTCE    U0RTCE                                              ESL038
+      * Credit side                                                                           ERN054
+      * Incoming Payments                                                                     ERN054
+     C                     SELEC                                                              ERN054
+     C           PYTP      WHEQ 'IN'                                                          ERN054
+      * Party one                                                                             ERN054
+     C                     MOVELBNCT      PITP1                                               ERN054
+     C                     MOVELBNC1      PIPRY1                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC1                                              ERN054
+      * Party two                                                                             ERN054
+     C                     MOVELACBT      PITP2                                               ERN054
+     C                     MOVELACBK      PIPRY2                                              ERN054
+     C                     MOVELACBB      PIBRC2                                              ERN054
+      * Party three                                                                           ERN054
+     C                     MOVEL*BLANKS   PITP3                                               ERN054
+     C                     MOVEL*BLANKS   PIPRY3                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC3                                              ERN054
+      *                                                                                       ERN054
+      * Outgoing Payments                                                                     ERN054
+     C           PYTP      WHEQ 'OP'                                                          ERN054
+      * Party one                                                                             ERN054
+     C                     MOVELDSTT      PITP1                                               ERN054
+     C                     MOVELDST1      PIPRY1                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC1                                              ERN054
+      * Party two                                                                             ERN054
+     C                     MOVELSNCT      PITP2                                               ERN054
+     C                     MOVELSNCO      PIPRY2                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC2                                              ERN054
+      * Party three                                                                           ERN054
+     C                     MOVEL*BLANKS   PITP3                                               ERN054
+     C                     MOVEL*BLANKS   PIPRY3                                              ERN054
+     C                     MOVEL*BLANKS   PIBRC3                                              ERN054
+     C                     ENDSL                                                              ERN054
+      *                                                                                       ERN054
+      * Account currency, amount, date                                                        ERN054
+     C                     MOVELPCCY      PICCY                                               ERN054
+     C                     Z-SUBPYAM      PIAMNT                                              ERN054
+     C                     Z-ADDPVDT      PIPDTE                                              ERN054
+      * Payment Reference and type                                                            ERN054
+     C                     MOVELPREF      PIPREF                                              ERN054
+     C                     MOVELPYTP      PIPTYP                                              ERN054
+     C                     MOVELBRCA      PIBRCB                                              ERN054
+      *                                                                                       E00030
+      ** Set up FX data                                                                       E00030
+     C                     MOVELSMCY      PISMCY                                              E00030
+     C                     Z-ADDSMAM      PISMAM                                              E00030
+     C                     Z-ADDRATE      PIRATE                                              E00030
+     C                     MOVELPCCY      PIPCCY                                              E00030
+     C                     Z-ADDPYAM      PIPYAM                                              E00030
+     C           STP050    IFEQ 'Y'                                                           STP050
+      *                                                                                       ERN054
+      * Call validator                                                                        ERN054
+     C                     CALL 'FTP780'                                                      ERN054
+     C                     PARM           P@RTCE  7                                           ERN054
+     C*****                PARM 'YES'     P@DSP   3                                    ERN054 233571
+     C*****                PARM 'NO '     P@DSP                                        233571 PNL012
+     C                     PARM 'YES'     P@DSP                                               PNL012
+     C                     PARM           P@IDTA                                              ERN054
+     C                     PARM           P@ODTA                                              ERN054
+     C                     PARM           P@AUTH
+      *                                                                                       ERN054
+     C           P@RTCE    IFNE '*NOCHK '                                                     ERN054
+     C           P@RTCE    ANDNE*BLANKS                                                       ERN054
+     C           P@RTCE    ANDNE'*OVER  '                                                     ERN054
+     C           P@RTCE    ANDNE'*EXCEED'                                                     ESL038
+     C           PNL012    ANDEQ'N'                                                           PNL012
+     C           P@RTCE    ORNE '*NOCHK '                                                     PNL012
+     C           P@RTCE    ANDNE*BLANKS                                                       PNL012
+     C           P@RTCE    ANDNE'*OVER  '                                                     PNL012
+     C           PNL012    ANDEQ'Y'                                                           PNL012
+     C           P@RTCE    CAT  P@ODTA    FTMSDT                                              ERN054
+     C                     MOVEL'STP0036' FTMSID                                              ERN054
+     C                     MOVEL'XXUSRMSG'FTMSGF                                              ERN054
+     C                     EXSR FTSNMS                                                        ERN054
+     C                     MOVEL'Y'       @RCD                                                ERN054
+     C                     ENDIF                                                              ERN054
+     C                     ENDIF                                                              STP050
+      *                                                                                       ESL038
+     C           *LIKE     DEFN P@RTCE    U1RTCE                                              ESL038
+     C                     MOVELP@RTCE    U1RTCE                                              ESL038
+      *                                                                                       ERN054
+     C                     ENDIF                                                              ERN054
+      *
+      *****************************************************************
+      * End of FT0060C051                                             *
+      *****************************************************************

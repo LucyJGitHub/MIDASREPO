@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR856737           Date 12May16               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR927047           Date 21Mar12               *      
       *                 MD055694           Date 09Mar20               *
       *                 CMG008             Date 20Feb20               *
@@ -127,6 +128,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *             Applied following HVB specific changes            *
+      *             HVBFIX, BGB015178, CSW207FIX                      *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -959,8 +963,13 @@
       *
       ** Validate Branch code
       *
+     C* Branch will only be set up if PMAccount is FULL or PARTIAL                         CSW207FIX
      C**********         If        PMInpType <> *Blanks                             CSW207A BUG14593
-     C                   If        PMBranch <> *Blanks
+     C**********         If        PMBranch <> *Blanks                             BUG14593CSW207FIX
+     C                   If        PMBranch <> *Blanks and                                 CSW207FIX
+     C                             PMInpType = 'G'  or                                     CSW207FIX
+     C                             PMBranch <> *Blanks and                                 CSW207FIX
+     C                             PMInpType = 'P'                                         CSW207FIX
      C                   Call      'AOBRCHR1'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
@@ -1018,6 +1027,11 @@
      C                   EndIf                                                               CSW207A
       *
       ** Set default and validate network
+      ** Set up default values                                                                HVBFIX
+     C                   If        PMNetwork = *Blanks  OR                                    HVBFIX
+     C                             PMNetwork = *ZEROS                                         HVBFIX
+     C                   Eval      PMNetwork = 'SWIFT'                                        HVBFIX
+     C                   EndIf                                                                HVBFIX
       *
      C**********         If        PMNetwork = *Blanks                                      BUG15045
      C**********         Eval      PMNetwork = 'SWIFT'                                      BUG15045
@@ -3017,6 +3031,9 @@
 
      C                   Select
 
+     C                   When      Wncode  = '4'                                           BGB015178
+     C                   Exsr      ValN                                                    BGB015178
+                                                                                           BGB015178
      C                   When      WSlash3 = '/'
      C                   Exsr      ValNXXCCC
 

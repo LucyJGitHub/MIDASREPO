@@ -21,8 +21,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058213           Date 27May21               *
-      *  Prev Amend No. CFT162             Date 08Sep17               *
+      *  Last Amend No. AR856737           Date 26JUL11               *
+      *  Prev Amend No. STP033             Date 14Mar03               *
+      *                 200943             Date 14Mar03               *
+      *                 STP017             Date 20Nov04               *
+      *                 EEE058             Date 26Mar2003             *
+      *                 MD058213           Date 27May21               *
+      *                 CFT162             Date 08Sep17               *
       *                 CSD103             Date 10Aug20               *
       *                 AR918975           Date 21Mar12               *
       *                 AR920171           Date 21Mar12               *
@@ -66,6 +71,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           200943, STP017, EEE058                              *
+      *         - FT0349MK01 not required                             *
+      *  STP033 - Calculate Receiver's charges remitted for           *
+      *           outgoing payments.                                  * 
+      *  200943 - If Mt103 then default to SHA                        *
+      *  STP017 - STP flags: 'Y' = STP, 'N' = Manual.                 *
+      *  EEE058 - Incoming STP                                        *
+      *           Default to SHA if CFT014                            *
+      *           Copy hook added - FT0349DB01, FT0349MK01            *
       *  MD058213 - FT0349 Compile Error Due to Same Field Names      *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      * 
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1072,7 +1088,8 @@
       ** If CFT009 on and STP, clear working DS                           CFT009
       *                                                                   CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
-     C           STP       ANDEQ'S'                                       CFT009
+     C********** STP       ANDEQ'S'                                                    CFT009 STP017
+     C           STP       ANDEQ'Y'                                                           STP017
      C                     CLEARWOTPYD                                    CFT009
      C                     CLEARWOTPXD                                    CFT009
      C                     ENDIF                                          CFT009
@@ -1804,6 +1821,8 @@
       *
      C                     ADD  1         Q
      C                     MOVEL'SRPROC'  @STK,Q
+      *                                                                                       STP033
+     C           STP       IFNE 'Y'                                                           STP033
       *
       ** Move warning array passed to WRN@ and error indicators
       *
@@ -1817,7 +1836,8 @@
       ** Retrieve the saved file fields from the defaulted codes          CFT009
       *                                                                   CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
-     C           STP       ANDNE'S'                                       CFT009
+     C********** STP       ANDNE'S'                                                    CFT009 STP017
+     C           STP       ANDNE'Y'                                                           STP017
       *                                                                   CFT009
      C           S7PREF    CHAINOTPAY                90                   CFT009
       *                                                                   CFT009
@@ -1858,7 +1878,8 @@
       ** against default values (NOT FOR STP)                             CFT009
       *                                                                   CFT009
      C           CFT009    IFEQ 'Y'                                       CFT009
-     C           STP       ANDNE'S'                                       CFT009
+     C********** STP       ANDNE'S'                                                    CFT009 STP017
+     C           STP       ANDNE'Y'                                                           STP017
      C                     EXSR DEFLT                                     CFT009
      C                     ENDIF                                          CFT009
       *
@@ -1944,15 +1965,21 @@
      C                     ENDIF
       *
       ** Check that Total Charges do not exceed payment amount
+      *                                                                                       STP033
+     C                     ENDIF                                                              STP033
       *
      C                     EXSR SRTOT
       *
      C           CFT014    IFEQ 'Y'
       *
       ** Validate Receiver's Charges Remitted
+      *                                                                                       STP033
+     C           STP       IFNE 'Y'                                                           STP033
       *
      C                     EXSR SRRCRM
-      *
+      *                                                                                       STP033
+     C                     ENDIF                                                              STP033
+      *                                                                                       STP033
       ** Validate Sender's Charges Deducted
       *
      C                     EXSR SRSNCD
@@ -2363,6 +2390,7 @@
       *
       ** Details of Charges optional, Defaults to BEN
       *
+     C/COPY WNCPYSRC,FT0349DB01                                                               EEE058
      C           S7DETC    IFEQ *BLANKS
       *                                                                                       219241
       ** If CFT014 is installed, use the default value from the                               219241
@@ -2375,6 +2403,12 @@
      C/COPY WNCPYSRC,FT0349C005
      C                     ENDIF                                                              219241
       *                                                                                       219241
+      *                                                                                       200943
+      * If Mt103 then default to SHAre                                                        200943
+      *                                                                                       200943
+     C           CFT014    IFEQ 'Y'                                                           200943
+     C                     MOVEL'SHA'     S7DETC                                              200943
+     C                     ENDIF                                                              200943
      C                     ELSE
       *
       ** Valid entries are 'OUR' or 'BEN'
@@ -6813,6 +6847,7 @@
       ** Issue this error message only if payment type is not regular payments.               187058
       *
      C           V#PDAM    IFEQ *ZERO
+     C           F7RCRM    ANDNE*ZERO                                                         EEE058
      C           V#PYTP    ANDNE'RP'                                                          187058
      C           V#M103    IFEQ 'Y'                                                           200949
      C                     MOVEL'Y'       E#MSGS

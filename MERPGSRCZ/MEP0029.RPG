@@ -1,0 +1,143 @@
+      *****************************************************************
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*OVRF*: OVRDBF (FILE IN PROGRAM) (FILE ON SYSTEM)                  : *
+/*EXI *  TEXT('Midas ME Repair Field to put dot in line 2')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0029 - Repair Field to put dot in line 2                  *
+      *                                                               *
+      *  Function:  This program places dot in the next line if the   *
+      *  first line is account line and second one shorter than 11    *
+      *  characters. Used to repair beneficiary.                      *
+      *                                                               *
+      *                                                               *
+      *  (C) Copyrignt Misys International Banking Systems 2002       *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 MKFX01             Date 23Jan06               *
+      *                 EEE058   *CREATE   Date 28Nov2002             *
+      * Midas Release 4.01--------------------------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  MKFX01 - Processing of field :24: added.                     *
+      *           Changes in /copy SME1100P.                          *
+      *  EEE058 - Repair field 50                                     *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+      *
+     IPIFDDT      DS
+     I                                        1 256 WRFDDT
+     I                                        6 256 WRTGVL
+     I                                       20  20 IACCLN
+     I                                       20  54 ILINE1
+     I                                       31  54 IREST1
+     I                                       55  89 ILINE2
+     I                                       66  89 IREST2
+     I                                       90 124 ILINE3
+     I                                      125 256 IREST
+      *
+      *  INPUT TAG DESCRIPTION
+      *
+     IPRFDDT      DS
+     I                                        1 256 WIFDDT
+     I                                        6 256 WITGVL
+     I                                        2  19 NACCR
+     I                                        2   7 NCNUM
+     I                                        8  10 NCCY
+     I*****                                  11  14 NACOD                                    MD31937
+     I*****                                  15  16 NACSQ                                    MD31937
+     I*****                                  17  19 NBRCA                                    MD31937
+     I*****                                  20 256 R59INF                                   MD31937
+     I                                       11  20 NACOD                                    MD31937
+     I                                       21  22 NACSQ                                    MD31937
+     I                                       23  25 NBRCA                                    MD31937
+     I                                       26 256 R59INF                                   MD31937
+     I                                       55  89 RLINE2
+     I                                       55  55 RDOT2
+     I                                       90 124 RLINE3
+     I                                       90  90 RDOT3
+     I                                      125 256 RREST
+     IP@FMT     E DSDSSDY
+      * External Data structure to hold the outgoing record format
+      * of the file.
+     ID@ACCT    E DSACCNTAB
+      * ACCNTABF - Account details record format data structure
+      *
+      *
+     IPCRIT     E DSMEGNCRPD
+      * Criteria rule hit
+      *
+     I              '0123456789'          C         DIGITS
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define incoming parameters
+      *
+     C           *LIKE     DEFN WRTGVL    P#RPP1
+     C           *LIKE     DEFN WITGVL    P#RPP2
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#RETN  7
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2            Message Details
+     C                     PARM           P#RPP1
+     C                     PARM           P#RPP2
+     C                     PARM           PCRIT
+      *
+      *  Process field
+      *
+     C                     MOVELP#RPP1    PIFDDT
+     C                     MOVELP#RPP1    PRFDDT
+      *
+      *  Check second line has information if not dot it
+      *
+     C           IACCLN    IFEQ '/'
+      *
+     C           IREST2    IFEQ *BLANKS
+     C           ILINE3    ANDEQ*BLANKS
+     C                     MOVEL'.'       RLINE3
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           IREST1    IFEQ *BLANKS
+     C           ILINE2    ANDEQ*BLANKS
+     C                     MOVEL'.'       RLINE2
+     C                     MOVELPRFDDT    P#RPP2
+     C                     MOVEL'*MAP'    P#RETN    P
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *  Exit program
+      *
+     C                     RETRN
+**  CPY@ table
+(C) Copyright Misys International Banking Systems Ltd. 2002

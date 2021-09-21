@@ -1,0 +1,142 @@
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 MK0516             Date 09Feb2005             *
+      *                 EEE065    *CREATE  Date 01Jan2004             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  MK0516 - When validation of destination against BIC fails,   *
+      *           issue an error message instead of warning.          *
+      *  EEE065 - FT Payment Rounting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      * Cheque for switchable feature
+      *
+      ** Access SAR details file to determine if ERN014 is switched ON
+      *
+     C           EEE065    IFEQ *BLANKS
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTRN   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'EEE065'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+      ** If core feature is switched ON, set a variable field to
+      ** condition the rest of the processing.
+      *
+     C           @RTRN     IFEQ *BLANKS
+     C                     MOVE 'Y'       EEE065  1
+     C                     ELSE
+     C                     MOVE 'N'       EEE065
+      *
+      ** else, database error (return code other than *NRF)
+      *
+     C           @RTRN     IFNE '*NRF   '
+     C                     MOVEL'SCSARDPD'W0FILE           ************
+     C                     MOVEL'*VERIFY' W0KEY            * DBERR 999*
+     C                     Z-ADD999       W0ERNB           ************
+     C                     EXSR SRERR                      *ABORT PGM*
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  Only call if SWIFT Settlement
+     C           S4STMT    IFEQ '08'
+     C           LCSETM    ANDNE'EB'
+     C           LCSETM    ANDNE'ER'
+     C           LCSETM    ANDNE'EL'
+     C           LCSETM    ANDNE'ES'
+     C           LCSETM    ANDNE'EK'
+     C           LCSETM    ANDNE'PS'
+     C           F4DSTT    ANDNE'A'
+     C           EEE065    ANDEQ'Y'
+      *
+      * Booking branch
+     C                     MOVELS4BRCA    SWBRCA
+     C           F4DSTT    IFEQ 'S'
+      * SWIFT BIC
+     C                     MOVELS4DST1    SWSBIC
+      * Information type  (S=SWIFT C=Customer)
+     C                     MOVEL'S'       SWTYPE
+     C                     ELSE
+      * Customer
+     C                     MOVEL'C'       SWTYPE
+     C           F4DSTT    IFEQ 'F'
+     C           F4DSTT    OREQ 'R'
+     C           F4DSTT    OREQ 'G'
+     C                     MOVELIMCNUM    SWCUST
+     C                     ELSE
+     C                     MOVELS4DST1    SWCUST
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     CALL 'FTP0700'
+     C                     PARM *BLANKS   SWRTN   7
+     C                     PARM           SWPARM           Incoming dat
+      *
+      * If not fatal only warning
+      *
+     C                     SELEC
+     C           SWRTN     WHEQ '       '
+     C           SWRTN     WHEQ 'SWK0003'
+      *                                                                                       MK0516
+     C           SWRTN     WHEQ 'SWK0002'                                                     MK0516
+     C           SWRTN     OREQ 'SWK0004'                                                     MK0516
+     C           SWRTN     OREQ 'SWK0005'                                                     MK0516
+     C           SWRTN     OREQ 'SWK0006'                                                     MK0516
+     C           SWRTN     OREQ 'SWK0007'                                                     MK0516
+      *                                                                                       MK0516
+      ** Return error message.                                                                MK0516
+      *                                                                                       MK0516
+     C                     MOVEL'Y'       E#MSGS                                              MK0516
+     C                     MOVELS4DST1    FTMSDT                                              MK0516
+     C                     MOVELE#CPGM    FTPGMQ                                              MK0516
+     C                     MOVELSWRTN     FTMSID                                              MK0516
+     C                     EXSR FTSNMS                                                        MK0516
+     C                     MOVEL'Y'       I4DST1                                              MK0516
+     C                     MOVEL'Y'       E#NOUP                                              MK0516
+      *                                                                                       MK0516
+     C           SWRTN     WHEQ 'SWK0001'
+     C*****      SWRTN     OREQ 'SWK0002'                                                     MK0516
+     C*****      SWRTN     OREQ 'SWK0004'                                                     MK0516
+     C*****      SWRTN     OREQ 'SWK0005'                                                     MK0516
+     C*****      SWRTN     OREQ 'SWK0006'                                                     MK0516
+     C*****      SWRTN     OREQ 'SWK0007'                                                     MK0516
+      *
+      ** Make sure warning is displayed at least once
+      *
+     C                     MOVEL'Y'       I4DST
+     C                     MOVEL'Y'       E#WARN
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4SLDT    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVELSWRTN     FTMSID
+     C                     EXSR FTSNMS
+      *
+     C           WRN@,9    IFEQ *BLANKS
+     C                     MOVEL*BLANKS   E#RSND
+     C                     MOVEA'Y'       WRN@,9
+     C                     ENDIF
+      * Error
+     C                     OTHER
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELS4DST1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'SWK0006' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       I4DST
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVEA' '       WRN@,9
+     C                     ENDSL
+     C                     ENDIF
+      *
+      *
+      *****************************************************************
+      * End of FT0342C025                                             *
+      *****************************************************************

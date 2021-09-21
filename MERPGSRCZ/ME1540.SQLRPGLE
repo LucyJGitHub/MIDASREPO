@@ -16,8 +16,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 29Jul11               *
+      *                 ERZ093             Date 01Oct2004             *
+      *                 MK0521             Date 15Feb2005             *
+      *                 EEE065             Date 26Aug03               *
+      *                 EEE056             Date 22Oct02               *
+      *                 EEE046             Date 11Apr01               *
+      *                 EEE019             Date 30Jun99               *
+      *                 ESL038             Date 01Oct2004             *
+      *                 EEE058             Date 05Feb2003             *
+      *                 PL0001             Date 02Oct2001             *
+      *                 MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030371           Date 10Sep14               *
@@ -69,6 +80,45 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *           Applied following changes:                          *
+      *           ERZ093, MK0521, EEE065, EEE056, EEE046,             *
+      *           EEE019, ESL038, EEE058, PL0001                      *
+      *  ERZ093 - MT101's STP processing                             *
+      *           Use copy hook ME1540CMF1, ME1540CMF2                *
+      *  MK0521 - Kepp auto auhorise indicator on, even after CMD12   *
+      *           was pressed.                                        *
+      *  EEE065 - Polish Features Upgrade R4                          *
+      *           Rename ME1540C007 in ME1540C012                     *
+      *           Rename ME1540C010 in ME1540C013                     *
+      *           used hooks : ME1540E001, C001, C003, C005, C006,    *
+      *                              C008, C009, C012, C013           *
+      *  EEE056 - Polish Clearing Tax Payment                         *
+      *           Amended hook ME1540C006                             *
+      *           Amended hook ME1540C007                             *
+      *           Amended hook ME1540C009                             *
+      *           Amended hook ME1540C010                             *
+      *  EEE046 - Polish Clearing Enhancement                         *
+      *  /Copy used:              /Copy added:                        *
+      *                           ME1540C005                          *
+      *                           ME1540C006                          *
+      *                           ME1540C007                          *
+      *                           ME1540C008                          *
+      *                           ME1540C009                          *
+      *                           ME1540C010                          *
+      *                           ME1540E001                          *
+      *  EEE019 - MT100 Interface with MultiCash.                     *
+      *           used /Copy     ME1540C001, ME1540C003               *
+      *  ESL038 - ING STP Development                                 *
+      *  EEE058 - Allow Contains to be specified CT                   *
+      *           Add copy hook ME1540DB01                            *
+      *           Add copy hook ME1540DB02                            *
+      *           Add copy hook ME1540DB03                            *
+      *           Add copy hook ME1540DB04                            *
+      *           Add window processing                               *
+      *           Add copy hook ME1540DB01                            *
+      *  PL0001 - Add settleement mothods 18 and 91                   *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -162,6 +212,7 @@
      F**********                           RENAME(@EFREJ5:@MTAGL1)                          MD056560
      FMEINMVL2  IF   E           K DISK                                                           MD
      F** Midas Incoming Valid Messages by Message Type                                      MD020057
+     D/COPY WNCPYSRC,ME1540DB02                                                               EEE058
      F/EJECT
       *****************************************************************
       *                                                               *
@@ -290,7 +341,8 @@
      D*  Copysource for error processing
      D*
      D**  Array containing Copyright statement
-     D HKST            S              2    DIM(7) CTDATA PERRCD(7)
+     D*HKST*****       S              2    DIM(7) CTDATA PERRCD(7)                           PL0001
+     D HKST            S              2    DIM(9) CTDATA PERRCD(9)                           PL0001
      D**  Array containing valid existing settlement methods
      D HKVN            S              1    DIM(11) CTDATA PERRCD(11)
      D**  Array for set number and sequence number validation
@@ -349,6 +401,9 @@
      D DSBRCA        E DS                  EXTNAME(SDBRCHPD)
      D**  Data Structures for Branch Definition
      D*
+     D DSMMOD        E DS                  EXTNAME(SDMMODPD)                                  EEE058
+     D**  Data Structures for Module Definition                                               EEE058
+     D*                                                                                       EEE058
      D DSMTPY        E DS                  EXTNAME(SDMTPYPD)
      D**  Data Structures for Message Type Definition
      D*
@@ -515,6 +570,7 @@
      D #1GNDT          DS           231
       * Stored master file format fields                                  162428
       *                                                                   162428
+     I/COPY QWINDSRC,ME1540WDTA                                                               EEE058
      C/EJECT
      C*================================================================
      C*  P R O G R A M   S T A R T
@@ -759,6 +815,14 @@
      C                   MOVE      'N'           CSW209
      C                   MOVE      *ON           *IN71
      C                   ENDIF
+      *                                                                                       EEE058
+      * Get modules information                                                               EEE058
+      *                                                                                       EEE058
+     C                   CALL      'AOMMODR0'                           9090                  EEE058
+     C                   PARM      *BLANKS       P@RTCD            7            B:Return code EEE058
+     C                   PARM      '*FIRST '     P@OPTN            7            I:Option      EEE058
+     C     DSMMOD        PARM      *BLANKS       DSFDY                          O:Module Flg  EEE058
+      *                                                                                       EEE058
      C                   ENDSR
      C/EJECT
      C*****************************************************************
@@ -1501,6 +1565,13 @@
      C                   MOVE      '1'           *IN12
      C                   SETON                                        92
      C                   END
+      *                                                                                       EEE058
+      * Window processing                                                                     EEE058
+     C     *IN03         IFEQ      '0'                                                        EEE058
+     C     *IN03         ANDEQ     '0'                                                        EEE058
+     C                   EXSR      SRWIND                                                     EEE058
+     C                   END                                                                  EEE058
+      *                                                                                       EEE058
      C*
      C  N12
      CANN03
@@ -1690,6 +1761,7 @@
      C*
      C                   ENDIF
      C*
+     C/COPY WNCPYSRC,ME1540DB04                                                               EEE058
      C                   END
      C*                                                                   162428
      C     ENDDEL        TAG                                                                   16242
@@ -1871,6 +1943,7 @@
      C                   UNLOCK    MEURPRL0                                                    16242
      C                   ENDDO
      C*
+     C/COPY WNCPYSRC,ME1540DB03                                                               EEE058
      C                   MOVE      'Y'           #HOK
      C*
      C                   END
@@ -1914,6 +1987,7 @@
      C                   MOVEL     'Y'           W0RSF1
      C                   END
      C*
+      /COPY WNCPYSRC,ME1540C012                                                               EEE065
      C                   ENDSR
      C/EJECT
      C*****************************************************************
@@ -2023,6 +2097,10 @@
      C     *IN07         IFEQ      '1'                                                         16267
      C                   EXSR      #HVF7                                                       16267
      C                   ENDIF                                                                 16267
+      * Window processing                                                                     EEE058
+     C     *IN99         IFEQ      '0'                                                        EEE058
+     C                   EXSR      SRWIND                                                     EEE058
+     C                   END                                                                  EEE058
      C*                                                                   CRE008
      C**  Validate Key F8                                                 CRE008
      C     *IN08         IFEQ      '1'                                                         CRE00
@@ -2644,6 +2722,7 @@
      C     #HVPTP        BEGSR
      C*
      C                   MOVE      '0'           *IN32
+     C/COPY WNCPYSRC,ME1540CMF1                                                               ERZ093
      C*
       *                                                                   CFT006
       ** Payment type must be for RI, for 101                             CFT006
@@ -2666,6 +2745,7 @@
      C                   ENDIF                                                                 CFT00
       *                                                                   CFT006
      C                   ENDIF                                                                 CFT00
+     C/COPY WNCPYSRC,ME1540CMF2                                                               ERZ093
       *                                                                   CRE008
       ** Payment type must be for RI, for 101                             CRE008
       *                                                                   CRE008
@@ -5065,6 +5145,7 @@
      C*
      C**  Perform table lookup for valid operator values
      C     #2OPER        LOOKUP    HKOP                                   66
+     C/COPY WNCPYSRC,ME1540DB01                                                               EEE058
      C*
      C     *IN66         IFNE      '1'
       * When ? is entered we perform no validity checks
@@ -5269,6 +5350,7 @@
      C                   MOVEL     #1BRCA        GNBRCA
      C                   MOVEL     #1AUTO        GNAUTO                                        CFT00
      C*
+      /COPY WNCPYSRC,ME1540C013                                                               EEE065
      C     #1ACTC        IFEQ      'I'                                                         CFT00
      C/COPY WNCPYSRC,ME1540C010
      C                   MOVEL     *BLANKS       PDTOCD                                        CFT00
@@ -5454,6 +5536,83 @@
      C*
      C                   ENDSR
       /EJECT
+      *================================================================                       EEE058
+      *                                                               *                       EEE058
+      *  SRWIND   : Control Window Processing                         *                       EEE058
+      *                                                               *                       EEE058
+      *================================================================                       EEE058
+     CSR   SRWIND        BEGSR                                                                EEE058
+      *                                                                                       EEE058
+      * If window processing call WN0010                                                      EEE058
+      *                                                                                       EEE058
+     C     BGWDPR        IFEQ      'Y'                                                        EEE058
+      *                                                                                       EEE058
+      *    /copy to move data into the data structure fields passed                           EEE058
+      *     as a parameter to the window controller                                           EEE058
+      *                                                                                       EEE058
+      /COPY WNCPYSRC,ME1540MOV1                                                               EEE058
+      *                                                                                       EEE058
+     C                   CALL      'WN0010'                                                   EEE058
+     C                   PARM      ##PGM         O#PGM            10                          EEE058
+     C                   PARM      *BLANKS       O#CMD             2                          EEE058
+     C                   PARM      #HACTC        O#ACTN            1                          EEE058
+     C                   PARM                    DATA                                         EEE058
+     C     R#RTN         PARM      *BLANKS       O#RTN             7                          EEE058
+     C                   PARM                    EXTRA           256                          EEE058
+      *                                                                                       EEE058
+      *   /copy to move data back from the data structure fields passed                       EEE058
+      *    as a parameter to the window controller and control user                           EEE058
+      *    defined processing.                                                                EEE058
+      *                                                                                       EEE058
+      /COPY WNCPYSRC,ME1540MOV2                                                               EEE058
+      *                                                                                       EEE058
+     C     *LIKE         DEFINE    O#RTN         R#RTN                                        EEE058
+     C     R#RTN         CABEQ     *BLANKS       EXWIND                                       EEE058
+      *                                                                                       EEE058
+      *  Check return code and send message on action                                         EEE058
+      *  - set no update as some action has been specified.                                   EEE058
+      *                                                                                       EEE058
+     C                   MOVEL     *ON           *IN99                                        EEE058
+     C                   ROLBK                                          90                    EEE058
+      *                                                                                       EEE058
+     C                   SELECT                                                               EEE058
+      *                                                                                       EEE058
+      * *Return code is *User QUIT requested                                                  EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'Y2U9999'                                                  EEE058
+     C                   MOVEL     'Y2U9999'     P0RTN                                        EEE058
+     C                   MOVEL     'Y2U9999'     ZAMSID                                       EEE058
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+     C                   EXSR      ZYEXPG                                                     EEE058
+      *                                                                                       EEE058
+      * *Return code is WN Window Error                                                       EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'USR0563'                                                  EEE058
+     C                   MOVEL     'USR0563'     ZAMSID                                       EEE058
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+      *                                                                                       EEE058
+      * *Return code is *DBF update error                                                     EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'USR0567'                                                  EEE058
+     C                   MOVEL     'USR0567'     ZAMSID                                       EEE058
+     C                   MOVEL     'SDUSRMSG'    ZAMSGF                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+      *                                                                                       EEE058
+      * *Return code is *Previous Screen                                                      EEE058
+      *                                                                                       EEE058
+     C     R#RTN         WHENEQ    'USR0790'                                                  EEE058
+     C                   MOVEL     'MIN0001'     ZAMSID                                       EEE058
+     C                   EXSR      ZASNMS                                                     EEE058
+     C                   ENDSL                                                                EEE058
+      *                                                                                       EEE058
+     C                   END                                                                  EEE058
+      *                                                                                       EEE058
+     C     EXWIND        TAG                                                                  EEE058
+     CSR                 ENDSR                                                                EEE058
+     C/EJECT
+      *================================================================
      C*
      C* File and Program Error Processing
      C*
@@ -5461,9 +5620,11 @@
      C/COPY MECPYSRC,SRERRCLE                                                               MD056560
 ** CPY@
 (c) Finastra International Limited 2001
-** HKST  - Valid existing settlement methods
-00010208101213
+** HKST  - Valid existing settlement methods     PL0001 add 18 91 to end
+000102081012131891
 ** HKVN  - Numeric field validation table
 0123456789
 ** HKOP  - Valid operator values
 EQNEGEGTLELT
+** HKST2                                                                                     EEE065
+ECEDSCERZCETTP                                                                               EEE065

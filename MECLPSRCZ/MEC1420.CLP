@@ -10,8 +10,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD024820           Date 08May14              */
+/*       Last Amend No. MD031937           Date 13Jan15              */
+/*       Prev Amend No. AR856737           Date 13Sep11              */
+/*                      DJBF10             DATE 17NOV2004            */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD024820           Date 08May14              */
 /*                      262490             Date 07Nov09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -26,6 +29,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*       DJBF10 - Add Copy Hook fro Quick Search                     */
+/*                MEC1420DB1 added.                                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD024820 - Some SWIFT BIC were not deleted due to locking   */
 /*       262490 - If Full files and CFT040  then clear MEBICPPD      */
@@ -344,6 +351,7 @@
              CHGVAR     VAR(&IN54) VALUE('0')
              ENDDO
 /* Clear temporary files                                             */
+/*/COPY WNCPYSRC,MEC1420DB1                                          */                   /*DJBF10*/
              CLRPFM     METICPPD
              CLRPFM     METICCPD
              CLRPFM     METICVPD

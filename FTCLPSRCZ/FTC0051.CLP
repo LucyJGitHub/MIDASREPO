@@ -9,8 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD102             Date 08Jan19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD031937           Date 13Jan15              */
+/*       Prev Amend No. AR856737           Date 13Sep11              */
+/*                      238249             Date 19May06              */
+/*                      CSD102             Date 08Jan19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD021757           Date 14Aug13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +28,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD031937 - Upgrade STP enhancements to BF Midas 2.1         */
+/*       AR856737 - Upgrade STP enhancements to Midas Plus level     */
+/*                - Applied fix 238249                               */
+/*       238249 - Record locking problem due to incoming payment     */
+/*                transaction data area in XXDPLIB. Apply fix 042167.*/
 /*       CSD102 - Password Length Extension                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021757 - CAP211 Override OTXL0                            */
@@ -67,6 +75,10 @@
 /** The activation group that the called program runs in */
  
              DCL        VAR(&ACTGRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODULE) TYPE(*CHAR) LEN(2)                                   /*238249*/
+             DCL        VAR(&TRNREF) TYPE(*CHAR) LEN(15)                                  /*238249*/
+             DCL        VAR(&RINFOR) TYPE(*CHAR) LEN(80)                                  /*238249*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*238249*/
                                                                                           /*CSC022*/
              DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)                                    /*CSC022*/
              DCL        VAR(&SCCMTJOB) TYPE(*CHAR) LEN(256)                               /*CSC022*/
@@ -301,5 +313,11 @@ END:
              ENDDO                                                                        /*CSC022*/
  
              ENDDO
+             CHGVAR     VAR(&MODULE) VALUE('FT')                                          /*238249*/
+             CHGVAR     VAR(&TRNREF) VALUE('               ')                             /*238249*/
+             CHGVAR     VAR(&RINFOR) VALUE('    ')                                        /*238249*/
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')                                     /*238249*/
+             CALL       PGM(AOC8000) PARM(&RTNCDE &MODULE &TRNREF +
+                          &RINFOR)                                                        /*238249*/
  
              ENDPGM

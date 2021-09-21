@@ -1,0 +1,80 @@
+      *---------------------------------------------------------------*
+      *  Last Amend No. MD031937           Date 23Jan15               *
+      *  Prev Amend No. AR856737           Date 13Sep11               *
+      *                 ESL038             Date 19Oct2004             *
+      *                 EBB013             Date 08Oct04               *
+      *                 EEE065             Date 26Aug03               *
+      *                 EEE036   *CREATE   Date 28Oct96               *
+      *---------------------------------------------------------------*
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level      *
+      *  ESL038 -  PLN Abroad - Inclusion of EBB013                   *
+      *  EBB013 -  Local Clearing Interface                           *
+      *   EEE065 - Polish Features Upgrade R4                         *
+      *   EEE036 - Polish Clearing Message Generation (Elixir)        *
+      *---------------------------------------------------------------*
+      *
+      *
+      *                                                                                       EBB013
+      **  Set screen field to standard settlement method                                      EBB013
+     C**********           MOVE STMT      #1SETM                                              EBB013
+     C                     MOVE STMT      STMTF3                                              EBB013
+     C                     MOVE 'N'       ##LCLR  1                                           EBB013
+      *                                                                                       EBB013
+      **  Determine if payment is a local clearing payment                                    EBB013
+     C           PREF      CHAINFTLCDTL0             90                                       EBB013
+      *                                                                                       EBB013
+      **  Local clearing payment                                                              EBB013
+     C           *IN90     IFEQ *OFF                                                          EBB013
+      *                                                                                       EBB013
+      **  Set local clearing flag                                                             EBB013
+     C                     MOVE 'Y'       ##LCLR  1                                           EBB013
+      *                                                                                       EBB013
+      **  Set screen field to local clearing settlement method                                EBB013
+     C*****                MOVE CLSETM    STMTF3                                        EBB013EMRMK2
+     C                     MOVE CLSETM    STMTF4                                              EMRMK2
+     C                     MOVE *ON       *IN79                                               EMRMK2
+      *                                                                                       EBB013
+      **  Move ordering customer into work field                                              EBB013
+     C                     MOVELORC1      @1ORC1                                              EBB013
+      *                                                                                       EBB013
+      **  Ordering customer contains retail account                                           EBB013
+     C           ORCT      IFEQ 'R'                                                           EBB013
+     C                     MOVEL@1ACNO    P@RETL                                              EBB013
+     C                     MOVEL*BLANKS   P@CNUM                                              EBB013
+     C                     MOVEL*BLANKS   P@ACOD                                              EBB013
+     C                     MOVEL*BLANKS   P@ACSQ                                              EBB013
+     C                     MOVEL*BLANKS   P@BRCA                                              EBB013
+     C                     MOVEL*BLANKS   P@CYCD                                              EBB013
+     C                     ENDIF                                                              EBB013
+      *                                                                                       EBB013
+      **  Ordering customer contains partial account identifier                               EBB013
+     C           ORCT      IFEQ 'P'                                                           EBB013
+     C                     MOVEL*BLANKS   P@RETL                                              EBB013
+     C                     MOVEL@1CNUM    P@CNUM                                              EBB013
+     C                     MOVEL@1ACOD    P@ACOD                                              EBB013
+     C                     MOVEL@1ACSQ    P@ACSQ                                              EBB013
+     C                     MOVEL@1BRCA    P@BRCA                                              EBB013
+     C                     MOVELPCCY      P@CYCD                                              EBB013
+     C                     ENDIF                                                              EBB013
+      *                                                                                       EBB013
+      **  Get IBAN reference if it exists                                                     EBB013
+     C                     CALL 'AOACCTR0'                                                    EBB013
+     C                     PARM *BLANKS   P@RTCD  7                                           EBB013
+     C                     PARM '*KEY   ' P@OPTN  7                                           EBB013
+     C                     PARM           P@RETL 10                                           EBB013
+     C                     PARM           P@CNUM  6                                           EBB013
+     C                     PARM           P@CYCD  3                                           EBB013
+     C                     PARM           P@ACOD  4                                           EBB013
+     C                     PARM           P@ACSQ  2                                           EBB013
+     C                     PARM           P@BRCA  3                                           EBB013
+     C           WACCN     PARM *BLANKS   DSSDY                                               EBB013
+      *                                                                                       EBB013
+      **  If account not found report database error                                          EBB013
+     C           P@RTCD    IFEQ *BLANKS                                                       EBB013
+     C           IBAN      ANDNE*BLANKS                                                       EBB013
+     C                     MOVELIBAN      SORC1                                               EBB013
+     C                     ENDIF                                                              EBB013
+      *                                                                                       EBB013
+     C                     ENDIF                                                              EBB013
+      *                                                                                       EBB013

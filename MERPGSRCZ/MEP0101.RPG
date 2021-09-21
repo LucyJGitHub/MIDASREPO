@@ -1,0 +1,174 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME STP Queue Status')                            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  MEP0101 - STP Queue Status                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *                                                               *
+      *  Last Amend No. MD031937           Date 13Jan15               *
+      *  Prev Amend No. AR856737           Date 15Jul2011             *
+      *                 HVB013   *CREATE   Date 03Nov2011             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031937 - Upgrade STP enhancements to BF Midas 2.1          *
+      *  AR856737 - Upgrade STP enhancements to Midas Plus level.     *
+      *  HVB013  - STP Queue Monitor                                  *
+      *                                                               *
+      *****************************************************************
+      ** Messages Linked to STP Queue
+     FFTMESQL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Summary of items in the Queue
+     FFTQMONL0UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+      ** STP Queue Definition
+     FFTSTPQL0IF  E           K        DISK         KINFSR *PSSR
+      ** Rename the field in file FTSTPQL0
+     I@STPQP0
+     I              SQSTPQ                          F#STPQ
+      *
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      * Get Rundate - Rundate  *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      *
+     I              'NOT_IN_QUEUE'        C         CNOTQ
+     I              'MANUALLY Processed'  C         CMANP
+     I              'Queue DELETED'       C         CNODES
+      *
+      *
+     C           KPOS1     KLIST
+     C                     KFLD           KSTPQ            STP Queue name
+      * Setup key
+     C                     MOVE *BLANKS   KSTPQ  20
+      *
+     C           KPOS1     SETLL@MESQP0
+     C                     READ @MESQP0                  82
+      *
+     C           *IN82     DOWEQ*OFF
+      *
+     C                     Z-ADD0         W#LIV   30
+     C                     Z-ADD0         W#DEL   30
+     C                     Z-ADD0         W#AUT   30
+     C                     Z-ADD0         W#MAT   30
+     C                     Z-ADD0         W#REJ   30
+     C                     MOVE *BLANKS   WSTPQ  20
+     C                     MOVE SQSTPQ    WSTPQ
+      *
+     C           SQSTPQ    DOWEQWSTPQ
+     C           *IN82     ANDEQ*OFF
+      *
+     C                     SELEC
+     C           FTINFG    WHEQ 'MIN0030'
+     C           FTOTFG    OREQ 'MIN0030'
+     C                     ADD  1         W#LIV
+      *
+     C           FTINFG    WHEQ 'MIN0031'
+     C           FTOTFG    OREQ 'MIN0031'
+     C                     ADD  1         W#DEL
+      *
+     C           FTINFG    WHEQ 'MIN0032'
+     C           FTOTFG    OREQ 'MIN0032'
+     C                     ADD  1         W#AUT
+      *
+     C           FTINFG    WHEQ 'MIN0033'
+     C           FTOTFG    OREQ 'MIN0033'
+     C                     ADD  1         W#MAT
+      *
+     C           FTINFG    WHEQ 'MIN0083'
+     C           FTOTFG    OREQ 'MIN0083'
+     C                     ADD  1         W#REJ
+      *
+     C                     ENDSL
+      *
+     C                     READ @MESQP0                  82
+      *
+     C           SQSTPQ    IFNE WSTPQ
+     C           *IN82     OREQ *ON
+      *
+      ** Update File
+     C                     MOVE *BLANKS   KSTPQ
+      *
+     C           WSTPQ     IFNE *BLANKS
+     C                     MOVE WSTPQ     KSTPQ
+     C                     ELSE
+     C                     MOVELCNOTQ     KSTPQ
+     C                     ENDIF
+      *
+     C           KPOS1     CHAINFTQMONL0             75
+     C                     MOVE *BLANKS   FSTPQ
+     C                     MOVELKSTPQ     FSTPQ
+     C                     Z-ADDW#LIV     FNTRN
+     C                     Z-ADDW#DEL     FNDEL
+     C                     Z-ADDW#AUT     FNAUT
+     C                     Z-ADDW#MAT     FNMAT
+     C                     Z-ADDW#REJ     FNMSG
+      *
+      ** Get Queue Description
+     C           KPOS1     CHAINFTSTPQL0             65
+      *
+     C                     MOVE *BLANKS   FQDES
+     C                     SELEC
+      ** Messages not assigned to Queue
+     C           *IN65     WHEQ *ON
+     C           WSTPQ     ANDEQ*BLANKS
+     C                     MOVELCMANP     FQDES
+      ** Messages on Queue but the Queue has been deleted.
+     C           *IN65     WHEQ *ON
+     C           WSTPQ     ANDNE*BLANKS
+     C                     MOVELCNODES    FQDES
+      ** Queue found
+     C           *IN65     WHEQ *OFF
+     C                     MOVELSQDESC    FQDES
+     C                     ENDSL
+      *
+     C           *IN75     IFEQ *ON
+     C                     WRITE@QMOND0
+     C                     ELSE
+     C                     UPDAT@QMOND0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+      * Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           ULERR     IFEQ *BLANK
+     C                     MOVE 'Y'       ULERR   1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************

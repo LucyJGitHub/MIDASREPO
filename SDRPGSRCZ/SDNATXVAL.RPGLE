@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CAP240             Date 03Aug21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 AR742751           Date 07Apr11               *
       *                 CER059             Date 19Jul10               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP240 - SD Non-account Holders JAVA Conversion              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -43,15 +45,15 @@
       *  CGL032 - Automatic Exchange of Information                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCCTXV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -63,65 +65,65 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Current Subfile Details
      D NwSflFmt      E DS                  Extname(SDNATXPD)
- 
+
       ** New Details in File Format
      D NwFilFmt      E DS                  Extname(SDVNATXPD)
- 
+
       ** Customer Details OK indicators
      D OkFlags       E DS                  Extname(SDENATXPD)
- 
+
       ** Valid Customer Details                                                             AR742751
      D ValidCusd     E DS                  EXTNAME(SDVCUSDPD)                               AR742751
      D                                     PREFIX(A_)                                       AR742751
@@ -133,28 +135,28 @@
       ** to be used in validation modules
      D CCTXScrnFmt   E DS                  Extname(SDCCTXPD)
      D                                     Prefix(@)
- 
+
       ** New File Details in CCTX Format
       ** to be used in validation modules
      D CCTXFileFmt   E DS                  Extname(SDVCCTXPD)
- 
+
       ** CCTX Error Flag format
       ** to be used in validation modules
      D CCTXOkFlags   E DS                  Extname(SDECCTXPD)
      D                                     Prefix(@)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
       **  Certificate Expiry and Status Cross Validation Field
      D DDCERT                        20A
- 
+
       *                                                                                       CER048
       ** External DS for SAR Details                                                          CER048
       *                                                                                       CER048
@@ -162,26 +164,26 @@
                                                                                               CER048
      D ZMUSER          DS            17
      D  USRBCH                11     13
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Mode of Operation
      D PModeOfOp       S              6A
- 
+
       ** Response Mode
      D PRespMode       S              1A
- 
+
       ** Work fields for bank data
      D WKDFIN          S                   Like(BJDFIN)
      D WKRDNB          S                   Like(BJRDNB)
      D WKCYCD          S                   Like(BJCYCD)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
      D I               S              3P 0
      D CER048          S              1A                                                      CER048
      D PReturnCd       S              6A                                                      CER048
@@ -192,47 +194,47 @@
      D POptn           S              7A                                                      CER048
      D PSard           S              6A                                                      CER048
      D PCalledF        S              1A                                                      CER048
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCCTXV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Format SDCCTXBRW screen and error indicators for use
       ** in validation modules
- 
+
      C                   EXSR      SRFmtCCTXscrn
- 
+
       ** Validate Tax Status
- 
+
      C                   EXSR      SRTAX
- 
+
       ** Validate Certificate Reference
- 
+
      C                   EXSR      SRCERT
- 
+
       ** Validate Certificate of Expiry Date
- 
+
      C                   EXSR      SRCEEX
- 
+
       ** Validate Customer Tax Status                                                         236137
                                                                                               236137
      C                   EXSR      SRCSTS                                                     236137
@@ -253,18 +255,18 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
       ** Format SDVNATXPD file format with validated fields
- 
+
      C                   EXSR      SRFmtNATXfile
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       *  SRFmtCCTXscrn - Format CCTX screen format                    *
       *****************************************************************
      C     SRFmtCCTXscrn BEGSR
- 
+
      C                   EVAL      @DDETXS = DDETXS
      C                   EVAL      @DDCERF = DDCERF
      C                   EVAL      @DDCEEX = DDCEEX
@@ -277,7 +279,7 @@
      C                   EVAL      @DDCVDT = DDCVDT                                           CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -285,7 +287,7 @@
       *  SRFmtNATXfile - Format NATX file format                      *
       *****************************************************************
      C     SRFmtNATXfile BEGSR
- 
+
      C                   EVAL      OKCEEX = @OKCEEX
       *                                                                                       CER048
      C                   IF        CER048  = 'Y'                                              CER048
@@ -293,7 +295,7 @@
      C                   EVAL      OKCADT = @OKCADT                                           CER048
      C                   EVAL      OKCVDT = @OKCVDT                                           CER048
      C                   ENDIF                                                                CER048
- 
+
      C                   IF        Idx < 1
      C                   EVAL      NTCERF = DDCERF
      C                   EVAL      NTCEEX = CTCEEX
@@ -307,7 +309,7 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -315,27 +317,27 @@
       *  SRTAX - Validate European Tax Status                         *
       *****************************************************************
      C     SRTAX         BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      SRResetEr
- 
+
       ** Validate Tax Status
- 
+
      C                   CALLB     'SDVTXST02'
- 
+
       * Input Parameters :
- 
+
       ** Return Code
       ** Mode Of Operation                                                                    232543
       ** Screen details in screen format
- 
+
      C                   PARM                    RetCodeIn
      C                   PARM                    PModeOfOp                                    232543
      C                   PARM                    NwSflFmt
- 
+
       * Output Parameters :
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Error Flags
       ** New Details in File Format
@@ -344,11 +346,12 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OkFlags
      C                   PARM                    NwFilFmt
- 
+     C                   PARM                    DDCOLC                         CAP240
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdErr
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -356,9 +359,9 @@
       *  SRCERT - Validate Certificate Reference                      *
       *****************************************************************
      C     SRCERT        BEGSR
- 
+
      C                   EVAL      OKCERF = 'Y'
- 
+
       ***Certifact**of Reference should be blank if Status is not 'S'                         232543
       **********                                                                              232543
      C**********         IF        DDETXS <> 'S' AND DDCERF <> *Blanks                        232543
@@ -367,17 +370,21 @@
      C**********         EVAL      MsgIdArr(Idx) = 'USR4792'                                  232543
      C**********         EVAL      OKCERF = 'N'                                               232543
      C**********         ENDIF                                                                232543
- 
+
       ** Free Format Certificate must be input if Tax Status is 'S'.
- 
+
      C                   IF        DDCERF = *Blanks
      C                             And DDETXS = 'S'
- 
+
      C                   EVAL      Idx = Idx + 1
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   Eval      FldNameArr(Idx) = 'CXCERF'                                 CAP240
+     C                   else                                                                 CAP240
      C                   EVAL      FldNameArr(Idx) = 'DDCERF'
+     C                   Endif                                                                CAP240
      C                   EVAL      MsgIDArr(Idx) = 'USR4783'
      C                   EVAL      OKCERF = 'N'
- 
+
      C**********         ELSE                                                                 232543
      C**********         EVAL      OKCERF = 'Y'                                               232543
      C                   ENDIF
@@ -387,11 +394,15 @@
      C                   IF        DDCERF = *Blanks                                           232543
      C                             And DDCEEX <> *Blanks                                      232543
      C                   EVAL      Idx = Idx + 1                                              232543
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   Eval      FldNameArr(Idx) = 'CXCERF'                                 CAP240
+     C                   else                                                                 CAP240
      C                   EVAL      FldNameArr(Idx) = 'DDCERF'                                 232543
+     C                   Endif                                                                CAP240
      C                   EVAL      MsgIDArr(Idx) = 'USR4800'                                  232543
      C                   EVAL      OKCERF = 'N'                                               232543
      C                   ENDIF                                                                232543
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -399,17 +410,17 @@
       ** SRCEEX - Validate Certificate Expiry Date                    *
       *****************************************************************
      C     SRCEEX        BEGSR
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      SRResetEr
- 
+
       ** Validate Certificate Expiry Date
- 
+
      C                   CALLB     'SDVCEXP01'
- 
+
       * Input Parameters :
- 
+
       ** Return Code
       ** Screen details in CCTX screen format
       ** Date Format Indicator
@@ -421,9 +432,9 @@
      C                   PARM                    BJRDNB
      C                   PARM                    ValidCusd                                  AR742751
      C                   PARM                    ValidCuad                                  AR742751
- 
+
       * Output Parameters :
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Error Flags in CCTX error format
       ** New Details in CCTX File Format
@@ -432,11 +443,12 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    CCTXOkFlags
      C                   PARM                    CCTXFileFmt
- 
+     C                   PARM                    DDCOLC                         CAP240
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdErr
- 
+
      C                   ENDSR
       *****************************************************************                       236137
      C/EJECT                                                                                  236137
@@ -454,7 +466,11 @@
                                                                                               236137
      C                   IF        DDNSTS = *BLANKS                                           236137
      C                   ADD       1             Idx                                          236137
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   Eval      FldNameArr(Idx) = 'CXNSTS'                                 CAP240
+     C                   else                                                                 CAP240
      C                   EVAL      FldNameArr(Idx) = 'DDNSTS'                                 236137
+     C                   Endif                                                                CAP240
      C                   EVAL      MsgIDArr(Idx) = 'USR4920'                                  236137
      C                   EVAL      oknsts = 'N'                                               236137
                                                                                               236137
@@ -466,7 +482,11 @@
      C                             DDNSTS <> 'N' AND                                          232543
      C                             DDNSTS <> 'C'                                              232543
      C                   EVAL      Idx = Idx + 1                                              232543
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   Eval      FldNameArr(Idx) = 'CXNSTS'                                 CAP240
+     C                   else                                                                 CAP240
      C                   EVAL      FldNameArr(Idx) = 'DDNSTS'                                 232543
+     C                   Endif                                                                CAP240
      C                   EVAL      MsgIDArr(Idx) = 'USR4921'                                  232543
      C                   EVAL      oknsts = 'N'                                               232543
      C                   ELSE                                                                 232543
@@ -495,6 +515,7 @@
      C                   PARM                    MsgDtaXAr                                    CER048
      C                   PARM                    CCTXOkFlags                                  CER048
      C                   PARM                    CCTXFileFmt                                  CER048
+     C                   PARM                    PModeOfOp                                    CAP240
       *                                                                                       CER048
       ** Update error info with that returned from validation module                          CER048
       *                                                                                       CER048
@@ -525,6 +546,7 @@
      C                   PARM                    MsgDtaXAr                                    CER048
      C                   PARM                    CCTXOkFlags                                  CER048
      C                   PARM                    CCTXFileFmt                                  CER048
+     C                   PARM                    PModeOfOp                                    CAP240
       *                                                                                       CER048
       ** Update error info with that returned from validation module                          CER048
       *                                                                                       CER048
@@ -555,6 +577,7 @@
      C                   PARM                    MsgDtaXAr                                    CER048
      C                   PARM                    CCTXOkFlags                                  CER048
      C                   PARM                    CCTXFileFmt                                  CER048
+     C                   PARM                    PModeOfOp                                    CAP240
       *                                                                                       CER048
       ** Update error info with that returned from validation module                          CER048
       *                                                                                       CER048
@@ -568,15 +591,15 @@
       *             from each validation module.                      *
       *****************************************************************
      C     SRResetEr     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** Reset error & warning fields/message IDs/message data (arrays)
- 
+
      C                   EVAL      FldNamXAr = *Blanks
      C                   EVAL      MsgIDXAr  = *Blanks
      C                   EVAL      MsgDtaXAr = *Blanks
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -585,9 +608,9 @@
       *            from each validation module.                       *
       *****************************************************************
      C     SRUpdErr      BEGSR
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   EVAL      I = 1
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C                   IF        *IN99 = *ON
@@ -595,13 +618,13 @@
      C                   MOVEA     MsgIDXAr      MsgIdArr(I)
      C                   MOVEA     MsgDtaXAr     MsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Set Error Index
- 
+
      C                   EVAL      I = 1
      C     *Blanks       LOOKUP    FldNameArr(I)                          99
      C                   EVAL      Idx = I - 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -611,11 +634,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       *  Input Paramters :
- 
+
       ** Return Code
       ** Mode of Operation
       ** Response mode
@@ -624,9 +647,9 @@
      C                   PARM                    PModeOfOp
      C                   PARM                    PRespMode
      C                   PARM                    NwSflFmt
- 
+
       * Output Parameters :
- 
+
       ** Error Flags
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Error message index
@@ -637,16 +660,17 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
      C                   PARM                    NwFilFmt
- 
+     C                   PARM                    DDCOLC            2            CAP240
+
       ** Access BanK Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *Blanks
      C     *Lock         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -689,7 +713,7 @@
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **------------------------------------------------------------------
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT

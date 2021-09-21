@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CAP240             Date 27Aug21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26250           Date 30Sep09               *
       *                 BUG23780           Date 24Apr09               *
       *                 BUG23892           Date 06May09               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP240 - SD Non Account Holders JAVA conversion              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26250 - Customer Details By Country of Tax Maintenance    *
@@ -210,7 +212,11 @@
      C                   ELSE
      C                   EVAL      OKCRTP = 'N'
      C                   EVAL      Idx = Idx + 1
+     C                   If        ModeOfOp = '*NAHL'                                       CAP240
+     C                   Eval      FldNamXAr(Idx) = 'CXCRTP'                                CAP240
+     C                   Else                                                               CAP240
      C                   EVAL      FldNamXAr(Idx) = 'DDCRTP'
+     C                   Endif                                                              CAP240
      C                   EVAL      MsgIdXAr(Idx) = 'USR8292'
       *
      C                   ENDIF
@@ -238,6 +244,7 @@
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OkFlags
      C                   PARM                    NwDlFilFmt
+     C                   PARM                    ModeOfOp          6            CAP240
       *
      C                   ENDSR
      ******************************************************************

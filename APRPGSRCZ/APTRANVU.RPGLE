@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CAP240             Date 23Jun21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
@@ -231,6 +232,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP240 - SD Non-account Holders JAVA (NAHL)                  *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -763,6 +765,7 @@
      D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
      D DDEXDT_FX     E                     EXTFLD(DDEXDT)                                     CDL099
      D SDCUEX        E DS                  EXTNAME(SDCUEXPD)                                MD044880
+     D TransNahlTot    S           9999A                                                      CAP240
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -5089,6 +5092,31 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN                                     CLE164
      C                   PARM                    Buffer                                       CLE164
      C                   PARM                    APIRetc                                      CLE164
+                                                                                              CAP240
+      * SD NAHL                                                                               CAP240
+                                                                                              CAP240
+     C     TransTYPE     WHENEQ    'NAHL'                                                     CAP240
+                                                                                              CAP240
+     C                   EVAL      TransNahlTot = BufferTotal                                 CAP240
+                                                                                              CAP240
+     C                   CALL      'SDNAHLVU'                                                 CAP240
+      * Common header information (DS) from source system                                     CAP240
+     C                   PARM                    HeadIn                                       CAP240
+      * Transaction information                                                               CAP240
+     C                   PARM                    TransNahlTot                                 CAP240
+     C                   PARM                    FldNameArr                                   CAP240
+     C                   PARM                    MsgIDArr                                     CAP240
+     C                   PARM                    MsgDtaArr                                    CAP240
+     C                   PARM                    WFldNamArr                                   CAP240
+     C                   PARM                    WMsgIDArr                                    CAP240
+     C                   PARM                    WMsgDtaArr                                   CAP240
+     C                   PARM                    MsgFArray                                    CAP240
+     C                   PARM                    UpdateYN                                     CAP240
+     C                   PARM                    Buffer9999                                   CAP240
+     C                   PARM                    APIRetc                                      CAP240
+                                                                                              CAP240
+     C                   MOVEL     Buffer9999    Buffer                                       CAP240
+     C                   MOVE      Buffer9999    Buffer2                                      CAP240
       *
       * If unknown API requested, make sure this is reported back
      C                   OTHER

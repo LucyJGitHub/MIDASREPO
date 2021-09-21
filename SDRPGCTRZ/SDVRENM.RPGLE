@@ -17,7 +17,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CAP240             Date 02Aug21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,14 +32,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP240 - SD Non-Account Holders JAVA conversion              *
       *  MD046248 - Finastra Rebranding                               *
       *  202379 - Incorrect field name                                *
       *  CAP034 - Conversion of SD inputs into modular structure      *
       *           to use as APIs.                                     *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -50,58 +52,58 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -116,18 +118,18 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       ** comments
- 
+
       *
       ** VALIDATION
       *
@@ -154,7 +156,11 @@
      C                   MOVE      'N'           DDCRNMOK
      C                   ADD       1             Idx
      C**********         MOVEL     'DDCRMM'      FldNamXAr(Idx)                               202379
+     C     @Function     Ifeq      'NAHL'                                       CAP240
+     C                   MOVEL     'DDNARN'      FldNamXAr(Idx)                 CAP240
+     C                   else                                                   CAP240
      C                   MOVEL     'DDCRNM'      FldNamXAr(Idx)                               202379
+     C                   Endif                                                  CAP240
      C                   MOVEL     'USR0220'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -165,7 +171,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -185,15 +191,16 @@
       *
       ** Customer Report Name - OK
      C                   PARM                    DDCRNMOK          1
+     C                   PARM                    @Function         4            CAP240
       *
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

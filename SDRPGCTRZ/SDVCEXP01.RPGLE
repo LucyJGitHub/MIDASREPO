@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CAP240             Date 27Aug21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR740196           Date 03Apr11               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP240 - SD Non Account Holders JAVA conversion              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -64,7 +66,7 @@
       *  CGL032 - Automatic Exchange of Information                   *
       *                                                               *
       *****************************************************************
- 
+
       ** Customer Details by Country of Tax                                                 BUG23658
      FSDACTXL1  IF   E           K DISK                                                     BUG23658
                                                                                             BUG23658
@@ -72,62 +74,62 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** New Details in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(SDCCTXPD)
- 
+
       ** New Details in File Format
      D NwDlFilFmt    E DS                  EXTNAME(SDVCCTXPD)
- 
+
       ** Valid Customer Details                                                             AR740196
      D ValidCusd     E DS                  EXTNAME(SDVCUSDPD)                               AR740196
      D                                     PREFIX(A_)                                       AR740196
@@ -142,25 +144,25 @@
       *                                                                                       CER048
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER048
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG26250
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Date Format Indicator
      D BJDFIN          S              1A
- 
+
       ** Rundate
      D BJRDNB          S              5P 0
- 
+
       ** ZDATE1 Parameters
      D ZDAYNO          S              5P 0
      D ErrorFlag       S              1A
- 
+
       ** Work Variables
      D WExpDat         S              5P 0
      D ExDtChg         S              1A                                                    BUG23658
@@ -177,7 +179,7 @@
      D WResi           S              1A                                                    BUG26250
       ** Mode of Operation                                                                  AR740196
      D PModeOfOp       S              6A                                                    AR740196
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -191,25 +193,29 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   EVAL      RetCodeIn = *Blanks
- 
+
      C                   EVAL      FldNamXAr = *Blanks
      C                   EVAL      MsgIDXAr = *Blanks
      C                   EVAL      MsgDtaXAr = *Blanks
      C                   EVAL      Idx = 0
      C                   EVAL      WExpDat = 0
- 
+
      C                   IF        PModeOfOp =  '*VU '                                      AR740196
      C                   EVAL      BBCOLC  = A_CUCOLC                                       AR740196
      C                   ENDIF                                                              AR740196
                                                                                             AR740196
+     C                   If        PModeOfOp =  '*NAHL'                                     CAP240
+     C                   Eval      BBCOLC  = Nahl_COLC                                      CAP240
+     C                   Endif                                                              CAP240
+                                                                                            CAP240
      C                   IF        DDCEEX <> *BLANKS
- 
+
       ** Validate that the expiry date only contains numbers
- 
+
      C                   TESTN                   DDCEEX               9798
      C                   IF        *IN97 = *ON
      C                             Or *IN98 = *ON
@@ -231,18 +237,22 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ZDAYNO
      C                   ENDIF
- 
+
       ** Error if value date is not numeric or is an invalid date
- 
+
      C                   IF        *IN97 = *OFF
      C                             And *IN98 = *OFF
      C                             Or RetCodeOut = 'Error'
      C                   EVAL      OKCEEX = 'N'
      C                   EVAL      Idx = Idx + 1
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   EVAL      FldNamXAr(Idx) = 'CXCEEX'                                  CAP240
+     C                   else                                                                 CAP240
      C                   MOVEL     'DDCEEX'      FldNamXAr(Idx)
+     C                   Endif                                                                CAP240
      C                   MOVEL     'USR4784'     MsgIdXAr(Idx)
      C                   MOVE      *Blanks       MsgDtaXAr(Idx)
- 
+
      C                   IF        BJDFIN = 'D'
      C                   MOVEL     'DDMMYY'      MsgDtaXAr(Idx)
      C                   ELSE
@@ -250,11 +260,11 @@
      C                   ENDIF
      C                   GOTO      EMAIN
      C                   ENDIF
- 
+
      C                   Z-ADD     ZDAYNO        WExpDat
- 
+
       ** Date must be earlier than the current date
- 
+
       *                                                                                     BUG23658
      C                   EVAL      ExDtChg = 'Y'                                            BUG23658
      C**********         IF        CER048 = 'Y'                                    BUG23658 BUG23892
@@ -269,18 +279,22 @@
      C                   IF        WExpDat < BJRDNB                                         BUG23780
      C                             AND ExDtChg = 'Y'                                        BUG23658
      C                   EVAL      Idx = Idx + 1
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   EVAL      FldNamXAr(Idx) = 'CXCEEX'                                  CAP240
+     C                   else                                                                 CAP240
      C                   EVAL      FldNamXAr(Idx) = 'DDCEEX'
+     C                   Endif                                                                CAP240
      C**********         EVAL      MsgIdXAr(Idx) = 'USR4785'                                BUG23780
      C                   EVAL      MsgIdXAr(Idx) = 'USR9908'                                BUG23780
      C                   EVAL      OKCEEX = 'N'
      C                   GOTO      EMAIN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ***Send*error*message*if*expiry*date*is*blank*and*Tax*Status*=*'S'           BUG22912 BUG23544
       ** Send error message if expiry date is blank and Tax Status = 'S'                    BUG23544
- 
+
      C                   EXSR      SRRESI                                                   BUG26250
      C                   IF        DDCEEX = *Blanks AND
      C**********                   DDETXS = 'S'                                               CER048
@@ -291,7 +305,11 @@
      C                             DDETXS = 'S' AND                                         BUG26250
      C                             WResi = 'N'                                              BUG26250
      C                   EVAL      Idx = Idx + 1
+     C                   If        PModeOfOp = '*NAHL'                                        CAP240
+     C                   EVAL      FldNamXAr(Idx) = 'CXCEEX'                                  CAP240
+     C                   else                                                                 CAP240
      C                   EVAL      FldNamXAr(Idx) = 'DDCEEX'
+     C                   Endif                                                                CAP240
      C                   EVAL      MsgIdXAr(Idx) = 'USR4786'
      C                   EVAL      OKCEEX = 'N'
      C                   GOTO      EMAIN
@@ -309,7 +327,7 @@
      C**********         EVAL      OKCEEX = 'N'                                      232543 BUG23892
      C**********         GOTO      EMAIN                                             232543 BUG23892
      C**********         ENDIF                                                       232543 BUG23892
- 
+
       ***Certifacte*of Expiry Date should be blank if Status is not 'S'                       232543
       **********                                                                              232543
      C**********         IF        DDETXS <> 'S' AND DDCEEX <> *Blanks                        232543
@@ -319,12 +337,12 @@
      C**********         EVAL      OKCEEX = 'N'                                               232543
      C**********         GOTO      EMAIN                                                      232543
      C**********         ENDIF                                                                232543
- 
+
       ** Return to calling program
- 
+
      C                   EVAL      OKCEEX = 'Y'
      C                   EVAL      CTCEEX = WExpDat
- 
+
      C     EMAIN         TAG
      C                   RETURN
       *****************************************************************
@@ -340,6 +358,7 @@
                                                                                             BUG26250
      C                   EVAL      PRTCD = *BLANKS                                          AR740196
      C                   IF        PModeOfOp <> '*VU '                                      AR740196
+     C                             and PModeOfOp <> '*NAHL'                                 CAP240
      C                   CALL      'AOCUSTR1'                                               BUG26250
      C                   PARM      *BLANKS       PRTCD                                      BUG26250
      C                   PARM      '*KEY   '     POPTN                                      BUG26250
@@ -367,48 +386,49 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Input Parameters
       ** ================
- 
+
       ** Return Code
      C                   PARM                    RetCodeIn
                                                                                             AR740196
       ** Mode of Operation                                                                  AR740196
      C                   PARM                    PModeOfOp                                  AR740196
- 
+
       ** New Detail in Screen Format
      C                   PARM                    NwDlScnFmt
- 
+
       ** Date Format Indicator
      C                   PARM                    BJDFIN
- 
+
       ** Rundate
      C                   PARM                    BJRDNB
- 
+
      C                   PARM                    ValidCusd                                  AR740196
      C                   PARM                    ValidCuad                                  AR740196
       ** Output Parameters
       ** =================
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Screen Error Indicator
      C                   PARM                    OKFlags
- 
+
       ** New Details in File Format
      C                   PARM                    NwDLFilFmt
- 
+     C                   PARM                    Nahl_Colc         2            CAP240
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
       *                                                                                     BUG23658
      C     KeyDt         KLIST                                                              BUG23658
@@ -438,7 +458,7 @@
      C                   OUT       LDA                                                        CER048
      C                   EXSR      *PSSR                                                      CER048
      C                   ENDIF                                                                CER048
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

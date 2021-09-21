@@ -18,11 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103    *CREATE  Date 10Aug20               *
+      *  Last Amend No. CIR020             Date 14Sep21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *       Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
@@ -46,6 +48,8 @@
      D thisSQL1        S            500
      D thisSQL2        S            500                                                       CDL102
      D thisSQL3        S            500                                                       CDL102
+     D thisSQL4        S            500                                                       CIR020
+     D thisSQL5        S            500                                                       CIR020
                                                                                               CDL102
      D PRtCd           S              7A                                                      CDL102
      D POptn           S              7A                                                      CDL102
@@ -54,6 +58,7 @@
       * Switchable features                                                                   CDL102
      D CLE172          S              1A                                                      CDL102
      D CDL102          S              1A                                                      CDL102
+     D CIR020          S              1A                                                      CIR020
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -91,6 +96,21 @@
      C                   IF        PRtCd = *BLANKS                                            CDL102
      C                   EVAL      CDL102 = 'Y'                                               CDL102
      C                   ENDIF                                                                CDL102
+
+      ** Check if switchable feature CIR020 is switched on.                                   CIR020
+                                                                                              CIR020
+     C                   EVAL      CIR020 = 'N'                                               CIR020
+                                                                                              CIR020
+     C                   CALL      'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRtCd                                        CIR020
+     C                   PARM      '*VERIFY'     POptn                                        CIR020
+     C                   PARM      'CIR020'      PSard                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C                   IF        PRtCd = *BLANKS                                            CIR020
+     C                   EVAL      CIR020 = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
       ** Main Processing
       ** Housekeeping of Lending Records
       *
@@ -151,6 +171,36 @@
                                                                                               CDL102
      C                   ENDIF                                                                CDL102
       *                                                                                       CDL102
+      ** Housekeeping of Dealing IRS Records                                                  CIR020
+      * still not amended from this point on for CIR020                                       CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+                                                                                              CIR020
+     C                   EVAL      thisSQL4 = 'Delete from SDHSDRTD where +                   CIR020
+     C                              CMODID = ''IR'' AND CTRNID not in +                       CIR020
+     C                              (select DLNO from DEALSDG) AND +                          CIR020
+     C                              CTRNID not in (select DLNO from DLCHISPD)'                CIR020
+     C                   EVAL      thisSQL5 = 'Delete from SDARRLOGTD where +                 CIR020
+     C                              SJMODI = ''IR'' AND SJTREF not in +                       CIR020
+     C                              (select DLNO from DEALSDG) AND +                          CIR020
+     C                              SJTREF not in (select DLNO from DLCHISPD)'                CIR020
+      *                                                                                       CIR020
+     C/EXEC SQL                                                                               CIR020
+     C+ EXECUTE IMMEDIATE :thisSQL4                                                           CIR020
+     C/END-EXEC                                                                               CIR020
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                             CIR020
+     C                   SETON                                            90                  CIR020
+     C                   EXSR      *PSSR                                                      CIR020
+     C                   ENDIF                                                                CIR020
+     C/EXEC SQL                                                                               CIR020
+     C+ EXECUTE IMMEDIATE :thisSQL5                                                           CIR020
+     C/END-EXEC                                                                               CIR020
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100                             CIR020
+     C                   SETON                                            91                  CIR020
+     C                   EXSR      *PSSR                                                      CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

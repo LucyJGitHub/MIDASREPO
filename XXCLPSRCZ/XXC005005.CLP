@@ -9,10 +9,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. DRI007  *CREATE    Date 16Aug21              */
+/*       Last Amend No. MD058894           Date 21Sep21              */
+/*       Prev Amend No. DRI007  *CREATE    Date 16Aug21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058894-DRI007 - Halt ETL extract if in error              */
 /*       DRI007 - ETL Extract Requirements                           */
 /*                                                                   */
 /*********************************************************************/
@@ -52,6 +54,10 @@
              DCL        VAR(&DATETOT) TYPE(*CHAR) LEN(7)
              DCL        VAR(&DATE3) TYPE(*CHAR) LEN(7)
 
+             DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4)                                /*MD058894*/
+             DCL        VAR(&RMSG) TYPE(*CHAR) LEN(132)                                /*MD058894*/
+             DCL        VAR(&PARAMS) TYPE(*CHAR) LEN(21)                               /*MD058894*/
+                                                                                       /*MD058894*/
              DCLF       FILE(XXETLEXPD)
 /**/
 /*    Global monitor message                                         */
@@ -161,9 +167,18 @@
                 CPYF       FROMFILE(&XXFILE) TOFILE(&EXTLIB/&XXFILE) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
                 MONMSG     MSGID(CPF2802 CPF2817) EXEC(DO)
-                   SNDPGMMSG  MSGID(DRI0701) MSGF(GBXXUSRMSG) MSGDTA(&XXFILE) +
-                                TOMSGQ(MOPERQ)
-                   MONMSG     MSGID(CPF0000 MCH0000)
+/*                 SNDPGMMSG  MSGID(DRI0701) MSGF(GBXXUSRMSG) MSGDTA(&XXFILE) +
+                                TOMSGQ(MOPERQ)                                            MD058894*/
+/*                 MONMSG     MSGID(CPF0000 MCH0000)                                      MD058894*/
+ ANSWER:                                                                                /*MD058894*/
+                   CHGVAR     VAR(&PARAMS) VALUE(&EXTLIB *CAT &XXFILE)
+                   SNDPGMMSG  MSGID(DRI0701) MSGF(GBXXUSRMSG) MSGDTA(&PARAMS) +
+                                TOMSGQ(MOPERQ) MSGTYPE(*INQ) KEYVAR(&KEYVAR)            /*MD058894*/
+                   RCVMSG     MSGKEY(&KEYVAR) WAIT(*MAX) KEYVAR(&KEYVAR) MSG(&RMSG)     /*MD058894*/
+                   IF         (&RMSG *NE 'DONE') THEN(DO)                               /*MD058894*/
+                      GOTO       ANSWER                                                 /*MD058894*/
+                   ENDDO                                                                /*MD058894*/
+
                 ENDDO
 
                 GOTO       CMDLBL(READ)

@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CIR018             Date 06Aug14               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CIR018             Date 06Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR018 - Daily Rate Change Frequency for SIRS                *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -69,7 +71,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,82 +90,82 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **Decimal data length passed as a parameter to ZALIGN
      D   ZADEC         S              1  0
- 
+
       **Digital data length passed as a parameter to ZALIGN
      D   ZADIG         S              2  0
- 
+
       **Field Passed to ZALIGN on which the work is done
      D   ZFIELD        S             16A
- 
+
       **Indicator to show whether or not ZALIGN was successful
      D   ZALIGNok      S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **Error message passed back to calling programme
      D Msgid1          S                   LIKE(#msgid)
- 
+
       **Our/Their base rate code passed as a parameter from calling program
      D  STBRTT         S              2A
- 
+
       **Our/Their Rate Fix days passed as a parameter from calling p   rogramme
      D  STFRFD         S              2A
- 
+
       **Currency passed as a parameter from calling programme
      D   SUCUCY        S              3A
- 
+
       **Currency code passed as a parameter from calling programme
      D   BLCYCD        S              3A
- 
+
       **Local currency code passed as a parameter from calling programme
      D   BJLCCY        S              3A
- 
+
       **Entry validated through ZALIGN passed back to calling programme
      DRatFixDays       S              2S 0
- 
+
       ** Rate Change Frequency Code                                                           CIR007
      DPRAtChgFq        S              1A                                                      CIR007
                                                                                               CIR007
@@ -197,7 +199,8 @@
                                                                                               CIR011
       ** Deal is cap, collar or floor                                                         CAP055
      D PDealCACF       S              1A                                                      CAP055
- 
+     D PBLRT           S              1A                                                      CIR020
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -205,7 +208,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -213,10 +216,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   Z-ADD     0             RatFixDays
+     C     PBLRT         IFEQ      'Y'                                                        CIR020
+     C                   Z-ADD     0             RatFixDays                                   CIR020
+      *                                                                                       CIR020
+      * Move defaulted value to the screen field as well .                                    CIR020
+     C                   MOVE      RatFixDays    STFRFD                                       CIR020
+     C                   ENDIF                                                                CIR020
                                                                                               CAP055
       ** Check if deal is cap, collar or floor                                                CAP055
                                                                                               CAP055
@@ -226,6 +235,14 @@
      C                   ELSE                                                                 CAP055
      C                   EVAL      PDealCACF = 'N'                                            CAP055
      C                   ENDIF                                                                CAP055
+
+     C                   IF        PBLRT = 'Y'                                                CIR020
+     C                             AND (STFRFD <> *Blanks AND                                 CIR020
+     C                             (STFRFD <> '  ' AND STFRFD <> ' 0' AND                     CIR020
+     C                             STFRFD <> '0 ' AND STFRFD <> '00'))                        CIR020
+     C                   MOVE      'Y'           ErrorFound                                   CIR020
+     C                   MOVE      '5049523'     Msgid1                                       CIR020
+     C                   ENDIF                                                                CIR020
                                                                                               CIR007
       ** If CIR007 is on , Deal Type is 'RS' and Rate Change Frequency                        CIR007
       ** Code is 'O', then the Rate Fix Days must be zero or blank.                           CIR007
@@ -254,7 +271,7 @@
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
      C                   ELSE                                                                 CIR007
- 
+
      C     STFRFD        IFNE      *BLANKS
      C     STBRTT        IFEQ      *BLANKS
      C     PDealCACF     ANDEQ     'N'                                                        CAP055
@@ -277,7 +294,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        RatFixDays
                                                                                               247210
@@ -301,6 +318,7 @@
      C     SAVRAM        OREQ      'Y'
      C     SUCUCY        ANDEQ     BJLCCY
      C     PDealCACF     ANDEQ     'N'                                                        CAP055
+     C     PBLRT         OREQ      'Y'                                                        CIR020
      C                   Z-ADD     0             RatFixDays
       *                                                                                      BUG6283
       * Move defaulted value to the screen field as well .                                   BUG6283
@@ -344,15 +362,15 @@
      C                   END                                                                  CIR011
                                                                                               CIR011
      C                   END                                                                  CIR011
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
- 
- 
+
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -364,9 +382,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -380,6 +398,7 @@
      C                   PARM                    PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
+     C                   PARM                    PBLRT                                        CIR020
       *                                                                                       CIR011
       **  Access SAR details file to determine if Rate Fix Day Adj is on.                     CIR011
       *                                                                                       CIR011
@@ -428,13 +447,13 @@
      C                   ELSE                                                                 CIR018
      C                   MOVEL     'N'           CIR018            1                          CIR018
      C                   ENDIF                                                                CIR018
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *                                                                                     BUG13857
       *****************************************************************                     BUG13857
@@ -466,7 +485,7 @@
      C                   ENDIF                                                              BUG13857
                                                                                             BUG13857
      C                   ENDSR                                                              BUG13857
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

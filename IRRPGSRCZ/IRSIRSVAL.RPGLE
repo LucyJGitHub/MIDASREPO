@@ -2182,6 +2182,7 @@
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
+     C                   PARM      D1BLRT        PBLRT             1                          CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2550,6 +2551,8 @@
      C                   PARM                    BNDCSP                                       245692
      C                   PARM                    RSORED                                     MD051346
      C                   PARM                    SACCD                                      MD051346
+     C                   PARM      D1BLRT        PBLRT                                        CIR020
+     C                   PARM      D1CALM        PCALM             4                          CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2844,6 +2847,7 @@
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
+     C                   PARM      D2BLRT        PBLRT                                        CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -3081,6 +3085,8 @@
      C                   PARM                    BNDCSP                                       245692
      C                   PARM                    RSORED                                     MD051346
      C                   PARM                    SACCD                                      MD051346
+     C                   PARM      D2BLRT        PBLRT                                        CIR020
+     C                   PARM      D2CALM        PCALM                                        CIR020
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx

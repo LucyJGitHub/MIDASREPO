@@ -553,6 +553,7 @@
      D UseDealCust     C                   Const('UseDealCustforEuTax')                     MD026788
      D UseHistRate     C                   Const('UseHistRateforBVDeal')                    MD031283
      D DSPPRIN         C                   Const('DspPrinInDecInd')                         MD054117
+     D GenKeyYN        C                   Const('GenKeyOnNonTaxDeal')                      MD058183
      D/COPY ZSRSRC,ZHOLILE                                                                   BUG6293
      D/COPY ZSRSRC,ZINTDYZ1LE                                                                BUG6293
      D/COPY ZSRSRC,ZDATE9Z2LE                                                                BUG6293
@@ -2772,7 +2773,8 @@
      C**********         PARM                    PSysVal03                           245308 MD054117
      C                   PARM      DSPPRIN       PSysVal03                                  MD054117
      C                   PARM                    PCurSet03                                    245308
-     C                   PARM                    PSysVal04                                    245308
+     C**********         PARM                    PSysVal04                           245308 MD058183
+     C                   PARM      GenKeyYN      PSysVal04                                  MD058183
      C                   PARM                    PCurSet04                                    245308
      C                   PARM                    PSysVal05                                    245308
      C                   PARM                    PCurSet05                                    245308
@@ -2803,6 +2805,7 @@
      C                   MOVEL     PCurSet02     HSTRAT                                     MD031283
      C                   ENDIF                                                              MD031283
      C                   MOVEL     PCurSet03     PCIDCF                                     MD054117
+     C                   MOVEL     PCurSet04     WGENKEY           1                        MD058183
       *                                                                                       CGL031
      C     KYEUTI        KLIST                                                                CGL031
      C                   KFLD                    BJRDNB                                       CGL031
@@ -12810,9 +12813,12 @@
      C**********         MOVE      'N'           WINTC             1                235126 MD024874A
 2781 C*                                                                   080603
 2781 C* If Deposit Taken (IT,CD,TD) and System is Taxable                 080603
+     C* Or Deposit Taken (IT,CD,TD) & system value GenKeyOnNonTaxDeal is Y                  MD058183
 2781 C*                                                                   080603
 2781 C     *IN25         IFEQ      *ON                                          B 001          08060
      C     TAXI          ANDEQ     'Y'                                                      MD055158
+     C     *IN25         OREQ      *ON                                                      MD058183
+     C     WGENKEY       ANDEQ     'Y'                                                      MD058183
       *                                                                   CDL006
       ** Or feature CDL006 installed.                                     CDL006
       *                                                                   CDL006

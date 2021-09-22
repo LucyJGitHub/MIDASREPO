@@ -194,6 +194,9 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  MD058896 - CGC2050 Seq. No. 00007 failed during COB          *
+      *             Changed the condition introduced by CSD103 to     *
+      *             ensure that AOBSRTR0 is accessed if DABRTT is not *
+      *             blank.                                            *
       *  MD057942 - Field TRBTT is not defined. Used TBRTT instead as *
       *             the corresponding field for Their Base Rate Type. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

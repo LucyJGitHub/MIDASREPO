@@ -921,6 +921,10 @@
      C                             ApiName = 'SIR2'  or                                       CIR020
      C                             ApiName = 'CACF') and                                      CIR020
      C                             BSRTRecFound = 'Y'                                         CLE172
+     C                   IF        BAFLOR = WFLOOR                                            CIR020
+     C                   EVAL      VFLOR  = WFLOOR                                            CIR020
+     C                   LEAVESR                                                              CIR020
+     C                   ENDIF                                                                CIR020
      C                   EVAL      WNumFLOR = BAFLOR                                          CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -1713,12 +1717,16 @@
      C                   SELECT                                                               CLE172
      C                   WHEN      TransICBS = 3 or                                           CLE172
      C                             TransICBS = 5                                              CLE172
+     C                             or TransICBS = 2                                           CIR020
      C                   Z-ADD     2             WDBAV                                        CLE172
      C                   WHEN      TransICBS = 4                                              CLE172
+     C                             or TransICBS = 1                                           CIR020
      C**********         Z-ADD     3             WDBAV                               CLE172 MD057930
      C                   Z-ADD     1             WDBAV                                      MD057930
      C**********         OTHER                                                         CLE172 CIR020
      C**********         Z-ADD     TransICBS     WDBAV                                 CLE172 CIR020
+     C                   WHEN      TransICBS = 6                                              CIR020
+     C                   Z-ADD     6             WDBAV                                        CIR020
      C                   ENDSL                                                                CLE172
                                                                                               CLE172
       ** Zero value in DBAV field at transaction level is not valid                           CIR020

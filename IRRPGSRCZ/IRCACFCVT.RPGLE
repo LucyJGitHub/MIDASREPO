@@ -44,7 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with     *
       *             zero rate                                         *
@@ -177,6 +177,20 @@
 
       ** Second DS For Access Programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+                                                                                              CIR020
+      ** CACF Backward-Looking Rate Screen Fields                                             CIR020
+     D CurrScnBlrt     DS                                                                     CIR020
+     D  DDBLRT                        1A                                                      CIR020
+     D  DDRFRR                       10A                                                      CIR020
+     D  DDCALM                        4A                                                      CIR020
+     D  DDBADJ                       13A                                                      CIR020
+     D  DDFLOR                       13A                                                      CIR020
+     D  DDLBDY                        2A                                                      CIR020
+     D  DDLODY                        2A                                                      CIR020
+     D  DDOPSH                        1A                                                      CIR020
+     D  DDRRDP                        2A                                                      CIR020
+     D  DDDBAV                        1A                                                      CIR020
+     D  DDRTKN                        1A                                                      CIR020
                                                                                               CAP043
      D CIR001          S              1A                                                      CAP043
      D WUNBDP          S              1  0                                                    CAP043
@@ -196,6 +210,7 @@
      D CIR005          S              1A
      D CIR006          S              1A
      D CIR008          S              1A                                                      CIR008
+     D CIR020          S              1A                                                      CIR020
 
       ** Standing Data Fields
      D PDatFmtInd      S              1A
@@ -237,6 +252,10 @@
      D POPTN           S              7A                                                      CAP043
      D PSARD           S              6A                                                      CAP043
                                                                                               CAP043
+     D WWBadj          S             11P 7                                                    CIR020
+     D WWFlor          S             11P 7                                                    CIR020
+     D WSavDeciSep     S              1A                                                      CIR020
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1243,6 +1262,90 @@
       ** Class                                                                                CDL038
       *                                                                                       CDL038
      C                   MOVE      CLAS          #0CLAS                                       CDL038
+                                                                                              CIR020
+      ** Setup screen fields for Backward-Looking Rate Fields                                 CIR020
+      ** depending on the Buy/Sell Indicator                                                  CIR020
+                                                                                              CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+                                                                                              CIR020
+     C                   IF        (DTYP = 'RP' AND BYSL = 'B')                               CIR020
+     C                             OR (DTYP = 'RR' AND BYSL = 'B')                            CIR020
+     C                             OR (DTYP = 'RF' AND BYSL = 'S')                            CIR020
+                                                                                              CIR020
+     C                   MOVE      TBLRT         DDBLRT                                       CIR020
+     C                   MOVE      TRFRR         DDRFRR                                       CIR020
+     C                   MOVE      TCALM         DDCALM                                       CIR020
+     C                   MOVE      TOPSH         DDOPSH                                       CIR020
+     C                   MOVE      TRTKN         DDRTKN                                       CIR020
+                                                                                              CIR020
+      ** Convert numeric fields into screen field                                             CIR020
+      ** if Backward-Looking Rate is Y                                                        CIR020
+                                                                                              CIR020
+     C                   IF        TBLRT = 'Y'                                                CIR020
+                                                                                              CIR020
+     C                   EVAL      WSavDeciSep = PDeciSep                                     CIR020
+     C                   EVAL      PDeciSep = '.'                                             CIR020
+     C                   EVAL      PNbrDecPl = 7                                              CIR020
+     C                   Z-ADD     TBADJ         WWBadj                                       CIR020
+     C                   Z-ADD     *ZEROS        PAmountIn                                    CIR020
+     C                   MOVE      WWBadj        PAmountIn                                    CIR020
+     C                   EXSR      SrFmtAmt                                                   CIR020
+     C                   MOVE      PAmountOut    DDBADJ                                       CIR020
+                                                                                              CIR020
+     C                   Z-ADD     TFLOR         WWFlor                                       CIR020
+     C                   Z-ADD     *ZEROS        PAmountIn                                    CIR020
+     C                   MOVE      WWFlor        PAmountIn                                    CIR020
+     C                   EXSR      SrFmtAmt                                                   CIR020
+     C                   MOVE      PAmountOut    DDFLOR                                       CIR020
+     C                   EVAL      PDeciSep = WSavDeciSep                                     CIR020
+                                                                                              CIR020
+     C                   MOVE      TLBDY         DDLBDY                                       CIR020
+     C                   MOVE      TLODY         DDLODY                                       CIR020
+     C                   MOVE      TRRDP         DDRRDP                                       CIR020
+     C                   MOVE      TDBAV         DDDBAV                                       CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ELSE                                                                 CIR020
+                                                                                              CIR020
+     C                   MOVE      UBLRT         DDBLRT                                       CIR020
+     C                   MOVE      URFRR         DDRFRR                                       CIR020
+     C                   MOVE      UCALM         DDCALM                                       CIR020
+     C                   MOVE      UOPSH         DDOPSH                                       CIR020
+     C                   MOVE      URTKN         DDRTKN                                       CIR020
+                                                                                              CIR020
+      ** Convert numeric fields into screen field                                             CIR020
+      ** if Backward-Looking Rate is Y                                                        CIR020
+                                                                                              CIR020
+     C                   IF        UBLRT = 'Y'                                                CIR020
+                                                                                              CIR020
+     C                   EVAL      WSavDeciSep = PDeciSep                                     CIR020
+     C                   EVAL      PDeciSep = '.'                                             CIR020
+     C                   EVAL      PNbrDecPl = 7                                              CIR020
+     C                   Z-ADD     UBADJ         WWBadj                                       CIR020
+     C                   Z-ADD     *ZEROS        PAmountIn                                    CIR020
+     C                   MOVE      WWBadj        PAmountIn                                    CIR020
+     C                   EXSR      SrFmtAmt                                                   CIR020
+     C                   MOVE      PAmountOut    DDBADJ                                       CIR020
+                                                                                              CIR020
+     C                   Z-ADD     UFLOR         WWFlor                                       CIR020
+     C                   Z-ADD     *ZEROS        PAmountIn                                    CIR020
+     C                   MOVE      WWFlor        PAmountIn                                    CIR020
+     C                   EXSR      SrFmtAmt                                                   CIR020
+     C                   MOVE      PAmountOut    DDFLOR                                       CIR020
+     C                   EVAL      PDeciSep = WSavDeciSep                                     CIR020
+                                                                                              CIR020
+     C                   MOVE      ULBDY         DDLBDY                                       CIR020
+     C                   MOVE      ULODY         DDLODY                                       CIR020
+     C                   MOVE      URRDP         DDRRDP                                       CIR020
+     C                   MOVE      UDBAV         DDDBAV                                       CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
 
      C                   ENDSR
       *****************************************************************
@@ -1301,6 +1404,7 @@
       ** Blank outputs
 
      C                   EVAL      CrIRScnFmt = *BLANKS
+     C                   EVAL      CurrScnBlrt = *BLANK                                       CIR020
      C                   EVAL      PDealStat = *BLANK
 
      C                   ENDSR
@@ -1363,6 +1467,7 @@
       ** Deal in Screen Format
 
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    CurrScnBlrt                                  CIR020
 
       ** Deal Status
 
@@ -1434,6 +1539,18 @@
      C                   EVAL      CDL028 = 'N'                                               CDL028
      C                   ENDIF                                                                CDL028
 
+      ** Check if CIR020 is installed                                                         CIR020
+                                                                                              CIR020
+     C                   EVAL      CIR020 = 'N'                                               CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRTCD                                        CIR020
+     C                   PARM      '*VERIFY'     POPTN                                        CIR020
+     C                   PARM      'CIR020'      PSARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C                   IF        PRTCD = *BLANKS                                            CIR020
+     C                   EVAL      CIR020 = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and

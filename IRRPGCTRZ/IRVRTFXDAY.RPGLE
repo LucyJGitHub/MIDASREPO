@@ -220,12 +220,6 @@
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   Z-ADD     0             RatFixDays
-     C     PBLRT         IFEQ      'Y'                                                        CIR020
-     C                   Z-ADD     0             RatFixDays                                   CIR020
-      *                                                                                       CIR020
-      * Move defaulted value to the screen field as well .                                    CIR020
-     C                   MOVE      RatFixDays    STFRFD                                       CIR020
-     C                   ENDIF                                                                CIR020
                                                                                               CAP055
       ** Check if deal is cap, collar or floor                                                CAP055
                                                                                               CAP055
@@ -235,7 +229,15 @@
      C                   ELSE                                                                 CAP055
      C                   EVAL      PDealCACF = 'N'                                            CAP055
      C                   ENDIF                                                                CAP055
-
+                                                                                              CIR020
+     C     PBLRT         IFEQ      'Y'                                                        CIR020
+     C     PDealCACF     ANDEQ     'N'                                                        CIR020
+     C                   Z-ADD     0             RatFixDays                                   CIR020
+                                                                                              CIR020
+      ** Move defaulted value to the screen field as well                                     CIR020
+     C                   MOVE      RatFixDays    STFRFD                                       CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   IF        PBLRT = 'Y'                                                CIR020
      C                             AND (STFRFD <> *Blanks AND                                 CIR020
      C                             (STFRFD <> '  ' AND STFRFD <> ' 0' AND                     CIR020
@@ -319,6 +321,7 @@
      C     SUCUCY        ANDEQ     BJLCCY
      C     PDealCACF     ANDEQ     'N'                                                        CAP055
      C     PBLRT         OREQ      'Y'                                                        CIR020
+     C     PDealCACF     ANDEQ     'N'                                                        CIR020
      C                   Z-ADD     0             RatFixDays
       *                                                                                      BUG6283
       * Move defaulted value to the screen field as well .                                   BUG6283

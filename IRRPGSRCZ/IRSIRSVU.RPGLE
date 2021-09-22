@@ -118,7 +118,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
@@ -326,6 +326,8 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
+     D BLKFLR          C                   CONST('            ')                              CIR020
+     D SCNSTR          C                   CONST('9999.9999999')                              CIR020
 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
@@ -455,6 +457,19 @@
       ** Incoming Transaction
      D TranIn        E DS                  EXTNAME(IRSIRSPD)
      D PBDCCcy               243    306                                         BUG4646
+      *                                                                                       CIR020
+      ** Define data structure for InSIR020                                                   CIR020
+     D InSIR020        DS                                                                     CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D  TranScnBlrt1           1     50                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D  TranScnBlrt2          51    100                                                       CIR020
+      *                                                                                       CIR020
+      ** New LIBOR Fields (Ours)                                                              CIR020
+     D NewLibor1       S             50                                                       CIR020
+      ** New LIBOR Fields (Theirs)                                                            CIR020
+     D NewLibor2       S             50                                                       CIR020
+      *                                                                                       CIR020
 
       ** Valid Deals layout
       ** Large fields to include
@@ -483,6 +498,12 @@
       ** (Current) Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(IRSIRSPD)
      D                                     PREFIX(@)
+     D OutCIR020       DS                                                                     CIR020
+      ** Outgoing Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D  CurrScnBlrt1           1     50                                                       CIR020
+      ** Outgoing Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D  CurrScnBlrt2          51    100                                                       CIR020
+      *                                                                                       CIR020
       ************************                                                  BUG4646
       ***Our*Rate*Change*Dates (IRCs)                                           BUG4646
      D*OurRatChgD****E*DS*****             EXTNAME(IRDTSCPD)                    BUG4646
@@ -704,6 +725,7 @@ RGC                                                                             
 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                    CIR020
 
       ** Field (500A) to receive the incoming transaction
      D Trans500        S            500A
@@ -828,6 +850,28 @@ RGC                                                                             
      D**SSPiOK************************1A   INZ('Y')                                           CDL038
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A   INZ('Y')
+     D  OKUBLRT                       1A   INZ('Y')                                           CIR020
+     D  OKURFRR                       1A   INZ('Y')                                           CIR020
+     D  OKUCALM                       1A   INZ('Y')                                           CIR020
+     D  OKUBADJ                       1A   INZ('Y')                                           CIR020
+     D  OKUFLOR                       1A   INZ('Y')                                           CIR020
+     D  OKULBDY                       1A   INZ('Y')                                           CIR020
+     D  OKULODY                       1A   INZ('Y')                                           CIR020
+     D  OKUOPSH                       1A   INZ('Y')                                           CIR020
+     D  OKURRDP                       1A   INZ('Y')                                           CIR020
+     D  OKUBDAV                       1A   INZ('Y')                                           CIR020
+     D  OKURTKN                       1A   INZ('Y')                                           CIR020
+     D  OKTBLRT                       1A   INZ('Y')                                           CIR020
+     D  OKTRFRR                       1A   INZ('Y')                                           CIR020
+     D  OKTCALM                       1A   INZ('Y')                                           CIR020
+     D  OKTBADJ                       1A   INZ('Y')                                           CIR020
+     D  OKTFLOR                       1A   INZ('Y')                                           CIR020
+     D  OKTLBDY                       1A   INZ('Y')                                           CIR020
+     D  OKTLODY                       1A   INZ('Y')                                           CIR020
+     D  OKTOPSH                       1A   INZ('Y')                                           CIR020
+     D  OKTRRDP                       1A   INZ('Y')                                           CIR020
+     D  OKTBDAV                       1A   INZ('Y')                                           CIR020
+     D  OKTRTKN                       1A   INZ('Y')                                           CIR020
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -1454,14 +1498,22 @@ RGC                                                                             
      C**********                                       BufferEx6                   MD044553 MD056546
      C**********         EVAL      PCSAST=%SUBST(BufferEx6:746)+BufferEx7          MD044553 MD056546
      C                   EVAL      ACTRJ=%SUBST(Buffer:5114)                                MD056546
-     C                   EVAL      ORDATEAST=%SUBST(Buffer:5115)+Buffer2                    MD056546
-     C                   EVAL      OPDATEAST=%SUBST(Buffer2:3915)+BufferEx2                 MD056546
-     C                   EVAL      TRDATEAST=%SUBST(BufferEx2:4716)                         MD056546
-     C                   EVAL      TPDATEAST=%SUBST(BufferEx2:9516)+BufferEx3               MD056546
-     C                   EVAL      OCFSAST=%SUBST(BufferEx3:4317)+BufferEx4                 MD056546
-     C                   EVAL      TCFSAST=%SUBST(BufferEx4:7518)+BufferEx5+                MD056546
-     C                                                 BufferEx6                            MD056546
-     C                   EVAL      PCSAST=%SUBST(BufferEx6:720)+BufferEx7                   MD056546
+     C**********         EVAL      ORDATEAST=%SUBST(Buffer:5115)+Buffer2             MD056546 CIR020
+     C**********         EVAL      OPDATEAST=%SUBST(Buffer2:3915)+BufferEx2          MD056546 CIR020
+     C**********         EVAL      TRDATEAST=%SUBST(BufferEx2:4716)                  MD056546 CIR020
+     C**********         EVAL      TPDATEAST=%SUBST(BufferEx2:9516)+BufferEx3        MD056546 CIR020
+     C**********         EVAL      OCFSAST=%SUBST(BufferEx3:4317)+BufferEx4          MD056546 CIR020
+     C**********         EVAL      TCFSAST=%SUBST(BufferEx4:7518)+BufferEx5+         MD056546 CIR020
+     C**********                                       BufferEx6                     MD056546 CIR020
+     C**********         EVAL      PCSAST=%SUBST(BufferEx6:720)+BufferEx7            MD056546 CIR020
+     C                   EVAL      ORDATEAST=%SUBST(Buffer:5215)+Buffer2                      CIR020
+     C                   EVAL      OPDATEAST=%SUBST(Buffer2:3999)+BufferEx2                   CIR020
+     C                   EVAL      TRDATEAST=%SUBST(BufferEx2:4816)                           CIR020
+     C                   EVAL      TPDATEAST=%SUBST(BufferEx2:9616)+BufferEx3                 CIR020
+     C                   EVAL      OCFSAST=%SUBST(BufferEx3:4417)+BufferEx4                   CIR020
+     C                   EVAL      TCFSAST=%SUBST(BufferEx4:7618)+BufferEx5+                  CIR020
+     C                                                 BufferEx6                              CIR020
+     C                   EVAL      PCSAST=%SUBST(BufferEx6:820)+BufferEx7                     CIR020
      C                   MOVEA     ORDATEAST     ORDATEA                        BUG4646
      C                   MOVEA     OPDATEAST     OPDATEA                        BUG4646
      C                   MOVEA     TRDATEAST     TRDATEA                        BUG4646
@@ -1649,6 +1701,23 @@ RGC                                                                             
      C                             UPDateYN <> 'Y'                                            CSW213
      C                   EXSR      SrSIRSvu                                                   CSW213
      C                   ENDIF                                                                CSW213
+      *                                                                                       CIR020
+      ** LIBOR IRS related fields (Ours)                                                      CIR020
+     C                   EVAL       NewLibor1= TranScnBlrt1                                   CIR020
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor1)                             CIR020
+     C                   IF         Pos <> 0                                                  CIR020
+     C                   EVAL       NewLibor1= %REPLACE(BLKFLR:NewLibor1:Pos:12)              CIR020
+     C                   EVAL       TranScnBlrt1 = NewLibor1                                  CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
+      ** LIBOR IRS related fields (Theirs)                                                    CIR020
+      *                                                                                       CIR020
+     C                   EVAL       NewLibor2= TranScnBlrt2                                   CIR020
+     C                   EVAL       Pos = %SCAN(SCNSTR:NewLibor2)                             CIR020
+     C                   IF         Pos <> 0                                                  CIR020
+     C                   EVAL       NewLibor2= %REPLACE(BLKFLR:NewLibor2:Pos:12)              CIR020
+     C                   EVAL       TranScnBlrt2 = NewLibor2                                  CIR020
+     C                   ENDIF                                                                CIR020
 
      C                   IF        UpdateYN = 'Y' AND Idx = *ZERO
                                                                                 BUG6075
@@ -1733,6 +1802,7 @@ RGC                                                                             
      C**********                            @WIPTmst +                             MD044553 MD056546
      C**********                            OutSwift2013 + ORDATEAST                 CSW213 MD053400
      C                                      OutSwift2013 + ACTRJ +                          MD053400
+     C                                      InSIR020 +                                        CIR020
      C                                      ORDATEAST                                       MD053400
      C*******************EVAL      Buffer2=%SUBST(ORDATEAST:4239)+OPDATEAST     BUG4646BUG5357
      C*******************EVAL      BufferEx2=%SUBST(OPDATEAST:3438)+TRDATEAST   BUG4646BUG5357
@@ -2244,6 +2314,10 @@ RGC                                                                             
      C                   PARM                    TSLIP
       ** Current Deal in Screen Format
      C                   PARM                    DealScnfmt
+      ** SIRS LIBOR OURS field in Screen Format                                               CIR020
+     C                   PARM                    TranScnBlrt1                                 CIR020
+      ** SIRS LIBOR THEIRS field in Screen Format                                             CIR020
+     C                   PARM                    TranScnBlrt2                                 CIR020
 
      C                   ENDSR
       *****************************************************************
@@ -2382,6 +2456,10 @@ RGC                                                                             
      C                   PARM      TranIn        IncDATA        2000
       ** Current Data
      C                   PARM      DealScnfmt    CurDATA        2000
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
 
      C                   MOVEL     IncDATA       TranIn
 
@@ -5512,6 +5590,8 @@ RGC                                                                             
 
      C                   CLEAR                   ValidDeal
      C                   CLEAR                   ValidXDeal                     BUG4646
+     C                   CLEAR                   CurrScnBlrt1                                 CIR020
+     C                   CLEAR                   CurrScnBlrt2                                 CIR020
 
       ** Numeric fields within 'ValidDeal' have to be reset explicitly as
       **  there are long alpha fileds overlapping these which cause the
@@ -6237,6 +6317,7 @@ RGC                                                                             
      C                   PARM                    InfData500                                  BUG6671
      C                   PARM                    ExtData500                                  BUG6671
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    InSIR020                                     CIR020
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

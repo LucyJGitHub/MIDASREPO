@@ -41,7 +41,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CIR020 - LIBOR Deregulation - IRS                            *
-      *  MD058513 - Rate known flag not saved                         *
+      *  MD058513 - Rate known flag not saved.                        *
       *  MD058734 - Default value or Day Basis Average based          *
       *             from Calculation Method 3,4 and 5.                *
       *  MD058623 - Added validation for API DEAM                     *
@@ -1706,6 +1706,7 @@
      C                   IF        (ApiName = 'CLIP' or                              CLE172 MD058734
      C                             ApiName = 'FUND' or                                      MD058734
      C**********                   ApiName = 'LDNI') and                             MD058734 CIR020
+     C                             ApiName = 'LDNI'  or                                       CIR020
      C                             ApiName = 'CIR1'  or                                       CIR020
      C                             ApiName = 'CIR2'  or                                       CIR020
      C                             ApiName = 'SIR1'  or                                       CIR020

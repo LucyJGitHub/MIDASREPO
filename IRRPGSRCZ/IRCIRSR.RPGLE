@@ -67,7 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -306,6 +306,12 @@
      D                                     PREFIX(C)
      D InPayStmtM    E DS                  EXTNAME(SDESSPPD)
      D                                     PREFIX(C)
+     D OutCIR020       DS                                                                     CIR020
+      ** Outgoing Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D  CurrScnBlrt1           1     50                                                       CIR020
+      ** Outgoing Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D  CurrScnBlrt2          51    100                                                       CIR020
+ *                                                                                       CIR020
 
       **-----------------------------------------------------------------------
       ** File formats
@@ -805,6 +811,7 @@
      C**********                            + @WIPTmst                             MD044553 MD056546
      C                                      + InSwift2013                                   MD030454
      C                                      + ACTRJ                                         MD053400
+     C                                      + OutCIR020                                       CIR020
      C                                      + ORDATEAST                                     MD030454
      C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1864)+OPDATEAST        MD030454 CSW214
      C**********                            + TRDATEAST                              MD030454 CSW214
@@ -1004,6 +1011,10 @@
      C                   PARM                    CIRSScnFmt
       ** Deal Status
      C**********         PARM                    PDlSts                                      BUG5871
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
      C                   PARM                    DDSTS                                       BUG5871
 
      C                   ENDSR

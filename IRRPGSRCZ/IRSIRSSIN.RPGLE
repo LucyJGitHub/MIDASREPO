@@ -78,7 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -253,6 +253,16 @@
      D CrDlScnFmt    E DS                  EXTNAME(IRSIRSPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
+      *                                                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D TranScnBlrt1    DS            50                                                       CIR020
+      ** Incoming Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D TranScnBlrt2    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Ours)                       CIR020
+     D CurrScnBlrt1    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Theirs)                     CIR020
+     D CurrScnBlrt2    DS            50                                                       CIR020
+                                                                                              CIR020
 
      D NwDlFilFmt    E DS                  EXTNAME(IRVSIRSPD)
       * New Deal in File Format
@@ -2010,6 +2020,10 @@
       *
       * Deal in screen format
      C                   PARM                    NwDlScnFmt
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
       *
       * Deal Status
      C                   PARM                    DDSTS            24
@@ -2654,6 +2668,10 @@
       *                                                                                       185057
       * Current Deal in Screen Format                                                         185057
      C                   PARM                    CrDlScnFmt                                   185057
+      ** SIRS LIBOR OURS field in Screen Format                                               CIR020
+     C                   PARM                    TranScnBlrt1                                 CIR020
+      ** SIRS LIBOR THEIRS field in Screen Format                                             CIR020
+     C                   PARM                    TranScnBlrt2                                 CIR020
      C*
      C* For each warning error code set up in IRC schedule screens,
      C* set up message to be sent to the screen

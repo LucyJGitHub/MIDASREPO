@@ -1893,6 +1893,13 @@
 
      C                   EXSR      SrResetErrs
 
+      ** Default Rate Fix Days to blanks if Average Method is Y                               CIR020
+     C                   IF        CIR020 = 'Y' and                                           CIR020
+     C                             DDBLRT = 'Y' and                                           CIR020
+     C                             #0AVRM = 'Y'                                               CIR020
+     C                   EVAL      #0FRFD = *BLANKS                                           CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   CALLB     'IRVRTFXDAY'
       ** Parameters:
       **    Return code                          (output)
@@ -3253,6 +3260,10 @@
      C                   MOVEL     'N'           RPTBLRT                                      CIR020
      C                   MOVEL     'N'           RPTOPSH                                      CIR020
      C                   MOVEL     'N'           RPTRTKN                                      CIR020
+     C                   Z-ADD     *ZEROS        RPUBADJ                                      CIR020
+     C                   Z-ADD     *ZEROS        RPUFLOR                                      CIR020
+     C                   Z-ADD     *ZEROS        RPTBADJ                                      CIR020
+     C                   Z-ADD     *ZEROS        RPTFLOR                                      CIR020
                                                                                               CIR020
       ** For CACF input via SOAP/MQ, ensure that BLRT cannot be 'Y'                           CIR020
       ** if deal is not using a backward-looking base rate code                               CIR020
@@ -3290,17 +3301,16 @@
       ** Call program to validate Backward Looking Rate Fields                                CIR020
                                                                                               CIR020
      C     OKBLRT        IFNE      'N'                                                        CIR020
-     C                   MOVEL     #0ICBS        TransIcbs                                    CIR020
      C                   CALLB     'ZAVBLRTE'                                                 CIR020
      C                   PARM      'CACF'        ApiName           4                          CIR020
-     C                   PARM      #0DLNO        TransRef          6                          CIR020
-     C                   PARM      #0DTYP        TransDType        2                          CIR020
-     C                   PARM      #0CUCY        TranCcy           3                          CIR020
-     C                   PARM      #0BRTT        TransBrtt         2                          CIR020
-     C                   PARM                    TransIcbs         1 0                        CIR020
-     C                   PARM      #0ACCD        TransChgTyp       1                          CIR020
+     C                   PARM                    #0DLNO                                       CIR020
+     C                   PARM                    #0DTYP                                       CIR020
+     C                   PARM                    #0CUCY                                       CIR020
+     C                   PARM                    #0BRTT                                       CIR020
+     C                   PARM                    #0ICBS                                       CIR020
+     C                   PARM                    #0ACCD                                       CIR020
      C                   PARM      CACFScnBlrt   TempInpDS       200                          CIR020
-     C                   PARM                    Idx                                          CIR020
+     C                   PARM      *ZEROS        Idx                                          CIR020
      C                   PARM                    FldNamXAr                                    CIR020
      C                   PARM                    MsgIDXAr                                     CIR020
      C                   PARM                    TempOutDS       200                          CIR020

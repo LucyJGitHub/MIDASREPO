@@ -501,6 +501,7 @@
       **   Interest Fix Date > 0  AND
       **   Interest Fix Date <= Value Date
 
+     C                   IF        CIR020 = 'N'                                               CIR020
      C                   IF        #0BRTT <> CrBRTT
      C                   IF        VDAT < PRunDayNo OR
      C                             (WSide = 'U' AND
@@ -513,6 +514,7 @@
      C                   EVAL      OKBRTT = 'N'
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                                CIR020
 
       ** Spread/Rate. This field is only amendable if the Interest
       ** Fix Date > zero.

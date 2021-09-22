@@ -304,8 +304,6 @@
      D  WVRPDet2            1344   2126
      D  WVRtFxCcy           2097   2126
      D  WVRPDet3            2551   2602                                                       CDL028
-     D  WVOurBlrt           2607   2641                                                       CIR020
-     D  WVThrBlrt           2648   2682                                                       CIR020
 
       ** Deals file - Caps/Collars/Floors
      D DEALS         E DS                  EXTNAME(DEALSDG)
@@ -316,8 +314,6 @@
      D  WFRPPay3            1134   1343
      D  WFRPDet2            1344   2126
      D  WFRPDet3            2551   2602                                                       CDL028
-     D  WFOurBlrt           2607   2641                                                       CIR020
-     D  WFThrBlrt           2648   2682                                                       CIR020
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSD015
       ** External DS for Customer Details                                                     CSD015
@@ -1137,13 +1133,10 @@
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
                                                                                               CIR020
-      ** Backward-Looking Rate Fields                                                         CIR020
+      ** Setup Backward-Looking Rate Fields                                                   CIR020
                                                                                               CIR020
      C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   MOVEL     WVOurBlrt     WFOurBlrt                                    CIR020
-     C                   MOVEL     WVThrBlrt     WFThrBlrt                                    CIR020
-     C                   MOVEL     RPURTKN       URTKN                                        CIR020
-     C                   MOVEL     RPTRTKN       TRTKN                                        CIR020
+     C                   EXSR      SetupBLRT                                                  CIR020
                                                                                               CIR020
       ** Set Backward-Looking Rate Change Date                                                CIR020
                                                                                               CIR020
@@ -1536,11 +1529,10 @@
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
                                                                                               CIR020
-      ** Backward-Looking Rate Fields                                                         CIR020
+      ** Setup Backward-Looking Rate Fields                                                   CIR020
                                                                                               CIR020
      C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   MOVEL     WVOurBlrt     WFOurBlrt                                    CIR020
-     C                   MOVEL     WVThrBlrt     WFThrBlrt                                    CIR020
+     C                   EXSR      SetupBLRT                                                  CIR020
                                                                                               CIR020
       ** Set Rate Change Date to Rundate if deal is amended from                              CIR020
       ** forward-looking to backward-looking                                                  CIR020
@@ -3553,6 +3545,85 @@
      C                   ENDSR                                                                CSD015
       *****************************************************************                       CSD015
       /EJECT                                                                                  CSD015
+      *****************************************************************                       CIR020
+      *                                                               *                       CIR020
+      * SetupBLRT - Setup Backward-Looking Rate Fields                *                       CIR020
+      *                                                               *                       CIR020
+      *****************************************************************                       CIR020
+     C     SetupBLRT     BEGSR                                                                CIR020
+                                                                                              CIR020
+      ** OURS fields                                                                          CIR020
+      ** Backward Looking Rate                                                                CIR020
+     C                   MOVE      RPUBLRT       UBLRT                                        CIR020
+                                                                                              CIR020
+      ** Risk Free Rate                                                                       CIR020
+     C                   MOVE      RPURFRR       URFRR                                        CIR020
+                                                                                              CIR020
+      ** Calculation Method                                                                   CIR020
+     C                   MOVE      RPUCALM       UCALM                                        CIR020
+                                                                                              CIR020
+      ** Benchmark Adjustment                                                                 CIR020
+     C                   Z-ADD     RPUBADJ       UBADJ                                        CIR020
+                                                                                              CIR020
+      ** Floor                                                                                CIR020
+     C                   Z-ADD     RPUFLOR       UFLOR                                        CIR020
+                                                                                              CIR020
+      ** Lookback Days                                                                        CIR020
+     C                   Z-ADD     RPULBDY       ULBDY                                        CIR020
+                                                                                              CIR020
+      ** Lockout Days                                                                         CIR020
+     C                   Z-ADD     RPULODY       ULODY                                        CIR020
+                                                                                              CIR020
+      ** Observation Period Shift                                                             CIR020
+     C                   MOVE      RPUOPSH       UOPSH                                        CIR020
+                                                                                              CIR020
+      ** Rate Rounding Decimal Places                                                         CIR020
+     C                   Z-ADD     RPURRDP       URRDP                                        CIR020
+                                                                                              CIR020
+      ** Daily Basis for Average                                                              CIR020
+     C                   Z-ADD     RPUDBAV       UDBAV                                        CIR020
+                                                                                              CIR020
+      ** Rates Known Flag                                                                     CIR020
+     C                   MOVE      RPURTKN       URTKN                                        CIR020
+                                                                                              CIR020
+      ** THEIRS Fields                                                                        CIR020
+      ** Backward Looking Rate                                                                CIR020
+     C                   MOVE      RPTBLRT       TBLRT                                        CIR020
+                                                                                              CIR020
+      ** Risk Free Rate                                                                       CIR020
+     C                   MOVE      RPTRFRR       TRFRR                                        CIR020
+                                                                                              CIR020
+      ** Calculation Method                                                                   CIR020
+     C                   MOVE      RPTCALM       TCALM                                        CIR020
+                                                                                              CIR020
+      ** Benchmark Adjustment                                                                 CIR020
+     C                   Z-ADD     RPTBADJ       TBADJ                                        CIR020
+                                                                                              CIR020
+      ** Floor                                                                                CIR020
+     C                   Z-ADD     RPTFLOR       TFLOR                                        CIR020
+                                                                                              CIR020
+      ** Lookback Days                                                                        CIR020
+     C                   Z-ADD     RPTLBDY       TLBDY                                        CIR020
+                                                                                              CIR020
+      ** Lockout Days                                                                         CIR020
+     C                   Z-ADD     RPTLODY       TLODY                                        CIR020
+                                                                                              CIR020
+      ** Observation Period Shift                                                             CIR020
+     C                   MOVE      RPTOPSH       TOPSH                                        CIR020
+                                                                                              CIR020
+      ** Rate Rounding Decimal Places                                                         CIR020
+     C                   Z-ADD     RPTRRDP       TRRDP                                        CIR020
+                                                                                              CIR020
+      ** Daily Basis for Average                                                              CIR020
+     C                   Z-ADD     RPTDBAV       TDBAV                                        CIR020
+                                                                                              CIR020
+      ** Rates Known Flag                                                                     CIR020
+     C                   MOVE      RPTRTKN       TRTKN                                        CIR020
+                                                                                              CIR020
+     C                   ENDSR                                                                CIR020
+      ****************************************************************                        CIR020
+      /EJECT                                                                                  CIR020
+      ****************************************************************                        CIR020
       /COPY ZACPYSRC,PSSR_ILE
       /EJECT
       *****************************************************************

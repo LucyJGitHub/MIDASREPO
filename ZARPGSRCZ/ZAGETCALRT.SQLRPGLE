@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058182           Date 25May21               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
       *                 MD058040           Date 11May21               *
       *                 MD057871           Date 30Apr21               *
@@ -21,6 +22,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CDL102 - LIBOR Deregulation - Dealing.                       *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
@@ -1285,7 +1287,12 @@
                       FileID = 'DLLIBEPD';
                       exec sql insert into DLLIBEPD
                       values (:ExtractFLDS);
-
+                    // Start of change CIR020
+                   when moduleID  = 'IR';
+                     FileID = 'IRLIBEPD';
+                      exec sql insert into IRLIBEPD
+                      values (:ExtractFLDS);
+                    // End of change CIR020
                    endsl;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       AuditLogDS.SJTMST = %timestamp();

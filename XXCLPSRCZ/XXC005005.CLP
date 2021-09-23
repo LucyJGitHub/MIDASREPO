@@ -166,7 +166,7 @@
 
                 CPYF       FROMFILE(&XXFILE) TOFILE(&EXTLIB/&XXFILE) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
-                MONMSG     MSGID(CPF2802 CPF2817) EXEC(DO)
+                MONMSG     MSGID(CPF2802 CPF2817 CPF2952) EXEC(DO)
 /*                 SNDPGMMSG  MSGID(DRI0701) MSGF(GBXXUSRMSG) MSGDTA(&XXFILE) +
                                 TOMSGQ(MOPERQ)                                            MD058894*/
 /*                 MONMSG     MSGID(CPF0000 MCH0000)                                      MD058894*/

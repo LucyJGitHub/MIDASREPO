@@ -675,12 +675,21 @@
 
       ** Average Rate Method. This field is not amendable.
 
+     C                   MOVEL     'N'           WSKIP             1                          CIR020
+     C                   IF        CIR020 = 'Y' and                                           CIR020
+     C                             DDBLRT = 'Y' and                                           CIR020
+     C                             #0AVRM = 'Y'                                               CIR020
+     C                   MOVEL     'Y'           WSKIP                                        CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   IF        WSKIP = 'N'                                                CIR020
      C                   IF        #0AVRM <> CrAVRM
      C                   ADD       1             WIdx
      C                   EVAL      FldNameArr(WIdx) = '#0AVRM'
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0696'
      C                   EVAL      OKAVRM = 'N'
      C                   ENDIF
+     C                   ENDIF                                                                CIR020
 
       ** Premium Value Date. This field is non-amendable if CIR001 is
       ** off, or CIR006 is on, or Original Entry Date <> Rundate.

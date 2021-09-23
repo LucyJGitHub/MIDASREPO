@@ -189,6 +189,7 @@
       *
       ** Customer Report Town - OK
      C                   PARM                    DDCRTNOK          1
+     C                   PARM                    @Function         4            CAP240
       *
       *
       ** Program, module and procedure names for database error processing.

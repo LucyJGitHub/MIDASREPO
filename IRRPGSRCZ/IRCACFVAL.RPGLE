@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051346           Date 17Jul18               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 12Mar15               *
       *                 CIR018             Date 11Aug14               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051346 - The system does not allow to change the maturity  *
@@ -269,6 +271,8 @@
      D   FilPymtCcys        2063   2092
      D   FilRtFxCcys        2097   2126
      D   FilBsDyConv        2063   2126
+     D   FilOurBlrt         2607   2642                                                       CIR020
+     D   FilThrBlrt         2648   2683                                                       CIR020
 
       ** Caps/Collars/Floors Extra Data Layout - File (D/B) format
      D ExtData       E DS                  EXTNAME(IRCPEXPD)
@@ -324,6 +328,9 @@
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACCD3      E                     EXTFLD(QQACCD)                                     CGL029
 
+      ** External DS for Base Rate details                                                    CIR020
+     D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                                  CIR020
+                                                                                              CIR020
       ** Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
@@ -341,6 +348,34 @@
      D OKFEBO        E DS                  EXTNAME(IREFEBOPD)
      D                                     PREFIX(FB_)
 
+      ** CACF Backward-Looking Rate Screen Fields                                             CIR020
+     D CACFScnBlrt     DS                                                                     CIR020
+     D  DDBLRT                        1A                                                      CIR020
+     D  DDRFRR                       10A                                                      CIR020
+     D  DDCALM                        4A                                                      CIR020
+     D  DDBADJ                       13A                                                      CIR020
+     D  DDFLOR                       13A                                                      CIR020
+     D  DDLBDY                        2A                                                      CIR020
+     D  DDLODY                        2A                                                      CIR020
+     D  DDOPSH                        1A                                                      CIR020
+     D  DDRRDP                        2A                                                      CIR020
+     D  DDDBAV                        1A                                                      CIR020
+     D  DDRTKN                        1A                                                      CIR020
+                                                                                              CIR020
+      ** CACF Backward-Looking Rate Valid Fields                                              CIR020
+     D CACFValidBlrt   DS                                                                     CIR020
+     D  WRPBLRT                       1A                                                      CIR020
+     D  WRPRFRR                      10A                                                      CIR020
+     D  WRPCALM                       4A                                                      CIR020
+     D  WRPBADJ                      11P 7                                                    CIR020
+     D  WRPFLOR                      11P 7                                                    CIR020
+     D  WRPLBDY                       2S 0                                                    CIR020
+     D  WRPLODY                       2S 0                                                    CIR020
+     D  WRPOPSH                       1A                                                      CIR020
+     D  WRPRRDP                       2S 0                                                    CIR020
+     D  WRPDBAV                       1A                                                      CIR020
+     D  WRPRTKN                       1A                                                      CIR020
+                                                                                              CIR020
       ** Data structure for Fees/Buy-Outs details
      D/COPY QWINDSRC,IRSIRSGDTA
 
@@ -355,6 +390,8 @@
      D CIR006          S              1A
      D CIR007          S              1A
      D CDL028          S              1A                                                      CDL028
+     D CIR020          S              1A                                                      CIR020
+                                                                                              CIR020
      D I               S              3P 0
      D Idx             S              3P 0
       ** Index for arrays of of error message ids for CDL029                                  CDL029
@@ -638,6 +675,13 @@
      C                   EXSR      SrUpFFE
       /COPY WNCPYSRC,IRCACFV073
 
+      ** Validate backward-looking rate fields if CIR020 is ON                                CIR020
+     C                   IF        CIR020 = 'Y' and                                           CIR020
+     C                             OKBRTT <> 'N' and                                          CIR020
+     C                             OKICBS <> 'N'                                              CIR020
+     C                   EXSR      SrBlrtFlds                                                 CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
       ** Setup additional fields for the Valids file
       /COPY WNCPYSRC,IRCACFV074
      C                   EXSR      SrSetupVld
@@ -1849,6 +1893,13 @@
 
      C                   EXSR      SrResetErrs
 
+      ** Default Rate Fix Days to blanks if Average Method is Y                               CIR020
+     C                   IF        CIR020 = 'Y' and                                           CIR020
+     C                             DDBLRT = 'Y' and                                           CIR020
+     C                             #0AVRM = 'Y'                                               CIR020
+     C                   EVAL      #0FRFD = *BLANKS                                           CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   CALLB     'IRVRTFXDAY'
       ** Parameters:
       **    Return code                          (output)
@@ -1863,6 +1914,7 @@
       **    Deal type                            (input)
       **    CIR007 switchable feature            (input)
       **    Average rate method                  (input)
+      **    Backward-Looking Rate Indicator      (input)                                      CIR020
      C                   PARM                    RetCodeOut
      C                   PARM                    MsgID1
      C                   PARM                    #0FRFD
@@ -1875,6 +1927,7 @@
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
      C                   PARM                    #0AVRM
+     C                   PARM                    DDBLRT                                       CIR020
 
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
@@ -2405,6 +2458,8 @@
       **    Rate change frequency                (input)
       **    Deal type                            (input)
       **    CIR007 switchable feature            (input)
+      **    Backward-Looking Rate Indicator      (input)                                      CIR020
+      **    Calculation Method                   (input)                                      CIR020
      C                   PARM                    RetCodeOut
      C                   PARM                    MsgID1
      C                   PARM                    OKVDAT
@@ -2435,6 +2490,8 @@
      C**********         PARM                    #0CUCY                            BUG11457 MD033488
      C                   PARM                    RPORED                                     MD051346
      C                   PARM                    #0ACCD                                     MD051346
+     C                   PARM                    DDBLRT                                       CIR020
+     C                   PARM                    DDCALM                                       CIR020
 
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
@@ -3179,6 +3236,125 @@
      C                   ENDSR                                                                CDL028
       *****************************************************************                       CDL028
       /EJECT                                                                                  CDL028
+      *****************************************************************                       CIR020
+      *  SrBlrtFlds - Validate Backward-Looking Rate Fields           *                       CIR020
+      *****************************************************************                       CIR020
+     C     SrBlrtFlds    BEGSR                                                                CIR020
+                                                                                              CIR020
+      ** Reset error information                                                              CIR020
+                                                                                              CIR020
+     C                   EXSR      SrResetErrs                                                CIR020
+                                                                                              CIR020
+      ** Initialise data structures                                                           CIR020
+                                                                                              CIR020
+     C                   CLEAR                   TempInpDS                                    CIR020
+     C                   CLEAR                   FilOurBlrt                                   CIR020
+     C                   CLEAR                   FilThrBlrt                                   CIR020
+     C                   CLEAR                   CACFValidBlrt                                CIR020
+                                                                                              CIR020
+      ** Initialise field to N                                                                CIR020
+                                                                                              CIR020
+     C                   MOVEL     'N'           RPUBLRT                                      CIR020
+     C                   MOVEL     'N'           RPUOPSH                                      CIR020
+     C                   MOVEL     'N'           RPURTKN                                      CIR020
+     C                   MOVEL     'N'           RPTBLRT                                      CIR020
+     C                   MOVEL     'N'           RPTOPSH                                      CIR020
+     C                   MOVEL     'N'           RPTRTKN                                      CIR020
+     C                   Z-ADD     *ZEROS        RPUBADJ                                      CIR020
+     C                   Z-ADD     *ZEROS        RPUFLOR                                      CIR020
+     C                   Z-ADD     *ZEROS        RPTBADJ                                      CIR020
+     C                   Z-ADD     *ZEROS        RPTFLOR                                      CIR020
+                                                                                              CIR020
+      ** For CACF input via SOAP/MQ, ensure that BLRT cannot be 'Y'                           CIR020
+      ** if deal is not using a backward-looking base rate code                               CIR020
+                                                                                              CIR020
+     C                   MOVEL     'Y'           OKBLRT            1                          CIR020
+                                                                                              CIR020
+     C     DDBLRT        IFEQ      'Y'                                                        CIR020
+                                                                                              CIR020
+     C                   CALLB     'AOBSRTR0'                                                 CIR020
+     C                   PARM      *BLANK        @RTCD                                        CIR020
+     C                   PARM      '*KEY'        @OPTN                                        CIR020
+     C                   PARM      #0CUCY        @CCY              3                          CIR020
+     C                   PARM      #0BRTT        @BRTT             2                          CIR020
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CIR020
+     C                   IF        @RTCD <> *BLANKS and                                       CIR020
+     C                             @RTCD <> '*NRF   '                                         CIR020
+     C                   EVAL      DBFILE = 'SDBSRTPD'                                        CIR020
+     C                   EVAL      DBASE = 004                                                CIR020
+     C                   EVAL      DBKEY = #0BRTT                                             CIR020
+     C                   EXSR      *PSSR                                                      CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C     #0BRTT        IFEQ      *BLANKS                                                    CIR020
+     C     #0BRTT        ORNE      *BLANKS                                                    CIR020
+     C     BABLRT        ANDNE     'Y'                                                        CIR020
+     C                   MOVEL     'N'           OKBLRT                                       CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   MOVEL     'DDBLRT'      FldNamXAr(Idx)                               CIR020
+     C                   MOVEL     '5049505'     MsgIDXAr(Idx)                                CIR020
+     C                   EXSR      SRUpdatErrs                                                CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+      ** Call program to validate Backward Looking Rate Fields                                CIR020
+                                                                                              CIR020
+     C     OKBLRT        IFNE      'N'                                                        CIR020
+     C                   CALLB     'ZAVBLRTE'                                                 CIR020
+     C                   PARM      'CACF'        ApiName           4                          CIR020
+     C                   PARM                    #0DLNO                                       CIR020
+     C                   PARM                    #0DTYP                                       CIR020
+     C                   PARM                    #0CUCY                                       CIR020
+     C                   PARM                    #0BRTT                                       CIR020
+     C                   PARM                    #0ICBS                                       CIR020
+     C                   PARM                    #0ACCD                                       CIR020
+     C                   PARM      CACFScnBlrt   TempInpDS       200                          CIR020
+     C                   PARM      *ZEROS        Idx                                          CIR020
+     C                   PARM                    FldNamXAr                                    CIR020
+     C                   PARM                    MsgIDXAr                                     CIR020
+     C                   PARM                    TempOutDS       200                          CIR020
+     C                   PARM      *BLANKS       RetCodeOut                                   CIR020
+                                                                                              CIR020
+      ** Move back updated values to screen fields                                            CIR020
+                                                                                              CIR020
+     C                   MOVEL     TempInpDS     CACFScnBlrt                                  CIR020
+                                                                                              CIR020
+      ** Average Rate Method must be 'Y' if Backward-Looking Rate is 'Y'                      CIR020
+      *                                                                                       CIR020
+     C     DDBLRT        IFEQ      'Y'                                                        CIR020
+     C     #0AVRM        ANDNE     'Y'                                                        CIR020
+     C                   MOVEL     'N'           OKAVRM                                       CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   MOVEL     '#0AVRM'      FldNamXAr(Idx)                               CIR020
+     C                   MOVEL     '5049518'     MsgIDXAr(Idx)                                CIR020
+     C                   MOVEL     'Error'       RetCodeOut                                   CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C     RetCodeOut    IFNE      'Error'                                                    CIR020
+                                                                                              CIR020
+      ** If no error found, update CACF Valid File                                            CIR020
+                                                                                              CIR020
+     C                   MOVEL     TempOutDS     CACFValidBlrt                                CIR020
+     C                   SELECT                                                               CIR020
+     C                   WHEN      WOurTheir = 'O'                                            CIR020
+     C                   MOVEL     CACFValidBlrt FilOurBlrt                                   CIR020
+     C                   WHEN      WOurTheir = 'T'                                            CIR020
+     C                   MOVEL     CACFValidBlrt FilThrBlrt                                   CIR020
+     C                   ENDSL                                                                CIR020
+     C                                                                                        CIR020
+     C                   ELSE                                                                 CIR020
+                                                                                              CIR020
+      ** If error found, update error information                                             CIR020
+                                                                                              CIR020
+     C                   EXSR      SrUpdatErrs                                                CIR020
+                                                                                              CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   ENDSR                                                                CIR020
+      *****************************************************************                       CIR020
+      /EJECT                                                                                  CIR020
       *****************************************************************
       *  SrSetupVld - Setup Additional Fields needed for Valids File  *
       *****************************************************************
@@ -3276,6 +3452,7 @@
       **    Pay Settlement Nostro
       **    Caps/Collars/Floors Extra Data Layout File
       **    Validate Business Day Convention flag
+      **    Backward-Looking Rate Fields Screen Format                                        CIR020
       **    Bank details
       **    Module details
       **    Deal details
@@ -3299,6 +3476,7 @@
      C                   PARM                    PayNostro
      C                   PARM                    ExtData
      C                   PARM                    ValidateBDC
+     C                   PARM                    CACFScnBlrt                                  CIR020
      C                   PARM                    SDBANK
      C                   PARM                    SDMMOD
      C                   PARM                    SDDEAL
@@ -3444,6 +3622,19 @@
      C                   EVAL      CDL038 = 'N'                                              BUG9717
      C                   ENDIF                                                               BUG9717
                                                                                              BUG9717
+      ** Determine if CIR020 is switched on                                                   CIR020
+                                                                                              CIR020
+     C                   MOVE      'N'           CIR020                                       CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       @RTCD                                        CIR020
+     C                   PARM      '*VERIFY'     @OPTN                                        CIR020
+     C                   PARM      'CIR020'      @SARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+      *                                                                                       CIR020
+     C                   IF        @RTCD = *BLANKS                                            CIR020
+     C                   EVAL      CIR020 = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.

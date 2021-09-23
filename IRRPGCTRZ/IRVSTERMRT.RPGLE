@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD051346           Date 17Jul18               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
       *           - Blank short-term rate not rejected on backvalued  *
@@ -72,7 +74,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -91,33 +93,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -128,93 +130,93 @@
                                                                                 CIR005
       ** External data extructure used by access objects                        CIR005
      D DSFDY         E DS                  EXTNAME(DSFDY)                       CIR005
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **Holiday Check indicator passed from ZCHKH
      D   ZIND          S              1A
       ** Valid Rate fix days passed as a parameter from calling program
      D  UFRFDX         S              2S 0                                      (TFRFDX+URFDFX)
       **Valid date indicator passed as a parameter
      D   VDATXok       S              1A
- 
+
       **Valid Currency indicator passed as a parameter
      D   SUCUCYok      S              1A
- 
+
       **Valid Floating Rate Fix Days indicator passed as parameter
      D   SUFRFDok      S              1A
- 
+
       **Valid Base Rate type indicator passed as a parameter
      D   SUBRTTok      S              1A
- 
+
       **Day number for holiday passed as parameter
      D   ZDAYNO        S              5P 0
- 
+
       *Error message to be handed back as a parameter
      D   Msgid1        S                   LIKE(#Msgid)
- 
+
       **Rate fix days used by DLBACK
      D    ZRFDY        S              5  0
- 
+
       **Valid Value date passed as a parameter
      D   VDATX         S              5  0
- 
+
       **'Currency for rate fix holiday' flag from FRA/IRS I.C.D. passed as parameter
      D   BQCRFH        S              1A
- 
+
       **Currency field for DLBACK
      D   ZCCY          S              3A
- 
+
       **Location Code for DLBACK
      D   ZLOC          S              3A
- 
+
       **Valid value date for DLBACK
      D   ZINDT         S              5  0
- 
+
       **Rate Fix Date field for DLBACK
      D   ZRFDT         S              5  0
- 
+
       **Work Field for DLBACK
      D   ZWKFLD        S              5  0
- 
+
       **ZALIGN indicator passed back from ZALIGN as parameter
      D   ZALIGNok      S              1A
- 
+
       **Rate fix days passed as a parameter
      D   ZFIELD        S             16A
- 
+
       **Length of Decimal field passed to ZALIGN as parameter
      D ZADEC           S              1  0
- 
+
       **Length of digital field passed as a parameter to ZALIGN
      D ZADIG           S              2  0
- 
+
       **Runday number passed as a parameter
      D BJRDNB          S              5  0
- 
+
       **Currency code passed to program as parameter
      D BLCYCD          S              3A
- 
+
       **Short term rate
      D SUEINR          S             12A
- 
+
       **Base Rate Code
      D SUBRTT          S              2A
- 
+
       **System Location code passed as a parameter
      D BJSLCD          S              3A
- 
+
       **Currency field passed as a parameter from calling program
      D SUCUCY          S              3A
- 
+
       **Local currency code passed to program as parameter
      D BJLCCY          S              3A
                                                                                 CIR005
@@ -226,7 +228,7 @@
                                                                                 CIR005
       ** Currencies for Rate Fixing Conventions Leg1                            CIR005
      D  PRateCur       S             30A                                        CIR005
- 
+
       ** Rate Change Frequency Code                                                           CIR007
      DPRAtChgFq        S              1A                                                      CIR007
                                                                                               CIR007
@@ -267,6 +269,8 @@
       ***Error*return*code*for*ZA0840*module***************************              245692 MD033488
       ** Error return code for ZA0841 module                                                MD033488
      D @@ERCD          S              1  0                                                    245692
+     D PBLRT           S              1A                                                      CIR020
+     D PCALM           S              4A                                                      CIR020
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -274,7 +278,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -284,12 +288,18 @@
       ** +----------------------------------------------------------------+
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
- 
+
       ** Validate Our Short Term Rate using ZALIGN and DLBACK
- 
+
      C                   Z-ADD     0             UEINRX           11 7
      C                   Z-ADD     0             @@AMT                                        245692
      C                   Z-ADD     0             @@ERCD                                       245692
+     C     SUEINR        IFNE      *BLANKS                                                    CIR020
+     C     PBLRT         ANDEQ     'Y'                                                        CIR020
+     C     PCALM         ANDNE     'MANU'                                                     CIR020
+     C                   MOVE      '5049524'     Msgid1                                       CIR020
+     C                   MOVE      'Y'           ErrorFound                                   CIR020
+     C                   ENDIF                                                                CIR020
      C     SUEINR        IFEQ      *BLANKS
      C     SUBRTT        IFNE      *BLANKS
      C*****VDATXok       ANDEQ     'Y'                                                       BUG7659
@@ -299,19 +309,19 @@
      C     SUBRTTok      ANDEQ     'Y'
      C                   Z-ADD     VDATX         ZINDT
      C                   Z-ADD     UFRFDX        ZRFDY
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C     BQCRFH        IFEQ      'F'
      C                   MOVE      BLCYCD        ZCCY
      C                   ENDIF
- 
+
      C     BQCRFH        IFEQ      'L'
      C                   MOVE      BJLCCY        ZCCY
      C                   ENDIF
- 
+
      C     BQCRFH        IFEQ      'D'
      C     BQCRFH        OREQ      ' '
      C                   MOVE      SUCUCY        ZCCY
@@ -362,6 +372,7 @@
      C     WValBDC       ANDEQ     'Y'                                          CIR005
      C**********         IF        PDealTyp <> 'RS' AND PRatChgFq <> 'O'           MD051346 MD054095
      C                   IF        PRatChgFq <> 'O'                                         MD054095
+     C                             AND PBLRT = 'N'                                            CIR020
      C                   MOVE      'MMA0032'     Msgid1
      C                   MOVE      'Y'           ErrorFound
      C                   ENDIF                                                              MD051346
@@ -397,7 +408,7 @@
      C                   PARM                    @@ERCD                                       245692
      C                   PARM                    @@AMT                                        245692
      C                   PARM                    BNDCSP                                       245692
- 
+
      C*****ZALIGNok      IFEQ      'N'                                                        245692
      C     @@ERCD        IFNE      0                                                          245692
      C                   MOVE      'MMA0034'     Msgid1
@@ -451,7 +462,7 @@
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
      C                   ENDIF                                                                CIR007
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
@@ -469,14 +480,14 @@
      C                   MOVE      ZCCY          ZCCY              3
      C                   Z-ADD     0             ZWKFLD            5 0
      C                   MOVE      ZLOC          ZLOC              3
- 
+
      C**  Set Rate Fix Date equal to Input Date
      C                   Z-ADD     ZINDT         ZRFDT             5 0
- 
+
      C**  Perform the following processing until the work field is
      C**  greater than or equal to the Rate Fix Days
      C     ZWKFLD        DOUGE     ZRFDY
- 
+
      C**  If the Rate Fix Days are not equal to zero subtract 1
      C**  from the Rate Fix Date
      C     ZRFDY         IFNE      0
@@ -486,32 +497,32 @@
      C*   proved to be a working day in the relevant currency and
      C*   location.
      C*   Uses ZCHKH to check Rate Fix Date for a holiday
- 
+
      C     ZIND          DOUEQ     'W'
- 
+
      C                   Z-ADD     ZRFDT         ZDAYNO
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJLCCY
      C                   PARM                    BJSLCD
      C                   PARM                    ZIND
- 
+
      C* If date is a holiday (ZIND = 'H')
      C* subtract 1 from rate fix date
- 
+
      C     ZIND          IFEQ      'H'
      C                   SUB       1             ZRFDT
      C                   END
      C                   END
- 
+
      C**  When a working day has been found, add 1 to the Work Field
- 
+
      C                   ADD       1             ZWKFLD
      C                   END
- 
+
      C                   ENDSR
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -523,9 +534,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -554,6 +565,8 @@
      C                   PARM                    BNDCSP                                       245692
      C                   PARM                    WORED                                      MD051346
      C                   PARM                    WACCD                                      MD051346
+     C                   PARM                    PBLRT                          CIR020
+     C                   PARM                    PCALM                          CIR020
                                                                                 CIR005
       ** Access SAR details file to determine if FRA/IRS Business Day           CIR005
       ** Day Convention is switched on.                                         CIR005
@@ -576,15 +589,15 @@
      C                   ELSE                                                   CIR005
      C                   MOVEL     'N'           CIR005                         CIR005
      C                   ENDIF                                                  CIR005
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

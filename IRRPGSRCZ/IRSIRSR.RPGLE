@@ -68,7 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -292,6 +292,11 @@
 
       ** FRA/IRS Settlement Instructions
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
+     D OutCIR020       DS                                                                     CIR020
+      ** Outgoing Backward-Looking Rate Screen Fields (Ours)                                  CIR020
+     D  CurrScnBlrt1           1     50                                                       CIR020
+      ** Outgoing Backward-Looking Rate Screen Fields (Theirs)                                CIR020
+     D  CurrScnBlrt2          51    100                                                       CIR020
 
       **-----------------------------------------------------------------------
       ** File formats
@@ -627,6 +632,7 @@
      C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
      C**********                            @WIPTmst +                             MD044553 MD056546
      C                                      InSwift2013 + ACTRJ +                           MD053400
+     C                                      OutCIR020 +                                       CIR020
      C                                      ORDATEAST                                       MD053400
      C*******************EVAL      Buffer2=%SUBST(ORDATEAST:4239)+OPDATEAST     BUG4646BUG5357
      C*******************EVAL      BufferEx2=%SUBST(OPDATEAST:3438)+TRDATEAST   BUG4646BUG5357
@@ -906,6 +912,10 @@
      C                   PARM                    SIRSScnFmt
       ** Deal Status
      C**********         PARM                    PDlSts                                      BUG5871
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
      C                   PARM                    DDSTS                                       BUG5871
 
      C     ESrSIRSCVT    ENDSR

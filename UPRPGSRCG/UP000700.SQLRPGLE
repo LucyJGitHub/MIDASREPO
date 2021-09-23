@@ -12,11 +12,14 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055093             Date 20Jan20             *
-      *  Prev Amend No. MD054209   *CREATE   Date 07Sep19             *
+      *  Last Amend No. MD058721             Date 28Aug21             *      
+      *  Prev Amend No. MD055093             Date 20Jan20             *
+      *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058721 - Consider bespoke API in WIP config.               *
+      *           - Applied for MD-58919                              *
       *  MD055093 - 'Old' file T_WIPCF has been cpoied to QTEMP       *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
       *                                                               *
@@ -77,7 +80,9 @@
      C                             'WC_BOACCH, WC_AUTOA, WC_AUTLVL, WC_ZONE, ' +
      C                             'WC_SYSTEM, WC_BOFLD1, WC_BOFLD2, ' +
      C                             'WC_BOFLD3, WC_BOFLD4, ' +
-     C                             'WC_BOFLD5, ''B'' FROM ' + %trimr(GTALIB) +
+     C**********                   'WC_BOFLD5, ''B'' FROM ' + %trimr(GTALIB) +              MD058721
+     C                             'WC_BOFLD5, ''B'', '' '', '' '', '' ''' +                MD058721
+     C                             ','' ''  FROM ' +  %trimr(GTALIB) +                      MD058721
      C                             '/T_WIPCF where WC_ZONE <> ''*REFZONE'' and'+
      C                             ' WC_ZONE <> '''' and WC_ZONE IS NOT NULL ' +
      C                             'and WC_ZONE <> ''GLOBAL'')'

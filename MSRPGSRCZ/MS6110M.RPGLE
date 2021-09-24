@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. UUC104             Date 12Oct20               *
-      *  Prev Amend No. AR989496           Date 13Jun12               *
+      *  Last Amend No. MD058137           Date 18May21               *
+      *  Prev Amend No. UUC104             Date 12Oct20               *
+      *                 AR989496           Date 13Jun12               *
       *                 MD041126           Date 11May20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
@@ -84,6 +85,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058137 - Midas is not generating unique MQ MessageID if    *
+      *             via MGOREF message generation                     *
       *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
       *           Use copy hook MS6110MC05		                       	  *
       *	         Add copy hook UUC104_018                             *
@@ -720,6 +723,7 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
      C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
      C                                    CCODE : REASON )                                  MD041126

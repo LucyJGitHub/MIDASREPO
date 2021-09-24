@@ -296,7 +296,7 @@
      C                   Z-ADD     0             @@ERCD                                       245692
      C     SUEINR        IFNE      *BLANKS                                                    CIR020
      C     PBLRT         ANDEQ     'Y'                                                        CIR020
-     C     PCALM         ANDNE     'MANU'                                                     CIR020
+     C     PCALM         ANDNE     'MANL'                                                     CIR020
      C                   MOVE      '5049524'     Msgid1                                       CIR020
      C                   MOVE      'Y'           ErrorFound                                   CIR020
      C                   ENDIF                                                                CIR020

@@ -2593,6 +2593,11 @@
 
      C                   EXSR      SrResetErrs
 
+      ** Set Average Rate Method to Y if BLRT = Y                                             CIR020
+     C                   IF        CIR020 = 'Y' and DDBLRT = 'Y'                              CIR020
+     C                   EVAL      #0AVRM = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   CALLB     'IRVAVRTMTH'
       ** Parameters:
       **    Return code                          (output)

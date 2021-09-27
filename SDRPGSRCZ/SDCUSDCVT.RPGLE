@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  MD055446           Date 04Apr20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. LLE100             Date 08May20               *
+      *  Prev Amend No  MD055446           Date 04Apr20               *
+      *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      * LLE100   - Customer Details Field Changes                     *
+      *            Hooks: LLE100_004, LLE100_005                      *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -556,6 +559,7 @@
      C     BBTAIN        IFEQ      'I'
      C     BBTAIN        OREQ      'J'
      C     BBTAIN        OREQ      'R'                                                        CRE007
+     C/COPY WNCPYSRC,LLE100_004                                                               LLE100
      C                   EXSR      SCN_BRTX
      C                   END
      C                   ENDIF
@@ -4897,6 +4901,7 @@
      C                   MOVEL     'N'           CER050                                       CER050
      C                   END                                                                  CER050
       *                                                                                       CER050
+     C/COPY WNCPYSRC,LLE100_005                                                               LLE100
      C                   ENDSR
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CER050             Date 16Jun19              */
-/*       Prev Amend No. MD020934           Date 11May19              */
+/*       Last Amend No. LLE028             Date 24Feb20              */
+/*       Prev Amend No. CER050             Date 16Jun19              */
+/*                      MD020934           Date 11May19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CRE105             Date 03Mar15              */
 /*                      MD034346           Date 08May15              */
@@ -87,6 +88,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LLE028 - Store FX Revaluation Amounts and Rates.            */
 /*       CER050 - Annualised Percentage Rate                         */
 /*       MD020934 - COB component LERC135 failed due to CDL045.      */
 /*                  Amend length of field &EXTLIB from 8 to 10 to    */
@@ -258,6 +260,7 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CDL045*/
                                                                                           /*CDL045*/
              DCL        VAR(&CGL031) TYPE(*CHAR) LEN(1) VALUE('N')                        /*233206*/
+             DCL        VAR(&LLE028) TYPE(*CHAR) LEN(1) VALUE('N')                        /*LLE028*/
 /*/COPY OFCPYSRCZ,CRE105_001                                                              /*CRE105*/
 /*  AOSARDRO variables.                                              */                   /*CDL013*/
              DCL        VAR(&CDL013) TYPE(*CHAR) LEN(7)                                   /*CDL013*/
@@ -303,6 +306,22 @@
              GOTO       CMDLBL(ENDPGM)                                                    /*CDL039*/
              ENDDO                                                                        /*CDL039*/
                                                                                           /*CDL039*/
+/** Determine if Store FX Revaluation Amounts & Rates is */                               /*LLE028*/
+/** switched on.                                         */                               /*LLE028*/
+                                                                                          /*LLE028*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*LLE028*/
+             CHGVAR     VAR(&SARD) VALUE('LLE028')                                        /*LLE028*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*LLE028*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&LLE028) VALUE('Y'))                                        /*LLE028*/
+             IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
+                          '*NRF   ') THEN(DO)                                             /*LLE028*/
+             SNDPGMMSG  MSG('AOSARDR0 - Program Error') +
+                          TOMSGQ(MOPERQ)                                                  /*LLE028*/
+             CHGJOB     JOB(XXXXXX11)                                                     /*LLE028*/
+             GOTO       CMDLBL(ENDPGM)                                                    /*LLE028*/
+             ENDDO                                                                        /*LLE028*/
+                                                                                          /*LLE028*/
 /** Determine if Mark to Market Cross-currency Interest Rate Swaps is*/                   /*CIR014*/
 /** switched on.                                                     */                   /*CIR014*/
                                                                                           /*CIR014*/
@@ -1400,6 +1419,14 @@
           ENDDO                                                                           /*CDL013*/
 /**/                                                                                      /*CDL013*/
              CALL       PGM(DL0280)                           /*E18     S01117*/
+                                                                                          /*LLE028*/
+/* Update Forward Revaluation Details */                                                  /*LLE028*/
+                                                                                          /*LLE028*/
+             IF         COND(%SWITCH(XXXXXX00) *AND +
+                             (&LLE028 *EQ 'Y')) THEN(DO)                                  /*LLE028*/
+             CALL       PGM(DLC4420)                                                      /*LLE028*/
+             ENDDO                                                                        /*LLE028*/
+                                                                                          /*LLE028*/
 /*                                                                  */                    /*CDL013*/
         IF         COND(&CDL013 *EQ ' ') THEN(DO)                                         /*CDL013*/
              CHGDTAARA  DTAARA(GLWHT) VALUE('N')                                          /*CDL013*/

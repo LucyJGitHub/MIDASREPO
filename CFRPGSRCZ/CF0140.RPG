@@ -13,12 +13,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW041             DATE 31Aug07               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 113352             Date 13Feb97               *
@@ -29,6 +30,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+     F*  CSW041 - Send TRAM Confirmation Status to MMM                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
      F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
@@ -80,6 +82,15 @@
      I*                                                                   S01408
      I/COPY WNCPYSRC,CF0140IIPG                                           S01408
      I*                                                                   S01408
+     ISDSTAT    E DSSDSTAT                                                                    CSW041
+      *                                                                                       CSW041
+     ICONBUF      DS                             23                                           CSW041
+     I                                        1   2 #HSTID                                    CSW041
+     I                                        3   4 #MODID                                    CSW041
+     I                                        5  19 #TRREF                                    CSW041
+     I                                       20  21 #CPTST                                    CSW041
+     I                                       22  23 #BRKST                                    CSW041
+      *                                                                                       CSW041
      C*****************************************************************
       /EJECT
      C*****************************************************************
@@ -99,6 +110,10 @@
      C*                                                               *
      C*****************************************************************
      C*
+      ** Execute Initial Subroutine                                                           CSW041
+      *                                                                                       CSW041
+     C                     EXSR INIT                                                          CSW041
+      *                                                                                       CSW041
      C**  OBTAIN LATEST FEEDBACK RECORD
      C**  (CFWFEDL0 is key on descending DATE/TIME within IMRF)
      C                     READ CFWFEDL0                 80
@@ -110,6 +125,8 @@
      C                     MOVELDTSC      @DTSC
      C                     MOVEL@D        DD
      C                     MOVEL@Y        YY
+      *                                                                                       CSW041
+     C                     EXSR SENDCF                                                        CSW041
      C*
      C**  WRITE NEW RECORD, UPDATE EXISTING RECORD ON FEEDBACK FILE
      C           IMRF      CHAINCFFEEDL0             81
@@ -137,6 +154,83 @@
      C                     END
      C*
      C                     SETON                     LR
+     C*****************************************************************                       CSW041
+      /EJECT                                                                                  CSW041
+      *****************************************************************                       CSW041
+      *                                                               *                       CSW041
+      *       SENDCF - Send Confirmation Feedback to MMM              *                       CSW041
+      *                                                               *                       CSW041
+      *       CALLS - CFG002                                          *                       CSW041
+      *                                                               *                       CSW041
+     C*****************************************************************                       CSW041
+      *                                                                                       CSW041
+     C           SENDCF    BEGSR                                                              CSW041
+      *                                                                                       CSW041
+      ** Call program that sends confirmation feedback to MMM (CFG002)                        CSW041
+      ** when CSW041 switchable feature is installed.                                         CSW041
+      *                                                                                       CSW041
+     C           CSW041    IFEQ 'Y'                                                           CSW041
+      *                                                                                       CSW041
+      ** Populate CONFBUF  DS                                                                 CSW041
+      *                                                                                       CSW041
+     C                     MOVELLIBR      #HSTID                                              CSW041
+     C                     MOVELCPSX      #CPTST                                              CSW041
+     C                     MOVELBKSX      #BRKST                                              CSW041
+      *                                                                                       CSW041
+     C           IMRF      CHAINMGOREFL0             11                                       CSW041
+     C           *IN11     IFEQ '0'                                                           CSW041
+     C                     MOVELMODI      #MODID                                              CSW041
+     C                     MOVELMTRN      #TRREF                                              CSW041
+     C                     ELSE                                                               CSW041
+     C                     MOVE *BLANKS   #MODID                                              CSW041
+     C                     MOVE *BLANKS   #TRREF                                              CSW041
+     C                     ENDIF                                                              CSW041
+      *                                                                                       CSW041
+     C           #MODID    IFNE *BLANKS                                                       CSW041
+     C           #TRREF    ANDNE*BLANKS                                                       CSW041
+     C                     MOVELCONBUF    @BUFF                                               CSW041
+      *                                                                                       CSW041
+     C                     CALL 'CFG002'                                                      CSW041
+     C                     PARM           @BUFF  23                                           CSW041
+      *                                                                                       CSW041
+     C                     ENDIF                                                              CSW041
+      *                                                                                       CSW041
+     C                     ENDIF                                                              CSW041
+      *                                                                                       CSW041
+     C                     ENDSR                                                              CSW041
+      *                                                                                       CSW041
+     C*****************************************************************                       CSW041
+      /EJECT                                                                                  CSW041
+      *****************************************************************                       CSW041
+      *                                                               *                       CSW041
+      *       INIT - Initial Subroutine                               *                       CSW041
+      *                                                               *                       CSW041
+      *       CALLS - AOSARDR0                                        *                       CSW041
+      *                                                               *                       CSW041
+     C*****************************************************************                       CSW041
+      *                                                                                       CSW041
+     C           INIT      BEGSR                                                              CSW041
+      *                                                                                       CSW041
+      ** Define Data Area                                                                     CSW041
+      *                                                                                       CSW041
+     C           *NAMVAR   DEFN           SDSTAT                                              CSW041
+     C                     IN   SDSTAT                                                        CSW041
+      *                                                                                       CSW041
+      ***  Check if the feature CSW041 is installed.                                          CSW041
+      *                                                                                       CSW041
+     C                     CALL 'AOSARDR0'                                                    CSW041
+     C                     PARM '       ' @RTCD   7                                           CSW041
+     C                     PARM '*VERIFY' @OPTN   7                                           CSW041
+     C                     PARM 'CSW041'  @SARD   6                                           CSW041
+      *                                                                                       CSW041
+     C           @RTCD     IFEQ *BLANKS                                                       CSW041
+     C                     MOVEL'Y'       CSW041  1                                           CSW041
+     C                     ELSE                                                               CSW041
+     C                     MOVEL'N'       CSW041                                              CSW041
+     C                     ENDIF                                                              CSW041
+      *                                                                                       CSW041
+     C                     ENDSR                                                              CSW041
+      *                                                                                       CSW041
      C*****************************************************************
       /EJECT
      C*****************************************************************

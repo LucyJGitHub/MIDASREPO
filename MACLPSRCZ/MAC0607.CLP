@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056839           Date 16Oct20              */
-/*       Prev Amend No. MD039095           Date 16Apr19              */
+/*       Last Amend No. MD058833           Date 14Sep21              */
+/*       Prev Amend No. MD056839           Date 16Oct20              */
+/*                      MD039095           Date 16Apr19              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -28,6 +29,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058833 - Incorporate fixes from FCLIB of client           */
+/*                  LEUFIX14 -  fix applied is same with MD-56839    */
 /*       MD056839 - MA No spool files should be cleared if ODACLR    */
 /*                  equal to 'N'.                                    */
 /*                - Revert changes of MD039095 for this program only.*/

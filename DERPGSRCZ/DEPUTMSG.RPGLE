@@ -110,7 +110,7 @@
      D PSysVal10       S             20A                                                   AR1004819
      D PCurSet10       S            200A                                                    MD041126     
  
-       ** MQ Parameters                                                                     MD041126
+      ** MQ Parameters                                                                      MD041126
      D HCONN           S             10I 0                                                  MD041126
      D HIN             S             10I 0                                                  MD041126
      D P@MsgLen        S             10I 0                                                  MD041126

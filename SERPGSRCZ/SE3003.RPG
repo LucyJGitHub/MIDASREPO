@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046998A          Date 15Apr21               *
-      *  Prev Amend No. 248698             Date 01Jun20               *
+      *  Last Amend No. MD058111           Date 22Jul21               *
+      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *                 248698             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057247           Date 01Feb21               *
       *                 MD050604           Date 21Feb20               *
@@ -204,6 +205,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058111 - FusionMidas 2.1 SP24 CDS - Bulk Input jobs are    *
+      *             failing due to blank NMCY when calling SE0045.    *
+      *             Set NMCY equal to NMCYA which contains value      *
+      *             after accessing SECTYD.                           *
       *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
       *            - Applied fix for MD057480                         *
       *  248698 - Rounding discrepancies on some SE reports. Applied  *
@@ -5380,6 +5385,10 @@
      C*                                                                   E18356
      C**Branch*code:*defaults*to*value*on*ICD**************************   E18356
      C***********          Z-ADDDSTB      @BTDBR                          E18356
+      *                                                                                     MD058111
+      ** Set NMCY that will be use later by SE0045 via ZNCD/ZLCD                            MD058111
+      *                                                                                     MD058111
+     C                     MOVE NMCYA     NMCY                                              MD058111
      C*
      C* Trade date: defaults to earlier of run and value dates
      C           RUND      IFLT @BTDVD
@@ -8427,14 +8436,14 @@
       *                                                                                     AR596783
       ** Populate record to Trade Details Extension File                                    AR596783
       *                                                                                     AR596783
-     C           CER049    IFEQ 'Y'                                                         AR871625
+     C           CER049    IFEQ 'Y'                                                AR871625
      C                     MOVE TDRF      TQTDRF                                            AR596783
      C                     MOVE TDBA      TQTDBA                                            AR596783
      C           TQTDRF    CHAINTRADSQL0             01                                     AR871625
      C           *IN01     IFEQ '1'                                                         AR871625
      C                     WRITETRADSQD0                                                    AR596783
      C                     ENDIF                                                            AR871625
-     C                     ENDIF                                                            AR871625
+     C                     ENDIF                                                   AR871625
      C*                                                                   S01408
      C/COPY WNCPYSRC,SE3003CP14                                           S01408
      C*                                                                   S01408
@@ -12944,6 +12953,7 @@
       ** Set error code if error is encountered upon validation.                              234440
       *                                                                                       234440
      C           DDFPOK    IFNE 'Y'                                                           234440
+     C           DDFPOK    ANDNE'W'                                                         MD058111
      C                     SETON                     12                                       234440
      C                     ENDIF                                                              234440
       *                                                                                       234440

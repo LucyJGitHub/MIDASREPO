@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. MD057446  *CREATE  Date 12Jan21              */
+/*       Last Amend No. MD058454           Date 18Aug21              */
+/*       Prev Amend No. MD057446  *CREATE  Date 12Jan21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058454 - SP25: Installation issues with ASPs.             */
+/*                - Include ASP and ASPDEV as parameters in CHGOWNAUT*/
 /*       MD057446 - Duplicate key error on SMUPGCTD when running     */
 /*                  PRCA. Create separate programs for global and    */
 /*                  zonal schema upgrade. Transfer zone processing   */
@@ -40,6 +43,8 @@
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                /*MD058454*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                  /*MD058454*/
 
 /*/COPY SDCPYSRC,SDSVALDCL */
 
@@ -193,6 +198,27 @@ ABNOR:
              CHGVAR     VAR(&GLOBPRFX) VALUE(%SST(&SVAL4 1 2))
              CHGVAR     VAR(&ZONEPRFX) VALUE(%SST(&SVAL5 1 2))
 
+/* RE-USE VARIABLES FROM AOSVALR0 TO GPAOSVALR0                                         /*MD058454*/
+             CHGVAR     VAR(&SVALK1) VALUE('IASPinstallation')                          /*MD058454*/
+             CHGVAR     VAR(&SVALK2) VALUE('IASPgroup')                                 /*MD058454*/
+             CHGVAR     VAR(&SVALK3) VALUE(' ')                                         /*MD058454*/
+             CHGVAR     VAR(&SVALK4) VALUE(' ')                                         /*MD058454*/
+             CHGVAR     VAR(&SVALK5) VALUE(' ')                                         /*MD058454*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK10 &SVAL10)                                      /*MD058454*/
+                                                                                        /*MD058454*/
+             IF         COND(&RSVALRTNC *NE ' ') THEN(DO)                               /*MD058454*/
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')                                   /*MD058454*/
+             ENDDO                                                                      /*MD058454*/
+                                                                                        /*MD058454*/
+             CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                           /*MD058454*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                 /*MD058454*/
+             CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                             /*MD058454*/
+             ENDDO                                                                      /*MD058454*/
+                                                                                        /*MD058454*/
              ENDSUBR
 
 /*********************************************************************/
@@ -230,9 +256,16 @@ ABNOR:
                 CHGVAR     VAR(&AUTL) VALUE(&ZONEPRFX *TCAT 'DATABASE')
              ENDDO
 
+             IF         COND(&IASP *EQ ' ') THEN(DO)                                    /*MD058454*/
              CHGOWNAUT  OBJ(&BFLIB/*ALL) OBJTYPE(*ALL) +
                           NEWOWN(&OWNER) PUBAUT(*USE) +
                           AUTL(&AUTL) CHGLIB(N)
+             ENDDO                                                                      /*MD058454*/
+             ELSE       CMD(DO)                                                         /*MD058454*/
+             CHGOWNAUT  OBJ(&BFLIB/*ALL) OBJTYPE(*ALL) +
+                          NEWOWN(&OWNER) PUBAUT(*USE) +
+                          AUTL(&AUTL) CHGLIB(N) ASP(*ASPDEV) ASPDEV(&IASP)              /*MD058454*/
+             ENDDO                                                                      /*MD058454*/
 
 /** Journal all files within schema library using Midas Journal */
              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)

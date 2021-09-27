@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058593             Date 20Aug21             *
-      *  Prev Amend No. MD054346             Date 18Jul21             *
+      *  Last Amend No. MD056891             Date 21Aug21             *
+      *  Prev Amend No. MD058593             Date 20Aug21             *
+      *                 MD054346             Date 18Jul21             *
       *                 MD055891             Date 01Sep20             *
       *                 MD058443             Date 12Jul21             *
       *                 MD058177             Date 27May21             *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056891 - Deliverable Data Split for T_WIPACT               *
       *  MD058593 - GZSCSAREPD was made redundant. Remove it from BTD *
       *  MD054346 - Switchable Features Password Encryption           *
       *  MD055891 - Deliverable Data Split for COB                    *
@@ -387,12 +389,22 @@
      C                   eval      OLDFILE = 'GPNSECPD'                                     MD054346
      C                   endif                                                              MD054346
                                                                                             MD054346
+      * for T_WIPACT migration                                                              MD056891
+     C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
+     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD056891
+     C                             ' overriding user value (select ' +                      MD056891
+     C                             %trimr(PSELECT) + ' from ' + OLDFILE +                   MD056891
+     C                             ' A where not exists (select * from ' +                  MD056891
+     C                             XINDEX +  ' B ' + %trimr(WHERE) + '))'                   MD056891
+     C                   else                                                               MD056891
+                                                                                            MD056891
      C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +
      C                             ' (select ' +
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +
      C                             ' A where not exists (select * from ' +
      C                             XINDEX +  ' B ' + %trimr(WHERE) + '))'
 
+     C                   endif                                                              MD056891
      C/EXEC SQL
      C+ prepare DynSQLStmnt
      C+ from :SQLDynStmt

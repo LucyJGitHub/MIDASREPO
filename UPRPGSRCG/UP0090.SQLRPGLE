@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054346             Date 18Jul21             *
-      *  Prev Amend No. MD056555             Date 31Aug20             *
+      *  Last Amend No. MD056808             Date 20Sep20             *
+      *  Prev Amend No. MD056891             Date 21Aug21             *
+      *                 MD054346             Date 18Jul21             *
+      *                 MD056555             Date 31Aug20             *
       *                 MD055891             Date 01Sep20             *
       *                 MD057707             Date 21Jan21             *
       *                 MD057599             Date 21Jan21             *
@@ -78,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056808 - Deliverable Data Split for SDEXMAPD               *
+      *  MD056891 - Deliverable Data Split for T_WIPACT               *
       *  MD054346 - Switchable Features Password Encryption           *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055891 - Deliverable Data Split for COB                    *
@@ -1124,6 +1128,8 @@
      C                             or ChkFile = 'SCSRWXTD'                                  MD056555
      C                             or ChkFile = 'SCSRXXTD'                                  MD056555
      C                             or ChkFile = 'GPSECXTD'                                  MD054346
+     C                             or ChkFile = 'GPWATXTD'                                  MD056891
+     C                             or ChkFile = 'SDEXMXTD'                                  MD056808
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1258,6 +1264,7 @@
      C                             or Member = 'GPSRVCTD'                                   MD056555
      C                             or Member = 'GPSRWCTD'                                   MD056555
      C                             or Member = 'GPSECCTD'                                   MD054346
+     C                             or Member = 'GPWATCTD'                                   MD056891
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1337,6 +1344,7 @@
      C                             or Member = 'SCSRVCTD'                                   MD056555
      C                             or Member = 'SCSRWCTD'                                   MD056555
      C                             or Member = 'SCSRXCTD'                                   MD056555
+     C                             or Member = 'SDEXMCTD'                                   MD056808
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

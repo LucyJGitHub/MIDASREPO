@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/**** *  RPGBASEBND                                                   *                     MD056808
+/*STD *  RPGSQLBND                                                    *                     MD056808
 /*EXI *  TEXT('Midas SD FATCA Exceptions by CUST/NAHO Report')        *
       *****************************************************************
       *                                                               *
@@ -11,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD056808           Date 20Sep20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042897           Date 29Nov16               *
       *                 MD039670           Date 26Jul16               *
@@ -22,6 +24,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056808 - Deliverable Data Split for SDEXMAPD               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -84,7 +87,7 @@
      FSDCUSTL0  IF   E           K DISK
 
       ** FATCA Exception Messages File
-     FSDEXMAL0  IF   E           K DISK
+     F*SDEXMAL0* IF   E           K DISK                                                    MD056808
 
       ** FATCA Exceptions by Customers/Non-Account Holders Report
      FSD000554P1O    E             PRINTER INFSR(*PSSR)
@@ -112,6 +115,7 @@
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD039670
 
+     D SDEXMA        E DS                  EXTNAME(SDEXMJW0)                                MD056808
      DPSDS            SDS
 
       ** Procedure name
@@ -197,6 +201,7 @@
      D WcheckCH        S              5  0                                                    CGL177
      D WcheckCI        S              5  0                                                    CGL177
      D WxCUST          S              6A                                                      CGL177
+     D Kexma           S              1A                                                    MD056808
 
      ** ZSFILE Parameters
      D ZSERR           S              1
@@ -651,9 +656,17 @@
      C     SRWREX        BEGSR
      C                   EVAL      WIdx = 1
      C                   DOW       Excpts(WIdx) <> *BLANKS
-     C     Excpts(WIdx)  CHAIN     SDEXMAL0
+     C*****Excpts(WIdx)  CHAIN     SDEXMAL0                                                 MD056808
+     C                   eval      Kexma = Excpts(WIdx)                                     MD056808
+     C/EXEC SQL                                                                             MD056808
+     C+ SELECT *                                                                            MD056808
+     C+ into :SDEXMA                                                                        MD056808
+     C+ from SDEXMJW0                                                                       MD056808
+     C+ where FEEXID = :Kexma                                                               MD056808
+     C/END-EXEC                                                                             MD056808
      C**********         IF        %FOUND = '1'                                               CGL177
-     C                   IF        %FOUND(SDEXMAL0)                                           CGL177
+     C**********         IF        %FOUND(SDEXMAL0)                                  CGL177 MD056808
+     C                   IF        SQLCODE = 0                                       CGL177 MD056808
       ** Move exception message (256A) to array of 4 elements (64A)
      C                   EVAL      MsgLines = *BLANKS
      C                   MOVEA     FEEXDE        MsgLines

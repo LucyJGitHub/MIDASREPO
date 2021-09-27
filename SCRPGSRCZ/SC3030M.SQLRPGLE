@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD058842           Date 14Sep21               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD058842 - SCSRRXTD not properly updated                     *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
@@ -1186,8 +1188,10 @@
      C     YARDC         IFEQ      'Y'
      C**********         UPDATE    @SARRL0                              91      *           MD056555
      C/EXEC SQL                                                                             MD056555
-     C+ update SCSRRBTD                                                                     MD056555
-     C+ set AHTYLC = :AHTYLC, AHRDSC = :AHRDSC, AHLCD = :AHLCD                              MD056555
+     C**update SCSRRBTD                                                            MD056555 MD058842
+     C**set*AHTYLC = :AHTYLC, AHRDSC = :AHRDSC, AHLCD = :AHLCD                     MD056555 MD058842
+     C+ update SCSRRXTD                                                            MD056555 MD058842
+     C+ set AHTYLC = :AHTYLC, AHAVAL = :AHAVAL, AHLCD = :AHLCD                     MD056555 MD058842
      C+ where AHSARN = :AHSARN and AHRNAM = :AHRNAM                                         MD056555
      C/END-EXEC                                                                             MD056555
      C                   ELSE

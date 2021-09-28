@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSW220  *CREATE    Date 09Mar20               *
+      *  Last Amend No. MD058934           Date 28Sep21               *
+      *  Prev Amend No. CSW220  *CREATE    Date 09Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058934 - Recompile due to change in MEINFTPD file.         *
       *  CSW220 - SWIFT Changes 2020                                  *
       *                                                               *
       *****************************************************************

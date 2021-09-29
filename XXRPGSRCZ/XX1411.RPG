@@ -1,0 +1,281 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas xx Summarize I/O Account Data (ALTAC)')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - I/O RECONCILE                                        *
+     F*                                                               *
+     F*  XX1411 - SUMMARIZE I/O ACCOUNT DATA (ALTAC)                  *
+     F*                                                               *
+     F*  (C) FINASTRA INTERNATIONAL LIMITED 2021                      *
+     F*                                                               *
+     F*  Last Amend No. EML114   *CREATE   Date 23Sep21               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  EML114 - Upgrade TFJ004 to FM2.1                             *
+     F*  TFJ004 - Inter-office Reconcile                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FXXACNTL2IP  E           K        DISK
+     FTABCY   IF  F     230  5AI     2 DISK
+      *
+     FIORECNEBO   E                    DISK
+     F*
+      *****************************************************************
+     E*
+     E/COPY ZSRSRC,ZDATE9Z1
+      ** Array for ZDATE9
+     E**
+     E                    CCYA      150  3
+     E                    DPA       150  1 0
+     E                    WKA        15  1
+     E                    WKB        20  1
+     E                    WKE        11  1
+     E                    WKF        17  1
+     E**
+     E                    AMT     1   1 19               Amount title
+      *****************************************************************
+     I*
+0119 IXXACNTP0
+     I                                              CCY   L1
+     I                                              ALTAC L1
+     I                                              HOCNUML1
+     I*
+0119 ITABCY   NS  03
+0121 I                                        1   1 RECIX
+0122 I                                        2   30RECTX
+0123 I                                       10  12 CCYX
+0124 I                                       13  130SRECX
+0125 I                                       38  380CDPX
+     I/COPY ZSRSRC,ZDATE9Z2
+      ** Data structure for ZDATE9
+     I            DS
+     I                                        1   60WKDATE
+     I                                        1   20WKDD
+     I                                        3   40WKMM
+     I                                        5   60WKYY
+     I            DS
+     I                                        1  10 WDATE
+     I                                        1   4 WYY
+     I                                        5   5 SL1
+     I                                        6   7 WMM
+     I                                        8   8 SL2
+     I                                        9  10 WDD
+     I@BANK     E DSSDBANKPD
+     I** DUMMY RECORD FORMAT FOR BANK DETAILS
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     C*****************************************************************
+     C*
+     C*    FIRST CYCLE PROCESSING
+     C        N10          EXSR CCYARR
+     C        N10          SETON                     10
+     C*
+     C   L1                Z-ADD0         WAMT1  150
+     C   L1                MOVELRECTYP    REC
+     C   L1                MOVELALTAC     ICODE1
+     C   L1                MOVELHOCNUM    SCODE2
+     C   L1                MOVELCCY       CUR1
+     C*
+     C                     ADD  YTDBAL    WAMT1
+     C*
+0256 C**   LOOK UP NO. OF DECIMAL PLACES FOR CURRENCY.             *******
+0257 CL1                   MOVE CCY       XCCY    3
+0258 CL1                   Z-ADD1         X
+0259 CL1         XCCY      LOKUPCCYA,X                   80
+0260 CL1 80                MOVE DPA,X     XDECP   10
+0260 CL1N80                MOVE 1         XDECP
+0261 C*
+0262 C*    CHECK NUMBER OF DECIMAL PLACES FOR CURRENCY.
+0263 CL1         XDECP     COMP 1                      3031
+0264 CL1         XDECP     COMP 2                    33  32
+     C*
+     CL1                   MOVE *BLANK    AMT1
+     C*1                   Z-ADDWAMT1     WKN15                                               TFJ007
+     CL1                   Z-SUBWAMT1     WKN15                                               TFJ007
+     CL1                   Z-ADDXDECP     D       20
+     CL1         15        SUB  XDECP     O       20
+     CL1                   EXSR #SREDT
+     CL1                   MOVE WKA19     AMT1
+     C*
+     C**  WRITE RECORD TO FJ'S FILE
+     CL1                   WRITEIORECEBF
+     C*
+     C********************************************************************
+     C           #SREDT    BEGSR
+     C                     MOVE '0'       *IN85
+     C                     MOVE *BLANK    WKB
+     C           WKN15     COMP 0                      84
+     C   84                MULT -1        WKN15  150
+     C                     MOVE WKN15     WKA15  15
+     C                     MOVEAWKA15     WKA
+     C           D         IFEQ 2
+     C                     MOVE '0'       WKB,19
+     C                     END
+     C           D         IFEQ 1
+     C                     MOVEA'00'      WKB,18
+     C                     END
+     C           D         IFEQ 0
+     C                     MOVEA'000'     WKB,17
+     C                     END
+     C                     Z-ADD0         M       20
+     C           15        SUB  O         N       20
+     C           #SR301    TAG
+     C           M         COMP 15                       83
+     C   83                GOTO #SR302
+     C                     ADD  1         N       20
+     C                     ADD  1         M
+     C           WKA,M     IFNE '0'
+     C           *IN85     OREQ '1'
+     C                     MOVE '1'       *IN85
+     C                     MOVE WKA,M     WKB,N
+     C                     END
+     C           M         IFEQ O
+     C           *IN85     IFEQ '0'
+     C                     MOVE '0'       WKB,N
+     C                     END
+     C                     ADD  1         N
+     C                     MOVE '.'       WKB,N
+     C                     MOVE '1'       *IN85
+     C                     END
+     C                     GOTO #SR301
+     C           #SR302    TAG
+     C                     Z-ADD0         N
+     C           *IN84     IFEQ '1'
+     C           #LP04     TAG
+     C                     ADD  1         N
+     C           N         CABGE20        #SR303
+     C           WKB,N     IFNE *BLANK
+     C                     SUB  1         N
+     C                     MOVE '-'       WKB,N
+     C                     GOTO #SR303
+     C                     END
+     C                     GOTO #LP04
+     C                     END
+     C*
+     C           #SR303    TAG
+     C*
+     C                     MOVEAWKB       WKA19  19
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C********************************************************************
+     C           CCYARR    BEGSR                           *** CCYARR  ***
+     C**
+     C**   SET OFF ERROR INDICATOR
+     C                     SETOF                     99
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       30
+     C**
+     C**   SET UP KEY FOR CURRENCY TABLE.
+     C                     MOVEL'     '   XCYKEY  5
+     C**
+     C**   SET LOWER LIMIT AND READ CURRENCY TABLE HEADER.
+     C           XCYKEY    SETLLTABCY
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           XLOOP     TAG                             ** XLOOP TAG **
+     C                     READ TABCY                    99
+     C  N99      RECTX     COMP 20                   9999
+     C**
+     C**   END IF ALL CURRENCY RECORDS PROCESSED
+     C   99                GOTO XEND
+     C**
+     C**   IGNORE DELETED RECORDS AND NON-SUB-RECORD ONE.
+     C           RECIX     COMP 'D'                  9797
+     C   97                GOTO XLOOP
+     C           SRECX     COMP 1                    9797
+     C   97                GOTO XLOOP
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE CCYX      CCYA,X
+     C                     MOVE CDPX      DPA,X
+     C**
+     C**   CHECK FOR FULL ARRAY.96 ON IF FULL.
+     C           X         COMP 150                      96
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C  N96                GOTO XLOOP
+     C**
+     C           XEND      TAG                             ** XEND TAG  **
+     C*
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10         *************
+     C                     MOVEL'01'      DBASE   3         *DBERROR 001*
+     C                     MOVEL@OPTN     DBOPTN  7         *************
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVEL'System'  SYSTEM
+     C                     MOVEL'Date'    DATE
+     C                     MOVEL'Record'  REC
+     C                     MOVEL'Our'     SCODE1
+     C                     MOVE 'Office'  SCODE1
+     C                     MOVEL'Account' ICODE1
+     C                     MOVEL'Counter' SCODE2
+     C                     MOVE 'party'   SCODE2
+     C                     MOVEL'Account2'ICODE2
+     C                     MOVEL'Currency'CUR1
+     C                     MOVELAMT,1     AMT1
+     C*
+     C                     WRITEIORECEBF
+     C*
+     C                     MOVE *BLANK    SYSTEM
+     C                     MOVE *BLANK    DATE
+     C                     MOVE *BLANK    REC
+     C                     MOVE *BLANK    SCODE1
+     C                     MOVE *BLANK    ICODE1
+     C                     MOVE *BLANK    SCODE2
+     C                     MOVE *BLANK    ICODE2
+     C                     MOVE *BLANK    CUR1
+     C                     MOVE *BLANK    AMT1
+     C*
+     C                     SETOF                     98
+     C*
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C           @@RTN     IFNE '1'
+     C                     MOVE @@YR      WYY
+     C                     MOVE '/'       SL1
+     C                     MOVE @@Z71M    WMM
+     C                     MOVE '/'       SL2
+     C                     MOVE @@Z71D    WDD
+     C                     MOVE WDATE     DATE
+     C                     ELSE
+     C                     MOVE *BLANK    DATE
+     C                     ENDIF
+     C*
+     C                     MOVEL'4'       SYSTEM
+     C*** In Dusseldorf
+     C                     MOVEL'524'     SCODE1
+     C*** In Paris
+     C***                  MOVEL'534'     SCODE1
+     C*
+     C                     ENDSR
+     C**
+     C**
+     C/COPY ZSRSRC,ZDATE9Z3
+     C*
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+** AMT - Amount title
+Amount (Cr -)

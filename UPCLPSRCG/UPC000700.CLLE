@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD054346           Date 18Jul21              */
-/*       Prev Amend No. MD056555           Date 31Aug20              */
+/*       Last Amend No. MD056808           Date 20Sep20              */
+/*       Prev Amend No. MD056891           Date 21Aug21              */
+/*                      MD054346           Date 18Jul21              */
+/*                      MD056555           Date 31Aug20              */
 /*                      MD055891           Date 01Sep20              */
 /*                      MD057707           Date 21Jan21              */
 /*                      MD057599           Date 21Jan21              */
@@ -57,6 +59,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056808 - Deliverable Data Split for SDEXMAPD              */
+/*       MD056891 - Deliverable Data Split for T_WIPACT              */
 /*       MD054346 - Switchable Features Password Encryption          */
 /*       MD056555 - Deliverable Data Split for SAR group             */
 /*       MD055891 - Deliverable Data Split for COB                   */
@@ -1798,6 +1802,36 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD054346*/
              ENDDO                                                                      /*MD054346*/
                                                                                         /*MD054346*/
+/* GPWATCTD */                                                                          /*MD056891*/
+             IF         COND(&FILE *EQ 'GPWATCTD') THEN(DO)                             /*MD056891*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056891*/
+             CHKOBJ     OBJ(&LIBMOV/T_WIPACT) OBJTYPE(*FILE)                            /*MD056891*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056891*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056891*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056891*/
+             RESETMAXID FILE(GPWATBTD) RSTOPT(1000)                                     /*MD056891*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056891*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'T_WIPACT')                                           /*MD056891*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056891*/
+             ENDDO                                                                      /*MD056891*/
+                                                                                        /*MD056891*/
+/* SDEXMCTD */                                                                          /*MD056808*/
+             IF         COND(&FILE *EQ 'SDEXMCTD') THEN(DO)                             /*MD056808*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056808*/
+             CHKOBJ     OBJ(&LIBMOV/SDEXMAPD) OBJTYPE(*FILE)                            /*MD056808*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056808*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056808*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056808*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056808*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SDEXMAPD')                                           /*MD056808*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056808*/
+             ENDDO                                                                      /*MD056808*/
+                                                                                        /*MD056808*/
              ENDDO                                                                      /*MD054560*/
                                                                                         /*MD054955*/
 /* If No Display Condition fields */                                                    /*MD056564*/

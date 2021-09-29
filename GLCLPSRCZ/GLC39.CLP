@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD044892           Date 12Sep17              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DRI006             Date 01Jun21              */
+/*       Prev Amend No. MD044892           Date 12Sep17              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -36,6 +37,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       DRI006 - ACCNTAB COB save at monthend                      */
 /*       MD044892 - Suppress Base CCY transfer posting in PEA.       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL023 - Retention of Currency of Balance.                 */
@@ -122,7 +124,10 @@
              DCL        VAR(&FEOY) TYPE(*CHAR) LEN(1) VALUE(' ')      /*CGL023*/
              DCL        VAR(&EROR) TYPE(*CHAR) LEN(1) VALUE(' ')      /*CGL023*/
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*CSC020*/
-             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(50)                                   /*CSC020*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(50) /*CSC020*/
+                                                                                          /*DRI006*/
+/*/COPY WNCPYSRC,DRI006_001                                          */                   /*DRI006*/
+                                                                                          /*DRI006*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC39INT                                            */
                                                                       /*S01408*/
@@ -190,9 +195,9 @@
              CLRPFM     FILE(GEXFPD)
              CLRPFM     FILE(GEXFZZ)
 /*/COPY WNCPYSRC,GLC39014                                            */
- 
+
              ENDDO                                                    /*E15192*/
- 
+
              ELSE       CMD(DO)                                       /*E15192*/
 /**/
 /**  Check if Management Accounts Enhancement is installed.  If it */ /*CMC001*/
@@ -226,17 +231,17 @@
                CLRPFM     FILE(GEXBZZ)                                                  /*MD044892*/
                GOTO       CMDLBL(ENDPGM)                                                /*MD044892*/
              ENDDO                                                                      /*MD044892*/
- 
+
              SNDPGMMSG  MSG('GLC39 - Transfer of base ccy Income and +
                           Expense') TOMSGQ(MRUNQ)                     /*E15192*/
- 
+
              CLRPFM     FILE(GEXBHH)                                  /*E15192*/
              CLRPFM     FILE(GEXBPD)                                  /*E15192*/
              CLRPFM     FILE(GEXBZZ)                                  /*E15192*/
              OVRDBF     FILE(GEXFHH) TOFILE(GEXBHH)                   /*E15192*/
              OVRDBF     FILE(GEXFPD) TOFILE(GEXBPD)                   /*E15192*/
              OVRDBF     FILE(GEXFZZ) TOFILE(GEXBZZ)                   /*E15192*/
- 
+
              ENDDO                                                    /*E15192*/
 /**/                                                                   /*S1099*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)            /*S1099*/
@@ -486,7 +491,7 @@ NOJRN:          CHGJOB     INQMSGRPY(*DFT)                             /*S1099*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,GLC39011                                            */
- 
+
              IF         COND(&FORB *EQ 'F') THEN(DO)                  /*E15192*/
              CLRPFM     FILE(GEXFHH)                                   /*S1099*/
              MONMSG MSGID(CPF0000 RPG0000 MCH0000)                    /*LN0870*/
@@ -503,7 +508,7 @@ NOJRN:          CHGJOB     INQMSGRPY(*DFT)                             /*S1099*/
              CLRPFM     FILE(GEXBZZ)                                  /*E15192*/
              MONMSG MSGID(CPF0000 RPG0000 MCH0000)                    /*LN0870*/
              ENDDO                                                    /*E15192*/
- 
+
 /********    CHGDTAARA  DTAARA(GLSTAT (57 1)) VALUE('N')    /*S1099*/ /*S01189*/
              CHGVAR     VAR(&STAT) VALUE('N')                         /*S01189*/
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)           /*S01189*/
@@ -512,7 +517,10 @@ NOJRN:          CHGJOB     INQMSGRPY(*DFT)                             /*S1099*/
                           Finastra International Limited')
 /*/COPY WNCPYSRC,GLC39012                                            */
 /*ENDPGM:*****ENDPGM******************************************************S1099*************CSC020*/
- ENDPGM:                                                                                  /*CSC020*/
+ ENDPGM: /*CSC020*/
+                                                                                          /*DRI006*/
+/*/COPY WNCPYSRC,DRI006_002                                          */                   /*DRI006*/
+                                                                                          /*DRI006*/
 /*                                                                                        /*CSC020*/
 /* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*CSC020*/
 /*                                                                                        /*CSC020*/

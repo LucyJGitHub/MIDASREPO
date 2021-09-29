@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058721             Date 28Aug21             *
-      *  Prev Amend No. MD058491             Date 28Jul21             *
+      *  Last Amend No. MD058933             Date 28Sep21             *
+      *  Prev Amend No. MD058721             Date 28Aug21             *
+      *                 MD058491             Date 28Jul21             *
       *                 MD057288             Date 01Dec20             *
       *                 MD057231             Date 18Nov20             *
       *                 MD054733             Date 02Dec19             *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058933 - For CBCMPCTD, field 'Execution parameters' needs  *
+      *             update as field is in the XTD.                    *
       *  MD058721 - Consider bespoke API in WIP config.               *
       *             Delete record in XTD if not found in CTD and BTD. *
       *             Do not delete BTD record.                         *
@@ -101,6 +104,11 @@
       * Add missing record in extension file if found in core file but not in the extension
      C                   exsr      SR_AddExt
 
+      * Special process for CBCMPCTD                                                        MD058933
+     C                   if        XINDEX = 'CBCMPCTD'                                      MD058933
+     C                   exsr      SR_CBCMP                                                 MD058933
+     C                   endif                                                              MD058933
+                                                                                            MD058933
      C                   Seton                                        LR
      C                   Return
 
@@ -514,6 +522,43 @@
      C                   ENDIF
      C                   ENDSR
 
+      /EJECT                                                                                MD058933
+      *****************************************************************                     MD058933
+      *                                                               *                     MD058933
+      *    SR_CBCMP - Special process to update CBCMPXTD              *                     MD058933
+      *                                                               *                     MD058933
+      *****************************************************************                     MD058933
+                                                                                            MD058933
+     C     SR_CBCMP      BEGSR                                                              MD058933
+                                                                                            MD058933
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD058933
+                                                                                            MD058933
+     C                   eval      SQLDynStmt = 'update '      +                            MD058933
+     C                             %trimr(KMSCHEMA) + '/CBCMPXTD x '  +                     MD058933
+     C                             ' set (x.dhcprm ) = (select c.dhcprm ' +                 MD058933
+     C                             ' from CBCMPCTD c ' +                                    MD058933
+     C                             ' where x.dhcott = c.dhcott and x.dhcseq ' +             MD058933
+     C                             ' = c.dhcseq and c.dhcpca <> ''Y'') ' +                  MD058933
+     C                             ' where exists (select * from CBCMPCTD c' +              MD058933
+     C                             ' where x.dhcott = c.dhcott and x.dhcseq ' +             MD058933
+     C                             ' = c.dhcseq and c.dhcpca <> ''Y'')'                     MD058933
+                                                                                            MD058933
+     C/EXEC SQL                                                                             MD058933
+     C+ prepare DynSQLStmnt                                                                 MD058933
+     C+ from :SQLDynStmt                                                                    MD058933
+     C/END-EXEC                                                                             MD058933
+                                                                                            MD058933
+     C/exec SQL                                                                             MD058933
+     C+ execute DynSQLStmnt                                                                 MD058933
+     C/end-exec                                                                             MD058933
+                                                                                            MD058933
+     C                   If        SQLCode <> 0                                             MD058933
+     C                             and SQLCode <> 100                                       MD058933
+     C                   eval      ERROR = '*Error'                                         MD058933
+     C                   Dump                                                               MD058933
+     C                   Endif                                                              MD058933
+     C                   ENDSR                                                              MD058933
+      *                                                                                     MD058933
       /EJECT
       *****************************************************************
       *                                                               *
@@ -534,4 +579,3 @@
      C
       *
      C     BldOutFileE   ENDSR
-      *

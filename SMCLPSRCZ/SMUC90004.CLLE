@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to add job sched for ERC000110 job')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       SMUC90004 - CL program to add job sched for ERC000110 job   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD058462  *CREATE  Date 29Jun21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058462 - KWG24 Answerback processing was automated in M+  */
+/*                  using program ERC000110. This program            */
+/*                  (or equivalent) should be made available for     */
+/*                  Fusion Midas.                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2021')
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR1))
+/**/
+/* Start of program */
+
+/**/
+/* Get system prefix */
+/**/
+
+             RTVJOBA    USER(&USER)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&XLIB) VALUE(&PREF *TCAT 'XLIB')
+
+             ADDJOBSCDE JOB(ERC000110) CMD(CALL PGM(ERC000110)) +
+                          FRQ(*WEEKLY) SCDDATE(*NONE) SCDDAY(*MON +
+                          *TUE *WED *THU *FRI) SCDTIME('07:30:00') +
+                          JOBD(&XLIB/BULKTJOBD) JOBQ(*JOBD) +
+                          USER(&USER)
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program or */
+/* Restore backup if an error occurred in update mode */
+/**/
+ABNOR:
+
+ ABNOR1:     SNDPGMMSG  MSG('Error occurred in SMUC90004 program') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2021')
+             SNDPGMMSG  MSG('End of SMUC90004') TOMSGQ(MRUNQ MOPERQ)
+             ENDPGM

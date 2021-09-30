@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058890           Date 21Sep21               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030371           Date 10Sep14               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058890 - Decimal-data error occurred when inserting new    *
+      *             record in Generation Criteria Table Maintenance   *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1352,6 +1355,7 @@
      C**  Check if header record exists
      C                   MOVEL     #1MTPY        #KMTPY
      C                   MOVE      #1MSET        #KMSET
+     C                   CLEAR                   @GNCRPD                                    MD058890
      C     #HHKEY        CHAIN     MEGNCRL0                           6099
      C                   UNLOCK    MEGNCRL0                                                    16242
      C** Hold existing image                                              162428

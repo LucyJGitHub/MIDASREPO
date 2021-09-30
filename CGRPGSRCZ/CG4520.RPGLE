@@ -23,8 +23,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. LLE089             Date 21Feb20               *
+      *  Prev Amend No. LLE060             Date 21Feb20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD056576           Date 21Sep20               *
       *                 MD054681           Date 01Jun20               *
       *                 261705             Date 08Oct19               *
@@ -65,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LLE089 - Tiered and Threshold Interest Details on Statement  *
+      *  LLE060 - Additional UDC fields                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
@@ -138,6 +142,9 @@
       *                                                               *
       *****************************************************************
      F/COPY WNCPYSRC,CG4510F001
+      *                                                                                       LLE060
+     FINPAY     IF   E           K DISK    INFSR(*PSSR)                                       LLE060
+     FOTPAY     IF   E           K DISK    INFSR(*PSSR)                                       LLE060
       *                                                                                       CER038
       ** Correspondent file by customer number                                                CER038
       *                                                                                       CER038
@@ -172,6 +179,11 @@
      FGLMNARL1  IF   E           K DISK                                                     BUG24460
       *                                                                                     BUG24460
      F/COPY WNCPYSRC,CG4510F003
+      ** Midas RET.HIST.-CREDIT RATE CHG RECORDS                                              LLE089
+     FREHRCJ    IF   E           K DISK    INFSR(SRFILE)                                      LLE089
+      *                                                                                       LLE089
+      ** Midas RET.HIST.-DEBIT RATE CHG RECORDS                                               LLE089
+     FREHRDJ    IF   E           K DISK    INFSR(SRFILE)                                      LLE089
      F/SPACE 5
      F/COPY WNCPYSRC,CG4510F005
      D*COPY*CGCPYSRC,CGPACKE                                                                MD056543
@@ -191,8 +203,14 @@
      D**********          ##GRP   1  95 10   ##RDEA 22                               CER038 BUG24460
      D**********          ##GRP   1  97 10   ##RDEA 22                               BUG24460 CRE073
      D**********          ##GRP   1 106 10   ##RDEA 22                                 CRE073 261705
-     D ##GRP           S             10    DIM(108) CTDATA PERRCD(1)                          261705
-     D ##RDEA          S             22    DIM(108) ALT(##GRP)                                261705
+     D********** ##GRP           S             10    DIM(108) CTDATA PERRCD(1)         261705 LLE060
+     D********** ##RDEA          S             22    DIM(108) ALT(##GRP)               261705 LLE060
+     D********** ##GRP           S             10    DIM(111) CTDATA PERRCD(1)         LLE060 LLE089
+     D********** ##RDEA          S             22    DIM(111) ALT(##GRP)               LLE060 LLE089
+     D ##GRP           S             10    DIM(167) CTDATA PERRCD(1)                          LLE089
+     D ##RDEA          S             22    DIM(167) ALT(##GRP)                                LLE089
+      * ARRAY FOR 'COMPRESSING' TWO NARRATIVES                                                LLE060
+     D ARR             S              1    DIM(70)                                            LLE060
      D/COPY WNCPYSRC,CG4510E002
      D*
      D**  Array of Currencies accessed by program
@@ -332,7 +350,8 @@
      D  ##BANO                 1      3                                         N/Used
      D  ##BITM                 4      6                                         N/Used
       *
-     D ##SRDT          DS                  OCCURS(20)
+     D*##SRDT******DS                         20                                              LLE089
+     D ##SRDT          DS                  OCCURS(25)                                         LLE089
       **  DS to store subroutine specific data.
       **  - Previous Bind
       **  - This Bind
@@ -347,6 +366,42 @@
      D C#STMT          C                   CONST('STATEMENT ')
      D C#NORM          C                   CONST('NORMAL    ')
      D C#TURN          C                   CONST('TURNOVER  ')
+      *                                                                                       LLE089
+     D                 DS                                                                     LLE089
+     D  RAT2                   1     36                                                       LLE089
+     D  RAT21                  1      6P 7                                                    LLE089
+     D  RAT22                  7     12P 7                                                    LLE089
+     D  RAT23                 13     18P 7                                                    LLE089
+     D  RAT24                 19     24P 7                                                    LLE089
+     D  RAT25                 25     30P 7                                                    LLE089
+     D  RAT26                 31     36P 7                                                    LLE089
+      *                                                                                       LLE089
+     D                 DS                                                                     LLE089
+     D  RAT3                   1     36                                                       LLE089
+     D  RAT31                  1      6P 7                                                    LLE089
+     D  RAT32                  7     12P 7                                                    LLE089
+     D  RAT33                 13     18P 7                                                    LLE089
+     D  RAT34                 19     24P 7                                                    LLE089
+     D  RAT35                 25     30P 7                                                    LLE089
+     D  RAT36                 31     36P 7                                                    LLE089
+     D*                                                                                       LLE089
+     D                 DS                                                                     LLE089
+     D  BAL2                   1     48                                                       LLE089
+     D  BAL21                  1      8P 0                                                    LLE089
+     D  BAL22                  9     16P 0                                                    LLE089
+     D  BAL23                 17     24P 0                                                    LLE089
+     D  BAL24                 25     32P 0                                                    LLE089
+     D  BAL25                 33     40P 0                                                    LLE089
+     D  BAL26                 41     48P 0                                                    LLE089
+     D*                                                                                       LLE089
+     D                 DS                                                                     LLE089
+     D  BAL3                   1     48                                                       LLE089
+     D  BAL31                  1      8P 0                                                    LLE089
+     D  BAL32                  9     16P 0                                                    LLE089
+     D  BAL33                 17     24P 0                                                    LLE089
+     D  BAL34                 25     32P 0                                                    LLE089
+     D  BAL35                 33     40P 0                                                    LLE089
+     D  BAL36                 41     48P 0                                                    LLE089
      D/COPY WNCPYSRC,CG4510I004
       *
      D CPYR            DS
@@ -358,6 +413,14 @@
      D  PACCD                  1     10  0                                                    CER038
       *                                                                                       CER038
      D  PACSQ                 11     12  0                                                    CER038
+      *                                                                                       LLE060
+     D ULACD         E DS                  EXTNAME(SDACODPD)                                  LLE060
+      **  EXTERNAL DS FOR ACCOUNT CODE DETAILS                                                LLE060
+     D  AQACCD       E                     EXTFLD(QQACCD)                                     LLE060
+      *                                                                                       LLE060
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  LLE060
+      **  EXTERNAL DS FOR MODULE DETAILS                                                      LLE060
+      *                                                                                       LLE060
      I*COPY*CGCPYSRC,SRERRI                                                                 MD056543
       *
      I/COPY WNCPYSRC,CG4510I001
@@ -640,6 +703,25 @@
      C                   Z-ADD     ##PBIN        S#PBIN
      C                   Z-ADD     ##TBIN        S#TBIN
      C/COPY WNCPYSRC,CG4510C034
+      *                                                                                       LLE089
+     C     LLE089        IFEQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+      **  Tiered and Threshold Credit Rate Change (complex)                                   LLE089
+      *                                                                                       LLE089
+     C                   EXSR      G#TTC1                                                     LLE089
+     C     1             OCCUR     ##SRDT                                                     LLE089
+     C                   MOVEL     ##SPAT        S#PATH                                       LLE089
+     C                   Z-ADD     ##PBIN        S#PBIN                                       LLE089
+     C                   Z-ADD     ##TBIN        S#TBIN                                       LLE089
+      *                                                                                       LLE089
+      **  Tiered and Threshold Debit Rate Change (complex)                                    LLE089
+      *                                                                                       LLE089
+     C                   EXSR      G#TTD1                                                     LLE089
+     C     1             OCCUR     ##SRDT                                                     LLE089
+     C                   MOVEL     ##SPAT        S#PATH                                       LLE089
+     C                   Z-ADD     ##PBIN        S#PBIN                                       LLE089
+     C                   Z-ADD     ##TBIN        S#TBIN                                       LLE089
+     C                   ENDIF                                                                LLE089
       *
       **  Footer (simple)
      C                   EXSR      G#SFTR
@@ -791,6 +873,28 @@
      C                   MOVEL     EDAT          ##D(7)                                       261705
       *                                                                                       261705
      C/COPY WNCPYSRC,CG4510C025
+     C     LLE060        IFEQ      'Y'                                                        LLE060
+      *                                                                                       LLE060
+      * Use access object to retrieve account code name                                       LLE060
+     C                   MOVE      SDACOD        ULACOD                                       LLE060
+     C                   CALL      'AOACODR0'                                                 LLE060
+     C                   PARM      '*MSG   '     ULRTCD            7                          LLE060
+     C                   PARM      '*KEY   '     ULKEYD            7                          LLE060
+     C                   PARM                    ULACOD           10                          LLE060
+     C     ULACD         PARM      *BLANKS       DSSDY                                        LLE060
+      *                                                                                       LLE060
+      * Database error                                                                        LLE060
+     C     ULRTCD        IFEQ      '*ERROR'                                                   LLE060
+     C     ULRTCD        OREQ      '*NRF'                                                     LLE060
+     C                   Z-ADD     13            W0ERNB                         ************  LLE060
+     C                   MOVE(P)   SDACOD        W0KEY                          * DBERR 13 *  LLE060
+     C                   MOVEL     'SDACODPD'    W0FILE                         ************  LLE060
+     C                   EXSR      SRERR                                                      LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+      * Move account code name into RDE element                                               LLE060
+     C                   MOVEA     A5ACCN        ##D(8)                                       LLE060
+     C                   ENDIF                                                                LLE060
       *
       **  Set up First/Subsequent/Last Indicator
      C                   MOVE      'FR'          ##FSLI
@@ -1469,6 +1573,516 @@
       *
      C                   ENDSR
       *****************************************************************
+     C/SPACE 5                                                                                LLE089
+      *****************************************************************                       LLE089
+      * Subroutine  :  G#TTC1                                         *                       LLE089
+      * Function    :  Credit Rate change group set 1 (complex)       *                       LLE089
+      *                                                               *                       LLE089
+      * Called by   :  G#STMT - Top level group set                   *                       LLE089
+      * Calls       :  G#TTC2 - Credit Rate Change Grp Set 2 (simple) *                       LLE089
+      *****************************************************************                       LLE089
+     C     G#TTC1        BEGSR                                                                LLE089
+      *                                                                                       LLE089
+      **  Set up subroutine stack name                                                        LLE089
+     C                   ADD       1             Q                                            LLE089
+     C                   MOVEL     'g_TTC1'      @STK(Q)                                      LLE089
+      *                                                                                       LLE089
+      **  Retrieve subroutine specific data.                                                  LLE089
+     C     21            OCCUR     ##SRDT                                                     LLE089
+      *                                                                                       LLE089
+      **  Set up Path.                                                                        LLE089
+     C                   MOVEL     '\g_TTC1'     ##PNAM                                       LLE089
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       LLE089
+     C                   EXSR      PSHGRS                                                     LLE089
+     C                   MOVEL     S#PATH        ##SPAT                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Binds from passed in values.                                                 LLE089
+     C                   Z-ADD     S#PBIN        ##PBIN                                       LLE089
+     C                   Z-ADD     S#TBIN        ##TBIN                                       LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+      **  Initialise the First/Last/Subsequent Flag.                                          LLE089
+     C                   MOVE      'FR'          ##FSLI                                       LLE089
+      *                                                                                       LLE089
+      **  Position the rate change file before the first posting for this                     LLE089
+      **  Account, starting on the Last Statement Date, and find the                          LLE089
+      **  first record with matching key.                                                     LLE089
+      **  (NOTE: not Account Postings)                                                        LLE089
+     C                   Z-ADD     SDLSTD        ##PSTD                                       LLE089
+     C                   MOVEL     'Y'           FIRST             1                          LLE089
+     C     ##ACDK        SETGT     REHRCJ                                                     LLE089
+     C     ##ACKY        READPE    REHRCJ                                 55                  LLE089
+      *                                                                                       LLE089
+      **  For each rate change ...                                                            LLE089
+     C     *IN55         DOWEQ     *OFF                                                       LLE089
+      *                                                                                       LLE089
+      **  If the rate change date is between the Last Statement Date and                      LLE089
+      **  the Current Statement Date and is a Credit Change ...                               LLE089
+      *                                                                                       LLE089
+      **  Or if the Posting Date is on the Last Statement Date and the                        LLE089
+      **  Last Statement Date matches the Date Account Opened and the                         LLE089
+      **  Last Page Number is zero (ie Posting not processed) and is                          LLE089
+      **  a Credit Change ...                                                                 LLE089
+      *                                                                                       LLE089
+      **  ... process the posting further.                                                    LLE089
+     C     PSTD          IFGT      SDLSTD                                                     LLE089
+     C     PSTD          ANDLE     SDUNXD                                                     LLE089
+      *                                                                                       LLE089
+     C     PSTD          OREQ      SDLSTD                                                     LLE089
+     C     DACO          ANDEQ     SDLSTD                                                     LLE089
+     C     SDLSTP        ANDEQ     *ZEROS                                                     LLE089
+      *                                                                                       LLE089
+      **  or if rate change is the first one to be  printed                                   LLE089
+     C     FIRST         OREQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+     C     FIRST         IFEQ      'Y'                                                        LLE089
+     C                   MOVEL     'N'           FIRST                                        LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      **  If the Credit Interest Calculation Type is '01' or '02'                             LLE089
+      *                                                                                       LLE089
+      **  ... Process Posting Group Set 3 (simple)                                            LLE089
+     C     INTP          IFEQ      1                                                          LLE089
+     C     INTP          OREQ      2                                                          LLE089
+      *                                                                                       LLE089
+      **  If data has been formatted but not written, process it.                             LLE089
+      **  (Note that this will not execute on first pass through SR and                       LLE089
+      **   that data relates to previous record to be extracted read.)                        LLE089
+     C     ##RFMT        IFEQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+      **  Output the Data.                                                                    LLE089
+     C                   EXSR      SRODTA                                                     LLE089
+      *                                                                                       LLE089
+      **  Set the First/Last/Subsequent Flag for Subsequent runs.                             LLE089
+     C                   MOVE      'SU'          ##FSLI                                       LLE089
+      *                                                                                       LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      **  Increment Bind Levels.                                                              LLE089
+     C                   Z-ADD     ##TBIN        S#PBIN                                       LLE089
+     C                   ADD       1             ##BNDC                                       LLE089
+     C                   Z-ADD     ##BNDC        S#TBIN                                       LLE089
+      *                                                                                       LLE089
+     C                   EXSR      G#TTC2                                                     LLE089
+      *                                                                                       LLE089
+     C     21            OCCUR     ##SRDT                                                     LLE089
+     C                   MOVEL     ##SPAT        S#PATH                                       LLE089
+     C                   Z-ADD     ##PBIN        S#PBIN                                       LLE089
+     C                   Z-ADD     ##TBIN        S#TBIN                                       LLE089
+      *                                                                                       LLE089
+     C                   ENDIF                                                                LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      **  Read next posting for account                                                       LLE089
+     C     ##ACKY        READE     REHRCJ                                 55                  LLE089
+      *                                                                                       LLE089
+     C                   ENDDO                                                                LLE089
+      *                                                                                       LLE089
+      **  If data has been formatted but not written, process it.                             LLE089
+      **  (Note that data relates to previous read.)                                          LLE089
+     C     ##RFMT        IFEQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+      **  The last record has been processed - set the First/Last/Subs                        LLE089
+      **  Flag accordingly.                                                                   LLE089
+     C                   MOVE      'LA'          DEFSLI                                       LLE089
+      *                                                                                       LLE089
+      **  Output the Data.                                                                    LLE089
+     C                   EXSR      SRODTA                                                     LLE089
+      *                                                                                       LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+     C     EXTTC1        TAG                                                                  LLE089
+      *                                                                                       LLE089
+      **  Unwind subroutine stack name                                                        LLE089
+     C                   EXSR      POPGRS                                                     LLE089
+     C                   MOVEA     *BLANKS       @STK(Q)                                      LLE089
+     C                   SUB       1             Q                                            LLE089
+      *                                                                                       LLE089
+     C                   ENDSR                                                                LLE089
+      *****************************************************************                       LLE089
+     C/SPACE 5                                                                                LLE089
+      *****************************************************************                       LLE089
+      * Subroutine  :  G#TTC2                                         *                       LLE089
+      * Function    :  Credit Rate change group set 2 (simple)        *                       LLE089
+      *                                                               *                       LLE089
+      * Called by   :  G#TTC1 - Credit Rate change group set 1        *                       LLE089
+      * Calls       :  SRRRDE - Retrieve RDE Information              *                       LLE089
+      *                SRADTA - Format Extract Data                   *                       LLE089
+      *                SRODTA - Output Extract Data                   *                       LLE089
+      *                SRERR  - Database Error                        *                       LLE089
+      *****************************************************************                       LLE089
+     C     G#TTC2        BEGSR                                                                LLE089
+      *                                                                                       LLE089
+      **  Set up subroutine stack name                                                        LLE089
+     C                   ADD       1             Q                                            LLE089
+     C                   MOVEL     'g_TTC2'      @STK(Q)                                      LLE089
+      *                                                                                       LLE089
+      **  Retrieve subroutine specific data.                                                  LLE089
+     C     23            OCCUR     ##SRDT                                                     LLE089
+      *                                                                                       LLE089
+      **  Set up Path.                                                                        LLE089
+     C                   MOVEL     '\g_TTC2'     ##PNAM                                       LLE089
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       LLE089
+     C                   EXSR      PSHGRS                                                     LLE089
+     C                   MOVEL     S#PATH        ##SPAT                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Binds from passed in values.                                                 LLE089
+     C                   Z-ADD     S#PBIN        ##PBIN                                       LLE089
+     C                   Z-ADD     S#TBIN        ##TBIN                                       LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+      **  Retrieve RDE information for RDE's in Group Set                                     LLE089
+     C                   MOVEL     'g_TTC2'      ##GRPS                                       LLE089
+     C                   Z-ADD     1             ##RDEN                                       LLE089
+     C                   EXSR      SRRRDE                                                     LLE089
+      *                                                                                       LLE089
+      **  Set up Value Date                                                                   LLE089
+     C                   MOVEL     VALD          ##D(1)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Interest Type                                                                LLE089
+     C                   MOVEL     INTP          ##D(2)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Interest Sub Type                                                            LLE089
+     C                   MOVEL     INST          ##D(3)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Rates                                                                        LLE089
+     C                   MOVEL     RAT21         ##D(4)                                       LLE089
+     C                   MOVE      7             ##D(4)                                       LLE089
+     C                   MOVEL     RAT22         ##D(5)                                       LLE089
+     C                   MOVE      7             ##D(5)                                       LLE089
+     C                   MOVEL     RAT23         ##D(6)                                       LLE089
+     C                   MOVE      7             ##D(6)                                       LLE089
+     C                   MOVEL     RAT24         ##D(7)                                       LLE089
+     C                   MOVE      7             ##D(7)                                       LLE089
+     C                   MOVEL     RAT25         ##D(8)                                       LLE089
+     C                   MOVE      7             ##D(8)                                       LLE089
+     C                   MOVEL     RAT26         ##D(9)                                       LLE089
+     C                   MOVE      7             ##D(9)                                       LLE089
+     C                   MOVEL     RAT31         ##D(10)                                      LLE089
+     C                   MOVE      7             ##D(10)                                      LLE089
+     C                   MOVEL     RAT32         ##D(11)                                      LLE089
+     C                   MOVE      7             ##D(11)                                      LLE089
+     C                   MOVEL     RAT33         ##D(12)                                      LLE089
+     C                   MOVE      7             ##D(12)                                      LLE089
+     C                   MOVEL     RAT34         ##D(13)                                      LLE089
+     C                   MOVE      7             ##D(13)                                      LLE089
+     C                   MOVEL     RAT35         ##D(14)                                      LLE089
+     C                   MOVE      7             ##D(14)                                      LLE089
+     C                   MOVEL     RAT36         ##D(15)                                      LLE089
+     C                   MOVE      7             ##D(15)                                      LLE089
+      **  Set up Balances                                                                     LLE089
+     C                   MOVEL     BAL21         ##D(16)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(16)                                      LLE089
+     C                   MOVEL     BAL22         ##D(17)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(17)                                      LLE089
+     C                   MOVEL     BAL23         ##D(18)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(18)                                      LLE089
+     C                   MOVEL     BAL24         ##D(19)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(19)                                      LLE089
+     C                   MOVEL     BAL25         ##D(20)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(20)                                      LLE089
+      * Pull out data                                                                         LLE089
+     C                   EXSR      SRADTA                                                     LLE089
+      *                                                                                       LLE089
+      **  Retrieve RDE information for RDEs in group set                                      LLE089
+      *                                                                                       LLE089
+     C                   MOVEL     @STK(Q)       ##GRPS                                       LLE089
+     C                   Z-ADD     21            ##RDEN                                       LLE089
+     C                   EXSR      SRRRDE                                                     LLE089
+      *                                                                                       LLE089
+     C                   MOVEL     BAL26         ##D(1)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(1)                                       LLE089
+     C                   MOVEL     BAL31         ##D(2)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(2)                                       LLE089
+     C                   MOVEL     BAL32         ##D(3)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(3)                                       LLE089
+     C                   MOVEL     BAL33         ##D(4)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(4)                                       LLE089
+     C                   MOVEL     BAL34         ##D(5)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(5)                                       LLE089
+     C                   MOVEL     BAL35         ##D(6)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(6)                                       LLE089
+     C                   MOVEL     BAL36         ##D(7)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(7)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Intial Threshold                                                             LLE089
+     C                   MOVEL     INTH          ##D(8)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(8)                                       LLE089
+      *                                                                                       LLE089
+      **  Accumulate RDE's and associated data and output to                                  LLE089
+      **  PF/CGUDTAPD.                                                                        LLE089
+     C                   EXSR      SRADTA                                                     LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+     C     EXTTC2        TAG                                                                  LLE089
+      *                                                                                       LLE089
+      **  Unwind subroutine stack name                                                        LLE089
+     C                   EXSR      POPGRS                                                     LLE089
+     C                   MOVEA     *BLANKS       @STK(Q)                                      LLE089
+     C                   SUB       1             Q                                            LLE089
+      *                                                                                       LLE089
+     C                   ENDSR                                                                LLE089
+      *****************************************************************                       LLE089
+     C/SPACE 5                                                                                LLE089
+      *****************************************************************                       LLE089
+      * Subroutine  :  G#TTD1                                         *                       LLE089
+      * Function    :  Debit Rate change group set 1 (complex)        *                       LLE089
+      *                                                               *                       LLE089
+      * Called by   :  G#STMT - Top level group set                   *                       LLE089
+      * Calls       :  G#TTD2 - Debit Rate Change Grp Set 2 (simple)  *                       LLE089
+      *****************************************************************                       LLE089
+     C     G#TTD1        BEGSR                                                                LLE089
+      *                                                                                       LLE089
+      **  Set up subroutine stack name                                                        LLE089
+     C                   ADD       1             Q                                            LLE089
+     C                   MOVEL     'g_TTD1'      @STK(Q)                                      LLE089
+      *                                                                                       LLE089
+      **  Retrieve subroutine specific data.                                                  LLE089
+     C     22            OCCUR     ##SRDT                                                     LLE089
+      *                                                                                       LLE089
+      **  Set up Path.                                                                        LLE089
+     C                   MOVEL     '\g_TTD1'     ##PNAM                                       LLE089
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       LLE089
+     C                   EXSR      PSHGRS                                                     LLE089
+     C                   MOVEL     S#PATH        ##SPAT                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Binds from passed in values.                                                 LLE089
+     C                   Z-ADD     S#PBIN        ##PBIN                                       LLE089
+     C                   Z-ADD     S#TBIN        ##TBIN                                       LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+      **  Initialise the First/Last/Subsequent Flag.                                          LLE089
+     C                   MOVE      'FR'          ##FSLI                                       LLE089
+      *                                                                                       LLE089
+      **  Position the rate change file before the first posting for this                     LLE089
+      **  Account, starting on the Last Statement Date, and find the                          LLE089
+      **  first record with matching key.                                                     LLE089
+      **  (NOTE: not Account Postings)                                                        LLE089
+     C                   Z-ADD     SDLSTD        ##PSTD                                       LLE089
+     C                   MOVEL     'Y'           FIRST                                        LLE089
+     C     ##ACDK        SETGT     REHRDJ                                                     LLE089
+     C     ##ACKY        READE     REHRDJ                                 55                  LLE089
+      *                                                                                       LLE089
+      **  For each rate change ...                                                            LLE089
+     C     *IN55         DOWEQ     *OFF                                                       LLE089
+      *                                                                                       LLE089
+      **  If the rate change date is between the Last Statement Date and                      LLE089
+      **  the Current Statement Date and is a Credit Change ...                               LLE089
+      *                                                                                       LLE089
+      **  Or if the Posting Date is on the Last Statement Date and the                        LLE089
+      **  Last Statement Date matches the Date Account Opened and the                         LLE089
+      **  Last Page Number is zero (ie Posting not processed) and is                          LLE089
+      **  a Credit Change ...                                                                 LLE089
+      *                                                                                       LLE089
+      **  ... process the posting further.                                                    LLE089
+     C     PSTD          IFGT      SDLSTD                                                     LLE089
+     C     PSTD          ANDLE     SDUNXD                                                     LLE089
+      *                                                                                       LLE089
+     C     PSTD          OREQ      SDLSTD                                                     LLE089
+     C     DACO          ANDEQ     SDLSTD                                                     LLE089
+     C     SDLSTP        ANDEQ     *ZEROS                                                     LLE089
+      *                                                                                       LLE089
+      **  or if rate change is the first one to be  printed                                   LLE089
+     C     FIRST         OREQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+     C     FIRST         IFEQ      'Y'                                                        LLE089
+     C                   MOVEL     'N'           FIRST                                        LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      **  If the Debit Interest Calculation Type is '01' or '02'                              LLE089
+      *                                                                                       LLE089
+      **  ... Process Posting Group Set 3 (simple)                                            LLE089
+     C     INTP          IFEQ      1                                                          LLE089
+     C     INTP          OREQ      2                                                          LLE089
+      *                                                                                       LLE089
+      **  If data has been formatted but not written, process it.                             LLE089
+      **  (Note that this will not execute on first pass through SR and                       LLE089
+      **   that data relates to previous record to be extracted read.)                        LLE089
+     C     ##RFMT        IFEQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+      **  Output the Data.                                                                    LLE089
+     C                   EXSR      SRODTA                                                     LLE089
+      *                                                                                       LLE089
+      **  Set the First/Last/Subsequent Flag for Subsequent runs.                             LLE089
+     C                   MOVE      'SU'          ##FSLI                                       LLE089
+      *                                                                                       LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      **  Increment Bind Levels.                                                              LLE089
+     C                   Z-ADD     ##TBIN        S#PBIN                                       LLE089
+     C                   ADD       1             ##BNDC                                       LLE089
+     C                   Z-ADD     ##BNDC        S#TBIN                                       LLE089
+      *                                                                                       LLE089
+     C                   EXSR      G#TTD2                                                     LLE089
+      *                                                                                       LLE089
+     C     22            OCCUR     ##SRDT                                                     LLE089
+     C                   MOVEL     ##SPAT        S#PATH                                       LLE089
+     C                   Z-ADD     ##PBIN        S#PBIN                                       LLE089
+     C                   Z-ADD     ##TBIN        S#TBIN                                       LLE089
+      *                                                                                       LLE089
+     C                   ENDIF                                                                LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      **  Read next rate change for that account                                              LLE089
+     C     ##ACKY        READE     REHRDJ                                 55                  LLE089
+      *                                                                                       LLE089
+     C                   ENDDO                                                                LLE089
+      *                                                                                       LLE089
+      **  If data has been formatted but not written, process it.                             LLE089
+      **  (Note that data relates to previous read.)                                          LLE089
+     C     ##RFMT        IFEQ      'Y'                                                        LLE089
+      *                                                                                       LLE089
+      **  The last record has been processed - set the First/Last/Subs                        LLE089
+      **  Flag accordingly.                                                                   LLE089
+     C                   MOVE      'LA'          DEFSLI                                       LLE089
+      *                                                                                       LLE089
+      **  Output the Data.                                                                    LLE089
+     C                   EXSR      SRODTA                                                     LLE089
+      *                                                                                       LLE089
+     C                   ENDIF                                                                LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+     C     EXTTD1        TAG                                                                  LLE089
+      *                                                                                       LLE089
+      **  Unwind subroutine stack name                                                        LLE089
+     C                   EXSR      POPGRS                                                     LLE089
+     C                   MOVEA     *BLANKS       @STK(Q)                                      LLE089
+     C                   SUB       1             Q                                            LLE089
+      *                                                                                       LLE089
+     C                   ENDSR                                                                LLE089
+      *****************************************************************                       LLE089
+     C/SPACE 5                                                                                LLE089
+      *****************************************************************                       LLE089
+      * Subroutine  :  G#TTD2                                         *                       LLE089
+      * Function    :  Debit Rate change group set 2 (simple)         *                       LLE089
+      *                                                               *                       LLE089
+      * Called by   :  G#TTD1 - Credit Rate change group set 1        *                       LLE089
+      * Calls       :  SRRRDE - Retrieve RDE Information              *                       LLE089
+      *                SRADTA - Format Extract Data                   *                       LLE089
+      *                SRODTA - Output Extract Data                   *                       LLE089
+      *                SRERR  - Database Error                        *                       LLE089
+      *****************************************************************                       LLE089
+     C     G#TTD2        BEGSR                                                                LLE089
+      *                                                                                       LLE089
+      **  Set up subroutine stack name                                                        LLE089
+     C                   ADD       1             Q                                            LLE089
+     C                   MOVEL     'g_TTD2'      @STK(Q)                                      LLE089
+      *                                                                                       LLE089
+      **  Retrieve subroutine specific data.                                                  LLE089
+     C     24            OCCUR     ##SRDT                                                     LLE089
+      *                                                                                       LLE089
+      **  Set up Path.                                                                        LLE089
+     C                   MOVEL     '\g_TTD2'     ##PNAM                                       LLE089
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       LLE089
+     C                   EXSR      PSHGRS                                                     LLE089
+     C                   MOVEL     S#PATH        ##SPAT                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Binds from passed in values.                                                 LLE089
+     C                   Z-ADD     S#PBIN        ##PBIN                                       LLE089
+     C                   Z-ADD     S#TBIN        ##TBIN                                       LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+      **  Retrieve RDE information for RDE's in Group Set                                     LLE089
+     C                   MOVEL     'g_TTD2'      ##GRPS                                       LLE089
+     C                   Z-ADD     1             ##RDEN                                       LLE089
+     C                   EXSR      SRRRDE                                                     LLE089
+      *                                                                                       LLE089
+      **  Set up Value Date                                                                   LLE089
+     C                   MOVEL     VALD          ##D(1)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Interest Type                                                                LLE089
+     C                   MOVEL     INTP          ##D(2)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Interest Sub Type                                                            LLE089
+     C                   MOVEL     INST          ##D(3)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Rates                                                                        LLE089
+     C                   MOVEL     RAT21         ##D(4)                                       LLE089
+     C                   MOVE      7             ##D(4)                                       LLE089
+     C                   MOVEL     RAT22         ##D(5)                                       LLE089
+     C                   MOVE      7             ##D(5)                                       LLE089
+     C                   MOVEL     RAT23         ##D(6)                                       LLE089
+     C                   MOVE      7             ##D(6)                                       LLE089
+     C                   MOVEL     RAT24         ##D(7)                                       LLE089
+     C                   MOVE      7             ##D(7)                                       LLE089
+     C                   MOVEL     RAT25         ##D(8)                                       LLE089
+     C                   MOVE      7             ##D(8)                                       LLE089
+     C                   MOVEL     RAT26         ##D(9)                                       LLE089
+     C                   MOVE      7             ##D(9)                                       LLE089
+     C                   MOVEL     RAT31         ##D(10)                                      LLE089
+     C                   MOVE      7             ##D(10)                                      LLE089
+     C                   MOVEL     RAT32         ##D(11)                                      LLE089
+     C                   MOVE      7             ##D(11)                                      LLE089
+     C                   MOVEL     RAT33         ##D(12)                                      LLE089
+     C                   MOVE      7             ##D(12)                                      LLE089
+     C                   MOVEL     RAT34         ##D(13)                                      LLE089
+     C                   MOVE      7             ##D(13)                                      LLE089
+     C                   MOVEL     RAT35         ##D(14)                                      LLE089
+     C                   MOVE      7             ##D(14)                                      LLE089
+     C                   MOVEL     RAT36         ##D(15)                                      LLE089
+     C                   MOVE      7             ##D(15)                                      LLE089
+      **  Set up Balances                                                                     LLE089
+     C                   MOVEL     BAL21         ##D(16)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(16)                                      LLE089
+     C                   MOVEL     BAL22         ##D(17)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(17)                                      LLE089
+     C                   MOVEL     BAL23         ##D(18)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(18)                                      LLE089
+     C                   MOVEL     BAL24         ##D(19)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(19)                                      LLE089
+     C                   MOVEL     BAL25         ##D(20)                                      LLE089
+     C                   MOVE      A6NBDP        ##D(20)                                      LLE089
+      * Pull out data                                                                         LLE089
+     C                   EXSR      SRADTA                                                     LLE089
+      *                                                                                       LLE089
+      **  Retrieve RDE information for RDEs in group set                                      LLE089
+      *                                                                                       LLE089
+     C                   MOVEL     @STK(Q)       ##GRPS                                       LLE089
+     C                   Z-ADD     21            ##RDEN                                       LLE089
+     C                   EXSR      SRRRDE                                                     LLE089
+      *                                                                                       LLE089
+     C                   MOVEL     BAL26         ##D(1)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(1)                                       LLE089
+     C                   MOVEL     BAL31         ##D(2)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(2)                                       LLE089
+     C                   MOVEL     BAL32         ##D(3)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(3)                                       LLE089
+     C                   MOVEL     BAL33         ##D(4)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(4)                                       LLE089
+     C                   MOVEL     BAL34         ##D(5)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(5)                                       LLE089
+     C                   MOVEL     BAL35         ##D(6)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(6)                                       LLE089
+     C                   MOVEL     BAL36         ##D(7)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(7)                                       LLE089
+      *                                                                                       LLE089
+      **  Set up Intial Threshold                                                             LLE089
+     C                   MOVEL     INTH          ##D(8)                                       LLE089
+     C                   MOVE      A6NBDP        ##D(8)                                       LLE089
+      *                                                                                       LLE089
+      **  Accumulate RDE's and associated data and output to                                  LLE089
+      **  PF/CGUDTAPD.                                                                        LLE089
+     C                   EXSR      SRADTA                                                     LLE089
+      *                                                                                       LLE089
+      *................................................................                       LLE089
+      *                                                                                       LLE089
+     C     EXTTD2        TAG                                                                  LLE089
+      *                                                                                       LLE089
+      **  Unwind subroutine stack name                                                        LLE089
+     C                   EXSR      POPGRS                                                     LLE089
+     C                   MOVEA     *BLANKS       @STK(Q)                                      LLE089
+     C                   SUB       1             Q                                            LLE089
+      *                                                                                       LLE089
+     C                   ENDSR                                                                LLE089
+      *****************************************************************                       LLE089
      C/SPACE 5
       *****************************************************************
       * Subroutine  :  G#SCC1                                         *
@@ -2964,6 +3578,52 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
+      *                                                                                       LLE060
+     C     LLE060        IFEQ      'Y'                                                        LLE060
+      * Ensure the work Fields are initialised                                                LLE060
+     C                   MOVE      *BLANKS       ARR                                          LLE060
+     C                   MOVE      *BLANKS       ULNAR1                                       LLE060
+     C                   MOVE      *BLANKS       ULNAR2                                       LLE060
+     C                   MOVE      *BLANKS       ULWORK                                       LLE060
+      * Original transaction type = Incoming payment                                          LLE060
+     C     OTTP          IFEQ      'IN'                                                       LLE060
+      *                                                                                       LLE060
+      * Obtain Ordering Customer details                                                      LLE060
+     C     PREF          CHAIN     INPAY                              90                      LLE060
+     C     *IN90         IFEQ      *OFF                                                       LLE060
+      *                                                                                       LLE060
+      * Set-up fields and 'compress' narrative                                                LLE060
+     C                   MOVEA     ORC1          ARR(1)                                       LLE060
+     C                   MOVEL     ORC2          ULWORK           35                          LLE060
+     C                   EXSR      #LCNAR                                                     LLE060
+      *                                                                                       LLE060
+      * Move 'compressed' narrative to arrays                                                 LLE060
+     C                   MOVEA     ULNAR1        ##D(18)                                      LLE060
+     C                   MOVEA     ULNAR2        ##D(19)                                      LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+      * Original transaction type = Outgoing payment                                          LLE060
+     C     OTTP          IFEQ      'OP'                                                       LLE060
+      *                                                                                       LLE060
+      * Obtain Beneficiary Customer details                                                   LLE060
+     C     PREF          CHAIN     OTPAY                              90                      LLE060
+     C     *IN90         IFEQ      *OFF                                                       LLE060
+      *                                                                                       LLE060
+      * Set-up fields and 'compress' narrative                                                LLE060
+     C                   MOVEA     BNC1          ARR(1)                                       LLE060
+     C                   MOVEL     BNC2          ULWORK                                       LLE060
+     C                   EXSR      #LCNAR                                                     LLE060
+      *                                                                                       LLE060
+      * Move 'compressed' narrative to arrays                                                 LLE060
+     C                   MOVEA     ULNAR1        ##D(18)                                      LLE060
+     C                   MOVEA     ULNAR2        ##D(19)                                      LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+     C                   ENDIF                                                                LLE060
      C*
       **  Accumulate RDE's and associated data and output to                               BUG23277A
       **  PF/CGUDTAPD.                                                                     BUG23277A
@@ -3747,6 +4407,31 @@
      C                   EXSR      SRERR
      C                   END
      C                   ENDIF
+      *                                                                                       LLE060
+      ** Access SAR details file to determine if LLE060 is installed.                         LLE060
+      *                                                                                       LLE060
+     C                   CALL      'AOSARDR0'                                                 LLE060
+     C                   PARM      *BLANKS       PRTCD             7                          LLE060
+     C                   PARM      '*VERIFY'     POPTN             7                          LLE060
+     C                   PARM      'LLE060'      PSARD             6                          LLE060
+     C     SCSARD        PARM      SCSARD        DSSDY                                        LLE060
+      *                                                                                       LLE060
+      ** Database Error                                                                       LLE060
+      *                                                                                       LLE060
+     C     PRTCD         IFNE      *BLANK                                                     LLE060
+     C     PRTCD         ANDNE     '*NRF   '                                                  LLE060
+     C                   MOVEL     'SCSARDPD'    W0FILE                         ************  LLE060
+     C                   MOVEL     '*CALL'       W0KEY                          * DBERR 19 *  LLE060
+     C                   Z-ADD     32            W0ERNB                         ************  LLE060
+     C                   MOVEL     'MEM5003'     W0MSGD                                       LLE060
+     C                   MOVEL     'MIDAS  '     W0MSGF                                       LLE060
+     C                   EXSR      SRERR                                                      LLE060
+     C                   END                                                                  LLE060
+      *                                                                                       LLE060
+     C                   MOVEL     'N'           LLE060                                       LLE060
+     C     PRTCD         IFEQ      *BLANK                                                     LLE060
+     C                   MOVEL     'Y'           LLE060            1                          LLE060
+     C                   ENDIF                                                                LLE060
       *                                                                                       CAP204
       ** Access SAR details file to determine if CAP204 is installed.                         CAP204
       *                                                                                       CAP204
@@ -3908,6 +4593,28 @@
       **  Copyright
      C                   MOVEA     ##CPY         ##BIS            80
      C/COPY WNCPYSRC,CG4510C006
+      *                                                                                       LLE089
+      ** Access Switchable Features file and check if LLE089 is                               LLE089
+      ** installed                                                                            LLE089
+      *                                                                                       LLE089
+     C                   CALL      'AOSARDR0'                                                 LLE089
+     C                   PARM      *BLANKS       PRTCD                                        LLE089
+     C                   PARM      '*VERIFY'     POPTN                                        LLE089
+     C                   PARM      'LLE089'      PSARD                                        LLE089
+      *                                                                                       LLE089
+     C     PRTCD         IFEQ      *BLANK                                                     LLE089
+     C                   MOVE      'Y'           LLE089            1                          LLE089
+     C                   ELSE                                                                 LLE089
+     C                   MOVE      'N'           LLE089                                       LLE089
+     C     PRTCD         IFNE      '*NRF   '                                                  LLE089
+     C                   MOVEL     'SCSARDPD'    W0FILE                                       LLE089
+     C                   MOVEL     '*CALL'       W0KEY                                        LLE089
+     C                   Z-ADD     37            W0ERNB                                       LLE089
+     C                   MOVEL     'MEM5003'     W0MSGD                                       LLE089
+     C                   MOVEL     'MIDAS  '     W0MSGF                                       LLE089
+     C                   EXSR      SRERR                                                      LLE089
+     C                   ENDIF                                                                LLE089
+     C                   ENDIF                                                                LLE089
       *
       *................................................................
       *
@@ -4356,6 +5063,52 @@
      C                   ENDSR                                                              BUG24460
       *****************************************************************                       CER038
      C/COPY WNCPYSRC,CG4510C022
+     C     #LCNAR        BEGSR                                                                LLE060
+      *                                                                                       LLE060
+      * Define narrative work fields                                                          LLE060
+     C     *LIKE         DEFINE    PNAR          ULNAR1                                       LLE060
+     C     *LIKE         DEFINE    PNAR          ULNAR2                                       LLE060
+      *                                                                                       LLE060
+      * Search array for end of first narrative                                               LLE060
+     C                   MOVE      *BLANKS       PROCES                                       LLE060
+     C                   Z-ADD     0             XX                2 0                        LLE060
+     C     XX            DOWLT     35                                                         LLE060
+     C                   ADD       1             XX                                           LLE060
+     C     XX            ADD       1             YY                2 0                        LLE060
+      *                                                                                       LLE060
+      * If two blank spaces are found...                                                      LLE060
+     C     ARR(XX)       IFEQ      *BLANKS                                                    LLE060
+     C     ARR(YY)       ANDEQ     *BLANKS                                                    LLE060
+      *                                                                                       LLE060
+      * Place second narrative directly after first                                           LLE060
+     C     XX            IFEQ      1                                                          LLE060
+     C                   MOVEA     ULWORK        ARR(1)                                       LLE060
+     C                   ELSE                                                                 LLE060
+     C                   MOVEA     ULWORK        ARR(YY)                                      LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+      * Split array into two fields                                                           LLE060
+     C                   MOVE      'Y'           PROCES            1                          LLE060
+     C                   MOVEA     ARR(1)        ULNAR1                                       LLE060
+     C                   MOVEA     ARR(31)       ULNAR2                                       LLE060
+      *                                                                                       LLE060
+      * Leave DO loop                                                                         LLE060
+     C                   Z-ADD     35            XX                                           LLE060
+     C                   ENDIF                                                                LLE060
+      *                                                                                       LLE060
+     C                   ENDDO                                                                LLE060
+      *                                                                                       LLE060
+      * If DO Loop  processing was not performed i.e. where all first                         LLE060
+      * 35 characters are full, do array handling again                                       LLE060
+     C     PROCES        IFNE      'Y'                                                        LLE060
+     C     ULNAR1        IFEQ      *BLANKS                                                    LLE060
+     C                   MOVEA     ARR(1)        ULNAR1                                       LLE060
+     C                   ENDIF                                                                LLE060
+     C     ULNAR2        IFEQ      *BLANKS                                                    LLE060
+     C                   MOVE      ULWORK        ULNAR2                                       LLE060
+     C                   ENDIF                                                                LLE060
+     C                   ENDIF                                                                LLE060
+     C                   ENDSR                                                  ** #LNARR **  LLE060
      C/SPACE 5
      C*COPY*CGCPYSRC,SRERRPSSR                                                              MD056543
      C/COPY CGCPYSRC,SRERRPSSRL                                                             MD056543
@@ -4375,6 +5128,7 @@ g_SHDR0004 STMT_DEMAN
 g_SHDR0005 STMT_MANAG
 g_SHDR0006 SDAT       Date                                                                    261705
 g_SHDR0007 EDAT       Date                                                                    261705
+g_SHDR0008 ACNME                                                                              LLE060
 BRANCH0001 BRANCH
 BRANCH0002 BRANCH NAM
 ACCNT 0001 ACCOUNT
@@ -4420,6 +5174,8 @@ g_SPS30014 POST_EQCY  AmountL
 g_SPS30015 EQUIV_CCY
 g_SPS30016 EQUIV_CCYD
 g_SPS30017 ORIG_ACCT
+g_SPS30018 FTNARR1                                                                            LLE060
+g_SPS30019 FTNARR2                                                                            LLE060
 g_SCLR0001 HDR_CRCLR  AmountL
 g_SCLR0002 HDR_DRCLR  AmountL
 g_SCLR0003 START_CLR  AmountL
@@ -4455,6 +5211,62 @@ g_SFTR0002 CMGA_TXT2
 g_SFTR0003 CMGA_TXT3
 g_SFTR0004 CMGA_TXT4
      X/COPY WNCPYSRC,CG4510X001
+g_TTC20001 VALUE DATE Date                                                                    LLE089
+g_TTC20002 INT TYPE                                                                           LLE089
+g_TTC20003 INT STYPE                                                                          LLE089
+g_TTC20004 RATE_1     AmountL                                                                 LLE089
+g_TTC20005 RATE_2     AmountL                                                                 LLE089
+g_TTC20006 RATE_3     AmountL                                                                 LLE089
+g_TTC20007 RATE_4     AmountL                                                                 LLE089
+g_TTC20008 RATE_5     AmountL                                                                 LLE089
+g_TTC20009 RATE_6     AmountL                                                                 LLE089
+g_TTC20010 RATE_7     AmountL                                                                 LLE089
+g_TTC20011 RATE_8     AmountL                                                                 LLE089
+g_TTC20012 RATE_9     AmountL                                                                 LLE089
+g_TTC20013 RATE_10    AmountL                                                                 LLE089
+g_TTC20014 RATE_11    AmountL                                                                 LLE089
+g_TTC20015 RATE_12    AmountL                                                                 LLE089
+g_TTC20016 BALANCE_1  AmountL                                                                 LLE089
+g_TTC20017 BALANCE_2  AmountL                                                                 LLE089
+g_TTC20018 BALANCE_3  AmountL                                                                 LLE089
+g_TTC20019 BALANCE_4  AmountL                                                                 LLE089
+g_TTC20020 BALANCE_5  AmountL                                                                 LLE089
+g_TTC20021 BALANCE_6  AmountL                                                                 LLE089
+g_TTC20022 BALANCE_7  AmountL                                                                 LLE089
+g_TTC20023 BALANCE_8  AmountL                                                                 LLE089
+g_TTC20024 BALANCE_9  AmountL                                                                 LLE089
+g_TTC20025 BALANCE_10 AmountL                                                                 LLE089
+g_TTC20026 BALANCE_11 AmountL                                                                 LLE089
+g_TTC20027 BALANCE_12 AmountL                                                                 LLE089
+g_TTC20028 INITTHRS   AmountL                                                                 LLE089
+g_TTD20001 VALUE DATE Date                                                                    LLE089
+g_TTD20002 INT TYPE                                                                           LLE089
+g_TTD20003 INT STYPE                                                                          LLE089
+g_TTD20004 RATE_1     AmountL                                                                 LLE089
+g_TTD20005 RATE_2     AmountL                                                                 LLE089
+g_TTD20006 RATE_3     AmountL                                                                 LLE089
+g_TTD20007 RATE_4     AmountL                                                                 LLE089
+g_TTD20008 RATE_5     AmountL                                                                 LLE089
+g_TTD20009 RATE_6     AmountL                                                                 LLE089
+g_TTD20010 RATE_7     AmountL                                                                 LLE089
+g_TTD20011 RATE_8     AmountL                                                                 LLE089
+g_TTD20012 RATE_9     AmountL                                                                 LLE089
+g_TTD20013 RATE_10    AmountL                                                                 LLE089
+g_TTD20014 RATE_11    AmountL                                                                 LLE089
+g_TTD20015 RATE_12    AmountL                                                                 LLE089
+g_TTD20016 BALANCE_1  AmountL                                                                 LLE089
+g_TTD20017 BALANCE_2  AmountL                                                                 LLE089
+g_TTD20018 BALANCE_3  AmountL                                                                 LLE089
+g_TTD20019 BALANCE_4  AmountL                                                                 LLE089
+g_TTD20020 BALANCE_5  AmountL                                                                 LLE089
+g_TTD20021 BALANCE_6  AmountL                                                                 LLE089
+g_TTD20022 BALANCE_7  AmountL                                                                 LLE089
+g_TTD20023 BALANCE_8  AmountL                                                                 LLE089
+g_TTD20024 BALANCE_9  AmountL                                                                 LLE089
+g_TTD20025 BALANCE_10 AmountL                                                                 LLE089
+g_TTD20026 BALANCE_11 AmountL                                                                 LLE089
+g_TTD20027 BALANCE_12 AmountL                                                                 LLE089
+g_TTD20028 INITTHRS   AmountL                                                                 LLE089
 PSNARR0001 PSNARR01                      Posting Narrative 1                                  CER038
 PSNARR0002 PSNARR02                      Posting Narrative 2                                  CER038
 PSNARR0003 PSNARR03                      Posting Narrative 3                                  CER038

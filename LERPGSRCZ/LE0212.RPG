@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058592           Date 21Aug21               *
-      *  Prev Amend No. MD058388           Date 19Jul21               *
+      *  Last Amend No. MD058621           Date 24Sep21               *
+      *  Prev Amend No. MD058659           Date 24Sep21               *
+      *                 MD058592           Date 21Aug21               *
+      *                 MD058388           Date 19Jul21               *
       *                 MD058222           Date 08Jul21               *
       *                 MD058102           Date 09Jun21               *
       *                 MD058283           Date 09Jun21               *
@@ -302,6 +304,24 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058621 - Sequence of SC event relative to rollover event   *
+      *             in LOAC differs when events are in the future as  *
+      *             compared in the past. Display future SC after     *
+      *             future RO if SC value date equal rollover date.   *
+      *           - Clear WSAME if SC all-in rate is to be displayed  *
+      *             on next page and set WSAME to 'Y' for WDTL5 of    *
+      *             historic RO if FCM101 is OFF to prevent looping.  *
+      *             Add conditions for WDTL5 if FCM101 is ON.         *
+      *           - Save current base rate in WCUBR for future SC and *
+      *             set effective interest rate = SC all-in rate for  *
+      *             future interest calculation.                      *
+      *  MD058659 - Incorrect interest payment following a rollover & *
+      *             incorrect rollover all-in interest rate. Call     *
+      *             XXCALC to ensure WCUSP is set for the rollover.   *
+      *           - Suppress spread/rate change narrative for future  *
+      *             SC.  Add fix to suppress for historic SC. Include *
+      *             checking of CNSGH equal to blanks for WDTL2 of    *
+      *             historic SC to prevent looping.                   *
       *  MD058592 - Spread/rate change and contractual spread are not *
       *             displayed when frequency based repayment is on    *
       *             same date. Change to WDTLC/WDTLD for future SC to *
@@ -1913,6 +1933,7 @@
      C           RLDT      ANDNE*ZEROS                                                      AR860576
      C           WFRPR     ORNE 'Y'                                                           219500
      C           WFRIN     ANDNE'Y'                                                           219500
+     C           RLDT      ANDNE*ZEROS                                                      MD058659
      C           VSLN      IFLT 20                                                          BUG13074
      C                     EXSR SRRDAT                                    184903
      C                     ENDIF                                                            BUG13074
@@ -2328,6 +2349,10 @@
      C                     MOVE *BLANK    WDTL9   1                                           218984
      C                     MOVE *BLANK    WDTLC   1                                         MD058592
      C                     MOVE *BLANK    WDTLD   1                                         MD058592
+     C                     MOVE 'N'       WSCDSP  1                                         MD058621
+     C                     Z-ADD0         WSCINT 117                                        MD058621
+     C                     MOVE *BLANK    WDTLE   1                                         MD058621
+     C                     MOVE *BLANK    WDTLF   1                                         MD058621
      C                     Z-ADD0         WCNT    10                      184903
      C                     Z-ADD0         W#NEXT                          154221
      C                     Z-ADD0         WNEXTO                                             249835B
@@ -4764,6 +4789,7 @@
      C           FCM101    IFEQ 'N'                                                         MD058388
      C           FCM101    OREQ 'Y'                                                         MD058388
      C           WDTL1     ANDEQ*BLANKS                                                     MD058388
+     C           CNSGH     ANDEQ*BLANK                                                      MD058659
      C                     MOVEL'LEE0039' ZAMSID
      C                     EXSR SRTEXT
      C                     MOVELZAMSTX    SNARR
@@ -6426,6 +6452,11 @@ E1   C                     ENDIF                                                
      C********** BRTEH     ANDGT*ZEROS                                              BUG9240 MD035329
      C           BRTTH     ANDGT*ZEROS                                                      MD035329
      C********** DISCRO    ANDNE0                                                    221558 MD026445
+     C           FCM101    ANDNE'Y'                                                         MD058621
+     C           WDTL5     OREQ *BLANK                                                      MD058621
+     C           BRTTH     ANDGT*ZEROS                                                      MD058621
+     C           CNSGH     ANDEQ*BLANK                                                      MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
      C           WDTL6     OREQ *BLANK                                                        FCM101
      C           FCM101    ANDEQ'Y'                                                           FCM101
      C********** BRTT      ANDGT0                                                     FCM101 FCM101F
@@ -6446,16 +6477,19 @@ E1   C                     ENDIF                                                
      C           CDE002    ANDNE'Y'                                                           FCM101
      C           WDTL2     ANDEQ*BLANK                                                        FCM101
      C           FCM101    ANDEQ'Y'                                                           FCM101
+     C           CNSGH     ANDNE*BLANKS                                                     MD058659
       *                                                                                       FCM101
      C           BGN0ST    OREQ 'Y'                                                           FCM101
      C           IRCFH     ANDEQ'Y'                                                           FCM101
      C           WDTL2     ANDEQ*BLANK                                                        FCM101
      C           FCM101    ANDEQ'Y'                                                           FCM101
+     C           CNSGH     ANDNE*BLANKS                                                     MD058659
       *                                                                                       FCM101
      C           CDE002    OREQ 'Y'                                                           FCM101
      C           IRCFH     ANDEQ'Y'                                                           FCM101
      C           WDTL2     ANDEQ*BLANK                                                        FCM101
      C           FCM101    ANDEQ'Y'                                                           FCM101
+     C           CNSGH     ANDNE*BLANKS                                                     MD058659
       *                                                                                       FCM101
      C           BGN0ST    ORNE 'Y'                                                           FCM101
      C           CDE002    ANDNE'Y'                                                           FCM101
@@ -6555,6 +6589,10 @@ E1   C                     ENDIF                                                
      C           WSAME     IFEQ 'Y'                                       154221
      C           INTAL     ANDNE*ZEROS                                    154221
      C           WDTL2     ANDEQ*BLANK                                    154221
+     C           WSAME     OREQ 'Y'                                                         MD058621
+     C           AMTPL     ANDEQ'SC'                                                        MD058621
+     C           WDTL3     ANDEQ*BLANK                                                      MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
      C                     CLEARWSAME                                     154221
      C                     ENDIF                                          154221
       *
@@ -6702,6 +6740,115 @@ E1   C                     ENDIF                                                
      C                     EXSR SRDISL                                                        263412
      C                     ENDIF                                                            MD046080
      C                     ENDIF                                                              263412
+      *                                                                                     MD058621
+     C           FCM101    IFEQ 'Y'                                                         MD058621
+     C           AMTPL     ANDEQ'SC'                                                        MD058621
+      *                                                                                     MD058621
+     C           PTYP      IFEQ 61                                                          MD058621
+     C           PTYP      OREQ 62                                                          MD058621
+     C           PTYP      OREQ 64                                                          MD058621
+     C           PTYP      OREQ 66                                                          MD058621
+     C           PTYP      OREQ 68                                                          MD058621
+     C           PTYP      OREQ 69                                                          MD058621
+     C           PTYP      OREQ 70                                                          MD058621
+     C           PTYP      OREQ 71                                                          MD058621
+     C           PTYP      OREQ 72                                                          MD058621
+      *                                                                                     MD058621
+      ** Display SC All-in Rate                                                             MD058621
+      *                                                                                     MD058621
+     C           KLOAMY    CHAINXXLOAMY0             38                                     MD058621
+      *                                                                                     MD058621
+     C           *IN38     IFEQ *OFF                                                        MD058621
+     C           SCINTR    ANDNE*BLANKS                                                     MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C           OUTALL    ORNE 0                                                           MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C           WDTL3     ANDEQ*BLANKS                                                     MD058621
+     C           OUTALL    OREQ 0                                                           MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C           WDTL3     ANDEQ*BLANKS                                                     MD058621
+      *                                                                                     MD058621
+     C                     MOVE *BLANKS   ZFLD17                                            MD058621
+     C                     MOVE SCINTR    ZFLD17                                            MD058621
+     C                     Z-ADD4         ZSDIG                                             MD058621
+     C                     Z-ADD7         ZSDEC                                             MD058621
+     C                     EXSR XASIGN                                                      MD058621
+     C                     MOVE ZOUT15    SCAMNT                                            MD058621
+     C           ZFSIGN    IFEQ '-'                                                         MD058621
+     C                     Z-SUBSCAMNT    SCAMNT                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C           OUTALL    IFNE SCAMNT                                                      MD058621
+     C           OUTALL    ANDNE0                                                           MD058621
+     C           AMCNSP    ANDNERTSPL                                                       MD058621
+     C           AMCNSP    ANDNE*ZEROS                                                      MD058621
+     C           OUTALL    OREQ SCAMNT                                                      MD058621
+     C           AMCNSP    ANDNERTSPL                                                       MD058621
+     C           AMCNSP    ANDNE*ZEROS                                                      MD058621
+     C                     MOVEL'XXX3914' ZAMSID                                            MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVEL'XXX3913' ZAMSID                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     EXSR SRTEXT                                                      MD058621
+     C                     MOVELZAMSTX    SNARR                                             MD058621
+      *                                                                                     MD058621
+     C           OUTALL    IFNE SCAMNT                                                      MD058621
+     C           OUTALL    ANDNE0                                                           MD058621
+      *                                                                                     MD058621
+      ** Display a negative rate properly                                                   MD058621
+      *                                                                                     MD058621
+     C           OUTALL    IFLT 0                                                           MD058621
+     C                     MOVE 'Y'       WSUB                                              MD058621
+     C                     Z-SUBOUTALL    OUTALL                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     MOVE OUTALL    ZFIELD                                            MD058621
+     C                     Z-ADD7         ZADEC                                             MD058621
+     C                     EXSR ZEDIT                                                       MD058621
+      *                                                                                     MD058621
+     C           WSUB      IFEQ 'Y'                                                         MD058621
+     C                     MOVE *BLANKS   WSUB                                              MD058621
+     C                     MOVE ZFIELD    WFLD1                                             MD058621
+     C           WFLD1     CAT  '-'       WFLD2                                             MD058621
+     C                     MOVE WFLD2     SAMNT                                             MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVE ZFIELD    SAMNT                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ELSE                                                             MD058621
+      *                                                                                     MD058621
+      ** Display a negative rate properly                                                   MD058621
+      *                                                                                     MD058621
+     C           SCAMNT    IFLT 0                                                           MD058621
+     C                     MOVE 'Y'       WSUB                                              MD058621
+     C                     Z-SUBSCAMNT    WSCAMT                                            MD058621
+     C                     ELSE                                                             MD058621
+     C                     Z-ADDSCAMNT    WSCAMT                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     MOVE WSCAMT    ZFIELD                                            MD058621
+     C                     Z-ADD7         ZADEC                                             MD058621
+     C                     EXSR ZEDIT                                                       MD058621
+      *                                                                                     MD058621
+     C           WSUB      IFEQ 'Y'                                                         MD058621
+     C                     MOVE *BLANKS   WSUB                                              MD058621
+     C                     MOVE ZFIELD    WFLD1                                             MD058621
+     C           WFLD1     CAT  '-'       WFLD2                                             MD058621
+     C                     MOVE WFLD2     SAMNT                                             MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVE ZFIELD    SAMNT                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     MOVE *BLANKS   ZFIELD                                            MD058621
+      *                                                                                     MD058621
+     C                     MOVE 'Y'       WDTL3                                             MD058621
+     C                     EXSR SRDISL                                                      MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVE *BLANKS   SCINTR                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
      C                     ELSE
       *
       ** Process frequency repayments
@@ -6757,6 +6904,17 @@ E1   C                     ENDIF                                                
       *
       ** Prepare to display action if selected
       *
+     C           VDATL     IFEQ RLDT                                                        MD058621
+     C           AMTPL     ANDEQ'SC'                                                        MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WRLDS     ANDEQ'1'                                                         MD058621
+     C           WSCDSP    ANDEQ'N'                                                         MD058621
+     C                     MOVE 'Y'       WSCDSP                                            MD058621
+     C                     Z-ADDVDATL     WVDATS  50                                        MD058621
+     C                     Z-ADDLASNL     WLASNS  30                                        MD058621
+     C                     Z-ADDRTSPL     WRTSPS 117                                        MD058621
+     C                     Z-ADDOREDL     WOREDS  50                                        MD058621
+     C                     ELSE                                                             MD058621
      C           VDATL     IFGE WDTIN
      C           WCDIN     IFEQ *BLANK
      C           WCDIN     OREQ 'P'
@@ -6769,6 +6927,7 @@ E1   C                     ENDIF                                                
      C                     EXSR SROUTL
      C                     ENDIF
      C                     ENDIF
+     C                     ENDIF                                                            MD058621
       *                                                                                     BUG21868
      C           VDATL     IFEQ MDAT                                                        BUG21868
      C           ZINTR     ANDGT*ZERO                                                       BUG21868
@@ -7051,6 +7210,47 @@ E1   C                     ENDIF                                                
      C           PTYP      ANDEQ71                                                           FCM101B
      C           FCM101    OREQ 'Y'                                                          FCM101B
      C           PTYP      ANDEQ72                                                           FCM101B
+      *                                                                                     MD058621
+     C                     Z-ADD0         @@BSRT                                            MD058621
+     C                     MOVE CCY       PKEY1                                             MD058621
+     C                     MOVE BRTT      PKEY2                                             MD058621
+     C                     CALL 'AOBSRTR0'                                                  MD058621
+     C                     PARM *BLANKS   PRTCD                                             MD058621
+     C                     PARM '*KEY    'POPTN                                             MD058621
+     C                     PARM           PKEY1                                             MD058621
+     C                     PARM           PKEY2                                             MD058621
+     C           SDBSRT    PARM SDBSRT    DSFDY                                             MD058621
+      *                                                                                     MD058621
+     C           VDATL     IFGE BAVDNR                                                      MD058621
+     C                     Z-ADDBANBRT    @@BSRT                                            MD058621
+     C                     ELSE                                                             MD058621
+     C                     Z-ADDBACBSR    @@BSRT                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     Z-ADD@@BSRT    WCUBR                                             MD058621
+      *                                                                                     MD058621
+     C           KLOAMY    CHAINXXLOAMY1             38                                     MD058621
+      *                                                                                     MD058621
+     C           *IN38     IFEQ *OFF                                                        MD058621
+     C                     Z-ADDAMCNSP    SVCNSP                                            MD058621
+     C                     MOVE AMCNSG    SVCNSG                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     CALL XXCALC                                                      MD058621
+     C                     PARM           PRTCD                                             MD058621
+     C                     PARM           @@BSRT                                            MD058621
+     C                     PARM           SVBRTF                                            MD058621
+     C                     PARM           SVBRSG                                            MD058621
+     C                     PARM           SVAIRF                                            MD058621
+     C                     PARM           SVAISG                                            MD058621
+     C                     PARM           SVCNSP                                            MD058621
+     C                     PARM           SVCNSG                                            MD058621
+     C                     PARM *ZERO     OUTSPR                                            MD058621
+     C                     PARM *ZERO     OUTALL                                            MD058621
+     C                     PARM *BLANKS   OUTSPS                                            MD058621
+      *                                                                                     MD058621
+     C           OUTALL    IFLT 0                                                           MD058621
+     C                     Z-SUBOUTALL    OUTALL                                            MD058621
+     C                     ENDIF                                                            MD058621
       *                                                                                      FCM101B
      C           KLOAMY    CHAINXXLOAMY0             38                                      FCM101B
       *                                                                                      FCM101B
@@ -7064,9 +7264,16 @@ E1   C                     ENDIF                                                
      C           ZFSIGN    IFEQ '-'                                                          FCM101B
      C                     Z-SUBWCURT     WCURT                                              FCM101B
      C                     ENDIF                                                             FCM101B
+     C           OUTALL    IFNE WCURT                                                       MD058621
+     C           OUTALL    ANDNE0                                                           MD058621
+     C                     Z-ADDOUTALL    WCURT                                             MD058621
+     C                     ENDIF                                                            MD058621
      C                     ELSE                                                              FCM101B
      C                     EXSR SRNEWI                                                       FCM101B
      C                     ENDIF                                                             FCM101B
+     C           WSCDSP    IFEQ 'Y'                                                         MD058621
+     C                     Z-ADDWCURT     WSCINT                                            MD058621
+     C                     ENDIF                                                            MD058621
      C                     ELSE                                                              FCM101B
      C                     EXSR SRNEWI
      C                     ENDIF                                                             FCM101B
@@ -7775,6 +7982,7 @@ E1   C                     ENDIF                                                
      C                     ELSE                                                              FCM101C
      C                     Z-ADDBACBSR    @@BSRT                                             FCM101C
      C                     ENDIF                                                             FCM101C
+     C                     Z-ADD@@BSRT    WCUBR                                             MD058621
       *                                                                                      FCM101C
      C           KLOAMY    CHAINXXLOAMY1             38                                      FCM101C
       *                                                                                      FCM101C
@@ -7864,7 +8072,22 @@ E1   C                     ENDIF                                                
      C**********           MOVE 'Y'       WDTL1                                    MD058388 MD058592
      C                     MOVE 'Y'       WDTLC                                             MD058592
      C                     ENDIF                                                            MD058388
+     C           FCM101    IFNE 'Y'                                                         MD058659
      C                     EXSR SRDISL
+     C                     ELSE                                                             MD058621
+     C           VSLN      IFGE 20                                                          MD058621
+     C           WDTLD     IFEQ *BLANK                                                      MD058621
+     C           AMCNSP    ANDNE*ZERO                                                       MD058621
+     C           WDTL3     OREQ *BLANK                                                      MD058621
+     C           SCINTR    ANDNE*BLANKS                                                     MD058621
+     C           WDTL3     OREQ *BLANK                                                      MD058621
+     C           OUTALL    ANDNE0                                                           MD058621
+     C           WDTL3     OREQ *BLANK                                                      MD058621
+     C           OUTALL    ANDEQ0                                                           MD058621
+     C                     MOVE 'Y'       WSAME                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058659
      C                     ENDIF                                                            MD058388
       *                                                                                       FCM101
  S1  C           FCM101    IFEQ 'Y'                                                           FCM101
@@ -9515,6 +9738,7 @@ E1   C                     ENDIF                                                
       ** Use base rate if interest rate is zero                                            AR1068354
      C           WCURT     IFEQ *ZEROS                                                     AR1068354
      C           WCUBR     ANDNE*ZEROS                                                     AR1068354
+     C           FCM101    ANDNE'Y'                                                         MD058621
      C**********           Z-ADDWCUBR     WCURT                                   AR1068354 MD019846
      C                     EXSR SRNEWI                                                      MD019846
      C                     ENDIF                                                           AR1068354
@@ -9753,6 +9977,12 @@ E1   C                     ENDIF                                                
      C                     MOVE 'Y'       WOVFL
      C                     MOVE 'Y'       WSAME
      C                     SELEC
+     C           WDTLE     WHEQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C                     MOVE *BLANK    WDTLE                                             MD058621
+     C           WDTLF     WHEQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C                     MOVE *BLANK    WDTLF                                             MD058621
      C           WDTLD     WHEQ 'Y'                                                         MD058592
      C           FCM101    ANDEQ'Y'                                                         MD058592
      C                     MOVE *BLANK    WDTLD                                             MD058592
@@ -10042,6 +10272,17 @@ E1   C                     ENDIF                                                
      C                     CLEARSINDT                                     158633
      C                     ENDIF                                          158633
       *                                                                   158633
+     C           WSCDSP    IFEQ 'Y'                                                         MD058621
+     C           FCALR     ANDEQ' '                                                         MD058621
+     C           FCALI     ANDEQ' '                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WAMTPS    ANDEQ'SC'                                                        MD058621
+     C           WVDATS    ANDNEWOREDS                                                      MD058621
+     C                     Z-ADDWOREDS    ZDAYNO                                            MD058621
+     C                     EXSR ZDATE2                                                      MD058621
+     C                     MOVE ZADATE    SINDT                                             MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
      C                     WRITELE0212F2
       **********                                                                       249397 257301
       ***If*Expected*Date*was*displayed*as*Due*Date,*reset **                          249397 257301
@@ -11526,6 +11767,11 @@ E1   C                     ENDIF                                                
      C                     KFLD           LNRF                                                FCM101
      C                     KFLD           RLDT                                                FCM101
       *                                                                                       FCM101
+     C           KLOAMZ    KLIST                                                            MD058621
+     C                     KFLD           LNRF                                              MD058621
+     C                     KFLD           WVDATS                                            MD058621
+     C                     KFLD           WLASNS                                            MD058621
+      *                                                                                     MD058621
      C           *LIKE     DEFN YBRCA     KYBRCA                                              CLE134
      C           *LIKE     DEFN YPDCT     KYPDCT                                              CLE134
      C           *LIKE     DEFN YPDVDT    KYPDVD                                              CLE134
@@ -12046,6 +12292,7 @@ E1   C                     ENDIF                                                
      C                     MOVE XXNNSG    NNSG                                              MD058248
      C                     Z-ADDNNSP      WNNSP                                             MD058283
      C                     MOVE NNSG      WNNSG   1                                         MD058283
+     C                     MOVE '  '      WAMTPS  2                                         MD058621
       *                                                                                       224646
       ** Do not write rollover details if the selected date is greater                        224646
       ** than the rollover date                                                               224646
@@ -12220,7 +12467,9 @@ E1   C                     ENDIF                                                
       *                                                                                     MD031067
      C                     ENDIF                                                            MD031067
       *                                                                                       193701
-     C           WCNT      IFEQ 0                                                             193701
+     C********** WCNT      IFEQ 0                                                    193701 MD058659
+     C           WCNT      IFLE 0                                                           MD058659
+     C                     Z-ADD0         WCNT                                              MD058659
      C                     MOVE ' '       WDTL1                           184903
      C                     MOVE ' '       WDTL2                           184903
      C                     MOVE ' '       WDTL3                           184903
@@ -12232,6 +12481,10 @@ E1   C                     ENDIF                                                
      C                     MOVE ' '       WDTL9                                               218984
      C                     MOVE ' '       WDTLA   1                                           FCM101
      C                     MOVE ' '       WDTLB   1                                           FCM101
+     C                     MOVE ' '       WDTLC                                             MD058621
+     C                     MOVE ' '       WDTLD                                             MD058621
+     C                     MOVE ' '       WDTLE                                             MD058621
+     C                     MOVE ' '       WDTLF                                             MD058621
       *                                                                   184903
       ** Count how many rollover details are to be displayed              184903
       *                                                                   184903
@@ -12315,6 +12568,11 @@ E1   C                     ENDIF                                                
      C                     ADD  1         WCNT                                                FCM101
      C                     ENDIF                                                              FCM101
       *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                         MD058621
+     C           WSCDSP    ANDEQ'Y'                                                         MD058621
+     C                     ADD  2         WCNT                                              MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
      C                     ENDIF                                          184903
       *                                                                                       193701
       ** Write first the principal if rollover is multi-currency                              193701
@@ -12376,6 +12634,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                                               193701
      C                     ENDIF                                                              193701
      C                     ENDIF                                                              193701
@@ -12438,6 +12702,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                                               193701
      C                     ENDIF                                                              193701
      C                     ENDIF                                                              193701
@@ -12565,6 +12835,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                                               193701
      C                     ENDIF                                                              193701
      C                     ENDIF                                                              193701
@@ -12702,6 +12978,7 @@ E1   C                     ENDIF                                                
      C           USENEW    ANDEQ'Y'                                                         MD039651
      C                     Z-ADDOWCUBR    WCUBR                                             MD053334
      C                     MOVE OWCUBR    ZFIELD                                            MD039651
+     C                     MOVE ' '       WSUB                                              MD058659
      C           OWCUBR    IFLT 0                                                            FCM101A
      C                     MOVE 'Y'       WSUB                                               FCM101A
      C                     Z-SUBOWCUBR    OWCUBR                                             FCM101A
@@ -12714,6 +12991,7 @@ E1   C                     ENDIF                                                
      C**********           MOVE WCUBR     ZFIELD                                     FCM101A FCM101D
      C**********           MOVE WCUBR     ZFLD15                                    FCM101D MD053238
      C                     MOVE WCUBR     ZFIELD                                            MD053238
+     C                     MOVE ' '       WSUB                                              MD058659
      C           WCUBR     IFLT 0                                                            FCM101A
      C                     MOVE 'Y'       WSUB                                               FCM101A
      C**********           Z-SUBWCUBR     WCUBR                                      FCM101A FCM101F
@@ -12748,6 +13026,16 @@ E1   C                     ENDIF                                                
      C                     ENDIF                                                             FCM101A
      C                     MOVE *BLANKS   ZFIELD                                            AR742875
      C**********           MOVE 'Y'       WDTL1                                        184903 193701
+      *                                                                                     MD058659
+      ** Calculate rate/spread (WCUSP) for new base rate (WCUBR)                            MD058659
+      *                                                                                     MD058659
+     C           CAS005    IFEQ 'Y'                                                         MD058659
+     C                     Z-ADDWCUBR     WWBRTE 117                                        MD058659
+     C           FCM101    IFEQ 'Y'                                                         MD058659
+     C                     EXSR CALRTS                                                      MD058659
+     C                     ENDIF                                                            MD058659
+     C                     ENDIF                                                            MD058659
+      *                                                                                     MD058659
      C           WNOTWR    IFEQ *BLANK                                                        224646
      C           WFXCOF    ANDNE'Y'                                                         MD031378
      C                     EXSR SRDETL                                    184903
@@ -12798,6 +13086,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                           184903
      C                     ENDIF                                          184903
      C                     ENDIF                                          184903
@@ -12978,6 +13272,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                           184903
      C                     ENDIF                                          184903
      C                     ENDIF                                          184903
@@ -13068,6 +13368,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                           184903
      C                     ENDIF                                          184903
      C                     ENDIF                                          184903
@@ -13117,6 +13423,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                           184903
      C                     ENDIF                                          184903
      C                     ENDIF                                          184903
@@ -13268,6 +13580,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                                               FCM101
      C                     ENDIF                                                              FCM101
      C                     ENDIF                                                              FCM101
@@ -13307,11 +13625,11 @@ E1   C                     ENDIF                                                
      C                     ENDIF                                                              FCM101
      C                     ENDSL                                                              FCM101
       *                                                                                       FCM101
-      ** Restor original value of NNSG                                                       FCM101F
-      *                                                                                      FCM101F
-     C           FCM101    IFEQ 'Y'                                                          FCM101F
-     C                     MOVE WNNSG     NNSG                                               FCM101F
-     C                     ENDIF                                                             FCM101F
+      ***Restor*original*value*of*NNSG*********************************             FCM101F MD058659
+      **********                                                                    FCM101F MD058659
+     C********** FCM101    IFEQ 'Y'                                                 FCM101F MD058659
+     C**********           MOVE WNNSG     NNSG                                      FCM101F MD058659
+     C**********           ENDIF                                                    FCM101F MD058659
       *                                                                                      FCM101F
      C                     EXSR SRTEXT                                                        FCM101
      C                     MOVELZAMSTX    SNARR                                               FCM101
@@ -13336,6 +13654,12 @@ E1   C                     ENDIF                                                
      C           NINTR     OREQ *ZEROS                                                      MD058388
      C           FCM101    ANDEQ'Y'                                                         MD058388
      C           WDTLB     ANDEQ*BLANKS                                                     MD058388
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
      C                     MOVE 'Y'       WSAME                                               FCM101
      C                     ENDIF                                                              FCM101
      C                     ENDIF                                                              FCM101
@@ -13440,9 +13764,211 @@ E1   C                     ENDIF                                                
       *                                                                                       FCM101
      C                     SUB  1         WCNT                                                FCM101
      C                     MOVE 'Y'       WDTLB                                               FCM101
+      *                                                                                     MD058621
+     C           VSLN      IFGE 20                                                          MD058621
+     C           WSCDSP    IFEQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           WSCDSP    OREQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
+     C                     MOVE 'Y'       WSAME                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
      C                     ENDIF                                                              FCM101
+      *                                                                                     MD058621
+      ** Display 'SC' Contractual Spread that was suppressed earlier                        MD058621
+      *                                                                                     MD058621
+     C           WSCDSP    IFEQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+      *                                                                                     MD058621
+     C           PTYP      IFEQ 61                                                          MD058621
+     C           PTYP      OREQ 62                                                          MD058621
+     C           PTYP      OREQ 64                                                          MD058621
+     C           PTYP      OREQ 66                                                          MD058621
+     C           PTYP      OREQ 68                                                          MD058621
+     C           PTYP      OREQ 69                                                          MD058621
+     C           PTYP      OREQ 70                                                          MD058621
+     C           PTYP      OREQ 71                                                          MD058621
+     C           PTYP      OREQ 72                                                          MD058621
+      *                                                                                     MD058621
+     C           KLOAMZ    CHAINXXLOAMY1             55                                     MD058621
+      *                                                                                     MD058621
+     C           *IN55     IFEQ *OFF                                                        MD058621
+     C           AMCNSP    ANDNE*ZERO                                                       MD058621
+     C           WDTLE     ANDEQ*BLANKS                                                     MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C                     SELEC                                                            MD058621
+     C           AMCNSG    WHEQ 'A'                                                         MD058621
+     C                     MOVEL'XXX3901' ZAMSID                                            MD058621
+     C           AMCNSG    WHEQ 'S'                                                         MD058621
+     C                     MOVEL'XXX3902' ZAMSID                                            MD058621
+     C           AMCNSG    WHEQ 'P'                                                         MD058621
+     C                     MOVEL'XXX3903' ZAMSID                                            MD058621
+     C                     ENDSL                                                            MD058621
+      *                                                                                     MD058621
+     C                     EXSR SRTEXT                                                      MD058621
+     C                     MOVELZAMSTX    SNARR                                             MD058621
+      *                                                                                     MD058621
+      ** Display a negative rate properly                                                   MD058621
+      *                                                                                     MD058621
+     C           AMCNSP    IFLT 0                                                           MD058621
+     C                     MOVE 'Y'       WSUB                                              MD058621
+     C                     Z-SUBAMCNSP    AMCNSP                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     MOVE AMCNSP    ZFIELD                                            MD058621
+     C                     Z-ADD7         ZADEC                                             MD058621
+     C                     EXSR ZEDIT                                                       MD058621
+      *                                                                                     MD058621
+     C           WSUB      IFEQ 'Y'                                                         MD058621
+     C                     MOVE *BLANKS   WSUB                                              MD058621
+     C                     MOVE ZFIELD    WFLD1                                             MD058621
+     C           WFLD1     CAT  '-'       WFLD2                                             MD058621
+     C                     MOVE WFLD2     SAMNT                                             MD058621
+     C                     Z-SUBAMCNSP    AMCNSP                                            MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVE ZFIELD    SAMNT                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     MOVE *BLANKS   ZFIELD                                            MD058621
+      *                                                                                     MD058621
+     C           WNOTWR    IFEQ *BLANK                                                      MD058621
+     C                     MOVE 'SC'      WAMTPS                                            MD058621
+     C                     EXSR SRDETL                                                      MD058621
+     C                     MOVE '  '      WAMTPS                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     SUB  1         WCNT                                              MD058621
+     C                     MOVE 'Y'       WDTLE                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C           VSLN      IFGE 20                                                          MD058621
+     C           WSCDSP    IFEQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
+     C                     MOVE 'Y'       WSAME                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+      ** Display 'SC' All-in Rate that was suppressed earlier                               MD058621
+      *                                                                                     MD058621
+     C           WSCDSP    IFEQ 'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
+      *                                                                                     MD058621
+     C           PTYP      IFEQ 61                                                          MD058621
+     C           PTYP      OREQ 62                                                          MD058621
+     C           PTYP      OREQ 64                                                          MD058621
+     C           PTYP      OREQ 66                                                          MD058621
+     C           PTYP      OREQ 68                                                          MD058621
+     C           PTYP      OREQ 69                                                          MD058621
+     C           PTYP      OREQ 70                                                          MD058621
+     C           PTYP      OREQ 71                                                          MD058621
+     C           PTYP      OREQ 72                                                          MD058621
+      *                                                                                     MD058621
+     C           KLOAMZ    CHAINXXLOAMY0             55                                     MD058621
+      *                                                                                     MD058621
+     C           *IN55     IFEQ *OFF                                                        MD058621
+     C           SCINTR    ANDNE*BLANKS                                                     MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C           WSCINT    ORNE 0                                                           MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
+     C           WSCINT    OREQ 0                                                           MD058621
+     C           VSLN      ANDLT20                                                          MD058621
+     C           WDTLF     ANDEQ*BLANKS                                                     MD058621
+      *                                                                                     MD058621
+     C                     MOVE *BLANKS   ZFLD17                                            MD058621
+     C                     MOVE SCINTR    ZFLD17                                            MD058621
+     C                     Z-ADD4         ZSDIG                                             MD058621
+     C                     Z-ADD7         ZSDEC                                             MD058621
+     C                     EXSR XASIGN                                                      MD058621
+     C                     MOVE ZOUT15    SCAMNT                                            MD058621
+     C           ZFSIGN    IFEQ '-'                                                         MD058621
+     C                     Z-SUBSCAMNT    SCAMNT                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C           WSCINT    IFNE SCAMNT                                                      MD058621
+     C           WSCINT    ANDNE0                                                           MD058621
+     C           AMCNSP    ANDNEWRTSPS                                                      MD058621
+     C           AMCNSP    ANDNE*ZEROS                                                      MD058621
+     C           WSCINT    OREQ SCAMNT                                                      MD058621
+     C           WSCINT    ANDNEWRTSPS                                                      MD058621
+     C           AMCNSP    ANDNE*ZEROS                                                      MD058621
+     C                     MOVEL'XXX3914' ZAMSID                                            MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVEL'XXX3913' ZAMSID                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     EXSR SRTEXT                                                      MD058621
+     C                     MOVELZAMSTX    SNARR                                             MD058621
+      *                                                                                     MD058621
+     C           WSCINT    IFNE SCAMNT                                                      MD058621
+     C           WSCINT    ANDNE0                                                           MD058621
+      *                                                                                     MD058621
+      ** Display a negative rate properly                                                   MD058621
+      *                                                                                     MD058621
+     C           WSCINT    IFLT 0                                                           MD058621
+     C                     MOVE 'Y'       WSUB                                              MD058621
+     C                     Z-SUBWSCINT    WSCINT                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     MOVE WSCINT    ZFIELD                                            MD058621
+     C                     Z-ADD7         ZADEC                                             MD058621
+     C                     EXSR ZEDIT                                                       MD058621
+      *                                                                                     MD058621
+     C           WSUB      IFEQ 'Y'                                                         MD058621
+     C                     MOVE *BLANKS   WSUB                                              MD058621
+     C                     MOVE ZFIELD    WFLD1                                             MD058621
+     C           WFLD1     CAT  '-'       WFLD2                                             MD058621
+     C                     MOVE WFLD2     SAMNT                                             MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVE ZFIELD    SAMNT                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     MOVE *BLANKS   ZFIELD                                            MD058621
+     C                     ELSE                                                             MD058621
+      *                                                                                     MD058621
+      ** Display a negative rate properly                                                   MD058621
+      *                                                                                     MD058621
+     C           SCAMNT    IFLT 0                                                           MD058621
+     C                     MOVE 'Y'       WSUB                                              MD058621
+     C                     Z-SUBSCAMNT    WSCAMT                                            MD058621
+     C                     ELSE                                                             MD058621
+     C                     Z-ADDSCAMNT    WSCAMT                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     MOVE WSCAMT    ZFIELD                                            MD058621
+     C                     Z-ADD7         ZADEC                                             MD058621
+     C                     EXSR ZEDIT                                                       MD058621
+      *                                                                                     MD058621
+     C           WSUB      IFEQ 'Y'                                                         MD058621
+     C                     MOVE *BLANKS   WSUB                                              MD058621
+     C                     MOVE ZFIELD    WFLD1                                             MD058621
+     C           WFLD1     CAT  '-'       WFLD2                                             MD058621
+     C                     MOVE WFLD2     SAMNT                                             MD058621
+     C                     ELSE                                                             MD058621
+     C                     MOVE ZFIELD    SAMNT                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     MOVE *BLANKS   ZFIELD                                            MD058621
+      *                                                                                     MD058621
+     C           WNOTWR    IFEQ *BLANK                                                      MD058621
+     C                     MOVE 'SC'      WAMTPS                                            MD058621
+     C                     EXSR SRDETL                                                      MD058621
+     C                     MOVE '  '      WAMTPS                                            MD058621
+     C                     ENDIF                                                            MD058621
+      *                                                                                     MD058621
+     C                     SUB  1         WCNT                                              MD058621
+     C                     MOVE 'Y'       WDTLF                                             MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
+     C                     ENDIF                                                            MD058621
       *                                                                   184903
-     C           WCNT      IFEQ 0                                         184903
+     C********** WCNT      IFEQ 0                                                    184903 MD058659
+     C           WCNT      IFLE 0                                                           MD058659
+     C                     Z-ADD0         WCNT                                              MD058659
      C                     MOVE '0'       WRLDS                           184903
      C                     MOVE ' '       WDTL1                           184903
      C                     MOVE ' '       WDTL2                           184903
@@ -13455,6 +13981,10 @@ E1   C                     ENDIF                                                
      C                     MOVE ' '       WDTL9                                               218984
      C                     MOVE ' '       WDTLA                                               FCM101
      C                     MOVE ' '       WDTLB                                               FCM101
+     C                     MOVE ' '       WDTLC                                             MD058621
+     C                     MOVE ' '       WDTLD                                             MD058621
+     C                     MOVE ' '       WDTLE                                             MD058621
+     C                     MOVE ' '       WDTLF                                             MD058621
      C**********           Z-ADD*ZERO     RLDT                                        BUG9240 246037
      C           WRKFLD    IFEQ 'M'                                                         BUG21922
      C           WENDT     ANDNE99999                                                      MD039391A
@@ -13504,6 +14034,10 @@ E1   C                     ENDIF                                                
      C                     Z-ADDOWCUBR    WCUBR                                             MD053334
      C                     ENDIF                                                            MD053334
       *                                                                                     MD053334
+     C           FCM101    IFEQ 'Y'                                                         MD058659
+     C                     EXSR CALRTS                                                      MD058659
+     C                     ENDIF                                                            MD058659
+      *                                                                                     MD058659
      C                     EXSR SRNEWI                                                       BUG9240
      C                     ENDIF                                                             BUG9240
       *                                                                                       238722
@@ -13514,10 +14048,47 @@ E1   C                     ENDIF                                                
      C                     Z-ADD*ZERO     WINPD                                               238722
      C                     Z-ADD*ZERO     WIPAID                                              238722
      C                     ENDIF                                                              238722
+      *                                                                                     MD058621
+     C           WRLDS     IFEQ '0'                                                         MD058621
+     C           WSCDSP    ANDEQ'Y'                                                         MD058621
+     C           FCM101    ANDEQ'Y'                                                         MD058621
+     C                     Z-ADDWSCINT    WCURT                                             MD058621
+     C                     MOVE 'N'       WSCDSP                                            MD058621
+     C                     MOVE *BLANKS   SCINTR                                            MD058621
+     C                     ENDIF                                                            MD058621
       *                                                                   184903
      C/COPY WNCPYSRC,LEH00906
      C                     ENDSR                                          184903
       /EJECT                                                              184903
+      *****************************************************************                     MD058659
+      *                                                               *                     MD058659
+      *  CALRTS - Calculate rate/spread on future rollover            *                     MD058659
+      *                                                               *                     MD058659
+      *  Called by: SRRDAT                                            *                     MD058659
+      *                                                               *                     MD058659
+      *  Calls: XXCALC                                                *                     MD058659
+      *                                                               *                     MD058659
+      *****************************************************************                     MD058659
+      *                                                                                     MD058659
+     C           CALRTS    BEGSR                                                            MD058659
+      *                                                                                     MD058659
+     C                     CALL XXCALC                                                      MD058659
+     C                     PARM           PRTCD                                             MD058659
+     C                     PARM WCUBR     @@BSRT                                            MD058659
+     C                     PARM           SVBRTF                                            MD058659
+     C                     PARM           SVBRSG                                            MD058659
+     C                     PARM           SVAIRF                                            MD058659
+     C                     PARM           SVAISG                                            MD058659
+     C                     PARM WNNSP     SVCNSP                                            MD058659
+     C                     PARM NNSG      SVCNSG                                            MD058659
+     C                     PARM *ZERO     OUTSPR                                            MD058659
+     C                     PARM *ZERO     OUTALL                                            MD058659
+     C                     PARM *BLANKS   OUTSPS                                            MD058659
+     C                     Z-ADDOUTSPR    WCUSP                                             MD058659
+     C                     Z-ADDOUTALL    NINTR                                             MD058659
+      *                                                                                     MD058659
+     C                     ENDSR                                                            MD058659
+      *                                                                                     MD058659
       *****************************************************************                       253042
       *                                                               *                       253042
       *  SRSCUR - Subroutine to set correct currency depeding on the  *                       253042

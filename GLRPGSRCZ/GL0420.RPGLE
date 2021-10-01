@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD058791           Date 15Sep21               *
-      *  Prev Amend No. MD058751           Date 03Sep21               *
+      *  Last Amend No. MD058791A          Date 23Sep21               *
+      *  Prev Amend No. MD058791           Date 15Sep21               *
+      *                 MD058751           Date 03Sep21               *
       *                 AR1068690          Date 14Dec12               *
       *                 260897             Date 19Oct12               *
       *                 244144             Date 19Oct12               *
@@ -168,6 +169,9 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058791A - Lack of space between '/' and STPG, results in   *
+      *             '/' overprinted by STPG. Moved the printing of '/'*
+      *             1 position to the left. Amended hook UUC102_007.  *
       *  MD058791 - STPG not printed due to incorrect hook placement. *
       *             Replace hook GL042OOOP7 with UUC102_008.          *
       *             Replace hook GL042OOOP9 with UUC102_009.          *

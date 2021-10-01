@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057056           Date 19May21               *
-      *  Prev Amend No. MD056683           Date 14Sep20               *
+      *  Last Amend No. MD058938           Date 28Sep21               *
+      *  Prev Amend No. MD057056           Date 19May21               *
+      *                 MD056683           Date 14Sep20               *
       *                 MD056303           Date 18Jul20               *
       *                 MD056187           Date 02Jul20               *
       *                 MD056170           Date 30Jun20               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058938 - Recompile due to change in MEINFTPD file.         *
       *  MD057056 - SWIFT: F21 in MT199 is truncated                  *
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *

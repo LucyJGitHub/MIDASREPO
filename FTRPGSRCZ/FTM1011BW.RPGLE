@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058938           Date 28Sep21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -41,6 +42,7 @@
       *                 CFT006  *CREATE    Date 27Sep99               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058938 - Recompile due to change in MEINFTPD file.         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -82,7 +84,7 @@
                                                                                               CSD015
       ** Compliance Watch Hit List File                                                       CSD015
      FSDCWHTL1  IF   E           K DISK                                                       CSD015
- 
+
       *****************************************************************
       *****************************************************************
       *                                                               *
@@ -122,7 +124,7 @@
       *       56  Error in swift reference                            *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -141,77 +143,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       * Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT101HPD)
- 
+
       ** Error array
      D @EI             S              1    DIM(40)
- 
+
       ** OK flags
      D OKFILE        E DS                  EXTNAME(FTE101HBPD)
- 
+
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for access programs, short DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** User Details
      D SDUSER        E DS                  EXTNAME(MUSER)
                                                                                               CSD015
@@ -228,7 +230,7 @@
       ** External DS for Standing Data Dataarea                                               CSD015
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD015
      D  SMODE        E                     EXTFLD(MODE)                                       CSD015
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -237,12 +239,12 @@
      D  Atxt           C                   'Authorised Transactions'
      D  AllTxt         C                   'All Transactions'
      D  DualTxt        C                   'Part Authorised Transactions'
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Work fields
      D rrn             S              3  0 INZ(1)
      D error           S              1    INZ('Y')
@@ -262,17 +264,17 @@
      D warning         S              1                                         185196
      D warncheck       S              1                                         185196
      D allparts        S              1                                         185196
- 
+
      D UserBnch        S                   Like(DBRN)
      D ActErr          S              1  0
      D ValidCode       S              1
- 
+
       ** Parameters for ZALIGN
      D zalignok        S              1
      D zfield          S             16
      D zadec           S              1  0
      D zadig           S              2  0
- 
+
       ** *Entry parameters
      D @actn           S              1
      D @rftid          S             15
@@ -280,12 +282,12 @@
      D @swiftref       S             28
      D @keyp           S              2
      D @rfttype        S              2
- 
+
       ** Key list fields
      D krftid          S             15
      D ktrnref         S             16
      D kpytp           S              2
- 
+
       ** Parameters for QDCXLATE
      D length          S              5  0
      D wsndst          S             35
@@ -294,7 +296,7 @@
      D wordcus1        S             35
      D const1          S             10
      D const2          S             10
- 
+
       ** Parameters for QCLSCAN
      D lgthfld         S              3  0
      D start           S              3  0
@@ -314,12 +316,12 @@
      D KFuncCode       S              8                                                       CSD015
      D KIden           S             40                                                       CSD015
      D KBranch         S              3                                                       CSD015
- 
- 
+
+
      D  SavUser        S                   Like(INUSER)
- 
+
      D Display         S              1    Inz('Y')                             188650
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -334,11 +336,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      Exit = 'N'                                   184177
- 
+
      C                   Dow       exit = 'N'
- 
+
      C                   If        Actcnt > 1                                   188650
      C                   Eval      Actcnt = Actcnt - 1                          188650
      C                   Eval      Display = 'N'                                188650
@@ -346,17 +348,17 @@
      C                   Eval      Actcnt = 0                                   188650
      C                   Eval      Display = 'Y'                                188650
      C                   Endif                                                  188650
- 
+
      C                   If        Actcnt < 1                                   188650
      C                   Exsr      ClrScreen
      C                   Exsr      FillScreen
      C                   Endif                                                  188650
      C                   Exsr      ShowScreen
      C                   Enddo
- 
+
      C                   Return                                                 184177
      C*******************Seton                                        LR        184177
- 
+
       *****************************************************************
       /EJECT                                                              *
       *****************************************************************
@@ -369,21 +371,21 @@
       *                                                               *
       *****************************************************************
      C     FillScreen    Begsr
- 
+
       ** Clear subfile
- 
+
      C                   Eval      *IN28 = *ON
      C                   Write     ftm1012bct
      C                   Eval      *IN28 = *OFF
- 
+
      C                   Eval      rrn = 1
      C                   Eval      kpytp = type
      C                   Eval      Ix = 0
- 
+
      C                   Select
- 
+
       ** When both of the Selection fields are not blank - error
- 
+
      C                   When      sssnddst <> *BLANKS AND
      C                             ssordcus <> *BLANKS OR
      C                             sssnddst <> *BLANKS AND
@@ -394,26 +396,26 @@
      C                   Move      'sssnddst'    FldNameArr(Ix)
      C                   Move      'RFV0061'     MsgIdArr(Ix)
      C                   Eval      oksdord = 'N'
- 
+
      C                   Endsl
- 
+
       ** When RFT id is not blank, position subfile, Else read file from
       ** the beginning
- 
+
      C                   IF        sprftid <> *BLANKS AND sssnddst = *BLANKS
      C                             AND ssordcus = *BLANKS
- 
+
       ** Ensure no blanks at beginning of position fields
- 
+
      C                   Eval      work1 = 0
      C     ' '           Check     sprftid:1     work1
      C                   Subst     sprftid:work1 krftid
- 
+
      C                   Else
      C*******************Eval      krftid = *blanks                             188651
      C                   Eval      krftid = *Hival                              188651
      C                   Endif
- 
+
      C                   Select
      C                   When      NOT *IN32 and NOT *IN33 and NOT *IN34
      C     KPosition     SETLL     FT101HL6
@@ -428,14 +430,14 @@
      C     KPosition     Setll     FT101HL2
      C     KPYTP         READE     FT101HL2                               40
      C                   Endsl
- 
+
      C                   Dow       *IN40 = *OFF
      C                   Eval      *IN45 = *Off
- 
+
      C                   Select
- 
+
       ** Select on sender/destination
- 
+
      C                   When      sssnddst <> *BLANKS AND
      C                             ssordcus = *BLANKS  AND
      C                             sssndref = *BLANKS
@@ -444,19 +446,19 @@
      C                   Parm      sssnddst      wsndst
      C                   Parm      'QSYSTRNTBL'  const1
      C                   Parm      'QSYS'        const2
- 
+
       ** Ensure no blanks at beginning of search field
- 
+
      C                   Eval      work1 = 0
      C                   Eval      work2 = wsndst
      C     ' '           Check     work2:1       work1
      C                   Subst     wsndst:work1  wsndst1
      C                   Eval      wsndst = wsndst1
- 
+
       ** Scan for search string
- 
+
      C                   IF        type = 'RI'
- 
+
      C                   Call      'QCLSCAN'
      C                   Parm                    sinst
      C                   Parm      11            lgthfld
@@ -467,9 +469,9 @@
      C                   Parm      '1'           trim
      C                   Parm      '?'           wild
      C                   Parm                    result
- 
+
      C                   Else
- 
+
      C                   Call      'QCLSCAN'
      C*******************Parm                    hacsv1
      C                   Parm                    RFTDST
@@ -482,35 +484,35 @@
      C                   Parm      '?'           wild
      C                   Parm                    result
      C                   Endif
- 
+
       ** If string found, Write to subfile
- 
+
      C                   IF        result >= 1
      C                   Eval      *IN45 = *ON
      C                   Endif
- 
+
       ** Select on ordering customer
- 
+
      C                   When      sssnddst =  *BLANKS  AND
      C                             ssordcus <> *BLANKS AND
      C                             sssndref =  *BLANKS
- 
+
      C                   Call      'QDCXLATE'
      C                   Parm      35            length
      C                   Parm      ssordcus      wordcus
      C                   Parm      'QSYSTRNTBL'  const1
      C                   Parm      'QSYS'        const2
- 
+
       ** Ensure no blanks beginning of search field
- 
+
      C                   Eval      work1 = 0
      C                   Eval      work2 = wordcus
      C     ' '           Check     work2:1       work1
      C                   Subst     wordcus:work1 wordcus1
      C                   Eval      wordcus = wordcus1
- 
+
       ** Scan for search string
- 
+
      C                   Call      'QCLSCAN'
      C                   Parm                    hocus1
      C                   Parm      35            lgthfld
@@ -521,36 +523,36 @@
      C                   Parm      '1'           trim
      C                   Parm      '?'           wild
      C                   Parm                    result
- 
+
       ** If string found, Write to subfile
- 
+
      C                   IF        result >= 1
      C                   Eval      *IN45 = *ON
      C                   Endif
- 
- 
+
+
       ** Select on senders reference
- 
+
      C                   When      sssnddst =  *BLANKS  AND
      C                             ssordcus =  *BLANKS AND
      C                             sssndref <> *BLANKS
- 
+
      C                   Call      'QDCXLATE'
      C                   Parm      16            length
      C                   Parm      sssndref      wordcus
      C                   Parm      'QSYSTRNTBL'  const1
      C                   Parm      'QSYS'        const2
- 
+
       ** Ensure no blanks beginning of search field
- 
+
      C                   Eval      work1 = 0
      C                   Eval      work2 = wordcus
      C     ' '           Check     work2:1       work1
      C                   Subst     wordcus:work1 wordcus1
      C                   Eval      wordcus = wordcus1
- 
+
       ** Scan for search string
- 
+
      C                   Call      'QCLSCAN'
      C                   Parm                    sndref
      C                   Parm      16            lgthfld
@@ -561,41 +563,41 @@
      C                   Parm      '1'           trim
      C                   Parm      '?'           wild
      C                   Parm                    result
- 
+
       ** If string found, Write to subfile
- 
+
      C                   IF        result >= 1
      C                   Eval      *IN45 = *ON
      C                   Endif
- 
+
      C                   OTHER
- 
+
      C                   Eval      *IN45 = *ON
- 
+
      C                   Endsl
- 
+
      C                   If        Pytp <> type
      C                   Eval      *IN45 = *Off
      C                   Endif
- 
- 
+
+
       ** Write to the subfile
- 
+
      C                   IF        *IN45 = *ON
      C                   Eval      sfrftid = rftid
      C                   Eval      sfsndref = sndref
- 
+
      C                   IF        type = 'RI'
      C                   Eval      sfsnddst = sinst
      C                   Else
      C                   Eval      sfsnddst = rftdst
      C                   Endif
- 
+
      C                   Eval      sfordcus = hocus1
      C                   Write     ftm1012bsf
      C                   Add       1             rrn
      C                   Endif
- 
+
      C                   Select
      C                   When      NOT *IN32 and NOT *IN33 and NOT *IN34
      C     KPYTP         READE     FT101HL6                               40
@@ -606,7 +608,7 @@
      C                   When      *IN34
      C     KPYTP         READE     FT101HL2                               40
      C                   Endsl
- 
+
      C                   Enddo
      C                   ENDSR
       /EJECT                                                              *
@@ -620,7 +622,7 @@
       *                                                               *
       *****************************************************************
      C     ShowScreen    Begsr
- 
+
      C*******************IF        rrn = 1                                      188650
      C                   IF        rrn = 1 and Display = 'Y'                    188650
      C                   Eval      *IN26 = *OFF
@@ -629,51 +631,51 @@
      C                   Eval      *IN26 = *ON
      C                   Eval      emptysf = 'N'
      C                   Endif
- 
+
      C                   Eval      *IN27 = *ON
      C                   Eval      *IN29 = *ON
      C                   Eval      error = 'Y'
- 
+
      C                   IF        type = 'RI'
      C                   Eval      *IN31 = *OFF
      C                   Else
      C                   Eval      *IN31 = *ON
      C                   Endif
- 
+
       ** Loop until there are no errors
- 
+
      C                   Dow       error = 'Y'
- 
+
       ** Move ok flags into array
- 
+
      C                   MoveA     okfile        @ei
- 
+
       ** Set screen error indicators according to status of ok flags
- 
+
      C                   Eval      c = 1
      C                   Eval      e = 50
- 
+
      C                   Dow       c <=40
- 
+
      C                   IF        @ei(c) = 'N' OR @ei(c) = 'W'
      C                   Eval      *IN(e) = *ON
      C                   Endif
- 
+
      C                   Add       1             c
      C                   Add       1             e
- 
+
      C                   Enddo
- 
+
       ** Clear message subfile
- 
+
      C                   Call      'ZA0250'
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Select text at top of screen
      C                   Select
      C                   When      *IN32
@@ -685,25 +687,25 @@
      C                   Other
      C                   Eval      ScnTxt = AllTxt
      C                   Endsl
- 
+
       ** Display command keys
- 
+
      C                   Write     cmdkey
- 
+
       ** Write error messages
- 
+
      C                   Write     #msgctl
- 
+
       ** Display screen
- 
+
      C                   If        Display = 'Y'                                188650
      C                   EXFMT     ftm1012bct
      C                   Endif                                                  188650
- 
+
       ** Process screen
- 
+
      C                   Exsr      ProcScreen
- 
+
      C                   Enddo
       *
      C                   ENDSR
@@ -724,46 +726,46 @@
       *****************************************************************
      C     ProcScreen    Begsr
      C                   Select
- 
+
       ** When F3 is pressed, exit
- 
+
      C                   When      *IN03 = *ON
      C                   Eval      error = 'N'
      C                   Eval      exit  = 'Y'
      C                   Eval      @keyp = '03'
- 
+
       ** When F5 is pressed, refresh
- 
+
      C                   When      *IN05 = *ON
      C                   Eval      error = 'N'
      C                   Eval      Actcnt = 0                                   188650
- 
+
       ** When F12 is pressed, exit
- 
+
      C                   When      *IN12 = *ON
      C                   Eval      error = 'N'
      C                   Eval      exit  = 'Y'
      C                   Eval      @keyp = '12'
- 
+
       ** When F14 is pressed, toggle between incoming/outgoing RFT
- 
+
      C                   When      *IN14 = *ON
      C                   Eval      error = 'N'
- 
+
      C                   IF        type = 'RI'
      C                   Eval      type = 'RO'
      C                   Else
      C                   Eval      type = 'RI'
      C                   Endif
- 
+
      C                   OTHER
- 
+
       ** Validate screen
- 
+
      C                   Exsr      Validate
- 
+
      C                   Endsl
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -776,7 +778,7 @@
       *                                                               *
       *****************************************************************
      C     Validate      Begsr
- 
+
      C                   Eval      Ix = 0
      C                   MoveA     '0000000'     *IN(50)
      C                   Eval      errcnt = 0
@@ -787,47 +789,47 @@
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   MsgDtaArr
- 
+
       ** Validate subfile action code
- 
+
      C                   IF        emptysf = 'N'
      C                   Exsr      ValSubf
      C                   Endif
- 
+
       ** Validate User
      C                   Exsr      ValUser
- 
+
       ** Validate action code
- 
+
      C                   If        ValidCode = 'Y'
      C                   Exsr      ValActcd
      C                   Endif
- 
+
       ** Validate RFT Id
- 
+
      C                   Exsr      ValRftid
- 
+
       ** Validate transaction reference
- 
+
      C                   Exsr      ValTrnrf
- 
+
       ** Validate swift reference
- 
+
      C                   Exsr      ValSwfrf
- 
+
      C                   Select
- 
+
       ** When screen fields are all blank, reload subfile
- 
+
      C                   When      error = 'Y' AND action = *BLANKS AND
      C                             sactn =*BLANKS
      C                             AND sswfref = *BLANKS AND
      C                             srftid = *BLANKS AND strnref = *BLANKS
      C                   Eval      error = 'N'
- 
+
       ** If there are no errors, fill parameters to pass back to controlling
       ** module, exit
- 
+
      C                   When      error = 'N'
      C                   Eval      exit = 'Y'
      C                   Eval      RetCodeIn = *BLANKS
@@ -836,45 +838,45 @@
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   MsgDtaArr
- 
+
      C                   IF        sfactn <> *BLANKS
      C                   Eval      @actn = sfactn
      C                   Eval      @rftid = sfrftid
      C                   Eval      @tranref = *BLANKS
      C                   Eval      @swiftref = *BLANKS
      C                   Eval      @keyp = *BLANKS
- 
+
      C                   Else
- 
+
      C                   IF        sactn <> *BLANKS
      C                   Eval      @actn = sactn
      C                   Else
      C                   Eval      @actn = 'I'
      C                   Endif
- 
+
      C                   Eval      @rftid = srftid
      C                   Eval      @tranref = strnref
      C                   Eval      @swiftref = sswfref
      C                   Eval      @keyp = *BLANKS
      C                   Endif
- 
+
      C                   IF        @actn = 'I' AND @rftid = *BLANKS
- 
+
       ** If the swift reference is not blank then default message type to
       ** 'incoming' since most will be this and no other way to determine
- 
+
      C                   IF        @swiftref <> *BLANKS
      C                   Eval      @rfttype = 'RI'
      C                   Else
      C                   Eval      @rfttype = type
      C                   Endif
- 
+
      C                   Else
      C                   Eval      @rfttype = *blanks
      C                   Endif
- 
+
      C                   Endsl
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -887,46 +889,46 @@
       *                                                               *
       *****************************************************************
      C     ValSubf       Begsr
- 
+
       ** Read changes to subfile
- 
+
      C                   READC     ftm1012bsf                             41
- 
+
      C                   Dow       *IN41 = *OFF
- 
+
      C                   Select
- 
+
       ** Valid action code
- 
+
      C                   When      sfactn = 'I' OR sfactn = 'C' OR
      C                             sfactn = 'A' OR sfactn = 'D' OR
      C                             sfactn = 'E' OR sfactn = 'X'
- 
+
      C                   Add       1             actcnt
- 
+
      C                   IF        actcnt = 1
      C                   Eval      rec = rrn
      C                   Eval      action = 'Y'
      C                   Endif
- 
+
       ** More than one action code, error
- 
+
      C*******************IF        actcnt > 1 OR actcnt = 1 AND                 188650
      C                   IF        actcnt = 1 AND                               188650
      C                             sactn <> *BLANKS OR actcnt =1 AND
      C                             sactn = *BLANKS AND sswfref <> *BLANKS
      C                   Eval      *IN52 = *ON
      C                   Endif
- 
+
      C                   Eval      *IN30 = *ON
      C                   UPDATE    ftm1012bsf
      C                   Eval      *IN30 = *OFF
      C                   Eval      *IN52 = *OFF
- 
+
      C                   READC     ftm1012bsf                             41
- 
+
       ** Invalid action code
- 
+
      C                   When      sfactn <> 'I' AND sfactn <> 'C' AND
      C                             sfactn <> 'A' AND sfactn <> 'D' AND
      C                             sfactn <> 'E' AND sfactn <> 'X' AND
@@ -948,109 +950,109 @@
      C
      C                   READC     ftm1012bsf                             41
      C                   OTHER
- 
+
       ** Selection is  blank
- 
+
      C                   Eval      *IN30 = *OFF
      C                   UPDATE    ftm1012bsf
      C                   READC     ftm1012bsf                             41
- 
+
      C                   Endsl
- 
+
      C                   Enddo
- 
+
      C                   Select
- 
+
       ** More than one action code, error
- 
+
      C*******************When      actcnt > 1 OR actcnt =1 AND                  188650
      C                   When      actcnt =1 AND                                188650
      C                             sactn <> *BLANKS OR actcnt =1 AND
      C                             sactn = *BLANKS AND sswfref <> *BLANKS
- 
+
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
      C                   Move      'RFV0063'     MsgIdArr(Ix)
      C                   Eval      oksfactn = 'N'
- 
+
      C                   READC     ftm1012bsf                             41
- 
+
      C                   Eval      *IN30 = *ON
      C                   Eval      *IN52 = *ON
      C                   UPDATE    ftm1012bsf
      C                   Eval      *IN30 = *OFF
      C                   Eval      *IN52 = *OFF
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
       ** If invalid action code, error
- 
+
      C                   When      errcnt > 0
- 
+
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
      C                   Move      'RFV0064'     MsgIdArr(Ix)
      C                   Eval      oksfactn = 'N'
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   OTHER
- 
+
      C                   READC     ftm1012bsf                             41
- 
+
       ** If valid action code, retrieve rft header details
- 
+
      C                   IF        sfactn ='I' OR sfactn = 'A'
      C                             OR sfactn = 'C' OR sfactn ='X'
      C                             OR sfactn = 'D'
- 
+
      C     sfrftid       CHAIN     FT101HL3                           42
- 
+
      C                   IF        *IN42 = *OFF
- 
+
       ** If authorised, you cannot action the RFT
- 
+
      C                   IF        auin = 'Y'       OR
      C                             SfActn <> 'X'    And
      C                             AUP1 <> *Blanks
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
      C                   Move      'RFV0065'     MsgIdArr(Ix)
      C                   Eval      oksfactn = 'N'
- 
+
      C                   Eval      *IN30 = *ON
      C                   Eval      *IN52 = *ON
      C                   UPDATE    ftm1012bsf
      C                   Eval      *IN30 = *OFF
      C                   Eval      *IN52 = *OFF
- 
+
      C                   Else
- 
+
       ** If action code is authorise, user must not be the same as authorise
       ** user on file
- 
+
      C                   IF        sfactn = 'X'
- 
+
       * Validate user authorisation threshold
      C                   CallB     'FTVTHTH01'
      C                   Parm                    RetCodeIn
      C                   Parm                    HdrRcdIn
- 
+
       * Validate header and detail records
- 
+
      C                   Eval      SavUser = InUser
      C                   CallB     'FTM1016VL'
      C                   Parm                    ValErrCde        10
      C                   Parm                    SfActn
      C                   Parm                    HdrRcdIn
      C                   Eval      Inuser = SavUser
- 
+
       * If no error and message has been routed from a SWIFT msg                185196
       * check to see if all parts have been processed. If not                   185196
       * then issue warning message - once only - which can be                   185196
@@ -1082,16 +1084,16 @@
      C                   Endif                                                  185196
                                                                                 185196
      C                   Select
- 
+
      C                   When      ValErrCde = '*VALERROR'
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
      C                   Move      'RFV0146'     MsgIdArr(Ix)
      C                   Eval      oksfactn = 'N'
- 
+
      C                   Eval      *IN30 = *ON
      C                   Eval      *IN52 = *ON
      C                   UPDATE    ftm1012bsf
@@ -1122,47 +1124,47 @@
      C                   Eval      RetCodeIn = *blanks                          185196
      C                   Eval      firstwarn  = *blanks                         185196
      C                   Endif                                                  185196
- 
- 
+
+
      C                   When      psuser = inuser OR
      C                             psuser = updusr
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
      C                   Move      'RFV0075'     MsgIdArr(Ix)
      C                   Eval      oksfactn = 'N'
- 
+
      C                   Eval      *IN30 = *ON
      C                   Eval      *IN52 = *ON
      C                   UPDATE    ftm1012bsf
      C                   Eval      RetCodeIn = *Blanks                                        213056
      C                   Eval      *IN30 = *OFF
      C                   Eval      *IN52 = *OFF
- 
+
      C                   When      RetCodeIn = 'TooSmall'
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
      C                   Move      'RFV0142'     MsgIdArr(Ix)
      C                   Eval      oksfactn = 'N'
- 
+
      C                   Eval      *IN30 = *ON
      C                   Eval      *IN52 = *ON
      C                   UPDATE    ftm1012bsf
      C                   Eval      RetCodeIn = *Blanks                                        213056
      C                   Eval      *IN30 = *OFF
      C                   Eval      *IN52 = *OFF
- 
+
      C                   Other
- 
+
       ** No errors in subfile action code
- 
+
      C                   Eval      error = 'N'
      C                   Endsl
                                                                                               CSD015
@@ -1201,20 +1203,20 @@
      C                   Endif                                                                CSD015
      C                   Endif                                                                CSD015
      C                   Endif                                                                CSD015
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   Else
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Else
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endsl
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1227,76 +1229,76 @@
       *                                                               *
       *****************************************************************
      C     ValActcd      Begsr
- 
+
      C                   Select
- 
+
       ** More than one action code, error
- 
+
      C                   When      action = 'Y' AND sactn <> *BLANKS OR
      C                             action = 'Y' AND sactn = *BLANKS AND
      C                             sswfref <> *BLANKS
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sactn'       FldNameArr(Ix)
      C                   Move      'RFV0063'     MsgIdArr(Ix)
      C                   Eval      okhdactn = 'N'
- 
+
       ** Invalid action code, error
- 
+
      C                   When      sactn <>'I' AND sactn <> 'C' AND
      C                             sactn <> 'A' AND sactn <> 'D' AND
      C                             sactn <> 'E' AND sactn <> 'X' AND
      C                             sactn <> *BLANKS
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sactn'       FldNameArr(Ix)
      C                   Move      'RFV0064'     MsgIdArr(Ix)
      C                   Eval      okhdactn = 'N'
- 
+
       ** No action codes, error
- 
+
      C                   When      sactn = *BLANKS AND sfactn = *BLANKS
      C                             AND sswfref = *BLANKS
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   OTHER
- 
- 
+
+
       ** If valid action code, retrieve rft header details
- 
+
      C                   IF        sactn ='I' OR sactn = 'A' OR sactn = 'D'
      C                             OR sactn = 'C' OR sactn ='X'
- 
+
      C     srftid        CHAIN     FT101HL3                           42
- 
+
      C                   IF        *IN42 = *OFF
- 
+
       ** If authorised, you cannot action the RFT
- 
+
      C                   IF        auin = 'Y'        Or
      C                             SActn <> 'X'     And
      C                             AUP1 <> *Blanks
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sactn'       FldNameArr(Ix)
      C                   Move      'RFV0065'     MsgIdArr(Ix)
      C                   Eval      okhdactn = 'N'
- 
+
      C                   Else
- 
+
       ** If action code is authorise, user must not be the same as authorise
       ** user on file
- 
+
      C                   IF        sactn = 'X'
                                                                                 187210
       * Validate user authorisation threshold                                   187210
@@ -1401,24 +1403,24 @@
      C***********        If        psuser = aup1                                187210
      C                   If        psuser = inuser  or                          187210
      C                             psuser = updusr                              187210
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sactn'       FldNameArr(Ix)
      C                   Move      'RFV0075'     MsgIdArr(Ix)
      C                   Eval      okhdactn = 'N'
      C                   Eval      RetCodeIn = *Blanks                                        213056
- 
+
       ** No errors in action code
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
                                                                                               CSD015
       ** If function code is being monitored by compliance watch and Watch                    CSD015
@@ -1452,25 +1454,25 @@
      C                   Endif                                                                CSD015
      C                   Endif
      C                   Endif
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endsl
- 
+
      C                   ENDSR
       /EJECT                                                                    185196
       *****************************************************************         185196
@@ -1528,17 +1530,17 @@
       *                                                               *
       *****************************************************************
      C     ValUser       Begsr
- 
+
      C                   Eval      ValidCode = 'Y'
- 
+
       * Ensure that header action code is valid for the user
- 
+
      C                   If        Sactn <> *Blank
      C                   Call      'ZVACTBU'
      C                   Parm                    Sactn
      C                   Parm                    UserBnch
      C                   Parm                    ActErr
- 
+
      C                   Select
      C                   When      ActErr = 1
      C                   Add       1             Ix
@@ -1548,7 +1550,7 @@
      C                   Eval      okhdactn = 'N'
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   When      ActErr = 2
      C                   Add       1             Ix
      C                   Move      'sactn'       FldNameArr(Ix)
@@ -1557,17 +1559,17 @@
      C                   Eval      okhdactn = 'N'
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Endsl
      C                   EndIf
- 
+
       * Ensure subfile action correct
      C                   If        Sfactn <> *Blank
      C                   Call      'ZVACTBU'
      C                   Parm                    Sfactn
      C                   Parm                    UserBnch
      C                   Parm                    ActErr
- 
+
      C                   Select
      C                   When      ActErr = 1
      C                   Add       1             Ix
@@ -1577,7 +1579,7 @@
      C                   Eval      oksfactn = 'N'
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   When      ActErr = 2
      C                   Add       1             Ix
      C                   Move      'sfactn'      FldNameArr(Ix)
@@ -1586,7 +1588,7 @@
      C                   Eval      oksfactn = 'N'
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Endsl
      C                   EndIf
      C                   Endsr
@@ -1601,74 +1603,74 @@
       *                                                               *
       *****************************************************************
      C     ValRftid      Begsr
- 
+
      C                   Select
- 
+
       ** RFT Id is mandatory for action code A, E, D, C, X
- 
+
      C                   When      srftid = *BLANKS
- 
+
      C                   IF        sactn = 'A' OR sactn = 'E' OR
      C                             sactn = 'D' OR sactn = 'C' OR
      C                             sactn = 'X'
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'srftid'      FldNameArr(Ix)
      C                   Move      'RFV0066'     MsgIdArr(Ix)
      C                   Eval      okrftd = 'N'
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   OTHER
- 
+
       ** If action code is blank, RFT Id must be blank
- 
+
      C                   IF        sactn = *BLANKS
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'srftid'      FldNameArr(Ix)
      C                   Move      'RFV0067'     MsgIdArr(Ix)
      C                   Eval      okrftd = 'N'
- 
+
      C                   Else
- 
+
      C     srftid        CHAIN     FT101HL3                           42
- 
+
       ** RFT id not found on file, error
- 
+
      C                   IF        *IN42 = *ON
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'srftid'      FldNameArr(Ix)
      C                   Move      'RFV0068'     MsgIdArr(Ix)
      C                   Eval      okrftd = 'N'
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   Endsl
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1681,75 +1683,75 @@
       *                                                               *
       *****************************************************************
      C     ValTrnrf      Begsr
- 
+
      C                   Select
- 
+
       ** If RFT id is blank and action code is blank or 'I', transaction
       ** ref must be blank
- 
+
      C                   When      srftid = *BLANKS AND strnref <> *BLANKS
      C                             AND sactn = 'I' OR
      C                             srftid = *BLANKS AND strnref <> *BLANKS
      C                             AND sactn = *BLANKS
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'strnref'     FldNameArr(Ix)
      C                   Move      'RFV0069'     MsgIdArr(Ix)
      C                   Eval      oktrrf = 'N'
- 
- 
+
+
       ** Transaction ref must be blank for acton codes I, C, X
- 
+
      C                   When      srftid <> *BLANKS AND strnref <> *BLANKS
- 
+
      C                   IF        sactn = 'I' OR sactn = *BLANKS OR
      C                             sactn = 'X' OR sactn = 'C'
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'strnref'     FldNameArr(Ix)
      C                   Move      'RFV0069'     MsgIdArr(Ix)
      C                   Eval      oktrrf = 'N'
- 
+
      C                   Else
- 
+
      C                   Eval      krftid = srftid
      C                   Eval      ktrnref = strnref
- 
+
      C     kdetail       CHAIN     FT101Dl0                           43
- 
+
       ** If transaction ref is not on file, error
- 
+
      C                   IF        *IN43 = *ON
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'strnref'     FldNameArr(Ix)
      C                   Move      'RFV0070'     MsgIdArr(Ix)
      C                   Eval      oktrrf = 'N'
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   OTHER
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endsl
      C                   ENDSR
       /EJECT
@@ -1763,70 +1765,70 @@
       *                                                               *
       *****************************************************************
      C     ValSwfrf      Begsr
- 
+
      C                   Select
- 
+
       ** '?' can only be entered for action codes, blank and 'I'
- 
+
      C                   When      sswfref = '?'
- 
+
      C                   IF        sactn <> *BLANKS AND sactn <> 'I'
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sswfref'     FldNameArr(Ix)
      C                   Move      'RFV0071'     MsgIdArr(Ix)
      C                   Eval      okswfrf = 'N'
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
- 
+
       ** Swift ref can only be entered for action codes, blank and 'I'
- 
+
      C                   When      sswfref <> *BLANKS
- 
+
      C                   IF        sactn <> *BLANKS AND sactn <> 'I'
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sswfref'     FldNameArr(Ix)
      C                   Move      'RFV0071'     MsgIdArr(Ix)
      C                   Eval      okswfrf = 'N'
- 
+
      C                   Else
- 
+
      C     sswfref       CHAIN     msixi2l2                           44
- 
+
       ** If swift ref is not on file, error
- 
+
      C                   IF        *IN44 = *ON
- 
+
      C                   Eval      error = 'Y'
      C                   Eval      errorprv = 'Y'
- 
+
      C                   Add       1             Ix
      C                   Move      'sswfref'     FldNameArr(Ix)
      C                   Move      'RFV0072'     MsgIdArr(Ix)
      C                   Eval      okswfrf = 'N'
- 
+
      C                   Else
- 
+
      C                   IF        errorprv <> 'Y'
      C                   Eval      error = 'N'
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   Endsl
      C                   ENDSR
       /EJECT
@@ -1840,13 +1842,13 @@
       *                                                               *
       *****************************************************************
      C     ClrScreen     Begsr
- 
+
      C                   Eval      rec = 1
      C                   Eval      sfactn = *blanks
      C                   Eval      sactn = *blanks
      C*******************Eval      srftid = *blanks                             184177
      C*******************Eval      strnref = *blanks                            184177
- 
+
      C*******************IF        *IN05 = *ON OR *IN14 =*ON
      C                   IF        *IN05 = *ON                                  184177
      C                   Eval      sprftid = *blanks
@@ -1854,7 +1856,7 @@
      C                   Eval      sssnddst = *blanks
      C                   Eval      ssordcus = *blanks
      C                   Endif
- 
+
      C                   IF        *IN24 = *OFF
      C                   Eval      sswfref = *blanks
      C                   Move      *ALL'Y'       okfile
@@ -1863,33 +1865,33 @@
      C                   CLEAR                   MsgDtaArr
      C                   MoveA     '0000000'     *IN(50)
      C                   Endif
- 
+
      C                   Eval      *IN24 = *OFF
- 
+
      C                   If        *INKP
      C                   Select
- 
+
       * All : Show Unauthorised (32)
      C                   When      NOT *IN32 and NOT *IN33 and NOT *IN34
      C                   Eval      *IN32 = *On
- 
+
       * Unauthorised : Show Authorised (33)
      C                   When      *IN32 and NOT *IN33 and NOT *IN34
      C                   Eval      *IN32 = *Off
      C                   Eval      *IN33 = *On
- 
+
       * Authorised : Show Dual Authorisation (34)
      C                   When      NOT *IN32 and *IN33 and NOT *IN34
      C                   Eval      *IN33 = *Off
      C                   Eval      *IN34 = *On
- 
+
       * Dual Authorisation : Show All
      C                   When      NOT *IN32 and NOT *IN33 and *IN34
      C                   Eval      *IN34 = *Off
      C                   Endsl
- 
+
      C                   Endif
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1901,13 +1903,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        PLIST
- 
+
       ** OUTPUTS
- 
+
       ** Return Code
      C                   Parm                    RetCodeIn
       ** Action Code
@@ -1929,30 +1931,30 @@
      C                   Parm                    FldNameArr
      C                   Parm                    MsgIdArr
      C                   Parm                    MsgDtaArr
- 
+
       ** Access Bank Details
- 
+
      C                   Call      'AOBANKR0'
      C                   Parm      '*DBERR '     @rtcd
      C                   Parm      '*FIRST '     @optn
      C     sdbank        Parm      sdbank        dsfdy
- 
+
       ** Database Error
- 
+
      C                   IF        @rtcd <> *blanks
      C                   Eval      dbfile = 'SDBANKPD'
      C                   Eval      dbase = 001
      C                   Eval      dbkey = @optn
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Get user default branch
      C                   Call      'AOUSERR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm                    PSUser
      C     SDUSER        Parm      SDUSER        DSFDY
- 
+
      C                   IF        @RTCD <> *Blanks
      C                   Eval      DBFILE = 'MUSERDD '
      C                   Eval      DBASE = 002
@@ -2034,14 +2036,14 @@
      C                   Endif                                                                CSD015
                                                                                               CSD015
      C                   In        SDSTAT                                                     CSD015
- 
+
       ** Key lists
- 
+
       ** Key list for FT101DL0
      C     kdetail       KLIST
      C                   KFLD                    krftid
      C                   KFLD                    ktrnref
- 
+
       ** Key list for FT101HL6
      C     KPosition     KLIST
      C                   KFLD                    kpytp
@@ -2069,9 +2071,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       *
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SE *DSP
@@ -2082,9 +2084,9 @@
      C                   Eval      PGMQ = '*'
      C                   Eval      type = @rfttype
      C                   Eval      *IN24 = *ON
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR918343           Date 25Apr12               *
+      *  Last Amend No. CLE155             Date 20Feb20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR918343           Date 25Apr12               *
       *                 MD027517           Date 08Jul14               *      
       *               . MD053093           Date 03Sep19               *
       *                 MD048074           Date 03Sep19               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE155 - Facility Approval Date                              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
@@ -1678,6 +1680,7 @@
      C                   ELSE
      C                   ENDIF
      C                   ENDIF
+     C     CLE155        IFNE      'Y'                                                        CLE155
       *
       *  Allow Committed/Approval Date to be any date in the past but
       *  not later than Start date.
@@ -1698,6 +1701,32 @@
      C                   Movel     'DDCOMD'      FldNamXAr(Idx)
      C                   Movel     'LEF0295'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                       CLE155
+      *  Committed/Approval Date checks for CLE155                                            CLE155
+      *                                                                                       CLE155
+     C                   ELSE                                                                 CLE155
+      *                                                                                       CLE155
+      ** Approval Date must be greater or equal to Start Date                                 CLE155
+      *                                                                                       CLE155
+     C                   MOVE      ZDAYNO        W#COMD            5 0                        CLE155
+     C     W#COMD        IFLT      W#DTAP                                                     CLE155
+     C                   Move      'N'           DDCOMDOK                                     CLE155
+     C                   Add       1             Idx                                          CLE155
+     C                   Movel     'DDCOMD'      FldNamXAr(Idx)                               CLE155
+     C                   Movel     'LEF0611'     MsgIDXAr(Idx)                                CLE155
+     C                   ENDIF                                                                CLE155
+      *                                                                                       CLE155
+      ** Approval Date must be less than Expiry Date                                          CLE155
+      *                                                                                       CLE155
+     C                   MOVE      WWDTEX        W#DTEX                                       CLE155
+     C     W#COMD        IFGT      W#DTEX                                                     CLE155
+     C                   Move      'N'           DDCOMDOK                                     CLE155
+     C                   Add       1             Idx                                          CLE155
+     C                   Movel     'DDCOMD'      FldNamXAr(Idx)                               CLE155
+     C                   Movel     'LEF0613'     MsgIDXAr(Idx)                                CLE155
+     C                   ENDIF                                                                CLE155
+      *                                                                                       CLE155
+     C                   ENDIF                                                                CLE155
       *
      C                   ENDSR
       *****************************************************************
@@ -3200,6 +3229,21 @@
      C                   ELSE                                                                BUG9656
      C                   MOVE      'N'           CLE036                                      BUG9656
      C                   ENDIF                                                               BUG9656
+      *                                                                                       CLE155
+      ** Access Switchable SAR details for the existence of CLE155                            CLE155
+      *                                                                                       CLE155
+     C                   MOVE      *BLANKS       CLE155            1                          CLE155
+      *                                                                                       CLE155
+     C                   CALLB     'AOSARDR0'                                                 CLE155
+     C                   PARM      *BLANK        @RTCD                                        CLE155
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE155
+     C                   PARM      'CLE155'      @SARD                                        CLE155
+      *                                                                                       CLE155
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE155
+     C                   MOVE      'Y'           CLE155                                       CLE155
+     C                   ELSE                                                                 CLE155
+     C                   MOVE      'N'           CLE155                                       CLE155
+     C                   ENDIF                                                                CLE155
       *
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        SDSTAT

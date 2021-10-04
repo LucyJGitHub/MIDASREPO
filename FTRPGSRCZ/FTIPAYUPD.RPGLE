@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *  Last Amend No. LEUFIX12           Date 26Jun20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD048586           Date 11Jan21               *
       *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
@@ -98,6 +99,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX12 - Input user is not set on insertion through        *
+      *             the API with AUTH='N'                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD048586 - Remove conditions for executing SRCLR             *
@@ -1158,6 +1161,12 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   EVAL      INLVL1 = 'Y'                                             BUG14585
+      *                                                                                     LEUFIX12
+      ** Ensure input user is set on insertion                                              LEUFIX12
+      *                                                                                     LEUFIX12
+     C                   IF        INUSR1 = *Blanks                                         LEUFIX12
+     C                   EVAL      INUSR1 = PUser                                           LEUFIX12
+     C                   ENDIF                                                              LEUFIX12
       *
       ** Move valid file details to update file details.
       *

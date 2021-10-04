@@ -1,0 +1,229 @@
+000200210803      *****************************************************************
+000300210803**************/*STD *  RPG                                            *
+000400210803/*STD *  RPGBASE                                                      *
+000500210803/*EXI *  TEXT('*BUCetrieve From/To depot for Contingent Liabilit.')   *
+000600210803      *****************************************************************
+000700210803      *                                                               *
+000800210803      *  Midas  - Securities Trading Module                           *
+000900210803      *                                                               *
+001000210803      *  SEE099 - Check whether additional posting is to be generated *
+001100210803      *           for deliver to/from depot.                          *
+001200210803      *                                                               *
+001300210803      *  Function: Midas generates entries for Our depot customer     *
+001400210803      *            when the Posting Reference is 5 using Trade        *
+001500210803      *            'Deliver To' depot for Trade Purchased and 'Deliver*
+001600210803      *            From' Depot for Trade Sale. This program will check*
+001700210803      *            whether the trade is against a Safe Custody        *
+001800210803      *            Customer, if this is the case, then an additional  *
+001900210803      *            entry will be generated for Deliver To Depot (if   *
+002000210803      *            Trade Sale) or for Deliverr Deliver From Depot (if *
+002100210803      *            Trade Purchased). The entry will be generate with  *
+002200210803      *            opposite sign.                                     *
+002300210803      *                                                               *
+002400210803      *  Calls:                                                       *
+002500210803      *                                                               *
+002600210803      *  Called by : SE2450 - Generated entries                       *
+002700210803      *                                                               *
+002800210803      *  (C) Copyright Midas-Kapiti International Ltd. 2000           *
+002900210803      *                                                               *
+002901210930      *  Last Amend No. MD-58877           Date 30Sep21               *
+003000210930      *  Prev Amend No. DBA304             Date 28Mar01               *  *S01522
+003100210930      *                 CCFIX1 *CREATE     Date 05July2000           *
+003200210803      *                                                               *
+003300210803      *---------------------------------------------------------------*
+003400210803      *                                                               *
+003401210930      *  MD-58877 - Upgraded from 2.0 version                         *
+003500210803      *  DBA304 - Upgrade to DBA 3.04. CRTPARM RPG now redundant      *   S01117
+003600210803      *  CCFIX1 - Generate additional entry for deliver to/from depot *
+003700210803      *                                                               *
+003800210803      *****************************************************************
+003900210803      *                                                               *
+004000210803      *  Subroutine Index                                             *
+004100210803      *                                                               *
+004200210803      *  EINIT  - Initial processing                                  *
+004300210803      *                                                               *
+004400210803      *****************************************************************
+004500210803      *                                                               *
+004600210803      *   Indicator Index                                             *
+004700210803      *                                                               *
+004800210803      * U7- U8 - Standard midas usage                                 *
+004900210803      *     LR - Last record                                          *
+005000210803      *                                                               *
+005100210803      *****************************************************************
+005200210803      /SPACE
+005300210803      *****************************************************************
+005400210803      ** Investment Types
+005500210803     FTRADS   IF  E           K        DISK
+005600210803      *
+005700210803     FHSTTTR  IF  E           K        DISK
+005800210803      *
+005900210803      *****************************************************************
+006000210803      /EJECT
+006100210803     E                    CPY@    1   1 80
+006200210803      *****************************************************************
+006300210803      /SPACE
+006400210803      *****************************************************************
+006500210803     ILDA       E DSLDA                         256
+006600210803      ** Local data area for database error details
+006700210803      *  *LOCK IN LDA immediately before and OUT LDA immediately
+006800210803      *  after each database error handling.
+006900210803      *
+007000210803      *                                     134 141 DBFILE
+007100210803      *        Defines:                     142 170 DBKEY
+007200210803      *                                     171 180 DBPGM
+007300210803      *                                     181 1830DBASE
+007400210803      *
+007500210803     IPSDS       SDS
+007600210803      *
+007700210803      ** Program Status Data Structure - gives Job/Workstation name and
+007800210803      ** User ID
+007900210803     I                                     *PROGRAM ##PGM
+008000210803     I                                      201 208 @FILE
+008100210803     ISDBANK    E DSSDBANKPD
+008200210803      *
+008300210803     IDSFDY     E DSDSFDY
+008400210803      *
+008500210803      ** First DS for Access programs, short data structure
+008600210803      *****************************************************************
+008700210803      /EJECT
+008800210803      *****************************************************************
+008900210803      /EJECT
+009000210803     C*
+009100210803     C                     EXSR EINIT
+009200210803     C*
+009300210803     C                     EXSR EPROC
+009400210803     C*
+009500210803     C                     EXSR EEND
+009600210803     C*
+009700210803      *****************************************************************
+009800210803      *                                                               *
+009900210803      *  EINIT     - Initialisation Processing                        *
+010000210803      *                                                               *
+010100210803      *  Calls                                                        *
+010200210803      *                                                               *
+010300210803      *  Called By - MAIN                                             *
+010400210803      *                                                               *
+010500210803      *****************************************************************
+010600210803      *
+010700210803     C           EINIT     BEGSR
+010800210803     C*
+010900210803     C           *ENTRY    PLIST
+011000210803     C                     PARM           TRDREF  6
+011100210803     C                     PARM           WDELDP  6
+011200210803     C                     PARM           WNEWPS  1
+011300210803      *
+011400210803      ** Set up copyright parameter and screen header fields
+011500210803     C                     MOVEACPY@      BIS@   80
+011600210803      *
+011700210803      ** Define Local Data Area for error handling
+011800210803     C           *NAMVAR   DEFN           LDA
+011900210803      *
+012000210803      ** Access bank details for date format
+012100210803     C                     CALL 'AOBANKR0'
+012200210803     C                     PARM '*MSG   ' @RTCD   7
+012300210803     C                     PARM '*FIRST ' @OPTN   7
+012400210803     C           SDBANK    PARM SDBANK    DSFDY
+012500210803      *
+012600210803     C           @RTCD     IFNE *BLANKS
+012700210803     C           *LOCK     IN   LDA
+012800210803     C                     MOVE *BLANKS   DBKEY
+012900210803     C                     MOVEL'SDBANKPD'DBFILE
+013000210803     C                     MOVEL'SEE099'  DBPGM
+013100210803     C                     Z-ADD001       DBASE
+013200210803     C                     OUT  LDA
+013300210803     C                     EXSR *PSSR
+013400210803     C                     ENDIF
+013500210803      *
+013600210803     C                     ENDSR
+013700210803      *
+013800210803      *****************************************************************
+013900210803      /EJECT
+014000210803      *****************************************************************
+014100210803      *                                                               *
+014200210803      *  EPROC     - Process TRADS Records                            *
+014300210803      *                                                               *
+014400210803      *  Calls     - EPROCS                                           *
+014500210803      *                                                               *
+014600210803      *  Called By - MAIN                                             *
+014700210803      *                                                               *
+014800210803      *****************************************************************
+014900210803      *
+015000210803     C           EPROC     BEGSR
+015100210803      *
+015200210803      ** Set pointer to the top of the file and read
+015300210803     C           TRDREF    CHAINTRADS                20
+015400210803      *
+015500210803      ** If record no records found
+015600210803     C           *IN20     IFEQ *ON
+015700210803     C           TRDREF    CHAINHSTTTR               20
+015800210803     C                     ENDIF
+015900210803      *
+016000210803      ** Do while records found
+016100210803     C           *IN20     IFEQ *ON
+016200210803     C                     MOVE 'N'       WNEWPS
+016300210803     C                     EXSR EEND
+016400210803     C                     END
+016500210803      *
+016600210803     C           TDTP      IFEQ 'TP'
+016700210803     C                     MOVE DELF      WDELDP
+016800210803     C                     ELSE
+016900210803     C                     MOVE DELT      WDELDP
+017000210803     C                     END
+017100210803      *
+017200210803     C                     ENDSR
+017300210803      *
+017400210803      *****************************************************************
+017500210803      /EJECT
+017600210803      *****************************************************************
+017700210803      *                                                               *
+017800210803      *  EEND      - End Processing                                   *
+017900210803      *                                                               *
+018000210803      *  Calls     -                                                  *
+018100210803      *                                                               *
+018200210803      *  Called By - MAIN                                             *
+018300210803      *                                                               *
+018400210803      *****************************************************************
+018500210803      *
+018600210803     C           EEND      BEGSR
+018700210803     C                     MOVE *ON       *INLR
+018800210803     C                     RETRN
+018900210803     C                     ENDSR
+019000210803      *
+019100210803      *****************************************************************
+019200210803      /EJECT
+019300210803      *****************************************************************
+019400210803      *                                                               *
+019500210803      * *PSSR  - Program exception error routine                      *
+019600210803      *          Called automatically if a program error occurs,      *
+019700210803      *          or directly by the program code using EXSR.          *
+019800210803      *          This subroutine DUMPs the program just once.         *
+019900210803      *                                                               *
+020000210803      *****************************************************************
+020100210803      *
+020200210803     C           *PSSR     BEGSR
+020300210803      *
+020400210803     C           @RUN      IFEQ *BLANK
+020500210803     C                     MOVE 'Y'       @RUN    1
+020600210803      *
+020700210803     C           DBASE     IFEQ 0
+020800210803     C           *LOCK     IN   LDA
+020900210803     C                     MOVEL@FILE     DBFILE    P
+021000210803     C                     MOVE '999'     DBASE
+021100210803     C                     OUT  LDA
+021200210803     C                     ENDIF
+021300210803      *
+021400210803     C                     MOVE *ON       *INU7
+021500210803     C                     MOVE *ON       *INU8
+021600210803     C                     MOVE *ON       *INLR
+021700210803     C                     DUMP
+021800210803     C                     CALL 'DBERRCTL'
+021900210803     C                     ENDIF
+022000210803     C                     RETRN
+022100210803      *
+022200210803     C                     ENDSR
+022300210803      *
+022400210803      *****************************************************************
+022500210803      /SPACE
+022600210803      *****************************************************************
+022700210803**  CPY@
+022800210803(C) Copyright Midas-Kapiti International Ltd. 2000

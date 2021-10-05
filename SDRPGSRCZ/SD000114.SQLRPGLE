@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Lats Amend No. MD058708           Date 31Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
       *                 MD058138           Date 18May21               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058708 - SD001110P2 does not reflect BC specific changes   *
       *             (base rate code and ARR parameters). Add Base     *
       *             Rate Code field in extract file.                  *
@@ -218,6 +220,7 @@
       ** Program Variables
      D CLE172          S              1A                                                      CDL102
      D CDL102          S              1A                                                      CDL102
+     D CIR020          S              1A                                                      CIR020
      D WRUN            S              1A
      D ARRCalcFreq     S              1A
      D CallARR         S              1A
@@ -256,10 +259,10 @@
       ** Delete logs for failed transactions on re-run
      C                   EXSR      SRDltLOGS
 
-      ** Insert to extract file all Midas Transactions using a                             CDL102
-      ** backward looking rate                                                             CDL102
-     C                   EXSR      SRCrtBLRT                                               CDL102
-                                                                                           CDL102
+      ** Insert to extract file all Midas Transactions using a                                CDL102
+      ** backward looking rate                                                                CDL102
+     C                   EXSR      SRCrtBLRT                                                  CDL102
+                                                                                              CDL102
       ** Select the backward looking rate transactions
      C                   EXSR      SRSelTRAN
 
@@ -499,6 +502,43 @@
      C/end-exec                                                                               CDL102
      C                   ENDIF                                                                CDL102
                                                                                               CDL102
+     C                   IF        CIR020 = 'Y'                                               CIR020
+                                                                                              CIR020
+      ** Select the IRS deal if OURS interest detail                                          CIR020
+      ** is using a backward looking-rate                                                     CIR020
+     C/exec SQL                                                                               CIR020
+     C+ insert into SDBJEXPD                                                                  CIR020
+     C+ select 'RU', digits(DLNO),                                                            CIR020
+     C+        UCUCY, VDAT, MDAT,                                                             CIR020
+     C+        UNICD, 0, 0, UIACD, ' ',                                                       CIR020
+     C+        UBLRT, URFRR, UCALM, UBADJ, UFLOR,                                             CIR020
+     C+        ULBDY, ULODY, UOPSH, URRDP, UDBAV, UBRTT                                       CIR020
+     C+ from DEALSDG                                                                          CIR020
+     C+ where RECI = 'D' and VDAT < :BJDNWD                                                   CIR020
+     C+   and UBLRT = 'Y' and UCALM <> 'MANL'                                                 CIR020
+     C+   and UICFR <> 'O'                                                                    CIR020
+     C+   and DTYP in ('RS','RX','RP','RR','RF')                                              CIR020
+     C+ with nc                                                                               CIR020
+     C/end-exec                                                                               CIR020
+                                                                                              CIR020
+      ** Select the IRS deal if THEIRS interest detail                                        CIR020
+      ** is using a backward looking-rate                                                     CIR020
+     C/exec SQL                                                                               CIR020
+     C+ insert into SDBJEXPD                                                                  CIR020
+     C+ select 'RT', digits(DLNO),                                                            CIR020
+     C+        TCUCY, VDAT, MDAT,                                                             CIR020
+     C+        TNICD, 0, 0, TIACD, ' ',                                                       CIR020
+     C+        TBLRT, TRFRR, TCALM, TBADJ, TFLOR,                                             CIR020
+     C+        TLBDY, TLODY, TOPSH, TRRDP, TDBAV, TBRTT                                       CIR020
+     C+ from DEALSDG                                                                          CIR020
+     C+ where RECI = 'D' and VDAT < :BJDNWD                                                   CIR020
+     C+   and TBLRT = 'Y' and TCALM <> 'MANL'                                                 CIR020
+     C+   and TICFR <> 'O'                                                                    CIR020
+     C+   and DTYP in ('RS','RX','RP','RR','RF')                                              CIR020
+     C+ with nc                                                                               CIR020
+     C/end-exec                                                                               CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   IF        SQLCODE <> NO_ERROR and                                    CDL102
      C                             SQLCODE <> NO_RECORD                                       CDL102
      C                   EVAL      DBFILE = 'SQLERROR'                                        CDL102
@@ -608,6 +648,20 @@
      C+ set HKRTKN = :RatesKnown                                                              CDL102
      C+ where HKDN38 = :TransREF                                                              CDL102
      C/end-exec                                                                               CDL102
+                                                                                              CIR020
+     C                   WHEN      TrMODI = 'RU'                                              CIR020
+     C/exec SQL                                                                               CIR020
+     C+ update DEALSDG                                                                        CIR020
+     C+ set URTKN = :RatesKnown                                                               CIR020
+     C+ where DLNO = :TransREF                                                                CIR020
+     C/end-exec                                                                               CIR020
+                                                                                              CIR020
+     C                   WHEN      TrMODI = 'RT'                                              CIR020
+     C/exec SQL                                                                               CIR020
+     C+ update DEALSDG                                                                        CIR020
+     C+ set TRTKN = :RatesKnown                                                               CIR020
+     C+ where DLNO = :TransREF                                                                CIR020
+     C/end-exec                                                                               CIR020
                                                                                               CDL102
      C                   ENDSL                                                                CDL102
 
@@ -615,7 +669,8 @@
      C                             SQLCODE <> NO_RECORD
      C                   EVAL      DBFILE = 'SQLERROR'
      C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBASE  = 006
+     C**********         EVAL      DBASE  = 006                                               CIR020
+     C                   EVAL      DBASE  = 008                                               CIR020
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -658,6 +713,8 @@
      C                   ENDIF                                                                CDL102
      C                                                                                        CDL102
      C                   IF        TrMODI = 'DL'                                              CDL102
+     C                             or TrMODI = 'RU'                                           CIR020
+     C                             or TrMODI = 'RT'                                           CIR020
      C                   EVAL      WrkDATE = TrSLID                                           CDL102
      C                   ENDIF                                                                CDL102
 
@@ -696,6 +753,8 @@
      C                   ENDIF                                                                CDL102
      C                                                                                        CDL102
      C                   IF        TrMODI = 'DL'                                              CDL102
+     C                             or TrMODI = 'RU'                                           CIR020
+     C                             or TrMODI = 'RT'                                           CIR020
      C                   IF        TrNIDT <> 0                                                CDL102
      C                   EVAL      WrkDATE = TrNIDT                                           CDL102
      C                   ELSE                                                                 CDL102
@@ -1016,6 +1075,18 @@
      C     PRtCd         IFEQ      *BLANK                                                     CDL102
      C                   MOVE      'Y'           CDL102                                       CDL102
      C                   ENDIF                                                                CDL102
+                                                                                              CIR020
+      ** Determine if CIR020 is installed                                                     CIR020
+     C                   MOVE      'N'           CIR020                                       CIR020
+     C                   CALL      'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANK        PRtCd                                        CIR020
+     C                   PARM      '*VERIFY'     POptn                                        CIR020
+     C                   PARM      'CIR020'      PSard                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C     PRtCd         IFEQ      *BLANK                                                     CIR020
+     C                   MOVE      'Y'           CIR020                                       CIR020
+     C                   ENDIF                                                                CIR020
 
       ** Get setting of system value ARR Calculation Frequency
      C                   EVAL      ARRCalcFreq = *BLANKS

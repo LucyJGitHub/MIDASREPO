@@ -1,0 +1,166 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas xx Re-organize I/O Account Data (DELETE)')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - I/O RECONCILE                                        *
+     F*                                                               *
+     F*  XX1413 - RE-ORGANIZE I/O ACCOUNT DATA (DELETE)               *
+     F*                                                               *
+     F*  (C) FINASTRA INTERNATIONAL LIMITED 2021                      *
+     F*                                                               *
+     F*  Last Amend No. EML114   *CREATE   Date 23Sep21               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  EML114 - Upgrade TFJ004 to FM2.1                             *
+     F*  TFJ004 - Inter-office Reconcile                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FXXACNTPPUP  E                    DISK
+     FXXACODPPIF  E                    DISK
+     FXXCUSTPPIF  E                    DISK
+      *
+     F*
+      *****************************************************************
+      *
+     E                    ACD      1000 10 0
+     E                    REC      1000  1
+     E                    ALT      1000 10
+     E                    HCS      1000  3
+     E                    IOC      1000  1
+     E                    CHTA     1000  1
+      *
+     E********************CST      1000  6 0                                                 EML114
+     E                    CST      1000  6                                                   EML114
+     E                    HCO      1000  3
+     E                    CHTC     1000  1
+      *
+      *****************************************************************
+     I*
+     IXXACNTP0
+     I              BRCA                            BRCA1
+     I              CNUM                            CNUM1
+     I              CCY                             CCY1
+     I              ACOD                            ACOD1
+     I              ACSQ                            ACSQ1
+     I*
+     I@BANK     E DSSDBANKPD
+     I** DUMMY RECORD FORMAT FOR BANK DETAILS
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     C*****************************************************************
+     C*
+     C  N10                EXSR #INIT
+     C  N10                SETON                     10
+     C*
+     C                     Z-ADD1         X
+     C*
+     C           ACOD1     LOKUPACD,X                    80
+     C           *IN80     IFEQ '1'
+     C           CHTA,X    IFEQ 'D'
+     C                     DELETXXACNTP0
+     C                     GOTO #END
+     C                     END
+     C                     ELSE
+     C                     DELETXXACNTP0
+     C                     GOTO #END
+     C                     END
+     C*
+     C           IOC,X     IFEQ 'Y'
+     C                     Z-ADD1         Y       40
+     C           CNUM1     LOKUPCST,Y                    81
+     C           *IN81     IFEQ '1'
+     C           CHTC,Y    IFEQ 'D'
+     C                     DELETXXACNTP0
+     C                     GOTO #END
+     C                     END
+     C                     ELSE
+     C                     DELETXXACNTP0
+     C                     END
+     C                     END
+     C*
+     C           #END      TAG
+     C*
+     C********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10         *************
+     C                     MOVEL'01'      DBASE   3         *DBERROR 001*
+     C                     MOVEL@OPTN     DBOPTN  7         *************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**
+     C**   SET OFF EOF INDICATOR
+     C                     SETOF                     79
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       40
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           LOOP1     TAG                             ** LOOP1 TAG **
+     C                     READ XXACODPP                 79
+     C**
+     C**   END IF ALL XXACODPP
+     C   79                GOTO NEXT
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE IOACOD    ACD,X
+     C                     MOVE RECTYP    REC,X
+     C                     MOVE ALTAC     ALT,X
+     C                     MOVE HCNUM1    HCS,X
+     C                     MOVE IOCUSF    IOC,X
+     C                     MOVE CHTP      CHTA,X
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C                     GOTO LOOP1
+     C**
+     C           NEXT      TAG                             ** NEXT TAG  **
+     C*
+     C**   SET OFF EOF INDICATOR
+     C                     SETOF                     79
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       40
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           LOOP2     TAG                             ** LOOP2 TAG **
+     C                     READ XXCUSTPP                 79
+     C**
+     C**   END IF ALL XXACODPP
+     C   79                GOTO #IEND
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE IOCUST    CST,X
+     C                     MOVE HCNUM2    HCO,X
+     C                     MOVE CHTP      CHTC,X
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C                     GOTO LOOP2
+     C**
+     C           #IEND     TAG                             ** #IEND TAG  **
+     C*
+     C                     ENDSR
+     C********************************************************************

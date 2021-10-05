@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD057554           Date 08Jun21               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD058915           Date 27Sep21               *
+      *  Prev Amend No. MD057554           Date 08Jun21               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD036311           Date 01Nov15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058915 - Delete error message is displayed on Non Account  *
+      *             Holder Maintenance when action code is A and E.   *
       *  MD057554 - Unable to Release customer on SP23 that has been  *
       *             closed on earlier SP version.                     *
       *             Prevent the deletion of a Non-account Holder      *
@@ -650,6 +653,7 @@
      C     KEYACC        CHAIN     SDCUAHL3                                                 MD057554
      C                   IF        %FOUND(SDCUAHL3) AND                                     MD057554
      C                             CATYLC <> 'D'                                            MD057554
+     C                             AND DDACTN = 'D'                                         MD058915
      C                   MOVEL     'N'           OKACTN                                     MD057554
      C                   ADD       1             Ix                                         MD057554
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             MD057554

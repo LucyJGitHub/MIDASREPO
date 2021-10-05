@@ -1,10 +1,10 @@
      H DEBUG
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas RZ Developments Archiving Procedure')            *
+/*EXI *  TEXT('Midas SC Developments Archiving Procedure')            *
       *****************************************************************
       *                                                               *
-      *  Midas - RZ Developments                                      *
+      *  Midas - System Control Module                                *
       *                                                               *
       *  SC001451 - Run Archiving Procedure                           *
       *                                                               *

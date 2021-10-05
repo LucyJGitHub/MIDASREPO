@@ -3,7 +3,7 @@
 /*EXI    TEXT('Save MPM Libraries')                                  */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas - RZ Developments                                     */
+/*       Midas - System Control Module                               */
 /*                                                                   */
 /*       SCC001120 - Save MPM Libraries                              */
 /*                                                                   */
@@ -20,7 +20,7 @@
 /*********************************************************************/
              Pgm        Parm(&Component &Sequence)
 
-/* Define variables */
+/** Define variables */
 
              Dcl        Var(&MPlusDbPfx) Type(*CHAR) Len(2)
              Dcl        Var(&MainMPMDb ) Type(*CHAR) Len(10)

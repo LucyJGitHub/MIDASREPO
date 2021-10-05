@@ -3,7 +3,7 @@
 /*EXI    TEXT('Run MMM Archiving')                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas - RZ Developments                                     */
+/*       Midas - System Control Module                               */
 /*                                                                   */
 /*       SCC001125 - Run MPM Archiving                               */
 /*                                                                   */
@@ -16,7 +16,7 @@
 /*********************************************************************/
              Pgm
 
-/* Define variables */
+/** Define variables */
 
              Dcl        Var(&MPlusDbPfx) Type(*CHAR) Len(2)
              Dcl        Var(&MainMMMDb ) Type(*CHAR) Len(10)

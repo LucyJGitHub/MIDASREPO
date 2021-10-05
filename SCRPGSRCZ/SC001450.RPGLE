@@ -4,9 +4,9 @@
 /*EXI *  TEXT('Get Banks Details Today and Tomorrow')                 *
       *****************************************************************
       *                                                               *
-      *  Midas - RZ Developments                                      *
+      *  Midas - System Control Module                                *
       *                                                               *
-      *  RZ001450 - Get Bank Details Today and Tomorrow               *
+      *  SC001450 - Get Bank Details Today and Tomorrow               *
       *                                                               *
       *  Function:  This program retrieves run date and next working  *
       *             day                                               *

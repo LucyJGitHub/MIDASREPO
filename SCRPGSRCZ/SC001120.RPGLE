@@ -4,7 +4,7 @@
 /*EXI *  TEXT('Get list of MPM Libraries')                            *
       *****************************************************************
       *                                                               *
-      *  Midas - RZ Developments                                      *
+      *  Midas - System Control Module                                *
       *                                                               *
       *  SC001120 - Get List of MPM Libraries                         *
       *                                                               *
@@ -68,15 +68,14 @@
      D SValK10         S             20A
      D SVal10          S            200A
 
-
      C     *Entry        Plist
      C                   Parm                    O#MPLusDbPf
      C                   Parm                    O#MainMPMDb
      C                   Parm                    O#ArchMPMDb
      C                   Parm                    O#MMMUser
 
+      ** Get corresponding system values
 
-      * Get corresponding system values
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      C#LiveSysDb   SValK1
@@ -99,25 +98,33 @@
      C                   PARM      *BLANKS       SVal9
      C                   PARM      *BLANKS       SValK10
      C                   PARM      *BLANKS       SVal10
-      *
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      *INLR = *On
      C                   ENDIF
-      * Get Live System Library Prefix
+
+      ** Get Live System Library Prefix
+
      C                   EVAL      O#LiveSysDb = SVal1
-      * Get MPM Main Db name
+
+      ** Get MPM Main Db name
+
      C                   IF        O#LiveSysDb = O#MPLusDbPf
      C                   EVAL      O#MainMPMDb = SVal2
      C                   ELSE
      C                   EVAL      O#MainMPMDb = SVal3
      C                   ENDIF
-      * Get MPM Archive Db name
+
+      ** Get MPM Archive Db name
+
      C                   IF        O#LiveSysDb = O#MPLusDbPf
      C                   EVAL      O#ArchMPMDb = SVal4
      C                   ELSE
      C                   EVAL      O#ArchMPMDb = SVal5
      C                   ENDIF
-      * Get Meridian User profile
+
+      ** Get Meridian User profile
+
      C                   IF        O#LiveSysDb = O#MPLusDbPf
      C                   EVAL      O#MMMUser = SVal6
      C                   ELSE

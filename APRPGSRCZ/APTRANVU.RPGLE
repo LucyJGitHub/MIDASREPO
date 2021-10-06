@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. LUC139             Date 11Jan21               *
-      *  Prev Amend No. CER009             Date 22Oct20               *
+      *  Last Amend No. MD059003           Date 06Oct21               *
+      *  Prev Amend No. LUC139             Date 11Jan21               *
+      *                 CER009             Date 22Oct20               *
       *                 CER008             Date 22Oct20               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -234,6 +235,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059003 - Serious Midas Error is encountered when inserting *
+      *             FXDL.                                             *
       *  LUC139 - UCI Italian returns upgrade to FM2.1                *
       *  CER009 - Puma II Upgrade to MP                               *
       *  CER008 - Base Italian Features Upgrade to MP                 *      
@@ -1336,7 +1339,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
      C                   ADD       RPIFLn        Bfp                                          CDL099
      C     FXEDLn        SUBST     BUFFER:Bfp    InCDL099                                     CDL099
-     C                   ADD       RPIFLn        Bfp                                          CER009
+     C**********         ADD       RPIFLn        Bfp                                 CER009 MD059003
+     C                   ADD       FXEDLn        Bfp                                        MD059003
      C     FXFRLn        SUBST     BUFFER:Bfp    RegData                                      CER009
      C                   ADD       FXFRLn        Bfp                                          CER009
 

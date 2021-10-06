@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058111           Date 22Jul21               *
-      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *  Last Amend No. MD058166           Date 31Aug21               *
+      *  Prev Amend No. MD058111           Date 22Jul21               *
+      *                 MD046998A          Date 15Apr21               *
       *                 248698             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057247           Date 01Feb21               *
@@ -205,6 +206,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058166 - FusionMidas 2.1 SP24 CDS - Bulk Input does not    *
+      *             update extension files. Remove some codes by      *
+      *             AR871625 (condition to CER049 before writing in   *
+      *             extension file). Also, add processing to add      *
+      *             record in TRADSDX2 as prevent DB error during     *
+      *             authorization of trade amendment.                 *
       *  MD058111 - FusionMidas 2.1 SP24 CDS - Bulk Input jobs are    *
       *             failing due to blank NMCY when calling SE0045.    *
       *             Set NMCY equal to NMCYA which contains value      *
@@ -8436,14 +8443,14 @@
       *                                                                                     AR596783
       ** Populate record to Trade Details Extension File                                    AR596783
       *                                                                                     AR596783
-     C           CER049    IFEQ 'Y'                                                AR871625
+     C********** CER049    IFEQ 'Y'                                                AR871625 MD058166
      C                     MOVE TDRF      TQTDRF                                            AR596783
      C                     MOVE TDBA      TQTDBA                                            AR596783
      C           TQTDRF    CHAINTRADSQL0             01                                     AR871625
      C           *IN01     IFEQ '1'                                                         AR871625
      C                     WRITETRADSQD0                                                    AR596783
      C                     ENDIF                                                            AR871625
-     C                     ENDIF                                                   AR871625
+     C**********           ENDIF                                                   AR871625 MD058166
      C*                                                                   S01408
      C/COPY WNCPYSRC,SE3003CP14                                           S01408
      C*                                                                   S01408
@@ -10702,7 +10709,9 @@
       **  Record not found clear field WBLKY2 so that nothing is left     S01401
       **  over from previous chain.                                       S01401
      C           *IN02     IFEQ *ON                                       S01401
-     C                     MOVE *BLANKS   WBLKY2                          S01401
+     C**********           MOVE *BLANKS   WBLKY2                 S01401 MD058166
+     C                     MOVE @BTDRF    B2TDRF                        MD058166
+     C                     MOVE 'A'       B2WHEN                        MD058166
      C                     ENDIF                                          S01401
       *                                                                   S01401
      C***********          ENDIF                                   S01401 068692

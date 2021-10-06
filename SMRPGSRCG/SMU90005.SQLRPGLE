@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas SM Generate Permission Mapping')
+/*EXI *  TEXT('Midas SM Generate Permission Mapping')                 *
       *****************************************************************
       *                                                               *
       *  Midas - Implementation Module                                *

@@ -3727,6 +3727,17 @@
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
+      ** For OIS SIR deals, ensure that backward looking rate is                              CIR020
+      ** not allowed                                                                          CIR020
+      *                                                                                       CIR020
+     C     D1BLRT        IFEQ      'Y'                                                        CIR020
+     C     SUICFR        ANDEQ     'O'                                                        CIR020
+     C                   MOVEL     'N'           SuBrttOK                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'SUBRTT'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx) = '5049526'                                  CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
       ** Call program to validate Backward Looking Rate Fields                                CIR020
       *                                                                                       CIR020
      C     OKUBLRT       IFNE      'N'                                                        CIR020
@@ -3815,6 +3826,17 @@
      C                   EVAL      FldNameArr(Idx) = 'D2BLRT'                                 CIR020
      C                   EVAL      MsgIDArr(Idx) = '5049505'                                  CIR020
      C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
+      *                                                                                       CIR020
+      ** For OIS SIR deals, ensure that backward looking rate is                              CIR020
+      ** not allowed                                                                          CIR020
+      *                                                                                       CIR020
+     C     D2BLRT        IFEQ      'Y'                                                        CIR020
+     C     STICFR        ANDEQ     'O'                                                        CIR020
+     C                   MOVEL     'N'           StBrttOK                                     CIR020
+     C                   ADD       1             Idx                                          CIR020
+     C                   EVAL      FldNameArr(Idx) = 'STBRTT'                                 CIR020
+     C                   EVAL      MsgIDArr(Idx) = '5049526'                                  CIR020
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
       ** Call program to validate Backward Looking Rate Fields                                CIR020

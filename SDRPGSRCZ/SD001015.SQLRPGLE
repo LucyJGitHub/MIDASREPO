@@ -172,16 +172,18 @@
      C                   ENDIF                                                                CDL102
       *                                                                                       CDL102
       ** Housekeeping of Dealing IRS Records                                                  CIR020
-      * still not amended from this point on for CIR020                                       CIR020
+      *                                                                                       CIR020
      C                   IF        CIR020 = 'Y'                                               CIR020
                                                                                               CIR020
      C                   EVAL      thisSQL4 = 'Delete from SDHSDRTD where +                   CIR020
-     C                              CMODID = ''IR'' AND CTRNID not in +                       CIR020
-     C                              (select DLNO from DEALSDG) AND +                          CIR020
+     C                              (CMODID = ''IR'' OR CMODID = ''RT'') AND +                CIR020
+     C                              CTRNID not in (select DLNO from DEALSDG) +                CIR020
+     C                              AND +                                                     CIR020
      C                              CTRNID not in (select DLNO from DLGHISPD)'                CIR020
      C                   EVAL      thisSQL5 = 'Delete from SDARRLOGTD where +                 CIR020
-     C                              SJMODI = ''IR'' AND SJTREF not in +                       CIR020
-     C                              (select DLNO from DEALSDG) AND +                          CIR020
+     C                              (SJMODI = ''RU'' OR SJMODI = ''RT'') AND +                CIR020
+     C                              SJTREF not in (select DLNO from DEALSDG) +                CIR020
+     C                              AND +                                                     CIR020
      C                              SJTREF not in (select DLNO from DLGHISPD)'                CIR020
       *                                                                                       CIR020
      C/EXEC SQL                                                                               CIR020

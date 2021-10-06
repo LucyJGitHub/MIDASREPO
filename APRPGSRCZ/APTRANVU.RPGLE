@@ -5226,8 +5226,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
      C                   ADD       RPIFln        Bfp                                        MD058991
      C                   ADD       1             Bfp                                          CIR020
-     C*****100**         SUBST     BUFFER:Bfp    InCIR020                            CIR020 MD058991
-     C                   EVAL      InCIR020    = %SUBST(BufferTotal:Bfp:100)                MD058991
+     C     100           SUBST     BUFFER:Bfp    InCIR020                                     CIR020
                                                                                              BUG6671
 
      C**********         ENDSL                                                               BUG4646

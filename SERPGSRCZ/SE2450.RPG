@@ -17,8 +17,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD031128           Date 22Dec14               *
-      *  Prev Amend No. MD049636           Date 13Mar18               *
+      *  Last Amend No. 181226             Date 30Sep21               *
+      *  Prev Amend No. 245663             Date 30Sep21               *
+      *                 MD031128           Date 22Dec14               *
+      *                 MD049636           Date 13Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 215959             Date 21Mar16               *
       *                 AR1056730          Date 15Nov12               *
@@ -129,6 +131,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  181226 - Generate additional posting for deliver from/to     *
+      *           depot (Contingent Liabilities entries for           *
+      *           Safecustody).                                       *
+      *         - Applied for MD-58877                                *
+      *  245663 - Position Settlement generated with incorrect        *
+      *           Transaction Type.                                   *
+      *         - Applied for MD-58876                                *
       *  MD031128 - Fields OTST and OTRF not set up when additional   *
       *             trade postings are required.                      *
       *  MD049636 - New Narrative codes in 1-50 interval              *
@@ -1740,6 +1749,55 @@
      C                     MOVE *BLANKS   ##FFIN                          S01522
      C******************** MOVE XTRFR     ##TRNO                    S01522087870
      C                     MOVELXTRFR     ##TRNO                          087870
+     C* New Posting will be generated only if account key                 181226
+     C* is 'Settlement' + 'Face Value' + Safe Custody Client +            181226
+     C* Processing Type is not '4' '2' '7'.                               181226
+     C* Pgm SEE099 will retrieve the Deliver From/To Depot                181226
+     C* (Deliver From if Trade Purchased)                                 181226
+     C* (Deliver To if Trade Sold)                                        181226
+     C*                                                                   181226
+     C* Trade Purchased:                                                  181226
+     C* Deliver From Depot will be CREDIT  (new posting)                  181226
+     C* Deliver To   Depot will be DEBIT                                  181226
+     C*                                                                   181226
+     C* Trade Sold                                                        181226
+     C* Deliver From Depot will be CREDIT                                 181226
+     C* Deliver To   Depot will be DEBIT   (new posting)                  181226
+     C*                                                                   181226
+     C*                                                                   181226
+     C                     MOVE *BLANKS   WNEWPS  1                       181226
+     C                     MOVE *BLANKS   WDELDP  6                       181226
+     C*                                                                   181226
+     C           PROT      IFNE '2'                        B* Commodities 181226
+     C           PROT      ANDNE'4'                        Shares         181226
+     C           PROT      ANDNE'7'                        Unit Trust     181226
+     C*                                                                   181226
+     C           WACEVC    IFEQ 'S'                        B* Settlement  181226
+     C           WACPFI    ANDEQ'S'                         Safe Custody  181226
+     C           WACAMC    ANDEQ'FV'                        Face Value    181226
+     C*                                                                   181226
+     C           WACTRT    IFEQ 'S'                        B* Sale/Debit  181226
+     C           I         ANDLE3                             Debit       181226
+     C*                                                                   181226
+     C           WACTRT    OREQ 'P'                        Purchase/Credit181226
+     C           I         ANDGT3                           Credit        181226
+     C*                                                                   181226
+     C                     MOVE XTRFR     WXTRFR  6                       181226
+     C                     MOVE 'Y'       WNEWPS                          181226
+     C                     CALL 'SEE099'                                  181226
+     C                     PARM           WXTRFR                          181226
+     C                     PARM           WDELDP                          181226
+     C                     PARM           WNEWPS                          181226
+     C           WNEWPS    IFEQ 'Y'                                       181226
+     C           WDELDP    ANDNE*BLANKS                                   181226
+     C                     MOVE WDELDP    CNUM                            181226
+     C                     MOVE WDELDP    ##CUST                          181226
+     C                     END                                            181226
+     C*                                                                   181226
+     C                     END                             E* Sale/Debit  181226
+     C                     END                             E* Settlement  181226
+     C                     END                             E* Commodities 181226
+     C*                                                                   181226
      C/COPY WNCPYSRC,SE2450C078
      C*
      C                     EXSR PRFALL
@@ -5825,11 +5883,13 @@
      C*                                                                   CPB002
      C           BGN4ST    IFEQ 'Y'                                       CPB002
      C           2         SUBSTACKY:9    WKSTYP  2                       CPB002
+     C           WKSTYP    IFNE *BLANK                                           245663
      C           WKSTYP    CHAINSECOATL1             71                   CPB002
      C           MMPTYP    IFEQ 'CC'                                      CPB002
      C           *IN71     ANDEQ*OFF                                      CPB002
      C                     Z-ADD98000     TRAT                            CPB002
      C                     ENDIF                                          CPB002
+     C                     ENDIF                                                 245663
       *                                                                   CPB002
      C           2         SUBSTACKY:19   WKCAMC  2                       CPB002
      C           WKCAMC    IFEQ 'WR'                                      CPB002

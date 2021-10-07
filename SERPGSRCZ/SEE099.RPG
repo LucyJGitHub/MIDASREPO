@@ -1,0 +1,231 @@
+     H        1   Y
+      *****************************************************************
+**************/*STD *  RPG                                            *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('*BUCetrieve From/To depot for Contingent Liabilit.')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Securities Trading Module                           *
+      *                                                               *
+      *  SEE099 - Check whether additional posting is to be generated *
+      *           for deliver to/from depot.                          *
+      *                                                               *
+      *  Function: Midas generates entries for Our depot customer     *
+      *            when the Posting Reference is 5 using Trade        *
+      *            'Deliver To' depot for Trade Purchased and 'Deliver*
+      *            From' Depot for Trade Sale. This program will check*
+      *            whether the trade is against a Safe Custody        *
+      *            Customer, if this is the case, then an additional  *
+      *            entry will be generated for Deliver To Depot (if   *
+      *            Trade Sale) or for Deliverr Deliver From Depot (if *
+      *            Trade Purchased). The entry will be generate with  *
+      *            opposite sign.                                     *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *  Called by : SE2450 - Generated entries                       *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 2000           *
+      *                                                               *
+      *  Last Amend No. MD-58877           Date 30Sep21               *
+      *  Prev Amend No. DBA304             Date 28Mar01               *  *S01522
+      *                 CCFIX1 *CREATE     Date 05July2000            *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD-58877 - Upgraded from 2.0 version                         *
+      *  DBA304 - Upgrade to DBA 3.04. CRTPARM RPG now redundant      *   S01117
+      *  CCFIX1 - Generate additional entry for deliver to/from depot *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Subroutine Index                                             *
+      *                                                               *
+      *  EINIT  - Initial processing                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   Indicator Index                                             *
+      *                                                               *
+      * U7- U8 - Standard midas usage                                 *
+      *     LR - Last record                                          *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+      ** Investment Types
+     FTRADS   IF  E           K        DISK
+      *
+     FHSTTTR  IF  E           K        DISK
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *  *LOCK IN LDA immediately before and OUT LDA immediately
+      *  after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                     *PROGRAM ##PGM
+     I                                      201 208 @FILE
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access programs, short data structure
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /EJECT
+     C*
+     C                     EXSR EINIT
+     C*
+     C                     EXSR EPROC
+     C*
+     C                     EXSR EEND
+     C*
+      *****************************************************************
+      *                                                               *
+      *  EINIT     - Initialisation Processing                        *
+      *                                                               *
+      *  Calls                                                        *
+      *                                                               *
+      *  Called By - MAIN                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EINIT     BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TRDREF  6
+     C                     PARM           WDELDP  6
+     C                     PARM           WNEWPS  1
+      *
+      ** Set up copyright parameter and screen header fields
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define Local Data Area for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access bank details for date format
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'SEE099'  DBPGM
+     C                     Z-ADD001       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EPROC     - Process TRADS Records                            *
+      *                                                               *
+      *  Calls     - EPROCS                                           *
+      *                                                               *
+      *  Called By - MAIN                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EPROC     BEGSR
+      *
+      ** Set pointer to the top of the file and read
+     C           TRDREF    CHAINTRADS                20
+      *
+      ** If record no records found
+     C           *IN20     IFEQ *ON
+     C           TRDREF    CHAINHSTTTR               20
+     C                     ENDIF
+      *
+      ** Do while records found
+     C           *IN20     IFEQ *ON
+     C                     MOVE 'N'       WNEWPS
+     C                     EXSR EEND
+     C                     END
+      *
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE DELF      WDELDP
+     C                     ELSE
+     C                     MOVE DELT      WDELDP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EEND      - End Processing                                   *
+      *                                                               *
+      *  Calls     -                                                  *
+      *                                                               *
+      *  Called By - MAIN                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EEND      BEGSR
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+      *
+     C           DBASE     IFEQ 0
+     C           *LOCK     IN   LDA
+     C                     MOVEL@FILE     DBFILE    P
+     C                     MOVE '999'     DBASE
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 2000
+

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059003           Date 06Oct21               *
-      *  Prev Amend No. LUC139             Date 11Jan21               *
+      *  Last Amend No. MD059026           Date 07Oct21               *
+      *  Prev Amend No. MD059003           Date 06Oct21               *
+      *                 LUC139             Date 11Jan21               *
       *                 CER009             Date 22Oct20               *
       *                 CER008             Date 22Oct20               *
       *                 CLE172             Date 01Oct20               *
@@ -235,11 +236,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059026 - Serious Midas Error is encountered when inserting *
+      *             CUSD.                                             *
       *  MD059003 - Serious Midas Error is encountered when inserting *
       *             FXDL.                                             *
       *  LUC139 - UCI Italian returns upgrade to FM2.1                *
       *  CER009 - Puma II Upgrade to MP                               *
-      *  CER008 - Base Italian Features Upgrade to MP                 *      
+      *  CER008 - Base Italian Features Upgrade to MP                 *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -1177,7 +1180,7 @@ RGC  D RPIF4LN         S              4  0                                      
      D CRSSLn          S              4  0                                                    CGL157
      D CRDDLn          S              4  0                                                    CGL157
      D CUS1Ln          S              4  0                                                    CER008
-     D CUS2Ln          S              4  0                                                    CER009     
+     D CUS2Ln          S              4  0                                                    CER009
      D/COPY OFCPYSRCZ,CRE101_001                                                              CRE101
       ** +--- Start of main processing -----------------------------------+
 
@@ -5804,15 +5807,6 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CGL157
      C                   EVAL      FileName = 'SDCRDDPD'                                      CGL157
      C                   EXSR      GETRCDLN                                                   CGL157
-                                                                                              CER008
-     C                   EVAL      FileName = 'SDCUS1PD'                                      LUC139
-     C                   EXSR      GETRCDLN                                                   CER008
-     C                   EVAL      CUS1Ln = RecordLen                                         CER008
-                                                                                              CER008
-     C                   EVAL      FileName = 'SDCUS2PD'                                      LUC139
-     C                   EXSR      GETRCDLN                                                   CER009
-     C                   EVAL      CUS2Ln = RecordLen                                         CER009
-                                                                                              CER009
      C                   Z-ADD     500           CRS01Ln           4 0                        CGL157
      C                   Z-ADD     500           CRS02Ln           4 0                        CGL157
      C                   Z-ADD     500           CRS03Ln           4 0                        CGL157
@@ -5829,6 +5823,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Z-ADD     500           CRS14Ln           4 0                        CGL157
      C     RecordLen     SUB       6539          CRS15Ln           4 0                        CGL157
                                                                                               CGL157
+                                                                                              CER008
+     C                   EVAL      FileName = 'SDCUS1PD'                                      LUC139
+     C                   EXSR      GETRCDLN                                                   CER008
+     C                   EVAL      CUS1Ln = RecordLen                                         CER008
+                                                                                              CER008
+     C                   EVAL      FileName = 'SDCUS2PD'                                      LUC139
+     C                   EXSR      GETRCDLN                                                   CER009
+     C                   EVAL      CUS2Ln = RecordLen                                         CER009
+                                                                                              CER009
      C                   ENDSR
       *****************************************************************
       /SPACE 5

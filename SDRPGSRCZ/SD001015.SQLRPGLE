@@ -176,7 +176,7 @@
      C                   IF        CIR020 = 'Y'                                               CIR020
                                                                                               CIR020
      C                   EVAL      thisSQL4 = 'Delete from SDHSDRTD where +                   CIR020
-     C                              (CMODID = ''IR'' OR CMODID = ''RT'') AND +                CIR020
+     C                              (CMODID = ''RU'' OR CMODID = ''RT'') AND +                CIR020
      C                              CTRNID not in (select DLNO from DEALSDG) +                CIR020
      C                              AND +                                                     CIR020
      C                              CTRNID not in (select DLNO from DLGHISPD)'                CIR020

@@ -417,9 +417,9 @@
      C                   EVAL      P1CALM = Dcalm
       *
      C                   IF        TRMODI  = 'RU'
-     C                   EVAL      P1INFR = UIPFR
+     C                   EVAL      P1INFR = UICFR
      C                   ELSE
-     C                   EVAL      P1INFR = TIPFR
+     C                   EVAL      P1INFR = TICFR
      C                   ENDIF
       *
      C                   EVAL      ZDayNo = DintEnd

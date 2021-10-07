@@ -5807,6 +5807,15 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CGL157
      C                   EVAL      FileName = 'SDCRDDPD'                                      CGL157
      C                   EXSR      GETRCDLN                                                   CGL157
+      **********                                                                     CER008 MD059026
+     C**********         EVAL      FileName = 'SDCUS1PD'                             LUC139 MD059026
+     C**********         EXSR      GETRCDLN                                          CER008 MD059026
+     C**********         EVAL      CUS1Ln = RecordLen                                CER008 MD059026
+      **********                                                                     CER008 MD059026
+     C**********         EVAL      FileName = 'SDCUS2PD'                             LUC139 MD059026
+     C**********         EXSR      GETRCDLN                                          CER009 MD059026
+     C**********         EVAL      CUS2Ln = RecordLen                                CER009 MD059026
+      **********                                                                     CER009 MD059026
      C                   Z-ADD     500           CRS01Ln           4 0                        CGL157
      C                   Z-ADD     500           CRS02Ln           4 0                        CGL157
      C                   Z-ADD     500           CRS03Ln           4 0                        CGL157
@@ -5823,15 +5832,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Z-ADD     500           CRS14Ln           4 0                        CGL157
      C     RecordLen     SUB       6539          CRS15Ln           4 0                        CGL157
                                                                                               CGL157
-                                                                                              CER008
-     C                   EVAL      FileName = 'SDCUS1PD'                                      LUC139
-     C                   EXSR      GETRCDLN                                                   CER008
-     C                   EVAL      CUS1Ln = RecordLen                                         CER008
-                                                                                              CER008
-     C                   EVAL      FileName = 'SDCUS2PD'                                      LUC139
-     C                   EXSR      GETRCDLN                                                   CER009
-     C                   EVAL      CUS2Ln = RecordLen                                         CER009
-                                                                                              CER009
+     C                   EVAL      FileName = 'SDCUS1PD'                                    MD059026
+     C                   EXSR      GETRCDLN                                                 MD059026
+     C                   EVAL      CUS1Ln = RecordLen                                       MD059026
+                                                                                            MD059026
+     C                   EVAL      FileName = 'SDCUS2PD'                                    MD059026
+     C                   EXSR      GETRCDLN                                                 MD059026
+     C                   EVAL      CUS2Ln = RecordLen                                       MD059026
+                                                                                            MD059026
      C                   ENDSR
       *****************************************************************
       /SPACE 5

@@ -3735,7 +3735,8 @@
      C                   MOVEL     'N'           SuBrttOK                                     CIR020
      C                   ADD       1             Idx                                          CIR020
      C                   EVAL      FldNameArr(Idx) = 'SUBRTT'                                 CIR020
-     C                   EVAL      MsgIDArr(Idx) = '5049526'                                  CIR020
+     C                   EVAL      MsgIDArr(Idx) = '5049525'                                  CIR020
+     C
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
       ** Call program to validate Backward Looking Rate Fields                                CIR020
@@ -3836,7 +3837,7 @@
      C                   MOVEL     'N'           StBrttOK                                     CIR020
      C                   ADD       1             Idx                                          CIR020
      C                   EVAL      FldNameArr(Idx) = 'STBRTT'                                 CIR020
-     C                   EVAL      MsgIDArr(Idx) = '5049526'                                  CIR020
+     C                   EVAL      MsgIDArr(Idx) = '5049525'                                  CIR020
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
       ** Call program to validate Backward Looking Rate Fields                                CIR020

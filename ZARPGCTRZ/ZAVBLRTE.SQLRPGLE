@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD058513           Date 09Sep21               *
+      *  Last Amend No. MD058988           Date 06Oct21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 MD058513           Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058623           Date 23Aug21               *
       *                 MD058404           Date 06Jul21               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058988 - CIR020 fields/values not defaulting when inserting*
+      *             a backward-looking base rate code via SOAP/MQ     *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058513 - Rate known flag not saved.                        *
       *  MD058734 - Default value or Day Basis Average based          *
@@ -664,7 +667,13 @@
      C**********         WHEN      ApiName = 'CLIP' and                                CLE172 CDL102
      C                   WHEN      (ApiName = 'CLIP' or                                       CDL102
      C                             ApiName = 'LDNI' or                                        CDL102
-     C                             ApiName = 'FUND') and                                      CDL102
+     C**********                   ApiName = 'FUND') and                             CDL102 MD058988
+     C                             ApiName = 'FUND'  or                                     MD058988
+     C                             ApiName = 'CIR1'  or                                     MD058988
+     C                             ApiName = 'CIR2'  or                                     MD058988
+     C                             ApiName = 'SIR1'  or                                     MD058988
+     C                             ApiName = 'SIR2'  or                                     MD058988
+     C                             ApiName = 'CACF') and                                    MD058988
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDCALM = BACALM                                            CLE172
                                                                                               CLE172

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058999           Date 07Oct21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD053400           Date 03Jul19               *
       *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -92,6 +93,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058999 - Error messages do not include the field name in   *
+      *             error. Error field name is not colored red        *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053400 - Details are not correctly reverted back when the  *
@@ -3735,7 +3738,8 @@
      C                   MOVEL     'N'           SuBrttOK                                     CIR020
      C                   ADD       1             Idx                                          CIR020
      C                   EVAL      FldNameArr(Idx) = 'SUBRTT'                                 CIR020
-     C                   EVAL      MsgIDArr(Idx) = '5049526'                                  CIR020
+     C                   EVAL      MsgIDArr(Idx) = '5049525'                                  CIR020
+     C
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
       ** Call program to validate Backward Looking Rate Fields                                CIR020
@@ -3744,7 +3748,8 @@
       *                                                                                       CIR020
      C                   MOVEL     SDTYP         TransTP                                      CIR020
      C                   CALLB     'ZAVBLRTE'                                                 CIR020
-     C                   PARM      'SIRS'        ApiName           4                          CIR020
+     C**********         PARM      'SIRS'        ApiName           4                 CIR020 MD058999
+     C                   PARM      'SIR1'        ApiName           4                        MD058999
      C                   PARM                    DDDLNO            6                          CIR020
      C                   PARM                    TransTP           2                          CIR020
      C                   PARM                    SUCUCY                                       CIR020
@@ -3752,7 +3757,8 @@
      C                   PARM                    SUICBS                                       CIR020
      C                   PARM                    SACCD                                        CIR020
      C                   PARM      TranScnBlrt1  TempInpDS       200                          CIR020
-     C                   PARM      *ZEROS        Idx                                          CIR020
+     C**********         PARM      *ZEROS        Idx                                 CIR020 MD058999
+     C                   PARM                    Idx                                        MD058999
      C                   PARM                    FldNameArr                                   CIR020
      C                   PARM                    MsgIDArr                                     CIR020
      C                   PARM                    TempOutDS       200                          CIR020
@@ -3836,7 +3842,7 @@
      C                   MOVEL     'N'           StBrttOK                                     CIR020
      C                   ADD       1             Idx                                          CIR020
      C                   EVAL      FldNameArr(Idx) = 'STBRTT'                                 CIR020
-     C                   EVAL      MsgIDArr(Idx) = '5049526'                                  CIR020
+     C                   EVAL      MsgIDArr(Idx) = '5049525'                                  CIR020
      C                   ENDIF                                                                CIR020
       *                                                                                       CIR020
       ** Call program to validate Backward Looking Rate Fields                                CIR020
@@ -3845,15 +3851,18 @@
       *                                                                                       CIR020
      C                   MOVEL     SDTYP         TransTP                                      CIR020
      C                   CALLB     'ZAVBLRTE'                                                 CIR020
-     C                   PARM      'SIRS'        ApiName           4                          CIR020
+     C**********         PARM      'SIRS'        ApiName           4                 CIR020 MD058999
+     C                   PARM      'SIR2'        ApiName           4                 CIR020 MD058999
      C                   PARM                    SDLNO             6                          CIR020
      C                   PARM                    TransTP           2                          CIR020
-     C                   PARM                    STCUCY                                       CIR020
+     C**********         PARM                    STCUCY                              CIR020 MD058999
+     C                   PARM                    SUCUCY                                     MD058999
      C                   PARM                    STBRTT                                       CIR020
      C                   PARM                    STICBS                                       CIR020
      C                   PARM                    SACCD                                        CIR020
      C                   PARM      TranScnBlrt2  TempInpDS       200                          CIR020
-     C                   PARM      *ZEROS        Idx                                          CIR020
+     C**********         PARM      *ZEROS        Idx                                 CIR020 MD058999
+     C                   PARM                    Idx                                 CIR020 MD058999
      C                   PARM                    FldNameArr                                   CIR020
      C                   PARM                    MsgIDArr                                     CIR020
      C                   PARM                    TempOutDS       200                          CIR020

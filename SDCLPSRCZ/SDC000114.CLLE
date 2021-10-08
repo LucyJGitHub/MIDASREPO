@@ -9,14 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD058673           Date 10Sep21              */
-/*       Prev Amend no. MD058331           Date 05Jul21              */
+/*       Last Amend No. CIR020             Date 02Aug21              */
+/*       Prev Amend No. MD058673           Date 10Sep21              */
+/*                      MD058331           Date 05Jul21              */
 /*                      CDL102             Date 01Jun21              */
 /*                      CLE172             Date 01Oct20              */
 /*                      CSD103  *CREATE    Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CIR020 - LIBOR Deregulation - IRS                           */
 /*       MD058673 - Only benchmark rate is applied on deal on day1   */
 /*                  of its valuation. For deal with FLID = Y, call a */
 /*                  new program to recompute deal's one day interest */
@@ -38,6 +40,7 @@
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CLE172*/
              DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE172*/
              DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL102*/
+             DCL        VAR(&CIR020) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CIR020*/
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)                                   /*MD058331*/
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(1) VALUE(0)                          /*MD058331*/
 
@@ -177,6 +180,27 @@ CONTINUE:
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CDL102*/
                 CHGVAR     VAR(&CDL102) VALUE('Y')                                        /*CDL102*/
              ENDDO                                                                        /*CDL102*/
+                                                                                          /*CIR020*/
+/** Check if the CIR020 feature is on */                                                  /*CIR020*/
+                                                                                          /*CIR020*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CIR020*/
+             CHGVAR     VAR(&SARD) VALUE('CIR020')                                        /*CIR020*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CIR020*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &SCSARD)                                                        /*CIR020*/
+                                                                                          /*CIR020*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CIR020*/
+                                                                                          /*CIR020*/
+             IF         COND(&RTCD *NE '       ' *AND +
+                          &RTCD *NE '*NRF   ') THEN(DO)                                   /*CIR020*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CIR020*/
+                GOTO       CMDLBL(ERROR)                                                  /*CIR020*/
+             ENDDO                                                                        /*CIR020*/
+                                                                                          /*CIR020*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CIR020*/
+                CHGVAR     VAR(&CIR020) VALUE('Y')                                        /*CIR020*/
+             ENDDO                                                                        /*CIR020*/
 
 /** Retrieve zone system prefix */
 
@@ -197,11 +221,13 @@ CONTINUE:
 
              CLRPFM     FILE(LELIBEPD)
              CLRPFM     FILE(DLLIBEPD)                                                    /*CDL102*/
+             CLRPFM     FILE(IRLIBEPD)                                                    /*CIR020*/
              CLRPFM     FILE(DLBCAMPD)                                                    /*CDL102*/
              CLRPFM     FILE(SDBJEXPD)                                                    /*CDL102*/
                                                                                           /*CDL102*/
              IF         COND(&CLE172 *EQ 'Y' *OR +
-                           &CDL102 *EQ 'Y') THEN(DO)                                      /*CDL102*/
+                           &CDL102 *EQ 'Y' *OR &CIR020 *EQ 'Y') THEN(DO)
+/**********                &CDL102 *EQ 'Y') THEN(DO)       */                      /*CDL102 CIR020*/
 
              CALL       PGM(SD000114)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -240,6 +266,21 @@ CONTINUE:
                 ENDDO                                                                   /*MD058673*/
                                                                                         /*MD058673*/
              ENDDO                                                                        /*CDL102*/
+                                                                                          /*CIR020*/
+             IF         COND(&CIR020 *EQ 'Y') THEN(DO)                                    /*CIR020*/
+                                                                                          /*CIR020*/
+                CALL       PGM(SD001110P3)                                                /*CIR020*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CIR020*/
+                   GOTO       CMDLBL(ERROR)                                               /*CIR020*/
+                ENDDO                                                                     /*CIR020*/
+                                                                                          /*CIR020*/
+                CALL       PGM(SD001112P3)                                                /*CIR020*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CIR020*/
+                   GOTO       CMDLBL(ERROR)                                               /*CIR020*/
+                ENDDO                                                                     /*CIR020*/
+                                                                                          /*CIR020*/
+             ENDDO                                                                        /*CIR020*/
+                                                                                          /*CIR020*/
              ENDDO                                                                        /*CDL102*/
                                                                                           /*CDL102*/
 /** If sucessful completion, update status file to Completed */

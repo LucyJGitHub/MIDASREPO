@@ -236,7 +236,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058991 - Backward looking rate error encountered(Recompile)*
+      *  MD058991 - Backward looking rate error encountered           *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of refereNce rate field             *

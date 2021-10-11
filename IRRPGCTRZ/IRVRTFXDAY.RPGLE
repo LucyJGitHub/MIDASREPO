@@ -47,7 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS                            *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR018 - Daily Rate Change Frequency for SIRS                *
       *  256564 - Recompile due to PF changes done by fix 256330      *

@@ -31,7 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS                            *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058708 - SD001110P2 does not reflect BC specific changes   *
       *             (base rate code and ARR parameters). Add Base     *
       *             Rate Code field in extract file.                  *

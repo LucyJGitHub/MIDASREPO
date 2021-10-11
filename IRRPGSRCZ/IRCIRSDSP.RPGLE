@@ -48,7 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11376-Remove the incorrect declaration of STDDECLARE      *
       *  CDL038 - Extended Deal Sub Type                              *

@@ -4723,34 +4723,6 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   ENDSR                                                                CSD015
-      *****************************************************************                     MD058914
-      /EJECT                                                                                MD058914
-      *****************************************************************                     MD058914
-      *                                                               *                     MD058914
-      * SRSetOTPAYDQD - Gets the Customer and Branch Details          *                     MD058914
-      *                                                               *                     MD058914
-      *****************************************************************                     MD058914
-     C     SRSetOTPAYDQD BEGSR                                                              MD058914
-      *                                                                                     MD058914
-     C                   CALL      'FT1200'                                                 MD058914
-     C                   PARM      *blank        P@Rtcd                                     MD058914
-      * INPUTS                                                                              MD058914
-     C                   PARM      'O'           P@INOT                                     MD058914
-     C                   PARM                    P@BNC1                                     MD058914
-     C                   PARM                    P@BNC2                                     MD058914
-     C                   PARM      OTORC1        P@ORC1                                     MD058914
-     C                   PARM      OTORC2        P@ORC2                                     MD058914
-     C                   PARM      OTORC3        P@ORC3                                     MD058914
-     C                   PARM      OTBRCA        P@BRCH                                     MD058914
-     C                   PARM      OTPCCY        P@PCCY                                     MD058914
-     C                   PARM      OTSMCY        P@SMCY                                     MD058914
-      * OUTPUTS                                                                             MD058914
-     C                   PARM      *blanks       WCustNumb                                  MD058914
-     C                   PARM      *blanks       WCustBrch                                  MD058914
-      *                                                                                     MD058914
-     C                   EVAL      OTORCC = WCustNumb                                       MD058914
-     C                   EVAL      OTORCB = WCustBrch                                       MD058914
-     C                   ENDSR                                                              MD058914
       *****************************************************************                       CSD015
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
@@ -4803,6 +4775,34 @@
      C     PString       CAT       WLARR(U):0    PString                                      CSD015
                                                                                               CSD015
      C                   ENDSR                                                                CSD015
+      *****************************************************************                     MD058914
+      /EJECT                                                                                MD058914
+      *****************************************************************                     MD058914
+      *                                                               *                     MD058914
+      * SRSetOTPAYDQD - Gets the Customer and Branch Details          *                     MD058914
+      *                                                               *                     MD058914
+      *****************************************************************                     MD058914
+     C     SRSetOTPAYDQD BEGSR                                                              MD058914
+      *                                                                                     MD058914
+     C                   CALL      'FT1200'                                                 MD058914
+     C                   PARM      *blank        P@Rtcd                                     MD058914
+      * INPUTS                                                                              MD058914
+     C                   PARM      'O'           P@INOT                                     MD058914
+     C                   PARM                    P@BNC1                                     MD058914
+     C                   PARM                    P@BNC2                                     MD058914
+     C                   PARM      OTORC1        P@ORC1                                     MD058914
+     C                   PARM      OTORC2        P@ORC2                                     MD058914
+     C                   PARM      OTORC3        P@ORC3                                     MD058914
+     C                   PARM      OTBRCA        P@BRCH                                     MD058914
+     C                   PARM      OTPCCY        P@PCCY                                     MD058914
+     C                   PARM      OTSMCY        P@SMCY                                     MD058914
+      * OUTPUTS                                                                             MD058914
+     C                   PARM      *blanks       WCustNumb                                  MD058914
+     C                   PARM      *blanks       WCustBrch                                  MD058914
+      *                                                                                     MD058914
+     C                   EVAL      OTORCC = WCustNumb                                       MD058914
+     C                   EVAL      OTORCB = WCustBrch                                       MD058914
+     C                   ENDSR                                                              MD058914
       *****************************************************************                       221778
       /EJECT                                                                                  221778
       *****************************************************************                       221778

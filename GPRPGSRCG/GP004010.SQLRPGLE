@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD042109           Date 26Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058622           Date 05Oct21               *
+      *  Prev Amend No. MD042109           Date 26Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
       *                 MD035820           Date 11May16               *
       *                 AR1097353          Date 26Mar13               *
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058622 - In UXP user is changed but P1 report is not pro - *
+      *             duced and AU report shows no details to report.   *
+      *           - Removed MD042109 changes and add BFRECCREATEDON   *
+      *             and BFRECAPPROVEDDATE fields of MIVW_OGUS.        *
       *  MD042109 - Updates, amendments and deletes do not show on    *
       *             BFTC audit reports                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -168,6 +173,8 @@
      D  FRECR                        26A
      D  FREAP                        26A                                                   AR1036892
      D  FREDL                        26A                                                      CBF023
+     D  BFRECR                       26A                                                    MD058622
+     D  FREAPB                       26A                                                    MD058622
 
      D UserDS          DS
      D  FNAMEPK                      32A
@@ -258,7 +265,8 @@
      D***NIRptDS***      S              5I 0 DIM(6)                                        AR1036892
      D***NIUserDS***     S              5I 0 DIM(17)                                       AR1032564
      D***NIRptDS         S              5I 0 DIM(7)                                 AR1036892 CBF023
-     D NIRptDS         S              5I 0 DIM(8)                                             CBF023
+     D*NIRptDS**       S              5I 0 DIM(8)                                    CBF023 MD058622
+     D NIRptDS         S              5I 0 DIM(10)                                          MD058622
      D NIUserDS        S              5I 0 DIM(18)                                         AR1032564
      D NIZoneDS        S              5I 0 DIM(2)
      D NIFRUNA         S              5I 0
@@ -408,7 +416,8 @@
      C********select*USERID,*TYPE,*NAME,*DESC,*CMODDATE,*RECRTDON******                    AR1036892
      C********select*USERID,*TYPE,*NAME,*DESC,*CMODDATE,*RECRTDON,*APRDATE          AR1036892 CBF023
      C+       select USERID, TYPE, NAME, DESC, CMODDATE, RECRTDON, APRDATE,                   CBF023
-     C+            RDELDATE                                                                   CBF023
+     C*************RDELDATE********************************************              CBF023 MD058622
+     C+            RDELDATE, BRECRTDON, BAPRDATE                                            MD058622
      C+       from
      C+       (
      C+       select A.BFNAMEPK as USERID, BFRSAFLAG, 'BOOKBR' as TYPE,
@@ -417,7 +426,10 @@
      C*************AS RECRTDON*****************************************                    AR1036892
      C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
      C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
-     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
+     C*************A.BFRECDELETETDATE*as*RDELDATE**********************              CBF023 MD058622
+     C+            A.BFRECDELETETDATE as RDELDATE,                                          MD058622
+     C+            A.BFRECCREATEDON as BRECRTDON,                                           MD058622
+     C+            A.BFRECAPPROVEDDATE as BAPRDATE                                          MD058622
      C+       from
      C+            MIVW_USER A
      C+            join GPBRCBPD B on A.BFNAMEPK = B.USRP
@@ -429,7 +441,10 @@
      C*************AS RECRTDON*****************************************                    AR1036892
      C*************as*RECRTDON,*.BFRECAPPROVEDDATE*as*APRDATE**********             AR1036892 CBF023
      C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
-     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
+     C*************A.BFRECDELETETDATE*as*RDELDATE**********************              CBF023 MD058622
+     C+            A.BFRECDELETETDATE as RDELDATE,                                          MD058622
+     C+            A.BFRECCREATEDON as BRECRTDON,                                           MD058622
+     C+            A.BFRECAPPROVEDDATE as BAPRDATE                                          MD058622
      C+       from
      C+            MIVW_USER A
      C+            join GPBRCOPD B on A.BFNAMEPK = B.USRP
@@ -441,7 +456,10 @@
      C*************AS RECRTDON*****************************************                    AR1036892
      C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
      C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
-     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
+     C*************A.BFRECDELETETDATE as RDELDATE**********************              CBF023 MD058622
+     C+            A.BFRECDELETETDATE as RDELDATE,                                          MD058622
+     C+            A.BFRECCREATEDON as BRECRTDON,                                           MD058622
+     C+            A.BFRECAPPROVEDDATE as BAPRDATE                                          MD058622
      C+       from
      C+            MIVW_USER A
      C+            join GPCMPSPD B on A.BFNAMEPK = B.USRP
@@ -454,7 +472,10 @@
      C*************AS RECRTDON*****************************************                    AR1036892
      C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
      C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
-     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
+     C*************A.BFRECDELETETDATE*as*RDELDATE**********************              CBF023 MD058622
+     C+            A.BFRECDELETETDATE as RDELDATE,                                          MD058622
+     C+            B.BFRECCREATEDON as BRECRTDON,                                           MD058622
+     C+            B.BFRECAPPROVEDDATE as BAPRDATE                                          MD058622
      C+       from
      C+            MIVW_USER A
      C+            join MIVW_OGUS B on A.BFNAMEPK = B.BFUSERNAME
@@ -467,7 +488,10 @@
      C*************AS RECRTDON*****************************************                    AR1036892
      C*************as*RECRTDON,*A.BFRECAPPROVEDDATE*as*APRDATE*********             AR1036892 CBF023
      C+            as RECRTDON, A.BFRECAPPROVEDDATE as APRDATE,                               CBF023
-     C+            A.BFRECDELETETDATE as RDELDATE                                             CBF023
+     C*************A.BFRECDELETETDATE*as*RDELDATE**********************              CBF023 MD058622
+     C+            A.BFRECDELETETDATE as RDELDATE,                                          MD058622
+     C+            A.BFRECCREATEDON as BRECRTDON,                                           MD058622
+     C+            B.BFRECAPPROVEDDATE as BAPRDATE                                          MD058622
      C+       from
      C+            MIVW_USER A
      C+            join MIVW_ZUSR B on A.BFNAMEPK = B.BFUSERID
@@ -1306,6 +1330,9 @@
       *****************************************************************
      C     SrConvDat     BEGSR
 
+      *                                                                                     MD058622
+      ** FCMOD was not populated                                                            MD058622
+      *                                                                                     MD058622
      C                   IF        NIRptDS(5) = 0
      C                   EVAL      TmpDat01 = %DATE(%SUBST(FCMOD:1:10):*ISO)
      C                   EVAL      DatNum01 = %DEC(TmpDat01)
@@ -1316,26 +1343,35 @@
      C                   EVAL      ZDayNo1 = 0
      C                   EVAL      FCMOD   = *BLANKS
      C                   ENDIF
-
+      ** For 4 eyes, use approved date from MIVW_OGRP                                       MD058622
+     C                   IF        NIRptDS(10) = 0                                          MD058622
+     C                   EVAL      TmpDat02 = %DATE(%SUBST(FREAPB:1:10):*ISO)               MD058622
+     C                   EVAL      DatNum02 = %DEC(TmpDat02)                                MD058622
+     C                   EVAL      PDateIN  = DatNum02                                      MD058622
+     C                   EXSR      SRZDateO                                                 MD058622
+     C                   Z-ADD     ZDayNo        ZDayNo2                                    MD058622
+     C                   ELSE                                                               MD058622
+      ** For 2 eyes                                                                         MD058622
      C**********         IF        NIRptDS(6) = 0                                          AR1036892
      C**********         EVAL      TmpDat02 = %DATE(%SUBST(FRECR:1:10):*ISO)               AR1036892
-     C                   EVAL      TmpDat02 = *LOVAL                                        MD042109
-      ** Approved Date                                                                      MD042109
-     C                   IF        NIRptDS(7) = 0                                           MD042109
+     C**********         EVAL      TmpDat02 = *LOVAL                               MD042109 MD058622
+      ***Approved*Date*************************************************            MD042109 MD058622
+     C**********         IF        NIRptDS(7) = 0                                  MD042109 MD058622
      C**********         IF        NIRptDS(6) = 0                                 AR1036892 MD042109
-     C                   EVAL      TmpDat02 = %DATE(%SUBST(FREAP:1:10):*ISO)               AR1036892
-     C                   ELSE                                                               MD042109
-      ** Last Modified Date                                                                 MD042109
-     C                   IF        NIRptDS(5) = 0                                           MD042109
-     C                   EVAL      TmpDat02 = %DATE(%SUBST(FCMOD:1:10):*ISO)                MD042109
-     C                   ELSE                                                               MD042109
-      ** Created on Date                                                                    MD042109
-     C                   IF        NIRptDS(6) = 0                                           MD042109
+      ** FRECR was populated during USER role insert                                        MD058622
+     C                   IF        NIRptDS(6) = 0                                           MD058622
+     C**********         ELSE                                                      MD042109 MD058622
+      ***Last*Modified*Date********************************************            MD042109 MD058622
+     C**********         IF        NIRptDS(5) = 0                                  MD042109 MD058622
+     C**********         EVAL      TmpDat02 = %DATE(%SUBST(FCMOD:1:10):*ISO)       MD042109 MD058622
+     C**********         ELSE                                                      MD042109 MD058622
+      ***Created*on*Date***********************************************            MD042109 MD058622
+     C**********         IF        NIRptDS(6) = 0                                  MD042109 MD058622
      C                   EVAL      TmpDat02 = %DATE(%SUBST(FRECR:1:10):*ISO)                MD042109
-     C                   ENDIF                                                              MD042109
-     C                   ENDIF                                                              MD042109
-     C                   ENDIF                                                              MD042109
-     C                   IF        TmpDat02 <> *LOVAL                                       MD042109
+     C**********         ENDIF                                                     MD042109 MD058622
+     C**********         ENDIF                                                     MD042109 MD058622
+     C**********         ENDIF                                                     MD042109 MD058622
+     C**********         IF        TmpDat02 <> *LOVAL                              MD042109 MD058622
      C                   EVAL      DatNum02 = %DEC(TmpDat02)
      C                   EVAL      PDateIN  = DatNum02
      C                   EXSR      SRZDateO
@@ -1344,6 +1380,20 @@
      C                   EVAL      ZDayNo2 = 0
      C                   EVAL      FRECR   = *BLANKS
      C                   ENDIF
+      *                                                                                     MD058622
+      ** BFRECR was populated during USER, add ROLE                                         MD058622
+      *                                                                                     MD058622
+     C                   IF        FTYPE = 'ROLE'                                           MD058622
+     C                   IF        NIRptDS(9) = 0                                           MD058622
+     C                   EVAL      TmpDat02 = %DATE(%SUBST(BFRECR:1:10):*ISO)               MD058622
+     C                   EVAL      DatNum02 = %DEC(TmpDat02)                                MD058622
+     C                   EVAL      PDateIN  = DatNum02                                      MD058622
+     C                   EXSR      SRZDateO                                                 MD058622
+     C                   Z-ADD     ZDayNo        ZDayNo2                                    MD058622
+     C                   ENDIF                                                              MD058622
+     C                   ENDIF                                                              MD058622
+                                                                                            MD058622
+     C                   ENDIF                                                              MD058622
 
      C                   ENDSR
       *****************************************************************

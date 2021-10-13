@@ -636,13 +636,14 @@
      C**********         EVAL      TmpDat04 = *LOVAL                               MD042109 MD058622
       ***Approved*Date*************************************************            MD042109 MD058622
       ** For 4 eyes, use approve date of MIVW_GRPM                                          MD058622
-     C                   IF        NullIndDs(13) = 0                                       AR1036892
+     C**********         IF        NullIndDs(11) = 0                              AR1036892 MD058622
+     C                   IF        NullIndDs(14) = 0                                        MD058622
      C**********         EVAL      TmpDat04 = %DATE(%SUBST(BFAPRDAT:1:10):*ISO)   AR1036892 MD058622
      C                   EVAL      TmpDat04 = %DATE(%SUBST(BFAPRDATB:1:10):*ISO)            MD058622
-     C                   EVAL      DatNum04 = %DEC(TmpDat04)                               AR1025965
-     C                   EVAL      PDateIN  = DatNum04
-     C                   EXSR      SRZDateO
-     C                   Z-ADD     ZDayNo        ZDayNo4
+     C                   EVAL      DatNum04 = %DEC(TmpDat04)                                MD058622
+     C                   EVAL      PDateIN  = DatNum04                                      MD058622
+     C                   EXSR      SRZDateO                                                 MD058622
+     C                   Z-ADD     ZDayNo        ZDayNo4                                    MD058622
      C**********         ELSE                                                      MD042109 MD058622
       ***Last*Modified*Date********************************************            MD042109 MD058622
      C**********         IF        NullIndDs(08) = 0                               MD042109 MD058622

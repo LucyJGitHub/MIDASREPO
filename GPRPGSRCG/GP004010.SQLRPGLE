@@ -1358,6 +1358,7 @@
       ***Approved*Date*************************************************            MD042109 MD058622
      C**********         IF        NIRptDS(7) = 0                                  MD042109 MD058622
      C**********         IF        NIRptDS(6) = 0                                 AR1036892 MD042109
+     C**********         EVAL      TmpDat02 = %DATE(%SUBST(FREAP:1:10):*ISO)      AR1036892 MD058622
       ** FRECR was populated during USER role insert                                        MD058622
      C                   IF        NIRptDS(6) = 0                                           MD058622
      C**********         ELSE                                                      MD042109 MD058622

@@ -11,13 +11,16 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103B            Date 26Oct19               *
-      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI103B            Date 26Oct19               *
+      *                 DAI103             Date 25Jun19               *
       *                 NADC02             Date 12Jun12               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile only)                                  *
       *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01 and NADC02 ML Extracts    *
       *           to FB 2.1                                           *
@@ -25,7 +28,7 @@
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *
       *****************************************************************
- 
+
      FGPTRAPL0  IP  AE           K DISK
      FTXMLTRNEXPIS  AE           K DISK
      FTXUCAPTRANIS  AE           K DISK
@@ -38,61 +41,61 @@
      FGZSDINDSL0IF   E           K DISK
      FGPMLEXPD  O    E             DISK     rename(GPMLEXD0:GPMLEXF)
      FQSYSPRT   O    F  132        PRINTER
- 
+
      D ZYDY            S              4  0 DIM(4) CTDATA PERRCD(4)
      D ZMDY            S              3  0 DIM(13) CTDATA PERRCD(13)
      D ZMNM            S              3    DIM(12) CTDATA PERRCD(12)
- 
+
      D GPML          E DS                  EXTNAME(GPMLEXPD)
- 
+
      D ZDayNo          S              5P 0
      D ZDatfm          S              1A
      D ZADate          S              7A
      D ZDate           S              6P 0
- 
+
       ** Parameters for MRDATBID - Date Bucket Identification Module
      D PaDtSch         S              1  0
      D PaRepDt         S              5  0
      D PaSchDt         S              5  0
      D PaBuckCode      S              8
- 
+
      IGOTRAPD0      01
      I                                          T_ID          L1M1
      ITXMLTRNEXF    02
      I              TETRNIDX                    T_ID          L1M1
      ITXUCAPTRAF    03
      I              TRAN_IDX                    T_ID          L1M1
- 
+
      C   L1              CLEAR                   GPML
- 
+
      C   01              ADD       1             Cnt_TRAP
      C   02              ADD       1             Cnt_TRNEXP
      C   03              ADD       1             Cnt_UCAPTRN
- 
+
      CL1                 SELECT
- 
+
       * Extract Exposures
- 
+
      CL1                 WHEN      Cnt_TRAP = 1
      C                             AND Cnt_TRNEXP = 1
      CL1                 EXSR      EXT_MLEX
- 
+
       * Extract Uncaptured Transactions
- 
+
      CL1                 WHEN      Cnt_TRAP = 1
      C                             AND Cnt_TRNEXP = 0
      CL1                 EXSR      EXT_MLUT
- 
+
       * Report discrepancies
- 
+
      CL1                 OTHER
      CL1                 EXSR      RPT_DISC
      CL1                 ENDSL
- 
+
      CL1                 Z-ADD     0             Cnt_TRAP          2 0
      CL1                 Z-ADD     0             Cnt_TRNEXP        2 0
      CL1                 Z-ADD     0             Cnt_UCAPTRN       2 0
- 
+
      CLR                 Z-ADD     1             CHLINE
      CLR                 EXSR      PAG
      CLR                 EXCEPT    ENDRPT
@@ -114,48 +117,48 @@
       *****************************************************************
      C     EXT_MLEX      BEGSR
      C**?? T_MATI        CABEQ     'Y'           ENDMLEX
- 
+
      C                   EXSR      GET_POSN
      C     *IN99         CABEQ     '1'           ENDMLEX
- 
+
      C                   EXSR      SET_OUTPUT
- 
+
      C                   EXSR      MKT_VALUE
- 
+
      C                   EXSR      USD_AMNTS
- 
+
      C                   IF        MEINST <> *blank
      C                   IF        MENOMINAL <> 0 OR MEEXPOSURE <> 0
      C                             OR MEPOSITN <> 0
      C                   WRITE     GPMLEXF
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ENDMLEX       ENDSR
       *****************************************************************
      C     EXT_MLUT      BEGSR
      C**?? T_MATI        CABEQ     'Y'           ENDMLUT
- 
+
      C                   EVAL      TEINST    = *BLANK
      C                   EVAL      TEEXPOSURE= *ZERO
      C                   EVAL      TEOFFSET  = *ZERO
- 
+
      C                   EXSR      GET_POSN
      C     *IN99         CABEQ     '1'           ENDMLUT
- 
+
      C                   EVAL      TEEXPCCY  = P_CCY
      C                   EVAL      TEOFFCCY  = P_OCCY
- 
+
      C                   EXSR      SET_OUTPUT
      C                   IF        T_RLDO = 'Y' AND P_ASLI = 'A'
      C                   EVAL      MEINST    = 'GLOBMM'
      C                   EVAL      MEEXPOSURE= MENOMINAL
      C                   ENDIF
- 
+
      C                   EXSR      MKT_VALUE
- 
+
      C                   EXSR      USD_AMNTS
- 
+
      C                   IF        MEINST <> *blank
      C                   IF        MENOMINAL <> 0 OR MEEXPOSURE <> 0
      C                             OR MEPOSITN <> 0
@@ -168,7 +171,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ENDMLUT       ENDSR
       *****************************************************************
      C     GET_POSN      BEGSR
@@ -196,7 +199,7 @@
      C   99              MOVEL     Customer      BBCUST
      C   99              MOVEL     CustBranch    BBBRCD
      C   99              MOVEL     *BLANK        BBCRNM
- 
+
      C     GPCUSTXKey    KLIST
      C                   KFLD                    BBBRCD
      C                   KFLD                    BBCUST
@@ -219,7 +222,7 @@
      C                   EVAL      MEINST    = TEINST
       * GL Categgory
      C                   EXSR      DETGLCAT
- 
+
       * Transaction Date DDMMMYY
      C                   Z-ADD     T_TDAT        ZDAYNO
      C                   EXSR      ZDATE2
@@ -232,9 +235,9 @@
      C                   Z-ADD     T_EDAT        ZDAYNO
      C                   EXSR      ZDATE2
      C                   EVAL      MEREDAT   = ZADATE
- 
+
       ** Set Maturity Bucket - Date schedule 0
- 
+
      C                   EVAL      PaDtSch = 0
      C                   EVAL      PaRepDt = BJRDNB
      C                   EVAL      PaSchDt = T_EDAT
@@ -242,7 +245,7 @@
      C                   EVAL      MEMATB = PaBuckCode
       * Nominal
       * (May be set to Market value later)
- 
+
      C                   EVAL      MENOMINAL= 0
      C                   IF           P_ASLI = 'A'
      C                   IF           T_SMOD <> 'SBPS'
@@ -388,7 +391,7 @@
      C                   EVAL      MELIMDEFC  = 'N'
      C                   EVAL      MELIMDEFP  = 'N'
      C                   EVAL      MELIMDEFX  = 'N'
- 
+
      C                   ENDSR
       *****************************************************************
      C     MKT_VALUE     BEGSR
@@ -421,7 +424,7 @@
       * Zone
      C                   MOVEL     T_ZONE        ZONE
      C                   MOVE      'USD'         TCCY              3
- 
+
       * Nominal in USD
      C                   MOVE      P_CCY         FCCY              3
      C                   Z-ADD     MENOMINAL     INAMT            17 2
@@ -468,16 +471,16 @@
      C                   IF        MEEXPINUSD <> MENOMINUSD
      C                   EVAL      MEEXPDIF = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C     CONV          BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      FCCY = 'USD'
      C                   EVAL      OTAMT = INAMT
- 
+
      C                   OTHER
      C                   MOVE      FCCY          CCY
      C     KEY           CHAIN     GPMLCSPD                           99
@@ -485,11 +488,11 @@
      C   99              DUMP
      C                   EVAL(H)   OTAMT = INAMT * CCYSRATE
      C                   ENDSL
- 
+
      C     KEY           KLIST
      C                   KFLD                    CCY               3
      C                   KFLD                    ZONE             10
- 
+
      C                   ENDSR
       *****************************************************************
      C     DETGLCAT      BEGSR
@@ -529,25 +532,25 @@
      C                   ENDSR
       *****************************************************************
      C     SRGetBuckCd   BEGSR
- 
+
      C                   CALL      'MRDATBID'
      C                   PARM                    PaDtSch
      C                   PARM                    PaRepDt
      C                   PARM                    PaSchDt
       ** Output
      C                   PARM                    PaBuckCode
- 
+
      C                   ENDSR
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   READ      GZSDBANKPD                             H1
      C   H1              DUMP
- 
+
      C                   Z-ADD     99            LINENO            3 0
      C                   Z-ADD     0             PAGNUM            5 0
      C                   EXSR      PAG
- 
+
      C                   ENDSR
       *****************************************************************
      OQSYSPRT   E            PAGEHEAD        001002

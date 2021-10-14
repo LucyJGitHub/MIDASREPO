@@ -11,18 +11,21 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103B            Date 26Oct19               *
-      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI103B            Date 26Oct19               *
+      *                 DAI103             Date 25Jun19               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile only)                                  *
       *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01 ML Extracts to FB 2.1     *
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *
       *****************************************************************
- 
+
      FT_MLLIMIT IP   E             DISK    rename(T_MLLIMIT:T_MLLIMF)
      FGZSDBANKPDIF   E             DISK
      FGZSDCUSTL1IF   E           K DISK
@@ -36,43 +39,43 @@
      FGPCTRYL0  IF   E           K DISK
      FGPMLXPPD  O    E           K DISK
      FQSYSPRT   O    F  132        PRINTER
- 
+
       **   JNSTAT DATA AREA
      D JNSTAT         UDS           200
      D  PRUN                 103    105P 0
- 
+
      D INGRPID         S              5  0 DIM(99)
      D INSTR           S             10    DIM(99)
      D CUGRPID         S              5  0 DIM(9999)
      D CUGRPNM         S             20    DIM(9999)
      D CUSTR           S            200    DIM(9999)
      D CUSTRArr        S             10    DIM(20)
- 
+
      D CTRY            S              7    DIM(30)
      D CTRYTOT         S             17  2 DIM(30)
- 
+
      D PRtCd           S              7A
      D PFldIn          S             16A
      D PDecPlace       S              1  0
      D PDigits         S              2  0
      D PFldOut         S             16A
- 
+
      D ZDayNo          S              5P 0
      D ZDatfm          S              1A
      D ZADate          S              7A
      D ZDate           S              6P 0
- 
+
      D                 DS
      D ZDATE_DS                1      6  0
      D  ZDD                    1      2  0
      D  ZMM                    3      4  0
      D  ZYY                    5      6  0
- 
+
      D                 DS
      D MECNCD_GLCAT            1      7
      D MECNCD                  1      2
      D MEGLCAT                 3      7
- 
+
      C                   IF        LIUTSRTYPE = 1
      C                             AND LISTATUS <> 'E'
      C                             AND I#CUPA = 'C'
@@ -82,13 +85,13 @@
      C                   EXSR      RPT_LIMIT
      C                   ADD       1             Count_LIM         5 0
      C                   ENDIF
- 
+
      CLR                 Z-ADD     1             CHLINE
      CLR                 EXSR      PAG
      CLR                 EXCEPT    ENDRPT
       *****************************************************************
      C     RPT_LIMIT     BEGSR
- 
+
       * INSTRUMENT
      C                   Z-ADD     LIINSTGRP     InstGroup         5 0
      C                   Z-ADD     1             #I
@@ -101,23 +104,23 @@
      C                             (Instrument = 'GLOBFW' and LITYPE <> 'C')                 DAI103B
      C                   GOTO      BYPASS                                                    DAI103B
      C                   ENDIF                                                               DAI103B
- 
+
       * TENOR
      C                   Z-ADD     LITENOR       TENORNO           3 0
      C                   Z-ADD     LITENOR       TID
      C     TID           CHAIN     I_MLTENOR0                         99
      C   99              MOVEL     *BLANK        TFROM
      C   99              MOVEL     *BLANK        TTO
- 
+
       * Counterparty Exposure
       * Total Instrument Exposure
- 
+
      C                   Z-ADD     1             #CT               2 0
      C                   MOVEL     *BLANK        CTRY
      C                   Z-ADD     *ZERO         CTRYTOT
      C                   Z-ADD(H)  LIEXPOSURE    EXPOSURE         17 2
      C                   Z-ADD     0             TOEXPOSURE       17 2
- 
+
       * CUSTOMER
      C                   MOVEL     *BLANK        CUCNCZ
      C                   MOVEL     *BLANK        CUCOLC
@@ -128,7 +131,7 @@
      C                   KFLD                    Customer         10
      C     CustomerKey   CHAIN     GPCUSTD0                           99
      C                   ENDIF
- 
+
       * CUSTOMER GROUP
      C                   IF        LIUTSRTYPE = 2
      C                   MOVEL     *BLANK        PFldIn
@@ -140,37 +143,37 @@
      C                   MOVEA     CUSTR(#I)     CUSTRArr
      C                   MOVEL     CUGRPNM(#I)   CUCRNM
      C                   ENDIF
- 
+
       * Limit
      C                   Z-ADD     2             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    LIMIT
- 
+
       * Report transactions
- 
+
      C                   IF        LIUTSRTYPE = 1
      C                   EXSR      RPT_CUST_Trans
      C                   ENDIF
      C                   IF        LIUTSRTYPE = 2
      C                   EXSR      RPT_CGRP_Trans
      C                   ENDIF
- 
+
       * Counterparty Exposure
       * Total Instrument Exposure
- 
+
      C                   Z-ADD(H)  EXPOSURE      EXP              15 0
      C                   Z-ADD(H)  TOEXPOSURE    TOEXP            15 0
       * Counterparty Limit
      C                   Z-ADD     LIAMT         CPLIMIT          15 0
- 
+
       * Compare counterparty exposure v. total instrument exposure
- 
+
      C     EXP           COMP      TOEXP                              5050
      C   50              ADD       1             Count_LIMINV      5 0
      C                   Z-ADD     2             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    TOTAL
- 
+
      C                   Z-ADD     1             #CT
      C     CTRY(#CT)     DOUEQ     *BLANK
       * Limit Defined
@@ -248,7 +251,7 @@
      C*********          ENDSR                                                               DAI103B
       *****************************************************************
      C     RPT_CUST_TransBEGSR
- 
+
      C     GPCUSTXKey    KLIST
      C                   KFLD                    Customer
      C                   EVAL      Customer= LIUTSRCODE
@@ -262,26 +265,26 @@
      C     GPMLEXKey     KLIST
      C                   KFLD                    CUBRCD
      C                   KFLD                    CUCUST
- 
+
       * Exposure
- 
+
      C     GPMLEXKey     SETLL     GPMLEXD0
      C     GPMLEXKey     READE     GPMLEXD0                               99
      C     *IN99         DOWEQ     *OFF
- 
+
       * If instrument on limit
- 
+
      C                   IF        MEINST = Instrument
      C                             AND MEBRCA = LIENTYCODE
      C                   EXSR      INCL_EXP
- 
+
      C                   MOVE      *BLANK        TREF             40
      C                   IF        MESNAM <> *BLANK
      C                   MOVEL     MESNAM        TREF
      C                   ELSE
      C                   MOVEL     METREF        TREF
      C                   ENDIF
- 
+
      C                   Z-ADD     1             CHLINE            2 0
      C                   EXSR      PAG
      C  N40
@@ -305,41 +308,41 @@
      C  N41
      CANN42              EXCEPT    UPDMLEX
      C                   ENDIF
- 
+
      C     GPMLEXKey     READE     GPMLEXD0                               99
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      C     RPT_CGRP_TransBEGSR
- 
+
      C                   Z-ADD     1             #C
      C     CUSTRArr(#C)  DOWNE     *BLANK
- 
+
      C                   EVAL      Customer= CUSTRArr(#C)
      C                   MOVE      *BLANK        CUBRCD
      C                   MOVE      *BLANK        CUCUST
      C     GPCUSTXKey    CHAIN     GPCUSTXD0                          99
- 
+
       * Exposure
- 
+
      C     GPMLEXKey     SETLL     GPMLEXD0
      C     GPMLEXKey     READE     GPMLEXD0                               99
      C     *IN99         DOWEQ     *OFF
- 
+
       * If instrument on limit
- 
+
      C                   IF        MEINST = Instrument
      C                             AND MEBRCA = LIENTYCODE
      C                   EXSR      INCL_EXP
- 
+
      C                   MOVE      *BLANK        TREF             40
      C                   IF        MESNAM <> *BLANK
      C                   MOVEL     MESNAM        TREF
      C                   ELSE
      C                   MOVEL     METREF        TREF
      C                   ENDIF
- 
+
      C                   Z-ADD     1             CHLINE            2 0
      C                   EXSR      PAG
      C  N40
@@ -361,23 +364,23 @@
      C   41              DELETE    GPMLEXD0
      C  N41              EXCEPT    UPDMLEX
      C                   ENDIF
- 
+
      C     GPMLEXKey     READE     GPMLEXD0                               99
      C                   ENDDO
- 
+
      C                   ADD       1             #C
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      C     INCL_EXP      BEGSR
- 
+
      C                   MOVE      *BLANK        METENX
- 
+
      C                   Z-ADD     *HIVAL        W_CDAT            5 0
      C                   Z-ADD     BJRDNB        ZDAYNO                 98
      C                   EXSR      ZDATE2
- 
+
      C                   SELECT
       * 16D
      C     TTO           WHENEQ    '16D'
@@ -426,12 +429,12 @@
      C                   EXSR      ZDATE1
      C                   EVAL      W_CDAT = PMidasDayNo
      C                   ENDSL
- 
+
       * TENOR DETAILS
- 
+
      C                   MOVE      TFROM         MEFROM
      C                   MOVE      TTO           METO
- 
+
      C                   SETOFF                                       404142
       * TENOR EXCEEDED
      C     MEEDAT        IFGT      W_CDAT
@@ -453,7 +456,7 @@
      C                   EVAL      MELIMITIDP= LILIMITID
      C                   EVAL      MEUTSRCODP= LIUTSRCODE
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C     PAG           BEGSR
@@ -495,15 +498,15 @@
      C     *DTAARA       DEFINE                  JNSTAT
      C     *ENTRY        PLIST
      C                   PARM                    I#CUPA            1
- 
+
      C                   READ      GZSDBANKPD                             H1
- 
+
      C                   Z-ADD     99            LINENO            3 0
      C                   Z-ADD     0             PAGNUM            5 0
      C                   EXSR      PAG
- 
+
       * LOAD INSTRUMENT GROUPS
- 
+
      C                   Z-ADD     0             #I                4 0
      C                   READ      T_GRINSTLF                             99
      C     *IN99         DOWEQ     *OFF
@@ -514,9 +517,9 @@
      C                   ENDIF
      C                   READ      T_GRINSTLF                             99
      C                   ENDDO
- 
+
       * LOAD CUSTOMER GROUPS
- 
+
      C                   Z-ADD     0             #I                4 0
      C                   READ      T_GRCUSTLF                             99
      C     *IN99         DOWEQ     *OFF
@@ -536,7 +539,7 @@
      C                   ENDIF
      C                   READ      T_GRCUSTLF                             99
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      OQSYSPRT   E            PAGEHEAD        001002

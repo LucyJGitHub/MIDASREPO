@@ -11,14 +11,17 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103B            Date 26Oct19               *
-      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI103B            Date 26Oct19               *
+      *                 DAI103             Date 25Jun19               *
       *                 FRAIMP             Date 16Apr13               *
       *                 NADC02             Date 12Jun12               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile only)                                  *
       *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01, NADC02 and FRAIMP ML     *
       *           Extracts to FB 2.1                                  *
@@ -27,7 +30,7 @@
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *
       *****************************************************************
- 
+
      FGPMLXCL0  IP   E           K DISK
      FT_GRINSTL IF   E           K DISK    rename(T_GRINSTL:T_GRINSTLF)
      FGZSDBANKPDIF   E             DISK
@@ -36,153 +39,153 @@
      F**GPRPTMXCP1O    F  276        PRINTER                                          FRAIMP DAI103B
      FGPRPTMXCP1O    F  306        PRINTER                                                   DAI103B
      F                                     INFDS(SPOOLU)
- 
+
       ** File Information Data Structure for GPRPTMXCP1
      D SPOOLU          DS
      D  PSFileU               83     92
      D  PSFNumU              123    124B 0
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PEnty           S              3
      D ZSnum           S              6  0
      D ZSerr           S              1
- 
+
      D INSTR           S             10    DIM(10)
      D INST            S             10    DIM(20)
      D GLCAT           S              5    DIM(20)
      D INSTRGLC        S             15    DIM(20)
- 
+
      D TPIX            S             15  0 DIM(20)
      D TPEX            S             15  0 DIM(20)
      D CEXP            S             15  0 DIM(20)
      D TDI1            S             15  0 DIM(20)
      D TDI2            S             15  0 DIM(20)
- 
+
      D tTPIX           S             15  0 DIM(20)
      D tTPEX           S             15  0 DIM(20)
      D tCEXP           S             15  0 DIM(20)
      D tTDI1           S             15  0 DIM(20)
      D tTDI2           S             15  0 DIM(20)
- 
- 
+
+
      D  MEINSTGLCAT    DS
      D  MEINST                 1     10
      D  MEGLCAT               11     15
- 
- 
+
+
      IGPMLXCD0
      I                                          MECNCD        L2
      I                                          MELIMDEF      L1
- 
+
       * Change of country
- 
+
      C   L2              SETON                                        40
      C   L2              Z-ADD     1             CHLINE
      C   L2              EXSR      PAG
      C   L2              EXCEPT    STRC
- 
+
       * Change of limit defined
- 
+
      C  NL2              DO
      C   L1              SETOFF                                       40
      C   L1              Z-ADD     1             CHLINE
      C   L1              EXSR      PAG
      C   L1              EXCEPT    STRC
      C                   ENDDO
- 
+
      C   L1              Z-ADD     0             TPIX
      C   L1              Z-ADD     0             TPEX
      C   L1              Z-ADD     0             CEXP
      C   L1              Z-ADD     0             TDI1
      C   L1              Z-ADD     0             TDI2
- 
+
       * Accumulate exposure
- 
+
      C                   EXSR      ACCUM_EXPOS
- 
+
       * Report exposure
      CL1                 EXSR      REPORT_EXPOS
- 
+
       * Final totals
      CLR                 EXSR      REPORT_FINTOT
       *****************************************************************
      C     ACCUM_EXPOS   BEGSR
- 
+
       * INSTRUMENT
      C                   Z-ADD     1             #I
      C     MEINSTGLCAT   LOOKUP    INSTRGLC(#I)                           99
- 
+
       * Total Cpty Inst Exp in USD  (Counterparty GL Exposure)
       * Total Cpty Exposure in USD  (Counterparty ML Exposure)
       * Country Exposure in USD     (Country Exposure)
       * Total Diff in USD           (Country Exposure - Counterparty GL Exposure)
       * Total Diff in USD           (Country Exposure - Counterparty ML Exposure)
- 
+
      C                   ADD       METPIXUSD     TPIX(#I)
      C                   ADD       METPEXUSD     TPEX(#I)
      C                   ADD       MECEXPUSD     CEXP(#I)
      C                   ADD       METDI1USD     TDI1(#I)
      C                   ADD       METDI2USD     TDI2(#I)
- 
+
      C                   ADD       METPIXUSD     tTPIX(#I)
      C                   ADD       METPEXUSD     tTPEX(#I)
      C                   ADD       MECEXPUSD     tCEXP(#I)
      C                   ADD       METDI1USD     tTDI1(#I)
      C                   ADD       METDI2USD     tTDI2(#I)
- 
+
      C                   ENDSR
       *****************************************************************
      C     REPORT_EXPOS  BEGSR
- 
+
      C     TPIX(1)       COMP      0                                  2121
      C  N21TPEX(1)       COMP      0                                  2121
      C  N21CEXP(1)       COMP      0                                  2121
- 
+
      C     TPIX(2)       COMP      0                                  2222
      C  N22TPEX(2)       COMP      0                                  2222
      C  N22CEXP(2)       COMP      0                                  2222
- 
+
      C     TPIX(3)       COMP      0                                  2323
      C  N23TPEX(3)       COMP      0                                  2323
      C  N23CEXP(3)       COMP      0                                  2323
- 
+
      C     TPIX(4)       COMP      0                                  2424
      C  N24TPEX(4)       COMP      0                                  2424
      C  N24CEXP(4)       COMP      0                                  2424
- 
+
      C     TPIX(5)       COMP      0                                  2525
      C  N25TPEX(5)       COMP      0                                  2525
      C  N25CEXP(5)       COMP      0                                  2525
- 
+
      C     TPIX(6)       COMP      0                                  2626
      C  N26TPEX(6)       COMP      0                                  2626
      C  N26CEXP(6)       COMP      0                                  2626
- 
+
      C     TPIX(7)       COMP      0                                  2727
      C  N27TPEX(7)       COMP      0                                  2727
      C  N27CEXP(7)       COMP      0                                  2727
- 
+
      C     TPIX(8)       COMP      0                                  2828
      C  N28TPEX(8)       COMP      0                                  2828
      C  N28CEXP(8)       COMP      0                                  2828
- 
+
      C     TPIX(9)       COMP      0                                  2929
      C  N29TPEX(9)       COMP      0                                  2929
      C  N29CEXP(9)       COMP      0                                  2929
- 
+
      C     TPIX(10)      COMP      0                                  3030
      C  N30TPEX(10)      COMP      0                                  3030
      C  N30CEXP(10)      COMP      0                                  3030
- 
+
      C     TPIX(11)      COMP      0                                  3131
      C  N31TPEX(11)      COMP      0                                  3131
      C  N31CEXP(11)      COMP      0                                  3131
- 
+
      C     TPIX(12)      COMP      0                                  3232
      C  N32TPEX(12)      COMP      0                                  3232
      C  N32CEXP(12)      COMP      0                                  3232
- 
+
      C     TPIX(13)      COMP      0                                  3333
      C  N33TPEX(13)      COMP      0                                  3333
      C  N33CEXP(13)      COMP      0                                  3333
@@ -206,7 +209,7 @@
      C     TPIX(17)      COMP      0                                  3737                   DAI103B
      C  N37TPEX(17)      COMP      0                                  3737                   DAI103B
      C  N37CEXP(17)      COMP      0                                  3737                   DAI103B
- 
+
      C                   XFOOT     TPIX          TOTPIX           15 0
      C*******************SUB       TPIX(13)      TOTPIX                         * FX          NADC02
      C*********          SUB       TPIX(14)      TOTPIX                         * FX   NADC02 FRAIMP
@@ -232,15 +235,15 @@
      C*********          SUB       TDI2(14)      TOTDI2                         * FX   NADC02 FRAIMP
      C*********          SUB       TDI2(15)      TOTPIX                         * FX  FRAIMP DAI103B
      C                   SUB       TDI2(17)      TOTDI2                         * FX         DAI103B
- 
+
      C                   Z-ADD     5             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    TOTAL
- 
+
      C                   ENDSR
       *****************************************************************
      C     REPORT_FINTOT BEGSR
- 
+
      C                   XFOOT     tTPIX         TOTPIX
      C*******************SUB       tTPIX(13)     TOTPIX                         * FX          NADC02
      C*********          SUB       tTPIX(14)     TOTPIX                         * FX   NADC02 FRAIMP
@@ -266,28 +269,28 @@
      C*********          SUB       tTDI2(14)     TOTDI2                         * FX   NADC02 FRAIMP
      C*********          SUB       tTDI2(15)     TOTPIX                         * FX  FRAIMP DAI103B
      C                   SUB       tTDI2(17)     TOTDI2                         * FX         DAI103B
- 
+
      C                   Z-ADD     7             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    FINTOTAL
- 
+
       ** Ensure Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = PSFNumU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM                    PEnty
      C                   PARM                    PSFileU
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then end abnormally
- 
+
      C                   IF        ZSErr = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C     PAG           BEGSR
@@ -300,11 +303,11 @@
      C                   ENDSR
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   READ      GZSDBANKPD                             H1
- 
+
       * LOAD INSTRUMENT GROUPS
- 
+
      C                   EVAL      INSTR = 'ZZZZZZZZZZ'
      C                   Z-ADD     0             #I                4 0
      C                   READ      T_GRINSTLF                             99
@@ -387,19 +390,19 @@
      C*********          MOVE      '2 OFF'       INSTRGLC(#J)                                DAI103B
      C                   MOVE      '1 ON '       INSTRGLC(#J)                                DAI103B
      C                   ENDSL
- 
+
      C                   ADD       1             #I
      C                   IF        #I > 10                                                   DAI103B
      C                   LEAVE                                                               DAI103B
      C                   ENDIF                                                               DAI103B
      C                   ENDDO
- 
+
      C                   MOVEL     INSTRGLC      INST
      C                   MOVE      INSTRGLC      GLCAT
- 
+
      C                   Z-ADD     99            LINENO            3 0
      C                   Z-ADD     0             PAGNUM            5 0
- 
+
      C                   ENDSR
       *****************************************************************
      OGPRPTMXCP1E            PAGEHEAD        001002

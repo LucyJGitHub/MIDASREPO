@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR683288           Date 28Apr11              */
-/*       Prev Amend No. MD056206           Date 24Sep20              */
+/*       Last Amend No. MD059057           Date 14Oct21              */
+/*       Prev Amend No. AR683288           Date 28Apr11              */
+/*                      MD056206           Date 24Sep20              */
 /*                      MD055267           Date 16Mar20              */
 /*                      CSW051             Date 15Mar18              */
 /*                      MD046248           Date 27Oct17              */
@@ -48,6 +49,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059057 - Missing changes in SP2021B compat - (DAI103B)    */
+/*                  (Recompile only)                                 */
 /*       AR683288 - CFCONTROL crashes after MOVE command from        */
 /*                  IFSFILES to QDLSFLR.  Command to populate        */
 /*                  IFSFILES is not available. TRAM DAT objects are  */

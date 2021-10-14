@@ -13,14 +13,17 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103B            Date 26Oct19               *
-      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI103B            Date 26Oct19               *
+      *                 DAI103             Date 25Jun19               *
       *                 FRAIMP             Date 17Apr13               *
       *                 NADC02             Date 12Jun12               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile only)                                  *
       *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01, NADC02 and FRAIMP ML     *
       *           Extracts to FB 2.1                                  *
@@ -29,7 +32,7 @@
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *
       *****************************************************************
- 
+
      FGPMLEXL1  IP   E           K DISK
      FT_GRINSTL IF   E           K DISK    rename(T_GRINSTL:T_GRINSTLF)
      FGZSDBANKPDIF   E             DISK
@@ -39,85 +42,85 @@
      F**GPRPTMLIP1O    F  158        PRINTER                                          FRAIMP DAI103B
      FGPRPTMLIP1O    F  202        PRINTER                                                   DAI103B
      F                                     INFDS(SPOOLU)
- 
+
       ** File Information Data Structure for GPRPTMLIP1
      D SPOOLU          DS
      D  PSFileU               83     92
      D  PSFNumU              123    124B 0
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PEnty           S              3
      D ZSnum           S              6  0
      D ZSerr           S              1
- 
+
      D INSTR           S             10    DIM(10)
- 
+
      D cEXP            S             17  2 DIM(10)
      D coEXP           S             15  0 DIM(10)
- 
+
      D pEXP            S             17  2 DIM(10)
      D poEXP           S             15  0 DIM(10)
- 
+
      D tEXP            S             17  2 DIM(10)
      D toEXP           S             15  0 DIM(10)
- 
+
      IGPMLEXD0
      I                                          MECNCD        L3
      I                                          MECUSTNAME    L2
      I                                          MEINST        L1
- 
+
       * Change of country
- 
+
      C   L3              Z-ADD     99            LINENO
      C   L3              Z-ADD     0             cEXP
      C   L3              MOVEL     *BLANK        A4CNNM
      C   L3MECNCD        CHAIN     GPCTRYD0                           99
      C   L3              EVAL      MECNCDNAM = MECNCD + ' ' + A4CNNM
- 
+
       * Change of customer
- 
+
      C   L2              Z-ADD     3             CHLINE
      C   L2              EXSR      PAG
      C   L2              EXCEPT    CUSHEAD
      C   L2              Z-ADD     0             pEXP
- 
+
       * Accumulate exposure
- 
+
      C                   EXSR      ACCUM_EXPOS
- 
+
       * Output instrument
- 
+
      C                   Z-ADD(H)  MEEXPINUSD    EXP              15 0
      C                   Z-ADD(H)  MEEXPINUSD    TOTEXP           15 0
      C                   Z-ADD     1             CHLINE
      C                   EXSR      PAG
      C                   EXCEPT    INST
- 
+
       * Report customer totals
      CL2                 EXSR      REPORT_CUSTOT
- 
+
       * Report country totals
      CL3                 EXSR      REPORT_CTYTOT
- 
+
       * Final totals
      CLR                 EXSR      REPORT_FINTOT
       *****************************************************************
      C     ACCUM_EXPOS   BEGSR
- 
+
       * INSTRUMENT
      C                   Z-ADD     1             #I
      C     MEINST        LOOKUP    INSTR(#I)                              99
      C                   MOVEL     INSTR(#I)     Instrument       10
- 
+
       * Exposure in USD
- 
+
      C                   ADD       MEEXPINUSD    pEXP(#I)
- 
+
      C                   ADD       MEEXPINUSD    cEXP(#I)
- 
+
      C                   ADD       MEEXPINUSD    tEXP(#I)
- 
+
      C     #I            COMP      1                                      21
      C     #I            COMP      2                                      22
      C     #I            COMP      3                                      23
@@ -128,21 +131,21 @@
      C     #I            COMP      8                                      28                  FRAIMP
      C     #I            COMP      9                                      29                 DAI103B
      C     #I            COMP      10                                     30                 DAI103B
- 
+
      C                   ENDSR
       *****************************************************************
      C     REPORT_CUSTOT BEGSR
- 
+
      C     pEXP(1)       COMP      0                                  2121
- 
+
      C     pEXP(2)       COMP      0                                  2222
- 
+
      C     pEXP(3)       COMP      0                                  2323
- 
+
      C     pEXP(4)       COMP      0                                  2424
- 
+
      C     pEXP(5)       COMP      0                                  2525
- 
+
      C     pEXP(6)       COMP      0                                  2626
                                                                                               NADC02
      C     pEXP(7)       COMP      0                                  2727                    NADC02
@@ -152,53 +155,53 @@
      C     pEXP(9)       COMP      0                                  2929                   DAI103B
                                                                                              DAI103B
      C     pEXP(10)      COMP      0                                  3030                   DAI103B
- 
+
      C                   Z-ADD(H)  pEXP          poEXP
      C                   XFOOT     poEXP         TOTEXP
- 
+
      C                   Z-ADD     2             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    CUSTOTAL
- 
+
      C                   ENDSR
       *****************************************************************
      C     REPORT_CTYTOT BEGSR
- 
+
      C                   Z-ADD(H)  cEXP          coEXP
      C                   XFOOT     coEXP         TOTEXP
- 
+
      C                   Z-ADD     3             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    CTYTOTAL
- 
+
      C                   ENDSR
       *****************************************************************
      C     REPORT_FINTOT BEGSR
- 
+
      C                   Z-ADD(H)  tEXP          toEXP
      C                   XFOOT     toEXP         TOTEXP
- 
+
      C                   Z-ADD     3             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    FINTOTAL
- 
+
       ** Ensure Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = PSFNumU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM                    PEnty
      C                   PARM                    PSFileU
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then end abnormally
- 
+
      C                   IF        ZSErr = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C     PAG           BEGSR
@@ -211,11 +214,11 @@
      C                   ENDSR
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   READ      GZSDBANKPD                             H1
- 
+
       * LOAD INSTRUMENT GROUPS
- 
+
      C                   EVAL      INSTR = 'ZZZZZZZZZZ'
      C                   Z-ADD     0             #I                4 0
      C                   READ      T_GRINSTLF                             99
@@ -237,11 +240,11 @@
      C                   EVAL      INSTR(#I)   = 'GLOBNO'                                    DAI103B
      C                   ADD       1             #I                                          DAI103B
      C                   EVAL      INSTR(#I)   = 'GLOBFX'                                    DAI103B
- 
+
      C                   Z-ADD     99            LINENO            3 0
      C                   Z-ADD     0             PAGNUM            5 0
      C                   MOVE      *BLANK        MECNCDNAM        33
- 
+
      C                   ENDSR
       *****************************************************************
      OGPRPTMLIP1E            PAGEHEAD        001002

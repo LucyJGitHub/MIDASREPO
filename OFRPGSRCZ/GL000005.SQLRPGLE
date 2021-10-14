@@ -15,14 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. DAI101D             Date 13Oct19              *
-      *  Prev Amend No. DAI101C             Date 11Oct19              *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI101D            Date 13Oct19               *
+      *                 DAI101C            Date 11Oct19               *
       *                 DAI101A            Date 29May19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL141  *CREATE    Date 12Dec12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile Only)                                  *
       *  DAI101D - Access shadow files for REJECT option              *
       *  DAI101C - Allow Amend of Unauthorised Amount Accruals        *
       *  DAI101A - Amount Accrual Authorisation with CGL141           *

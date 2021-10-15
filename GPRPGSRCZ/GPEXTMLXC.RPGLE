@@ -11,18 +11,21 @@
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. DAI103B            Date 26Oct19               *
-      *  Prev Amend No. DAI103             Date 25Jun19               *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI103B            Date 26Oct19               *
+      *                 DAI103             Date 25Jun19               *
       *                 NADC01  *CREATE    Date 17Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile only)                                  *
       *  DAI103B - ML Reporting to include Nostros & Forward FX       *
       *  DAI103 - Upgraded MPlus 121 NADC01 ML Extracts to FB 2.1     *
       *  NADC01 - ML EXTRACTS FOR MIZUHO                              *
       *                                                               *
       *****************************************************************
- 
+
      FT_MLLIMIT IP   E             DISK    rename(T_MLLIMIT:T_MLLIMF)
      FGZSDBANKPDIF   E             DISK
      FT_GRINSTL IF   E           K DISK    rename(T_GRINSTL:T_GRINSTLF)
@@ -31,32 +34,32 @@
      FGPCTRYL0  IF   E           K DISK
      FGPMLXCPD  O    E           K DISK
      FQSYSPRT   O    F  132        PRINTER
- 
+
      D INGRPID         S              5  0 DIM(99)
      D INSTR           S             10    DIM(99)
- 
+
      D TOCPEXP_C       S             17  2 DIM(4)
      D TOCPINEXP_C     S             17  2 DIM(4)
      D TOINSTEXP_C     S             17  2 DIM(4)
- 
+
      D TOPEXP_C        S             15  0 DIM(4)
      D TOPIEXP_C       S             15  0 DIM(4)
      D TOIEXP_C        S             15  0 DIM(4)
- 
+
      C                   IF        LIUTSRTYPE = 3
      C                             AND LISTATUS <> 'E'
      C                   EXSR      RPT_LIMIT
      C                   ENDIF
- 
+
      CLR                 Z-ADD     1             CHLINE
      CLR                 EXSR      PAG
      CLR                 EXCEPT    ENDRPT
       *****************************************************************
      C     RPT_LIMIT     BEGSR
- 
+
       * COUNTRY
      C                   MOVEL     LIUTSRCODE    Country           2
- 
+
       * INSTRUMENT
      C                   Z-ADD     LIINSTGRP     InstGroup         5 0
      C                   Z-ADD     1             #I
@@ -69,12 +72,12 @@
      C                             (Instrument = 'GLOBFW' and LITYPE <> 'C')                 DAI103B
      C                   GOTO      BYPASS                                                    DAI103B
      C                   ENDIF                                                               DAI103B
- 
+
       * Total Cpty Exposure in USD
       * Total Cpty Inst Exp in USD
       * Total Instrument Exposure in USD
       * Country Exposure in USD
- 
+
      C                   Z-ADD     0             TOCPEXP          17 2
      C                   Z-ADD     0             TOCPINEXP        17 2
      C                   Z-ADD     0             TOINSTEXP        17 2
@@ -82,16 +85,16 @@
      C                   Z-ADD     0             TOCPINEXP_C
      C                   Z-ADD     0             TOINSTEXP_C
      C                   Z-ADD(H)  LIEXPOSURE    EXPOSURE         17 2
- 
+
       * Total counterparty and instrument exposures
- 
+
      C                   EXSR      TOT_Exp
- 
+
       * Total Cpty Exposure in USD
       * Total Cpty Inst Exp in USD
       * Total Instrument Exposure in USD
       * Country Exposure in USD
- 
+
      C                   Z-ADD(H)  TOCPEXP       TOPEXP           15 0
      C                   Z-ADD(H)  TOCPINEXP     TOPIEXP          15 0
      C                   Z-ADD(H)  TOINSTEXP     TOIEXP           15 0
@@ -101,14 +104,14 @@
      C                   Z-ADD(H)  EXPOSURE      EXP              15 0
       * Country Limit
      C                   Z-ADD     LIAMT         CTLIMIT          15 0
- 
+
       * Compare country exposure v. total instrument exposure
- 
+
      C     EXP           COMP      TOPIEXP                            5050
      C                   Z-ADD     1             CHLINE            2 0
      C                   EXSR      PAG
      C                   EXCEPT    TOTAL
- 
+
       * Limit Defined
      C                   MOVE      'Y'           MELIMDEF
       * Limit ID
@@ -154,7 +157,7 @@
      C                   MOVE      LIEXPDATE     MEEXPDATE
      C                   WRITE     GPMLXCD0
      C                   Z-ADD     0             MELIMTUSD
- 
+
       * GL Category
      C                   MOVEL     '2 OFF'       MEGLCAT
       * Total Cpty Exposure in USD
@@ -247,13 +250,13 @@
      C     GPMLXPKey     KLIST
      C                   KFLD                    Country
      C                   KFLD                    Instrument
- 
+
       * Counterparty Exposure Summary
- 
+
      C     GPMLXPKey     SETLL     GPMLXPD0
      C     GPMLXPKey     READE     GPMLXPD0                               99
      C     *IN99         DOWEQ     *OFF
- 
+
      C                   IF        S_MEBRCA = LIENTYCODE
      C                   ADD       S_METIEXUSD   TOCPINEXP
      C                   ADD       S_MEPEXPUSD   TOCPEXP
@@ -277,16 +280,16 @@
      C                   MOVE      'Y'           S_MELIMDEFX
      C                   ENDIF
      C                   EXCEPT    UPDMLXP
- 
+
      C     GPMLXPKey     READE     GPMLXPD0                               99
      C                   ENDDO
- 
+
       * Transaction (Instrument) Exposure
- 
+
      C     GPMLXPKey     SETLL     GPMLEXD0
      C     GPMLXPKey     READE     GPMLEXD0                               99
      C     *IN99         DOWEQ     *OFF
- 
+
      C                   IF        S_MEBRCA = LIENTYCODE
      C                   ADD       S_MEEXPINUSD  TOINSTEXP
      C                   IF        S_MEGLCAT = '1 ON '
@@ -305,10 +308,10 @@
      C                   MOVE      'Y'           S_MELIMDEFX
      C                   ENDIF
      C                   EXCEPT    UPDMLEX
- 
+
      C     GPMLXPKey     READE     GPMLEXD0                               99
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      C     PAG           BEGSR
@@ -321,15 +324,15 @@
      C                   ENDSR
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   READ      GZSDBANKPD                             H1
- 
+
      C                   Z-ADD     99            LINENO            3 0
      C                   Z-ADD     0             PAGNUM            5 0
      C                   EXSR      PAG
- 
+
       * LOAD INSTRUMENT GROUPS
- 
+
      C                   Z-ADD     0             #I                4 0
      C                   READ      T_GRINSTLF                             99
      C     *IN99         DOWEQ     *OFF
@@ -340,7 +343,7 @@
      C                   ENDIF
      C                   READ      T_GRINSTLF                             99
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      OQSYSPRT   E            PAGEHEAD        001002

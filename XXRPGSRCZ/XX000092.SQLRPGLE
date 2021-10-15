@@ -12,11 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. DAI101             Date 03Oct19               *
-      *  Prev Amend No.                    Date DDMMMYY               *
+      *  Last Amend No. MD059057           Date 14Oct21               *
+      *  Prev Amend No. DAI101             Date 03Oct19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059057 - Missing changes in SP2021B compat - (DAI103B)     *
+      *             (Recompile only)                                  *
       *  DAI101 - Accrual Authorisation                               *
       *                                                               *
       *****************************************************************

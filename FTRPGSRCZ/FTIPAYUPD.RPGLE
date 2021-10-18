@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 16Oct20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Last Amend No. MD058914           Date 06Oct21               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -95,6 +96,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058914 - FT payments customer information on listviews     *
+      *             is blank. Amend to add routine to retrieve        *
+      *             Customer and Branch for INPAYDQD/OTPAYDQD.        *
       *  CFT162 - MT900 and MT910 Message Generation                  *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
@@ -697,6 +701,19 @@
      D WTOWR           S             24A                                                      CGL029
      D CSW209          S              1A                                                      CSW209
      D CAP205          S              1A                                                      CAP205
+     D P@Rtcd          S              7A                                                    MD058914
+     D P@INOT          S              1A                                                    MD058914
+     D P@BNC1          S             35A                                                    MD058914
+     D P@BNC2          S             35A                                                    MD058914
+     D P@ORC1          S             35A                                                    MD058914
+     D P@ORC2          S             35A                                                    MD058914
+     D P@ORC3          S             35A                                                    MD058914
+     D P@BRCA          S              3A                                                    MD058914
+     D P@PCCY          S              3A                                                    MD058914
+     D P@SMCY          S              3A                                                    MD058914
+     D WCustNumb       S              6A                                                    MD058914
+     D WCustBrch       S              3A                                                    MD058914
+      *                                                                                     MD058914
      D/COPY WNCPYSRC,FTH00556
                                                                                               CSD015
       ** Watch List Description Array                                                         CSD015
@@ -1263,6 +1280,7 @@
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
      C                   EVAL      IPFRID = IPFRNT                                            257487
+     C                   EXSR      SRSetINPAYDQD                                            MD058914
      C                   WRITE     INPAYQD0                             99                    257487
       *                                                                                       257487
      C                   IF        *IN99 = *ON                                                257487
@@ -5676,6 +5694,35 @@ e1   C                   ENDIF                                                  
      C     PString       CAT       WLARR(U):0    PString                                      CSD015
                                                                                               CSD015
      C                   ENDSR                                                                CSD015
+      *****************************************************************                     MD058914
+      /EJECT                                                                                MD058914
+      *****************************************************************                     MD058914
+      *                                                               *                     MD058914
+      * SRSetINPAYDQD - Gets the Customer and Branch Details          *                     MD058914
+      *                                                               *                     MD058914
+      *****************************************************************                     MD058914
+     C     SRSetINPAYDQD BEGSR                                                              MD058914
+      *                                                                                     MD058914
+     C                   CALL      'FT1200'                                                 MD058914
+     C                   PARM      *blank        P@Rtcd                                     MD058914
+      * INPUTS                                                                              MD058914
+     C                   PARM      'I'           P@INOT                                     MD058914
+     C                   PARM      IPBNC1        P@BNC1                                     MD058914
+     C                   PARM      IPBNC2        P@BNC2                                     MD058914
+     C                   PARM                    P@ORC1                                     MD058914
+     C                   PARM                    P@ORC2                                     MD058914
+     C                   PARM                    P@ORC3                                     MD058914
+     C                   PARM      IPBRCA        P@BRCA                                     MD058914
+     C                   PARM      IPPCCY        P@PCCY                                     MD058914
+     C                   PARM      IPSMCY        P@SMCY                                     MD058914
+      * OUTPUTS                                                                             MD058914
+     C                   PARM      *blanks       WCustNumb                                  MD058914
+     C                   PARM      *blanks       WCustBrch                                  MD058914
+      *                                                                                     MD058914
+     C                   EVAL      IPBNCC = WCustNumb                                       MD058914
+     C                   EVAL      IPBNCB = WCustBrch                                       MD058914
+      *                                                                                     MD058914
+     C                   ENDSR                                                              MD058914
                                                                                               CGL029
       *****************************************************************                       CGL029
       /EJECT                                                                                  CGL029

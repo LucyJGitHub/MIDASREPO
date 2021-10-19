@@ -10,10 +10,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
+      *  Last Amend No. MD059024           Date 15Oct21               *
       *  Prev Amend No. EML102  *CREATE    Date 28Nov19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059024 - When batch is inserted via Standing Journal Entry *
+      *             screen, it calls this program and writes record in*
+      *             T_GZBITPEX but leaves the date field DDBEDT empty.*
       *  EML102 - Upgrade of UNL007 to FB2.1 SP23.                    *
       *           UNL007 - Extended Narratives                        *
       *                                                               *
@@ -339,6 +343,7 @@
      C                   MOVE      ZOZONE        EXZONE
      C                   MOVE      UFBTNB        EXBTNB
      C                   MOVE      UFBINB        EXBINB
+     C                   MOVE      UFPTDT        EXBEDT                                     MD059024
      C*
      C     KGZBTP        CHAIN     GZBITPV0                           87
      C*

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056611           Date 20Sep20               *
-      *  Prev Amend No. MD053808           Date 07Aug19               *
+      *  Last Amend No. MD058951           Date 15Oct21               *
+      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *                 MD053808           Date 07Aug19               *
       *                 MD050279           Date 06Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043639           Date 27Jan17               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058951 - Retrieve Midas Run date from SDSBNKTD file.       *
       *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD053808 - COB Component GOC0310 fails due to field size     *
       *             too small.                                        *
@@ -151,6 +153,9 @@
      D P@VL09          S            200A                                                    MD053808
      D P@VL10          S            200A                                                    MD053808
       *                                                                                     MD053808
+     D SDSBNK        E DS                  EXTNAME(SDSBNKTD)                                MD058951
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD058951
+     D LDA           E DS           256    EXTNAME(LDA)                                     MD058951
 
      D GPAUIP        E DS                  EXTNAME(GPAUIJW0)                                MD056611
      D X_INPT          S              4                                                     MD056611
@@ -998,6 +1003,16 @@
      C                   EVAL      I#ERMS = 'BAD ZONE:' + I#ZONE
      C                   EXSR      *PSSR
      C                   ENDIF
+     C*                                                                                     MD058951
+     C                   CALL      'AOSBNKR0'                                               MD058951
+     C                   PARM      '       '     ULRTCD            7                        MD058951
+     C                   PARM      '*FIRST '     ULOPTN            7                        MD058951
+     C     SDSBNK        PARM      SDSBNK        DSFDY                                      MD058951
+     C     ULRTCD        Ifne      *BLANK                                                   MD058951
+     C                   MOVEL     'SDSBNKTD'    DBFILE                                     MD058951
+     C                   Movel     '01'          DBASE                                      MD058951
+     C                   Exsr      *PSSR                                                    MD058951
+     C                   End                                                                MD058951
 
      C                   Z-ADD     99            LineNumber        3 0
      C                   Z-ADD     1             PageNumber        5 0

@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. UUC107             Date 18Nov20               *
-      *  Prev Amend No. 251687             Date 17May12               *
+      *  Last Amend No. MD058880           Date 12Oct21               *
+      *  Prev Amend No. UUC107             Date 18Nov20               *
+      *                 251687             Date 17May12               *
       *                 MD053553           Date 21Jan20               *
       *                 MD050134           Date 21Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -85,6 +86,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058880 - FM is recalculating GBP amount for EUR/GBP and    *
+      *             not respecting the values sent from FPM/DS.       *
+      *             Amend to condition inverse if UUC107.
       *  UUC107 - Upgrade CEUFT1 to FBM 2.1                           *
       *           FT Quotation of Rates                               *
       *           Hooks used: UUC107_001, UUC107_002, UUC107_003,     *
@@ -950,6 +954,7 @@
      C                   ENDIF
      C                   EVAL      WINVER = 'N'                                             MD045094
      C                   Z-ADD     0             WGRATE                                     AR787421
+     F/COPY WNCPYSRC,UUC107_005                                                             MD058880
      C     P#RATE        IFNE      0                                                        AR787421
      C     P#RATE        IFLT      1                                                        AR787421
      C     ZRATEX        ANDGT     1                                                        AR787421
@@ -960,6 +965,7 @@
      C                   EVAL      WINVER = 'Y'                                             MD045094
      C                   ENDIF                                                              AR787421
      C                   ENDIF                                                              AR787421
+     F/COPY WNCPYSRC,UUC107_006                                                             MD058880
       *
       ** Send message if Currency types are not compatible and
       ** a rate has been entered.

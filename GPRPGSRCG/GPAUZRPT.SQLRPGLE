@@ -1003,7 +1003,7 @@
      C                   EVAL      I#ERMS = 'BAD ZONE:' + I#ZONE
      C                   EXSR      *PSSR
      C                   ENDIF
-      *
+     C*                                                                                     MD058951
      C                   CALL      'AOSBNKR0'                                               MD058951
      C                   PARM      '       '     ULRTCD            7                        MD058951
      C                   PARM      '*FIRST '     ULOPTN            7                        MD058951
@@ -1013,7 +1013,7 @@
      C                   Movel     '01'          DBASE                                      MD058951
      C                   Exsr      *PSSR                                                    MD058951
      C                   End                                                                MD058951
-      *
+
      C                   Z-ADD     99            LineNumber        3 0
      C                   Z-ADD     1             PageNumber        5 0
 

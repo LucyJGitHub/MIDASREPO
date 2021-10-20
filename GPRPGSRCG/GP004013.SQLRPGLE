@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD050405           Date 03Jun20               *
-      *  Prev Amend No. MD042109           Date 26Jun18               *
+      *  Last Amend No. MD058622           Date 05Oct21               *
+      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *                 MD042109           Date 26Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
       *                 AR1096973          Date 23Apr13               *
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058622 - In UXP user is changed but P1 report is not pro - *
+      *             duced and AU report shows no details to report.   *
+      *           - Removed MD042109 changes and add BFRECCREATEDON   *
+      *             and BFRECAPPROVEDDATE fields of MIVW_GRPM.        *
       *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
       *  MD042109 - Updates, amendments and deletes do not show on    *
       *             BFTC audit reports                                *
@@ -148,9 +153,12 @@
      D  BFRAPRBY                     32A
      D  BFAPRDAT                     26A
      D  BFDELDAT                     26A                                                      CBF023
+     D  BFRCRTONB                    26A                                                    MD058622
+     D  BFAPRDATB                    26A                                                    MD058622
 
      D***NullIndDs       S              5I 0 DIM(11)                                          CBF023
-     D NullIndDs       S              5I 0 DIM(12)                                            CBF023
+     D***NullIndDs       S              5I 0 DIM(12)                                 CBF023 MD058622
+     D NullIndDs       S              5I 0 DIM(14)                                          MD058622
 
       ** Input Parameter for ZDATEO
      D                 DS
@@ -244,7 +252,10 @@
      C+  A.BFRECAPPROVEDBY,
      C***A.BFRECAPPROVEDDATE*******************************************                       CBF023
      C+  A.BFRECAPPROVEDDATE,                                                                 CBF023
-     C+  A.BFRECDELETETDATE                                                                   CBF023
+     C***A.BFRECDELETETDATE********************************************              CBF023 MD058622
+     C+  A.BFRECDELETETDATE,                                                                MD058622
+     C+  B.BFRECCREATEDON,                                                                  MD058622
+     C+  B.BFRECAPPROVEDDATE                                                                MD058622
      C+
      C+  from MIVW_OGRP A
      C+  left outer join MIVW_GRPM B on B.BFGROUPID = A.BFGROUPIDPK
@@ -628,22 +639,36 @@
      C**********         IF        NullIndDs(9) = 0                                        AR1036892
      C**********         EVAL      TmpDat04 = %DATE(%SUBST(BFRCRTON:1:10):*ISO)            AR1036892
      C**********         EVAL      DatNum04 = %DEC(TmpDat03)                               AR1025965
-     C                   EVAL      TmpDat04 = *LOVAL                                        MD042109
-      ** Approved Date                                                                      MD042109
-     C                   IF        NullIndDs(11) = 0                                       AR1036892
-     C                   EVAL      TmpDat04 = %DATE(%SUBST(BFAPRDAT:1:10):*ISO)            AR1036892
-     C                   ELSE                                                               MD042109
-      ** Last Modified Date                                                                 MD042109
-     C                   IF        NullIndDs(08) = 0                                        MD042109
-     C                   EVAL      TmpDat04 = %DATE(%SUBST(BFLSTMOD:1:10):*ISO)             MD042109
+     C**********         EVAL      TmpDat04 = *LOVAL                               MD042109 MD058622
+      ***Approved*Date*************************************************            MD042109 MD058622
+      ** For 4 eyes, use approve date of MIVW_GRPM                                          MD058622
+     C**********         IF        NullIndDs(11) = 0                              AR1036892 MD058622
+     C                   IF        NullIndDs(14) = 0                                        MD058622
+     C**********         EVAL      TmpDat04 = %DATE(%SUBST(BFAPRDAT:1:10):*ISO)   AR1036892 MD058622
+     C                   EVAL      TmpDat04 = %DATE(%SUBST(BFAPRDATB:1:10):*ISO)            MD058622
+     C                   EVAL      DatNum04 = %DEC(TmpDat04)                                MD058622
+     C                   EVAL      PDateIN  = DatNum04                                      MD058622
+     C                   EXSR      SRZDateO                                                 MD058622
+     C                   Z-ADD     ZDayNo        ZDayNo4                                    MD058622
+     C**********         ELSE                                                      MD042109 MD058622
+      ***Last*Modified*Date********************************************            MD042109 MD058622
+     C**********         IF        NullIndDs(08) = 0                               MD042109 MD058622
+     C**********         EVAL      TmpDat04 = %DATE(%SUBST(BFLSTMOD:1:10):*ISO)    MD042109 MD058622
+      ** For 2 eyes                                                                         MD058622
      C                   ELSE                                                               MD042109
       ** Created on Date                                                                    MD042109
      C                   IF        NullIndDs(09) = 0                                        MD042109
      C                   EVAL      TmpDat04 = %DATE(%SUBST(BFRCRTON:1:10):*ISO)             MD042109
      C                   ENDIF                                                              MD042109
-     C                   ENDIF                                                              MD042109
-     C                   ENDIF                                                              MD042109
-     C                   IF        TmpDat04 <> *LOVAL                                       MD042109
+     C**********         ENDIF                                                     MD042109 MD058622
+     C**********         ENDIF                                                     MD042109 MD058622
+     C**********         IF        TmpDat04 <> *LOVAL                              MD042109 MD058622
+      *                                                                                     MD058622
+      ** Created on Date for MIVW_GRPM during add permission                                MD058622
+      *                                                                                     MD058622
+     C                   IF        NullIndDs(13) = 0                                        MD058622
+     C                   EVAL      TmpDat04 = %DATE(%SUBST(BFRCRTONB:1:10):*ISO)            MD058622
+     C                   ENDIF                                                              MD058622
      C                   EVAL      DatNum04 = %DEC(TmpDat04)                               AR1025965
      C                   EVAL      PDateIN  = DatNum04
      C                   EXSR      SRZDateO

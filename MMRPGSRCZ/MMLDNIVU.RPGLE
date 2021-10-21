@@ -2770,7 +2770,7 @@
      C                   EVAL      PayDat = ValDateMDN                                        250161
      C                   ELSE                                                                 250161
       *                                                                                     MD058975
-     C                   IF        DDMDAT <> 0                                              MD058975
+     C                   IF        DDMDAT <> *BLANKS                                        MD058975
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDMDAT                                       250161
      C                   PARM                    ValDateMDN                                   250161
@@ -2786,7 +2786,7 @@
       ** Receive date = maturity date for loan, value date for deposit                        250161
      C                   IF        LOD = 'L'                                                  250161
       *                                                                                     MD058975
-     C                   IF        DDMDAT <> 0                                              MD058975
+     C                   IF        DDMDAT <> *BLANKS                                        MD058975
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDMDAT                                       250161
      C                   PARM                    ValDateMDN                                   250161

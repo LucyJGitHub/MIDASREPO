@@ -1,7 +1,7 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
-/********RPGBASEMOD****************************************************                     MD057934
+/**** ***RPGBASEMOD****************************************************                     MD057934
 /*STD *  RPGSQLMOD                                                    *                     MD057934
 /*EXI *  TEXT('Midas ZA Validate Backward Looking Rate Fields')       *
       *****************************************************************
@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058988           Date 06Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059065           Date 15Oct21               *
+      *  Prev Amend No. MD058988           Date 06Oct21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD058513           Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058623           Date 23Aug21               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059065 - IR020 fields/values not auto-populating when      *
+      *             amending CIRS from forward looking rate           *
+      *             to backward looking rate via SOAP/MQ              *
       *  MD058988 - CIR020 fields/values not defaulting when inserting*
       *             a backward-looking base rate code via SOAP/MQ     *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -447,7 +451,8 @@
      C                             ApiName = 'SIR1'  or                                       CIR020
      C                             ApiName = 'SIR2'  or                                       CIR020
      C                             ApiName = 'CACF') and                                      CIR020
-     C                             DDBLRT  = *BLANKS and                                      CDL102
+     C**********                   DDBLRT  = *BLANKS and                             CDL102 MD059065
+     C                             DDBLRT  <> 'Y' and                                       MD059065
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDBLRT = BABLRT                                            CLE172
                                                                                               CLE172
@@ -1492,7 +1497,9 @@
      C                   MOVE      '00'          WDAY
 
       ** Default value depending on where this program is called
-     C                   IF        DDRRDP = *BLANKS
+     C**********         IF        DDRRDP = *BLANKS                                         MD059065
+     C                   IF        DDRRDP = *BLANKS OR                                      MD059065
+     C                             DDRRDP = '00'                                            MD059065
 
      C                   SELECT
 

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058999           Date 07Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059064           Date 14Oct21               *
+      *  Prev Amend No. MD058999           Date 07Oct21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD053400           Date 03Jul19               *
       *                 MD051346           Date 17Jul18               *
@@ -93,6 +94,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059064 - Error messages for THEIRS doubled                 *
       *  MD058999 - Error messages do not include the field name in   *
       *             error. Error field name is not colored red        *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -3034,15 +3036,15 @@
      C                   PARM                    StICFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
-      *                                                                                       CIR020
-      ** Validate backward-looking rate fields if CIR020 is ON (Theirs)                       CIR020
-      *                                                                                       CIR020
-     C                   IF        CIR020 = 'Y' and                                           CIR020
-     C                             StBrttOK  <> 'N' and                                       CIR020
-     C                             StIcbsOK  <> 'N'                                           CIR020
-     C                   EXSR      SRTBLRT                                                    CIR020
-     C                   ENDIF                                                                CIR020
-                                                                                              CIR020
+      *****************************************************************              CIR020 MD059064
+      ***Validate*backward-looking*rate*fields*if*CIR020*is*ON*(Theirs)              CIR020 MD059064
+      *****************************************************************              CIR020 MD059064
+     C**********         IF        CIR020 = 'Y' and                                  CIR020 MD059064
+     C**********                   StBrttOK  <> 'N' and                              CIR020 MD059064
+     C**********                   StIcbsOK  <> 'N'                                  CIR020 MD059064
+     C**********         EXSR      SRTBLRT                                           CIR020 MD059064
+     C**********         ENDIF                                                       CIR020 MD059064
+                                                                                     CIR020 MD059064
 
       /COPY WNCPYSRC,IRSIRSV077                                                 CAP004
                                                                                 CAP004

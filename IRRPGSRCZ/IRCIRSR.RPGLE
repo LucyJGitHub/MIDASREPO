@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058556           Date 16Aug21               *
-      *  Prev Amend No. MD049387           Date 19Jan18               *
+      *  Last Amend No. MD058599           Date 09Oct21               *
+      *  Prev Amend No. MD058556           Date 16Aug21               *
+      *                 MD049387           Date 19Jan18               *
       *                 MD047859           Date 19Sep17               *
       *                 AR933170           Date 07Jun13               *      
       *                 CSD103             Date 10Aug20               *
@@ -70,6 +71,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058599 - SP23.1/24_FRA/IRS: Incorrect account name on page *
+      *             value date settlemet for CCS deals.               *
+      *           - Swap the value of InRCCY and InPCCY parameters of *
+      *             ZASETINCVT program for Value Date Settlement.     *
       *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
       *             behavior.                                         *
       *           - Recompile all objects affected by AR933170.       *
@@ -513,6 +518,8 @@
      D POP10           S             20A                                                    MD054117
      D PVL10           S            200A                                                    MD054117
      D PCIDCF          S              1A                                                    MD054117
+     D STCUCYV         S                   LIKE(STCUCY)                                     MD058599
+     D SUCUCYV         S                   LIKE(SUCUCY)                                     MD058599
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1109,12 +1116,21 @@
      C                   EVAL      InFRASttmt = CrFRAStmt
 
      C                   IF        CIR003 = 'Y'
+      ** Save the original value of STCUCY and SUCUCY                                       MD058599
+     C                   EVAL      STCUCYV  = STCUCY                                        MD058599
+     C                   EVAL      SUCUCYV  = SUCUCY                                        MD058599
+      ** Swap the value of STCUCY and SUCUCY                                                MD058599
+     C                   EVAL      STCUCY   = SUCUCYV                                       MD058599
+     C                   EVAL      SUCUCY   = STCUCYV                                       MD058599
 
       ** Set up Value Date Settlement Details                                                BUG5291
      C                   EVAL      DBRecSttmt = ExRValDat
      C                   EVAL      DBPaySttmt = ExPValDat
 
      C                   EXSR      SrSETINCVT
+      ** Return the original value of STCUCY and SUCUCY                                     MD058599
+     C                   EVAL      STCUCY   = STCUCYV                                       MD058599
+     C                   EVAL      SUCUCY   = SUCUCYV                                       MD058599
 
      C                   EVAL      InPayStmtV = CrPayStmt
      C                   EVAL      InRecStmtV = CrRecStmt

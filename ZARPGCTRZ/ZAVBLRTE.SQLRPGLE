@@ -43,7 +43,7 @@
       *                                                               *
       *  MD058988 - CIR020 fields/values not defaulting when inserting*
       *             a backward-looking base rate code via SOAP/MQ     *
-      *  CIR020 - LIBOR Deregulation - IRS                            *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058513 - Rate known flag not saved.                        *
       *  MD058734 - Default value or Day Basis Average based          *
       *             from Calculation Method 3,4 and 5.                *

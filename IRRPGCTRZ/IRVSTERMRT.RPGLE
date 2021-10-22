@@ -46,7 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS                            *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
       *           - Blank short-term rate not rejected on backvalued  *

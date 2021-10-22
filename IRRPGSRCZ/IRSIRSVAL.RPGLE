@@ -95,7 +95,7 @@
       *                                                               *
       *  MD058999 - Error messages do not include the field name in   *
       *             error. Error field name is not colored red        *
-      *  CIR020 - LIBOR Deregulation - IRS                            *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *

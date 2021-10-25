@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. DRI005  *CREATE    Date 13Apr21               *
+      *  Last Amend No. MD059134           Date 22Oct21               *
+      *  Prev Amend No. DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059134 - Net Balance not correct in Proofing file          *
       *  DRI005 - HO and EDW Extracts                                 *
       *                                                               *
       *****************************************************************
@@ -270,9 +272,9 @@ b3   C                   If        CCY = KCCY and ACOD = KACO2
      C                   Add       LDBL          WKLDBL
      C                   READ      XXACBRC                                51
 x3   C                   Else
-b4   C                   If        ACOD <> KACO2
-     C                   MOVE      '1'           *IN51
-x4   C                   Else
+b4   C*******            If        ACOD <> KACO2                                MD059134
+     C*******            MOVE      '1'           *IN51                          MD059134
+x4   C*******            Else                                                   MD059134
       ***  Access the Feeder details for Total DR/CR
      C                   Z-ADD     BJRDNB        K2RND
      C                   MOVEL     KCCY          K2CCY
@@ -298,10 +300,13 @@ e5   C                   EndDo
       *
       ** Write Proofing Record
      C                   EXSR      EXTPRF
+     C                   If        ACOD <> KACO2                                MD059134
+     C                   MOVE      '1'           *IN51                          MD059134
+     C                   Endif                                                  MD059134
      C                   MOVE      CCY           KCCY
      C                   Z-ADD     ACOD          KACO2
      C                   Z-ADD     0             WKLDBL
-e4   C                   Endif
+e4   C*******            Endif                                                  MD059134
 e3   C                   Endif
 e2   C                   Enddo
       ** Write Proofing Record

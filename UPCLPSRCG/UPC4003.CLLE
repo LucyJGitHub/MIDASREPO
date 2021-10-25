@@ -1,0 +1,416 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UPMBRLT) TOFILE(UPMBRLTPD)                      */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU Logical Files Compare')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4003 - ADBU Logical Files Compare                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD058585           Date 17Aug21              */
+/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058585 - aDBU does not detect if LF has different keys    */
+/*       CUT017 - Adapptive Database Upgrade                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIB1 &LIB2 &LOGFILE &LAYER)
+
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOGFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DSP1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DSP2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&NMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FLDUPD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&WLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&WMSG) TYPE(*CHAR) LEN(50) VALUE('DONE')
+             DCL        VAR(&WMSGF) TYPE(*CHAR) LEN(50) VALUE('FAIL')
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+
+             DCL        VAR(&BYTESP) TYPE(*DEC) LEN(8) VALUE(0)
+             DCL        VAR(&KEY2) TYPE(*DEC) LEN(8)
+             DCL        VAR(&LIBCNT1) TYPE(*DEC) LEN(15 0)
+             DCL        VAR(&LIBCNT2) TYPE(*DEC) LEN(15 0)
+             DCL        VAR(&HALF) TYPE(*DEC) LEN(15 0)
+             DCL        VAR(&NBRVARREC) TYPE(*DEC) LEN(8)
+             DCL        VAR(&RCVLD) TYPE(*DEC) LEN(8)  VALUE(200)
+             DCL        VAR(&ERRCODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&INFSTAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RCVL) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTVINFO) TYPE(*CHAR) LEN(16)
+
+             DCLF       FILE(UPMBRLT) OPNID(OPNID)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/** Global Monitor Message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/* Update Compare Work File Job Number */
+             CHGVAR        VAR(&PFX) VALUE(%SUBSTRING(&LIB1 1 2))
+             RTVJOBA    NBR(&JBNO)
+             CHGVAR     VAR(&NMBR) VALUE('C_' *TCAT &JBNO)
+             CHGVAR        VAR(&FLDUPD) VALUE('UP' *TCAT %SUBSTRING(&LIB1 3 2) +
+                            *TCAT 'JN')
+             CHGVAR     VAR(&FLDVAL) VALUE(&JBNO)
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update Compare Work File job Status with 'Running' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UP' *TCAT %SUBSTRING(&LIB1 3 2) +
+                            *TCAT 'SS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Check whether the libraries exist. */
+             CHKOBJ     OBJ(&LIB1) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 Library' +
+                             *BCAT &LIB1 *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             CHKOBJ     OBJ(&LIB2) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 Library' +
+                             *BCAT &LIB2 *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Clear log file */
+             CLRPFM     FILE(&LOGFILE)
+
+/* Copy FLDDAT */
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDPD) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             CPYF       FROMFILE(UTADBJW0) TOFILE(UTFLDDPD) +
+                          FROMMBR(*FIRST) TOMBR(&NMBR) MBROPT(*ADD) +
+                          FMTOPT(*MAP *DROP)
+
+/* Decide how to proceed for the compare */
+             CHGVAR VAR(&KEY2)               VALUE(7)
+             CHGVAR VAR(&NBRVARREC)          VALUE(1)
+             CHGVAR VAR(%BIN(&RTVINFO 1 4))  VALUE(&NBRVARREC)
+             CHGVAR VAR(%BIN(&RTVINFO 5 4))  VALUE(&KEY2)
+             CHGVAR VAR(%BIN(&ERRCODE))      VALUE(&BYTESP)
+             CHGVAR VAR(%BIN(&RCVL))         VALUE(&RCVLD)
+
+/* Call the QLIRLIBD API  */
+             CALL       PGM(QLIRLIBD) PARM(&RCVVAR &RCVL &LIB1 +
+                          &RTVINFO &ERRCODE)
+             CHGVAR     VAR(&LIBCNT1) VALUE(%BIN(&RCVVAR 29 4))
+             CALL       PGM(QLIRLIBD) PARM(&RCVVAR &RCVL &LIB2 +
+                          &RTVINFO &ERRCODE)
+             CHGVAR     VAR(&LIBCNT2) VALUE(%BIN(&RCVVAR 29 4))
+
+/* If second library is empty */
+             IF         COND(&LIBCNT2 *EQ 0) THEN(GOTO DONE)
+
+             CHGVAR     VAR(&HALF) VALUE(&LIBCNT1 * 0.5)
+/* If &LIB2 contains less than 50% of objects of &LIB1 */
+             IF         COND(&LIBCNT2 *LT &HALF) THEN(DO)
+/* List &LIB2 files */
+                DLTF       FILE(QTEMP/SMC000034F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPMBRLT)
+                DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +
+                             OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/SMC000034F)
+             CPYF       FROMFILE(QTEMP/SMC000034F) +
+                          TOFILE(QTEMP/UPMBRLT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+READ1:
+             RCVF       OPNID(OPNID)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(NEXT1)
+             ENDDO
+
+             DSPFD      FILE(&LIB1/&OPNID_MLFILE) TYPE(*BASATR) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDBA1)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(READ1)
+
+             enddo
+
+             ELSE       CMD(DO)
+/* DSPFD *BASATR LIB1 */
+             DSPFD      FILE(&LIB1/*ALL) TYPE(*BASATR) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDBA1)
+
+             enddo
+
+NEXT1:
+             CLOSE      OPNID(OPNID)
+/* Retrieve number of records */
+             RTVMBRD    FILE(QTEMP/DSPFDBA1) NBRCURRCD(&NBRCURRCD)
+ /* Update Compare Work File */
+             CHGVAR     VAR(&FLDVAL) VALUE(&NBRCURRCD)
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR        VAR(&FLDUPD) VALUE('UPGVNF')
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR        VAR(&FLDUPD) VALUE('UPDVNF')
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* DSPFD *BASATR LIB2 */
+             DSPFD      FILE(&LIB2/*ALL) TYPE(*BASATR) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDBA2)
+/* Retrieve number of records */
+             RTVMBRD    FILE(QTEMP/DSPFDBA2) NBRCURRCD(&NBRCURRCD)
+ /* Update Compare Work File */
+             CHGVAR     VAR(&FLDVAL) VALUE(&NBRCURRCD)
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR        VAR(&FLDUPD) VALUE('UPGVNR')
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR        VAR(&FLDUPD) VALUE('UPDVNR')
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */
+             CMPF FILE1(QTEMP/DSPFDBA1) FILE2(QTEMP/DSPFDBA2) TFILE(DSPFDBA1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(ATFILE) OUTFILE(QTEMP/UTCMPFPD#)
+/* call report program*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFDBA1')
+             CHGVAR     VAR(&DSP2) VALUE('DSPFDBA2')
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)
+             OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
+             CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)
+
+/* remove *MBRLIST */
+             GOTO       CMDLBL(NEXT)
+/* Remove members as they will be added back by CMPF */
+             DLTOVR     FILE(UTCMPFPD)
+             DLTF       FILE(QTEMP/UTCMPFPD#)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+
+/* DSPFD *MBRLIST LIB1 */
+             DSPFD      FILE(&LIB1/*ALL) TYPE(*MBRLIST) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDMB1)
+/* DSPFD *MBRLIST LIB2 */
+             DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDMB2)
+
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */
+             CMPF FILE1(QTEMP/DSPFDMB1) FILE2(QTEMP/DSPFDMB2) TFILE(DSPFDMB1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(MLFILE) OUTFILE(QTEMP/UTCMPFPD#)
+/* call report program*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFDMB1')
+             CHGVAR     VAR(&DSP2) VALUE('DSPFDMB2')
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)
+             CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)
+
+NEXT:
+
+/* Remove members as they will be added back by CMPF */
+             DLTOVR     FILE(UTCMPFPD)
+             DLTF       FILE(QTEMP/UTCMPFPD#)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+
+/* If &LIB2 contains less than 50% of objects of &LIB1 */
+             IF         COND(&LIBCNT2 *LT &HALF) THEN(DO)
+/* List &LIB2 files */
+                DLTF       FILE(QTEMP/SMC000034F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UPMBRLT)
+                DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +
+                             OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/SMC000034F)
+             CPYF       FROMFILE(QTEMP/SMC000034F) +
+                          TOFILE(QTEMP/UPMBRLT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+READ2:
+             RCVF       OPNID(OPNID)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(NEXT2)
+             ENDDO
+
+             DSPFD      FILE(&LIB1/&OPNID_MLFILE) TYPE(*RCDFMT) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFDRF1)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(READ2)
+
+             enddo
+
+             ELSE       CMD(DO)
+/* DSPFD *RCDFMT LIB1 */
+                   DSPFD      FILE(&LIB1/*ALL) TYPE(*RCDFMT) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/DSPFDRF1)
+
+             enddo
+
+NEXT2:
+             CLOSE      OPNID(OPNID)
+/* DSPFD *RCDFMT LIB1 */
+                   DSPFD      FILE(&LIB1/*ALL) TYPE(*RCDFMT) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/DSPFDRF1)
+/* DSPFD *RCDFMTT LIB2 */
+                   DSPFD      FILE(&LIB2/*ALL) TYPE(*RCDFMT) OUTPUT(*OUTFILE) +
+                                OUTFILE(QTEMP/DSPFDRF2)
+
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */
+             CMPF FILE1(QTEMP/DSPFDRF1) FILE2(QTEMP/DSPFDRF2) TFILE(DSPFDRF1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(RFFILE RFNAME) OUTFILE(QTEMP/UTCMPFPD#)
+/* call report program*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFDRF1')
+             CHGVAR     VAR(&DSP2) VALUE('DSPFDRF2')
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)
+             OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
+             CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)
+
+/* Check for difference in keys */                                                      /*MD058585*/
+             CALL       PGM(UP4023) PARM(&LIB1 &LIB2 &LAYER)                            /*MD058585*/
+                                                                                        /*MD058585*/
+DONE:
+/* Update Compare Work File */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CHGVAR        VAR(&FLDUPD) VALUE('UP' *TCAT %SUBSTRING(&LIB1 3 2) +
+                            *TCAT 'ED')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(%SUBSTRING(&LIB1 3 1) *EQ 'D') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update Compare Work File job Status with 'Complete' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UP' *TCAT %SUBSTRING(&LIB1 3 2) +
+                            *TCAT 'SS')
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+/* Send message to server */
+             CALL       PGM(QSNDDTAQ) PARM('ADBC_GSVR' '*LIBL     ' +
+                               &WLENGTH &WMSG)
+
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+/* Send message to server */
+             CALL       PGM(QSNDDTAQ) PARM('ADBC_ZSVR' '*LIBL     ' +
+                               &WLENGTH &WMSG)
+
+             ENDDO
+
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDPD) MBR(&NMBR)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+
+/* Update Compare Work File job Status with 'Abnormally' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UP' *TCAT %SUBSTRING(&LIB1 3 2) +
+                            *TCAT 'SS')
+             CHGVAR     VAR(&FLDVAL) VALUE('A')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             ENDDO
+
+/* Update Compare Work File */
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CHGVAR        VAR(&FLDUPD) VALUE('UP' *TCAT %SUBSTRING(&LIB1 3 2) +
+                            *TCAT 'ED')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &PFX &FLDUPD &FLDVAL &ERROR &RETURN)
+             ENDDO
+
+/* Send FAIL message to server */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL       PGM(QSNDDTAQ) PARM('ADBC_GSVR' '*LIBL     ' +
+                               &WLENGTH &WMSGF)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL       PGM(QSNDDTAQ) PARM('ADBC_ZSVR' '*LIBL     ' +
+                               &WLENGTH &WMSGF)
+             ENDDO
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program UPC4003 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+
+ END:        ENDPGM

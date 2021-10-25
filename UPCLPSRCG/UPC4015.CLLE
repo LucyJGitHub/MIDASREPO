@@ -1,0 +1,695 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU Global Update Server')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4015 - ADBU Global Update Server                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT017 - Adapptive Database Upgrade                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIB1 &LIB2 &BRGBRGLIB &LAYER)
+
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FLDUPD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&JUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JBNO) TYPE(*CHAR) LEN(6)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/* Global Monitor Message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/* Add REPLY for SQL DROP clause */
+             RMVRPYLE   SEQNBR(2598)
+             MONMSG     MSGID(CPF2556)
+             ADDRPYLE   SEQNBR(2598) MSGID(CPA32B2) RPY('I')
+             CHGJOB     JOBMSGQFL(*PRTWRAP)
+
+             RMVRPYLE   SEQNBR(2599)
+             MONMSG     MSGID(CPF2556)
+             ADDRPYLE   SEQNBR(2599) MSGID(CPD32CC) RPY('I')
+             CHGJOB     JOBMSGQFL(*PRTWRAP)
+
+/* Create Data Queue to communicate with the 4 jobs submitted */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CHGVAR     VAR(&DTQN) VALUE('ADBU_GSVR')
+              CHGVAR     VAR(&PLIB) VALUE(&LIB1 *TCAT 'GPLIB')
+              DLTDTAQ    DTAQ(&PLIB/ADBU_GSVR)
+              MONMSG     MSGID(CPF2105)
+              CRTDTAQ    DTAQ(&PLIB/ADBU_GSVR) MAXLEN(50) TEXT('UP +
+                            Server DTAQ for Global')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CHGVAR     VAR(&DTQN) VALUE('ADBU_ZSVR')
+              CHGVAR     VAR(&PLIB) VALUE(&LIB1 *TCAT 'DPLIB')
+              DLTDTAQ    DTAQ(&PLIB/ADBU_ZSVR)
+              MONMSG     MSGID(CPF2105)
+              CRTDTAQ    DTAQ(&PLIB/ADBU_ZSVR) MAXLEN(50) TEXT('UP +
+                           Server DTAQ for Zone')
+             ENDDO
+
+/* Clear error files */
+             CLRPFM     FILE(UPZLGUTD)
+
+/* Update Compare Work File UPUSER */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPUSER')
+             RTVJOBA    USER(&JUSER)
+             CHGVAR     VAR(&FLDVAL) VALUE(&JUSER)
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update Server Job Number */
+             RTVJOBA    NBR(&JBNO)
+             CHGVAR        VAR(&FLDUPD) VALUE('UPSVJN')
+             CHGVAR     VAR(&FLDVAL) VALUE(&JBNO)
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update Update Work File job Status with 'Running' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPUPSS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/******************************/
+SCRIPT:
+/******************************/
+/* Update Phase */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPHAS')
+             CHGVAR     VAR(&FLDVAL) VALUE('S')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Submit script job */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              SBMJOB     CMD(CALL PGM(UPC000051) PARM(&LIB1 &LIB2 +
+                          &BRGBRGLIB)) JOB(UPZADBUSCR) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              SBMJOB     CMD(CALL PGM(UPC000052) PARM(&LIB1 &LIB2 +
+                          &BRGBRGLIB)) JOB(UPGADBUSCR) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT)
+             ENDDO
+
+/* Wait for the script job to complete */
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+/* If Script ran ok, update status and wait for response from monitor */
+             IF         COND(&MSGDATA *EQ 'DONE') THEN(DO)
+/* Update Script Work File job Status with 'Complete' */
+              CHGVAR        VAR(&FLDUPD) VALUE('UPSCRS')
+              CHGVAR     VAR(&FLDVAL) VALUE('C')
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+
+             ENDDO
+
+/* If Script fails */
+              IF         COND(&MSGDATA *EQ 'FAIL') THEN(DO)
+/* Update Compare Work File job Status with 'Abnormal' */
+               CHGVAR        VAR(&FLDUPD) VALUE('UPSCRS')
+               CHGVAR     VAR(&FLDVAL) VALUE('A')
+               IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+               ENDDO
+               IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+               ENDDO
+             GOTO ABNOR
+              ENDDO
+
+/* Wait for response from the monitor */
+RCVD:
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL       PGM(QRCVDTAQ) PARM('UPZADBUDTQ' '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+              ENDDO
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL       PGM(QRCVDTAQ) PARM('UPGADBUDTQ' '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+              ENDDO
+
+/* If Script ran ok, update status and wait for response from monitor */
+              IF         COND(&MSGDATA *EQ 'CONTINUE') THEN(DO)
+              GOTO       CMDLBL(BACKUP)
+              ENDDO
+              ELSE CMD(DO)
+                GOTO RCVD
+              ENDDO
+
+/******************************/
+BACKUP:
+/******************************/
+/* Update Phase */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPHAS')
+             CHGVAR     VAR(&FLDVAL) VALUE('B')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update backup job Status with 'Running' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPBKUS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* call back up pgm */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UP000071 (&LIB1 &LIB2 &ERROR)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UP000061 (&LIB1 &LIB2 &ERROR)
+             ENDDO
+
+             IF         COND(&ERROR *NE '          ') THEN(DO)
+/* Update backup job Status with 'Running' */
+             CHGVAR     VAR(&FLDVAL) VALUE('A')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             GOTO ABNOR
+             ENDDO
+
+/* Wait for the monitor to show the completed jobs */
+             DLYJOB     DLY(2)
+
+/* else backup job Status with 'Complete'*/
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/******************************/
+UPGRADEPF:
+/******************************/
+/* Upgrade PF */
+/* Update Phase */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPHAS')
+             CHGVAR     VAR(&FLDVAL) VALUE('P')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update PF Update Status with 'Submitted'*/
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPFUS')
+             CHGVAR     VAR(&FLDVAL) VALUE('S')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* first remove dependent */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UP000072 (&LIB1 &LIB2 &ERROR)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UP000062 (&LIB1 &LIB2 &ERROR)
+             ENDDO
+
+             IF         COND(&ERROR *NE '          ') THEN(DO)
+/* Update PF Udate Status with 'Abnormal' */
+             CHGVAR     VAR(&FLDVAL) VALUE('A')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             ENDDO
+
+/* then submit 3 jobs and wait */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 'UPDMSB' &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'DMLIB')
+             SBMJOB     CMD(CALL PGM(UP000063X) PARM(&LIB1 &LIB2 +
+                          &LIB &ERROR)) JOB(&LIB) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT) INQMSGRPY(*SYSRPYL)
+
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 'UPDPSB' &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'DPLIB')
+             SBMJOB     CMD(CALL PGM(UP000063X) PARM(&LIB1 &LIB2 &LIB +
+                          &ERROR)) JOB(&LIB) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT) INQMSGRPY(*SYSRPYL)
+
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 'UPDTSB' &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'DTALIB')
+             SBMJOB     CMD(CALL PGM(UP000063X) PARM(&LIB1 &LIB2 +
+                          &LIB &ERROR)) JOB(&LIB) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT) INQMSGRPY(*SYSRPYL)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 'UPGMSB' &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'GMLIB')
+             SBMJOB     CMD(CALL PGM(UP000073) PARM(&LIB1 &LIB2 +
+                          &LIB &ERROR)) JOB(&LIB) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT) INQMSGRPY(*SYSRPYL)
+
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 'UPGPSB' &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'GPLIB')
+             SBMJOB     CMD(CALL PGM(UP000073) PARM(&LIB1 &LIB2 &LIB +
+                          &ERROR)) JOB(&LIB) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT) INQMSGRPY(*SYSRPYL)
+
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             CHGVAR     VAR(&FLDVAL) VALUE(&STIME)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 'UPGTSB' &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'GTALIB')
+             SBMJOB     CMD(CALL PGM(UP000073) PARM(&LIB1 &LIB2 +
+                          &LIB &ERROR)) JOB(&LIB) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT) INQMSGRPY(*SYSRPYL)
+             ENDDO
+
+/* Update PF Update Status with 'Running'*/
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPFUS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Wait for the 3 jobs to complete */
+LOOP:
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'DONE') THEN(CHGVAR +
+                          VAR(&COUNT) VALUE(&COUNT + 1))
+
+             IF         COND(&MSGDATA *EQ 'FAIL') THEN(CHGVAR +
+                          VAR(&COUNT) VALUE(&COUNT + 1))
+
+             IF         COND(&MSGDATA *EQ 'FAIL') THEN(CHGVAR +
+                          VAR(&FAIL) VALUE('Y'))
+
+             IF         COND(&COUNT *LT 3) THEN(GOTO LOOP)
+
+/* If there is a FAIL */
+             IF         COND(&FAIL *EQ 'Y') THEN(DO)
+/* Update PF Update Status with 'Abnormal' */
+              CHGVAR        VAR(&FLDUPD) VALUE('UPPFUS')
+              CHGVAR     VAR(&FLDVAL) VALUE('A')
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+             GOTO ABNOR
+             ENDDO
+
+             ELSE       CMD(DO)
+
+/* Wait for the monitor to show the completed jobs */
+             DLYJOB     DLY(2)
+
+/* Update PF Update Status with 'Complete' */
+              CHGVAR        VAR(&FLDUPD) VALUE('UPPFUS')
+              CHGVAR     VAR(&FLDVAL) VALUE('C')
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+             ENDDO
+
+/******************************/
+UPGRADELF:
+/******************************/
+/* Upgrade LF */
+/* Update Phase */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPHAS')
+             CHGVAR     VAR(&FLDVAL) VALUE('L')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+
+/* Update LF Update Status with 'Running'*/
+             CHGVAR        VAR(&FLDUPD) VALUE('UPLFUS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Perform remaining command for DVLIB/GVLIB*/
+/* Clear log file */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CLRPFM     FILE(UPZLGUTD)
+                CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'DVLIB')
+                CALL PGM(UP000066) PARM(&LIB1 &LIB2  &LIB &ERROR)
+                IF         COND(&ERROR *NE '          ') THEN(DO)
+                CPYF       FROMFILE(UPZLGUTD) TOFILE(*PRINT) +
+                             CRTFILE(*YES)
+                   CHGVAR     VAR(&FLDVAL) VALUE('A')
+                   CALL       PGM(UPZUPDWR) PARM('*UPDATE   ' &LIB1 +
+                                &FLDUPD &FLDVAL &ERROR &RETURN)
+                   IF         COND(&ERROR *NE '          ') +
+                                THEN(GOTO ABNOR)
+                   GOTO ABNOR
+                ENDDO
+             ENDDO
+
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CLRPFM FILE(UPGLGUTD)
+             CHGVAR     VAR(&LIB) VALUE(&LIB1 *TCAT 'GVLIB')
+             CALL PGM(UP000076) PARM(&LIB1 &LIB2  &LIB &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(DO)
+              CPYF       FROMFILE(UPGLGUTD) TOFILE(*PRINT) +
+                           CRTFILE(*YES)
+              CHGVAR     VAR(&FLDVAL) VALUE('A')
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             GOTO ABNOR
+             ENDDO
+             ENDDO
+
+
+/* call LF rebuild program */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UP000065 (&LIB1 &LIB2 &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(DO)
+/* Update LF Udate Status with 'Abnormal' */
+              CHGVAR     VAR(&FLDVAL) VALUE('A')
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              CPYF       FROMFILE(UPZLGUTD) TOFILE(*PRINT) +
+                           CRTFILE(*YES)
+             GOTO ABNOR
+             ENDDO
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UP000075 (&LIB1 &LIB2 &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(DO)
+/* Update LF Udate Status with 'Abnormal' */
+              CHGVAR     VAR(&FLDVAL) VALUE('A')
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              CPYF       FROMFILE(UPGLGUTD) TOFILE(*PRINT) +
+                           CRTFILE(*YES)
+             GOTO ABNOR
+             ENDDO
+             ENDDO
+
+/* copy log file *PRINT */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CPYF       FROMFILE(UPZLGUTD) TOFILE(*PRINT) +
+                           CRTFILE(*YES)
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CPYF       FROMFILE(UPGLGUTD) TOFILE(*PRINT) +
+                           CRTFILE(*YES)
+             ENDDO
+
+/* Wait for the monitor to show the completed jobs */
+             DLYJOB     DLY(2)
+
+/* Update LF Udate Status with 'Complete' */
+              CHGVAR     VAR(&FLDVAL) VALUE('C')
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+
+/******************************/
+RECONCILE:
+/******************************/
+/* Update Phase */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPPHAS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+              CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+              CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+              IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update Reconcile Status with 'Running' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPRCLS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* call report program */
+             CALL UPC4012 (&LIB1 &LIB2 &LAYER &BRGBRGLIB &ERROR)
+             IF         COND(&ERROR *NE '          ') THEN(DO)
+/* Update Reconcile Status with 'Abnormal' */
+              CHGVAR     VAR(&FLDVAL) VALUE('A')
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+             GOTO ABNOR
+             ENDDO
+
+/* Update Reconcile Status with 'Complete' */
+              CHGVAR     VAR(&FLDVAL) VALUE('C')
+              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+               CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+               CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+               IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+              ENDDO
+
+
+/* update final status */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPUPSS')
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+
+/* update end time */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* finally delete DTAQ */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPGADBCDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBU_GSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPZADBUDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBU_ZSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+/* Remove REPLY for SQL DROP clause */
+             RMVRPYLE   SEQNBR(2598)
+             RMVRPYLE   SEQNBR(2599)
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+
+             DSPJOBLOG  OUTPUT(*PRINT)
+/* update end time */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGUPDWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZUPDWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             ENDDO
+
+/* finally delete DTAQ */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPGADBCDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBU_GSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPZADBUDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBU_ZSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program UPC4015 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

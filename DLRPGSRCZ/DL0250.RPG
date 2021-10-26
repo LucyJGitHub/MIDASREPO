@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD058626A          Date 08Sep21               *
-      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD058626A          Date 08Sep21               *
+      *                 MD058708           Date 31Aug21               *
       *                 MD058652           Date 27Aug21               *
       *                 MD058626           Date 24Aug21               *
       *                 CDL102             Date 01Jun21               *
@@ -96,6 +97,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                               *
+      *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058626A - Printer overflow error                           *
       *  MD058708 - Incorrect rate is used to calculate accrual after *
       *             BC event. For calc method NCCR/SARR, only apply   *
@@ -252,7 +254,8 @@
      F*DEALSBRCIS**F***  689  6AI     2 DISK                              CSW005   CDL019
      F*DEALSBRCIS**F****2540**6AI*****2 DISK                                            CDL019CDL028
      F*DEALSBRCIS**F***2602**6AI*****2*DISK                                            CDL028 CDL038
-     FDEALSBRCIS  F    2606  6AI     2 DISK                                                   CDL038
+     F***DEALSBRCIS  F    2606  6AI     2 DISK                                         CDL038 CIR020
+     FDEALSBRCIS  F    2688  6AI     2 DISK                                                   CIR020
      FDEALSC  IF  E           K        DISK                           UC                      CDL033
       *                                                                                       CAS009
       ** Midas MM Effective Interest Rate by Tran Ref                                         CAS009
@@ -260,6 +263,7 @@
      FMMEIRDL9UF  E           K        DISK         KINFSR *PSSR                              CAS009
      F***DLLIBEL0IF  E           K        DISK                                       CDL102 MD058708
      FDLLIBEL0UF  E           K        DISK         KINFSR *PSSR                            MD058708
+     FIRLIBEL0UF  E           K        DISK         KINFSR *PSSR                              CIR020
      FSDBSHSL1IF  E           K        DISK                                                 MD031283
      F/COPY WNCPYSRC,DL0250F001
      FDEAMS   IF  E           K        DISK                                                MD031123A
@@ -787,6 +791,10 @@
      I                                     25982599 FSTE2B                                    CSD103
      I                                    P260026020FSTE2D                                    CDL028
      I                                     26032606 CLAS                                      CDL038
+     I                                     26072607 BLRTU                                     CIR020
+     I                                     26182621 CALMU                                     CIR020
+     I                                     26482648 BLRTT                                     CIR020
+     I                                     26592662 CALMT                                     CIR020
      I/COPY WNCPYSRC,DL0250I001
      IDEAMSDIF                                                                             MD031123A
      I              RECI                            RECIDM                                 MD031123A
@@ -1050,6 +1058,20 @@
      C                     MOVE 'N'       CDL102                                              CDL102
      C                     ENDIF                                                              CDL102
       *                                                                                       CDL102
+      ** Access SAR Details File to determine if CIR020 is installed                          CIR020
+      *                                                                                       CIR020
+     C                     CALL 'AOSARDR0'                                                    CIR020
+     C                     PARM *BLANKS   PRTCD                                               CIR020
+     C                     PARM '*VERIFY' POPTN                                               CIR020
+     C                     PARM 'CIR020'  PSARD                                               CIR020
+     C           SCSARD    PARM SCSARD    DSFDY                                               CIR020
+      *                                                                                       CIR020
+     C           PRTCD     IFEQ *BLANK                                                        CIR020
+     C                     MOVE 'Y'       CIR020  1                                           CIR020
+     C                     ELSE                                                               CIR020
+     C                     MOVE 'N'       CIR020                                              CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
       ** Access SAR Details File to determine if CDL020 is installed                        MD031283
       *                                                                                     MD031283
      C                     MOVE 'N'       CDL020  1                                         MD031283
@@ -1307,15 +1329,15 @@
      C                     ENDDO                                                              CDL102
      C                     ENDIF                                                              CDL102
       *                                                                                       CDL102
-     C           BRTT      IFNE '  '                                                          CDL102
-     C           BLRT      ANDNE'Y'                                                           CDL102
-     C           *IN10     ANDEQ'1'                                                           CDL102
-     C                     SETOF                     1015                                     CDL102
-     C                     GOTO END                                                           CDL102
-     C                     ENDIF                                                              CDL102
-     C           *IN15     IFEQ '1'                                                           CDL102
-     C                     MOVE ' '       BLRT                                                CDL102
-     C                     ENDIF                                                              CDL102
+     C********** BRTT      IFNE '  '                                                   CDL102 CIR020
+     C********** BLRT      ANDNE'Y'                                                    CDL102 CIR020
+     C********** *IN10     ANDEQ'1'                                                    CDL102 CIR020
+     C**********           SETOF                     1015                              CDL102 CIR020
+     C**********           GOTO END                                                    CDL102 CIR020
+     C**********           ENDIF                                                       CDL102 CIR020
+     C********** *IN15     IFEQ '1'                                                    CDL102 CIR020
+     C**********           MOVE ' '       BLRT                                         CDL102 CIR020
+     C**********           ENDIF                                                       CDL102 CIR020
 0450 C*
 0451 C*
 0452 C*    RESET OUTPUT INDICATORS.
@@ -1345,6 +1367,13 @@
      C                     MOVE '0'       *IN61                           S01119
      C                     MOVE '   '     SPDI                            S01119
      C                     EXSR FRAIRS                                    S01119
+     C           CIR020    IFEQ 'Y'                                                           CIR020
+     C           BLRTU     ANDEQ'Y'                                                           CIR020
+     C           CIR020    OREQ 'Y'                                                           CIR020
+     C           BLRTT     ANDEQ'Y'                                                           CIR020
+     C                     EXSR SRLIB2                                                        CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
      C                     GOTO END                                       S01119
      C                     END                                            S01119
      C/COPY WNCPYSRC,DL0250C014
@@ -1451,6 +1480,8 @@
      C           BADLRC    OREQ 'Y'                                       S01194
      C           BLRT      OREQ 'Y'                                                           CDL102
      C           DBLRT     OREQ 'Y'                                                           CDL102
+     C           BLRTU     OREQ 'Y'                                                           CIR020
+     C           BLRTT     OREQ 'Y'                                                           CIR020
      C                     MOVE '1'       *IN27                           S01194
      C                     END                                            S01194
 0472 C  N27                GOTO END
@@ -1563,6 +1594,8 @@
      C           *IN27     ANDEQ'1'                                                         MD031283
      C           *IN28     ANDEQ'1'                                                         MD031283
      C           BLRT      ANDNE'Y'                                                           CDL102
+     C           BLRTU     ANDNE'Y'                                                           CIR020
+     C           BLRTT     ANDNE'Y'                                                           CIR020
       *                                                                                     MD031283
      C                     EXSR SRBVAL                                                      MD031283
       *                                                                                     MD031283
@@ -1574,7 +1607,6 @@
      C           DBLRT     ANDEQ'Y'                                                           CDL102
      C                     EXSR SRLIBE                                                        CDL102
      C                     ENDIF                                                              CDL102
-      *                                                                                       CDL102
 0503 C                     GOTO END
 0504 C*
 0505 C*    SET ERROR INDICATORS.
@@ -1670,6 +1702,7 @@
      C*                                                                   S01119
      C********** UBRTT     IFNE 0                                                      S01119 CSD103
      C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C           BLRTU     ANDNE'Y'                                                           CIR020
      C*                                                                   S01119
      C* CHECK OUR DETAILS FOR AVERAGE RATE                                S01119
      C*                                                                   S01119
@@ -1699,6 +1732,7 @@
      C*                                                                   S01119
      C********** TBRTT     IFNE 0                                                      S01119 CSD103
      C           TBRTT     IFNE *BLANKS                                                       CSD103
+     C           BLRTT     ANDNE'Y'                                                           CIR020
      C*                                                                   S01119
      C* CHECK THR DETAILS FOR AVERAGE RATE METHOD                         S01119
      C*                                                                   S01119
@@ -1737,6 +1771,7 @@
      C*                                                                   S01119
      C********** UBRTT     IFNE 0                                                      S01119 CSD103
      C           UBRTT     IFNE *BLANKS                                                       CSD103
+     C           BLRTU     ANDNE'Y'                                                           CIR020
      C*                                                                   S01119
      C* PROCESS OUR DETAILS USING FRA/IRS SUBROUTINE                      S01119
      C*                                                                   S01119
@@ -1831,6 +1866,7 @@
      C*                                                                   S01119
      C********** TBRTT     IFNE 0                                                      S01119 CSD103
      C           TBRTT     IFNE *BLANKS                                                       CSD103
+     C           BLRTT     ANDNE'Y'                                                           CIR020
      C*                                                                   S01119
      C* PROCESS THR DETAILS USING FRA/IRS SUBROUTINE                      S01119
      C*                                                                   S01119
@@ -2931,6 +2967,106 @@
       *                                                                                       CDL102
      C                     ENDSR                                                              CDL102
       *                                                                                       CDL102
+      *****************************************************************                       CIR020
+      *                                                               *                       CIR020
+      *  SRLIB2 - Generate base rate change record for backward       *                       CIR020
+      *           looking rate IRS deal                               *                       CIR020
+      *                                                               *                       CIR020
+      *  Called by : - Main processing                                *                       CIR020
+      *                                                               *                       CIR020
+      *  Calls     : - ZDATE2                                         *                       CIR020
+      *                                                               *                       CIR020
+      *****************************************************************                       CIR020
+      *                                                                                       CIR020
+     C           SRLIB2    BEGSR                                                              CIR020
+      *                                                                                       CIR020
+     C                     MOVE DLNO      KKDLNO  6                                           CIR020
+     C                     MOVE 'N'       WOURS   1                                           CIR020
+     C                     MOVE 'N'       WTHEI   1                                           CIR020
+     C           KKDLNO    SETLLIRLIBEL0                                                      CIR020
+     C                     READ IRLIBEL0                 88                                   CIR020
+      *                                                                                       CIR020
+     C           KKDLNO    DOWEQLRLNRF                                                        CIR020
+     C           LRVDAT    ANDLEEVCD                                                          CIR020
+     C           *IN88     ANDEQ'0'                                                           CIR020
+      *                                                                                       CIR020
+      ** Process the extracted rates if Value Date >= Midas rundate for                       CIR020
+      ** deals with calculation method NCCR or SARR                                           CIR020
+      *                                                                                       CIR020
+     C                     MOVE 'Y'       GENBR                                               CIR020
+     C           CALM      IFEQ 'NCCR'                                                        CIR020
+     C           CALM      OREQ 'SARR'                                                        CIR020
+      *                                                                                       CIR020
+     C           LRVDAT    IFLT BJRDNB                                                        CIR020
+     C                     MOVE 'N'       GENBR                                               CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
+      ** However, process the extracted rates if it is a newly input                          CIR020
+      ** and the deal is backvalued                                                           CIR020
+      *                                                                                       CIR020
+     C           LRVDAT    IFLT BJRDNB                                                        CIR020
+     C           VDAT      ANDLTBJRDNB                                                        CIR020
+     C           ORED      ANDEQBJRDNB                                                        CIR020
+     C                     MOVE 'Y'       GENBR                                               CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
+     C                     Z-ADD0         BANBRT                                              CIR020
+     C           GENBR     IFEQ 'Y'                                                           CIR020
+     C           LRFLAG    ANDEQ*BLANK                                                        CIR020
+     C                     Z-ADDLRCART    BANBRT                                              CIR020
+     C           WZDAYN    IFEQ *ZERO                                                         CIR020
+     C                     Z-ADDLRVDAT    ZDAYNO                                              CIR020
+     C                     ELSE                                                               CIR020
+     C                     Z-ADDWZDAYN    ZDAYNO                                              CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
+     C                     EXSR ZDATE2                                                        CIR020
+     C                     MOVE ZADATE    VDATA                                               CIR020
+     C                     Z-ADDZDAYNO    ODATE                                               CIR020
+     C                     MOVE 'N'       WGEN    1                                           CIR020
+     C           LRLEGF    IFEQ 'O'                                                           CIR020
+     C                     Z-ADD2         SEQN                                                CIR020
+     C                     MOVE UBRTT     BRTT                                                CIR020
+     C           WOURS     IFEQ 'N'                                                           CIR020
+     C                     MOVE 'Y'       WGEN                                                CIR020
+     C                     ENDIF                                                              CIR020
+     C                     ELSE                                                               CIR020
+     C                     Z-ADD1         SEQN                                                CIR020
+     C                     MOVE TBRTT     BRTT                                                CIR020
+     C           WTHEI     IFEQ 'N'                                                           CIR020
+     C                     MOVE 'Y'       WGEN                                                CIR020
+     C                     ENDIF                                                              CIR020
+     C                     ENDIF                                                              CIR020
+     C                     SETOF                     36                                       CIR020
+      ** Generate only 1 record for ours and theirs                                           CIR020
+     C           WGEN      IFEQ 'Y'                                                           CIR020
+      *                                                                                       CIR020
+      ** Output to DAMBRDI and report.                                                        CIR020
+      *                                                                                       CIR020
+     C   OF                EXCPTHEADER                                                        CIR020
+     C                     EXCPTBRFRA                                                         CIR020
+     C                     ADD  1         DLTOT                                               CIR020
+     C           LRLEGF    IFEQ 'O'                                                           CIR020
+     C                     MOVE 'Y'       WOURS                                               CIR020
+     C                     ELSE                                                               CIR020
+     C                     MOVE 'Y'       WTHEI                                               CIR020
+     C                     ENDIF                                                              CIR020
+     C                     ENDIF                                                              CIR020
+     C                     ENDIF                                                              CIR020
+      *                                                                                       CIR020
+     C                     MOVE 'Y'       LRFLAG                                              CIR020
+     C                     UPDATIRLIBED0                                                      CIR020
+      *                                                                                       CIR020
+     C                     READ IRLIBEL0                 88                                   CIR020
+     C                     ENDDO                                                              CIR020
+      ** Set off deals indicator so records will not duplicate                                CIR020
+     C                     SETOF                     15                                       CIR020
+     C                     SUB  1         DLTOT                                               CIR020
+      *                                                                                       CIR020
+     C                     ENDSR                                                              CIR020
+      *                                                                                       CIR020
 0638 C**
 0639 C********************************************************************
      C*                                                                   S01194

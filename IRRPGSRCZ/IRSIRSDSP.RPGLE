@@ -49,7 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CIR020 - LIBOR Deregulation - IRS (Recompile)                *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR017 - SIRS Business Day Conventions for both Legs         *
       *           (Recompile)                                         *

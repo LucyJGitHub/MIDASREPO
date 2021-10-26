@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059065           Date 15Oct21               *
-      *  Prev Amend No. MD058988           Date 06Oct21               *
+      *  Last Amend No. MD059141           Date 26Oct21               *
+      *  Prev Amend No. MD059065           Date 15Oct21               *
+      *                 MD058988           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058513           Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059141 - SIRS Transaction accepting NCCR and SARR on       *
+      *             'Their Details'                                   *
       *  MD059065 - IR020 fields/values not auto-populating when      *
       *             amending CIRS from forward looking rate           *
       *             to backward looking rate via SOAP/MQ              *
@@ -728,7 +731,8 @@
 
       ** For IRS, the NCCR and SARR calculation method are not allowed                        CIR020
      C                   IF        (ApiName = 'CIR1' or ApiName = 'SIR1' or                   CIR020
-     C                              ApiName = 'CIR2' or ApiName = 'SIR1' or                   CIR020
+     C**********                    ApiName = 'CIR2' or ApiName = 'SIR1' or          CIR020 MD059141
+     C                              ApiName = 'CIR2' or ApiName = 'SIR2' or                 MD059141
      C                              ApiName = 'CACF') and                                     CIR020
      C                             (DDCALM = 'NCCR' or DDCALM = 'SARR')                       CIR020
      C                   EVAL      DDCALMOK = 'N'                                             CIR020

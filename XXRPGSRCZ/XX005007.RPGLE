@@ -16,7 +16,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058916 - DRI005 installation issues (Recompile)            *
+      *  MD058916 - DRI005 installation issues (Recompile).           *
       *  DRI005 - HO and EDW Extracts                                 *
       *                                                               *
       *****************************************************************

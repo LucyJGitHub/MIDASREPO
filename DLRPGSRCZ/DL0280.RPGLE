@@ -9211,14 +9211,16 @@
      C                   MOVE      ' '           FLRT              1                        AR887940
      C                   MOVE      ' '           WBLRT             1                          CIR020
      C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   IF        DTYP <> 'RR'                                               CIR020
+     C                   IF        ((DTYP = 'RR'                                              CIR020
+     C                             OR DTYP = 'RP')                                            CIR020
+     C                             AND BYSL = 'B')                                            CIR020
+     C                             OR (DTYP = 'RF'                                            CIR020
+     C                             AND BYSL = 'S')                                            CIR020
+     C                             OR (DTYP <> 'RR'                                           CIR020
      C                             AND DTYP <> 'RF'                                           CIR020
-     C                             AND DTYP <> 'RP'                                           CIR020
+     C                             AND DTYP <> 'RP')                                          CIR020
      C                   IF        UBLRT = 'Y'                                                CIR020
      C                             AND UCALM <> 'MANL'                                        CIR020
-     C                   IF        UNICD <> 0                                                 CIR020
-     C                             AND UNICD <= BJRDNB                                        CIR020
-     C                             OR UNICD = 0                                               CIR020
      C                   MOVE      UDNSI         WUDNSI            1                          CIR020
      C                   BITON     '02'          UDNSI                                        CIR020
      C                   MOVE      'Y'           WBLRT                                        CIR020
@@ -9231,7 +9233,6 @@
      C                   IF        %FOUND(DAMBR2)                                             CIR020
      C                   Z-ADD     RTSPIR        UEINR                                        CIR020
      C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     USPIN         IFEQ      'A'                                                        CIR020
      C     UEINR         ANDEQ     0                                                          CIR020
@@ -9241,75 +9242,23 @@
      C     UEINR         ANDEQ     0                                                          CIR020
      C                   Z-SUB     URTSP         UEINR                                        CIR020
      C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TBLRT = 'Y'                                                CIR020
-     C                             AND TCALM <> 'MANL'                                        CIR020
-     C                   IF        TNICD <> 0                                                 CIR020
-     C                             AND TNICD <= BJRDNB                                        CIR020
-     C                             OR TNICD = 0                                               CIR020
-     C                   MOVE      TDNSI         WTDNSI            1                          CIR020
-     C                   BITON     '02'          TDNSI                                        CIR020
-     C                   MOVE      'Y'           WBLRT                                        CIR020
-      ** Override effective int rate with backward looking rate                               CIR020
-     C                   Z-ADD     1             WDASN                                        CIR020
-     C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
-     C                   IF        %FOUND(DAMBR2)                                             CIR020
-     C                   Z-ADD     RTSPIR        TEINR                                        CIR020
+     C     USPIN         IFEQ      'P'                                                        CIR020
+     C     UBRTE         DIV       100           EINR                                         CIR020
+     C     EINR          MULT(H)   URTSP         UEINR                                        CIR020
+     C                   ADD       UBRTE         UEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
-      ** Apply spread rate if effective interest rate is zero                                 CIR020
-     C     TSPIN         IFEQ      'A'                                                        CIR020
-     C     TEINR         ANDEQ     0                                                          CIR020
-     C                   Z-ADD     TRTSP         TEINR                                        CIR020
      C                   ENDIF                                                                CIR020
-     C     TSPIN         IFEQ      'S'                                                        CIR020
-     C     TEINR         ANDEQ     0                                                          CIR020
-     C                   Z-SUB     TRTSP         TEINR                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ELSE                                                                 CIR020
-      *                                                                                       CIR020
-     C                   IF        DTYP = 'RR'                                                CIR020
-     C                             OR DTYP = 'RF'                                             CIR020
-     C                             OR DTYP = 'RP'                                             CIR020
      C                   IF        ((DTYP = 'RR'                                              CIR020
      C                             OR DTYP = 'RP')                                            CIR020
-     C                             AND BYSL = 'S')                                            CIR020
-     C                             OR (DTYP = 'RF'                                            CIR020
      C                             AND BYSL = 'B')                                            CIR020
-     C                   IF        UBLRT = 'Y'                                                CIR020
-     C                             AND UCALM <> 'MANL'                                        CIR020
-     C                   IF        UNICD <> 0                                                 CIR020
-     C                             AND UNICD <= BJRDNB                                        CIR020
-     C                             OR UNICD = 0                                               CIR020
-     C                   MOVE      UDNSI         WUDNSI            1                          CIR020
-     C                   BITON     '02'          UDNSI                                        CIR020
-     C                   MOVE      'Y'           WBLRT                                        CIR020
-      ** Override effective int rate with backward looking rate                               CIR020
-     C                   Z-ADD     2             WDASN             3 0                        CIR020
-     C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
-     C                   IF        %FOUND(DAMBR2)                                             CIR020
-     C                   Z-ADD     RTSPIR        UEINR                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
-      ** Apply spread rate if effective interest rate is zero                                 CIR020
-     C     USPIN         IFEQ      'A'                                                        CIR020
-     C     UEINR         ANDEQ     0                                                          CIR020
-     C                   Z-ADD     URTSP         UEINR                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C     USPIN         IFEQ      'S'                                                        CIR020
-     C     UEINR         ANDEQ     0                                                          CIR020
-     C                   Z-SUB     URTSP         UEINR                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
-      *                                                                                       CIR020
+     C                             OR (DTYP = 'RF'                                            CIR020
+     C                             AND BYSL = 'S')                                            CIR020
+     C                             OR (DTYP <> 'RR'                                           CIR020
+     C                             AND DTYP <> 'RF'                                           CIR020
+     C                             AND DTYP <> 'RP')                                          CIR020
      C                   IF        TBLRT = 'Y'                                                CIR020
      C                             AND TCALM <> 'MANL'                                        CIR020
-     C                   IF        TNICD <> 0                                                 CIR020
-     C                             AND TNICD <= BJRDNB                                        CIR020
-     C                             OR TNICD = 0                                               CIR020
      C                   MOVE      TDNSI         WTDNSI            1                          CIR020
      C                   BITON     '02'          TDNSI                                        CIR020
      C                   MOVE      'Y'           WBLRT                                        CIR020
@@ -9319,7 +9268,6 @@
      C                   IF        %FOUND(DAMBR2)                                             CIR020
      C                   Z-ADD     RTSPIR        TEINR                                        CIR020
      C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     TSPIN         IFEQ      'A'                                                        CIR020
      C     TEINR         ANDEQ     0                                                          CIR020
@@ -9328,6 +9276,11 @@
      C     TSPIN         IFEQ      'S'                                                        CIR020
      C     TEINR         ANDEQ     0                                                          CIR020
      C                   Z-SUB     TRTSP         TEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     USPIN         IFEQ      'P'                                                        CIR020
+     C     UBRTE         DIV       100           EINR                                         CIR020
+     C     EINR          MULT(H)   URTSP         UEINR                                        CIR020
+     C                   ADD       UBRTE         UEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
@@ -27211,16 +27164,6 @@
      C     RLINTR        TAG                                                     ** RLINTR TAG*S0111
      C*                                                                   S01119
      C                   Z-ADD     RTSPDM        WBRTE                                         S0111
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   IF        UNICD <> 0                                                 CIR020
-     C                             AND UNICD > BJRDNB                                         CIR020
-     C                   EVAL      WBRTE = 0                                                  CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TNICD <> 0                                                 CIR020
-     C                             AND TNICD > BJRDNB                                         CIR020
-     C                   EVAL      WBRTE = 0                                                  CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
      C     WSPIN         IFEQ      'A'                                          B              S0111
      C     WRTSP         ADD       WBRTE         WEINR                          *              S0111
      C                   END                                                    E              S0111
@@ -27319,14 +27262,6 @@
      C* APPLY DEAL AMENDMENT TO RECORD GIVING EFFECTIVE INTEREST RATE     S01119
      C*                                                                   S01119
      C                   Z-ADD     RTSPDM        WBRTE                                         S0111
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   IF        (UNICD <> 0                                                CIR020
-     C                             AND UNICD > BJRDNB)                                        CIR020
-     C                             OR (TNICD <> 0                                             CIR020
-     C                             AND TNICD <= BJRDNB)                                       CIR020
-     C                   EVAL      WBRTE = 0                                                  CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
      C     WSPIN         IFEQ      'A'                                          B              S0111
      C     WRTSP         ADD       WBRTE         WEINR                          *              S0111
      C                   END                                                    E              S0111
@@ -28102,9 +28037,9 @@
      C*                                                                   S01119
      C* MATURITY DATE PROCESSING                                          S01119
      C*                                                                   S01119
-     C                   IF        CIR020 = 'Y'                                               CIR020 
-     C                   Z-ADD     0             UBRTE                                        CIR020
-     C                   Z-ADD     0             TBRTE                                        CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   Z-ADD     0             UEINR                                        CIR020
+     C                   Z-ADD     0             TEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C                   TESTB     '2'           ACEI                 31                       S0111
      C     MDAT          IFLE      EVCD                                                        S0111

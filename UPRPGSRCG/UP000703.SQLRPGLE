@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD056891             Date 21Aug21             *
-      *  Prev Amend No. MD058593             Date 20Aug21             *
+      *  Last Amend No. MD058933A            Date 20Oct21             *
+      *  Prev Amend No. MD056891             Date 21Aug21             *
+      *                 MD058593             Date 20Aug21             *
       *                 MD054346             Date 18Jul21             *
       *                 MD055891             Date 01Sep20             *
       *                 MD058443             Date 12Jul21             *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058933A - Same logic as in UP000701 needs to be applied    *
       *  MD056891 - Deliverable Data Split for T_WIPACT               *
       *  MD058593 - GZSCSAREPD was made redundant. Remove it from BTD *
       *  MD054346 - Switchable Features Password Encryption           *
@@ -293,6 +295,33 @@
      C                   Endif
      C                   Endif                                                              MD054955
                                                                                             MD054955
+     C                   if        XINDEX = 'CBCMPCTD'                                     MD058933A
+     C                   eval      SQLDynStmt = 'update '      +                           MD058933A
+     C                             %trimr(KMSCHEMA) + '/CBCMPXTD x '  +                    MD058933A
+     C                             ' set (x.dhcprm ) = (select c.dhcprm ' +                MD058933A
+     C                             ' from CBCMPCTD c ' +                                   MD058933A
+     C                             ' where x.dhcott = c.dhcott and x.dhcseq ' +            MD058933A
+     C                             ' = c.dhcseq and c.dhcpca <> ''Y'') ' +                 MD058933A
+     C                             ' where exists (select * from CBCMPCTD c' +             MD058933A
+     C                             ' where x.dhcott = c.dhcott and x.dhcseq ' +            MD058933A
+     C                             ' = c.dhcseq and c.dhcpca <> ''Y'')'                    MD058933A
+                                                                                           MD058933A
+     C/EXEC SQL                                                                            MD058933A
+     C+ prepare DynSQLStmnt                                                                MD058933A
+     C+ from :SQLDynStmt                                                                   MD058933A
+     C/END-EXEC                                                                            MD058933A
+                                                                                           MD058933A
+     C/exec SQL                                                                            MD058933A
+     C+ execute DynSQLStmnt                                                                MD058933A
+     C/end-exec                                                                            MD058933A
+                                                                                           MD058933A
+     C                   If        SQLCode <> 0                                            MD058933A
+     C                             and SQLCode <> 100                                      MD058933A
+     C                   eval      ERROR = '*Error'                                        MD058933A
+     C                   Dump                                                              MD058933A
+     C                   Endif                                                             MD058933A
+     C                   ENDIF                                                             MD058933A
+                                                                                           MD058933A
      C                   ENDSR
 
       /EJECT

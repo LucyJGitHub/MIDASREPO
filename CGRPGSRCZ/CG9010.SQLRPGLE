@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057512           Date 08Feb21               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. MD059080           Date 15Oct21               *
+      *  Prev Amend No. MD057512           Date 08Feb21               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD054011           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059080 - CGC2050 00002 fails when retail account is used.  *
       *  MD057512 - CGC2050 00001 component loops during COB          *
       *           - Amended program CG9010 in sr/SRSECO + sr/SRCSEC   *
       *             to only close the cursors after                   *
@@ -237,6 +239,7 @@
      D  ##CCY                186    188
      D  ##ACO                189    198  0
      D  ##ACSQ               199    200  0
+     D  AAACSQ               199    200                                                     MD059080
      D  ##BRCA               201    203
      D  ##ACNO               180    189  0                                                        MD
      D AD              DS
@@ -519,7 +522,12 @@
      C     DRPTYP        OREQ      C#RETC                                                      CCG02
      C     DRPTYP        OREQ      C#REAG                                                      CCG02
      C     DRPTYP        OREQ      C#RETL                                                      CCG02
+     C                   TESTN                   AAACSQ               22                    MD059080
+     C                   If        *IN22 = *OFF                                             MD059080
+     C                   SETON                                        22                    MD059080
+     C                   Else                                                               MD059080
      C     KMACT         CHAIN     ACCNTABF                           22                       CCG02
+     C                   ENDIF                                                              MD059080
      C     *IN22         IFEQ      '1'                                                       MD04368
      C     ##ACNO        CHAIN     RETAILF                            22                     MD04368
      C                   ENDIF                                                               MD04368

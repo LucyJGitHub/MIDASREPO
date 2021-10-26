@@ -14,7 +14,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD058599           Date 09Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD058803           Date 08Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
       *                 MD054906           Date 15Jan20               *
@@ -71,6 +72,7 @@
       *             value date settlemet for CCS deals.               *
       *           - Swap the value of InRCCY and InPCCY parameters of *
       *             ZASETINCVT program for Value Date Settlement.     *
+      *  MD058803 - Incorrect CNI for Value Date Settlement details   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -1048,7 +1050,10 @@
       * FRA/IRS                                                                              BUG5291
      C                   EVAL      DBFraSttmt = CIRSFraIns
      C                   MOVE      RXAGVC        FLAGVC
-
+                                                                                            MD058803
+     C                   EVAL      InRCCY = STCUCY                                          MD058803
+     C                   EVAL      InPCCY = SUCUCY                                          MD058803
+                                                                                            MD058803
      C                   EXSR      SrSETINCVT
 
      C                   EVAL      InPaySttmt = CrPayStmt
@@ -1066,7 +1071,10 @@
       ** Set up Value Date Settlement Details                                                BUG5291
      C                   EVAL      DBRecSttmt = ExRValDat
      C                   EVAL      DBPaySttmt = ExPValDat
-
+                                                                                            MD058803
+     C                   EVAL      InRCCY = SUCUCY                                          MD058803
+     C                   EVAL      InPCCY = STCUCY                                          MD058803
+                                                                                            MD058803
      C                   EXSR      SrSETINCVT
       ** Return the original value of STCUCY and SUCUCY                                     MD058599
      C                   EVAL      STCUCY   = STCUCYV                                       MD058599
@@ -1078,7 +1086,10 @@
       ** Set up Maturity Date Settlement Details                                             BUG5291
      C                   EVAL      DBRecSttmt = ExRMatDat
      C                   EVAL      DBPaySttmt = ExPMatDat
-
+                                                                                            MD058803
+     C                   EVAL      InRCCY = STCUCY                                          MD058803
+     C                   EVAL      InPCCY = SUCUCY                                          MD058803
+                                                                                            MD058803
      C                   EXSR      SrSETINCVT
 
      C                   EVAL      InPayStmtM = CrPayStmt
@@ -1110,8 +1121,10 @@
      C                   PARM                    CrRecStmt
       ** Screen FRA/IRS settlement instruction
      C                   PARM                    CrFRAStmt
-     C                   PARM      STCUCY        InRCCY                                      CSF011A
-     C                   PARM      SUCUCY        InPCCY                                      CSF011A
+     C**********         PARM      STCUCY        InRCCY                             CSF011A MD058803
+     C**********         PARM      SUCUCY        InPCCY                             CSF011A MD058803
+     C                   PARM                    InRCCY                                     MD058803
+     C                   PARM                    InPCCY                                     MD058803
 
      C                   ENDSR
       *****************************************************************

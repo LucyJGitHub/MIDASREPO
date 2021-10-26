@@ -13,13 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CUT017             Date 17Mar20               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 BUG27790 *CREATE   Date 23Jun10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CUT017 - Adaptive Database Upgrade                           *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *

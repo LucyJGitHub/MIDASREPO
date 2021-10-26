@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD057707             Date 21Jan21             *
-      *  Prev Amend No. MD057599             Date 21Jan21             *
+      *  Last Amend No. CUT017               Date 17Mar20             *
+      *  Prev Amend No. MD057707             Date 21Jan21             *
+      *                 MD057599             Date 21Jan21             *
       *                 MD056612             Date 12Sep20             *
       *                 MD056557             Date 31Aug20             *
       *                 MD056565             Date 21Jan21             *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CUT017 - Adaptive Database Upgrade                           *
       *  MD057707 - Deliverable Data Split for SDOREFPD               *
       *  MD057599 - Deliverable Data Split for Bridge and Util files  *
       *  MD056612 - Deliverable Data Split for MX group               *
@@ -1095,6 +1097,7 @@
      C                             or ChkFile = 'SMLOAXTD'                                  MD057599
      C                             or ChkFile = 'UTGENXTD'                                  MD057599
      C                             or ChkFile = 'SDOREXTD'                                  MD057707
+     C                             or %SUBST(Member:6:3) =  'CTD'                             CUT017
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'

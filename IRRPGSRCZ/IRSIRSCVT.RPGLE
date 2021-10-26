@@ -77,7 +77,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059100 - Incorrect deal status on pre-confirmation         *
-      *             page during Amend of SIRS                         *
+      *             page during Amend of SIRS.                        *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*

@@ -22,6 +22,8 @@
 
 /* Define variables */
 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR)
+
              Dcl        Var(&MPlusDbPfx) Type(*CHAR) Len(2)
              Dcl        Var(&MainMPMDb ) Type(*CHAR) Len(10)
              Dcl        Var(&ArchMPMDb ) Type(*CHAR) Len(10)

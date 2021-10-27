@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. DAI104             Date 29Jul19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD036924           Date 06Nov19               *
       *                 AR674226           Date 04Dec19               *
@@ -72,6 +73,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI104 - Extend Customer De-Activation (CSD025) to LE        *
+      *           Use of core hook LEH00266                           *
+      *           Addition of hook DAI104_007                         *
+      *           Addition of hook DAI104_008                         *
+      *           Addition of hook DAI104_009                         *
+      *           Addition of hook DAI104_010                         *
+      *           Addition of hook DAI104_011                         *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD039655 - Facility cannot be rejected.                      *
@@ -332,6 +340,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D/COPY WNCPYSRC,DAI104_011                                                               DAI104
 
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FC_)
@@ -687,12 +696,14 @@
 
       ** Customer number must refer to a valid customer
 
+     C/COPY WNCPYSRC,DAI104_009                                                               DAI104
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      DDCSSN        @KEY1            10
      C                   PARM                    @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C/COPY WNCPYSRC,DAI104_010                                                               DAI104
       *
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*CUSCLS'                                                MD036924
@@ -705,8 +716,10 @@
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
      C                   ELSE
 
+     C/COPY WNCPYSRC,DAI104_007                                                               DAI104
      C                   MOVEL     *BLANK        DDCSSN
      C                   MOVEL     BBCUST        DDCSSN
+     C/COPY WNCPYSRC,DAI104_008                                                               DAI104
      C                   ENDIF
 
      C                   ENDIF

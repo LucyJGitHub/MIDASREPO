@@ -3478,7 +3478,7 @@
       ** If system value is not found then default value to 'N'                             MD035545
       *                                                                                     MD035545
      C     W0RTCD        IFNE      '       '                                                MD035545
-     C                   MOVE      'N'           WCALC6            1                        MD035545
+     C                   MOVE      'N'           WCALC6                                     MD035545
      C                   ELSE                                                               MD035545
      C                   MOVEL     P@VL01        WCALC6                                     MD035545
      C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993

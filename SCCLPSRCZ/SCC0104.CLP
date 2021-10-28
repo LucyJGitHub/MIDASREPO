@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD039086           Date 24Oct16              */
+/*       Last Amend No. LEUFIX34           Date 27Oct17              */
+/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
@@ -50,6 +51,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LEUFIX34 - UDC_PRTGEN is not restarted                      */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD039086 - Submit GO_ONL_ABC background updater             */
 /*                  Applied for MD-57273.                            */
@@ -643,6 +645,15 @@
              MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD027386*/
              ENDDO                                                                      /*MD027386*/
                                                                                         /*MD027386*/
+/* Start the UDC jobs */                                                                /*LEUFIX34*/
+                                                                                        /*LEUFIX34*/
+             IF         COND((%SST(&FMT 101 1) *EQ 'Y') *AND +
+                        (&MPHAS *EQ 'A')) THEN(DO)                                      /*LEUFIX34*/
+             CALL       PGM(CGC5203) PARM('')                       /*UDC_PRTGEN*/      /*LEUFIX34*/
+             CALL       PGM(CGC5273) PARM('')                       /*UDC_CHARGE*/      /*LEUFIX34*/
+             CALL       PGM(CGC5214) PARM('')                       /*UDC_IMMEDS*/      /*LEUFIX34*/
+             ENDDO                                                                      /*LEUFIX34*/
+                                                                                        /*LEUFIX34*/
 /** Submit ARR Calculator Scheduler */                                                    /*CSD103*/
                                                                                           /*CSD103*/
              IF         COND(&CSD103 *EQ 'Y' *AND +

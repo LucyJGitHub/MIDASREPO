@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058418           Date 19Oct21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 12Mar15               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -50,6 +51,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058418 - Inputting the Base Interest Rate, an error        *
+      *             occurred from the system.                         *
+      *             Add the Account Record field in parameter list of *
+      *             program TABLETK.                                  *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033488 - Allow negative rates. Reverse part of 226723 to   *
@@ -150,6 +155,11 @@
      F                                              KINFDS ID0008                            BUG8782
      F                                              KINFSR *PSSR                             BUG8782
       * RTV : Midas SD Profit centre accounting ICD retrieve                                 BUG8782
+      *                                                                                     MD058418
+     FSDBSHSL1IF  E           K        DISK                                                 MD058418
+     F                                              KINFSR *PSSR                            MD058418
+      ** Midas SD Base Rate History File                                                    MD058418
+      *                                                                                     MD058418
      F/COPY WNCPYSRC,SD0171RF01
       *
      E* Description     : Copyright notice for inclusion in all programs
@@ -2063,6 +2073,9 @@
      C                     Z-ADD1         WUNOIN           No. of Inserts
       * Change Standing Data Cont - Standing Data Controls  *
      C                     EXSR SCCHRC
+      *                                                                                     MD058418
+     C                     EXSR SCACRC                                                      MD058418
+      *                                                                                     MD058418
       * Parameter '*Return code' should be 'B'         031807
       * TABLETK - Base Rate Codes  *
      C                     CALL 'TABLETK'              90  TABLETK
@@ -2077,6 +2090,7 @@
      C                     PARM BABSRS    WQ0044  5        Base Rate Short
      C                     PARM BATYLC    WQ0045  1        Type of Last Ch
      C                     PARM WURDNB    WQ0046  50       Run day number
+     C                     PARM BAACRC    WQACRC  1        Account Records                  MD058418
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error
@@ -2413,6 +2427,9 @@
      C                     Z-ADD*ZERO     WUNOAM           No. of Amends
       * Change Standing Data Cont - Standing Data Controls  *
      C                     EXSR SECHRC
+      *                                                                                     MD058418
+     C                     EXSR SCACRC                                                      MD058418
+      *                                                                                     MD058418
      C                     MOVEL'D'       WUTYLC           Type of Last Ch
       * Parameter '*Return code' should be 'B'        031807
       * TABLETK - Base Rate Codes  *
@@ -2428,6 +2445,7 @@
      C                     PARM BABSRS    WQ0055  5        Base Rate Short
      C                     PARM WUTYLC    WQ0056  1        Type of Last Ch
      C                     PARM WURDNB    WQ0057  50       Run day number
+     C                     PARM BAACRC    WQACRC           Account Records                  MD058418
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error
@@ -2701,6 +2719,9 @@
      C                     Z-ADD1         WUNOAM           No. of Amends
       * Change Standing Data Cont - Standing Data Controls  *
      C                     EXSR SGCHRC
+      *                                                                                     MD058418
+     C                     EXSR SCACRC                                                      MD058418
+      *                                                                                     MD058418
       * Parameter '*Return code' should be 'B'          031807
       * TABLETK - Base Rate Codes  *
      C                     CALL 'TABLETK'              90  TABLETK
@@ -2715,6 +2736,7 @@
      C                     PARM BABSRS    WQ0066  5        Base Rate Short
      C                     PARM BATYLC    WQ0067  1        Type of Last Ch
      C                     PARM WURDNB    WQ0068  50       Run day number
+     C                     PARM BAACRC    WQACRC           Account Records                  MD058418
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error
@@ -3224,6 +3246,30 @@
      C                     EXSR ZYEXPG
       *================================================================
      CSR         ZXEXIT    ENDSR
+      /EJECT                                                                                MD058418
+     CSR         SCACRC    BEGSR                                                            MD058418
+      *================================================================                     MD058418
+      * Check previous value in history file                                                MD058418
+      *================================================================                     MD058418
+      *                                                                                     MD058418
+     C                     MOVE BACYCD    WCYCD                                             MD058418
+     C                     MOVE BABSRC    WBSRC                                             MD058418
+     C           BAVDNR    SUB  1         WVDNR                                             MD058418
+     C           BSHSKY    SETGTSDBSHSL1                                                    MD058418
+     C           BSHSK     REDPESDBSHSL1                 42                                 MD058418
+      * If found compare G0CBSR (previous rate) with current value                          MD058418
+     C           *IN42     IFEQ '0'                                                         MD058418
+      * If new base rate is the same as prev history record, flag as no change              MD058418
+     C           BANBRT    IFNE 0                                                           MD058418
+     C           BANBRT    ANDEQG0CBSR                                                      MD058418
+     C           BANBRT    OREQ 0                                                           MD058418
+     C           BACBSR    ANDEQG0CBSR                                                      MD058418
+     C                     MOVEL'N'       BAACRC                                            MD058418
+     C                     ENDIF                                                            MD058418
+     C                     ENDIF                                                            MD058418
+      *                                                                                     MD058418
+      *================================================================                     MD058418
+     CSR                   ENDSR                                                            MD058418
       /EJECT
      CSR         ZYEXPG    BEGSR
       *================================================================
@@ -3245,6 +3291,19 @@
       *================================================================
       * Initialisation
       *================================================================
+      *                                                                                     MD058418
+      ** Key list to access Base Rate History file                                          MD058418
+      *                                                                                     MD058418
+     C           BSHSKY    KLIST                                                            MD058418
+     C                     KFLD           WCYCD   3                                         MD058418
+     C                     KFLD           WBSRC   2                                         MD058418
+     C                     KFLD           WVDNR   50                                        MD058418
+      *                                                                                     MD058418
+     C           BSHSK     KLIST                                                            MD058418
+     C                     KFLD           WCYCD                                             MD058418
+     C                     KFLD           WBSRC                                             MD058418
+      *                                                                                     MD058418
+      *
      C           W0ICL     IFEQ *BLANK
      C                     MOVEL'Y'       W0ICL   1        *Initial call
      C                     ELSE

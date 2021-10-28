@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD058622           Date 05Oct21               *
-      *  Prev Amend No. MD042109           Date 26Jun18               *
+      *  Last Amend No. MD050405           Date 25Oct21               *
+      *  Prev Amend No. MD058622           Date 05Oct21               *
+      *                 MD042109           Date 26Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
       *                 AR1096973          Date 23Apr13               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
+      *           - Applied for MD058622A.                            *
       *  MD058622 - In UXP user is changed but P1 report is not pro - *
       *             duced and AU report shows no details to report.   *
       *           - Removed MD042109 changes and add BFRECCREATEDON   *
@@ -286,7 +289,11 @@
      C**********         IF        ZDayNo3  = BJRDNB OR                                    AR1036892
      C**********                   (ZDayNo4 = BJRDNB AND                                   AR1036892
      C**********                   ZDayNo3  = 0)                                           AR1036892
-     C                   IF        ZDayNo4  = BJRDNB                                       AR1036892
+     C**********         IF        ZDayNo4  = BJRDNB                              AR1036892 MD050405
+                                                                                            MD050405
+      ** Print report based on today's date instead of Midas rundate                        MD050405
+                                                                                            MD050405
+     C                   IF        TmpDat04 = %DATE()                                       MD050405
 
       ** If Different Event Group ID
 

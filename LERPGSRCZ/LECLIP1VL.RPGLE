@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. DAI104             Date 29Jul19               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
@@ -173,6 +174,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DAI104 - Extend Customer De-Activation (CSD025) LE           *
+      *           Amendment of core hook LECLIP1V27                   *
+      *           Addition of hook DAI104_013                         *
+      *           Addition of hook DAI104_014                         *
+      *           Addition of hook DAI104_015                         *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918361 - No error message for rollover frequency when not  *
@@ -2096,12 +2102,14 @@
       ***  Must be a valid customer
       *
      C                   ELSE
+     C/COPY WNCPYSRC,DAI104_013                                                               DAI104
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      DDCUST        @CUST            10
      C                   PARM      *BLANKS       @KEYSTS           7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C/COPY WNCPYSRC,DAI104_014                                                               DAI104
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'N'           DDCUSTOK
      C                   ADD       1             Idx
@@ -2127,6 +2135,7 @@
      C                   MOVEL     'DDCUST'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0036'     MsgIDXAr(Idx)
      C                   ENDIF
+     C/COPY WNCPYSRC,DAI104_015                                                               DAI104
      C                   ENDIF
      C                   ENDIF
       *

@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059100           Date 26Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
-      *                 CSD103             Date 10Aug20               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030847           Date 25Nov14               *
@@ -76,8 +75,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059100 - Incorrect deal status on pre-confirmation         *
-      *             page during Amend of SIRS.                        *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
@@ -1522,15 +1519,13 @@
       *
       * Deal in screen format
      C                   PARM                    DealScnFmt
-      * Deal Status
-     C                   PARM                    DDSTS            24                        MD059100
       * LIBOR related fields in screen format (Ours)                                          CIR020
      C                   PARM                    CurrScnBlrt1                                 CIR020
       * LIBOR related fields in screen format (Theirs)                                        CIR020
      C                   PARM                    CurrScnBlrt2                                 CIR020
       *
       * Deal Status
-     C**********         PARM                    DDSTS            24                        MD059100
+     C                   PARM                    DDSTS            24
       *
       ** Initialize program name
       *

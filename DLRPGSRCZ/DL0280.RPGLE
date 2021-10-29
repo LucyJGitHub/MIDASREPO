@@ -9211,13 +9211,13 @@
      C                   MOVE      ' '           FLRT              1                        AR887940
      C                   MOVE      ' '           WBLRT             1                          CIR020
      C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   Z-ADD     0             EINRURX          11 7                        CIR020
-     C                   Z-ADD     0             EINRTRX          11 7                        CIR020
+     C                   Z-ADD     0             WWUBRT           11 7                        CIR020
+     C                   Z-ADD     0             WWTBRT           11 7                        CIR020
      C                   IF        ((DTYP = 'RR'                                              CIR020
      C                             OR DTYP = 'RP')                                            CIR020
-     C                             AND BYSL = 'B')                                            CIR020
-     C                             OR (DTYP = 'RF'                                            CIR020
      C                             AND BYSL = 'S')                                            CIR020
+     C                             OR (DTYP = 'RF'                                            CIR020
+     C                             AND BYSL = 'B')                                            CIR020
      C                             OR (DTYP <> 'RR'                                           CIR020
      C                             AND DTYP <> 'RF'                                           CIR020
      C                             AND DTYP <> 'RP')                                          CIR020
@@ -9225,7 +9225,6 @@
      C                             AND UCALM <> 'MANL'                                        CIR020
      C                   MOVE      UDNSI         WUDNSI            1                          CIR020
      C                   BITON     '02'          UDNSI                                        CIR020
-     C                   MOVE      'Y'           WBLRT                                        CIR020
       ** Override effective int rate with backward looking rate                               CIR020
      C     DMBRK2        KLIST                                                                CIR020
      C                   KFLD                    DLNO                                         CIR020
@@ -9234,16 +9233,18 @@
      C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
      C                   IF        %FOUND(DAMBR2)                                             CIR020
      C                   Z-ADD     RTSPIR        UEINR                                        CIR020
-     C                   Z-ADD     RTSPIR        EINRURX                                      CIR020
+     C                   Z-ADD     RTSPIR        WWUBRT                                       CIR020
+     C                   Z-ADD     RTSPIR        UBRTE                                        CIR020
      C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     USPIN         IFEQ      'A'                                                        CIR020
-     C     UEINR         ANDEQ     0                                                          CIR020
-     C                   Z-ADD     URTSP         UEINR                                        CIR020
+     C     UBRTE         ADD       URTSP         UEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     USPIN         IFEQ      ' '                                                        CIR020
+     C                   Z-ADD     UBRTE         UEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C     USPIN         IFEQ      'S'                                                        CIR020
-     C     UEINR         ANDEQ     0                                                          CIR020
-     C                   Z-SUB     URTSP         UEINR                                        CIR020
+     C     UBRTE         SUB       URTSP         UEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C     USPIN         IFEQ      'P'                                                        CIR020
      C     UBRTE         DIV       100           EINR                                         CIR020
@@ -9264,27 +9265,28 @@
      C                             AND TCALM <> 'MANL'                                        CIR020
      C                   MOVE      TDNSI         WTDNSI            1                          CIR020
      C                   BITON     '02'          TDNSI                                        CIR020
-     C                   MOVE      'Y'           WBLRT                                        CIR020
       ** Override effective int rate with backward looking rate                               CIR020
      C                   Z-ADD     1             WDASN                                        CIR020
      C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
      C                   IF        %FOUND(DAMBR2)                                             CIR020
      C                   Z-ADD     RTSPIR        TEINR                                        CIR020
-     C                   Z-ADD     RTSPIR        EINRTRX                                      CIR020
+     C                   Z-ADD     RTSPIR        WWTBRT                                       CIR020
+     C                   Z-ADD     RTSPIR        TBRTE                                        CIR020
      C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     TSPIN         IFEQ      'A'                                                        CIR020
-     C     TEINR         ANDEQ     0                                                          CIR020
-     C                   Z-ADD     TRTSP         TEINR                                        CIR020
+     C     TBRTE         ADD       TRTSP         TEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     TSPIN         IFEQ      ' '                                                        CIR020
+     C                   Z-ADD     TBRTE         TEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C     TSPIN         IFEQ      'S'                                                        CIR020
-     C     TEINR         ANDEQ     0                                                          CIR020
-     C                   Z-SUB     TRTSP         TEINR                                        CIR020
+     C     TBRTE         SUB       TRTSP         TEINR                                        CIR020
      C                   ENDIF                                                                CIR020
-     C     USPIN         IFEQ      'P'                                                        CIR020
-     C     UBRTE         DIV       100           EINR                                         CIR020
-     C     EINR          MULT(H)   URTSP         UEINR                                        CIR020
-     C                   ADD       UBRTE         UEINR                                        CIR020
+     C     TSPIN         IFEQ      'P'                                                        CIR020
+     C     TBRTE         DIV       100           EINR                                         CIR020
+     C     EINR          MULT(H)   TRTSP         TEINR                                        CIR020
+     C                   ADD       TBRTE         TEINR                                        CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                                CIR020
@@ -19849,18 +19851,6 @@
       ** Adjust the Maturity Date by the Rate Fix Days Adjustment if                          204923
       ** CIR007 is on and one or both side/s is/are OIS.                                      204923
       *                                                                                       204923
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   IF        UBLRT = 'Y'                                                CIR020
-     C                             AND UCALM <> 'MANL'                                        CIR020
-     C                   Z-ADD     0             UEINR                                        CIR020
-     C                   Z-ADD     EINRURX       UBRTE                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TBLRT = 'Y'                                                CIR020
-     C                             AND TCALM <> 'MANL'                                        CIR020
-     C                   Z-ADD     0             TEINR                                        CIR020
-     C                   Z-ADD     EINRTRX       TBRTE                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
      C                   Z-ADD     MDAT          WMATDT            5 0
      C     CIR007        IFEQ      'Y'
      C     WFXDY         ANDNE     0
@@ -23902,18 +23892,6 @@
      C*                                                                   S01119
      C* MATURITY DATE PROCESSING                                          S01119
      C*                                                                   S01119
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   IF        UBLRT = 'Y'                                                CIR020
-     C                             AND UCALM <> 'MANL'                                        CIR020
-     C                   Z-ADD     0             UEINR                                        CIR020
-     C                   Z-ADD     EINRURX       UBRTE                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TBLRT = 'Y'                                                CIR020
-     C                             AND TCALM <> 'MANL'                                        CIR020
-     C                   Z-ADD     0             TEINR                                        CIR020
-     C                   Z-ADD     EINRTRX       TBRTE                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
      C                   TESTB     '2'           ACEI                 31                       S0111
      C     MDAT          IFLE      EVCD                                                        S0111
      C     *IN31         ANDEQ     '1'                                                         S0111
@@ -25939,11 +25917,6 @@
      C     AVERRT        IFEQ      'Y'                                                         S0111
      C     VDAT          IFLT      BJRDNB                                                      S0119
      C                   Z-ADD     AACRT         NRRT                                          S0111
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                             AND RTSPIR <> 0                                            CIR020
-     C                             AND WBLRT = 'Y'                                            CIR020
-     C                   EVAL      NRRT = RTSPIR                                              CIR020
-     C                   ENDIF                                                                CIR020
      C                   SETOFF                                       31                       S0111
      C                   ELSE                                                                  S0111
      C                   SETON                                        31                       S0111
@@ -26616,11 +26589,6 @@
      C                   END                                                                   S0111
      C*                                                                   S01119
      C                   Z-ADD     AACRT         EINR                                          S0111
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                             AND RTSPIR <> 0                                            CIR020
-     C                             AND WBLRT = 'Y'                                            CIR020
-     C                   EVAL      EINR = RTSPIR                                              CIR020
-     C                   ENDIF                                                                CIR020
      C*                                                                   S01119
      C                   ELSE                                                                  S0111
      C/COPY WNCPYSRC,DL0280C408
@@ -27964,11 +27932,6 @@
      C                   END                                                                   S0111
      C     AVERRT        IFEQ      'Y'                                                         S0111
      C                   Z-ADD     AACRT         NRRT                                          S0111
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                             AND RTSPIR <> 0                                            CIR020
-     C                             AND WBLRT = 'Y'                                            CIR020
-     C                   EVAL      NRRT = RTSPIR                                              CIR020
-     C                   ENDIF                                                                CIR020
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
      C                   EXCEPT    FITHR1                                                      S0111
@@ -28065,16 +28028,6 @@
      C*                                                                   S01119
      C* MATURITY DATE PROCESSING                                          S01119
      C*                                                                   S01119
-     C                   IF        CIR020 = 'Y'                                               CIR020
-     C                   IF        UBLRT = 'Y'                                                CIR020
-     C                             AND UCALM <> 'MANL'                                        CIR020
-     C                   Z-ADD     0             UEINR                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TBLRT = 'Y'                                                CIR020
-     C                             AND TCALM <> 'MANL'                                        CIR020
-     C                   Z-ADD     0             TEINR                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   ENDIF                                                                CIR020
      C                   TESTB     '2'           ACEI                 31                       S0111
      C     MDAT          IFLE      EVCD                                                        S0111
      C     *IN31         ANDEQ     '1'                                                         S0111

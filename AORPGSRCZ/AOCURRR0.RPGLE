@@ -12,8 +12,9 @@
       *  (c) Finastra International Limited 2001                      *
       *      2000                                                     *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD058440           Date 27Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 CER048             Date 19May08               *
       *                 CER043             Date 19May08               *
@@ -54,6 +55,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058440 - Dumps are generated after inserting a Full Trade  *
+      *             Settlement.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -324,6 +327,7 @@
      C                   END
       * Return to caller :
       *
+     C                   SETON                                        LR                    MD058440
      C                   RETURN
       *
       *****************************************************

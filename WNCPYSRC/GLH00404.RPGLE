@@ -164,10 +164,10 @@
      c                   MOVE      *blanks       wkftref                                    MD058767
      c                   EVAL      ftrefxx(1) = FTREF2                                      MD058767
      c                   EVAL      ftrefxx(2) = FTREF3                                      MD058767
-     c************       EVAL      ftrefxx(3) = FTREF5                             MD058767 MD059143
-     c************       EVAL      ftrefxx(4) = FTREF6                             MD058767 MD059143
-     c                   EVAL      ftrefxx(3) = FTREF4                                      MD059143
-     c                   EVAL      ftrefxx(4) = FTREF5                                      MD059143
+     c**********         EVAL      ftrefxx(3) = FTREF5                             MD058767 MD059143
+     c**********         EVAL      ftrefxx(4) = FTREF6                             MD058767 MD059143
+     C                   EVAL      ftrefxx(3) = FTREF4                                      MD059143
+     C                   EVAL      ftrefxx(4) = FTREF5                                      MD059143
      c                   Z-ADD     1             @xx               1 0                      MD058767
      c                   Z-ADD     0             @yy               1 0                      MD058767
       *                                                                                     MD058767

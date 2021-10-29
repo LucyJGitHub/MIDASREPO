@@ -5,18 +5,21 @@
 /*                                                                   */
 /*       Midas - Standing Data Module                                */
 /*                                                                   */
-/*       SD000405 - Midas SD Password Encryption Take-on Program     */
+/********SD000405 - Midas SD Password Encryption Take-on Program     */                 /*MD059167*/
+/*       SDC000405 - Midas SD Password Encryption Take-on Program    */                 /*MD059167*/
 /*                                                                   */
 /*       (c) Finastra International Limited 2018                     */
 /*                                                                   */
-/*       Last Amend No. MD053594A          Date 10Jun19              */
-/*       Prev Amend No. MD053109           Date 03Apr19              */
+/*       Last Amend No. MD059167           Date 29Oct21              */
+/*       Prev Amend No. MD053594A          Date 10Jun19              */
+/*                      MD053109           Date 03Apr19              */
 /*                      MD053146           Date 03Apr19              */
 /*                      MD053090           Date 26Mar19              */
 /*                      CSD101  *CREATE    Date 07Dec18              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*        MD059167 - Deliverable Data Split for SDINTFPD             */
 /*        MD053594A - Migration program did not run automatically    */
 /*        MD053109 - Data Take-On Reconciliation Issues              */
 /*        MD053146 - Incorrect account key format was migrated on    */
@@ -37,7 +40,8 @@
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                               /*MD053594A*/
              DCL        VAR(&BRGDTA) TYPE(*CHAR) LEN(10)                               /*MD053594A*/
 
-             DCLF       FILE(SDINTFTD)
+/**********  DCLF       FILE(SDINTFTD) */                                               /*MD059167*/
+             DCLF       FILE(SDINFJW0)                                                  /*MD059167*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2019')
@@ -69,10 +73,16 @@
                           ' ' ' ' ' ' ' ')                                             /*MD053594A*/
              CHGVAR     VAR(&BRGDTA) VALUE(&SVAL1)                                     /*MD053594A*/
 /** Copy file from deliverable data library. */                                        /*MD053594A*/
-             CPYF       FROMFILE(&BRGDTA/SDINTFTD) +
+/**********  CPYF       FROMFILE(&BRGDTA/SDINTFTD) +
                           TOFILE(SDINTFTD) TOMBR(*FROMMBR) +
-                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                          /*MD053594A*/
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP) */             /*MD053594A**MD059167*/
+             CPYF       FROMFILE(&BRGDTA/SDINFCTD) +
+                          TOFILE(SDINFCTD) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD059167*/
              MONMSG     MSGID(CPF0000)                                                 /*MD053594A*/
+/* and shyncrhonize the XTD file */                                                     /*MD059167*/
+             CALL       PGM(UP000701) PARM(' ' 'SDINFCTD' &DTALIB)                      /*MD059167*/
+                                                                                        /*MD059167*/
 
              CHKOBJ     OBJ(&DPLIB/XSDCORMPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK1))

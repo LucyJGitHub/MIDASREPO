@@ -4,12 +4,15 @@
       *                                                               *
       *  GLH00404 - Midas GL Retrieve Postings by Network Account     *
       *                                                               *
-      *  Last Amend No. MD058767        Date 07Sep21                  *
-      *  Prev Amend No. MD058751        Date 03Sep21                  *
+      *  Last Amend No. MD059143        Date 28Oct21                  *
+      *  Prev Amend No. MD058767        Date 07Sep21                  *
+      *                 MD058751        Date 03Sep21                  *
       *                 UUC103 *CREATE  Date 20Oct20                  *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059143 - Third line of fld86 is getting ommitted. Upgrade  *
+      *             fix MMFIX3 from BF Midas 1106.                    *
       *  MD058767 - MT940s are producing many extra spaces in tag 86. *
       *             Upgraded CAR UUC061 fix MD030976.                 *
       *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
@@ -161,8 +164,10 @@
      c                   MOVE      *blanks       wkftref                                    MD058767
      c                   EVAL      ftrefxx(1) = FTREF2                                      MD058767
      c                   EVAL      ftrefxx(2) = FTREF3                                      MD058767
-     c                   EVAL      ftrefxx(3) = FTREF5                                      MD058767
-     c                   EVAL      ftrefxx(4) = FTREF6                                      MD058767
+     c************       EVAL      ftrefxx(3) = FTREF5                             MD058767 MD059143
+     c************       EVAL      ftrefxx(4) = FTREF6                             MD058767 MD059143
+     c                   EVAL      ftrefxx(3) = FTREF4                                      MD059143
+     c                   EVAL      ftrefxx(4) = FTREF5                                      MD059143
      c                   Z-ADD     1             @xx               1 0                      MD058767
      c                   Z-ADD     0             @yy               1 0                      MD058767
       *                                                                                     MD058767

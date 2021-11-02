@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BUG7555            Date 16Feb21               *
-      *  Prev Amend No. AR921987           Date 23Mar12               *
+      *  Last Amend No. LEUFIX30           Date 21Sep20               *
+      *  Prev Amend No. BUG7555            Date 16Feb21               *
+      *                 AR921987           Date 23Mar12               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD047369A          Date 24Jan18               *
@@ -107,6 +108,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX30 - MT202s with cover are not displaying cover screens*
       *  BUG7555 - When an incoming message is routed to incoming     *
       *            payment, default payment value date to the date    *
       *            on field 32A.                                      *
@@ -5565,7 +5567,9 @@
      C                   EVAL      WScrn = 'F'                                             BUG14494A
      C                   ENDIF                                                             BUG14494A
       *                                                                                       CER001
+     C                   IF        CSW209 <> 'Y'                                            LEUFIX30
      C                   GOTO      EScrn_D                                      CFT014
+     C                   ENDIF                                                              LEUFIX30
      C                   ENDIF                                                  CFT014
       *                                                                                       CSW209
       ** Display Cover message if SWIFT 2009 is ON                                            CSW209

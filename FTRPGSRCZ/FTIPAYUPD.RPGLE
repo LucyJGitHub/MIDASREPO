@@ -1158,9 +1158,9 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   EVAL      INLVL1 = 'Y'                                             BUG14585
-                                                                                            LEUFIX12
-      * Ensure input user is set on insertion                                               LEUFIX12
-                                                                                            LEUFIX12
+      *                                                                                     LEUFIX12
+      ** Ensure input user is set on insertion                                              LEUFIX12
+      *                                                                                     LEUFIX12
      C                   IF        INUSR1 = *Blanks                                         LEUFIX12
      C                   EVAL      INUSR1 = PUser                                           LEUFIX12
      C                   ENDIF                                                              LEUFIX12

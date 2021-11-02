@@ -20,7 +20,9 @@
 /*********************************************************************/
              Pgm        Parm(&Component &Sequence)
 
-/** Define variables */
+/* Define variables */
+
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR)
 
              Dcl        Var(&MPlusDbPfx) Type(*CHAR) Len(2)
              Dcl        Var(&MainMPMDb ) Type(*CHAR) Len(10)
@@ -124,15 +126,20 @@
 
              Goto       CmdLbl(EndClPgm)
 
+/** Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(Error))
+             GOTO       CMDLBL(EndClPgm)
+
  Error:
              Chgjob     Sws(xxxxxx11)
              DmpClpgm
 
-             Sndpgmmsg  MsgId(CPF9898) Msgf(QCPFMSG) MsgDta('Program SCC001120 +
-                          ended abnormally - see job log') ToMsgq(Moperq MRunq)
-
-             Sndpgmmsg  MsgId(CPF9898) Msgf(QCPFMSG) MsgDta('Program SCC001120 +
-                          ended abnormally - see job log') MsgType(*Escape)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC001120 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
 
  EndClPgm:
 

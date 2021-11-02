@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048586           Date 11Jan21               *
-      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *  Last Amend No. LEUFIX12           Date 26Jun20               *
+      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
@@ -97,6 +98,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX12 - Input user is not set on insertion through        *
+      *             the API with AUTH='N'                             *
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
@@ -1155,6 +1158,12 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   EVAL      INLVL1 = 'Y'                                             BUG14585
+                                                                                            LEUFIX12
+      * Ensure input user is set on insertion                                               LEUFIX12
+                                                                                            LEUFIX12
+     C                   IF        INUSR1 = *Blanks                                         LEUFIX12
+     C                   EVAL      INUSR1 = PUser                                           LEUFIX12
+     C                   ENDIF                                                              LEUFIX12
       *
       ** Move valid file details to update file details.
       *

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057294           Date 03Dec20               *
-      *  Prev Amend No. MD050526           Date 27Oct20               *
+      *  Last Amend No. LEUFIX11           Date 24Jun20               *
+      *  Prev Amend No. MD057294           Date 03Dec20               *
+      *                 MD050526           Date 27Oct20               *
       *                 AR970389B          Date 16Sep20               *
       *                 AR970389A          Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -158,6 +159,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX11 - Validate BRT fields if A/c holder type = C,N or O *
       *  MD057294 - Missing Customer's Authority Holders Link after   *
       *             amend                                             *
       *  MD050526 - Maintain Customers tab Authority Holders Link and *
@@ -1955,6 +1957,9 @@
      C     DDTAIN        ANDEQ     'N'                                                      BUG14161
      C     S01383        OREQ      'Y'                                                      BUG14161
      C     DDTAIN        ANDEQ     'O'                                                      BUG14161
+     C                   IF        DDTAIN <> 'B'                                            LEUFIX11
+     C                   EXSR      ValdCuBrtx                                               LEUFIX11
+     C                   ENDIF                                                              LEUFIX11
      C                   EXSR      ValdCuBrtt
 
      C                   ENDIF

@@ -146,7 +146,7 @@
       *****************************************************************           MD024342B MD025467
      FLEACTZTD  O    E             DISK    COMMIT                                           MD059067
      F                                     RENAME(FCLTYZZF:FCLTYZZAX)                       MD059067
-      ** Midas Le AGGREGATE FACILITIES FILE TRAILER                                         MD059067
+      ** Midas LE AGGREGATE FACILITIES FILE TRAILER                                         MD059067
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦

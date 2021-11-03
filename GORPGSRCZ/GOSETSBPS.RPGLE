@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058440           Date 27Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058440 - Dumps are generated after inserting a Full Trade  *
+      *             Settlement.                                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -52,31 +55,31 @@
       *****************************************************************
      FPRICMXX   IF   E           K DISK    INFSR(*PSSR) PREFIX(PR_) USROPN
      FGPUTXSL0  IF A E           K DISK    INFSR(*PSSR)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D SECTY         E DS                  EXTNAME(SECTYD)
      D PRICE         E DS                  EXTNAME(PRICED) PREFIX(PR_)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                BUG13281
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       ** Overrides
      D ##OV1           S              1    DIM(60) CTDATA PERRCD(60)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -89,27 +92,28 @@
      C                   PARM                    SECTY
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    PRICE
      C                   PARM                    NomCcyDec         1 0
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
+     C                   SETON                                        LR                    MD058440
      C                   RETURN
       *
       *****************************************************************
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -171,9 +175,9 @@
      C                   Z-ADD     MATY          T_EDAT
       * Issuer Exposure
      C                   MOVEL     'Y'           T_ISEI
- 
+
       * Determine market price of security
- 
+
      C                   EXSR      MRKTPRC
       *
       * Valuation Currency
@@ -201,7 +205,7 @@
       * DETERMINE MARKET PRICE OF SECURITY
       ********************************************************************
      C     MRKTPRC       BEGSR
- 
+
      C                   CLEAR                   PRICE
       *
       * Get current market price
@@ -232,7 +236,7 @@
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM                    @CYCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO AOCURRR0'
      C                   EXSR      *PSSR
@@ -269,20 +273,20 @@
      C                   PARM      '*DBERR  '    @RTCD             7                        BUG13281
      C                   PARM      '*FIRST  '    @OPTN             7                        BUG13281
      C     SDBANK        PARM      SDBANK        DSSDY                                      BUG13281
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
+
      C                   Z-ADD     60            MESLEN           15 5
- 
+
       * Override/Open files
- 
+
      C                   CALL      'QCMDEXC'     OV1_Parm
      C                   OPEN      PRICMXX
- 
+
       * Key lists
- 
+
      C     GPUTXSK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_SMOD
@@ -292,13 +296,13 @@
      C                   KFLD                    T_BOOK
      C                   KFLD                    T_SESN
      C                   KFLD                    T_MKTI
- 
+
       * Parameter lists
- 
+
      C     OV1_Parm      PLIST
      C                   PARM                    ##OV1
      C                   PARM                    MESLEN
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

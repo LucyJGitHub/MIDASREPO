@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058440           Date 27Nov21               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       *                 AR1048651          Date 07Feb13               *
       *                 CER049             Date 06Dec10               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058440 - Dumps are generated after inserting a Full Trade  *
+      *             Settlement.                                       *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split (Recompile)       *
@@ -124,6 +127,7 @@
      C                   MOVEL     'A'           I#BFAF                                       222727
      C                   ENDDO                                                                222727
 
+     C                   SETON                                        LR                    MD058440
      C                   RETURN
 
       /SPACE 5

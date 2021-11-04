@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. 226873             Date 04Feb13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  226873 - FOOB in component REC100804. Introduce new file     *
+      *           RELZSHDJ1.                                          *
+      *         - Applied for AR1068690 (Child:AR1069087)             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -51,6 +55,9 @@
  
      FRELZSHDJ0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(REZSHDD0:REZSHDJ0)
+     FRELZSHDJ1 IF   E           K DISK    INFSR(*PSSR)                                       226873
+     F                                     RENAME(REZSHDD0:REZSHDJ1)                          226873
+                                                                                              226873
  
      FRECMHRL0  IF   E           K DISK    INFSR(*PSSR)
      FRECMHRL1  UF   E           K DISK    INFSR(*PSSR)
@@ -218,7 +225,8 @@
       * Read all zero balancing/sweeping hierarchies
       * with number of dependent hierarchies not yet processed = zero
  
-     C                   READ      REZSHDJ0                               99
+     C**********         READ      REZSHDJ0                               99                  226873
+     C                   READ      REZSHDJ1                               99                  226873
  
      C     *IN99         DOWEQ     *OFF
  
@@ -241,8 +249,10 @@
  
       * Read next zero balancing/sweeping hierarchy
  
-     C     *LOVAL        SETLL     REZSHDJ0
-     C                   READ      REZSHDJ0                               99
+     C******LOVAL        SETLL     REZSHDJ0                                                   226873
+     C**********         READ      REZSHDJ0                               99                  226873
+     C     *LOVAL        SETLL     REZSHDJ1                                                   226873
+     C                   READ      REZSHDJ1                               99                  226873
      C                   ENDDO
  
      C                   ENDSR

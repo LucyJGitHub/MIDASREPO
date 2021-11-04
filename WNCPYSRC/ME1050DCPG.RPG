@@ -1,0 +1,93 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - STP Functions                                        *
+      *                                                               *
+      *  ME1050DCPG -  Response feedback to MPM                       *
+      *                                                               *
+      *  Function: This function sends a response to MPM for          *
+      *            feedback of STP transactions                       *
+      *                                                               *
+      *  Component of: *None                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *                                                               *
+      *****************************************************************                       UUC104
+      *                                                               *                       UUC104
+      *  #RESP    : Send a response back to MPM for STP'd FT payments *                       UUC104
+      *                                                               *                       UUC104
+      *  CALLED BY: SRIN    - Update Incoming Msg Transaction Status  *                       UUC104
+      *             SROUT   - Update Outgoing Msg Transaction Status  *                       UUC104
+      *                                                               *                       UUC104
+      *  CALLS    :                                                   *                       UUC104
+      *                                                               *                       UUC104
+      *****************************************************************                       UUC104
+     CSR         #RESP     BEGSR                                                              UUC104
+      *                                                                                       UUC104
+      ** if BFMidas in Inpyt Cycle or just after save                                         UUC104
+      ** And Action is not little i for do not send response                                  UUC104
+     C           COB       IFEQ 'A'                                                           UUC104
+     C           W#AACT    ANDNE'i'                                                           UUC104
+     C           COB       OREQ 'F'                                                           UUC104
+     C           W#AACT    ANDNE'i'                                                           UUC104
+      *                                                                                       UUC104
+      * If manually cancelled then send MIN0162 to go back to pending                         UUC104
+     C           W0CPGM    IFEQ 'ME1200'                                                      UUC104
+     C           W0LMSG    ANDEQ'MIN0182'                                                     UUC104
+      *                                                                                       UUC104
+     C                     MOVEL'MSGID'   P#ACTC    P                                         UUC104
+      *                                                                                       UUC104
+     C                     CALL 'MEM0002'                                                     UUC104
+     C                     PARM           P#ACTC  8                                           UUC104
+     C                     PARM *BLANKS   P#RCDE  7                                           UUC104
+     C                     PARM F#MSGR    P#MSGR  80                                          UUC104
+     C                     PARM F#KPRT    P#KPRT  30                                          UUC104
+     C                     PARM W0CPGM    P#CPGM 10                                           UUC104
+     C                     PARM *BLANKS   P#MSID  7                                           UUC104
+      *                                                                                       UUC104
+      * Override message id                                                                   UUC104
+     C           P#MSID    IFNE *BLANKS                                                       UUC104
+     C                     MOVELP#MSID    F#INFG                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      ** Send a response back to MPM for STP'd FT payments                                    UUC104
+     C                     CALL 'MEM0003'                                                     UUC104
+      ** Return code (10A, returned to caller)                                                UUC104
+     C                     PARM *BLANKS   W2RTN                                               UUC104
+      ** Inputs to this procedure                                                             UUC104
+      ** ------------------------                                                             UUC104
+     C                     PARM           F#MSGR           Msg Unique Reference               UUC104
+     C                     PARM           F#INFG           Incoming Flag                      UUC104
+     C                     PARM           F#IPRF           Incoming Pay Ref                   UUC104
+     C                     PARM           F#OTFG           Outgoing Flag                      UUC104
+     C                     PARM           F#OPRF           Outgoing Pay Ref                   UUC104
+     C                     PARM           F#FRGL           Debit account                      UUC104
+     C                     PARM           F#TOGL           Credit account                     UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      * If manually cancelled then send MIN0162 to go back to pending                         UUC104
+     C           W0CPGM    IFEQ 'ME1200'                                                      UUC104
+     C           W0LMSG    ANDEQ'MIN0182'                                                     UUC104
+      *                                                                                       UUC104
+     C                     MOVEL'KNOCK'   P#ACTC    P                                         UUC104
+      *                                                                                       UUC104
+     C                     CALL 'MEM0002'                                                     UUC104
+     C                     PARM           P#ACTC  8                                           UUC104
+     C                     PARM *BLANKS   P#RCDE  7                                           UUC104
+     C                     PARM F#MSGR    P#MSGR  80                                          UUC104
+     C                     PARM F#KPRT    P#KPRT  30                                          UUC104
+     C                     PARM W0CPGM    P#CPGM 10                                           UUC104
+     C                     PARM           P#MSID  7                                           UUC104
+      *                                                                                       UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     CSR                   ENDSR                                                              UUC104
+      *****************************************************************

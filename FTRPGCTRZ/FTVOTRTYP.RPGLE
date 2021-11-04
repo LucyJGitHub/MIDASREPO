@@ -16,13 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. CFT046             Date 13Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 CER059             Date 19Jul10               *
       *                 CER030  *CREATE    Date 09Jul08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT046 - RE Transaction Type for FT payments                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -131,6 +133,9 @@
      D RespMode        S              1A
      D STRTC           S              3A
      D O2TTCD          S              3A
+      *                                                                                       CFT046
+     D CER030          S              1A                                                      CFT046
+     D CGL013          S              1A                                                      CFT046
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -181,6 +186,7 @@
       *
       ** Default Transaction type code from transaction type
       *
+     C                   IF        CER030 = 'Y' OR CGL013 = 'Y'                               CFT046
      C                   IF        STRTC = *BLANKS AND CFT014 = 'Y'
      C                             AND SRTTY  <> *BLANKS
       *
@@ -204,12 +210,15 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
       *
      C                   IF        SRTTY  <> *BLANKS
       *
       ** If Transaction code and transaction type has to be linked
       *
      C                   IF        CFT014 = 'Y'
+     C                             AND (CER030 = 'Y' OR CGL013 = 'Y')                         CFT046
       *
      C                   CALL      'AONTTIR1'
      C                   PARM      *BLANKS       PRtcd
@@ -273,6 +282,9 @@
      C                   PARM                    STRTC
       *
      C                   PARM                    RespMode
+      *                                                                                       CFT046
+     C                   PARM                    CER030                                       CFT046
+     C                   PARM                    CGL013                                       CFT046
       *
       ** OUTPUT
       *

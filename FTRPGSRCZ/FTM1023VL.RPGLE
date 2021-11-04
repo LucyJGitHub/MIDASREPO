@@ -14,9 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG14877           Date 30Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24243           Date 16Jun09               *
+      *                 BUG24243           Date 16Jun09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG14877 - Errors encountered in CCTD                        *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24243 - CCTD ended in database error when Sender charge's *
       *           currency is invalid                                 *
@@ -157,6 +160,10 @@
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
      D #I              S              2  0
+                                                                                            BUG14877
+      ** SWIFT 2001 switchable feature                                                      BUG14877
+     D CSW201          S              1A                                                    BUG14877
+     D PRtCd           S              7A                                                    BUG14877
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -243,6 +250,29 @@
       /COPY WNCPYSRC,FTM1023V16
      C                   EXSR      @DetChg
       /COPY WNCPYSRC,FTM1023V17
+      *                                                                                     BUG14877
+      ** Default Sender's Charges in Payment Currency                                       BUG14877
+      *                                                                                     BUG14877
+     C                   IF        PSndChg <> *Blanks AND                                   BUG14877
+     C                             PSndCcy <> *Blanks AND                                   BUG14877
+     C                             OKSChg <> 'N' AND OKSCcy <> 'N' AND                      BUG14877
+     C                             OKPCCy <> 'N'                                            BUG14877
+                                                                                            BUG14877
+     C                   IF        CSW201 = 'Y'                                             BUG14877
+     C                   IF        OKSChg2 <> 'N' AND OKSCcy2 <> 'N' AND                    BUG14877
+     C                             OKSChg3 <> 'N' AND OKSCcy3 <> 'N' AND                    BUG14877
+     C                             OKSChg4 <> 'N' AND OKSCcy4 <> 'N' AND                    BUG14877
+     C                             OKSChg5 <> 'N' AND OKSCcy5 <> 'N'                        BUG14877
+     C                   EXSR      @SndChgPay                                               BUG14877
+     C                   ENDIF                                                              BUG14877
+     C                   ELSE                                                               BUG14877
+                                                                                            BUG14877
+     C                   EXSR      @SndChgPay                                               BUG14877
+                                                                                            BUG14877
+     C                   ENDIF                                                              BUG14877
+                                                                                            BUG14877
+     C                   ENDIF                                                              BUG14877
+                                                                                            BUG14877
  
      C                   IF        HPCCtTyp = 'BI'
  
@@ -601,6 +631,19 @@
      C                   EXSR      UPDATERRS                                                BUG24243
       *                                                                                     BUG24243
      C                   ENDSR                                                              BUG24243
+      *****************************************************************                     BUG14877
+     C/EJECT                                                                                BUG14877
+      *****************************************************************                     BUG14877
+      ** @SndChgPay - Default Sender's Charges in Payment Currency                          BUG14877
+      *****************************************************************                     BUG14877
+      *                                                                                     BUG14877
+     C     @SndChgPay    BEGSR                                                              BUG14877
+      *                                                                                     BUG14877
+      ** Default                                                                            BUG14877
+      *                                                                                     BUG14877
+     C                   CALLB     'FTVSECH01'   P#List                                     BUG14877
+      *                                                                                     BUG14877
+     C                   ENDSR                                                              BUG14877
       *                                                                                     BUG24243
       *****************************************************************
      C/EJECT
@@ -683,6 +726,17 @@
      C                   PARM                    OKFlagHS1
      C                   PARM                    OKFlagHS2
       *
+      *                                                                                    BUG148771
+      ** Check if SWIFT 2001 is installed                                                  BUG148771
+      *                                                                                    BUG148771
+     C                   CALL      'SWIF2001'                                              BUG148771
+     C                   PARM      *BLANKS       PRtCd                                     BUG148771
+      *                                                                                    BUG148771
+     C                   IF        PRtCd = 'CSW2001'                                       BUG148771
+     C                   EVAL      CSW201 = 'Y'                                            BUG148771
+     C                   ELSE                                                              BUG148771
+     C                   EVAL      CSW201 = 'N'                                            BUG148771
+     C                   ENDIF                                                             BUG148771
      C                   ENDSR
       *
       *****************************************************************

@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD021737           Date 15Aug13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. B07400             Date 16May06               *
+      *                 B07400             Date 16May06               *
       *                 CSD027             Date 09Dec05               *
       *                 235845             Date 06Sep05               *
       *                 CGL029             Date 01Sep03               *
@@ -29,6 +30,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021737 - Standing Data Authorisations.  Nostros, Dbase     *
+      *             error Date, Time or Timestamp value is not valid. *
+      *           - No timestamp generation is done. Execute the      *
+      *             timestamp generator to avoid the database error.  *      
       *  MD046248 - Finastra Rebranding                               *
       *  B07400 - Nostro Codes maintenance not updating TABLETL.      *
       *           Re-arranged parm list when calling TABLETL.         *
@@ -150,6 +155,9 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+                                                                                            MD021737
+      ** Timestamp for the transaction                                                      MD021737
+     D PTimeStamp      S               Z                                                    MD021737
  
      D WUDELR          DS
      D  WUDR01                 1    250
@@ -386,6 +394,11 @@
      C                   ENDIF
      C                   ENDIF
  
+      ** Generate a timestamp for this transaction                                          MD021737
+     C                   CALLB     'ZAGENTMSTM'                                             MD021737
+     C                   PARM                    PTimeStamp                                 MD021737
+     C                   Eval      A7TMST = PTimeStamp                                      MD021737
+      *                                                                                     MD021737
       ** If action is 'I', Insert record.
       ** --------------------------------
  

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. AR907606           Date 07Feb12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR907606 - Wrong default narrative on sweep members. Correct *
+      *             DS declaration for account IDs. Also, show profile*
+      *             description on account level; apply fix 210118.   *
+      *             (Child: AR907607)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -38,6 +43,9 @@
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(ACCNTABF)
      FRECMBRL0  IF   E           K DISK    INFSR(*PSSR)
+     FRELZSMXL0 IF   E           K DISK    INFSR(*PSSR)                                     AR907606
+     FT_CMPROF  IF   E           K DISK    INFSR(*PSSR)                                     AR907606
+     F                                     RENAME(T_CMPROF:T_CMPROFF)                       AR907606
  
       *****************************************************************
       * Standard D Specifications
@@ -89,18 +97,21 @@
      D S_IEACID3Temp         280    281                                                       CGL029
                                                                                               CGL029
       ** Shadow Account                                                                       CGL029
+     D                 DS                                                                   AR907606
      D S_ACCID                 1     24                                                       CGL029
      D S_ACCID1                1     12                                                       CGL029
      D S_ACCID2               13     22                                                       CGL029
      D S_ACCID3               23     24                                                       CGL029
                                                                                               CGL029
       ** Income Account                                                                       CGL029
+     D                 DS                                                                   AR907606
      D S_IIACID                1     24                                                       CGL029
      D S_IIACID1               1     12                                                       CGL029
      D S_IIACID2              13     22                                                       CGL029
      D S_IIACID3              23     24                                                       CGL029
                                                                                               CGL029
       ** Expense Account                                                                      CGL029
+     D                 DS                                                                   AR907606
      D S_IEACID                1     24                                                       CGL029
      D S_IEACID1               1     12                                                       CGL029
      D S_IEACID2              13     22                                                       CGL029
@@ -314,6 +325,19 @@
      C                                       A_HIER + A_LINK
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                            AR907606
+     C                   MOVE      *BLANKS       DDPDESC                                    AR907606
+     C     I_LINK        CHAIN     RELZSMXL0                          77                    AR907606
+     C     *IN77         IFEQ      '1'                                                      AR907606
+     C                   EVAL      DDPDESC  = '* UNKNOWN *'                                 AR907606
+     C                   ELSE                                                               AR907606
+     C     ZMPROF        CHAIN     T_CMPROF                           77                    AR907606
+     C     *IN77         IFEQ      '0'                                                      AR907606
+     C                   EVAL      DDPDESC  = PS_DESC                                       AR907606
+     C                   ELSE                                                               AR907606
+     C                   EVAL      DDPDESC  = '* UNKNOWN *'                                 AR907606
+     C                   ENDIF                                                              AR907606
+     C                   ENDIF                                                              AR907606
  
      C                   ENDSR
       *******************************************************************                     CGL029

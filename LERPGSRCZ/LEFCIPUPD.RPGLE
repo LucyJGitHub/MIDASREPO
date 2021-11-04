@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD059067           Date 27Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031337           Date 25Feb15               *
       *                 MD024398           Date 11May14               *
@@ -59,6 +60,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059067 - LEC000058 00001 failed during COB. Introduce new  *
+      *             trailer file for aggregate facilities.            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -141,6 +144,9 @@
      F                                     RENAME(FCLTYZZF:FCLTYZZFX)                       MD025467
       ***API: Midas LE FACILITIES FILE*TRAILER                                              MD025467
       *****************************************************************           MD024342B MD025467
+     FLEACTZTD  O    E             DISK    COMMIT                                           MD059067
+     F                                     RENAME(FCLTYZZF:FCLTYZZAX)                       MD059067
+      ** Midas LE AGGREGATE FACILITIES FILE TRAILER (CLONE)                                 MD059067
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -1347,7 +1353,14 @@
      C                   MOVE      'I'           CHTP                                       MD024342
      C                   Z-ADD     NATN          TNLU                                       MD024342
      C**********         WRITE     FCLTYZZF                                       MD024342 MD024342B
+                                                                                            MD059067
+      ** Write to new facility aggregate trailer file if AG facility                        MD059067
+                                                                                            MD059067
+     C                   IF        FPTRCA = 'AG'                                            MD059067
+     C                   WRITE     FCLTYZZAX                                                MD059067
+     C                   ELSE                                                               MD059067
      C                   WRITE     FCLTYZZFX                                               MD024342B
+     C                   ENDIF                                                              MD059067
      C**********         ENDIF                                                     MD024342 MD025467
       *
      C                   ENDSR

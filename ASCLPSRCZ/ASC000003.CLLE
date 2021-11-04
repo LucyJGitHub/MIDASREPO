@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD059175           Date 29Oct21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059175 - ADEFIX - Add missing output report information   */
+/*                = Low and High limit.  and today effectivenss %    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CAS002 - Hedge Strategy/Linkage                             */
@@ -33,6 +36,26 @@
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*MD059175*/
+             DCL        VAR(&SVAL1)  TYPE(*CHAR) LEN(200)                               /*MD059175*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                               /*MD059175*/
  
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
@@ -46,6 +69,14 @@
                           Assessment Control') TOMSGQ(MRUNQ)
  
              CHGJOB     SWS(00000000)
+/**/                                                                                    /*MD059175*/
+/** Retrieve system value*/                                                             /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'HedgeLoHiEffctveness' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                        /*MD059175*/
  
 /* Create data area LDA */
  
@@ -70,6 +101,18 @@
                              TOFILE(&DPLIB/XASHGLKPD) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+/**/                                                                                    /*MD059175*/
+/** Call Hedge Effectiveness Today if system value is 'Y' */                            /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+                DLTF       FILE(XASHGLKPH)                                              /*MD059175*/
+                MONMSG     MSGID(CPF2105)                                               /*MD059175*/
+                CPYF       FROMFILE(ASHGLKPH) +
+                             TOFILE(&DPLIB/XASHGLKPH) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD059175*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              ENDDO
  
 /* If it is a restart. */
@@ -79,6 +122,16 @@
                              MBROPT(*REPLACE) CRTFILE(*YES)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                              EXEC(CLRPFM FILE(ASHGLKPD))
+/**/                                                                                    /*MD059175*/
+/** Process Hedge Effectiveness Today if system value is 'Y' */                         /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+                CPYF       FROMFILE(XASHGLKPH) TOFILE(ASHGLKPH) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD059175*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(ASHGLKPH))                                /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              ENDDO
  
              CHGVAR     VAR(&STAT) VALUE('Y')
@@ -89,6 +142,14 @@
  
 /* Call Hedge Effectiveness Assessment Program */
  
+/**/                                                                                    /*MD059175*/
+/** Process Hedge Effectiveness Today if system value is 'Y' */                         /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+             CALL       PGM(AS000003P)                                                  /*MD059175*/
+             CHGJOB     SWS(XXXXXX00)                                                   /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              CALL       PGM(AS000003)
  
 /* If no error occured in the program */
@@ -101,6 +162,14 @@
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                 DLTF       FILE(XASHGLKPD)
                 MONMSG     MSGID(CPF2105)
+/**/                                                                                    /*MD059175*/
+/** Process Hedge Effectiveness Today if system value is 'Y' */                         /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+                DLTF       FILE(XASHGLKPH)                                              /*MD059175*/
+                MONMSG     MSGID(CPF2105)                                               /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              ENDDO
  
 /* Database error processing */

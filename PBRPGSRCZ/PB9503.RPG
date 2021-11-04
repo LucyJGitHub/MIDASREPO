@@ -1,0 +1,183 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Private Banking Module                               *
+      *                                                               *
+      *  PB9503 - PB Retail Accruals Take-on (during COB)             *
+      *                                                               *
+      *  Function: This program will select all retail accounts and   *
+      *            send to interface file.                            *
+      *            This is to simulate take-on every day, as this is  *
+      *            the only way to have correct accruals in TOF at    *
+      *            any time                                           *
+      *            ******   Based on RP9502 ******                    *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. 236583  *CREATE    Date 20Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  236583   New program for UBS-MAD to do 'take on' of RE       *
+      *           accruals at end of each COB                         *
+      *                                                               *
+      *****************************************************************
+      *
+     FREACR   UF  E           K        DISK         KINFSR *PSSR
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     F            REACRDF                           KRENAMEREACRF
+      **  Retail Accrual File - Update REPI flag
+      *
+      *
+      ********************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTION OF INDICATORS                                       *
+      *  ------------------------                                     *
+      *                                                               *
+      *                                                               *
+      *  38 - FILE INDICATOR ON REACR                                 *
+      *                                                               *
+      *  89 - EOF REACR                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  INDEX TO SUBROUTINES                                         *
+      *  ----------------------                                       *
+      *                                                               *
+      *         - MAIN PROCESSING                                     *
+      *  *INZSR - INITIALISATION                                      *
+      *  *PSSR  - PROGRAM ERROR HANDLING ROUTINE                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      **  Copyright Array
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+      **  Local Data Area for DB Errors
+      *
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer details
+      *
+     IDSLDY     E DSDSLDY
+      **  Long DS for access programs, Very Long DS
+      *
+      *****************************************************************
+      /EJECT
+      *
+      **   Process to upate REPI flag from REACRD
+      *
+     C           *LOVAL    SETLLREACR
+     C                     READ REACR                    89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+      *
+     C                     MOVE CUST      @KEY10    P
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   @@RTCD  7
+     C                     PARM '*KEY   ' @@OPTN  7
+     C                     PARM           @KEY10 10
+     C                     PARM           @KEY7   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           BBPRBA    IFEQ 'Y'
+     C                     TESTN          REPI       88
+      **   If Replication Indicator is numeric
+     C           *IN88     IFEQ *ON
+     C                     MOVE REPI      WREPI   20
+     C                     ADD  1         WREPI
+     C                     ELSE
+     C                     Z-ADD1         WREPI
+     C                     ENDIF
+     C                     MOVE WREPI     REPI
+      *
+     C                     UPDATREACRF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ REACR                    89
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - INITIALISATION                            *
+      *                                                               *
+      * CALLS      *PSSR  - Program Error Handling Routine.           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      @MKI   80
+      *
+      **  LDA DEFINITION.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  INITIALISE DB ERROR FIELDS ETC, AND STORE PROGRAM NAME FOR
+      **  DB ERROR FIELD.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'REACRD'  DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'PB9503'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - PROGRAM ERROR HANDLING ROUTINE            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  *INZSR - Initial Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE *ON       *INLR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *
+** CPY@
+(c) Misys International Banking Systems Ltd. 2005

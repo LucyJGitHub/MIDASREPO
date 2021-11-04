@@ -18,7 +18,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. ADEFIX             Date 30Jun14               *
+      *  Last Amend No. MD059175           Date 29Oct21               *
       *  Prev Amend No. 228011             Date 24Jun04               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
@@ -43,7 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  ADEFIX - Add missing output report information               *
+      *  MD059175 - ADEFIX - Add missing output report information    *
       *           = Low and High limit.  and today effectivenss %     *
       *  228011 - Error on percentage reported by AS001003P1          *
       *  MD046248 - Finastra Rebranding                               *
@@ -495,31 +495,31 @@
      D KAShed          S              6S 0                                                    225293
      D KASdhi          S              1A                                                      225293
       *
-     D HedgeToday      S              1    INZ(*BLANKS)                                       ADEFIX
-      *                                                                                       ADEFIX
-      ** Calling parameters for AOSVALR0                                                      ADEFIX
-      *                                                                                       ADEFIX
-     D pRtnCd          S              7    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal01       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS01   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal02       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS02   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal03       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS03   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal04       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS04   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal05       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS05   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal06       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS06   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal07       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS07   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal08       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS08   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal09       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS09   S            200    INZ(*BLANKS)                                       ADEFIX
-     D pSysVal10       S             20    INZ(*BLANKS)                                       ADEFIX
-     D pSysValCurS10   S            200    INZ(*BLANKS)                                       ADEFIX
+     D HedgeToday      S              1    INZ(*BLANKS)                                     MD059175
+      *                                                                                     MD059175
+      ** Calling parameters for AOSVALR0                                                    MD059175
+      *                                                                                     MD059175
+     D pRtnCd          S              7    INZ(*BLANKS)                                     MD059175
+     D pSysVal01       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS01   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal02       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS02   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal03       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS03   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal04       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS04   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal05       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS05   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal06       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS06   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal07       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS07   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal08       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS08   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal09       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS09   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal10       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS10   S            200    INZ(*BLANKS)                                     MD059175
 
       *****************************************************************
       /EJECT
@@ -1854,7 +1854,7 @@
       ** Derivative
 
      C                   EVAL      AR = DER0E
-     C                   EVAL      Wpert = AR(1)                                            ADEFIX
+     C                   EVAL      Wpert = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      ODURPL = AMT(1)
      C                   EVAL      ODYUPL = AMT(2)
@@ -1905,7 +1905,7 @@
       ** Derivative
 
      C                   EVAL      AR = DER0I
-     C                   EVAL      Wpert = AR(1)                                             ADEFIX
+     C                   EVAL      Wpert = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      ODURPL = AMT(1)
      C                   EVAL      ODYUPL = AMT(2)
@@ -1956,7 +1956,7 @@
       ** Hedged
 
      C                   EVAL      AR = HDG0E
-     C                   EVAL      Wperh = AR(1)                                             ADEFIX
+     C                   EVAL      Wperh = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      OHURPL = AMT(1)
      C                   EVAL      OHYUPL = AMT(2)
@@ -2007,7 +2007,7 @@
       ** Hedged
 
      C                   EVAL      AR = HDG0I
-     C                   EVAL      Wperh = AR(1)                                              ADEFIX
+     C                   EVAL      Wperh = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      OHURPL = AMT(1)
      C                   EVAL      OHYUPL = AMT(2)
@@ -2055,7 +2055,7 @@
 
      C                   CLEAR                   LINKTOT1
      C                   CLEAR                   PERCENT1
-     C                   CLEAR                   PERCENT3                                     ADEFIX
+     C                   CLEAR                   PERCENT3                                   MD059175
 
       ** Total
 
@@ -2137,23 +2137,23 @@
      C                   EVAL      *IN24 = *ON                                                225293
      C                   ENDIF                                                                225293
                                                                                               225293
-     C                   If        HedgeToday = 'Y'                                           ADEFIX
-     C                   If        Wperh = 0                                                  ADEFIX
-     C                   EVAL      WPERC4 =  0                                                ADEFIX
-     C                   else                                                                 ADEFIX
-     C                   EVAL      WPERC4 =   Wpert/Wperh                                     ADEFIX
-     C                   endif                                                                ADEFIX
-     C                   If        WPERC4 > 0                                                 ADEFIX
-     C                   EVAL      WPERC4 =   0                                               ADEFIX
-     C                   endif                                                                ADEFIX
-     C                   EVAL      WPERC =  -WPERC4*100                                       ADEFIX
-     C                   EVAL      WPERLO = H1EFLO                                            ADEFIX
-     C                   EVAL      WPERUP = H1EFUP                                            ADEFIX
-     C                   Endif                                                                ADEFIX
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   If        Wperh = 0                                                MD059175
+     C                   EVAL      WPERC4 =  0                                              MD059175
+     C                   else                                                               MD059175
+     C                   EVAL      WPERC4 =   Wpert/Wperh                                   MD059175
+     C                   endif                                                              MD059175
+     C                   If        WPERC4 > 0                                               MD059175
+     C                   EVAL      WPERC4 =   0                                             MD059175
+     C                   endif                                                              MD059175
+     C                   EVAL      WPERC =  -WPERC4*100                                     MD059175
+     C                   EVAL      WPERLO = H1EFLO                                          MD059175
+     C                   EVAL      WPERUP = H1EFUP                                          MD059175
+     C                   Endif                                                              MD059175
      C                   WRITE     PERCENT1
-     C                   If        HedgeToday = 'Y'                                           ADEFIX
-     C                   WRITE     PERCENT3                                                   ADEFIX
-     C                   Endif                                                                ADEFIX
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   WRITE     PERCENT3                                                 MD059175
+     C                   Endif                                                              MD059175
 
       ** Print dotted line
 
@@ -2185,7 +2185,7 @@
 
      C                   CLEAR                   LINKTOT2
      C                   CLEAR                   PERCENT2
-     C                   CLEAR                   PERCENT4                                     ADEFIX
+     C                   CLEAR                   PERCENT4                                   MD059175
 
       ** Total
 
@@ -2238,23 +2238,23 @@
      C                   EVAL      *IN44 = *OFF
      C                   ENDIF
      C                   EVAL      OLASDT = WLASDT                                            229219
-     C                   If        HedgeToday = 'Y'                                           ADEFIX
-     C                   If        Wperh = 0                                                  ADEFIX
-     C                   EVAL      WPERC4 =  0                                                ADEFIX
-     C                   else                                                                 ADEFIX
-     C                   EVAL      WPERC4 =   Wpert/Wperh                                     ADEFIX
-     C                   endif                                                                ADEFIX
-     C                   If        WPERC4 > 0                                                 ADEFIX
-     C                   EVAL      WPERC4 =  0                                                ADEFIX
-     C                   endif                                                                ADEFIX
-     C                   EVAL      WPERC =  -WPERC4*100                                       ADEFIX
-     C                   EVAL      WPERLO = H1EFLO                                            ADEFIX
-     C                   EVAL      WPERUP = H1EFUP                                            ADEFIX
-     C                   Endif                                                                ADEFIX
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   If        Wperh = 0                                                MD059175
+     C                   EVAL      WPERC4 =  0                                              MD059175
+     C                   else                                                               MD059175
+     C                   EVAL      WPERC4 =   Wpert/Wperh                                   MD059175
+     C                   endif                                                              MD059175
+     C                   If        WPERC4 > 0                                               MD059175
+     C                   EVAL      WPERC4 =  0                                              MD059175
+     C                   endif                                                              MD059175
+     C                   EVAL      WPERC =  -WPERC4*100                                     MD059175
+     C                   EVAL      WPERLO = H1EFLO                                          MD059175
+     C                   EVAL      WPERUP = H1EFUP                                          MD059175
+     C                   Endif                                                              MD059175
      C                   WRITE     PERCENT2
-     C                   If        HedgeToday = 'Y'                                           ADEFIX
-     C                   WRITE     PERCENT4                                                   ADEFIX
-     C                   Endif                                                                ADEFIX
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   WRITE     PERCENT4                                                 MD059175
+     C                   Endif                                                              MD059175
 
       ** Print dotted line
 
@@ -3045,10 +3045,10 @@
       *                                                               *                       228011
       *****************************************************************                       228011
      C     SRInitArray   BEGSR                                                                228011
-     C                   Z-ADD     0             WPERC                                        ADEFIX
-     C                   Z-ADD     0             Wpert            18 4                        ADEFIX
-     C                   Z-ADD     0             Wperh            18 4                        ADEFIX
-     C                   Z-ADD     0             Wperc4            8 4                        ADEFIX
+     C                   Z-ADD     0             WPERC                                      MD059175
+     C                   Z-ADD     0             Wpert            18 4                      MD059175
+     C                   Z-ADD     0             Wperh            18 4                      MD059175
+     C                   Z-ADD     0             Wperc4            8 4                      MD059175
                                                                                               228011
      C                   Z-ADD     0             D0                                           228011
      C                   Z-ADD     0             D1                                           228011
@@ -3237,57 +3237,57 @@
                                                                                               228011
      C                   EXSR      SRInitArray                                                228011
 
-      *                                                                                       ADEFIX
-      ** Get Hedge High Low Effectiveness Today                                               ADEFIX
-      *                                                                                       ADEFIX
-     C                   EVAL      pRtnCd = *BLANKS                                           ADEFIX
-     C                   EVAL      pSysVal01     = 'HedgeLoHiEffctveness'                     ADEFIX
-     C                   EVAL      pSysValCurS01 = *BLANKS                                    ADEFIX
-                                                                                              ADEFIX
-     C                   CALL      'AOSVALR0'                                                 ADEFIX
-     C                   PARM                    pRtnCd                                       ADEFIX
-     C                   PARM                    pSysVal01                                    ADEFIX
-     C                   PARM                    pSysValCurS01                                ADEFIX
-     C                   PARM                    pSysVal02                                    ADEFIX
-     C                   PARM                    pSysValCurS02                                ADEFIX
-     C                   PARM                    pSysVal03                                    ADEFIX
-     C                   PARM                    pSysValCurS03                                ADEFIX
-     C                   PARM                    pSysVal04                                    ADEFIX
-     C                   PARM                    pSysValCurS04                                ADEFIX
-     C                   PARM                    pSysVal05                                    ADEFIX
-     C                   PARM                    pSysValCurS05                                ADEFIX
-     C                   PARM                    pSysVal06                                    ADEFIX
-     C                   PARM                    pSysValCurS06                                ADEFIX
-     C                   PARM                    pSysVal07                                    ADEFIX
-     C                   PARM                    pSysValCurS07                                ADEFIX
-     C                   PARM                    pSysVal08                                    ADEFIX
-     C                   PARM                    pSysValCurS08                                ADEFIX
-     C                   PARM                    pSysVal09                                    ADEFIX
-     C                   PARM                    pSysValCurS09                                ADEFIX
-     C                   PARM                    pSysVal10                                    ADEFIX
-     C                   PARM                    pSysValCurS10                                ADEFIX
-                                                                                              ADEFIX
-     C                   If        PRtnCd = *Blanks                                           ADEFIX
-     C                   Eval      HedgeToday = pSysValCurS01                                 ADEFIX
-     C                   Endif                                                                ADEFIX
-      *                                                                                       ADEFIX
-      ** Error routine - Retrieval of SysVal failed                                           ADEFIX
-      *                                                                                       ADEFIX
-     C                   IF        PRtnCd = '*NRF    '                                        ADEFIX
-     C                             or pRtnCd = '*ERROR '                                      ADEFIX
-      *                                                                                       ADEFIX
-      ** Data base error in file AOSVALPD                                                     ADEFIX
-      *                                                                                       ADEFIX
-     C     *LOCK         IN        LDA                                                        ADEFIX
-     C                   EVAL      DBFILE     =  'AOSVALPD'                                   ADEFIX
-     C                   EVAL      DBKEY      =  pSysVal01                                    ADEFIX
-     C                   EVAL      DBPGM      =  'AS001004'                                   ADEFIX
-     C                   EVAL      DBASE = 11                                                 ADEFIX
-     C                   OUT       LDA                                                        ADEFIX
-                                                                                              ADEFIX
-     C                   EXSR      *PSSR                                                      ADEFIX
-                                                                                              ADEFIX
-     C                   ENDIF                                                                ADEFIX
+      *                                                                                     MD059175
+      ** Get Hedge High Low Effectiveness Today                                             MD059175
+      *                                                                                     MD059175
+     C                   EVAL      pRtnCd = *BLANKS                                         MD059175
+     C                   EVAL      pSysVal01     = 'HedgeLoHiEffctveness'                   MD059175
+     C                   EVAL      pSysValCurS01 = *BLANKS                                  MD059175
+                                                                                            MD059175
+     C                   CALL      'AOSVALR0'                                               MD059175
+     C                   PARM                    pRtnCd                                     MD059175
+     C                   PARM                    pSysVal01                                  MD059175
+     C                   PARM                    pSysValCurS01                              MD059175
+     C                   PARM                    pSysVal02                                  MD059175
+     C                   PARM                    pSysValCurS02                              MD059175
+     C                   PARM                    pSysVal03                                  MD059175
+     C                   PARM                    pSysValCurS03                              MD059175
+     C                   PARM                    pSysVal04                                  MD059175
+     C                   PARM                    pSysValCurS04                              MD059175
+     C                   PARM                    pSysVal05                                  MD059175
+     C                   PARM                    pSysValCurS05                              MD059175
+     C                   PARM                    pSysVal06                                  MD059175
+     C                   PARM                    pSysValCurS06                              MD059175
+     C                   PARM                    pSysVal07                                  MD059175
+     C                   PARM                    pSysValCurS07                              MD059175
+     C                   PARM                    pSysVal08                                  MD059175
+     C                   PARM                    pSysValCurS08                              MD059175
+     C                   PARM                    pSysVal09                                  MD059175
+     C                   PARM                    pSysValCurS09                              MD059175
+     C                   PARM                    pSysVal10                                  MD059175
+     C                   PARM                    pSysValCurS10                              MD059175
+                                                                                            MD059175
+     C                   If        PRtnCd = *Blanks                                         MD059175
+     C                   Eval      HedgeToday = pSysValCurS01                               MD059175
+     C                   Endif                                                              MD059175
+      *                                                                                     MD059175
+      ** Error routine - Retrieval of SysVal failed                                         MD059175
+      *                                                                                     MD059175
+     C                   IF        PRtnCd = '*NRF    '                                      MD059175
+     C                             or pRtnCd = '*ERROR '                                    MD059175
+      *                                                                                     MD059175
+      ** Data base error in file AOSVALPD                                                   MD059175
+      *                                                                                     MD059175
+     C     *LOCK         IN        LDA                                                      MD059175
+     C                   EVAL      DBFILE     =  'AOSVALPD'                                 MD059175
+     C                   EVAL      DBKEY      =  pSysVal01                                  MD059175
+     C                   EVAL      DBPGM      =  'AS001004'                                 MD059175
+     C                   EVAL      DBASE = 11                                               MD059175
+     C                   OUT       LDA                                                      MD059175
+                                                                                            MD059175
+     C                   EXSR      *PSSR                                                    MD059175
+                                                                                            MD059175
+     C                   ENDIF                                                              MD059175
      C                   ENDSR
       *****************************************************************
       /EJECT

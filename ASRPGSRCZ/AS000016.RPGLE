@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. ADEFIX             Date 10Apr06               *
+      *  Last Amend No. MD059175           Date 29Oct21               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD025453           Date 21Mar16               *
       *                 CLE134             Date 01Aug12               *
@@ -32,7 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  ADEFIX - Incorrect branch reported                           *
+      *  MD059175 - ADEFIX - Incorrect branch reported                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025453 - Truncation error on event amount in SE2450P3.     *
       *             Recompiled due to changes in PF/SEKEYD.           *
@@ -379,7 +379,7 @@
  
      C                   EVAL      WkBRCA = BHBA
      C                   EXSR      SRBranch
-     C                   EVAL      PrBRCA = WkBRCA                                           ADEFIX
+     C                   EVAL      PrBRCA = WkBRCA                                          MD059175
      C                   EXSR      SRChkRCF
  
      C                   DOW       NOT %EOF(BKPHD)
@@ -395,8 +395,8 @@
  
      C                   EXSR      SRProcess
  
-     C                   READ      BKPHD
-     C                   EVAL      WkBRCA = BHBA                                             ADEFIX
+     C                   READ      BKPHD     C                   EVAL      WkBRCA = BHBA                                            MD059175
+
      C                   ENDDO
  
       ** Write End of Report

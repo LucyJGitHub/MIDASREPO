@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059100           Date 28Oct21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
@@ -118,6 +119,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059100 - Incorrect deal status on pre-confirmation         *
+      *             page during Amend of SIRS. Realigned parameters   *
+      *             for IRSIRSCVT.                                    *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -2442,7 +2446,13 @@ RGC                                                                             
       ** (Current) deal extenstion in file format                               BUG4646
      C                   PARM                    DealScnfmt
       ** Deal Status
-     C                   PARM                    DDSTS
+     C**********         PARM                    DDSTS                                      MD059100
+      * LIBOR related fields in screen format (Ours)                                        MD059100
+     C                   PARM                    CurrScnBlrt1                               MD059100
+      * LIBOR related fields in screen format (Theirs)                                      MD059100
+     C                   PARM                    CurrScnBlrt2                               MD059100
+      ** Deal Status
+     C                   PARM                    DDSTS                                      MD059100
 
       ** DATA SUBSTITUTION
 
@@ -2456,10 +2466,10 @@ RGC                                                                             
      C                   PARM      TranIn        IncDATA        2000
       ** Current Data
      C                   PARM      DealScnfmt    CurDATA        2000
-      * LIBOR related fields in screen format (Ours)                                          CIR020
-     C                   PARM                    CurrScnBlrt1                                 CIR020
-      * LIBOR related fields in screen format (Theirs)                                        CIR020
-     C                   PARM                    CurrScnBlrt2                                 CIR020
+      * LIBOR related fields in screen format (Ours)                                 CIR020 MD059100
+     C**********         PARM                    CurrScnBlrt1                        CIR020 MD059100
+      * LIBOR related fields in screen format (Theirs)                               CIR020 MD059100
+     C**********         PARM                    CurrScnBlrt2                        CIR020 MD059100
 
      C                   MOVEL     IncDATA       TranIn
 
@@ -5273,6 +5283,10 @@ RGC                                                                             
       ** (Current) Deal in screen format
       ** (Current) deal extenstion in file format                               BUG4646
      C                   PARM                    DealScnfmt
+      * LIBOR related fields in screen format (Ours)                                        MD059100
+     C                   PARM                    CurrScnBlrt1                               MD059100
+      * LIBOR related fields in screen format (Theirs)                                      MD059100
+     C                   PARM                    CurrScnBlrt2                               MD059100
       ** Deal Status
      C                   PARM                    DDSTS            24
 

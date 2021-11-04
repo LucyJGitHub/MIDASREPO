@@ -3,7 +3,7 @@
 /*EXI    TEXT('Run MMM Archiving')                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas - System Control Module                               */
+/*       Midas - RZ Developments                                     */
 /*                                                                   */
 /*       SCC001125 - Run MPM Archiving                               */
 /*                                                                   */
@@ -62,6 +62,10 @@
 
              CALL       PGM(QSYGETPH) PARM(&XXMIDAS '*NOPWD    ' &HANDLE)
              CALL       PGM(QWTSETP) PARM(&HANDLE &ERRCODE)
+
+/* Set Condition to Run when Libraries are Existing */
+             If         Cond(&MainMMMDb *NE ' ' *AND &ArchMMMDb *NE ' ') THEN(DO)
+
 /* Set MMM Archive Library */
 
              Addlible   Lib(&ArchMMMDb) Position(*First)
@@ -77,9 +81,6 @@
                 Rmvlible   Lib(&MainMMMDb)
                 Addlible   Lib(&MainMMMDb) Position(*First)
              Enddo
-
-/* Set Condition to Run when Libraries are Existing */
-             If         Cond(&MainMMMDb *NE ' ' *AND &ArchMMMDb *NE ' ') THEN(DO)
 
 /* Run Archive Procedure for correct system */
              CALL       PGM(SC001451)

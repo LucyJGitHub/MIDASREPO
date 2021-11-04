@@ -3,7 +3,7 @@
 /*EXI    TEXT('Run MMM Archiving')                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas - RZ Developments                                     */
+/*       Midas - System Control Module                               */
 /*                                                                   */
 /*       SCC001125 - Run MPM Archiving                               */
 /*                                                                   */

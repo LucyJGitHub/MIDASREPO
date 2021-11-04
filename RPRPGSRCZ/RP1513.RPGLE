@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1068513          Date 31May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 263381             Date 20Jan10               *
+      *  Prev Amend No. AR1068513          Date 31May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1095876          Date 30Sep13               *
       *                 CLE134             Date 01Aug12               *
       *                 AR858264A          Date 16Jul12               *
@@ -47,6 +48,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263381 - If Account,  PM customer and PM portfolios are      *
+      *           closed in the same COB it is essential to keep the  *
+      *           Portfolio reference in AFRT field before remove it. *
+      *           It will be used later in the replication process.   *
       *  AR1068513 - Projected available balance day10 fix            *
       *              (Recompile)                                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -109,6 +114,10 @@
      FGLACNTL3  IF   E           K DISK    UsrOpn                                           AR970292
      F                                     Infsr(*Pssr)                                     AR970292
                                                                                             AR970292
+      **  Midas GL Accounts Master                                                            263381
+     FACCNT     IF   E           K Disk    Ignore(ACCNTAAF:ACCNTACF)                          263381
+     F                                     Prefix(A_) Usropn                                  263381
+     F                                     Infsr(*Pssr)                                       263381
       /Eject
       *****************************************************************
       *                                                               *
@@ -117,6 +126,7 @@
       *                                                               *
       *  81  -  CHAIN access to SDPBDSL0 failed.                      *
       *  82  -  CHAIN access to MEMOSL2  failed.                      *                       CPB008
+      *  84  -  CHAIN access to ACCNT failed.                         *                       263381
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -453,6 +463,10 @@
       **  Work Field used for Front Office Id processing                                    AR970292
      D P_FrontOffice   S             20A                                                    AR970292
                                                                                             AR970292
+                                                                                              263381
+      **  Work field used for Portfolio Reference                                             263381
+     D P_Ptfr          S              4A                                                      263381
+                                                                                              263381
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -922,6 +936,32 @@
      C                   ENDIF                                                              AR970292
                                                                                             AR970292
      C                   ENDIF                                                              AR970292
+      **                                                                      **              263381
+      **---------------- Start of Account Portfolio Reference ----------------**              263381
+      **                                                                      **              263381
+     C                   Z-ADD     1             X                                            263381
+     C     'PTFR  '      LOOKUP    Arrfld(X)                              89                  263381
+     C                   EVAL      P_PTFR = %Subst(TransData:+                                263381
+     C                             ArrPos(X):ArrLen(X))                                       263381
+                                                                                              263381
+     C     P_PTFR        IFEQ      *Blanks                                                    263381
+                                                                                              263381
+     C                   OPEN      ACCNT                                                      263381
+     C     K_FullAcc     CHAIN(N)  ACCNT                              84                      263381
+     C                   CLOSE     ACCNT                                                      263381
+                                                                                              263381
+     C     *IN84         IFEQ      '0'                                                        263381
+     C     A_AFRT        ANDNE     *Blanks                                                    263381
+                                                                                              263381
+      **  Update Front Office Id                                                              263381
+     C                   Z-ADD     1             X                                            263381
+     C     'PTFR  '      LOOKUP    Arrfld(X)                              89                  263381
+     C                   EVAL      %Subst(TransData:ArrPos(X):+                               263381
+     C                             ArrLen(X)) = A_AFRT                                        263381
+     C                   ENDIF                                                                263381
+                                                                                              263381
+     C                   ENDIF                                                                263381
+                                                                                              263381
       **------------------ End of Additionnal fields ----------------**
 
       **  Change message Type from _After to _A
@@ -1330,6 +1370,10 @@
      C                   EVAL      FieldType   = 'A'                                        AR970292
      C                   EXSR      RtvPos                                                   AR970292
 
+      **  Retrieve position and length of PTFR flag from ACCNTAB.                             263381
+     C                   EVAL      FieldName   = 'PTFR'                                       263381
+     C                   EVAL      FieldType   = 'A'                                          263381
+     C                   EXSR      RtvPos                                                     263381
       **  Retrieve begin position of additionnal fields in Meridian message.
      C                   Eval      FieldName   = '*END_IMAGE'
      C                   Eval      FieldType   = *blank

@@ -11,8 +11,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD033891           Date 07Jul15               *
-      *  Prev Amend No. AR1088886          Date 15Feb13               *
+      *  Last Amend No. 226095             Date 29Sep21               *
+      *  Prev Amend No. 263381             Date 12Jan10               *
+      *                 MD033891           Date 07Jul15               *
+      *                 AR1088886          Date 15Feb13               *
       *                 MD050604           Date 21Feb20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -123,6 +125,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  226095 - CUAP Delete a customer = failed component in EOD    *
+      *  263381 - IF ACCOUNT,  PM CUSTOMER AND PM PORTFOLIOS ARE      *
+      *           CLOSED IN THE SAME COB IT IS ESSENTIAL TO KEEP THE  *
+      *           PORTFOLIO REFERENCE IN AFRT FIELD BEFORE REMOVE IT. *
+      *           IT WILL BE USED LATER IN THE REPLICATION PROCESS.   *
       *  MD033891 - LAVP issue on Branch 900. Recompiled due to       *
       *             changes in /COPY ZYLDZ2.                          *
       *  AR1088886 - Cob failure component PMC1030-00001              *
@@ -718,14 +725,14 @@
      C                     PARM *BLANKS   KEYST                           CPB001
      C           SDCUST    PARM SDCUST    DSLDY                           CPB001
      C*                                                                   CPB001
-     C           @RTCD     IFNE *BLANKS                                   CPB001
-     C           *LOCK     IN   LDA                                       CPB001
-     C                     Z-ADD63        DBASE            ***************CPB001
-     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 63 *CPB001
-     C                     MOVELQBCUST    DBKEY            ***************CPB001
-     C                     OUT  LDA                                       CPB001
-     C                     EXSR *PSSR                                     CPB001
-     C                     ENDIF                                          CPB001
+     C********** @RTCD     IFNE *BLANKS                                                CPB001 226095
+     C********** *LOCK     IN   LDA                                                    CPB001 226095
+     C**********           Z-ADD63        DBASE            ***************             CPB001 226095
+     C**********           MOVEL'SDCUSTPD'DBFILE           * DB ERROR 63 *             CPB001 226095
+     C**********           MOVELQBCUST    DBKEY            ***************             CPB001 226095
+     C**********           OUT  LDA                                                    CPB001 226095
+     C**********           EXSR *PSSR                                                  CPB001 226095
+     C**********           ENDIF                                                       CPB001 226095
      C                     ENDIF                                          CPB001
      C*                                                                   CPB001
      C**   If Private Banking OFF                                         CPB001
@@ -734,6 +741,9 @@
      C           BGN4ST    IFEQ 'N'                                       CPB001
      C           BGN4ST    OREQ 'Y'                                       CPB001
      C           BBPRBA    ANDEQ'N'                                       CPB001
+     C           @RTCD     ANDEQ*BLANKS                                                       226095
+     C           BGN4ST    OREQ 'Y'                                                           226095
+     C           @RTCD     ANDNE*BLANKS                                                       226095
      C                     EXSR #P02
      C                     ADD  1         WWRCDL
      C                     ENDIF                                          CPB001
@@ -1812,6 +1822,7 @@
      C**   Process record for the same customer
      C           *IN73     DOWEQ'0'
      C           WWCUST    ANDEQCNUM
+     C                     MOVELPTFR      AFRT                                                263381
      C                     MOVE *BLANKS   PTFR
      C                     MOVE *BLANKS   HLEX                            38430
      C                     EXCPTACCNTU
@@ -4098,6 +4109,7 @@
      OACCNTABFE                ACCNTU
      O                         PTFR
      O                         HLEX                                       38430
+     O                         AFRT                                                           263381
      O**
      O***FID*DEPOSITS**************************************************   S01486
      O***********                                                         S01486

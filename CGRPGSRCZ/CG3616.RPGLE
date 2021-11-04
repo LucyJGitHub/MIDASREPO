@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. PHSFIX             Date 20Feb13               *
+      *  Prev Amend No. 401689             Date 14Feb13               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG8303            Date 31Aug05               *
+      *                 BUG8303            Date 31Aug05               *
       *                 CSC022             Date 24Feb04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CCG015  *CREATE    Date 20Jun01               *
@@ -28,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  PHSFIX - Zero amount is extracted as `0. 0`.                 *
+      *  401689 - Allow extract of negative amount.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG8303 - OCBC 80284  DLC0210B in MSGW status                *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
@@ -38,21 +42,21 @@
      FCGUXMGL1  IF   E           K DISK
      FCGUXMRL1  IF   E           K DISK
      FCGUXMLPD  O    E           K DISK    COMMIT
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       ** Data structures
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WCMTJOBS               4    103A                                                      CSC022
@@ -69,16 +73,16 @@
      D  DERDEV
      D  DEFMTY
      D  DEFMQL
- 
+
       ** Keys for comparison
      DkGrp             DS
      D  DGITEM
      D  DGINCR
- 
+
      DkRde             DS
      D  DEITEM
      D  DEINCR
- 
+
       ** Working variable
       ** Fields for enhancement CSC022                                                        CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
@@ -94,66 +98,66 @@
      DEof_Grp          S              1
      DEof_Rde          S                   LIKE(Eof_Grp)
      DTagValue         S                   LIKE(XMTAGV)
- 
+
       ** Formats tag
      DFormatTag        PR                  LIKE(XMTAGN)
      D  p1                                 VALUE LIKE(DENWRD)
      D  p2                            1  0 VALUE
- 
+
       ** Writes XML statement for Group Set
      DWrtGrsXML        PR                  LIKE(ReturnCode)
      D  p1                                 VALUE LIKE(DGITEM)
      D  p2                                 VALUE LIKE(DGNWGS)
- 
+
       ** Writes XML statement for RDE line
      DWrtRdeXML        PR                  LIKE(ReturnCode)
      D  p1                                 VALUE LIKE(DEITEM)
      D  p2                                 VALUE LIKE(DENWRD)
      D  p3                                 VALUE LIKE(XMTAGV)
- 
+
       ** Formats tag value
      DFmtTagVal        PR                  LIKE(XMTAGV)
      DpRDEInfo                         *   VALUE
- 
+
       ** Converts Midas Run Date to a date
      DMidasDate        PR             8
      D  DayNum                        5  0 VALUE
- 
+
       ** Converts a date to midas run day
      DToMidasDt        PR             5  0
      D  DateIn                        6  0 VALUE
- 
+
       ** Formats a Midas Run day 99999 into an XML date CCYY-MM-DD
      DXMLDate          PR            10
      D  DayA                          5    VALUE
- 
+
       ** Formats a date DDMMYY into an XML date CCYY-MM-DD
      DXMLDate6         PR            10
      D  Date6A                        6    VALUE
- 
+
       ** Formats a date DDMMCCYY into an XML date CCYY-MM-DD
      DXMLDate8         PR            10
      D  Date8A                        8    VALUE
- 
+
       **  Get currency number of decimal position
      DGetDecPos        PR             1  0
      D  Currency                      3    VALUE
- 
+
       ** Format the amount depending the number of decimal positions
      DFmtAmt           PR            16
      D  DecPos                        1  0 VALUE
      D  Amount                       15    VALUE
- 
+
       ** Adjust characters to the right
      DRightAdjust      PR            15
      D  NumberAlph                   15    VALUE
- 
+
      C                   EVAL      ReturnCode = *BLANK
      C                   EVAL      DEITEM = *LOVAL
      C                   EVAL      DGITEM = *LOVAL
      C                   EVAL      DEINCR = 0
      C                   EVAL      DGINCR = 0
- 
+
       ** This process merges 2 files. The resulting records will reflect
       ** the order: ITEM/INCR/(DGNWGS or DENWRD).
       **
@@ -174,17 +178,17 @@
       **    Value      END GRP1
       **    Value      END REFR
       **
- 
+
      C     KeyGrpSet     SETLL     CGUXMRL1
      C     KeyGrpSet     SETLL     CGUXMGL1
      C                   EXSR      ReadGrp
      C                   EXSR      ReadRde
- 
+
      C                   DOW       (eof_grp = '0' OR eof_rde = '0')
      C                             AND ReturnCode = *BLANK
- 
+
      C                   SELECT
- 
+
       ** Time for the extracted RDE to be processed
      C                   WHEN      (kRde < kGrp OR eof_grp = '1')
      C                             AND eof_rde = '0'
@@ -215,18 +219,18 @@
      C                   EVAL      DBASE = 2
      C                   EVAL      DBKEY = kRde + ' ' + kGrp
      C                   EXSR      *PSSR
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   IF        ReturnCode = *BLANK
      C                   IF        (CSC022 = 'N')                                             CSC022
      C                             OR (CSC022 = 'Y') AND (WCMTSK = 'N')                       CSC022
      C                   COMMIT
      C                   ENDIF                                                                CSC022
      C                   ENDIF
- 
+
      C                   MOVE      '1'           *INLR                                       BUG8303
      C                   RETURN
       **********************************************************************
@@ -235,11 +239,11 @@
      C     *INZSR        BEGSR
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode       10
- 
+
      C     KeyGrpSet     KLIST
      C                   KFLD                    DGITEM
      C                   KFLD                    DGINCR
- 
+
      C     KeyRDE        KLIST
      C                   KFLD                    DEITEM
      C                   KFLD                    DEINCR
@@ -281,7 +285,7 @@
      C                   ENDIF                                                                CSC022
                                                                                               CSC022
      C                   ENDIF                                                                CSC022
- 
+
      C                   ENDSR
       **********************************************************************
       * READ CGUXMGL1
@@ -325,9 +329,9 @@
      D  Item                               VALUE LIKE(DEITEM)
      D  NewName                            VALUE LIKE(DENWRD)
      D  TagValue                           VALUE LIKE(XMTAGV)
- 
+
      DRetCode          S                   LIKE(ReturnCode)
- 
+
      C                   CLEAR                   CGUXMLD0
      C                   EVAL      XMITEM = Item
      C                   EVAL      XMTAGN = FormatTag(NewName:0)
@@ -337,7 +341,7 @@
      C                   IF        %ERROR
      C                   EVAL      RetCode = '*ERROR'
      C                   ENDIF
- 
+
      C                   RETURN    RetCode
      P                 E
       **********************************************************************
@@ -347,9 +351,9 @@
      DWrtGrsXML        PI                  LIKE(ReturnCode)
      D  Item                               VALUE LIKE(DGITEM)
      D  NewGrp                             VALUE LIKE(DGNWGS)
- 
+
      DRetCode          S                   LIKE(ReturnCode)
- 
+
      C                   CLEAR                   CGUXMLD0
      C                   EVAL      XMITEM = Item
      ** Parameter NewGrp can be either 'xxxxxx' or '/xxxxxx'
@@ -364,7 +368,7 @@
      C                   IF        %ERROR
      C                   EVAL      RetCode = '*ERROR'
      C                   ENDIF
- 
+
      C                   RETURN    RetCode
      P                 E
       **********************************************************************
@@ -447,7 +451,7 @@
      PMidasDate        B
      DMidasDate        PI             8
      D  DayNum                        5  0 VALUE
- 
+
       *
      DDtDDMMCCYY       DS
      D  DDMMCCYY                      8  0
@@ -475,7 +479,7 @@
      C                   ELSE
      C                   EVAL      Date = DtDDMMCCYY
      C                   ENDIF
- 
+
      C                   RETURN    Date
      P                 E
       **********************************************************************
@@ -639,7 +643,8 @@
      D  DecPos                        1  0 VALUE
      D  Amount                       15    VALUE
       *
-     DDIGITS           C                         CONST(' 0123456789')
+     D*DIGITS**         C                         CONST(' 0123456789')                        401689
+     DDIGITS           C                         CONST(' 0123456789-')                        401689
      DZfield           S             16
      DOutAmt           S                         LIKE(Zfield)
      DZaDec            S              1  0
@@ -650,6 +655,9 @@
      C     DIGITS        CHECK     Amount        AmtErr
      C                   IF        AmtErr = 0
      C                   MOVE      Amount        Zfield
+     C                   If        Amount = '              0'                                 PHSFIX
+     C                   eval      Zfield = '           0000'                                 PHSFIX
+     C                   Endif                                                                PHSFIX
      C                   CALLB     'ZEDIT'
      C                   PARM                    Zfield
      C                   PARM      DecPos        ZaDec

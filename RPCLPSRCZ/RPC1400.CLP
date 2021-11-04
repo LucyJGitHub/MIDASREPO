@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 249867             Date 27Jun12              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD020453           Date 26Jul13              */
+/*       Prev Amend No. 249867             Date 27Jun12              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 26May08              */
@@ -24,6 +25,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD020453 - Lock problem on PBS side between TMS Receiver    */
+/*                  and Monitor. Delay sending of run date           */
+/*                  (PF/SDBANKPD).                                   */
 /*       249867 - EOD component RPC1400 runs for so long.            */
 /*                Flagfail RPC1400 component when error is           */
 /*                encountered in RPC1485.                            */
@@ -169,6 +173,10 @@
                                      *CAT &SBS *CAT %SST(&cbprdn &PEND &PTOTAL))
                    ENDDO
 
+                   IF         COND(&CBFILN = 'SDBANKPD') THEN(DO)                       /*MD020453*/
+                          DLYJOB     DLY(120)                                           /*MD020453*/
+                   ENDDO                                                                /*MD020453*/
+                                                                                        /*MD020453*/
                    KMDDLC     PRODUCT(&PRODUCT) SERVER(&CBDSMN) +
                                 TYPE(*LIST) TABLES(&CBFILN)
                    MONMSG     MSGID(KCM6600 KCM6601) EXEC(GOTO CMDLBL(ABNOR))             /*195756*/

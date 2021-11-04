@@ -2,68 +2,55 @@
      H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas MR Customer Lending Loans Extracts')             *
       *****************************************************************
       *                                                               *
       *  Midas - MidasPlus Reporting module                           *
       *                                                               *
-      *  RPGLE/MRLOANEXT - Customer Lending Loans Extract             *
+      *  RPGLE/MRSBPSEXT - Securities Book Position Extract           *
       *                                                               *
-      *  Function:  This module will read CLOANCL as an input primary *
-      *             file.  For each required record from CLOANCL, a   *
+      *  Function:  This module will read BKPHDD as an input primary  *
+      *             file.  For each required record from BKPHDD, a    *
       *             record will be written to file MRTRAPPD.          *
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MRSEFIX            Date 05Jan06               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CLE134             Date 01Aug12               *
-      *                 CLE148             Date 23Jul12               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. MRSEFIX  *CREATE   Date 05Jan06               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD031             Date 10Apr06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 CLE042             Date 06Sep05               *
-      *                 CRN001             Date 01Aug05               *
-      *                 CDL038             Date 10May05               *
-      *                 CMR001  *CREATE    Date 16Aug04               *
-      *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  MRSEFIX - Add Securities Trading to MR                       *
-      *  MD046248 - Finastra Rebranding                               *
-      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
-      *  CLE148 - Alpha Loan Reference (Recompile)                    *
-      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CLE042 - Extended Loan Sub Type                              *
-      *  CRN001 - MidasPlus Regulatory Reporting Interface            *
-      *           Enhancement                                         *
-      *  CDL038 - Extended Deal Sub Type                              *
-      *  CMR001 - MidasPlus Reporting                                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
-      ** Loans and Deposits
-     FCLOANCL   IF   E             DISK    INFSR(*PSSR)
- 
+
+      ** Book Position Headers
+     FBKPHD     IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(BH_)
+
+      ** Book Positions
+     FBKPOS     IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(BP_)
+
+      ** Securities
+     FSECTY     IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(SE_)
+
+      ** Investment Types
+     FINVTP     IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(IN_)
+
       ** Reporting Parameters
      FMRRPRMPD  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Transactions Report File
      FMRTRAPPD  O    E           K DISK    INFSR(*PSSR)
-                                                                                              CRN001
-      **                                                                                      CRN001
-     FLENPVAL0  IF   E           K DISK    INFSR(*PSSR)                                       CRN001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -90,59 +77,56 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D DayMonthYear            1      6  0
      D Day                     1      2  0
      D Month                   3      4  0
      D Year                    5      6  0
- 
+
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Currency Details Data Structure
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Customer Details Data Structure
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Branch Details Data Structure
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFAC1      E                     EXTFLD(QQDFAC)
- 
+
       ** General Ledger Details Data Structure
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Access Object Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRN001
-      ** External DS for SAR details                                                          CRN001
                                                                                               CRN001
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+                                                                                              CRN001
      D WkTAmt          S             15  0
      D WkAmtInB        S             15  0
      D WkAmtIn1        S             15  0
@@ -159,15 +143,12 @@
      D WkNBDP2         S              1  0
      D WkSPRT2         S             13P 8
      D WkMDIN2         S              1
-     D PAcKyPos01      S              2
-     D PAcKyPos03      S              1
-     D PAcKyPos04      S              2
-     D PAcKyPos06      S              1
-     D PAcKyPos07      S              1
-     D PAcKyPos08      S              1
-     D PAcKyPos09      S              1
-     D PAcKyPos10      S              1
-     D PAcKyPos11      S              4                                                       CDL038
+     D PAcKyPos01      S              3
+     D PAcKyPos04      S              1
+     D PAcKyPos05      S              1
+     D PAcKyPos07      S              2
+     D PAcKyPos13      S              1
+     D PAcKyPos19      S              2
      D PAcCodDR1       S             10
      D PAcSecDR1       S              2
      D PPosRfDR1       S              1
@@ -193,13 +174,13 @@
      D PCcy            S              3
      D WkECDat         S              5  0
      D I#ERMS          S             60
- 
+
       ** Parameters for MRDATBID - Date Bucket Identification Module
      D PaDtSch         S              1  0
      D PaRepDt         S              5  0
      D PaSchDt         S              5  0
      D PaBuckCode      S              8
- 
+
       ** Parameters for ZXRATE module
      D ZRATE1          S             13P 8
      D ZMDI1           S              1
@@ -207,7 +188,7 @@
      D ZMDI2           S              1
      D ZRATEX          S             13P 8
      D ZMDIX           S              1
- 
+
       ** Parameters for ZCONVZ1 module
      D ZAMTCI          S             15  0
      D ZEXCH           S             13P 8
@@ -217,7 +198,7 @@
      D ZCDPI           S              1  0
      D ZCDPO           S              1  0
      D ZAMTCO          S             15  0
- 
+
       ** Parameters for GLINTC module
      D ZIBEG           S              5  0
      D ZIEND           S              5  0
@@ -225,10 +206,7 @@
      D ZIAMT           S             15  0
      D ZIRATE          S             11  7
      D ZINTR           S             30  9
- 
-      **                                                                                      CRN001
-     D CAS001          S              1                                                       CRN001
-                                                                                              CRN001
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -239,28 +217,92 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
-     C     1             SETLL     CLOANCL
-     C                   READ      CLOANCL
- 
-     C                   DOW       NOT %EOF(CLOANCL)
- 
-      ** Process live and matured records only
-     C                   IF        RECI = 'D' OR RECI = 'M'
+
+     C                   READ      BKPHDDF
+
+     C                   DOW       NOT %EOF(BKPHD  )
+
+      ** Process live records only
+     C                   IF        BH_RECI = 'D'
+     C                   IF        BH_BHTV = 'V'
+     C                   EXSR      SRGetPosition
+     C                   IF        Ext_Position = 'Y'
      C                   EXSR      SRProcess
      C                   ENDIF
- 
-     C                   READ      CLOANCL
- 
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   READ      BKPHDDF
+
      C                   ENDDO
- 
-     C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGetPosition - Subroutine                                   *
+      *                                                               *
+      *****************************************************************
+     C     SRGetPosition BEGSR
+
+     C                   MOVE      'Y'           Ext_Position      1
+
+      * Get security details
+
+     C     BH_BHSC       CHAIN     SECTYDF                            99        *
+
+      * Ignore if security not found or if deleted or matured
+
+     C     *IN99         IFEQ      '1'
+     C     SE_RECI       OREQ      '*'
+     C     SE_MATY       ORNE      *ZERO
+     C     SE_MATY       ANDLT     WkECDat
+     C                   EVAL      Ext_Position = 'N'
+     C                   GOTO      EEXTRCT
+     C                   ENDIF
+      *
+      * Get investment type details
+      *
+     C     INVTPK        KLIST
+     C                   KFLD                    SE_NMCY
+     C                   KFLD                    SE_SITP
+     C     INVTPK        CHAIN     INVTPDF                            99        *
+
+      * Ignore if investment type not found or if deleted
+
+     C     *IN99         IFEQ      '1'
+     C     IN_RECI       OREQ      '*'
+     C                   EVAL      Ext_Position = 'N'
+     C                   GOTO      EEXTRCT
+     C                   ENDIF
+      *
+      * Get further position details needed from BKPOSD
+      *
+     C     BKPOSK        KLIST
+     C                   KFLD                    BH_BHSC
+     C                   KFLD                    BH_BHBA
+     C                   KFLD                    BH_BHBK
+     C                   KFLD                    BH_BHMK
+     C                   KFLD                    BH_BHTV
+     C                   KFLD                    BH_LPSD
+
+      *  Obtain the current position
+
+     C     BKPOSK        CHAIN     BKPOS                              99
+     C     *IN99         IFEQ      '1'
+     C     BP_RECI       OREQ      '*'
+     C     BP_NPSN       OREQ      *ZERO
+     C     BP_ECNP       ANDEQ     *ZERO
+     C                   EVAL      Ext_Position = 'N'
+     C                   GOTO      EEXTRCT
+     C                   ENDIF
+
+     C     EEXTRCT       ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -270,114 +312,103 @@
       *****************************************************************
      C     SRProcess     BEGSR
      C                   CLEAR                   MRTRAPD0
- 
+
       ** Set Extract Date
      C                   EVAL      EXTDAT = BJRDNB
- 
+
       ** Set Event Control Date
      C                   EVAL      EXVCD = WkECDat
- 
+
       ** Set Calendar/Financial
      C                   EVAL      EXCAFI = 'C'
- 
+
       ** Set Period Type
      C                   EVAL      EXPERT = 'M'
- 
+
       ** Set Calendar Year/Month
      C                   EVAL      EXCY = CalendarYear
      C                   EVAL      EXCM = CalendarMonth
- 
+
       ** Set Module
-     C                   EVAL      EXMOD = 'LE'
- 
+     C                   EVAL      EXMOD = 'SE'
+
       ** Set Sub-Module
-     C                   EVAL      EXSUB = 'LOAN'
- 
+     C                   EVAL      EXSUB = 'SBPS'
+
       ** Set Transaction Id
-     C                   MOVEL     LNRF          EXTRID
- 
+     C                   EVAL      EXTRID = BH_BHSC + '-' + BH_BHBK + '-' +
+     C                                      BH_BHMK
+
       ** Set Sequence Number
      C                   EVAL      EXSEQ = 0
- 
+
       ** Set Transaction Status (EXSTAT)
      C                   EXSR      SRSetTrStat
- 
+
       ** Set On/Off Balance Sheet
-     C                   IF        PTYP = 70 OR PTYP = 71 OR PTYP = 72
-     C                   EVAL      EXBALS = '0'
-     C                   ELSE
      C                   EVAL      EXBALS = '1'
-     C                   ENDIF
- 
+
       ** Set Branch Details (EXBRCH, EXBICN)
      C                   EXSR      SRSetBrcDet
- 
+
       ** Set Customer Details (EXCUSN, EXCCIT, EXCLOC, EXCIND, EXCINT, EXCBNK
       ** EXCSWF)
      C                   EXSR      SRSetCusDet
- 
+
       ** Set Parent Details (EXPARN, EXPCIT, EXPLOC, EXPIND, EXPINT, EXPBNK
       ** EXPSWF)
      C     BBPCNB        IFNE      *BLANK
      C                   EXSR      SRSetParDet
      C                   ENDIF
- 
+
       ** Set Currency Details (EXCYCD, EXEBRT, EXMDIB, EXERP1, EXMDI1,
       ** EXERP2, EXMDI2)
      C                   EXSR      SRSetCurDet
- 
+
       ** Set FX Contract and Valuation Rates
      C                   EVAL      EXCNRT = 0
      C                   EVAL      EXVLRT = 0
- 
-      ** Set Principal Asset/Liability Indicator (EXPALI, EXPSGN, EXPDCI)
-     C                   EXSR      SRSetPALInd
- 
+
+      ** Set Principal Asset/Liability Indicator, Sign and DR/CR indicator
+     C                   IF        BP_NPSN >= 0
+     C                   EVAL      EXPALI = 'A'
+     C                   Z-ADD     1             EXPSGN
+     C                   Z-ADD     0             EXPDCI
+     C                   ELSE
+     C                   Z-SUB     BP_NPSN       BP_NPSN                                     MRSEFIX
+     C                   EVAL      EXPALI = 'L'
+     C                   Z-SUB     1             EXPSGN
+     C                   Z-ADD     1             EXPDCI
+     C                   ENDIF
+
       ** Set Principal Account Key (EXPACC, EXPACS, EXPREF)
      C                   EXSR      SRSetPrAcKy
- 
+
       ** Set Principal Amounts (EXPAMT, EXPMTB, EXPMT1, EXPMT2)
      C                   EXSR      SRSetPrnAmt
- 
-      ** Set Accrued Interest Sign and DR/CR ind
-     C                   IF        EXPALI = 'A'
+
+      ** Set Accrued Interest Sign and DR/CR indicator
      C                   EVAL      EXASGN = 1
      C                   EVAL      EXADCI = 0
-     C                   ELSE
-     C                   EVAL      EXASGN = -1
-     C                   EVAL      EXADCI = 1
-     C                   ENDIF
- 
+
       ** Set Accrued Interest Account Key (EXAACC, EXAACS, EXAREF,
       ** Set Interst Inc./Exp. Account Key (EXIACC, EXIACS, EXIREF)
- 
      C                   EXSR      SRSetAIAcKy
- 
+
       ** Set Accrued Interest Amounts (EXAAMT, EXAMTB, EXAMT1, EXAMT2)
      C                   EXSR      SRSetAInAmt
- 
+
       ** Set Unearned Disc/Prem Sign and DR/CR ind
-     C                   IF        EXPALI = 'A'
      C                   EVAL      EXESGN = -1
      C                   EVAL      EXEDCI =  1
-     C                   ELSE
-     C                   EVAL      EXESGN =  1
-     C                   EVAL      EXEDCI =  0
-     C                   ENDIF
- 
-      ** Set Unearned Disc/Prem Account Key (EXEACC, EXEACS, EXEREF,
+
+      ** Set Unearned Disc/Prem Account Key (EXEACC, EXEACS, EXAEEF,
       ** Set Disc./Prem. Account Key (EXDACC, EXDACS, EXDREF)
      C                   EXSR      SRSetDsAcKy
- 
-      ** Set Unearned Disc/Prem Amounts (EXEAMT, EXEMTB, EXEMT1, EXEMT2)
-     C                   EXSR      SRSetUDsAmt
- 
-      ** Initialise Disc/Prem Inc/Exp Amount Details
-     C                   EVAL      EXDAMT = *ZEROS
-     C                   EVAL      EXDMTB = *ZEROS
-     C                   EVAL      EXDMT1 = *ZEROS
-     C                   EVAL      EXDMT2 = *ZEROS
- 
+
+      ** Set Unearned Discount Amounts (EXEAMT, EXEMTB, EXEMT1, EXEMT2)
+     C                   EXSR      SRSetDscAmt
+
       ** Initialise Unrealised P/L A/c Details
      C                   EVAL      EXUSGN = *ZERO
      C                   EVAL      EXUDCI = *ZERO
@@ -388,33 +419,19 @@
      C                   EVAL      EXUMTB = *ZEROS
      C                   EVAL      EXUMT1 = *ZEROS
      C                   EVAL      EXUMT2 = *ZEROS
-                                                                                              CRN001
-      ** Check switchable feature CAS001                                                      CRN001
-     C                   IF        CAS001 = 'Y'                                               CRN001
-                                                                                              CRN001
-     C                   EXSR      SRSetURAcKy                                                CRN001
-                                                                                              CRN001
-      ** Get amounts from LENPVAL0, use LNRF from CLOANCL                                     CRN001
-     C     LNRF          CHAIN     LENPVAL0                                                   CRN001
-                                                                                              CRN001
-      ** Set Unrealized P/L Amount                                                            CRN001
-     C                   IF        %FOUND                                                     CRN001
-     C                   EVAL      WkTAmt = LNURPL                                            CRN001
-     C                   EXSR      SRCvtAmounts                                               CRN001
-     C                   EVAL(H)   EXUAMT = WkTAmt/(10**A6NBDP)                               CRN001
-     C                   EVAL(H)   EXUMTB = WkAmtInB/(10**WkNBDPB)                            CRN001
-     C                   EVAL(H)   EXUMT1 = WkAmtIn1/(10**WkNBDP1)                            CRN001
-     C                   EVAL(H)   EXUMT2 = WkAmtIn2/(10**WkNBDP2)                            CRN001
-     C                   ENDIF                                                                CRN001
-                                                                                              CRN001
-     C                   ENDIF                                                                CRN001
- 
+
       ** Initialise the rest of the Interest Inc./Exp. Details
      C                   EVAL      EXIAMT = *ZEROS
      C                   EVAL      EXIMTB = *ZEROS
      C                   EVAL      EXIMT1 = *ZEROS
      C                   EVAL      EXIMT2 = *ZEROS
- 
+
+      ** Initialise Disc/Prem Inc/Exp Amount Details
+     C                   EVAL      EXDAMT = *ZEROS
+     C                   EVAL      EXDMTB = *ZEROS
+     C                   EVAL      EXDMT1 = *ZEROS
+     C                   EVAL      EXDMT2 = *ZEROS
+
       ** Initialise Realised Profit/Loss Details
      C                   EVAL      EXRACC = *BLANKS
      C                   EVAL      EXRACS = *BLANKS
@@ -423,215 +440,42 @@
      C                   EVAL      EXRMTB = *ZEROS
      C                   EVAL      EXRMT1 = *ZEROS
      C                   EVAL      EXRMT2 = *ZEROS
- 
+
       ** Set Account Sequence, Transaction Type, Sub-Type, Profit Centre,
       ** Deal Date and Value Date
      C                   MOVEL     '01'          EXACSQ
      C                   MOVEL     '01'          EXACS1
-     C                   EVAL      EXTRTY = LTYP
-     C                   EVAL      EXTRST = SUTP
-     C*******************EVAL******EXCLAS = *BLANK                                     CDL038 CLE042
-     C                   EVAL      EXCLAS = CLAS                                              CLE042
-     C                   EVAL      EXPRFC = PRFC
-     C                   EVAL      EXDDAT = DDAT
-     C                   EVAL      EXVDAT = VDAT
- 
+     C                   EVAL      EXTRTY = SE_NMCY
+     C                   EVAL      EXTRST = SE_SITP
+     C                   EVAL      EXPRFC = *BLANK
+     C                   EVAL      EXDDAT = *ZERO
+     C                   EVAL      EXVDAT = *ZERO
+
       ** Set Maturity Date and Date Schedules (EXMDAT, EXMDT0 to EXMDT9)
      C                   EXSR      SRSetMatSch
- 
+
       ** Set Fixed/Variable Rate indicator, Base Rate, Rate/Spread, Interest
       ** Rate, Yield Rate
-     C                   IF        BRTT <> 0
-     C                   EVAL      EXRATE = 'V'
-     C                   ELSE
      C                   EVAL      EXRATE = 'F'
-     C                   ENDIF
- 
-     C                   EVAL      EXBRTE = BRTE
-     C                   EVAL      EXRTSP = RTSP
-     C                   EVAL      EXINTR = INTR
-     C                   EVAL      EXYLDR = *ZEROS
- 
-      ** Set Next Interest Pay Date and Date Schedules
-      ** (EXNIDT, EXNID0 to EXNID9)
+
+     C                   EVAL      EXBRTE = *ZEROS
+     C                   EVAL      EXRTSP = SE_CPNR
+     C                   EVAL      EXINTR = SE_CPNR
+     C                   EVAL      EXYLDR = *ZERO
+
+      ** Set Next Interest Pay Date/Amount and Date Schedules
+      ** (EXNIDT, EXNIMT, EXNID0 to EXNID9)
      C                   EXSR      SRSetNInSch
- 
+
       ** Set Next Interest Pay Amount (EXNIMT, EXNIMB, EXNIM1, EXNIM2)
-     C                   EXSR      SRSetNInAmt
- 
-      ** Set Next Principal Pay Date and Date Schedules
-      ** (EXNPDT, EXNPD0 to EXNPD9)
-     C                   EXSR      SRSetNPrSch
- 
-      ** Set Next Interest Pay Amount (EXNPMT, EXNPMB, EXNPM1, EXNPM2)
-     C                   EXSR      SRSetNPrAmt
- 
-      ** Initialise Facility and Loan Details
-     C                   EVAL      EXRCSI = RCSI
-     C                   MOVEL     FCUS          EXFCUS
-     C                   MOVEL     FTYP          EXFTYP
-     C                   MOVEL     FSEQ          EXFCNO
-                                                                                              CRN001
-     C                   EVAL      EXBOOK = BOKC                                              CRN001
- 
-      ** Write record to output file
-     C                   WRITE     MRTRAPD0
- 
-     C                   ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRSetNInSch - Subroutine that Sets Next Interest Pay Date -  *
-      *                Date Schedules                                 *
-      *                                                               *
-      *****************************************************************
-     C     SRSetNInSch   BEGSR
- 
-      ** Determine the Next Interest Pay Date to be written to MRTRAPPD
-     C                   IF        RLDT <> 0 AND RLDT < NIDT
-     C                   EVAL      EXNIDT = RLDT
-     C                   ELSE
-     C                   IF        NIDT <> 0
-     C                   EVAL      EXNIDT = NIDT
-     C                   ELSE
-     C                   EVAL      EXNIDT = MDAT
-     C                   ENDIF
-     C                   ENDIF
- 
-     C                   EVAL      EXNID0 = *BLANKS
-     C                   EVAL      EXNID1 = *BLANKS
-     C                   EVAL      EXNID2 = *BLANKS
-     C                   EVAL      EXNID3 = *BLANKS
-     C                   EVAL      EXNID4 = *BLANKS
-     C                   EVAL      EXNID5 = *BLANKS
-     C                   EVAL      EXNID6 = *BLANKS
-     C                   EVAL      EXNID7 = *BLANKS
-     C                   EVAL      EXNID8 = *BLANKS
-     C                   EVAL      EXNID9 = *BLANKS
- 
-      ** If the Next Interest Pay Date to be written to MRTRAPPD is not zero,
-      ** determine Date Schedules
-     C                   IF        EXNIDT <> 0
- 
-     C                   EVAL      PaRepDt = WkECDat
-     C                   EVAL      PaSchDt = EXNIDT
- 
-      ** Set Next Interest Pay Date - Date schedule 0
-     C                   EVAL      PaDtSch = 0
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID0 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 1
-     C                   EVAL      PaDtSch = 1
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID1 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 2
-     C                   EVAL      PaDtSch = 2
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID2 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 3
-     C                   EVAL      PaDtSch = 3
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID3 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 4
-     C                   EVAL      PaDtSch = 4
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID4 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 5
-     C                   EVAL      PaDtSch = 5
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID5 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 6
-     C                   EVAL      PaDtSch = 6
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID6 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 7
-     C                   EVAL      PaDtSch = 7
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID7 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 8
-     C                   EVAL      PaDtSch = 8
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID8 = PaBuckCode
- 
-      ** Set Next Interest Pay Date - Date schedule 9
-     C                   EVAL      PaDtSch = 9
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNID9 = PaBuckCode
- 
-     C                   ENDIF
- 
-     C                   ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRSetNInAmt - Subroutine that Sets Next Interest Pay Amount  *
-      *                Date Schedules                                 *
-      *                                                               *
-      *****************************************************************
-     C     SRSetNInAmt   BEGSR
- 
-     C                   EVAL      EXNIMT = *ZEROS
- 
-     C                   IF        EXNIDT <> 0
- 
-      ** Compute for the Next Interest Pay Amount to be written to MRTRAPPD
- 
-     C                   Z-ADD     IACD          ZIBEG
-     C                   Z-ADD     EXNIDT        ZIEND
-     C                   Z-ADD     ICBS          ZICALC
-     C                   Z-ADD     CPAM          ZIAMT
-     C                   Z-ADD     INTR          ZIRATE
- 
-     C                   CALLB     'GLINTC'
-      ** Inputs
-     C                   PARM                    ZIBEG
-     C                   PARM                    ZIEND
-     C                   PARM                    ZICALC
-     C                   PARM                    ZIAMT
-     C                   PARM                    ZIRATE
-      ** Output
-     C                   PARM      *ZEROS        ZINTR
- 
-     C                   Z-ADD(H)  ZINTR         WkIntrst         15 0
- 
-     C                   EVAL      WkTAmt = WkIntrst + AITC + AIAP
-     C                                      - IPRD - ICTD - IWOD
-     C                   EXSR      SRCvtAmounts
-     C                   EVAL(H)   EXNIMT = WkTAmt/(10**A6NBDP)
-     C                   EVAL(H)   EXNIMB = WkAmtInB/(10**WkNBDPB)
-     C                   EVAL(H)   EXNIM1 = WkAmtIn1/(10**WkNBDP1)
-     C                   EVAL(H)   EXNIM2 = WkAmtIn2/(10**WkNBDP2)
- 
-     C                   ENDIF
- 
-     C                   ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRSetNPrSch - Subroutine that Sets Next Principal Pay Date-  *
-      *                Date Schedules                                 *
-      *                                                               *
-      *****************************************************************
-     C     SRSetNPrSch   BEGSR
- 
-      ** Determine the Next Principal Pay Date to be written to MRTRAPPD
-     C                   IF        NRPD <> 0
-     C                   EVAL      EXNPDT = NRPD
-     C                   ELSE
+     C                   EXSR      SRSetNAmSch
+
+      ** Initialise Next Principal Pay Details
+     C                   EVAL      EXNPMT = *ZEROS
+     C                   EVAL      EXNPMB = *ZEROS
+     C                   EVAL      EXNPM1 = *ZEROS
+     C                   EVAL      EXNPM2 = *ZEROS
      C                   EVAL      EXNPDT = *ZEROS
-     C                   ENDIF
- 
      C                   EVAL      EXNPD0 = *BLANKS
      C                   EVAL      EXNPD1 = *BLANKS
      C                   EVAL      EXNPD2 = *BLANKS
@@ -642,85 +486,116 @@
      C                   EVAL      EXNPD7 = *BLANKS
      C                   EVAL      EXNPD8 = *BLANKS
      C                   EVAL      EXNPD9 = *BLANKS
- 
-      ** If the Next Principal Pay Date to be written to MRTRAPPD is not zero,
-      ** determine Date Schedules
-     C                   IF        EXNPDT <> 0
- 
-     C                   EVAL      PaRepDt = WkECDat
-     C                   EVAL      PaSchDt = EXNPDT
- 
-      ** Set Next Principal Pay Date - Date schedule 0
-     C                   EVAL      PaDtSch = 0
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD0 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 1
-     C                   EVAL      PaDtSch = 1
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD1 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 2
-     C                   EVAL      PaDtSch = 2
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD2 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 3
-     C                   EVAL      PaDtSch = 3
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD3 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 4
-     C                   EVAL      PaDtSch = 4
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD4 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 5
-     C                   EVAL      PaDtSch = 5
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD5 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 6
-     C                   EVAL      PaDtSch = 6
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD6 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 7
-     C                   EVAL      PaDtSch = 7
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD7 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 8
-     C                   EVAL      PaDtSch = 8
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD8 = PaBuckCode
- 
-      ** Set Next Principal Pay Date - Date schedule 9
-     C                   EVAL      PaDtSch = 9
-     C                   EXSR      SRGetBuckCd
-     C                   EVAL      EXNPD9 = PaBuckCode
- 
-     C                   ENDIF
- 
+
+      ** Initialise Recourse Indicator
+     C                   EVAL      EXRCSI = *BLANKS
+
+      ** Initialise Facility Details
+     C                   EVAL      EXFCUS = *BLANKS
+     C                   EVAL      EXFTYP = *BLANKS
+     C                   EVAL      EXFCNO = *BLANKS
+                                                                                         CRN001
+     C                   EVAL      EXBOOK = BH_BHBK                                           CRN001
+
+      ** Write record to output file
+     C                   WRITE     MRTRAPD0
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *
-      *  SRSetNPrAmt - Subroutine that Sets Next Principal Pay Amount *
+      *  SRSetNAmSch - Subroutine that Sets Next Interest Pay Amount  *
       *                                                               *
       *****************************************************************
-     C     SRSetNPrAmt   BEGSR
- 
-     C                   IF        EXNPDT <> 0
-     C                   EVAL      WkTAmt = RAMT
-     C                   EXSR      SRCvtAmounts
-     C                   EVAL(H)   EXNPMT = WkTAmt/(10**A6NBDP)
-     C                   EVAL(H)   EXNPMB = WkAmtInB/(10**WkNBDPB)
-     C                   EVAL(H)   EXNPM1 = WkAmtIn1/(10**WkNBDP1)
-     C                   EVAL(H)   EXNPM2 = WkAmtIn2/(10**WkNBDP2)
+     C     SRSetNAmSch   BEGSR
+
+     C                   EVAL      EXNIMT = *ZEROS
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSetNInSch - Subroutine that Sets Next Interest Pay Date -  *
+      *                Date Schedules                                 *
+      *                                                               *
+      *****************************************************************
+     C     SRSetNInSch   BEGSR
+
+      ** Determine the Next Interest Pay Date to be written to MRTRAPPD
+     C                   EVAL      EXNIDT = 0
+
+     C                   EVAL      EXNID0 = *BLANKS
+     C                   EVAL      EXNID1 = *BLANKS
+     C                   EVAL      EXNID2 = *BLANKS
+     C                   EVAL      EXNID3 = *BLANKS
+     C                   EVAL      EXNID4 = *BLANKS
+     C                   EVAL      EXNID5 = *BLANKS
+     C                   EVAL      EXNID6 = *BLANKS
+     C                   EVAL      EXNID7 = *BLANKS
+     C                   EVAL      EXNID8 = *BLANKS
+     C                   EVAL      EXNID9 = *BLANKS
+
+      ** If the Next Interest Pay Date to be written to MRTRAPPD is not zero,
+      ** determine Date Schedules
+     C                   IF        EXNIDT <> 0
+
+     C                   EVAL      PaRepDt = WkECDat
+     C                   EVAL      PaSchDt = EXNIDT
+
+      ** Set Next Interest Pay Date - Date schedule 0
+     C                   EVAL      PaDtSch = 0
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID0 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 1
+     C                   EVAL      PaDtSch = 1
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID1 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 2
+     C                   EVAL      PaDtSch = 2
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID2 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 3
+     C                   EVAL      PaDtSch = 3
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID3 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 4
+     C                   EVAL      PaDtSch = 4
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID4 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 5
+     C                   EVAL      PaDtSch = 5
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID5 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 6
+     C                   EVAL      PaDtSch = 6
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID6 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 7
+     C                   EVAL      PaDtSch = 7
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID7 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 8
+     C                   EVAL      PaDtSch = 8
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID8 = PaBuckCode
+
+      ** Set Next Interest Pay Date - Date schedule 9
+     C                   EVAL      PaDtSch = 9
+     C                   EXSR      SRGetBuckCd
+     C                   EVAL      EXNID9 = PaBuckCode
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -731,72 +606,62 @@
       *                                                               *
       *****************************************************************
      C     SRSetMatSch   BEGSR
- 
-     C                   EVAL      EXMDAT = MDAT
-     C                   EVAL      EXMDT0 = *BLANKS
-     C                   EVAL      EXMDT1 = *BLANKS
-     C                   EVAL      EXMDT2 = *BLANKS
-     C                   EVAL      EXMDT3 = *BLANKS
-     C                   EVAL      EXMDT4 = *BLANKS
-     C                   EVAL      EXMDT5 = *BLANKS
-     C                   EVAL      EXMDT6 = *BLANKS
-     C                   EVAL      EXMDT7 = *BLANKS
-     C                   EVAL      EXMDT8 = *BLANKS
-     C                   EVAL      EXMDT9 = *BLANKS
- 
+
+     C                   EVAL      EXMDAT = SE_MATY
+
      C                   EVAL      PaRepDt = WkECDat
-     C                   EVAL      PaSchDt = MDAT
- 
+     C                   EVAL      PaSchDt = SE_MATY
+
       ** Set Maturity Date - Date schedule 0
      C                   EVAL      PaDtSch = 0
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT0 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 1
      C                   EVAL      PaDtSch = 1
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT1 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 2
      C                   EVAL      PaDtSch = 2
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT2 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 3
      C                   EVAL      PaDtSch = 3
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT3 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 4
      C                   EVAL      PaDtSch = 4
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT4 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 5
      C                   EVAL      PaDtSch = 5
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT5 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 6
      C                   EVAL      PaDtSch = 6
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT6 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 7
      C                   EVAL      PaDtSch = 7
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT7 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 8
      C                   EVAL      PaDtSch = 8
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT8 = PaBuckCode
- 
+
       ** Set Maturity Date - Date schedule 9
      C                   EVAL      PaDtSch = 9
      C                   EXSR      SRGetBuckCd
      C                   EVAL      EXMDT9 = PaBuckCode
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -806,14 +671,14 @@
       *                                                               *
       *****************************************************************
      C     SRGetBuckCd   BEGSR
- 
+
      C                   CALLB     'MRDATBID'
      C                   PARM                    PaDtSch
      C                   PARM                    PaRepDt
      C                   PARM                    PaSchDt
       ** Output
      C                   PARM                    PaBuckCode
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -823,49 +688,31 @@
       *                                                               *
       *****************************************************************
      C     SRSetAInAmt   BEGSR
- 
-     C                   EVAL      EXAAMT = *ZEROS
-     C                   EVAL      EXAMTB = *ZEROS
-     C                   EVAL      EXAMT1 = *ZEROS
-     C                   EVAL      EXAMT2 = *ZEROS
- 
-     C                   IF        PTYP = 61 or PTYP = 62 or PTYP = 64
-     C                             OR PTYP = 66 or PTYP = 68 or PTYP = 69
-     C                             OR PTYP = 70 or PTYP = 71 OR PTYP = 72
- 
-     C                   EVAL      WkTAmt = AIPD - IPRD - ICTD - IWOD
+
+     C                   EVAL      WkTAmt = BH_ARPC
      C                   EXSR      SRCvtAmounts
      C                   EVAL(H)   EXAAMT = WkTAmt/(10**A6NBDP)
      C                   EVAL(H)   EXAMTB = WkAmtInB/(10**WkNBDPB)
      C                   EVAL(H)   EXAMT1 = WkAmtIn1/(10**WkNBDP1)
      C                   EVAL(H)   EXAMT2 = WkAmtIn2/(10**WkNBDP2)
-     C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       *                                                               *
-      *  SRSetUDsAmt - Subroutine that Sets Unearned Disc/Prem Amount *
+      *  SRSetDscAmt - Subroutine that Sets Discount Amounts          *
       *                                                               *
       *****************************************************************
-     C     SRSetUDsAmt   BEGSR
- 
-     C                   EVAL      EXEAMT = *ZEROS
-     C                   EVAL      EXEMTB = *ZEROS
-     C                   EVAL      EXEMT1 = *ZEROS
-     C                   EVAL      EXEMT2 = *ZEROS
- 
-     C                   IF        PTYP = 63 or PTYP = 65 or PTYP = 67
- 
-     C                   EVAL      WkTAmt = TOTI - AIPD
+     C     SRSetDscAmt   BEGSR
+
+     C                   EVAL      WkTAmt = BH_DPAP
      C                   EXSR      SRCvtAmounts
      C                   EVAL(H)   EXEAMT = WkTAmt/(10**A6NBDP)
      C                   EVAL(H)   EXEMTB = WkAmtInB/(10**WkNBDPB)
      C                   EVAL(H)   EXEMT1 = WkAmtIn1/(10**WkNBDP1)
      C                   EVAL(H)   EXEMT2 = WkAmtIn2/(10**WkNBDP2)
-     C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -877,18 +724,18 @@
       *                                                               *
       *****************************************************************
      C     SRCvtAmounts  BEGSR
- 
+
       ** Get Accrued Interest Amount in Base Currency
      C                   Z-ADD     WkTAmt        ZAMTCI
      C                   EVAL      ZEXCH = A6SPRT
      C                   EVAL      ZMD = A6MDIN
-     C                   EVAL      ZCCYI = CCY
+     C                   EVAL      ZCCYI = SE_NMCY
      C                   EVAL      ZCCYO = WkCYCDB
      C                   EVAL      ZCDPI = A6NBDP
      C                   EVAL      ZCDPO = WkNBDPB
      C                   EXSR      SRGetAmount
      C                   Z-ADD     ZAMTCO        WkAmtInB
- 
+
       ** Get Principal Amount in Reporting Currency 1
      C                   EVAL      ZEXCH = EXERP1
      C                   EVAL      ZMD = EXMDI1
@@ -896,7 +743,7 @@
      C                   EVAL      ZCDPO = WkNBDP1
      C                   EXSR      SRGetAmount
      C                   Z-ADD     ZAMTCO        WkAmtIn1
- 
+
       ** Get Principal Amount in Reporting Currency 2
      C                   EVAL      ZEXCH = EXERP2
      C                   EVAL      ZMD = EXMDI2
@@ -904,7 +751,7 @@
      C                   EVAL      ZCDPO = WkNBDP2
      C                   EXSR      SRGetAmount
      C                   Z-ADD     ZAMTCO        WkAmtIn2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -914,14 +761,31 @@
       *                                                               *
       *****************************************************************
      C     SRSetPrnAmt   BEGSR
- 
-     C                   Z-ADD     CPAM          WkTAmt
+
+     C                   IF        PAcKyPos19 = 'FV'
+     C                   Z-ADD     100           ZPRC
+     C                   ELSE
+     C                   Z-ADD     BH_LAVP       ZPRC
+     C                   ENDIF
+
+      * Determine current book value
+
+     C                   CALLB     'ZCNSD'
+     C                   PARM      BP_NPSN       ZNOML            15 0
+     C                   PARM                    ZPRC             16 9
+     C                   PARM      SE_SPBS       W#SPBS            1
+     C                   PARM      SE_NMDP       W#NMDP            1 0
+     C                   PARM      A6NBDP        W#NCDP            1 0
+     C                   PARM      *ZERO         ZCONS            15 0
+
+     C                   Z-ADD     ZCONS         WkTAmt
+
      C                   EXSR      SRCvtAmounts
      C                   EVAL(H)   EXPAMT = WkTAmt/(10**A6NBDP)
      C                   EVAL(H)   EXPMTB = WkAmtInB/(10**WkNBDPB)
      C                   EVAL(H)   EXPMT1 = WkAmtIn1/(10**WkNBDP1)
      C                   EVAL(H)   EXPMT2 = WkAmtIn2/(10**WkNBDP2)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -932,7 +796,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetAmount   BEGSR
- 
+
      C                   CALLB     'ZCONVZ1'
       ** Inputs
      C                   PARM                    ZAMTCI
@@ -944,7 +808,7 @@
      C                   PARM                    ZCDPO
       ** Output
      C                   PARM      *ZEROS        ZAMTCO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -954,23 +818,23 @@
       *                                                               *
       *****************************************************************
      C     SRSetCurDet   BEGSR
- 
-     C                   EVAL      I#LFD1 = CCY
- 
+
+     C                   EVAL      I#LFD1 = SE_NMCY
+
      C                   CALLB     'MXACSCURR'
       /COPY MXCPYSRC,MXACSPRME
- 
+
      C                   IF        ACS_RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'INVALID CURRENCY: ' + I#LFD1
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SDCURR = InData
- 
-     C                   EVAL      EXCYCD = CCY
+
+     C                   EVAL      EXCYCD = SE_NMCY
      C                   EVAL      EXEBRT = A6SPRT
      C                   EVAL      EXMDIB = A6MDIN
- 
+
       ** Retrieve Cross Rate between Transaction Currency and Reporting Ccy 1
      C                   EVAL      ZRATE1 = A6SPRT
      C                   EVAL      ZMDI1 = A6MDIN
@@ -979,14 +843,14 @@
      C                   EXSR      SRGetXRate
      C                   EVAL      EXERP1 = ZRATEX
      C                   EVAL      EXMDI1 = ZMDIX
- 
+
       ** Retrieve Cross Rate between Transaction Currency and Reporting Ccy 2
      C                   EVAL      ZRATE2  = WkSPRT2
      C                   EVAL      ZMDI2 = WkMDIN2
      C                   EXSR      SRGetXRate
      C                   EVAL      EXERP2 = ZRATEX
      C                   EVAL      EXMDI2 = ZMDIX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -996,7 +860,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetXRate    BEGSR
- 
+
      C                   CALLB     'ZXRATE'
       ** Inputs
      C                   PARM                    ZRATE1
@@ -1006,7 +870,7 @@
       ** Outputs
      C                   PARM      *ZEROS        ZRATEX
      C                   PARM      *BLANKS       ZMDIX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1016,33 +880,33 @@
       *                                                               *
       *****************************************************************
      C     SRSetCusDet   BEGSR
- 
-     C                   MOVEL     CNUM          PCust
- 
+
+     C                   MOVEL     SE_ISSR       PCust
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCust
      C                   PARM      *BLANKS       PStKey
      C     SDCUST        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust
-     C                   EVAL      DBASE = 5
+     C                   EVAL      DBASE = 3
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
-     C                   MOVE      CNUM          EXCUSN
+
+     C                   MOVE      SE_ISSR       EXCUSN
      C                   EVAL      EXCCIT = BBCNCZ
      C                   EVAL      EXCLOC = BBCOLC
      C                   EVAL      EXCIND = BBLICD
      C                   EVAL      EXCINT = BBLINC
      C                   EVAL      EXCBNK = BBBNBI
      C                   EVAL      EXCSWF = BBSWFI
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1052,25 +916,25 @@
       *                                                               *
       *****************************************************************
      C     SRSetParDet   BEGSR
- 
+
      C                   MOVEL     BBPCNB        PCust
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCust
      C                   PARM      *BLANKS       PStKey
      C     SDCUST        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust
-     C                   EVAL      DBASE = 5
+     C                   EVAL      DBASE = 4
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     BBCUST        EXPARN
      C                   EVAL      EXPCIT = BBCNCZ
      C                   EVAL      EXPLOC = BBCOLC
@@ -1078,7 +942,7 @@
      C                   EVAL      EXPINT = BBLINC
      C                   EVAL      EXPBNK = BBBNBI
      C                   EVAL      EXPSWF = BBSWFI
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1088,22 +952,22 @@
       *                                                               *
       *****************************************************************
      C     SRSetBrcDet   BEGSR
- 
-     C                   EVAL      I#LFD1 = BRCA
- 
+
+     C                   EVAL      I#LFD1 = BH_BHBA
+
      C                   CALLB     'MXACSBRCH'
       /COPY MXCPYSRC,MXACSPRME
- 
+
      C                   IF        ACS_RTCD = '*ERROR '
      C                   EVAL      I#ERMS = 'ERROR IN FORMAT MXACSBRCH'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SDBRCH = InData
- 
+
      C                   EVAL      EXBRCH = A8BRCD
      C                   EVAL      EXBICN = A8BICN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1113,22 +977,22 @@
       *                                                               *
       *****************************************************************
      C     SRGetCurrD    BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCcy
      C     SDCURR        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   EVAL      DBKEY = PCcy
-     C                   EVAL      DBASE = 3
+     C                   EVAL      DBASE = 5
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1138,19 +1002,19 @@
       *                                                               *
       *****************************************************************
      C     SRGetRepPrm   BEGSR
- 
+
      C     1             SETLL     MRRPRMPD
      C                   READ      MRRPRMPD
- 
+
      C                   IF        %EOF(MRRPRMPD)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'MRRPRMPD'
      C                   EVAL      DBKEY = '*READ '
-     C                   EVAL      DBASE = 4
+     C                   EVAL      DBASE = 6
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1161,29 +1025,26 @@
       *                                                               *
       *****************************************************************
      C     SRSetDsAcKy   BEGSR
- 
+
      C                   EVAL      EXEACC = *BLANKS
      C                   EVAL      EXEACS = *BLANKS
      C                   EVAL      EXEREF = *BLANKS
      C                   EVAL      EXDACC = *BLANKS
      C                   EVAL      EXDACS = *BLANKS
      C                   EVAL      EXDREF = *BLANKS
- 
-     C                   IF        PTYP = 63 or PTYP = 65 or PTYP = 67
- 
-     C                   EVAL      PAcKyPos01 = LTYP
-     C                   EVAL      PAcKyPos03 = 'A'
-     C                   EVAL      PAcKyPos04 = SUTP
-     C                   EVAL      PAcKyPos11 = CLAS                                          CLE042
-     C                   EVAL      PAcKyPos06 = *BLANKS
-     C                   EVAL      PAcKyPos07 = *BLANKS
-     C                   EVAL      PAcKyPos08 = *BLANKS
-     C                   EVAL      PAcKyPos09 = *BLANKS
-     C                   EVAL      PAcKyPos10 = 'D'
- 
+
+     C                   EVAL      PAcKyPos01 = BH_INVT
+     C                   EVAL      PAcKyPos04 = 'A'
+     C                   EVAL      PAcKyPos05 = ' '
+     C                   EVAL      PAcKyPos07 = BH_BHBK
+     C                   EVAL      PAcKyPos13 = 'S'
+
+      ** If discount amount is GREATER than zero, position is carrying a discount
+     C                   IF        BH_BUDU  > 0
+     C                   EVAL      PAcKyPos19 = 'DA'
+
      C                   EXSR      SRGetAcKeyD
- 
-     C                   IF        EXPALI = 'A'
+
      C                   EVAL      EXEACC = PAcCodDR1
      C                   EVAL      EXEACS = PAcSecDR1
      C                   EVAL      EXEREF = PPosRfDR1
@@ -1191,6 +1052,13 @@
      C                   EVAL      EXDACS = PAcSecCR1
      C                   EVAL      EXDREF = PPosRfCR1
      C                   ELSE
+
+      ** If discount amount is LESS than zero, position is carrying a premium
+     C                   IF        BH_BUDU  < 0
+     C                   EVAL      PAcKyPos19 = 'PA'
+
+     C                   EXSR      SRGetAcKeyD
+
      C                   EVAL      EXEACC = PAcCodCR1
      C                   EVAL      EXEACS = PAcSecCR1
      C                   EVAL      EXEREF = PPosRfCR1
@@ -1199,7 +1067,7 @@
      C                   EVAL      EXDREF = PPosRfDR1
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1210,47 +1078,24 @@
       *                                                               *
       *****************************************************************
      C     SRSetAIAcKy   BEGSR
- 
-     C                   EVAL      EXAACC = *BLANKS
-     C                   EVAL      EXAACS = *BLANKS
-     C                   EVAL      EXAREF = *BLANKS
-     C                   EVAL      EXIACC = *BLANKS
-     C                   EVAL      EXIACS = *BLANKS
-     C                   EVAL      EXIREF = *BLANKS
- 
-     C                   IF        PTYP = 61 or PTYP = 62 or PTYP = 64
-     C                             OR PTYP = 66 or PTYP = 68 or PTYP = 69
-     C                             OR PTYP = 70 or PTYP = 71 OR PTYP = 72
- 
-     C                   EVAL      PAcKyPos01 = LTYP
-     C                   EVAL      PAcKyPos03 = 'A'
-     C                   EVAL      PAcKyPos04 = SUTP
-     C                   EVAL      PAcKyPos11 = CLAS                                          CLE042
-     C                   EVAL      PAcKyPos06 = *BLANKS
-     C                   EVAL      PAcKyPos07 = *BLANKS
-     C                   EVAL      PAcKyPos08 = *BLANKS
-     C                   EVAL      PAcKyPos09 = *BLANKS
-     C                   EVAL      PAcKyPos10 = 'I'
- 
+
+     C                   EVAL      PAcKyPos01 = BH_INVT
+     C                   EVAL      PAcKyPos04 = 'A'
+     C                   EVAL      PAcKyPos05 = ' '
+     C                   EVAL      PAcKyPos07 = BH_BHBK
+     C                   EVAL      PAcKyPos13 = 'S'
+     C                   EVAL      PAcKyPos19 = 'AI'
+
      C                   EXSR      SRGetAcKeyD
- 
-     C                   IF        EXPALI = 'A'
+
      C                   EVAL      EXAACC = PAcCodDR1
      C                   EVAL      EXAACS = PAcSecDR1
      C                   EVAL      EXAREF = PPosRfDR1
      C                   EVAL      EXIACC = PAcCodCR1
      C                   EVAL      EXIACS = PAcSecCR1
      C                   EVAL      EXIREF = PPosRfCR1
-     C                   ELSE
-     C                   EVAL      EXAACC = PAcCodCR1
-     C                   EVAL      EXAACS = PAcSecCR1
-     C                   EVAL      EXAREF = PPosRfCR1
-     C                   EVAL      EXIACC = PAcCodDR1
-     C                   EVAL      EXIACS = PAcSecDR1
-     C                   EVAL      EXIREF = PPosRfDR1
-     C                   ENDIF
-     C                   ENDIF
- 
+     C                   EXSR      SRGetAcKeyD
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1260,92 +1105,50 @@
       *                                                               *
       *****************************************************************
      C     SRSetPrAcKy   BEGSR
- 
-     C                   EVAL      PAcKyPos01 = LTYP
-     C                   IF        EXSTAT = 'N'
-     C                   EVAL      PAcKyPos03 = 'D'
-     C                   ELSE
-     C                   EVAL      PAcKyPos03 = 'V'
-     C                   ENDIF
-     C                   EVAL      PAcKyPos04 = SUTP
-     C                   EVAL      PAcKyPos11 = CLAS                                          CLE042
-     C                   EVAL      PAcKyPos06 = *BLANKS
-     C                   EVAL      PAcKyPos07 = *BLANKS
-     C                   EVAL      PAcKyPos08 = *BLANKS
-     C                   EVAL      PAcKyPos09 = *BLANKS
-     C                   EVAL      PAcKyPos10 = 'A'
- 
+
+     C                   EVAL      PAcKyPos01 = BH_INVT
+     C                   EVAL      PAcKyPos04 = 'V'
+     C                   EVAL      PAcKyPos05 = 'P'
+     C                   EVAL      PAcKyPos07 = BH_BHBK
+     C                   EVAL      PAcKyPos13 = 'S'
+     C                   EVAL      PAcKyPos19 = 'CO'
+
      C                   EXSR      SRGetAcKeyD
-                                                                                             MRSEFIX
-     C                   IF        PAcSecCR1 = 'LI'                                          MRSEFIX
-     C                   EVAL      EXPALI = 'L'                                              MRSEFIX
-     C                   Z-SUB     1             EXPSGN                                      MRSEFIX
-     C                   Z-ADD     1             EXPDCI                                      MRSEFIX
-     C                   ENDIF                                                               MRSEFIX
- 
-     C                   IF        EXPALI = 'A'
+
      C                   EVAL      EXPACC = PAcCodDR1
      C                   EVAL      EXPACS = PAcSecDR1
      C                   EVAL      EXPREF = PPosRfDR1
-     C                   ELSE
-     C                   EVAL      EXPACC = PAcCodCR1
-     C                   EVAL      EXPACS = PAcSecCR1
-     C                   EVAL      EXPREF = PPosRfCR1
+
+     C                   IF        EXPREF = ' '
+     C                   EVAL      PAcKyPos19 = 'FV'
+     C                   EXSR      SRGetAcKeyD
+     C                   EVAL      EXPACC = PAcCodDR1
+     C                   EVAL      EXPACS = PAcSecDR1
+     C                   EVAL      EXPREF = PPosRfDR1
      C                   ENDIF
- 
+
+     C                   IF        EXPREF = '4'
+     C                   EVAL      EXPREF = '3'
+     C                   ENDIF
+
      C                   ENDSR
       *****************************************************************
       /EJECT
-      *****************************************************************                       CRN001
-      *                                                               *                       CRN001
-      *  SRSetURAcKy - Subroutine that Sets Unrealised P/L Account    *                       CRN001
-      *                Key Details                                    *                       CRN001
-      *                                                               *                       CRN001
-      *****************************************************************                       CRN001
-     C     SRSetURAcKy   BEGSR                                                                CRN001
-                                                                                              CRN001
-     C                   EVAL      PAcKyPos01 = LTYP                                          CRN001
-     C                   EVAL      PAcKyPos03 = 'A'                                           CRN001
-     C                   EVAL      PAcKyPos04 = SUTP                                          CRN001
-     C                   EVAL      PAcKyPos06 = *BLANKS                                       CRN001
-     C                   EVAL      PAcKyPos07 = *BLANKS                                       CRN001
-     C                   EVAL      PAcKyPos08 = *BLANKS                                       CRN001
-     C                   EVAL      PAcKyPos09 = 'U'                                           CRN001
-     C                   IF        FSURPL > 0                                                 CRN001
-     C                   EVAL      PAcKyPos10 = 'P'                                           CRN001
-     C                   EXSR      SRGetAcKeyD                                                CRN001
-     C                   EVAL      EXUACC = PAcCodCR1                                         CRN001
-     C                   EVAL      EXUACS = PAcSecCR1                                         CRN001
-     C                   EVAL      EXUREF = PPosRfCR1                                         CRN001
-     C                   ELSE                                                                 CRN001
-     C                   EVAL      PAcKyPos10 = 'L'                                           CRN001
-     C                   EXSR      SRGetAcKeyD                                                CRN001
-     C                   EVAL      EXUACC = PAcCodDR1                                         CRN001
-     C                   EVAL      EXUACS = PAcSecDR1                                         CRN001
-     C                   EVAL      EXUREF = PPosRfDR1                                         CRN001
-     C                   ENDIF                                                                CRN001
-                                                                                              CRN001
-     C                   ENDSR                                                                CRN001
-      *****************************************************************                       CRN001
-                                                                                              CRN001
       *****************************************************************
       *                                                               *
       *  SRGetAcKeyD - Subroutine that Retrieves Account Key Details  *
       *                                                               *
       *****************************************************************
      C     SRGetAcKeyD   BEGSR
- 
+
      C                   CALLB     'MRACSACKY'
      C                   PARM                    PAcKyPos01
-     C                   PARM                    PAcKyPos03
      C                   PARM                    PAcKyPos04
-     C                   PARM                    PAcKyPos06
+     C                   PARM                    PAcKyPos05
      C                   PARM                    PAcKyPos07
-     C                   PARM                    PAcKyPos08
-     C                   PARM                    PAcKyPos09
-     C                   PARM                    PAcKyPos10
-     C                   PARM                    PAcKyPos11                                   CDL038
- 
+     C                   PARM                    PAcKyPos13
+     C                   PARM                    PAcKyPos19
+
      C                   PARM      *BLANKS       PAcCodDR1
      C                   PARM      *BLANKS       PAcSecDR1
      C                   PARM      *BLANKS       PPosRfDR1
@@ -1364,7 +1167,7 @@
      C                   PARM      *BLANKS       PAcCodCR3
      C                   PARM      *BLANKS       PAcSecCR3
      C                   PARM      *BLANKS       PPosRfCR3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1374,46 +1177,10 @@
       *                                                               *
       *****************************************************************
      C     SRSetTrStat   BEGSR
- 
+
       ** Set Transaction Status
-     C                   IF        RECI = 'M'
-     C                   EVAL      EXSTAT = 'M'
- 
-     C                   ELSE
-     C                   IF        VDAT > WkECDat
-     C                   EVAL      EXSTAT = 'N'
-     C                   ELSE
      C                   EVAL      EXSTAT = *BLANKS
-     C                   ENDIF
-     C                   ENDIF
- 
-     C                   ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRSetPALInd - Subroutine that Sets Principal Asset/Liability *
-      *                Indicator                                      *
-      *                                                               *
-      *****************************************************************
-     C     SRSetPALInd   BEGSR
- 
-      ** Set Principal Asset/Liability Indicator to 'A' as asset
-     C                   IF        PTYP = 61 or PTYP = 62 or PTYP = 63
-     C                             OR PTYP = 64 or PTYP = 65 or PTYP = 68
-     C                             OR PTYP = 70 or PTYP = 71
-     C                   EVAL      EXPALI = 'A'
-     C                   Z-ADD     1             EXPSGN
-     C                   Z-ADD     0             EXPDCI
- 
-     C                   ELSE
- 
-      ** Set Principal Asset/Liability Indicator to 'L' as Liability
-     C                   EVAL      EXPALI = 'L'
-     C                   Z-SUB     1             EXPSGN
-     C                   Z-ADD     1             EXPDCI
-     C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1436,19 +1203,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -1457,14 +1224,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger Details
- 
+
      C                   CALL      'AOGELRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDGELRPD'
@@ -1473,14 +1240,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set event control date to whichever is the lesser of the next
       ** working day and accrual profit date
      C                   EVAL      WkECDat = BJDNWD - 1
      C                   IF        BKAPDT < WkECDat
      C                   EVAL      WkECDat = BKAPDT
      C                   ENDIF
- 
+
       ** Get Details of Base Currency
      C                   EVAL      PCcy = BJCYCD
      C                   EXSR      SRGetCurrD
@@ -1488,10 +1255,10 @@
      C                   EVAL      WkNBDPB = A6NBDP
      C                   EVAL      WkSPRTB = A6SPRT
      C                   EVAL      WkMDINB = A6MDIN
- 
+
       ** Access Report Parameters
      C                   EXSR      SRGetRepPrm
- 
+
       ** Get Details of Reporting Currency 1
      C                   EVAL      PCcy = RPCCY1
      C                   EXSR      SRGetCurrD
@@ -1499,7 +1266,7 @@
      C                   EVAL      WkNBDP1 = A6NBDP
      C                   EVAL      WkSPRT1 = A6SPRT
      C                   EVAL      WkMDIN1 = A6MDIN
- 
+
       ** Get Details of Reporting Currency 2
      C                   EVAL      PCcy = RPCCY2
      C                   EXSR      SRGetCurrD
@@ -1507,32 +1274,18 @@
      C                   EVAL      WkNBDP2 = A6NBDP
      C                   EVAL      WkSPRT2 = A6SPRT
      C                   EVAL      WkMDIN2 = A6MDIN
- 
+
       * Convert run date to DD/MM/YY
- 
+
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZDATE         DayMonthYear
- 
+
       * Calendar Year/Month
- 
+
      C                   Z-ADD     Year          CalendarYear      2 0
      C                   Z-ADD     Month         CalendarMonth     2 0
- 
-     C                   MOVE      'N'           CAS001                                       CRN001
-                                                                                              CRN001
-      ** Check if enhancement CAS001 is on                                                    CRN001
-                                                                                              CRN001
-     C                   CALLB     'AOSARDR0'                                                 CRN001
-     C                   PARM      *BLANKS       @RTCD                                        CRN001
-     C                   PARM      '*VERIFY'     @OPTN                                        CRN001
-     C                   PARM      'CAS001'      @SARD                                        CRN001
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CRN001
-                                                                                              CRN001
-     C     @RTCD         IFEQ      *BLANK                                                     CRN001
-     C                   MOVEL     'Y'           CAS001                                       CRN001
-     C                   ENDIF                                                                CRN001
-                                                                                              CRN001
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -1549,23 +1302,23 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2004

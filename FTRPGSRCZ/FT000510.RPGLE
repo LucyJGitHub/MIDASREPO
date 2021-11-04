@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CFT046             Date 13Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature                            *
@@ -138,6 +141,7 @@
      D CER031          S              1A                                                      CER030
      D CFT003          S              1A                                                      CER030
      D CGL013          S              1A                                                      CER030
+     D CFT046          S              1A                                                      CFT046
       *
       *
       /EJECT
@@ -560,6 +564,37 @@
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
       *
+      ** Check the switchable feature CFT046                                                  CFT046
+      *                                                                                       CFT046
+     C                   CALLB     'AOSARDR0'                                                 CFT046
+     C                   PARM      *BLANKS       PRtCd                                        CFT046
+     C                   PARM      '*VERIFY'     POptn                                        CFT046
+     C                   PARM      'CFT046'      PSard                                        CFT046
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT046
+      *                                                                                       CFT046
+     C                   IF        PRtCd = *BLANKS                                            CFT046
+     C                   EVAL      CFT046 = 'Y'                                               CFT046
+     C                   EVAL      *IN15 = *ON                                                CFT046
+     C                   ELSE                                                                 CFT046
+      *                                                                                       CFT046
+      ** Database error (return code other than *NRF)                                         CFT046
+      *                                                                                       CFT046
+     C                   IF        PRtCd  <> '*NRF   '                                        CFT046
+     C     *LOCK         IN        LDA                                                        CFT046
+     C                   EVAL      DBFILE =  'SCSARDPD'                                       CFT046
+     C                   EVAL      DBKEY  =  POptn                                            CFT046
+     C                   EVAL      DBPGM  =  PSProcPgm                                        CFT046
+     C                   EVAL      DBASE  =  007                                              CFT046
+     C                   EVAL      DBMOD  =  PSProcMod                                        CFT046
+     C                   EVAL      DBPROC =  '*INZSR'                                         CFT046
+     C                   OUT       LDA                                                        CFT046
+     C                   WRITE     DBERROR                                                    CFT046
+     C                   EXSR      *PSSR                                                      CFT046
+     C                   ELSE                                                                 CFT046
+     C                   EVAL      CFT046 = 'N'                                               CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
       *
       ** Define key list to access LF/FTOSSIL0
      C     K@OSSI        Klist

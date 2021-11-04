@@ -9,18 +9,22 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 262056             Date 30Jan13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE008             Date 19Feb02              */
+/*                      CRE008             Date 19Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CEU022 *C *CREATE  Date 05Jan98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       262056 - Attempt to start commitment control as it may be   */
+/*                not started.                                       */
+/*              - Applied for AR1068690 (Child: AR1069087)           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE008 - Cash Management                                    */
 /*       CEU022 - EMU Retail Utilities                               */
@@ -44,6 +48,8 @@
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*262056*/
+             MONMSG     MSGID(CPF8351)                                                    /*262056*/
  
 /* Call EU0130 */
  

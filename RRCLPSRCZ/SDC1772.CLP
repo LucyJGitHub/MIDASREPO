@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR1095162          Date 23Apr13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK016             Date 29Aug03              */
+/*                      CPK016             Date 29Aug03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             Date 10May95              */
@@ -23,9 +24,11 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/*       MD046248 - Finastra Rebranding                              */
-/*       CPK016 - Release 5 packaging.  Make data queue REBUILD      */
-/*                permanent.                                         */
+/*       AR1095162 - LFs go on LCKW during batch rebuild. Do not    */
+/*                   rebuild V_* views. (Child:AR1095164).          */
+/*       MD046248 - Finastra Rebranding                             */
+/*       CPK016 - Release 5 packaging.  Make data queue REBUILD     */
+/*                permanent.                                        */
 /*       S01408 - Addition of core hook SDC1772MPS                  */
 /*       E19691 - SDC1772 SHOULD BE ALLOCATED (*SHRRD) FOR THE      */
 /*                PERIOD THAT THE SDC1772 BATCH JOBS RUN.           */
@@ -82,6 +85,13 @@
              CHGVAR     VAR(&FILE) VALUE(%SST(&DATA 1 10))
              CHGVAR     VAR(&LIB) VALUE(%SST(&DATA 11 10))
              CHGVAR     VAR(&NAME) VALUE(%SST(&DATA 21 10))
+/**/                                                                                   /*AR1095162*/
+/** Ignore SQL views as these are not relevant                       */                /*AR1095162*/
+/**/                                                                                   /*AR1095162*/
+             IF         COND(%SST(&FILE 1 2) *Eq 'V_') THEN(DO)                        /*AR1095162*/
+             GOTO       CMDLBL(READ)                                                   /*AR1095162*/
+             ENDDO                                                                     /*AR1095162*/
+/**/                                                                                   /*AR1095162*/
              CALL       PGM(*LIBL/SD1731) PARM('*VERIFY' &FILE &LIB +
                           &NAME &RTNCDE)
              IF         COND(&RTNCDE *EQ '*ERROR') THEN(GOTO +

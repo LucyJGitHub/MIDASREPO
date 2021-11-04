@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039094           Date 15May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. CFT046             Date 13Oct20               *
+      *                 MD039094           Date 15May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 MD024011           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
@@ -57,6 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
       *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
       *             DDSUSR is taken out of FTIPY5PD, hence no need to *
       *             populate this field.                              *
@@ -377,6 +382,8 @@
      D CER030          S              1A                                                      CER030
      D CER031          S              1A                                                      CER030
      D CGL013          S              1A                                                      CER030
+      *                                                                                       CFT046
+     D CFT046          S              1A                                                      CFT046
       *                                                                                       CFT120
       ** CFT120 switchable field                                                              CFT120
       *                                                                                       CFT120
@@ -1211,7 +1218,7 @@
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        CFT009 = 'Y'                                 CFT009
      C                   EVAL      PINBDP = A6NBDP                              CFT009
      C                   ENDIF                                                  CFT009
@@ -1306,7 +1313,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   IF        CFT010 = 'Y'                                 CFT009
      C                   EVAL      VAT9 = VTMIC1                                CFT009
      C                   EVAL      VAT10 = VTMIC2                               CFT009
@@ -1936,6 +1943,7 @@
       ** If CER030 and CER031 is ON                                                           CER030
       *                                                                                       CER030
      C                   IF        CER030 = 'Y' OR CGL013 = 'Y'                               CER030
+     C                             OR CFT046 = 'Y'                                            CFT046
      C                   EVAL      DDRTTY = IRTTY                                             CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
@@ -2392,6 +2400,28 @@
      C                   ENDIF                                                                CFT120
       *                                                                                       CFT120
      C                   ENDIF                                                                CFT120
+      *                                                                                       CFT046
+      ** Check the switchable feature CFT046                                                  CFT046
+      *                                                                                       CFT046
+     C                   CALLB     'AOSARDR0'                                                 CFT046
+     C                   PARM      *BLANKS       PRtCd                                        CFT046
+     C                   PARM      '*VERIFY'     POptn                                        CFT046
+     C                   PARM      'CFT046'      PSard                                        CFT046
+     C     SCSARDP       PARM      SCSARD        DSFDY                                        CFT046
+      *                                                                                       CFT046
+     C                   IF        PRtcd = *BLANKS                                            CFT046
+     C                   EVAL      CFT046 = 'Y'                                               CFT046
+     C                   ELSE                                                                 CFT046
+      *                                                                                       CFT046
+     C                   IF        PRtcd <> '*NRF'                                            CFT046
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CFT046
+     C                   EVAL      DBASE = 013                                                CFT046
+     C                   EVAL      DBKEY = '*VERIFY'                                          CFT046
+     C                   ELSE                                                                 CFT046
+     C                   EVAL      CFT046 = 'N'                                               CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

@@ -1,0 +1,63 @@
+      *****************************************************************                       UUC101
+      *                                                               *                       UUC101
+      *  MIDAS - /COPY MEMBER (FT0060)                                *                       UUC101
+      *                                                               *                       UUC101
+      *  FT0060C010 - Payment Authorisation                           *                       UUC101
+      *                                                               *                       UUC101
+      *  (c) Finastra Ltd 2020                                        *                       UUC101
+      *                                                               *                       UUC101
+      *  Last Amend No. UUC101  *CREATE    Date 07Oct20               *                       UUC101
+      *                                                               *                       UUC101
+      *****************************************************************                       UUC101
+      *                                                               *                       UUC101
+      *  UUC101 - Cover FT Payments                                   *                       UUC101
+      *           Upgrade UUC041 to FBM 2.1                           *                       UUC101
+      *                                                               *                       UUC101
+      *****************************************************************                       UUC101
+      *                                                                                       UUC101
+      **  If feature UUC101 (Automatic cover in Funds Transfer)                               UUC101
+      **  is switched on.                                                                     UUC101
+     C           UUC101    IFEQ 'Y'                                                           UUC101
+      *                                                                                       UUC101
+      **  If an Outgoing Payment has been generated for an                                    UUC101
+      **  Incoming Payment.                                                                   UUC101
+     C           WUOTPY    IFEQ 'Y'                        Begin WUOTPY                       UUC101
+      * Do Nordea in hse cover checks                                                         UUC101
+     C                     Z-ADDOPMSGR    I#MSGR                                              UUC101
+     C                     CALL 'XX00002'                                                     UUC101
+     C                     PARM *BLANKS   CFRETC  7                                           UUC101
+     C                     PARM           I#MSGR  80                                          UUC101
+     C                     PARM           PREF                                                UUC101
+     C                     PARM *BLANKS   CFACON 24                                           UUC101
+      *                                                                                       UUC101
+      * If return code is *BLANK do Cover Chk                                                 UUC101
+     C           CFRETC    IFEQ *BLANKS                                                       UUC101
+     C                     CALL W#PGM                                                         UUC101
+     C                     PARM 'F'       CFTYPE  1                                           UUC101
+     C                     PARM PREF      CFREFN 15                                           UUC101
+     C                     PARM           CFACON                                              UUC101
+     C                     PARM *BLANKS   CFRTCD  1                                           UUC101
+     C                     PARM SMAM      CFAMOV 150                                          UUC101
+      *                                                                                       UUC101
+      **  Check return code.                                                                  UUC101
+     C                     SELEC                           Begin SELEC                        UUC101
+      *                                                                                       UUC101
+      **  If the account hasn't enough available fund,                                        UUC101
+      **  send a warning message.                                                             UUC101
+     C           CFRTCD    WHEQ 'N'                        Not covered                        UUC101
+     C                     MOVE *BLANKS   FTMSDT                                              UUC101
+     C           CFBRCA    CAT  CFCNUM    FTMSDT                                              UUC101
+     C                     CAT  CFCCY:0   FTMSDT                                              UUC101
+     C                     CAT  CFACOD:0  FTMSDT                                              UUC101
+     C                     CAT  CFACSQ:0  FTMSDT                                              UUC101
+     C                     CAT  PREF:0    FTMSDT                                              UUC101
+     C                     MOVEL'UC01303' FTMSID                                              UUC101
+     C                     MOVEL'XXUSRMSG'FTMSGF                                              UUC101
+     C                     EXSR FTSNMS                                                        UUC101
+      *                                                                                       UUC101
+     C                     ENDSL                           End SELEC                          UUC101
+      *                                                                                       UUC101
+     C                     END                             End CFRETC                         UUC101
+     C                     END                             End WUOTPY                         UUC101
+      *                                                                                       UUC101
+     C                     END                             End UUC101                         UUC101

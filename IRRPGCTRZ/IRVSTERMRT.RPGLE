@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD059065           Date 15Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059154           Date 29Oct21               *
+      *  Prev Amend No. MD059065           Date 15Oct21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD054095           Date 17Oct19               *
       *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -47,7 +48,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059065 - IR020 fields/values not auto-populating when      *
+      *  MD059154 - Short Term Rate does not display the effective    *
+      *             interest rate of the deal after COB. Do not set   *
+      *             Short-Term Rate to blank if backward-looking = Y. *
+      *             Throw error 45049524 only during insert.          *
+      *  MD059065 - CIR020 fields/values not auto-populating when     *
       *             amending CIRS from forward looking rate           *
       *             to backward looking rate via SOAP/MQ              *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -299,13 +304,14 @@
      C                   Z-ADD     0             @@AMT                                        245692
      C                   Z-ADD     0             @@ERCD                                       245692
       *                                                                                     MD059065
-     C     WACCD         IFEQ      'A'                                                      MD059065
-     C     SUEINR        ANDNE     *BLANKS                                                  MD059065
-     C     PBLRT         ANDEQ     'Y'                                                      MD059065
-     C     PCALM         ANDNE     'MANL'                                                   MD059065
-     C                   EVAL      SUEINR = *BLANKS                                         MD059065
-     C                   ELSE                                                               MD059065
-      *                                                                                     MD059065
+     C*****WACCD         IFEQ      'A'                                             MD059065 MD059154
+     C*****SUEINR        ANDNE     *BLANKS                                         MD059065 MD059154
+     C*****PBLRT         ANDEQ     'Y'                                             MD059065 MD059154
+     C*****PCALM         ANDNE     'MANL'                                          MD059065 MD059154
+     C**********         EVAL      SUEINR = *BLANKS                                MD059065 MD059154
+     C**********         ELSE                                                      MD059065 MD059154
+      *                                                                            MD059065 MD059154
+     C     WACCD         IFEQ      'I'                                                      MD059154
      C     SUEINR        IFNE      *BLANKS                                                    CIR020
      C     PBLRT         ANDEQ     'Y'                                                        CIR020
      C     PCALM         ANDNE     'MANL'                                                     CIR020
@@ -313,6 +319,7 @@
      C                   MOVE      'Y'           ErrorFound                                   CIR020
      C                   ENDIF                                                                CIR020
      C                   ENDIF                                                              MD059065
+      *                                                                                     MD059154
      C     SUEINR        IFEQ      *BLANKS
      C     SUBRTT        IFNE      *BLANKS
      C*****VDATXok       ANDEQ     'Y'                                                       BUG7659

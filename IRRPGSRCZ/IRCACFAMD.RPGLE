@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059146           Date 29Oct21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059146 - Rejected amendment on WIP did not revert to its   *
+      *             forward looking rate details due to validation    *
+      *             error for fields #0FRFD, #0EINR and #0AVRM. Skip  *
+      *             the validation if backward-looking rate is Y.     *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -565,15 +570,25 @@
 
      C                   TESTB     '3'           TDSTI                    01
 
+      ** Skip validation if Backward-Looking Rate is Y                                      MD059146
+                                                                                            MD059146
+     C                   MOVEL     'N'           WSKIP                                      MD059146
+     C                   IF        CIR020 = 'Y' and                                         MD059146
+     C                             (@DDBLRT = 'Y' or DDBLRT = 'Y')                          MD059146
+     C                   MOVEL     'Y'           WSKIP                                      MD059146
+     C                   ENDIF                                                              MD059146
+     C                                                                                      MD059146
       ** Rate Fix Days. This field is not amendable if Average Rate
       ** Method is 'Y'.
 
+     C                   IF        WSKIP = 'N'                                              MD059146
      C                   IF        #0FRFD <> CrFRFD AND *IN01 = *ON
      C                   ADD       1             WIdx
      C                   EVAL      FldNameArr(WIdx) = '#0FRFD'
      C                   EVAL      MsgIDArr(WIdx)   = 'MMA0107'
      C                   EVAL      OKFRFD = 'N'
      C                   ENDIF
+     C                   ENDIF                                                              MD059146
 
       ** Short Term Rate/Current Average. This field is not amendable
       ** if Average Rate Method is 'Y' and Value date >= Rundate.
@@ -601,6 +616,7 @@
      C                   ENDIF                                                                209379
                                                                                               209379
      C**********         IF        #0EINR <> CrEINR AND *IN01 = *ON AND                       209379
+     C                   IF        WSKIP = 'N'                                              MD059146
      C                   IF        WkFld1 <> WkFld2 AND *IN01 = *ON AND                       209379
      C                             VDAT >= PRunDayNo
      C                   ADD       1             WIdx
@@ -608,6 +624,7 @@
      C                   EVAL      MsgIDArr(WIdx)   = 'MMA0111'
      C                   EVAL      OKEINR = 'N'
      C                   ENDIF
+     C                   ENDIF                                                              MD059146
 
       ** Ceiling Rate. This field is not amendable.
 
@@ -677,8 +694,9 @@
 
      C                   MOVEL     'N'           WSKIP             1                          CIR020
      C                   IF        CIR020 = 'Y' and                                           CIR020
-     C                             DDBLRT = 'Y' and                                           CIR020
-     C                             #0AVRM = 'Y'                                               CIR020
+     C                             (@DDBLRT = 'Y' or DDBLRT = 'Y')                          MD059146
+     C**********                   DDBLRT = 'Y' and                                  CIR020 MD059146
+     C**********                   #0AVRM = 'Y'                                      CIR020 MD059146
      C                   MOVEL     'Y'           WSKIP                                        CIR020
      C                   ENDIF                                                                CIR020
                                                                                               CIR020

@@ -14,9 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG14877           Date 03Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24243           Date 16Jun09               *
+      *                 BUG24243           Date 16Jun09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG14877 - Errors encountered in CCTD                        *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24243 - CCTD ended in database error when Sender charge's *
       *           currency is invalid                                 *
@@ -51,17 +53,17 @@
       *  CFT006 - Funds Transfer - Swift messages MT101/MT102         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTM1023V01
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -79,116 +81,120 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD) PREFIX(H)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD)
- 
+
       * OK Flags for first screen
      D OKFlagDS1     E DS                  EXTNAME(FTE102S1PD)
- 
+
       * OK Flags for Second screen
      D OKFlagDS2     E DS                  EXTNAME(FTE102S2PD)
- 
+
       * OK Flags for first screen - header
      D OKFlagHS1     E DS                  EXTNAME(FTE102H1PD)
- 
+
       * OK Flags for Second screen - header
      D OKFlagHS2     E DS                  EXTNAME(FTE102H2PD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
      D #I              S              2  0
- 
+                                                                                            BUG14877
+      ** SWIFT 2001 switchable feature                                                      BUG14877
+     D CSW201          S              1A                                                    BUG14877
+     D PRtCd           S              7A                                                    BUG14877
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FTM1023V02
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **************   Call Validation Modules in Sequence   **************
- 
+
       ** Customer credit transfer Id (only in 'Reassign' mode)
       /COPY WNCPYSRC,FTM1023V03
- 
+
      C                   IF        ActionCode = 'R'
- 
+
       /COPY WNCPYSRC,FTM1023V04
      C                   EXSR      @CCTId
       /COPY WNCPYSRC,FTM1023V05
@@ -202,9 +208,9 @@
       ** Senders Charges and Currency                                                       BUG24243
                                                                                             BUG24243
      C                   EXSR      @SndChgCcy                                               BUG24243
- 
+
       ** Transaction Reference
- 
+
       /COPY WNCPYSRC,FTM1023V06
      C                   EXSR      @TrnsRef
                                                                                 184060
@@ -212,40 +218,63 @@
                                                                                 184060
      C                   EXSR      @TrnTyCd                                     184060
       /COPY WNCPYSRC,FTM1023V07
- 
+
       ** Beneficiary
- 
+
       /COPY WNCPYSRC,FTM1023V08
      C                   EXSR      @Benef
       /COPY WNCPYSRC,FTM1023V09
- 
+
       ** Account with institution
- 
+
       /COPY WNCPYSRC,FTM1023V10
      C                   EXSR      @AWI
       /COPY WNCPYSRC,FTM1023V11
- 
- 
+
+
       ** Ordering Institution
- 
+
       /COPY WNCPYSRC,FTM1023V12
      C                   EXSR      @OrdInst
       /COPY WNCPYSRC,FTM1023V13
- 
+
       ** Ordering Customer
- 
+
       /COPY WNCPYSRC,FTM1023V14
      C                   EXSR      @OrdCust
       /COPY WNCPYSRC,FTM1023V15
- 
+
       ** Details of charges
- 
+
       /COPY WNCPYSRC,FTM1023V16
      C                   EXSR      @DetChg
       /COPY WNCPYSRC,FTM1023V17
- 
+
+      *                                                                                     BUG14877
+      ** Default Sender's Charges in Payment Currency                                       BUG14877
+      *                                                                                     BUG14877
+     C                   IF        PSndChg <> *Blanks AND                                   BUG14877
+     C                             PSndCcy <> *Blanks AND                                   BUG14877
+     C                             OKSChg <> 'N' AND OKSCcy <> 'N' AND                      BUG14877
+     C                             OKPCCy <> 'N'                                            BUG14877
+                                                                                            BUG14877
+     C                   IF        CSW201 = 'Y'                                             BUG14877
+     C                   IF        OKSChg2 <> 'N' AND OKSCcy2 <> 'N' AND                    BUG14877
+     C                             OKSChg3 <> 'N' AND OKSCcy3 <> 'N' AND                    BUG14877
+     C                             OKSChg4 <> 'N' AND OKSCcy4 <> 'N' AND                    BUG14877
+     C                             OKSChg5 <> 'N' AND OKSCcy5 <> 'N'                        BUG14877
+     C                   EXSR      @SndChgPay                                               BUG14877
+     C                   ENDIF                                                              BUG14877
+     C                   ELSE                                                               BUG14877
+                                                                                            BUG14877
+     C                   EXSR      @SndChgPay                                               BUG14877
+                                                                                            BUG14877
+     C                   ENDIF                                                              BUG14877
+                                                                                            BUG14877
+     C                   ENDIF                                                              BUG14877
+                                                                                            BUG14877
      C                   IF        HPCCtTyp = 'BI'
- 
+
       ** Transfer Amount and transfer currency
       /COPY WNCPYSRC,FTM1023V18
      C                   EXSR      @TrnAmCCy
@@ -262,9 +291,9 @@
       /COPY WNCPYSRC,FTM1023V24
      C                   EXSR      @PayAmCcy
       /COPY WNCPYSRC,FTM1023V25
- 
+
      C                   ELSE
- 
+
       ** Payment amount and currency
       /COPY WNCPYSRC,FTM1023V26
      C                   EXSR      @PayAmCcy
@@ -281,10 +310,10 @@
       /COPY WNCPYSRC,FTM1023V32
      C                   EXSR      @TrnAmCCy
       /COPY WNCPYSRC,FTM1023V33
- 
- 
+
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Return
@@ -602,6 +631,20 @@
       *                                                                                     BUG24243
      C                   ENDSR                                                              BUG24243
       *                                                                                     BUG24243
+      *****************************************************************                     BUG14877
+     C/EJECT                                                                                BUG14877
+      *****************************************************************                     BUG14877
+      ** @SndChgPay - Default Sender's Charges in Payment Currency                          BUG14877
+      *****************************************************************                     BUG14877
+      *                                                                                     BUG14877
+     C     @SndChgPay    BEGSR                                                              BUG14877
+      *                                                                                     BUG14877
+      ** Default                                                                            BUG14877
+      *                                                                                     BUG14877
+     C                   CALLB     'FTVSECH01'   P#List                                     BUG14877
+      *                                                                                     BUG14877
+     C                   ENDSR                                                              BUG14877
+      *
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -611,43 +654,43 @@
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
- 
+
      C                   PARM                    RtnCodeIn        10
- 
+
       ** Response mode (1A), from source system common header (A or S)
      C                   PARM                    RespMode          1
- 
+
       ** Action Code
      C                   PARM                    ActionCode        1
- 
+
       ** Header information (DS) from source system in screen format
      C                   PARM                    HdrRcdIn
- 
+
       ** Detail information (DS) from source system in screen format
      C                   PARM                    DtlRcdIn
- 
+
       ** OK Flags Data Structure - Screen 1 only
      C                   PARM                    OkFlagDS1
      C                   PARM                    OkFlagDS2
      C                   PARM                    OkFlagHS1
      C                   PARM                    OkFlagHS2
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIx
- 
+
       *
       ** Set up the name of the MSGF from which the message handler
       ** will get the messages.
@@ -682,6 +725,17 @@
      C                   PARM                    OKFlagDS2
      C                   PARM                    OKFlagHS1
      C                   PARM                    OKFlagHS2
+      *                                                                                     BUG14877
+      ** Check if SWIFT 2001 is installed                                                   BUG14877
+      *                                                                                     BUG14877
+     C                   CALL      'SWIF2001'                                               BUG14877
+     C                   PARM      *BLANKS       PRtCd                                      BUG14877
+      *                                                                                     BUG14877
+     C                   IF        PRtCd = 'CSW2001'                                        BUG14877
+     C                   EVAL      CSW201 = 'Y'                                             BUG14877
+     C                   ELSE                                                               BUG14877
+     C                   EVAL      CSW201 = 'N'                                             BUG14877
+     C                   ENDIF                                                              BUG14877
       *
      C                   ENDSR
       *

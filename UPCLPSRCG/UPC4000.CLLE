@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*       Last Amend No. MD059161           Date 28Oct21              */
+/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059161 - Substitute screen is displayed although system   */
+/*                  values exist.                                    */
 /*       CUT017 - Adapptive Database Upgrade                         */
 /*                                                                   */
 /*********************************************************************/
@@ -67,11 +70,16 @@
 
 /* Check if ADBU is installed in the system*/
              CHGVAR     VAR(&SVALK1) VALUE('BrgADBUGlobalRefer')
-             CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
+/**********  CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
                           &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
                           &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
                           &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
-                          &SVAL9 &SVALK0 &SVAL10)
+                          &SVAL9 &SVALK0 &SVAL10) */                                    /*MD059161*/
+             CALL       PGM(UPSVALR0) PARM('*GLOBAL' &RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)                                       /*MD059161*/
 
 /* If not installed, prompt for substitue values */
              If         COND(&RTNCODE *EQ '*NRF   ') THEN(DO)
@@ -94,6 +102,9 @@
 /* Prompt for manual insert of Reference Prefixes */
              CHGVAR     VAR(&ERRPGM) VALUE('UP4022')
              CALL UP4022 (&GLOBP &ZONEP ' ' &ERROR)
+                IF         COND(&ERROR *EQ '*Return   ') THEN(DO)                       /*MD059161*/
+                   GOTO       CMDLBL(ENDPGM)                                            /*MD059161*/
+                ENDDO       /*MD059161*/
                 IF         COND(&ERROR *NE ' ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO

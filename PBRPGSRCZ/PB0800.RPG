@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259926             Date 21Sep12               *
+      *  Prev Amend No. 233395             Date 21Sep12               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -71,6 +73,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259926 - When the last record in SECDEPL1 has a RECI = 'H',  *
+      *           the last 'D' record is not extracted.               *
+      *  233395 - Matured securities with position not 0 reported in  *
+      *           reconciliation TOF/MIDAS. Change needed for USL013. *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
@@ -866,6 +872,7 @@
       *                                                                   CPB002
      C                     ADD  CDNV      WWCDNV                          CPB002
      C                     ADD  CECN      WWCECN                          CPB002
+     C                     MOVE RECI      WWRECI  1                                           259926
      C                     END                             - E2           CPB002
       *                                                                   CPB002
      C*****      QANOML    IFNE *ZEROS                     - B2           CPB002
@@ -933,8 +940,10 @@
      C                     ENDDO                           - E1
       *                                                                   CPB002
      C           WWCDNV    IFNE *ZEROS                     - B1           CPB002
-     C           RECI      ANDEQ'D'                                       CPB002
+     C********** RECI      ANDEQ'D'                                                    CPB002 259926
+     C           WWRECI    ANDEQ'D'                                                           259926
      C                     EXSR SRCDEP                                    CPB002
+     C                     MOVE ' '       WWRECI                                              259926
      C                     ENDIF                           - E1           CPB002
       *
      C                     ENDSR
@@ -1018,6 +1027,8 @@
       *                                                                   CPB002
       ** Write a record                                                   CPB002
      C           SERECI    IFNE 'M'                        - B1           CPB002
+     C           SERECI    ORNE 'M'                                                           233395
+     C           USL013    ANDEQ'Y'                                                           233395
      C                     EXSR WRIT01                                    CPB002
      C                     ENDIF                           - E1           CPB002
       *                                                                   CPB002
@@ -1119,6 +1130,18 @@
      C                     MOVE 'N'       WPB004                          CPB004
      C                     ENDIF                                          CPB004
       *
+      **   Access SAR details via access program                                              233395
+     C                     CALL 'AOSARDR0'                                                    233395
+     C                     PARM '       ' @RTCD   7                                           233395
+     C                     PARM '*KEY   ' @OPTN   7                                           233395
+     C                     PARM 'USL013'  @SARD   6                                           233395
+     C           SCSARD    PARM SCSARD    DSSDY                                               233395
+      *                                                                                       233395
+     C           @RTCD     IFEQ *BLANKS                                                       233395
+     C                     MOVE 'Y'       USL013  1                                           233395
+     C                     ELSE                                                               233395
+     C                     MOVE 'N'       USL013  1                                           233395
+     C                     ENDIF                                                              233395
      C                     ENDSR
      C/EJECT
       *****************************************************************

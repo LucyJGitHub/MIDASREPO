@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MRSEFIX            Date 05Jan06               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MRSEFIX - Add Securities Trading to MR                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -101,6 +103,7 @@
      C     ACCUM_BAL     BEGSR
  
      C     EXSTAT        IFEQ      ' '
+     C     EXSTAT        OREQ      'N'                                                       MRSEFIX
      C     EXDDAT        IFLT      BJRDNB
      C     *INU1         ANDEQ     '1'
      C     *INU1         OREQ      '0'

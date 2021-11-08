@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MRSEFIX            Date 05Jan06              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG9790            Date 05Jan06              */
+/*                      BUG9790            Date 05Jan06              */
 /*                      CMR001             Date 01Sep04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MRSEFIX - Add Securities Trading to MR                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG9790 - Allow for Caps, Collars and Floors member.        */
 /*       CMR001 - MidasPlus Reporting                                */
@@ -50,6 +52,7 @@
              CLRPFM     FILE(MRTRAPPD) MBR(FCLT)
              CLRPFM     FILE(MRTRAPPD) MBR(TDIN)
              CLRPFM     FILE(MRTRAPPD) MBR(TMAD)
+             CLRPFM     FILE(MRTRAPPD) MBR(SBPS)                                         /*MRSEFIX*/
  
              CLRPFM     FILE(MRSLACPD) MBR(ACCT)
              CLRPFM     FILE(MRSLACPD) MBR(FRAS)
@@ -61,6 +64,7 @@
              CLRPFM     FILE(MRSLACPD) MBR(FCLT)
              CLRPFM     FILE(MRSLACPD) MBR(TDIN)
              CLRPFM     FILE(MRSLACPD) MBR(TMAD)
+             CLRPFM     FILE(MRSLACPD) MBR(SBPS)                                         /*MRSEFIX*/
  
              CLRPFM     FILE(MRSLTRPD) MBR(ACCT)
              CLRPFM     FILE(MRSLTRPD) MBR(FRAS)
@@ -72,6 +76,7 @@
              CLRPFM     FILE(MRSLTRPD) MBR(FCLT)
              CLRPFM     FILE(MRSLTRPD) MBR(TDIN)
              CLRPFM     FILE(MRSLTRPD) MBR(TMAD)
+             CLRPFM     FILE(MRSLTRPD) MBR(SBPS)                                         /*MRSEFIX*/
  
              CLRPFM     FILE(MRTREVPD) MBR(DL)
              CLRPFM     FILE(MRTREVPD) MBR(LE)

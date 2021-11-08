@@ -30,8 +30,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD033891           Date 07Jul15               *
+      *  Prev Amend No. ADEFIX             Date 14Dec14               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -63,6 +65,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033891 - LAVP issue on Branch 900. Set LAVP to 100 if      *
+      *             passing from above 100 to below 100 or vice versa.*
+      *  ADEFIX   Recalculation using Yield on Price 100 causes       *
+      *           rounding difference on new price on 6 to 9 decimal  *
+      *           places.                                             *
+      *           Reset the price to 100 if it was Previouly 100      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  BUG11193 - Purchased Interest not calculated on BackValued   *
@@ -102,35 +110,35 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       * F spec for record format SEDEVDF.
      FSEDEV     IF   E           K DISK
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
- 
+
+
       ** Security Details
      D SECTY         E DS                  EXTNAME(SECTYD)
      D CDArr                 183    230
      D CRArr                 231    242
- 
- 
+
+
      D CDDS            DS
      D  CD                     1     48  0
      D                                     DIM(12)                              CD01-12 ARRAY
      D CRDS            DS
      D  CR                     1     12
      D                                     DIM(12)                              CR01-12 ARRAY
- 
- 
+
+
      D POWER8          S              8P 4 DIM(8) CTDATA PERRCD(1)
- 
- 
+
+
       ** WORKING VARIABLES **
- 
+
      D ECD             S              5P 0
      D*NCD*******      S              5P 0                                                    CSE031
      D ZZLCD           S              5P 0
@@ -141,10 +149,10 @@
      D ZDCSDT          S              5P 0
      D ZDCINT          S             13P 0
      D ZDXINT          S             15P 1
- 
+
       ** +-----------------------------------------------------------------+
- 
- 
+
+
       ** +--- The converted ZYLDZ1 starts here --------------------------+
      D********************************************************************
      D**                                                                 *
@@ -197,7 +205,7 @@
      D  COMFRQ                92     93P 0                                      S01397
      D  DSCBSS                94     94                                         S01397
      D  DLCOUP                95     95                                         S01397
- 
+
      D  ISSDTE                96     98P 0                                                    CSE035
      D  WBENCD                99    101P 0                                                    CSE035
                                                                                               CSE035
@@ -219,19 +227,19 @@
      D  NCMM                   1      2  0                                      E20380
      D  NCDD                   3      4  0                                      E20380
      D  NCMDD                  1      4  0                                      E20380
- 
+
      D*   MATURITY DATE AS MMDD                                           E20380
      D                 DS                                                       E20380
      D  MTMM                   1      2  0                                      E20380
      D  MTDD                   3      4  0                                      E20380
      D  MATMD                  1      4  0                                      E20380
       ** +--- The converted ZYLDZ1 ends here ----------------------------+
- 
- 
+
+
      ISEDEVDF
      I              RECI                        RECI_X
      I              NMCY                        NMCY_X
- 
+
       *
       * Set indicator 98 from BJDFIN
       *
@@ -240,24 +248,24 @@
      C                   ELSE
      C                   SETOFF                                       98
      C                   END
- 
+
       ** Nominal currency decimal places
- 
+
      C                   Z-ADD     NomCcyDec     NCDP
- 
+
       ** Set up effective date and input price for CD calculation
- 
+
      C                   Z-ADD     VDATE         ZFDATE            5 0
      C                   Z-ADD     YPARM         ZPRCIN           15 8
- 
+
       ** Set up coupon date and indicator arrays
- 
+
      C                   MOVE      CDarr         CDDS
      C                   MOVE      CRarr         CRDS
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZYLD
- 
+
      C                   RETURN
       /EJECT
       ** +--- The converted ZYLDZ2 starts here --------------------------+
@@ -1009,6 +1017,10 @@
      C**
      C**  ALL PARAMETERS SET UP CALL ZYIELD ROUTINE
      C**********         CALL      'ZYIELD'      YPARMS                 99              08303 CPK015
+      *  IF CALLS Y TO P  BUT SAVE PRICE WAS 100 FORCE SAVE PRICE IN NEW PRICE                ADEFIX
+     C     PRCYLD        IFEQ      'Y'                                                        ADEFIX
+     C                   Z-ADD     PRICEC        SAVP             15 9                        ADEFIX
+     C                   END                                                                  ADEFIX
      C                   CALL      'ZYIELD'                             99                    CPK015
      C                   PARM                    PRCYLD                                       CPK015
      C                   PARM                    METHOD                                       CPK015
@@ -1040,6 +1052,18 @@
      C                   PARM                    DLCOUP                                       CPK015
      C                   PARM                    ISSDTE                                       CSE035
      C                   PARM                    WBENCD                                       CSE035
+     C     PRCYLD        IFEQ      'P'                                                        ADEFIX
+     C     SAVP          IFEQ      100                                                        ADEFIX
+     C                   Z-ADD     SAVP          PRICEC                                       ADEFIX
+     C                   END                                                                  ADEFIX
+      ** Price cannot pass from above 100 to below 100 or vice versa.                       MD033891
+     C     SAVP          IFLT      100                                                      MD033891
+     C     PRICEC        ANDGT     100                                                      MD033891
+     C     SAVP          ORGT      100                                                      MD033891
+     C     PRICEC        ANDLT     100                                                      MD033891
+     C                   Z-ADD     100           PRICEC                                     MD033891
+     C                   ENDIF                                                              MD033891
+     C                   END                                                                  ADEFIX
                                                                                               CPK015
      C                   END                                                                   E3949
      C*                                                                   E39495
@@ -1066,7 +1090,7 @@
      C     ZYLD9         ENDSR                                                  ** ZYLD9  **
      C*****************************************************************
       ** +--- The converted ZYLDZ1 ends here ----------------------------+
- 
+
       /EJECT
       **********************************************************************
       *                                                                    *
@@ -1077,7 +1101,7 @@
       *   the module that contains subroutine ZDYYR                        *
       *                                                                    *
      C     ZDYYR         BEGSR
- 
+
      C                   CALLB     'ZDYYR'
      C                   PARM                    DYBS
      C                   PARM                    DVBS
@@ -1105,7 +1129,7 @@
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    ZINTDD            5 0
      C                   PARM                    LCDD5             5 0
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1118,7 +1142,7 @@
       *   the module that contains subroutine ZNCD                         *
       *                                                                    *
      C     ZNCD          BEGSR
- 
+
      C                   CALLB     'ZNCD'
      C                   PARM                    ITLD
      C                   PARM                    FCPN
@@ -1147,7 +1171,7 @@
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    NCD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1189,16 +1213,16 @@
       *   the module that contains subroutine ZLCD                         *
       *                                                                    *
      C     ZLCD          BEGSR
- 
+
       * in ZLCD use 'temporary' version of date format ind according
       * to current value of indicator 98.
- 
+
      C     *IN98         IFEQ      '1'
      C                   MOVE      'M'           T_BJDFIN          1
      C                   ELSE
      C                   MOVE      'D'           T_BJDFIN          1
      C                   END
- 
+
      C                   CALLB     'ZLCD'
      C                   PARM                    ISSD
      C                   PARM                    ITLD
@@ -1227,7 +1251,7 @@
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    ZZLCD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1276,13 +1300,13 @@
       *   the module that contains subroutine ZDATE2                       *
       *                                                                    *
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   MOVEL     ZDATE         ZWRK4             4 0
      C                   MOVE      ZDATE         ZYEAR
      C     BJDFIN        IFEQ      'D'
@@ -1292,7 +1316,7 @@
      C                   MOVEL     ZWRK4         ZMTH
      C                   MOVE      ZWRK4         ZDAY
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1313,7 +1337,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1326,7 +1350,7 @@
       *   the module that contains subroutine ZDAYS                        *
       *                                                                    *
      C     ZDAYS         BEGSR
- 
+
      C                   CALLB     'ZDAYS'
      C                   PARM                    ZSDATE            5 0
      C                   PARM                    ZEDATE            5 0
@@ -1344,7 +1368,7 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ZDDAYS            5 0
      C                   PARM                    ZODNAT            2 0          149162
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1357,7 +1381,7 @@
       *   the module that contains subroutine ZACCZ                        *
       *                                                                    *
      C     ZACCZ         BEGSR
- 
+
      C                   CALLB     'ZACCZ'
      C                   PARM                    ZAMT
      C                   PARM                    ZDCSDT
@@ -1372,7 +1396,7 @@
      C                   PARM                    ZDXINT
      C                   PARM                    ZDDAYS
      C                   PARM                    ZINTDD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1385,7 +1409,7 @@
       *   the module that contains subroutine ZCNSD                        *
       *                                                                    *
      C     ZCNSD         BEGSR
- 
+
      C                   CALLB     'ZCNSD'
      C                   PARM                    ZNOML
      C                   PARM                    ZPRC             16 9
@@ -1393,7 +1417,7 @@
      C                   PARM                    NMDP
      C                   PARM                    NomCcyDec
      C                   PARM                    ZCONS            15 0
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -1406,7 +1430,7 @@
       *   the module that contains subroutine ZCALCD                       *
       *                                                                    *
      C     ZCALCD        BEGSR
- 
+
      C                   CALLB     'ZCALCD'
      C                   PARM                    ZNOML
      C                   PARM                    ZPNPL
@@ -1421,10 +1445,10 @@
      C                   PARM                    PROT
      C                   PARM                    BJDFIN
      C                   PARM                    PRICEC
- 
+
      C                   ENDSR
       **********************************************************************
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -1435,13 +1459,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       ** Calculation Type (1A)
       ** Price Value for yield calculation (15P 9)
       ** Yield Value for price calculation (15P 9)
@@ -1450,7 +1474,7 @@
      C                   PARM                    PPARM            15 9
      C                   PARM                    YPARM            15 9
      C                   PARM                    VDATE             5 0
- 
+
       ** Security Details
       ** interest days adjustment
       ** Nominal currency decimal places  (1P 0)
@@ -1459,20 +1483,20 @@
      C                   PARM                    DADJN             1
      C                   PARM                    NomCcyDec         1 0
      C                   PARM                    PROT              1
- 
+
       ** Nominal (15P 0)
       ** Purchased interest (15P 9)
       ** Cum/Ex-coupon indicator (1A)
      C                   PARM                    ZNOML            15 0
      C                   PARM                    WRKPI            15 9
      C                   PARM                    SCUMEX            1
- 
+
       ** System Info
       ** Date format (1A)
      C                   PARM                    BJDFIN            1
- 
+
       * OUTPUTS
- 
+
       ** Yield Ok indicator (1A)
       ** Yield information DS
      C                   PARM                    ZYLDOk            1
@@ -1501,7 +1525,7 @@
      C                   ELSE                                                                 207543
      C                   MOVEL     'N'           CEU018                                       207543
      C                   END                                                                  207543
- 
+
      C                   ENDSR
       *****************************************************************
 **  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION

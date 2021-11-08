@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 263381             Date 20Jan10               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -42,6 +43,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263381 - If Account,  PM customer and PM portfolios are      *
+      *           closed in the same COB it is essential to keep the  *
+      *           Portfolio reference in AFRT field before remove it. *
+      *           It will be used later in the replication process.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -251,6 +256,10 @@
  
       **  Update Replication Indicator field.
      C                   Eval      REPI = *blank
+                                                                                          263381
+     C     PTFR          Ifeq      '   '                                                  263381
+     C                   MOVEL     AFRT          PTFR                                     263381
+     C                   END                                                              263381
  
       **  Update Master Account Details file record.
      C                   Update    ACCNTABF
@@ -262,6 +271,11 @@
      C                   Eval      REPI = 'C'
  
       **  Update Master Account Details file record.
+                                                                                          263381
+     C     PTFR          Ifeq      '   '                                                  263381
+     C                   MOVEL     AFRT          PTFR                                     263381
+     C                   END                                                              263381
+                                                                                          263381
      C                   Update    ACCNTABF
  
       **  Print Retail Account informations on report.

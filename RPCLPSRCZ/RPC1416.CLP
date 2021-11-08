@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 236583             Date 25Feb13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 26May08              */
+/*                      BG18886            Date 26May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -21,6 +22,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       236583 - Call new program PB9503 to do 'take on' of RE      */
+/*                accruals at the end of each COB                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CPB002 - Meridian DBA Middleware Replication Customization. */
@@ -60,6 +63,25 @@
 /*-------------------------------------------------------------------*/
  
              CHGJOB     SWS(XXXXXX00)
+                                                                                          /*236583*/
+/*-------------------------------------------------------------------*/                   /*236583*/
+/*  Call PB Retail Accruals Take-on (during COB)                     */                   /*236583*/
+/*-------------------------------------------------------------------*/                   /*236583*/
+                                                                                          /*236583*/
+             IF         COND(%SWITCH(10000000)) THEN(DO)                                  /*236583*/
+             CALL       PGM(PB9503)                                                       /*236583*/
+                                                                                          /*236583*/
+/*-------------------------------------------------------------------*/                   /*236583*/
+/*  Database error processing                                        */                   /*236583*/
+/*-------------------------------------------------------------------*/                   /*236583*/
+                                                                                          /*236583*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*236583*/
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&Mem)                           /*236583*/
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&Mem) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)                               /*236583*/
+                   GOTO       CMDLBL(ABNOR)                                               /*236583*/
+             ENDDO                                                                        /*236583*/
+             ENDDO                                                                        /*236583*/
  
 /*-------------------------------------------------------------------*/
 /*  Select RE Retail Accruals records that have been changed.        */

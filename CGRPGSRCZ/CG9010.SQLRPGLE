@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057512           Date 08Feb21               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. PHS002             Date 21Feb13               *
+      *  Prev Amend No. MD057512           Date 08Feb21               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD054011           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
@@ -61,6 +62,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  PHS002 - For Finantia only. 'GL' statements should be        *
+      *           generated on request in I/C whatever the            *
+      *           schedule is.                                        *
       *  MD057512 - CGC2050 00001 component loops during COB          *
       *           - Amended program CG9010 in sr/SRSECO + sr/SRCSEC   *
       *             to only close the cursors after                   *
@@ -296,6 +300,9 @@
      D C#SEAD          C                   CONST('SEC_ADV_CF')
      D C#SEPO          C                   CONST('SEC_POS_CF')
      D C#SEBS          C                   CONST('BUY_SELL')                                      MD
+     D WSTAT           C                   CONST('STATEMENT')                                 PHS002
+     D WNORM           C                   CONST('NORMAL')                                    PHS002
+     D MDTA          E DS                  EXTNAME(MPHAS)                                     PHS002
      D CGCSCH        E DS                  EXTNAME(CGCSHJW0)                                MD054955
       *COPY*CGCPYSRC,SRERRI                                                                 MD054955
       /EJECT
@@ -1689,6 +1696,19 @@
      C                   Z-ADD     CPRETP        D#RETP
      C                   MOVEL     CPLGID        D#LGID
      C                   MOVEL     CPPSCH        D#PSCH
+      *                                                                                       PHS002
+      * In I/C for SYSTEM STATEMENT NORMAL, force IMED schedule.                              PHS002
+     C     #SCLT(1)      IFEQ      'Y'                                                        PHS002
+     C     #SCLT(2)      ANDEQ     'Y'                                                        PHS002
+     C     #SCLT(3)      ANDEQ     'N'                                                        PHS002
+     C     #SCLT(4)      ANDEQ     'N'                                                        PHS002
+     C     MDTA          ANDEQ     'A'                                                        PHS002
+     C     Z#LEVL        ANDEQ     1                                                          PHS002
+     C     DRPTYP        ANDEQ     WSTAT                                                      PHS002
+     C     DRPSTP        ANDEQ     WNORM                                                      PHS002
+     C                   MOVEL     'IMED '       D#PSCH                                       PHS002
+     C                   ENDIF                                                                PHS002
+      *                                                                                       PHS002
      C                   ENDIF
       *
      C                   ENDIF
@@ -1743,6 +1763,9 @@
       ** Access run-date
      C     *DTAARA       DEFINE    RUNDAT        RUNDTA
      C                   IN        RUNDTA
+      *                                                                                       PHS002
+     C     *DTAARA       DEFINE    MPHAS         MDTA                                         PHS002
+     C                   IN        MDTA                                                       PHS002
       *
       ** Initialise system_level_already_accessed indication
      C                   MOVEL     'N'           ##SYST            1

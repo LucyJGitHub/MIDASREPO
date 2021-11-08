@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. 250976             Date 18Oct07               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MRSEFIX            Date 05Jan06               *
+      *  Prev Amend No. 250976             Date 18Oct07               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MRSEFIX - Add Securities Trading to MR                       *
       *  250976 - Do not issue DBASE error if customer is closed      *
       *           Applied for AR986197 (Child:AR986200)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -688,6 +690,7 @@
  
      C                   IF        PRetCode <> *BLANKS
      C                             AND BBCLST <> 'Y'                                          250976
+     C                             and BBTYLC <> 'D'                                         MRSEFIX
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059146           Date 29Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059234           Date 08Nov21               *
+      *  Prev Amend No. MD059146           Date 29Oct21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059234 - Unable to amend base rate code due to Rates Known *
+      *             field validation. Remove Rates Known validation   *
+      *             since this is not input-capable field.            *
       *  MD059146 - Rejected amendment on WIP did not revert to its   *
       *             forward looking rate details due to validation    *
       *             error for fields #0FRFD, #0EINR and #0AVRM. Skip  *
@@ -760,20 +764,20 @@
       ** #0ICFD - Our Rate Change Day in Month
       ** Business Day Convention Fields
 
-     C     CIR020        IFEQ      'Y'                                                        CIR020
-                                                                                              CIR020
-      ** Rates Known Flag cannot be amended                                                   CIR020
-                                                                                              CIR020
-     C     DDRTKN        IFNE      @DDRTKN                                                    CIR020
-     C                   ADD       1             WIdx                                         CIR020
-     C                   EVAL      FldNameArr(WIdx) = 'DDRTKN'                                CIR020
-     C                   EVAL      MsgIDArr(WIdx) = '5049469'                                 CIR020
-     C                   EVAL      BLen = %Len(%Trim(@DDRTKN))                                CIR020
-     C                   EVAL      MsgDtaArr(WIdx) = LenStr +%TRIM(@DDRTKN)                   CIR020
-     C                   ENDIF                                                                CIR020
-                                                                                              CIR020
-     C                   ENDIF                                                                CIR020
-                                                                                              CIR020
+     C*****CIR020        IFEQ      'Y'                                               CIR020 MD059234
+      **********                                                                     CIR020 MD059234
+      ***Rates*Known*Flag*cannot*be*amended****************************              CIR020 MD059234
+      **********                                                                     CIR020 MD059234
+     C*****DDRTKN        IFNE      @DDRTKN                                           CIR020 MD059234
+     C**********         ADD       1             WIdx                                CIR020 MD059234
+     C**********         EVAL      FldNameArr(WIdx) = 'DDRTKN'                       CIR020 MD059234
+     C**********         EVAL      MsgIDArr(WIdx) = '5049469'                        CIR020 MD059234
+     C**********         EVAL      BLen = %Len(%Trim(@DDRTKN))                       CIR020 MD059234
+     C**********         EVAL      MsgDtaArr(WIdx) = LenStr +%TRIM(@DDRTKN)          CIR020 MD059234
+     C**********         ENDIF                                                       CIR020 MD059234
+      **********                                                                     CIR020 MD059234
+     C**********         ENDIF                                                       CIR020 MD059234
+      **********                                                                     CIR020 MD059234
      C                   ENDSR
       *****************************************************************
       /EJECT

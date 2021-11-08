@@ -11,10 +11,14 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD059208             Date 05Nov21             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059208 - Cater for specific scenario where the LF needs    *
+      *             to be moved too (example of GPPWHJW0 not being    *
+      *             moved when dependents of GPSRWXTD are rebuilt)    *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -165,10 +169,25 @@
      C                   eval      SavFile = ORMFIL
      C                   eval      S##MNLIB = ORMLIB
      C                   endif
+                                                                                            MD059208
+     C                   if        ORFLCY <> ORMFIL                                         MD059208
+      ** check first if dependency LF is past of the dependent                              MD059208
+     C                   eval      RcdCount = 0                                             MD059208
+     C                   if        %subst(ORLBCY:4:1) =  'V'                                MD059208
+     C/exec SQL                                                                             MD059208
+     C+ select count(*) into :RcdCount                                                      MD059208
+     C+ from UPZORDTD where ORMFIL = :ORMFIL and ORFILE = :ORFLCY                           MD059208
+     C/end-exec                                                                             MD059208
+     C                   ENDIF                                                              MD059208
+     C                   ENDIF                                                              MD059208
 
       ** Dependency if not the main file
      C                   if        ORFLCY <> ORMFIL
+      ** ignore lf provided that it is part of dependent                                    MD059208
      C                             and %subst(ORLBCY:4:1) <> 'V'
+     C                             or ORFLCY <> ORMFIL                                      MD059208
+     C                             and %subst(ORLBCY:4:1) =  'V'                            MD059208
+     C                             and RcdCount = 0                                         MD059208
      C                   eval      ArrFPF = ORFLCY
      C                   eval      ArrLPF = ORLBCY
 

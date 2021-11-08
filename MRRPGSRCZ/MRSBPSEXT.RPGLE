@@ -1141,7 +1141,7 @@
       *****************************************************************
      C     SRGetAcKeyD   BEGSR
 
-     C                   CALLB     'MRACSACKY'
+     C                   CALLB     'MRACSSAKY'
      C                   PARM                    PAcKyPos01
      C                   PARM                    PAcKyPos04
      C                   PARM                    PAcKyPos05

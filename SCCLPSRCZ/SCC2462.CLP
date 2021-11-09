@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. AR1019279          Date 21Sep12              */
-/*       Prev Amend No. 248757             Date 27Jun07              */
+/*       Last Amend No. MD059242           Date 09Nov21              */
+/*       Prev Amend No. AR1019279          Date 21Sep12              */
+/*                      248757             Date 27Jun07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG7935            Date 17Aug05              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059242 - Cannot compile SCC2462 due to missing file       */
 /*       AR1019279 - Reinstate programs SCC2462 and SCC2468 in BF.   */
 /*       248757 - XREH* files may not exist.                         */
 /*       BUG7935- Problems with BUG6546.                             */
@@ -34,9 +36,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,SCC2462INT                                          */
- 
+
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                                    /*BUG6546*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                                /*BUG6546*/
              DCL        VAR(&MSGCLR) TYPE(*CHAR) LEN(50)                                 /*BUG6546*/
@@ -44,26 +46,29 @@
                           Finastra International Limited +
                           2002')
 /**********  DCLF       FILE(SCNJRNPD) */                                                 /*CSC018*/
-             DCLF       FILE(SCNJRNL0)                                                    /*CSC018*/
- 
+/**********  DCLF       FILE(SCNJRNL0) */                                    /*CSC018*/ /*MD059242*/
+             DCLF       FILE(SCNJRJW0)                                                  /*MD059242*/
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,SCC2462MPS                                          */
- 
+
 /* Check if message queue SCC2465 exists. */                                              /*CUP099*/
              CHKOBJ     OBJ(QTEMP/SCC2465) OBJTYPE(*MSGQ)                                 /*CUP099*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP099*/
                 CRTMSGQ    MSGQ(QTEMP/SCC2465)                                            /*CUP099*/
              ENDDO                                                                        /*CUP099*/
- 
+
 /* Read through the file and end journal each file. */
- 
+
  RCVF:       RCVF
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
-             IF         COND(&NJACTV *EQ 'Y') THEN(DO)
+/**********  IF         COND(&NJACTV *EQ 'Y') THEN(DO) */                               /*MD059242*/
+             IF         COND((&NJACTV *EQ 'Y') *AND +
+                          (&NJOTYP = '*FILE     ')) THEN(DO)                            /*MD059242*/
 /* If file does not exists check next ones.                                               /*248757*/
              CHKOBJ     OBJ(&NJFILE) OBJTYPE(*FILE)                                       /*248757*/
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(RCVF))                            /*248757*/
@@ -90,27 +95,27 @@
                 DLCOBJ     OBJ((&NJFILE *FILE *EXCL))                                    /*BUG6546*/
                 MONMSG     MSGID(CPF0000)                                                /*BUG6546*/
              ENDDO
- 
+
 /*/COPY WNCPYSRC,SCC2462MPE                                          */
- 
+
              GOTO       CMDLBL(RCVF)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,SCC2462ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             SCC2462 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited') 
- 
+                          Finastra International Limited')
+
 /*/COPY WNCPYSRC,SCC2462END                                          */
- 
+
              ENDPGM

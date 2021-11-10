@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR859678           Date 07Nov11              */
+/*       Last Amend No. MD045531           Date 02Nov20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR859678           Date 07Nov11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD045531 - Revert 229779 to prevent simultaneous running of */
+/*                  UDC_PRTGEN                                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR859678 - Avoid LCKW in SCKOBJLCOB (Child:AR859680)        */
 /*       229779 - Avoid lock on DTAQ when CPGN option is taken.      */
@@ -525,8 +528,8 @@ ABNORMAL:
                                                                                           /*CSC022*/
 /**/
  ENDCLPGM:
-             DLCOBJ     OBJ((CGPRTGEN *DTAQ *EXCL))                                       /*229779*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                    /*229779*/
-             DLCOBJ     OBJ((CGPRTGEN *DTAQ *SHRUPD))                                     /*229779*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                    /*229779*/
+/**********  DLCOBJ     OBJ((CGPRTGEN *DTAQ *EXCL))     */                       /*229779 MD045531*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)  */                       /*229779 MD045531*/
+/**********  DLCOBJ     OBJ((CGPRTGEN *DTAQ *SHRUPD))   */                       /*229779 MD045531*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)  */                       /*229779 MD045531*/
              ENDPGM

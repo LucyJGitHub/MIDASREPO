@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LEUFIX11           Date 24Jun20               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX11 - Date of Birth should be optional if a/c holder    *
+      *             type is defined.                                  *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -198,7 +201,13 @@
       * If BRT liable flag is N, date of birth must be entered
      C     DDXBRT        IFEQ      'N'
      C     DDXDOB        ANDEQ     *BLANKS
+     C     DDAHLT        ANDNE     'I'                                                      LEUFIX11
+     C     DDAHLT        ANDNE     'J'                                                      LEUFIX11
      C     DDAHLT        ANDNE     'R'                                                        CRE007
+     C     DDAHLT        ANDNE     'B'                                                      LEUFIX11
+     C     DDAHLT        ANDNE     'C'                                                      LEUFIX11
+     C     DDAHLT        ANDNE     'N'                                                      LEUFIX11
+     C     DDAHLT        ANDNE     'O'                                                      LEUFIX11
      C                   MOVE      'N'           DDXDOBOK
      C                   ADD       1             Idx
      C                   MOVEL     ErrFldNam     FldNamXAr(Idx)

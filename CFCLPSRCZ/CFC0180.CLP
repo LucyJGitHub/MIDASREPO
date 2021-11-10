@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD053298           Date 16May19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LEUFIX32           Date 08Oct20              */
+/*       Prev Amend No. MD053298           Date 16May19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -23,6 +24,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*     LEUFIX32 - CFCONTROL job submitted by CFC0081 at end of COB   */
+/*                is ending after a minute or so                     */
 /*     MD053298 - TRAM application cannot process .dat files as      */
 /*                midas.dat file is created too soon by the          */
 /*                CFCONTROL job                                      */
@@ -42,6 +45,7 @@
              DCL        VAR(&ERRDTA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                   /*LEUFIX31*/
              DCL        VAR(&RTNVAR) TYPE(*CHAR) LEN(1)
              DCL        VAR(&TFRPD) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&TRAMID) TYPE(*CHAR) LEN(3)
@@ -56,6 +60,17 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) +
                           EXEC(GOTO ABNOR)
 
+/* If JOB is CFCONTROL_ it was submitted by CFC0081 at end of COB. */                   /*LEUFIX31*/
+             RTVJOBA    JOB(&JOB)                                                       /*LEUFIX31*/
+             IF         COND(&JOB *EQ 'CFCONTROL_') THEN(DO)                            /*LEUFIX31*/
+START:       RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                                    /*LEUFIX31*/
+             IF         COND(&MPHAS *NE 'A') THEN(DO)                                   /*LEUFIX31*/
+             DLYJOB     DLY(60)                                                         /*LEUFIX31*/
+             GOTO START                                                                 /*LEUFIX31*/
+             ENDDO                                                                      /*LEUFIX31*/
+             CALL       PGM(CFCONTSTR)                                                  /*LEUFIX31*/
+             GOTO       CMDLBL(END)                                                     /*LEUFIX31*/
+             ENDDO                                                                      /*LEUFIX31*/
 /* This program is a background job, run throughout Input Cycle */
 /* It is called once from I/C Term and COB                      */
 /* If run during IC initiation delay until MPHAS is A, B or C   */

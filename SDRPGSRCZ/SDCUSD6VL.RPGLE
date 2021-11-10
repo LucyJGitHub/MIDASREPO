@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. LEUFIX11           Date 24Jun20               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX11 - Validate BRT fields if A/c holder type = C,N or O *
       * MD055446 - There are parties and fields missing from the BRT  *	
       *            details tab in Customer Input plus date of birth   *	
       *            issues.                                            *	
@@ -286,6 +288,9 @@
       ** END OF NOTE
       *
       /COPY WNCPYSRC,SDCUDBV004
+     C     DDAHLT        IFEQ      'I'                                                      LEUFIX11
+     C     DDAHLT        OREQ      'J'                                                      LEUFIX11
+     C     DDAHLT        OREQ      'R'                                                      LEUFIX11
      C                   EXSR      VCAHLT
       /COPY WNCPYSRC,SDCUDBV005
       *
@@ -293,6 +298,7 @@
       *
       /COPY WNCPYSRC,SDCUDBV006
      C                   EXSR      VCBTAX
+     C                   ENDIF                                                              LEUFIX11
       /COPY WNCPYSRC,SDCUDBV007
       *
       ** Validate Party 1 Name
@@ -302,7 +308,9 @@
      C                   EVAL      ErrFldNam = 'DD1NAM'
      C                   EVAL      NameNum = '1'
      C                   EVAL      DDXNAMOK = 'Y'
+     C                   IF        DDAHLT = 'I' or DDAHLT = 'J' or DDAHLT = 'R'             LEUFIX11
      C                   EXSR      VCXNAM
+     C                   ENDIF                                                              LEUFIX11
      C                   EVAL      BR1NAM = DDXNAM
       /COPY WNCPYSRC,SDCUDBV009
 

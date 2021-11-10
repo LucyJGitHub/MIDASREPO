@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. NADC01             Date 22Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG4136            Date 02SEP04              */
+/*                      BUG4136            Date 02SEP04              */
 /*                      BUG3672 *CREATE    Date 16Jul04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       NADC01 - ML EXTRACTS FOR LEUMI                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG4136- Initialise the reply dataq to ensure the reply     */
 /*                 message is for today COB                          */
@@ -79,6 +81,7 @@
  
 /* If no error then reset MLSTAT */
              CHGDTAARA  DTAARA(MLSTAT (1 1)) VALUE(' ')
+                   CALL       PGM(GPCEXTMLEX)                                             /*NADC01*/
                    GOTO       CMDLBL(END)
  
  ABNOR:

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059064           Date 14Oct21               *
-      *  Prev Amend No. MD058999           Date 07Oct21               *
+      *  Last Amend No. MD059206           Date 09Nov21               *
+      *  Prev Amend No. MD059064           Date 14Oct21               *
+      *                 MD058999           Date 07Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD053400           Date 03Jul19               *
@@ -94,6 +95,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059206 - Error message for Their Base Rate Code - Their    *
+      *             details is not shown when the user entered  back  *
+      *             ward looking (Our/Their) and rate change freq is  *
+      *             set to Overnight for Rate Change Freq Our/Their   *
       *  MD059064 - Error messages for THEIRS doubled                 *
       *  MD058999 - Error messages do not include the field name in   *
       *             error. Error field name is not colored red        *
@@ -3254,8 +3259,10 @@
       ** Validate backward-looking rate fields if CIR020 is ON (Theirs)                       CIR020
       *                                                                                       CIR020
      C                   IF        CIR020 = 'Y' and                                           CIR020
-     C                             SuBrttOK  <> 'N' and                                       CIR020
-     C                             SuIcbsOK  <> 'N'                                           CIR020
+     C**********                   SuBrttOK  <> 'N' and                              CIR020 MD059206
+     C**********                   SuIcbsOK  <> 'N'                                  CIR020 MD059206
+     C                             StBrttOK  <> 'N' and                                     MD059206
+     C                             StIcbsOK  <> 'N'                                         MD059206
      C                   EXSR      SRTBLRT                                                    CIR020
      C                   ENDIF                                                                CIR020
 

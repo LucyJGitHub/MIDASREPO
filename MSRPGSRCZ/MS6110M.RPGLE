@@ -85,7 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059177 - Reinstate MD-58137                                *
+      *  MD059177 - Reinstate MD058137                                *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055451.                             *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *

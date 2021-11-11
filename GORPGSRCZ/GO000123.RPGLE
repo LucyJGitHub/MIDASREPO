@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR818983           Date 23Aug11               *
+      *  Last Amend No. HF02288992         Date 17Feb21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR818983           Date 23Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HF02288992 - Apply AR1048337A. Reduce the wait time to 1     *
+      *               minute and to manually submit the RECEIVED      *
+      *               message if there is still no response           *
+      *               from DTAQ.                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR818983 - GOC0122 taking a long time.  Properly convert     *
       *             system value COBDtaQWait from alpha to numeric    *
@@ -159,8 +164,9 @@
      C                   EVAL      DtqLib = '*LIBL'
      C                   EVAL      DtqLen = 1000
      C**********         MOVEL     PSysVal1      DtqWait                                    AR818983
-     C                   EVAL      DtqWait = %DEC(PSysVal1:5:0)                             AR818983
- 
+     C**********         EVAL      DtqWait = %DEC(PSysVal1:5:0)                  AR818983 HF02288992
+     C                   EVAL      DtqWait= 60                                            HF02288992
+      
       ** Wait for data queue return prompt
      C                   CALL      'QRCVDTAQ'
      C                   PARM                    DtqNam           10
@@ -168,7 +174,11 @@
      C                   PARM                    DtqLen            5 0
      C                   PARM                    DtqRsp           10
      C                   PARM                    DtqWait           5 0
- 
+                                                                                           
+     C     DtqRsp        IFNE      'GO'                                                   HF02288992
+     C                   EVAL      DtqRsp = 'GO'                                          HF02288992
+     C                   EndIf                                                            HF02288992
+                                                                                          HF02288992
       ** Check for error
      C     DtqRsp        IFNE      'GO'
      C                   ExSr      *Pssr

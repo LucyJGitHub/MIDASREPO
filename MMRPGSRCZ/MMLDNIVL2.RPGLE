@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR1079461          Date 18Dec13               *
-      *  Prev Amend No. AR1060299          Date 23Nov12               *
+      *  Last Amend No. MD059049           Date 08Nov21               *
+      *  Prev Amend No. AR1079461          Date 18Dec13               *
+      *                 AR1060299          Date 23Nov12               *
       *                 AR1051652          Date 13Nov12               *
       *                 MD055010           Date 04Mar20               *
       *                 CER050             Date 16Jun19               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059049 - Time Deposit - Update on Tax Indicator field      *
       *  AR1079461 - Time deposit validation to enhance               *
       *  AR1060299 - Short term rate was not used                     *
       *  AR1051652 - Base rate changes are not generated for deal     *
@@ -1685,7 +1687,8 @@
      C                   ELSE                                                                 CDL033
      C                   IF        DDBSRC = *BLANKS                                           CDL033
      C                   EVAL      Idx = Idx + 1                                              CDL033
-     C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                 CDL033
+     C**********         EVAL      FldNameArr(Idx) = 'DDBSRC'                        CDL033 MD059049
+     C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                               MD059049
      C                   EVAL      MsgIDArr(Idx)   = 'FLR0023'                                CDL033
      C                   EVAL      ReturnCode      = 'Error'                                  CDL033
      C**********         ELSE                                                        CDL033 BUG24317

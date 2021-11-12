@@ -11,22 +11,30 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. NADC01             Date 22Jul20               *
+      *  Prev Amend No. HF02288992              Date 21Feb21          *      
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG4136            Date 01Sep04               *
+      *                 BUG4136            Date 01Sep04               *
       *                 BUG3672 *CREATE    Date 16Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  NADC01 - ML EXTRACTS FOR LEUMI                              */
+      *  HF02288992 - Apply AR1048337A. Reduce the wait time to 1     *
+      *             minute and to manually submit the RECEIVED        *
+      *             message if there is still no response from DTAQ.  *
       *  MD046248 - Finastra Rebranding                               *
       *  BG4136 - Library of the dataq not setup                      *
       *  BG1673 - Wait for finished message                           *
       *                                                               *
       *****************************************************************
  
+     FT_MLENDDAYIF   E             DISK    RENAME(T_MLENDDAY:TMLENDDAYF)                      NADC01
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -114,7 +122,8 @@
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
  
-     D WConst          C                   'ManagementLimitsCoBWait'
+     D*WConst***       C                   'ManagementLimitsCoBWait'                          NADC01
+     D WConst          C                   'ManagementLimitsCoBW'                             NADC01
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -128,6 +137,10 @@
       *                                                               *
       *****************************************************************
  
+      * Get Zone                                                                              NADC01
+     C                   MOVE      *BLANK        I#ERMS            7                          NADC01
+      /COPY GOCPYSRC,GOGETZONE                                                                NADC01
+      *
       ** Get the rundate
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
@@ -174,7 +187,8 @@
      C                   EVAL      DtqNam = 'GOMLCOBRSP'
      C                   EVAL      DtqLib = '*LIBL'                                          BUG4136
      C                   EVAL      DtqLen = 1000                                             BUG4136
-     C                   MoveL     PSysVal1      DtqWait
+     C**********         MoveL     PSysVal1      DtqWait                                  HF02288992
+     C                   EVAL      DtqWait= 60                                            HF02288992
  
       ** Wait for data queue return prompt
      C                   CALL      'QRCVDTAQ'
@@ -184,11 +198,41 @@
      C                   PARM                    DtqRsp           10
      C                   PARM                    DtqWait           5 0
  
+      *                                                                                   HF02288992
+     C     DtqRsp        IFNE      'GO'                                                   HF02288992
+     C                   EVAL      DtqRsp = 'GO'                                          HF02288992
+     C                   EndIf                                                            HF02288992
+      *                                                                                   HF02288992
       ** Check for error
      C     DtqRsp        IFNE      'GO'
      C                   ExSr      *Pssr
      C                   EndIf
  
+      * Wait for ML COB to end (When EDSTATUS = 10 on zone record in T_MLENDDAY)              NADC01
+     C                   DO        5                                                          NADC01
+      * Get T_MLENDDAY                                                                        NADC01
+     C                   DOU       *IN99 = *ON                                                NADC01
+     C     1             CHAIN     TMLENDDAYF                         99                      NADC01
+     C   99              READ      TMLENDDAYF                             99                  NADC01
+     C                   IF        EDZONE = O#ZONE                                            NADC01
+     C                   LEAVE                                                                NADC01
+     C                   ENDIF                                                                NADC01
+     C                   ENDDO                                                                NADC01
+     C                   IF        EDSTATUS = 10                                              NADC01
+     C                   LEAVE                                                                NADC01
+     C                   ENDIF                                                                NADC01
+      * Wait                                                                                  NADC01
+     C                   z-add     30            DtqWait                                      NADC01
+     C                   CALL      'QRCVDTAQ'                                                 NADC01
+     C                   PARM                    DtqNam           10                          NADC01
+     C                   PARM                    DtqLib           10                          NADC01
+     C                   PARM                    DtqLen            5 0                        NADC01
+     C                   PARM                    DtqRsp           10                          NADC01
+     C                   PARM                    DtqWait           5 0                        NADC01
+     C                   ENDDO                                                                NADC01
+     C                   IF        EDSTATUS <> 10                                             NADC01
+     C                   DUMP                                                                 NADC01
+     C                   ENDIF                                                                NADC01
       * Exit from program
      C                   RETURN
  

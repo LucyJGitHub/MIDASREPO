@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. LEUFIX18           Date 22Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LEUFIX18 - Incorrect securities book positions are           *
+      *             extracted to GPPOSNPD. GOSETSBPS changed.         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -160,10 +163,12 @@
      C                   MOVEL     SCOR          T_CNCD
       * Transaction Date
      C**********         Z-ADD     LPSD          T_TDAT                                     BUG13281
-     C                   Z-ADD     BJRDNB        T_TDAT                                     BUG13281
+     C**********         Z-ADD     BJRDNB        T_TDAT                            BUG13281 LEUFIX18
+     C                   Z-ADD     LPSD          T_TDAT                                     LEUFIX18
       * Start Date
      C**********         Z-ADD     LPSD          T_SDAT                                     BUG13281
-     C                   Z-ADD     BJRDNB        T_SDAT                                     BUG13281
+     C**********         Z-ADD     BJRDNB        T_SDAT                            BUG13281 LEUFIX18
+     C                   Z-ADD     LPSD          T_SDAT                                     LEUFIX18
       * End Date
      C                   Z-ADD     MATY          T_EDAT
       * Issuer Exposure

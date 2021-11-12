@@ -16,14 +16,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023377           Date 25Apr14               *
+      *  Last Amend No. CR21-00033         Date 14Apr21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023377           Date 25Apr14               *
       *                 AR589238           Date 01Aug12               *
       *                 262864             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CR21-00033 - Change for CLM testing.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023377  - APOSTPD file has wrong source of posting (SPOS)  *
       *  AR589238  - Suspense postings should not refer to irrelevant *
@@ -472,6 +474,8 @@
      C                   EVAL      BRCA = WBRCA                                             AR589238
      C                   IF        A5ACTY = 'R'                                             AR589238
      C                   EVAL      RIND = 1                                                 AR589238
+     C                   ELSE                                                             CR21-00033
+     C                   EVAL      RIND = 0                                               CR21-00033
      C                   ENDIF                                                              AR589238
      C                   EVAL      ATYP = A5ACTY                                            AR589238
                                                                                             AR589238

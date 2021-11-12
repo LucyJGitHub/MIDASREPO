@@ -5,7 +5,7 @@
 /*                                                                   */
 /*       Midas     - Message Management Module                       */
 /*                                                                   */
-/*       MEC1021  - MS MX IMM Extraction Control - Batch process     */
+/*       MEC20022C - MS MX IMM Extraction Control - Batch process    */
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
@@ -18,13 +18,13 @@
 /*********************************************************************/
              PGM
 
-/* Copyright statement defination  */
+/** Copyright statement defination  */
 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2021')
 
-/* Declare variables */
+/** Declare variables */
 
              DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(5 0) VALUE(0)
@@ -32,42 +32,42 @@
              DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NXT_MSG) TYPE(*CHAR) LEN(8)
 
-/* Global Monitor Message */
+/** Global Monitor Message */
 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
 
-/*           Copyright statement definition - at runtime             */
+/**           Copyright statement definition - at runtime             */
 
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 
-/* Send Message to MRUNQ */
+/** Send Message to MRUNQ */
 
              SNDPGMMSG  MSG('MEC20022C - MS MX IMM Control') +
                           TOMSGQ(MRUNQ)
              CHGJOB     SWS(XXXXXX00)
 
-/* Call data queue creation and allocation */
+/** Call data queue creation and allocation */
 
              CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Start     ')
 
-/* Process already active or close down requested */
+/** Process already active or close down requested */
 
              IF         COND(&RTN_CODE *EQ 'MIN0619') THEN(DO)
              GOTO       CMDLBL(ENDCLPGM)
              ENDDO
 
-/* Start Commitment Control */
+/** Start Commitment Control */
 
              CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
 
-/* Loop calling  MS Extraction process */
+/** Loop calling  MS Extraction process */
 
  LOOP:
              CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
 
-/* Check for Cancellation of process - look at end status */
+/** Check for Cancellation of process - look at end status */
 
              RTVJOBA    ENDSTS(&ENDSTS)
              IF         COND(&ENDSTS *EQ '1') THEN(DO)
@@ -75,50 +75,50 @@
              ENDDO
 
 
-/* Check MEMXDTA positions 1 to 8 if spaces set to 1 */
+/** Check MEMXDTA positions 1 to 8 if spaces set to 1 */
 
              RTVDTAARA  DTAARA(MEMXDTA (1 8)) RTNVAR(&NXT_MSG)
              IF         COND(&NXT_MSG *EQ '        ') THEN(DO)
              CHGDTAARA  DTAARA(MEMXDTA (1 8)) VALUE('00000001')
              ENDDO
 
-/* Run ME20022 - MX Extraction */
+/** Run ME20022 - MX Extraction */
              CHGVAR     VAR(&RTN_CODE) VALUE(' ')
              CALL       PGM(ME20022) PARM(&RTN_CODE)
 
-/* Check for Database errors trapped by program */
+/** Check for Database errors trapped by program */
 
              IF         COND(%SWITCH(XXXXXX11) *OR +
                              %SWITCH(XXXXXXX1) *OR +
                              (&RTN_CODE *NE ' ')) THEN(DO)
              GOTO       CMDLBL(ABNORMAL)
              ENDDO
-/* Reset switches */
+/** Reset switches */
 
              CHGJOB     SWS(XXXXXX00)
 
-/* If count less than 1000 then wait for next entry */
+/** If count less than 1000 then wait for next entry */
 
              IF         COND(&COUNT *LE 1000) THEN(DO)
 
-/* Call data queue creation and allocation get next action */
+/** Call data queue creation and allocation get next action */
 
              CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Next      ')
 
-/* End of process requested */
+/** End of process requested */
 
              IF         COND(&RTN_CODE *EQ 'MIN0128') THEN(DO)
              GOTO       CMDLBL(ENDCLPGM)
              ENDDO
 
-/* Re-run process */
+/** Re-run process */
 
              GOTO       CMDLBL(LOOP)
 
              ENDDO
              ELSE       CMD(DO)
 
-/* Check for Cancellation of process - look at end status */
+/** Check for Cancellation of process - look at end status */
 
              RTVJOBA    ENDSTS(&ENDSTS)
              IF         COND(&ENDSTS *EQ '1') THEN(DO)
@@ -126,15 +126,15 @@
              ENDDO
 
 
-/* Call data queue creation and allocation to end process */
+/** Call data queue creation and allocation to end process */
 
              CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Re-submit ')
              ENDDO
 
              GOTO       CMDLBL(ENDCLPGM)
 
-/* Abnormal termination processing                       */
-/* Terminate with escape message */
+/** Abnormal termination processing                       */
+/** Terminate with escape message */
 
 ABNORMAL:
              CHGJOB     SWS(XXXXXX11)

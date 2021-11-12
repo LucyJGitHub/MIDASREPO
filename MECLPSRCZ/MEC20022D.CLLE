@@ -5,7 +5,7 @@
 /*                                                                   */
 /*       Midas - Message Management Module                           */
 /*                                                                   */
-/*       MEC1022  - MS MX IMM Extraction Control - Batch process     */
+/*       MEC20022D - MS MX IMM Extraction Control - Batch process    */
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
@@ -18,12 +18,12 @@
 /*********************************************************************/
              PGM        PARM(&RTN_CODE &ACTION)
 
-/* Copyright statement defination  */
+/** Copyright statement defination  */
 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
                           International Limited 2021')
 
-/* Declare variables */
+/** Declare variables */
 
              DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(10)
@@ -42,17 +42,17 @@
              DCL        VAR(&INT_JOB_ID) TYPE(*CHAR) LEN(16)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(132)
 
-/* Global Monitor Message */
+/** Global Monitor Message */
 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
 
-/*           Copyright statement definition - at runtime             */
+/**           Copyright statement definition - at runtime             */
 
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 
-/* Send Message to MRUNQ */
+/** Send Message to MRUNQ */
 
              SNDPGMMSG  MSG('MEC20022D - MS ME IMM Extraction Test +
                           Action') TOMSGQ(MRUNQ)
@@ -61,26 +61,26 @@
              CHGVAR     VAR(&RTN_CODE) VALUE(' ')
 
 
-/* If action is Start */
+/** If action is Start */
 
              IF         COND(&ACTION *EQ 'Start     ') THEN(DO)
 
-/* Allocate data queue *EXCL to see if process active */
+/** Allocate data queue *EXCL to see if process active */
 
              ALCOBJ     OBJ((MSMXIMM *DTAQ *EXCL)) WAIT(60)
              MONMSG     MSGID(CPF1002) EXEC(DO)
 
-/* Process already active */
+/** Process already active */
 
              CHGVAR     VAR(&RTN_CODE) VALUE('MIN0619')
              GOTO       CMDLBL(ENDCLPGM)
              ENDDO
 
-/* Change allocation to shared read */
+/** Change allocation to shared read */
              ALCOBJ     OBJ((MSMXIMM *DTAQ *SHRUPD)) WAIT(0)
              DLCOBJ     OBJ((MSMXIMM *DTAQ *EXCL))
 
-/* Process is not active - if interactive submit to batch */
+/** Process is not active - if interactive submit to batch */
 
              RTVJOBA    TYPE(&TYPE)
              IF         COND(&TYPE *EQ '1') THEN(DO)
@@ -92,36 +92,36 @@
 
              DLCOBJ     OBJ((MSMXIMM *DTAQ *SHRUPD))
              ENDDO
-/* End 'Start' */
+/** End 'Start' */
              ENDDO
 
-/* If action is Next */
+/** If action is Next */
 
              IF         COND(&ACTION *EQ 'Next      ') THEN(DO)
 
-/* Set delay time */
+/** Set delay time */
 
              CHGVAR     VAR(&DELAY_TIME) VALUE(10)
 
-/* Read data queue for next prompt for action */
+/** Read data queue for next prompt for action */
 
              CHGVAR     VAR(&WAIT) VALUE(1)
 
  RDTAQ:
              CALL       PGM(QRCVDTAQ) PARM('MSMXIMM' '*LIBL' &FLDLEN &DATA &WAIT)
 
-/* No information */
+/** No information */
 
              IF         COND(&FLDLEN *EQ 0) THEN(DO)
              CHGVAR     VAR(&RTN_CODE) VALUE('MIN0620')
              ENDDO
 
-/* Information */
+/** Information */
 
              IF         COND(&FLDLEN *GT 0) THEN(DO)
              CHGVAR     VAR(&RTN_CODE) VALUE('MIN0621')
 
-/* Close down requested */
+/** Close down requested */
 
              IF         COND(%SST(&DATA 1 3) *EQ 'End') THEN(DO)
              CHGVAR     VAR(&RTN_CODE) VALUE('MIN0128')
@@ -129,22 +129,22 @@
              ENDDO
              ENDDO
 
-/* Delay job by wait time (first time only) */
+/** Delay job by wait time (first time only) */
 
              IF         COND(&WAIT *GE 0) THEN(DO)
              DLYJOB     DLY(&DELAY_TIME)
              ENDDO
 
-/* If no information from prior read of data queue */
-/* Re-read queue for ever */
+/** If no information from prior read of data queue */
+/** Re-read queue for ever */
 
              IF         COND(&RTN_CODE *EQ 'MIN0620') THEN(DO)
              CHGVAR     VAR(&WAIT) VALUE(-1)
              GOTO       CMDLBL(RDTAQ)
              ENDDO
 
-/* Else read all information on data queue */
-/* and exit */
+/** Else read all information on data queue */
+/** and exit */
 
              ELSE       CMD(DO)
              CHGVAR     VAR(&WAIT) VALUE(1)
@@ -152,18 +152,18 @@
  ADTAQ:
              CALL       PGM(QRCVDTAQ) PARM('MSMXIMM' '*LIBL' &FLDLEN &DATA &WAIT)
 
-/* No information */
+/** No information */
 
              IF         COND(&FLDLEN *EQ 0) THEN(DO)
              RETURN
              ENDDO
 
-/* Information */
+/** Information */
 
              IF         COND(&FLDLEN *GT 0) THEN(DO)
              CHGVAR     VAR(&RTN_CODE) VALUE('MIN0621')
 
-/* Close down requested */
+/** Close down requested */
 
              IF         COND(%SST(&DATA 1 3) *EQ 'End') THEN(DO)
              CHGVAR     VAR(&RTN_CODE) VALUE('MIN0128')
@@ -172,11 +172,11 @@
              ENDDO
              GOTO       CMDLBL(ADTAQ)
              ENDDO
-/* End 'Next' */
+/** End 'Next' */
              ENDDO
 
 
-/* If action is Re-submit */
+/** If action is Re-submit */
 
              IF         COND(&ACTION *EQ 'Re-submit ') THEN(DO)
              CALL       PGM(MEC20022) PARM(&RTN_CODE)
@@ -187,22 +187,22 @@
              DLCOBJ     OBJ((MSMEIMM *DTAQ *SHRUPD))
              ENDDO
 
-/* If action is End */
+/** If action is End */
 
              IF         COND(&ACTION *EQ 'End       ') THEN(DO)
 
-/* Allocate data queue *SHRUPD to see if process active */
+/** Allocate data queue *SHRUPD to see if process active */
 
              ALCOBJ     OBJ((MSMXIMM *DTAQ *SHRUPD)) WAIT(0)
              MONMSG     MSGID(CPF1002) EXEC(DO)
 
-/* Process cannot be killed re-try later */
+/** Process cannot be killed re-try later */
 
              CHGVAR     VAR(&RTN_CODE) VALUE('RETRY')
              GOTO       CMDLBL(ENDCLPGM)
              ENDDO
 
-/* Send data queue entry to End process */
+/** Send data queue entry to End process */
 
              CHGVAR     VAR(&DATA) VALUE(' ')
              CHGVAR     VAR(&DATA) VALUE('End')
@@ -210,7 +210,7 @@
              CALL       PGM(QSNDDTAQ) PARM('MSMXIMM' '*LIBL' &FLDLEN +
                           &DATA)
 
-/* If termination is interactive then show info screen */
+/** If termination is interactive then show info screen */
 
              RTVJOBA    TYPE(&TYPE)
              IF         COND(&TYPE *EQ '1') THEN(DO)
@@ -220,13 +220,13 @@
                           'MEC20022D' 'Y')
              ENDDO
 
-/* Try to allocate data queue *EXCL */
+/** Try to allocate data queue *EXCL */
 
 ALCOBJ:                                                                                   /*CPK015*/
              ALCOBJ     OBJ((MSMXIMM *DTAQ *EXCL)) WAIT(120)                              /*CPK015*/
              MONMSG     MSGID(CPF1002) EXEC(DO)
 
-/* Check activity of job submitted */
+/** Check activity of job submitted */
 
              RTVDTAARA  DTAARA(MEMXDTA (9 10)) RTNVAR(&TEMP)
              CHGVAR     VAR(%SST(&JOB26 1 10)) VALUE(&TEMP)
@@ -238,7 +238,7 @@ ALCOBJ:                                                                         
              CALL       PGM(MEC1026) PARM(&RTN_CODE &JOB_INFO +
                           &FORMAT &JOB26 &INT_JOB_ID)
 
-/* If inactive end in error */
+/** If inactive end in error */
 
              IF         COND((&RTN_CODE *EQ 'MIN0125') *OR +
                              (%SST(&JOB_INFO 51 10) *EQ '*OUTQ  ') +
@@ -246,13 +246,13 @@ ALCOBJ:                                                                         
              GOTO       CMDLBL(ABNORMAL)
              ENDDO
 
-/* Kill process defined in MEMXDTA */
+/** Kill process defined in MEMXDTA */
 
              RTVDTAARA  DTAARA(MEMXDTA (9 10)) RTNVAR(&JOB)
              RTVDTAARA  DTAARA(MEMXDTA (19 10)) RTNVAR(&USER)
              RTVDTAARA  DTAARA(MEMXDTA (29 6)) RTNVAR(&JOBNBR)
 
-/* If termination is interactive then show info screen */
+/** If termination is interactive then show info screen */
 
              RTVJOBA    TYPE(&TYPE)
              IF         COND(&TYPE *EQ '1') THEN(DO)
@@ -264,7 +264,7 @@ ALCOBJ:                                                                         
                           'MEC20022D' 'Y')
              ENDDO
 
-/* If jobq then *IMMED */
+/** If jobq then *IMMED */
 
              IF         COND((%SST(&JOB_INFO 51 10) *EQ '*JOBQ  ') +
                         ) THEN(DO)
@@ -273,7 +273,7 @@ ALCOBJ:                                                                         
              GOTO       CMDLBL(ALCOBJ)
              ENDDO
 
-/* If active then *CNTRLD for 10 minutes */
+/** If active then *CNTRLD for 10 minutes */
 
              IF         COND((%SST(&JOB_INFO 51 10) *EQ '*ACTIVE') +
                         ) THEN(DO)
@@ -285,7 +285,7 @@ ALCOBJ:                                                                         
 
              ENDDO
 
-/* Check activity of job submitted */
+/** Check activity of job submitted */
 
              RTVDTAARA  DTAARA(MEMXDTA (9 10)) RTNVAR(&TEMP)
              CHGVAR     VAR(%SST(&JOB26 1 10)) VALUE(&TEMP)
@@ -295,13 +295,13 @@ ALCOBJ:                                                                         
              CHGVAR     VAR(%SST(&JOB26 21 6)) VALUE(%SST(&TEMP 1 6))
              CHGVAR     VAR(&FORMAT) VALUE('JOBI0200')
 
-/* If job specified */
+/** If job specified */
 
              IF         COND(&JOB26 *NE ' ') THEN(DO)
              CALL       PGM(MEC1026) PARM(&RTN_CODE &JOB_INFO +
                           &FORMAT &JOB26 &INT_JOB_ID)
 
-/* If jobq then *IMMED */
+/** If jobq then *IMMED */
 
              IF         COND((%SST(&JOB_INFO 51 10) *EQ '*JOBQ  ') +
                         ) THEN(DO)
@@ -314,7 +314,7 @@ ALCOBJ:                                                                         
              ENDDO
              ENDDO
 
-/* Clear data queue */
+/** Clear data queue */
 
              CALL       PGM(QCLRDTAQ) PARM('MSMXIMM' '*LIBL ')
 
@@ -325,11 +325,11 @@ ALCOBJ:                                                                         
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 
              ENDDO
-/* End 'End' */
+/** End 'End' */
              GOTO       CMDLBL(ENDCLPGM)
 
-/* Abnormal termination processing */
-/* Terminate with escape message */
+/** Abnormal termination processing */
+/** Terminate with escape message */
 
 ABNORMAL:
              RCLRSC     LVL(*CALLER)

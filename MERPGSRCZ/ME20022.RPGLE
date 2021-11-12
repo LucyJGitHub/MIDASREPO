@@ -5,12 +5,11 @@
 /*EXI *  TEXT('Midas  MX Elements data file update')                  *
       *****************************************************************
       *                                                               *
-      *  Midas - Midas SWIFT                                          *
+      *  Midas - Message Management Module                            *
       *                                                               *
       *  ME20022 - Midas MX Elements data file update                 *
       *                                                               *
-      *                                                               *
-      *  Called By: MSC20022 - Midas/SWIFT Meridian communications    *
+      *  Called By: MEC20022D - Midas MX Extraction Control           *
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
@@ -62,7 +61,7 @@
       *
      D MEMXDTA       E DS                  EXTNAME(MEMXDTA)
       ** Message Management data area
-      *
+
       ** Next Line indicator
      D                 DS
      D  WCRLF                  1      2
@@ -95,14 +94,12 @@
      D WEName          S            100A
      D WEValue         S            120A
      D WrkLen          S              3S 0
-
-
       /EJECT
       *****************************************************************
       *                 M A I N L I N E
       *****************************************************************
-      *
-      * Read available MX messages until EOF (all unprocessed incoming MX messages)
+
+      ** Read available MX messages until EOF (all unprocessed incoming MX messages)
 
      C     *LOVAL        SETLL     MSIXISOL1
      C                   READ      MSIXISOL1                              99
@@ -154,13 +151,16 @@
       *
      C                   DOW       *IN61 = '0'
 
-      ** Processing of MX message per record in MSMXISOPD
+      ** Processing of MX Message per record in MSMXISOPD
+
      C                   DOW       WStrPos <> *ZERO AND WStrPos <= 256
 
       ** Get the position of CRLF
+
      C                   EVAL      WCRLFPos = %SCAN(WCRLF:MXDTA:WStrPos)
 
       ** When CRLF is not found, check if the last character is CR
+
      C                   EVAL      WrkLF = *BLANKS
      C                   IF        WCRLFPos = *ZERO
      C                   EVAL      WCRPos = %SCAN(WCR:MXDTA:WStrPos)
@@ -171,13 +171,16 @@
      C                   ENDIF
 
       ** One element name and value found
+
      C                   IF        WCRLFPos <> *ZERO
      C                   EXSR      SrElement
       *
      C                   ELSE
+
       ** When delimeter is not found, check the remaining field
       ** If not blanks, an incomplete element is found, save it for later use.
       ** Length of MXDTA = 256
+
      C                   IF        WStrPos <= 256
      C                   EVAL      WLastElem = *BLANKS
      C                   IF        %SUBST(MXDTA:WStrPos) <> *BLANKS
@@ -207,16 +210,19 @@
      C     SrElement     BEGSR
 
       ** Element Name and Element Value
+
      C                   EVAL      WrkLen =  WCRLFPos - WStrPos
      C                   EVAL      WElement = %SUBST(MXDTA:WStrPos:WrkLen)
 
       ** Check if there's an element from previous record
+
      C                   IF        WLastElem <> *BLANKS
      C                   EVAL      WElement = %TRIM(WLastElem) + WElement
      C                   EVAL      WLastElem = *BLANKS
      C                   ENDIF
 
       ** Look for '=' to determine which is the element name and element value
+
      C                   EVAL      WEqPos = %SCAN('=':WElement)
       *
      C                   EVAL      WEName = %SUBST(WElement:1:WEqPos-1)
@@ -224,9 +230,11 @@
      C                   EVAL      WEValue = %SUBST(WElement:WEqPos+1)
 
       ** Update MX detail file
+
      C                   EXSR      SrMXUpdate
-      *
+
       ** Reset work fields
+
      C                   EVAL      WElement = *BLANKS
      C                   EVAL      WEName = *BLANKS
      C                   EVAL      WEvalue = *BLANKS
@@ -244,6 +252,7 @@
 
       ** MEISODPD
       ** Get the element name text description
+
      C                   EXSR      SrElemDesc
       *
      C                   EVAL      MEMSGR = DXMSGR
@@ -276,6 +285,7 @@
 
       ** Update the header file
       ** MEISOMPD
+
      C                   EVAL      OMMSGR = DXMSGR
      C                   EVAL      OMMSID = IMXID
      C                   EVAL      OMUETR = IUETR
@@ -295,6 +305,7 @@
      C                   ENDIF
 
       ** Update status flag to 'Y in MSMXISOPD
+
      C     IMXID         CHAIN     MSIXISOL1
      C                   IF        %FOUND
      C                   EVAL      IMPF = 'Y'
@@ -325,9 +336,10 @@
      C     WEname        CHAIN     MEDESCL1
      C                   IF        %FOUND
      C                   EVAL      MEENAM = DEDESC
-      *
-      ** not yet in the database, use the same element name and description
-      ** also, add this to database
+
+      ** If Element Name is Not found, Add this to the File
+      ** Use the Element Name as the Element Description
+
      C                   ELSE
      C                   EVAL      MEENAM = WEName
      C                   EVAL      DEENAM = WEName
@@ -353,9 +365,8 @@
      C     *ENTRY        PLIST
      C                   PARM                    PRtnCode
 
-      *
       ** Set up LDA
-      *
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
@@ -365,7 +376,8 @@
      C                   OUT       LDA
 
       ** Access Bank details via access program (Includes Run Date)
-      *  (database error handling done in access program)
+      ** (database error handling done in access program)
+      
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     PRTCD
      C                   PARM      '*FIRST '     POPTN
@@ -389,7 +401,9 @@
      C                   KFLD                    IMXID
      C                   KFLD                    IUETR
      C                   KFLD                    IMTPY
+
       ** Initilize work variables
+
      C                   EVAL      WrkMSID = *BLANKS
      C                   EVAL      WLastElem = *BLANKS
 

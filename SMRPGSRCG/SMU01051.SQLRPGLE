@@ -64,12 +64,13 @@
      D PrevFileName    S             10A   INZ(*BLANKS)                                     MD059184
      D PrevPFMember    S             10A   INZ(*BLANKS)                                     MD059184
      D CurrFileName    S             10A   INZ(*BLANKS)                                     MD059184
+     D CurrPFMember    S             10A   INZ(*BLANKS)                                     MD059184
      D IsFileFirstRec  S              1  0 INZ(0)                                           MD059184
      D FieldCounter    S             10  0 INZ(1)                                           MD059184
      D SortSQLStmnt    S           2000A   INZ(*BLANKS)                                     MD059184
      D SMFileUpdate  E DS                  EXTNAME(SMFILUPD)                                MD059184
      D TotFldCount     S              5  0 INZ(0)                                           MD059184
-     D FldExtArray     S              4A   DIM(5)                                           MD059184
+     D ExtFldArray     S              4A   DIM(5)                                           MD059184
      D sqlStatement1   S            500                                                     MD059184
      D sqlStatement2   S            500                                                     MD059184
      D sqlStatement3   S            500                                                     MD059184
@@ -137,7 +138,7 @@
      C                   IF        IsFileFirstRec = 0                                       MD059184
      C                   EVAL      PrevFileName = CurrFileName                              MD059184
      C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
-     C                   EVAL      FldExtArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      Layer = %TRIM(LAYR)                                      MD059184
      C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
      C                   EVAL      IsFileFirstRec = 1                                       MD059184
@@ -160,17 +161,17 @@
       ** And Set Field Extract and Counter for the Current File                             MD059184
       *                                                                                     MD059184
      C     TotFldCount   DOWNE     0                                                        MD059184
-     C                   EVAL      FldExtArray(TotFldCount) = *BLANKS                       MD059184
+     C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
      C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
      C                   ENDDO                                                              MD059184
      C                   EVAL      FieldCounter = 1                                         MD059184
-     C                   EVAL      FldExtArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
      C                   ELSE                                                               MD059184
       *                                                                                     MD059184
       ** Concatenate extracted fields from the same file name.                              MD059184
       *                                                                                     MD059184
-     C                   EVAL      FldExtArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
      C                   ENDIF                                                              MD059184
      C                   ENDIF                                                              MD059184
@@ -435,7 +436,7 @@
      C                             MBR('+PrevPFMember+')')                                  MD059184
      C                   CALL      'QCMDEXC'                                                MD059184
      C                   PARM                    Command                                    MD059184
-     C                   PARM      2764          Length                                     MD059184
+     C                   PARM      2764          Length           15 5                      MD059184
       *                                                                                     MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
@@ -491,7 +492,7 @@
       ** When Field Count is Equal to 2.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 2                                          MD059184
-     C                   EVAL      sqlStatement2 = sqlStatement1 + ' ' +                    MD059184
+     C                   EVAL      sqlStatement2 = sqlStatement1 + ' '                      MD059184
       *                                                                                     MD059184
       ** Update Second Field From Extract Field Array.                                      MD059184
       *                                                                                     MD059184
@@ -543,7 +544,7 @@
       ** When Field Count is equal to 3.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 3                                          MD059184
-     C                   EVAL      sqlStatement3 = sqlStatement2 + ' ' +                    MD059184
+     C                   EVAL      sqlStatement3 = sqlStatement2 + ' '                      MD059184
       *                                                                                     MD059184
       ** Update Third Field From Extract Field Array.                                       MD059184
       *                                                                                     MD059184
@@ -595,7 +596,7 @@
       ** When Field Count is equal to 4.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 4                                          MD059184
-     C                   EVAL      sqlStatement4 = sqlStatement3 + ' ' +                    MD059184
+     C                   EVAL      sqlStatement4 = sqlStatement3 + ' '                      MD059184
       *                                                                                     MD059184
       ** Update Fourth Field From Extract Field Array.                                      MD059184
       *                                                                                     MD059184
@@ -647,7 +648,7 @@
       ** When Field Count is equal to 5.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 5                                          MD059184
-     C                   EVAL      sqlStatement5 = sqlStatement4 + ' ' +                    MD059184
+     C                   EVAL      sqlStatement5 = sqlStatement4 + ' '                      MD059184
       *                                                                                     MD059184
       ** Update Fifth Field From Extract Field Array.                                       MD059184
       *                                                                                     MD059184
@@ -746,4 +747,3 @@
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2020
-

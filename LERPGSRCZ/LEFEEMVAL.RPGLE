@@ -11,11 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058763           Date 08Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
-      *                 MD031003           Date 08Sep20               *      
+      *                 MD031003           Date 08Sep20               *
       *                 MD052696           Date 04Apr19               *
       *                 MD004904           Date 04Apr19               *
       *                 AR1049357          Date 04Apr19               *
@@ -120,6 +121,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607  *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -716,6 +718,11 @@
      D P@PDVlD         S              5S 0                                                    CLE134
                                                                                               CLE134
      D P@NBDP          S              1S 0                                                    262513
+                                                                                            MD058763
+     D BChar           DS                                                                   MD058763
+     D   BLen                  1      2B 0                                                  MD058763
+     D   LenStr                1      2                                                     MD058763
+                                                                                            MD058763
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -1236,11 +1243,13 @@
       *                                                                                    AR826996B
      C     DDACTN        IFEQ      'I'                                                     AR826996B
      C     DDEADV        ANDEQ     'C'                                                     AR826996B
-     C     AUCBSR        ANDNE     *ZERO                                                   AR826996B
+     C*****AUCBSR        ANDNE     *ZERO                                          AR826996B MD058763
+     C     AUCBSR        ANDNE     *BLANKS                                                  MD058763
       *                                                                                    AR826996B
      C     DDACTN        OREQ      'A'                                                     AR826996B
      C     DDEADV        ANDEQ     'C'                                                     AR826996B
-     C     AUCBSR        ANDNE     *ZERO                                                   AR826996B
+     C*****AUCBSR        ANDNE     *ZERO                                          AR826996B MD058763
+     C     AUCBSR        ANDNE     *BLANKS                                                  MD058763
       *                                                                                    AR826996B
      C     KCYBR         KLIST                                                             AR826996B
      C                   KFLD                    DDECUR                                    AR826996B
@@ -1257,7 +1266,9 @@
      C                   EVAL      Idx        += 1                                         AR826996B
      C                   EVAL      FldNamXAr(Idx) = 'DDEADV'                               AR826996B
      C                   EVAL      MsgIDXAr(Idx) = 'LER5607'                               AR826996B
-     C                   EVAL      MsgDtaXAr = @CCYBR                                      AR826996B
+     C**********         EVAL      MsgDtaXAr = @CCYBR                             AR826996B MD058763
+     C                   EVAL      BLen = %Len(%Trim(@CCYBR))                               MD058763
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(@CCYBR)                   MD058763
      C                   ENDIF                                                             AR826996B
      C                   ENDIF                                                             AR826996B
       *                                                                                    AR826996B
@@ -6758,8 +6769,10 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD <> *BLANKS                                           CLE134
-     C                             AND AUCBSR <> *ZEROS                                       CLE134
-     C                             OR  AUCBSR = *ZEROS                                        CLE134
+     C**********                   AND AUCBSR <> *ZEROS                              CLE134 MD058763
+     C                             AND AUCBSR <> *BLANKS                                    MD058763
+     C**********                   OR  AUCBSR = *ZEROS                               CLE134 MD058763
+     C                             OR  AUCBSR = *BLANKS                                     MD058763
      C                             AND AUCRSP = *ZEROS                                        CLE134
      C                   EVAL      DDLNRFOK    = 'N'                                          CLE134
      C                   EVAL      Idx        += 1                                            CLE134

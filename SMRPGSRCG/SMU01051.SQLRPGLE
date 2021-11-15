@@ -76,6 +76,7 @@
      D sqlStatement3   S            500                                                     MD059184
      D sqlStatement4   S            500                                                     MD059184
      D sqlStatement5   S            500                                                     MD059184
+     D LayerFromFile   S              6A                                                    MD059184
 
       *
       ** +--------------------------------------+
@@ -109,27 +110,30 @@
                    EXEC SQL DECLARE P1 CURSOR FOR P1;
                    EXEC SQL OPEN P1;
                    EXEC SQL FETCH FROM P1 INTO :SMFileUpdate;
-
-      *
-      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD
-      *
+      *                                                                                     MD059184
+      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059184
+      *                                                                                     MD059184
                    IF SQLCOD = -501;
                       EXEC SQL OPEN P1;
                       EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
                    ENDIF;
-
-      *
-      ** IF TABLE FINDS ERROR OR NO RECORD.
-      *
+      *                                                                                     MD059184
+      ** IF TABLE FINDS ERROR OR NO RECORD.                                                 MD059184
+      *                                                                                     MD059184
                    IF SQLCOD <> 0 AND SQLCOD <> 100;
                       EXSR *PSSR;
                    ENDIF;
-
       *                                                                                     MD059184
       ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059184
       *                                                                                     MD059184
                    DOW SQLCOD = 0;
-
+      *                                                                                     MD059184
+     C                   EVAL      LayerFromFile = %TRIM(LAYR)                              MD059184
+      *                                                                                     MD059184
+      ** Processing for Zonal Layer                                                         MD059184
+      *                                                                                     MD059184
+     C     Layer         IFEQ      'Zonal '                                                 MD059184
+     C     LayerFromFile ANDEQ     'Zonal  '                                                MD059184
       *                                                                                     MD059184
       ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
       *                                                                                     MD059184
@@ -139,7 +143,6 @@
      C                   EVAL      PrevFileName = CurrFileName                              MD059184
      C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
      C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      Layer = %TRIM(LAYR)                                      MD059184
      C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
      C                   EVAL      IsFileFirstRec = 1                                       MD059184
      C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
@@ -175,19 +178,78 @@
      C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
      C                   ENDIF                                                              MD059184
      C                   ENDIF                                                              MD059184
-
+      *                                                                                     MD059184
      C                   EVAL      PrevFileName = CurrFileName                              MD059184
      C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
                       EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
-
+      *                                                                                     MD059184
                       IF SQLCOD <> 0 AND SQLCOD <> 100;
                          EXSR *PSSR;
                       ENDIF;
-
-                   ENDDO;
-
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Processing for Global Layer                                                        MD059184
+      *                                                                                     MD059184
+     C     Layer         IFEQ      'Global'                                                 MD059184
+     C     LayerFromFile ANDEQ     'Global '                                                MD059184
+      *                                                                                     MD059184
+      ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
+      *                                                                                     MD059184
+     C                   EVAL      CurrFileName = %TRIM(PFILE)                              MD059184
+     C                   EVAL      CurrPFMember = %TRIM(PMBR)                               MD059184
+     C                   IF        IsFileFirstRec = 0                                       MD059184
+     C                   EVAL      PrevFileName = CurrFileName                              MD059184
+     C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
+     C                   EVAL      IsFileFirstRec = 1                                       MD059184
+     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
+     C                   ELSE                                                               MD059184
+      *                                                                                     MD059184
+      ** Process Update when Current File Name <> Previous File Name                        MD059184
+      ** Else Save Extracted Fields Until File Name <> Previous                             MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevFileName <> CurrFileName                             MD059184
+     C                             AND PrevPFMember = CurrPFMember                          MD059184
+      *                                                                                     MD059184
+      ** Execute Update Subroutine - Based on number of fields                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      TotFldCount = FieldCounter                               MD059184
+     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
+     C                   EXSR      EnhSqlUpdate                                             MD059184
+      *                                                                                     MD059184
+      ** Reset Field Counters and Field Array                                               MD059184
+      ** And Set Field Extract and Counter for the Current File                             MD059184
+      *                                                                                     MD059184
+     C     TotFldCount   DOWNE     0                                                        MD059184
+     C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
+     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
+     C                   ENDDO                                                              MD059184
+     C                   EVAL      FieldCounter = 1                                         MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
+     C                   ELSE                                                               MD059184
+      *                                                                                     MD059184
+      ** Concatenate extracted fields from the same file name.                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
+     C                   ENDIF                                                              MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      PrevFileName = CurrFileName                              MD059184
+     C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+                      EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
+      *                                                                                     MD059184
+                      IF SQLCOD <> 0 AND SQLCOD <> 100;
+                         EXSR *PSSR;
+                      ENDIF;
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+                   ENDDO;                                                                   MD059184
+      *                                                                                     MD059184
                    EXEC SQL CLOSE P1;
-
+      *                                                                                     MD059184
      C***********        DOW       EndOfFile = False                                        MD059184
       *
       ** Process Update of files

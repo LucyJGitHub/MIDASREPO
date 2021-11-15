@@ -18,7 +18,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607  *
+      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607. *
+      *           - Delivered the missing eventcode/error message ID. *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CLE134 - Past Due Call Loan Processing                       *

@@ -25,7 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607  *
+      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607. *
+      *           - Delivered the missing eventcode/error message ID. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *

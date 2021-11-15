@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 27Jul20               *
-      *  Prev Amend No. MD058137           Date 18May21               *
+      *  Last Amend No. MD059177           Date 04Nov21               *
+      *  Prev Amend No. MD041126           Date 27Jul20               *
+      *                 MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059177 - Reinstate MD058137                                *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055451.                             *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *
@@ -730,6 +732,7 @@
       ** Send message
      C**********         Z-ADD     MQPUT         CID                                        MD041126
      C**********         Z-ADD     PMNMID        PMOPT                             MD058137 MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD059177
      C**********         CALL      'QMQM'                                                   MD041126
      C**********         PARM                    CID               9 0                      MD041126
      C**********         PARM                    HCONN             9 0                      MD041126

@@ -181,11 +181,6 @@
       *                                                                                     MD059184
      C                   EVAL      PrevFileName = CurrFileName                              MD059184
      C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
-                      EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
-      *                                                                                     MD059184
-                      IF SQLCOD <> 0 AND SQLCOD <> 100;
-                         EXSR *PSSR;
-                      ENDIF;
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
       ** Processing for Global Layer                                                        MD059184
@@ -239,12 +234,15 @@
       *                                                                                     MD059184
      C                   EVAL      PrevFileName = CurrFileName                              MD059184
      C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Fetch next record from file.                                                       MD059184
+      *                                                                                     MD059184
                       EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
       *                                                                                     MD059184
                       IF SQLCOD <> 0 AND SQLCOD <> 100;
                          EXSR *PSSR;
                       ENDIF;
-     C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
                    ENDDO;                                                                   MD059184
       *                                                                                     MD059184

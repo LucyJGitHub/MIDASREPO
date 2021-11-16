@@ -14,10 +14,12 @@
       *                                                               *
       *  (C) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. DRI005  *CREATE    Date 13Apr21               *
+      *  Last Amend No. MD059284           Date 15Nov21               *
+      *  Prev Amend No. DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059284 - HO Product Code and Market Code not mandatory     *
       *  DRI005 - HO and EDW Extracts                                 *
       *                                                               *
       *****************************************************************
@@ -519,21 +521,22 @@
      C                   Exsr      ZASNMS
      C                   Endif
       *
-     C                   If        #1HOPC = *Blanks
-      * HO Product Code must be entered
-     C                   Seton                                        9943
-     C                   Movel     'DRI0507'     ZAMSID
-     C                   Movel     'XXUSRMSG'    ZAMSGF
-     C                   Exsr      ZASNMS
-     C                   Endif
-      *
-     C                   If        #1HOMC = *Blanks
-      * HO Market Code must be entered
-     C                   Seton                                        9944
-     C                   Movel     'DRI0508'     ZAMSID
-     C                   Movel     'XXUSRMSG'    ZAMSGF
-     C                   Exsr      ZASNMS
-     C                   Endif
+      * HO Product Code and Market Code not mandatory                           MD059284
+     C**********         If        #1HOPC = *Blanks                             MD059284
+      **HO*Product*Code*must be entered                                         MD059284
+     C**********         Seton                                        9943      MD059284
+     C**********         Movel     'DRI0507'     ZAMSID                         MD059284
+     C**********         Movel     'XXUSRMSG'    ZAMSGF                         MD059284
+     C**********         Exsr      ZASNMS                                       MD059284
+     C**********         Endif                                                  MD059284
+      *                                                                         MD059284
+     C**********         If        #1HOMC = *Blanks                             MD059284
+      **HO*Market*Code*must be entered                                          MD059284
+     C**********         Seton                                        9944      MD059284
+     C**********         Movel     'DRI0508'     ZAMSID                         MD059284
+     C**********         Movel     'XXUSRMSG'    ZAMSGF                         MD059284
+     C**********         Exsr      ZASNMS                                       MD059284
+     C**********         Endif                                                  MD059284
       *
      C                   If        #1EXCL = *Blanks
       * Exclude flag must be entered

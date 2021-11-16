@@ -20,8 +20,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607. *
-      *           - Delivered the missing eventcode/error message ID. *
+      *  MD058763 - Error message LER5607 is displayed despite valid  *
+      *             input. Amend conditions to conform with           *
+      *             alphanumeric base rates.                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *

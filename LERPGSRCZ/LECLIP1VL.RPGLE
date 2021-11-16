@@ -174,8 +174,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058763 - FEEM: Missing eventcode/error message ID LER5607. *
-      *           - Delivered the missing eventcode/error message ID. *
+      *  MD058763 - Error message LER5607 is displayed despite valid  *
+      *             input. Amend conditions to conform with           *
+      *             alphanumeric base rates.                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918361 - No error message for rollover frequency when not  *

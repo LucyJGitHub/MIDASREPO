@@ -16,7 +16,7 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. MD059184  *CREATE  Date 05Nov21               *
+      *  Last Amend No. MD059184  *AMEND   Date 05Nov21               *
       *  Prev Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
@@ -70,12 +70,12 @@
      D SortSQLStmnt    S           2000A   INZ(*BLANKS)                                     MD059184
      D SMFileUpdate  E DS                  EXTNAME(SMFILUPD)                                MD059184
      D TotFldCount     S              5  0 INZ(0)                                           MD059184
-     D ExtFldArray     S              4A   DIM(5)                                           MD059184
-     D sqlStatement1   S            500                                                     MD059184
-     D sqlStatement2   S            500                                                     MD059184
-     D sqlStatement3   S            500                                                     MD059184
-     D sqlStatement4   S            500                                                     MD059184
-     D sqlStatement5   S            500                                                     MD059184
+     D ExtFldArray     S             10A   DIM(5)                                           MD059184
+     D sqlStatement1   S           9000                                                     MD059184
+     D sqlStatement2   S           9000                                                     MD059184
+     D sqlStatement3   S           9000                                                     MD059184
+     D sqlStatement4   S           9000                                                     MD059184
+     D sqlStatement5   S           9000                                                     MD059184
      D LayerFromFile   S              6A                                                    MD059184
 
       *
@@ -132,7 +132,7 @@
       *                                                                                     MD059184
       ** Processing for Zonal Layer                                                         MD059184
       *                                                                                     MD059184
-     C     Layer         IFEQ      'Zonal '                                                 MD059184
+     C     Layer         IFEQ      'ZONAL '                                                 MD059184
      C     LayerFromFile ANDEQ     'Zonal  '                                                MD059184
       *                                                                                     MD059184
       ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
@@ -140,8 +140,8 @@
      C                   EVAL      CurrFileName = %TRIM(PFILE)                              MD059184
      C                   EVAL      CurrPFMember = %TRIM(PMBR)                               MD059184
      C                   IF        IsFileFirstRec = 0                                       MD059184
-     C                   EVAL      PrevFileName = CurrFileName                              MD059184
-     C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
+     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
      C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
      C                   EVAL      IsFileFirstRec = 1                                       MD059184
@@ -151,8 +151,8 @@
       ** Process Update when Current File Name <> Previous File Name                        MD059184
       ** Else Save Extracted Fields Until File Name <> Previous                             MD059184
       *                                                                                     MD059184
-     C                   IF        PrevFileName <> CurrFileName                             MD059184
-     C                             AND PrevPFMember = CurrPFMember                          MD059184
+     C                   IF        %TRIM(PrevFileName) <> %TRIM(CurrFileName)               MD059184
+     C                             OR %TRIM(PrevPFMember) <> %TRIM(CurrPFMember)            MD059184
       *                                                                                     MD059184
       ** Execute Update Subroutine - Based on number of fields                              MD059184
       *                                                                                     MD059184
@@ -179,13 +179,13 @@
      C                   ENDIF                                                              MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
-     C                   EVAL      PrevFileName = CurrFileName                              MD059184
-     C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
+     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
       ** Processing for Global Layer                                                        MD059184
       *                                                                                     MD059184
-     C     Layer         IFEQ      'Global'                                                 MD059184
+     C     Layer         IFEQ      'GLOBAL'                                                 MD059184
      C     LayerFromFile ANDEQ     'Global '                                                MD059184
       *                                                                                     MD059184
       ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
@@ -193,8 +193,8 @@
      C                   EVAL      CurrFileName = %TRIM(PFILE)                              MD059184
      C                   EVAL      CurrPFMember = %TRIM(PMBR)                               MD059184
      C                   IF        IsFileFirstRec = 0                                       MD059184
-     C                   EVAL      PrevFileName = CurrFileName                              MD059184
-     C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
+     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
      C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
      C                   EVAL      IsFileFirstRec = 1                                       MD059184
@@ -204,8 +204,8 @@
       ** Process Update when Current File Name <> Previous File Name                        MD059184
       ** Else Save Extracted Fields Until File Name <> Previous                             MD059184
       *                                                                                     MD059184
-     C                   IF        PrevFileName <> CurrFileName                             MD059184
-     C                             AND PrevPFMember = CurrPFMember                          MD059184
+     C                   IF        %TRIM(PrevFileName) <> %TRIM(CurrFileName)               MD059184
+     C                             OR %TRIM(PrevPFMember) <> %TRIM(CurrPFMember)            MD059184
       *                                                                                     MD059184
       ** Execute Update Subroutine - Based on number of fields                              MD059184
       *                                                                                     MD059184
@@ -232,8 +232,8 @@
      C                   ENDIF                                                              MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
-     C                   EVAL      PrevFileName = CurrFileName                              MD059184
-     C                   EVAL      PrevPFMember = CurrPFMember                              MD059184
+     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
+     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
       ** Fetch next record from file.                                                       MD059184
@@ -498,52 +498,63 @@
      C                   PARM                    Command                                    MD059184
      C                   PARM      2764          Length           15 5                      MD059184
       *                                                                                     MD059184
+     C                   EVAL      PrevFileName = PrevPFMember                              MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
-      ** Check for number of fields to be updated                                           MD059184
+      ** Prepare One Field SQL Update Statement.                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement1 = 'Update ' +                              MD059184
+     C                             %TRIM(PrevFileName) +                                    MD059184
+     C                             ' SET ' + %TRIM(ExtFldArray(1)) +                        MD059184
+     C                             ' = CASE ' +                                             MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(1)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(1)) +                 MD059184
+     C                             ' = ' +                                                  MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(1)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(1))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Execute SQL Statement Based on Total Field Count                                   MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 1                                          MD059184
-     C                   EVAL      sqlStatement1 = 'Update ' + PrevFileName +               MD059184
-     C                             ' SET ' + ExtFldArray(1) + ' = CASE ' +                  MD059184
-     C                             'WHEN (' + ExtFldArray(1) + ') THEN ' +                  MD059184
-     C                             ''' '' WHEN'  + ExtFldArray(1) + ' = ' +                 MD059184
-     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             ExtFldArray(1) + ' =  '' 1'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''1 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''01'' THEN ' +                    MD059184
-     C                             '''01''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 2'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''2 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''02'' THEN ' +                    MD059184
-     C                             '''02''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 3'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''3 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''03'' THEN ' +                    MD059184
-     C                             '''03''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 4'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''4 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''04'' THEN ' +                    MD059184
-     C                             '''04''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 5'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''5 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''05'' THEN ' +                    MD059184
-     C                             '''05''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 6'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''6 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''06'' THEN ' +                    MD059184
-     C                             '''06''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 7'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''7 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''07'' THEN ' +                    MD059184
-     C                             '''07''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 8'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''8 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''08'' THEN ' +                    MD059184
-     C                             '''08''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(1) + ' =  '' 9'' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''9 '' OR ' +                      MD059184
-     C                             ExtFldArray(1) + ' =  ''09'' THEN ' +                    MD059184
-     C                             '''09''' + ' ELSE ' + ExtFldArray(1) + ' END'            MD059184
      C/EXEC SQL                                                                             MD059184
      C+ EXECUTE IMMEDIATE :sqlStatement1                                                    MD059184
      C/END-EXEC                                                                             MD059184
@@ -552,50 +563,58 @@
       ** When Field Count is Equal to 2.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 2                                          MD059184
-     C                   EVAL      sqlStatement2 = sqlStatement1 + ' '                      MD059184
+      *                                                                                     MD059184
+      ** Prepare Two Field SQL Update Statement.                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement2 = %TRIMR(sqlStatement1) + ' '              MD059184
       *                                                                                     MD059184
       ** Update Second Field From Extract Field Array.                                      MD059184
       *                                                                                     MD059184
-     C                             + ', ' + ExtFldArray(2) + ' = CASE ' +                   MD059184
-     C                             'WHEN (' + ExtFldArray(2) + ') THEN ' +                  MD059184
-     C                             ''' '' WHEN'  + ExtFldArray(2) + ' = ' +                 MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(2)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(2)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(2))                   MD059184
+     C                             + ' = ' +                                                MD059184
      C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             ExtFldArray(2) + ' =  '' 1'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''1 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''01'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''01'') THEN ' +             MD059184
      C                             '''01''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 2'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''2 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''02'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''02'') THEN ' +             MD059184
      C                             '''02''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 3'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''3 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''03'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''03'') THEN ' +             MD059184
      C                             '''03''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 4'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''4 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''04'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''04'') THEN ' +             MD059184
      C                             '''04''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 5'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''5 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''05'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''05'') THEN ' +             MD059184
      C                             '''05''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 6'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''6 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''06'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''06'') THEN ' +             MD059184
      C                             '''06''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 7'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''7 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''07'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''07'') THEN ' +             MD059184
      C                             '''07''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 8'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''8 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''08'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''08'') THEN ' +             MD059184
      C                             '''08''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(2) + ' =  '' 9'' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''9 '' OR ' +                      MD059184
-     C                             ExtFldArray(2) + ' =  ''09'' THEN ' +                    MD059184
-     C                             '''09''' + ' ELSE ' + ExtFldArray(2) + ' END'            MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(2))              MD059184
+     C                             + ' END'                                                 MD059184
      C/EXEC SQL                                                                             MD059184
      C+ EXECUTE IMMEDIATE :sqlStatement2                                                    MD059184
      C/END-EXEC                                                                             MD059184
@@ -604,50 +623,110 @@
       ** When Field Count is equal to 3.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 3                                          MD059184
-     C                   EVAL      sqlStatement3 = sqlStatement2 + ' '                      MD059184
+      *                                                                                     MD059184
+      ** Prepare Two Field SQL Update Statement.                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement2 = %TRIMR(sqlStatement1) + ' '              MD059184
+      *                                                                                     MD059184
+      ** Update Second Field From Extract Field Array.                                      MD059184
+      *                                                                                     MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(2)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(2)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(2))                   MD059184
+     C                             + ' = ' +                                                MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(2))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Prepare Three Field SQL Update Statement                                           MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement3 = %TRIMR(sqlStatement2) + ' '              MD059184
       *                                                                                     MD059184
       ** Update Third Field From Extract Field Array.                                       MD059184
       *                                                                                     MD059184
-     C                             + ', ' + ExtFldArray(3) + ' = CASE ' +                   MD059184
-     C                             'WHEN (' + ExtFldArray(3) + ') THEN ' +                  MD059184
-     C                             ''' '' WHEN'  + ExtFldArray(2) + ' = ' +                 MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(3)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(3)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(3))                   MD059184
+     C                             + ' = ' +                                                MD059184
      C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             ExtFldArray(3) + ' =  '' 1'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''1 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''01'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''01'') THEN ' +             MD059184
      C                             '''01''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 2'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''2 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''02'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''02'') THEN ' +             MD059184
      C                             '''02''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 3'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''3 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''03'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''03'') THEN ' +             MD059184
      C                             '''03''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 4'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''4 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''04'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''04'') THEN ' +             MD059184
      C                             '''04''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 5'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''5 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''05'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''05'') THEN ' +             MD059184
      C                             '''05''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 6'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''6 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''06'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''06'') THEN ' +             MD059184
      C                             '''06''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 7'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''7 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''07'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''07'') THEN ' +             MD059184
      C                             '''07''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 8'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''8 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''08'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''08'') THEN ' +             MD059184
      C                             '''08''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(3) + ' =  '' 9'' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''9 '' OR ' +                      MD059184
-     C                             ExtFldArray(3) + ' =  ''09'' THEN ' +                    MD059184
-     C                             '''09''' + ' ELSE ' + ExtFldArray(3) + ' END'            MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(3))              MD059184
+     C                              + ' END'                                                MD059184
      C/EXEC SQL                                                                             MD059184
      C+ EXECUTE IMMEDIATE :sqlStatement3                                                    MD059184
      C/END-EXEC                                                                             MD059184
@@ -656,50 +735,162 @@
       ** When Field Count is equal to 4.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 4                                          MD059184
-     C                   EVAL      sqlStatement4 = sqlStatement3 + ' '                      MD059184
+      *                                                                                     MD059184
+      ** Prepare Two Field SQL Update Statement.                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement2 = %TRIMR(sqlStatement1) + ' '              MD059184
+      *                                                                                     MD059184
+      ** Update Second Field From Extract Field Array.                                      MD059184
+      *                                                                                     MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(2)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(2)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(2))                   MD059184
+     C                             + ' = ' +                                                MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(2))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Prepare Three Field SQL Update Statement                                           MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement3 = %TRIMR(sqlStatement2) + ' '              MD059184
+      *                                                                                     MD059184
+      ** Update Third Field From Extract Field Array.                                       MD059184
+      *                                                                                     MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(3)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(3)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(3))                   MD059184
+     C                              + ' = ' +                                               MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(3))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Prepare Four Field SQL Update Statement                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement4 = %TRIMR(sqlStatement3) + ' '              MD059184
       *                                                                                     MD059184
       ** Update Fourth Field From Extract Field Array.                                      MD059184
       *                                                                                     MD059184
-     C                             + ', ' + ExtFldArray(4) + ' = CASE ' +                   MD059184
-     C                             'WHEN (' + ExtFldArray(4) + ') THEN ' +                  MD059184
-     C                             ''' '' WHEN'  + ExtFldArray(4) + ' = ' +                 MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(4)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(4)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(4))                   MD059184
+     C                             + ' = ' +                                                MD059184
      C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             ExtFldArray(4) + ' =  '' 1'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''1 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''01'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''01'') THEN ' +             MD059184
      C                             '''01''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 2'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''2 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''02'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''02'') THEN ' +             MD059184
      C                             '''02''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 3'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''3 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''03'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''03'') THEN ' +             MD059184
      C                             '''03''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 4'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''4 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''04'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''04'') THEN ' +             MD059184
      C                             '''04''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 5'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''5 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''05'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''05'') THEN ' +             MD059184
      C                             '''05''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 6'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''6 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''06'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''06'') THEN ' +             MD059184
      C                             '''06''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 7'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''7 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''07'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''07'') THEN ' +             MD059184
      C                             '''07''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 8'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''8 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''08'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''08'') THEN ' +             MD059184
      C                             '''08''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(4) + ' =  '' 9'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''9 '' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''09'' THEN ' +                    MD059184
-     C                             '''09''' + ' ELSE ' + ExtFldArray(4) + ' END'            MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(4))              MD059184
+     C                             + ' END'                                                 MD059184
      C/EXEC SQL                                                                             MD059184
      C+ EXECUTE IMMEDIATE :sqlStatement4                                                    MD059184
      C/END-EXEC                                                                             MD059184
@@ -708,66 +899,229 @@
       ** When Field Count is equal to 5.                                                    MD059184
       *                                                                                     MD059184
      C                   IF        TotFldCount = 5                                          MD059184
-     C                   EVAL      sqlStatement5 = sqlStatement4 + ' '                      MD059184
+      *                                                                                     MD059184
+      ** Prepare Two Field SQL Update Statement.                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement2 = %TRIMR(sqlStatement1) + ' '              MD059184
+      *                                                                                     MD059184
+      ** Update Second Field From Extract Field Array.                                      MD059184
+      *                                                                                     MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(2)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(2)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(2))                   MD059184
+     C                             + ' = ' +                                                MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(2)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(2))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Prepare Three Field SQL Update Statement                                           MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement3 = %TRIMR(sqlStatement2) + ' '              MD059184
+      *                                                                                     MD059184
+      ** Update Third Field From Extract Field Array.                                       MD059184
+      *                                                                                     MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(3)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(3)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(3))                   MD059184
+     C                             + ' = ' +                                                MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(3)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(3))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Prepare Four Field SQL Update Statement                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement4 = %TRIMR(sqlStatement3) + ' '              MD059184
+      *                                                                                     MD059184
+      ** Update Fourth Field From Extract Field Array.                                      MD059184
+      *                                                                                     MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(4)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(4)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(4))                   MD059184
+     C                             + ' = ' +                                                MD059184
+     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''01'') THEN ' +             MD059184
+     C                             '''01''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''02'') THEN ' +             MD059184
+     C                             '''02''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''03'') THEN ' +             MD059184
+     C                             '''03''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''04'') THEN ' +             MD059184
+     C                             '''04''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''05'') THEN ' +             MD059184
+     C                             '''05''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''06'') THEN ' +             MD059184
+     C                             '''06''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''07'') THEN ' +             MD059184
+     C                             '''07''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''08'') THEN ' +             MD059184
+     C                             '''08''' + ' WHEN (' +                                   MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(4)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(4))              MD059184
+     C                             + ' END'                                                 MD059184
+      *                                                                                     MD059184
+      ** Prepare Five Field SQL Update Statement                                            MD059184
+      *                                                                                     MD059184
+     C                   EVAL      sqlStatement5 = %TRIMR(sqlStatement4) + ' '              MD059184
       *                                                                                     MD059184
       ** Update Fifth Field From Extract Field Array.                                       MD059184
       *                                                                                     MD059184
-     C                             + ', ' + ExtFldArray(5) + ' = CASE ' +                   MD059184
-     C                             'WHEN (' + ExtFldArray(5) + ') THEN ' +                  MD059184
-     C                             ''' '' WHEN'  + ExtFldArray(5) + ' = ' +                 MD059184
+     C                             + ', ' + %TRIM(ExtFldArray(5)) + ' = CASE ' +            MD059184
+     C                             'WHEN (' + %TRIM(ExtFldArray(5)) +                       MD059184
+     C                             ' =  '' 0'' OR ' +                                       MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''0 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''00'') THEN ' +             MD059184
+     C                             ''' '' WHEN '  + %TRIM(ExtFldArray(5))                   MD059184
+     C                             + ' = ' +                                                MD059184
      C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             ExtFldArray(5) + ' =  '' 1'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''1 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''01'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 1'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''1 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''01'') THEN ' +             MD059184
      C                             '''01''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 2'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''2 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''02'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 2'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''2 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''02'') THEN ' +             MD059184
      C                             '''02''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 3'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''3 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''03'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 3'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''3 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''03'') THEN ' +             MD059184
      C                             '''03''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 4'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''4 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''04'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 4'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''4 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''04'') THEN ' +             MD059184
      C                             '''04''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 5'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''5 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''05'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 5'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''5 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''05'') THEN ' +             MD059184
      C                             '''05''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 6'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''6 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''06'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 6'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''6 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''06'') THEN ' +             MD059184
      C                             '''06''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 7'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''7 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''07'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 7'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''7 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''07'') THEN ' +             MD059184
      C                             '''07''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 8'' OR ' +                      MD059184
-     C                             ExtFldArray(4) + ' =  ''8 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''08'' THEN ' +                    MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 8'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''8 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''08'') THEN ' +             MD059184
      C                             '''08''' + ' WHEN (' +                                   MD059184
-     C                             ExtFldArray(5) + ' =  '' 9'' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''9 '' OR ' +                      MD059184
-     C                             ExtFldArray(5) + ' =  ''09'' THEN ' +                    MD059184
-     C                             '''09''' + ' ELSE ' + ExtFldArray(5) + ' END'            MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = '' 9'' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''9 '' OR ' +                MD059184
+     C                             %TRIM(ExtFldArray(5)) + ' = ''09'') THEN ' +             MD059184
+     C                             '''09''' + ' ELSE ' + %TRIM(ExtFldArray(5))              MD059184
+     C                             + ' END'                                                 MD059184
      C/EXEC SQL                                                                             MD059184
      C+ EXECUTE IMMEDIATE :sqlStatement5                                                    MD059184
      C/END-EXEC                                                                             MD059184
      C                   ENDIF                                                              MD059184
-      *
-      *
-     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
-     C                   EXSR      *PSSR
-     C                   ENDIF
-      *
-     C                   IF        PMBR <> *BLANKS
-     C                   EVAL      Command = ('DLTOVR '+PMBR+'')
-     C                   CALL      'QCMDEXC'
-     C                   PARM                    Command
-     C                   PARM      2764          Length
-     C                   ENDIF
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
       *
      C                   ENDSR
       *****************************************************************

@@ -1,0 +1,109 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas MS Midas/SWIFT Meridian communication')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Midas SWIFT                                         */
+/*                                                                   */
+/*       MSC200221B - Midas/SWIFT MX Meridian communications         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CSW122  *CREATE    Date 04Oct21              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSW122 - SWIFT ISO 20022 Changes                            */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&MCID &IO &ACCP &EOD)
+
+             DCL        VAR(&IO)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MCID) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&ACCP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EOD)  TYPE(*CHAR) LEN(4)
+
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTANAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+             DCL        VAR(&REPLY) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2001')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/* Create LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+
+/* Initialisation */
+             RTVJOBA    TYPE(&JOBTYPE)
+             RTVJOBA    NBR(&CNUM) TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+
+/* Create and lock data area to prove we are active */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(&XLIB) VALUE(&PREFIX *CAT 'XLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB') /*CPK015*/
+             CHGVAR     VAR(&DTANAM) VALUE('MSMX' *CAT &CNUM)
+             CRTDTAARA  DTAARA(&XLIB/&DTANAM) TYPE(*CHAR) LEN(1)
+             ALCOBJ     OBJ((&XLIB/&DTANAM *DTAARA *EXCL))
+
+/* Start commitment control (unless run interactively) */
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN) /*CPK016*/
+             ENDDO
+
+/* Start compression server for outgoing (Tx) session */
+             IF         COND(&IO *EQ 'O') THEN(DO)
+                CHGVAR     VAR(&DTQM) VALUE('MSQM' *CAT &CNUM)
+                CHGVAR     VAR(&DTQC) VALUE('MSQC' *CAT &CNUM)
+                CRTDTAQ    DTAQ(&DPLIB/&DTQM) MAXLEN(12050)
+                CRTDTAQ    DTAQ(&DPLIB/&DTQC) MAXLEN(50)
+             ENDDO
+
+             CHGJOB     LOGCLPGM(*NO)
+
+             CALL       PGM(MS20022B) PARM(&MCID &DTQM &DTQC &IO &EOD)
+
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/* Normal end */
+             GOTO       CMDLBL(END)
+
+/* Abnormal end */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MSC6110 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+/* Delete 'active' data area here --- just in case called */
+/* interactively. */
+ END:        DLTDTAARA  DTAARA(&DTANAM)
+             MONMSG     MSGID(CPF0000)
+
+                ENDPGM

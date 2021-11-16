@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 257657             Date 16Aug13               *
+      *  Prev Amend no. 251946             Date 16Sep13               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
@@ -173,6 +175,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257657 - Syndicated Loan input error LEL0401 when invalid    *
+      *           participant.                                        *
+      *         - Allow value for DDLNRF if CLE106 is on.  Validation *
+      *           is already done in LECLIP1VL.                       *
+      *         - Applied for MD021676.                               *
+      *  251946 - Consider rollover warning message only if CLE030    *
+      *           is switched on. Patterned fix after 248041.         *
+      *         - Applied for MD022245.                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918361 - No error message for rollover frequency when not  *
@@ -1935,6 +1945,11 @@
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
      C     WFOTRID       ANDNE     'LE000473'                                               MD032052
+     C                   If        Not (CLE106 = 'Y' And                                      257657
+     C                             SYINF='Y' And                                              257657
+     C                             DDPTFC = *Blanks  And                                      257657
+     C                             DDPTFT = *Blanks  And                                      257657
+     C                             DDPTFN = *Blanks)                                          257657
      C                   Eval      Idx = Idx + 1                                             BUG6108
      C                   Eval      DDLNRFOK = 'N'                                            BUG6108
      C                   Eval      FldNamXAr(Idx) = 'DDLNRF'                                 BUG6108
@@ -1944,6 +1959,7 @@
      C                   Else                                                            X03 BUG6108
      C                   Eval      MsgIDXAr(Idx) = 'LEL0541'                                 BUG6108
      C                   EndIf                                                           E03 BUG6108
+     C                   EndIf                                                                257657
      C                   ENDIF                                                              MD031225
                                                                                              BUG8436
      C                   ENDIF                                                               BUG8436
@@ -5787,6 +5803,7 @@ B001 C     ZERR          IFNE      *BLANKS
       **********                                                                     CLE030 BUG10657
      C**********         ELSE                                                        CLE030 BUG10657
      C**********         Z-ADD     WSVRD         W1RLDT                               CLE030 BUG4351
+     C     CLE030        IFEQ      'Y'                                                        251946
      C                   MOVE      'W'           DDRLDTOK                                     CLE030
      C                   ADD       1             WId                                          CLE030
      C                   MOVEL     'DDRLDT'      WFldNmXAr(WId)                               CLE030
@@ -5797,6 +5814,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C     CLE030        ANDEQ     'Y'                                                      BUG10733
      C                   EVAL      CCLLSTS = 'Q'                                              CLE030
      C                   ENDIF                                                                CLE030
+     C                   ENDIF                                                                251946
      C**********         ENDIF                                                       CLE030 BUG10657
      C                   ENDIF
       *

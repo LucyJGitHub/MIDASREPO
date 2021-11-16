@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055003           Date 12Feb20               *
+      *  Last Amend No. 098439             Date 25Sep13               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055003           Date 12Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 263333             Date 20Nov12               *
       *                 CRE075             Date 06Dec10               *
@@ -55,6 +56,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  098439 - Not print debit and credit advice if destination    *
+      *           of this advices are a retail account and if the     *
+      *           print transaction advice (PTRA fron REIACD) for     *
+      *           this account is set to 'N'.                         *
+      *         - Applied for MD022454.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD055003 - Allow use of BIC Directory details if SWIFT ID    *
@@ -265,6 +271,11 @@
      I                                       46  46 W0ADTP
      I*                                                                   S01408
      I/COPY WNCPYSRC,FT0315IIP1                                           S01408
+     IKACC        DS                                                                          098439
+     I                                        1   6 KCNUM                                     098439
+     I                                        7   9 KCCY                                      098439
+     I                                       10  190KACOD                                     098439
+     I                                       20  210KACSQ                                     098439
      I*                                                                   S01408
      ISCCMT       DS                            256                                           CSC022
      I                                        1   30CMTNUM                                    CSC022
@@ -2142,6 +2153,10 @@
       *
       *  Move formatted information to Output field
       *
+     C           *IN33     IFEQ '1'                                                           098439
+     C                     MOVELKACC      ADDRSS                                              098439
+     C                     SETOF                     33                                       098439
+     C                     END                                                                098439
      C                     MOVELADDRSS    W0SCR
       *
       *  Unwind subroutine stack name
@@ -2268,6 +2283,19 @@
      C                     MOVEL'Y'       ##BIC
      C                     ENDSL
      C                     END
+      *  If the calling program is FT0560 (debit and credit advice) and                       098439
+      *  if the destination of the transaction is a retail account with                       098439
+      *  a print transaction advice set to 'N' : return the code NOPRINT                      098439
+      *  to FT0560.                                                                           098439
+      *                                                                                       098439
+     C           W0CPGM    IFEQ 'FT0560'                                                      098439
+     C           ATYP      ANDEQ'R'                                                           098439
+     C                     MOVELCNUM      KCNUM                                               098439
+     C                     MOVE CCY       KCCY                                                098439
+     C                     MOVE ACOD      KACOD                                               098439
+     C                     MOVE ACSQ      KACSQ                                               098439
+     C                     SETON                     33                                       098439
+     C                     END                                                                098439
       *
       *  If a Retail account and W0RTAD 'Y' get first address
       *  for account and not customers address

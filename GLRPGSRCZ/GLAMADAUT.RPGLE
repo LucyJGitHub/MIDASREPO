@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR856663           Date 16Nov11               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE101             Date 27Aug14               *
@@ -55,6 +56,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR856663 - Attempt to write a duplicate rec to file ACCNTBXC *
+      *             DS/#1DACCNTBX is not being filled prior to call   *
+      *             to RPGLE/GLAMADUPD.  (Child: AR856664)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -449,6 +453,12 @@
      C     BGWDPR        OREQ      'Y'
      C     R_TSTMC       ANDEQ     'Y'
      C     AC_ATYP       ANDEQ     'R'
+      *                                                                                     AR856663
+      ** If Standing Data Auth *ON and A/C Auth Rq =Y and Retail Ac                         AR856663
+      *                                                                                     AR856663
+     C     CSD012        OREQ      'Y'                                                      AR856663
+     C     AUTHRQ        ANDEQ     'Y'                                                      AR856663
+     C     AC_ATYP       ANDEQ     'R'                                                      AR856663
       *
      C     Accntkey      CHAIN     ACCNTBXC                           82
       *
@@ -862,6 +872,12 @@
      C     BGWDPR        OREQ      'Y'
      C     R_TSTMC       ANDEQ     'Y'
      C     AC_ATYP       ANDEQ     'R'
+      *                                                                                     AR856663
+      ** If Standing Data Auth *ON and A/C Auth Rq =Y and Retail Ac                         AR856663
+      *                                                                                     AR856663
+     C     CSD012        OREQ      'Y'                                                      AR856663
+     C     AUTHRQ        ANDEQ     'Y'                                                      AR856663
+     C     AC_ATYP       ANDEQ     'R'                                                      AR856663
       *
      C     Accntkey      CHAIN     GLBXSHL0                           87
       *

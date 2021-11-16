@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. 259120A            Date 23Sep14               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
@@ -231,6 +233,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
+      *  259120A - Adjust buffer to include DDXRLT, DDXRLS, DDXRLC    *
+      *          - Applied for MD-28282.                              *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -763,6 +769,16 @@
      D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
      D DDEXDT_FX     E                     EXTFLD(DDEXDT)                                     CDL099
      D SDCUEX        E DS                  EXTNAME(SDCUEXPD)                                MD044880
+                                                                                             259120A
+     D*Filler***       DS             8                                             259120A MD057739
+     D*DDXRLT***               1      2                                             259120A MD057739
+     D*DDXRLS***               3      4                                             259120A MD057739
+     D*DDXRLC***               5      8                                             259120A MD057739
+     DRFiller          DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -2783,10 +2799,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
 
+     C*****FILLn*        SUBST     BUFFER:Bfp    RFiller                            259120A MD057739
+     C***********        ADD       FILLn         Bfp                                259120A MD057739
      C     LOEXLn        SUBST     BUFFER:Bfp    ExtData                                      247172
      C                   ADD       LOEXLn        Bfp                                          247172
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
      C**********         ADD       LOEXLn        Bfp                                         BUG9493
+     C     FILLn         SUBST     BUFFER:Bfp    RFiller                                    MD057739
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LOEXLn) + RFiller             MD057739
+     C                   ADD       FILLn         Bfp                                        MD057739
 
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
@@ -6184,6 +6205,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CLE106
      C                   Z-ADD     RecordLen     LOA2Ln            4 0                        CLE106
                                                                                               CLE106
+     C**********         Z-ADD     8             FILLn             4 0              259120A MD057739
+     C                   Z-ADD     9             FILLn             4 0                      MD057739
      C                   MOVEL     'LELOEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0

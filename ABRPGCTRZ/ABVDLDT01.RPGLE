@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD029160           Date 05Sep14               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029160 - APISERVER job fall over when trying to send in a  *
+      *             LDNI Cancellation. Recompiled due to changes in   *
+      *             MMVLDNIPD.                                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

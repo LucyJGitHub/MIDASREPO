@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -52,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
+      *  MD026384 - Added generation by assignment processing.        *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -161,6 +166,11 @@
       * Current loan amendment in screen format
      D C_LOAM_S      E DS                  EXTNAME(LELOAMPD)
      D                                     PREFIX(@)
+      **********                                                                   MD026384 MD057739
+      ** Current loan amendment 2 in screen format                                 MD026384 MD057739
+      **********                                                                   MD026384 MD057739
+     D*C_LOAM_2*     E DS                  EXTNAME(LELOA2PD)                       MD026384 MD057739
+     D**********                           PREFIX(@)                               MD026384 MD057739
 
       * New loan amendment in file format
      D N_LOAM_F      E DS                  EXTNAME(LEVLOAMPD)
@@ -444,6 +454,7 @@
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
+     D Filler          S              9A                                                    MD057739
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -878,6 +889,8 @@
       * Inputs
       ** Loan amendment in screen format
      C                   PARM                    C_LOAM_S
+     C**********         PARM                    C_LOAM_2                          MD026384 MD057739
+     C                   PARM                    Filler                                     MD057739
 
       ** Current loan amendment in file format
      C                   PARM                    C_LOAM_F

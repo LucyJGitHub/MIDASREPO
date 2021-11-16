@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD029160           Date 05Sep14               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 24Feb15               *
@@ -64,6 +65,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029160 - APISERVER job fall over when trying to send in a  *
+      *             LDNI Cancellation. Recompiled due to changes in   *
+      *             MMVLDNIPD.                                        *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *

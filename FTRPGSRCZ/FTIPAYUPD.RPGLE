@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *  Last Amend No. MD058914           Date 06Oct21               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD048586           Date 11Jan21               *
       *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
@@ -98,6 +100,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058914 - FT payments customer information on listviews     *
+      *             is blank. Amend to add routine to retrieve        *
+      *             Customer and Branch for INPAYDQD/OTPAYDQD.        *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD048586 - Remove conditions for executing SRCLR             *
@@ -261,6 +267,7 @@
       ** Compliance Watch Hit List File                                                       CSD015
      FSDCWHTL1  IF   E           K DISK    COMMIT                                             CSD015
       *
+     FSDM901L0  IF   E           K DISK                                                       CFT162
      F*FTPREFL0**UF*A*E*************DISK*** COMMIT                                    BUG4776 260326
       *****************************************************************               BUG4776 260326
      F/COPY WNCPYSRC,FTIPAYDF02
@@ -708,6 +715,19 @@
      D WTOWR           S             24A                                                      CGL029
      D CSW209          S              1A                                                      CSW209
      D CAP205          S              1A                                                      CAP205
+     D P@Rtcd          S              7A                                                    MD058914
+     D P@INOT          S              1A                                                    MD058914
+     D P@BNC1          S             35A                                                    MD058914
+     D P@BNC2          S             35A                                                    MD058914
+     D P@ORC1          S             35A                                                    MD058914
+     D P@ORC2          S             35A                                                    MD058914
+     D P@ORC3          S             35A                                                    MD058914
+     D P@BRCA          S              3A                                                    MD058914
+     D P@PCCY          S              3A                                                    MD058914
+     D P@SMCY          S              3A                                                    MD058914
+     D WCustNumb       S              6A                                                    MD058914
+     D WCustBrch       S              3A                                                    MD058914
+      *                                                                                     MD058914
      D/COPY WNCPYSRC,FTH00556
                                                                                               CSD015
       ** Watch List Description Array                                                         CSD015
@@ -1046,6 +1066,81 @@
      C                   Z-ADD     001           DBase
      C                   EXSR      SRERR
      C                   ENDIF
+      *                                                                                       CFT162
+     C                   IF        CFT162 = 'Y'                                               CFT162
+      *                                                                                       CFT162
+     C                   Movel     'N'           @INR900           1                          CFT162
+     C                   Movel     'N'           @INR910           1                          CFT162
+      *                                                                                       CFT162
+      ** Get full account details using info from FTVIPAYPD (NwIPFilFmt)                      CFT162
+      *                                                                                       CFT162
+     C                   EXSR      SRFulAccntV                                                CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   PINFT                                        CFT162
+      *                                                                                       CFT162
+     C                   IF        IPRCRT <> *BLANKS                                          CFT162
+     C                   MOVEL     WRCCDS        WFRWR                                        CFT162
+     C                   ELSE                                                                 CFT162
+     C                   MOVEL     WSNDDS        WFRWR                                        CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        IPACBT <> *BLANKS                                          CFT162
+     C                   MOVEL     WACBDS        WTOWR                                        CFT162
+     C                   ELSE                                                                 CFT162
+     C                   MOVEL     WBNCDS        WTOWR                                        CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+     C                   MOVEL     WFRWR         FTFRGL                                       CFT162
+     C                   MOVEL     WTOWR         FTTOGL                                       CFT162
+      *                                                                                       CFT162
+      ** Check customer/account MT900 defaults                                                CFT162
+      ** Check From Account (Receivers Correspondent or Sender)                               CFT162
+      *                                                                                       CFT162
+     C                   MoveL     FTFRGL        C_ACCT                                       CFT162
+      *                                                                                       CFT162
+     C     KYM901        Chain     SDM901L0                           99                      CFT162
+     C                   If        *In99 = *Off                                               CFT162
+     C                   Movel     M9R900        @INR900                                      CFT162
+     C                   Else                                                                 CFT162
+                                                                                              CFT162
+      * If no record found for the account, check if there is a record for the customer       CFT162
+     C                   Move      *Blanks       W_BRC1                                       CFT162
+     C                   Move      *Blanks       W_CCY1                                       CFT162
+     C                   Z-add     0             W_ACO1                                       CFT162
+     C                   Z-add     0             W_ACS1                                       CFT162
+     C     KYM901        Chain     SDM901L0                           99                      CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        *In99 = *Off                                               CFT162
+     C                   Movel     M9R900        @INR900                                      CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      * Set MT900 generated flag to 'N'                                                       CFT162
+     C                   Movel     'N'           ING900                                       CFT162
+      *                                                                                       CFT162
+      * Check customer/account MT910 defaults                                                 CFT162
+      * Check To Account (A/C With Bank or Beneficiary)                                       CFT162
+     C                   Movel     FTTOGL        C_ACCT                                       CFT162
+      *                                                                                       CFT162
+     C     KYM901        Chain     SDM901L0                           99                      CFT162
+     C                   If        *In99 = *Off                                               CFT162
+     C                   Movel     M9R910        @INR910                                      CFT162
+     C                   Else                                                                 CFT162
+      * If no record found for the account, check if there is a record for the customer       CFT162
+     C                   Move      *Blanks       W_BRC1                                       CFT162
+     C                   Move      *Blanks       W_CCY1                                       CFT162
+     C                   Z-Add     0             W_ACO1                                       CFT162
+     C                   Z-Add     0             W_ACS1                                       CFT162
+     C     KYM901        Chain     SDM901L0                           99                      CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   IF        *In99 = *Off                                               CFT162
+     C                   Movel     M9R910        @INR910                                      CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      * Set MT910 generated flag to 'N'                                                       CFT162
+     C                   Movel     'N'           ING910                                       CFT162
+     C                   Endif                                                                CFT162
       *                                                                         CFT014
       ** Generate Timestamp.                                                    CFT014
       *                                                                         CFT014
@@ -1057,8 +1152,10 @@
       ** Or if STP Phase 2 MT103 for FT is installed.                           CFT014
       *
      C***********        IF        CFT003 = 'Y'                                 CFT014
-     C                   IF        CFT003 = 'Y' or CFT014 = 'Y'                 CFT014
-     C                             OR CFT009 = 'Y'                              CFT009
+     C**********         IF        CFT003 = 'Y' or CFT014 = 'Y'                        CFT014 CFT162
+     C**********                   OR CFT009 = 'Y'                                     CFT009 CFT162
+     C                   IF        CFT003 = 'Y' or CFT014 = 'Y'                               CFT162
+     C                             OR CFT009 = 'Y' or CFT162= 'Y'                             CFT162
       *
      C     IPPRef        CHAIN     INPAYXL0                           99
      C/COPY WNCPYSRC,FTIPAYDC02
@@ -1084,6 +1181,13 @@
      C                   EVAL      INFRNT = 'MD' + INPREF                                     CSC011
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
+      *                                                                                       CFT162
+     C                   If        CFT162 = 'Y'                                               CFT162
+     C                   Eval      INR900 = @INR900                                           CFT162
+     C                   Eval      INR910 = @INR910                                           CFT162
+     C                   Eval      ING900 = 'N'                                               CFT162
+     C                   Eval      ING910 = 'N'                                               CFT162
+     C                   Endif                                                                CFT162
       *
      C***********        WRITE     INPAYXDF                                     CFT014
      C                   WRITE     INPAYXDF                             89      CFT014
@@ -1194,6 +1298,7 @@
      C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      IPFRID = IPFRNT                                            257487
+     C                   EXSR      SRSetINPAYDQD                                            MD058914
      C                   WRITE     INPAYQD0                             99                    257487
       *                                                                                       257487
      C                   IF        *IN99 = *ON                                                257487
@@ -2933,6 +3038,208 @@ e1   C                   ENDIF                                                  
      C                   ENDSR
       *
       *****************************************************************
+      /EJECT                                                                                  CFT162
+      *****************************************************************                       CFT162
+      *                                                               *                       CFT162
+      *  SRFulAccnt2 - Get full account details using values from     *                       CFT162
+      *               FTVIPAYPD                                       *                       CFT162
+      *                                                               *                       CFT162
+      *****************************************************************                       CFT162
+      *                                                                                       CFT162
+     C     SRFulAccntV   BEGSR                                                                CFT162
+      *                                                                                       CFT162
+      ** Sender.                                                                              CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   WSNDDS                                       CFT162
+      *                                                                                       CFT162
+     C     IPSNTP        IFEQ      'F'                                                        CFT162
+     C     IPSNTP        OREQ      'R'                                                        CFT162
+     C     IPSNTP        OREQ      'G'                                                        CFT162
+      *                                                                                       CFT162
+      ** Setup keys for account details retrieval.                                            CFT162
+      *                                                                                       CFT162
+     C                   IF        IPSNTP = 'F'                                               CFT162
+     C                   EVAL      WAXSBY = 'NOSTRO'                                          CFT162
+     C                   MOVEL     IPSND1        WKEYL5                                       CFT162
+     C                   MOVEL     WKEYL5        WNOCCY                                       CFT162
+     C                   MOVE      WKEYL5        WNOCOD                                       CFT162
+      *                                                                                       CFT162
+     C                   ELSE                                                                 CFT162
+      *                                                                                       CFT162
+     C                   IF        IPSNTP = 'R'                                               CFT162
+     C                   EVAL      WAXSBY = 'RETAIL'                                          CFT162
+     C                   MOVEL     IPSND1        WRACNO                                       CFT162
+      *                                                                                       CFT162
+     C                   ELSE                                                                 CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WAXSBY = 'ACCNTS'                                          CFT162
+     C                   EVAL      WKEYL18 = IPSND1                                           CFT162
+     C                   MOVEL     WKEYL18       WACCNT                                       CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+      ** Access Account record.                                                               CFT162
+      *                                                                                       CFT162
+     C                   EXSR      SRAcnt                                                     CFT162
+      *                                                                                       CFT162
+      ** Store full account details for FT Transaction Status File                            CFT162
+      ** record update.                                                                       CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WICNUM = ACCNUM                                            CFT162
+     C                   MOVE      ACCCY         WICCY                                        CFT162
+     C                   Z-ADD     ACACOD        WIACOD                                       CFT162
+     C                   Z-ADD     ACACSQ        WIACSQ                                       CFT162
+     C                   MOVE      ACBRCA        WIBRCA                                       CFT162
+     C                   MOVEL     WIACNT        WSNDDS                                       CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+      ** Receiver's Correspondence.                                                           CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   WRCCDS                                       CFT162
+      *                                                                                       CFT162
+     C                   IF        IPRCRT = 'N' or IPRCRT = 'R'                               CFT162
+     C                             or IPRCRT = 'F'                                            CFT162
+      *                                                                                       CFT162
+     C                   If        IPRCRT = 'F'                                               CFT162
+     C                   Eval      WAXSBY = 'NOSTRO'                                          CFT162
+     C                   Movel     IPINRCO1      WKEYL5                                       CFT162
+     C                   Movel     WKEYL5        WNOCCY                                       CFT162
+     C                   Move      WKEYL5        WNOCOD                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      ** Setup keys for account details retrieval.                                            CFT162
+      *                                                                                       CFT162
+     C                   If        IPRCRT = 'N'                                               CFT162
+     C                   Eval      WAXSBY = 'NOSTRO'                                          CFT162
+     C                   Eval      WNOCCY = IPSMCY                                            CFT162
+     C                   Movel     IPINRCO1      WNOCOD                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+     C                   If        IPRCRT = 'R'                                               CFT162
+     C                   Eval      WAXSBY = 'RETAIL'                                          CFT162
+     C                   Movel     IPINRCO1      WRACNO                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
+      ** Access Account record.                                                               CFT162
+      *                                                                                       CFT162
+     C                   EXSR      SRAcnt                                                     CFT162
+      *                                                                                       CFT162
+      ** Store full account details for FT Transaction Status File                            CFT162
+      ** record update.                                                                       CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WICNUM = ACCNUM                                            CFT162
+     C                   MOVE      ACCCY         WICCY                                        CFT162
+     C                   Z-ADD     ACACOD        WIACOD                                       CFT162
+     C                   Z-ADD     ACACSQ        WIACSQ                                       CFT162
+     C                   MOVE      ACBRCA        WIBRCA                                       CFT162
+     C                   MOVEL     WIACNT        WRCCDS                                       CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+      ** Beneficiary.                                                                         CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   WBNCDS                                       CFT162
+      *                                                                                       CFT162
+     C     IPBNCT        IFEQ      'R'                                                        CFT162
+     C     IPBNCT        OREQ      'P'                                                        CFT162
+      *                                                                                       CFT162
+      ** Setup keys for account details retrieval.                                            CFT162
+      *                                                                                       CFT162
+     C                   IF        IPBNCT = 'R'                                               CFT162
+     C                   EVAL      WAXSBY = 'RETAIL'                                          CFT162
+     C                   MOVEL     IPBNC1        WRACNO                                       CFT162
+      *                                                                                       CFT162
+     C                   ELSE                                                                 CFT162
+      *                                                                                       CFT162
+     C                   MOVEL     IPBNC1        WKEYL15          21                          CFT162
+     C                   MOVE      WKEYL15       WKEYL18          24                          CFT162
+     C                   MOVEL     IPBNC1        WKEYL9            9                          CFT162
+     C                   MOVE      IPPCCY        WKEYL9                                       CFT162
+     C                   MOVEL     IPBNC1        WKEYL12          18                          CFT162
+     C                   MOVE      WKEYL12       WKEYL15                                      CFT162
+     C                   MOVEL     WKEYL9        WKEYL15                                      CFT162
+     C                   MOVEL     WKEYL15       WKEYL18                                      CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WAXSBY = 'ACCNTS'                                          CFT162
+     C                   EVAL      WACCNT = WKEYL18                                           CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+      ** Access Account record.                                                               CFT162
+      *                                                                                       CFT162
+     C                   EXSR      SRAcnt                                                     CFT162
+      *                                                                                       CFT162
+      ** Store full account details for FT Transaction Status File                            CFT162
+      ** record update.                                                                       CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WICNUM = ACCNUM                                            CFT162
+     C                   MOVE      ACCCY         WICCY                                        CFT162
+     C                   Z-ADD     ACACOD        WIACOD                                       CFT162
+     C                   Z-ADD     ACACSQ        WIACSQ                                       CFT162
+     C                   MOVE      ACBRCA        WIBRCA                                       CFT162
+     C                   MOVEL     WIACNT        WBNCDS                                       CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+      ** Account with Bank.                                                                   CFT162
+      *                                                                                       CFT162
+     C                   CLEAR                   WACBDS                                       CFT162
+      *                                                                                       CFT162
+     C     IPACBT        IFEQ      'N'                                                        CFT162
+     C     IPACBT        OREQ      'R'                                                        CFT162
+     C     IPACBT        OREQ      'P'                                                        CFT162
+      *                                                                                       CFT162
+      ** Setup keys for account details retrieval.                                            CFT162
+      *                                                                                       CFT162
+     C                   IF        IPACBT = 'N'                                               CFT162
+     C                   EVAL      WAXSBY = 'NOSTRO'                                          CFT162
+     C                   EVAL      WNOCCY = IPPCCY                                            CFT162
+     C                   EVAL      WNOCOD = IPACBK                                            CFT162
+      *                                                                                       CFT162
+     C                   ELSE                                                                 CFT162
+      *                                                                                       CFT162
+     C                   IF        IPACBT = 'R'                                               CFT162
+     C                   EVAL      WAXSBY = 'RETAIL'                                          CFT162
+     C                   MOVEL     IPACBK        WRACNO                                       CFT162
+      *                                                                                       CFT162
+     C                   ELSE                                                                 CFT162
+      *                                                                                       CFT162
+     C                   MOVEL     IPACBK        WKEYL9                                       CFT162
+     C                   MOVE      IPPCCY        WKEYL9                                       CFT162
+     C                   MOVE      IPACBK        WKEYL15                                      CFT162
+     C                   MOVEL     WKEYL9        WKEYL15                                      CFT162
+     C                   MOVE      IPACBB        WKEYL18                                      CFT162
+     C                   MOVEL     WKEYL15       WKEYL18                                      CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WAXSBY = 'ACCNTS'                                          CFT162
+     C                   EVAL      WACCNT = WKEYL18                                           CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+      ** Access Account record.                                                               CFT162
+      *                                                                                       CFT162
+     C                   EXSR      SRAcnt                                                     CFT162
+      *                                                                                       CFT162
+      ** Store full account details for FT Transaction Status File                            CFT162
+      ** record update.                                                                       CFT162
+      *                                                                                       CFT162
+     C                   EVAL      WICNUM = ACCNUM                                            CFT162
+     C                   MOVE      ACCCY         WICCY                                        CFT162
+     C                   Z-ADD     ACACOD        WIACOD                                       CFT162
+     C                   Z-ADD     ACACSQ        WIACSQ                                       CFT162
+     C                   MOVE      ACBRCA        WIBRCA                                       CFT162
+     C                   MOVEL     WIACNT        WACBDS                                       CFT162
+      *                                                                                       CFT162
+     C                   ENDIF                                                                CFT162
+      *                                                                                       CFT162
+     C                   ENDSR                                                                CFT162
+      *                                                                                       CFT162
+      *****************************************************************                       CFT162
       /EJECT
       *****************************************************************
       *                                                               *
@@ -3388,6 +3695,26 @@ e1   C                   ENDIF                                                  
      C                   Movel     'N'           @CFT157                                      CFT157
      C                   End                                                                  CFT157
                                                                                               CFT157
+      *                                                                                       CFT162
+      ** Check if 'CFT162' is switched 'ON'                                                   CFT162
+      *                                                                                       CFT162
+     C                   MoveL     'N'           CFT162                                       CFT162
+     C                   CallB     'AOSARDR0'                                                 CFT162
+     C                   Parm      *BLANKS       @RTCD                                        CFT162
+     C                   Parm      '*VERIFY'     @OPTN                                        CFT162
+     C                   Parm      'CFT162'      @SARD                                        CFT162
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT162
+      *                                                                                       CFT162
+     C     @RTCD         Ifeq      *BLANKS                                                    CFT162
+     C                   MoveL     'Y'           CFT162            1                          CFT162
+     C     KYM901        KLIST                                                                CFT162
+     C                   KFLD                    W_CNU1                                       CFT162
+     C                   KFLD                    W_CCY1                                       CFT162
+     C                   KFLD                    W_ACO1                                       CFT162
+     C                   KFLD                    W_ACS1                                       CFT162
+     C                   KFLD                    W_BRC1                                       CFT162
+     C                   Endif                                                                CFT162
+      *                                                                                       CFT162
       *****************************************************************               241810 241810A
       ***Retrieve*ZMUSER*details.**************************************               241810 241810A
       *****************************************************************               241810 241810A
@@ -5386,6 +5713,35 @@ e1   C                   ENDIF                                                  
      C     PString       CAT       WLARR(U):0    PString                                      CSD015
                                                                                               CSD015
      C                   ENDSR                                                                CSD015
+      *****************************************************************                     MD058914
+      /EJECT                                                                                MD058914
+      *****************************************************************                     MD058914
+      *                                                               *                     MD058914
+      * SRSetINPAYDQD - Gets the Customer and Branch Details          *                     MD058914
+      *                                                               *                     MD058914
+      *****************************************************************                     MD058914
+     C     SRSetINPAYDQD BEGSR                                                              MD058914
+      *                                                                                     MD058914
+     C                   CALL      'FT1200'                                                 MD058914
+     C                   PARM      *blank        P@Rtcd                                     MD058914
+      * INPUTS                                                                              MD058914
+     C                   PARM      'I'           P@INOT                                     MD058914
+     C                   PARM      IPBNC1        P@BNC1                                     MD058914
+     C                   PARM      IPBNC2        P@BNC2                                     MD058914
+     C                   PARM                    P@ORC1                                     MD058914
+     C                   PARM                    P@ORC2                                     MD058914
+     C                   PARM                    P@ORC3                                     MD058914
+     C                   PARM      IPBRCA        P@BRCA                                     MD058914
+     C                   PARM      IPPCCY        P@PCCY                                     MD058914
+     C                   PARM      IPSMCY        P@SMCY                                     MD058914
+      * OUTPUTS                                                                             MD058914
+     C                   PARM      *blanks       WCustNumb                                  MD058914
+     C                   PARM      *blanks       WCustBrch                                  MD058914
+      *                                                                                     MD058914
+     C                   EVAL      IPBNCC = WCustNumb                                       MD058914
+     C                   EVAL      IPBNCB = WCustBrch                                       MD058914
+      *                                                                                     MD058914
+     C                   ENDSR                                                              MD058914
                                                                                               CGL029
       *****************************************************************                       CGL029
       /EJECT                                                                                  CGL029

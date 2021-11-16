@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254657             Date 01Jun20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. UUC100             Date 07Oct20               *
+      *  Prev Amend No. 254657             Date 01Jun20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057237           Date 04Dec20               *
       *                 MD054702           Date 07Sep20               *
       *                 MD053119           Date 02Dec19               *
@@ -88,6 +89,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC100 - Upgrade UUC027 to FBM 2.1                           *
+      *           Cover-control on journal entries input.             *
+      *           Hooks Used: GLH00634, GLH00635, GLBITHDC02,         *
+      *                       GLBITHDD01                              *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
       *           user tries to amend/accept JE inserted via APIs     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251029             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 250229             Date 20May08               *
+      *  Prev Amend No. 251029             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -79,6 +80,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250229 - When inputting transactions ensure an error message *
+      *           set when trying to insert the same deal number      *
+      *           simultaneously.                                     *
+      *         - Applied for MD030370.                               *
       *  251029 - Applied fix 231306.                                 *
       *  231306 - Handle file locking properly.                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -767,7 +772,9 @@
      C*  WRITE (OR UPDATE IF PRESENT) NEW DEAL
      C*
      C     *IN99         IFEQ      '0'
-     C                   UPDATE    FXDEALP0
+     C**********         UPDATE    FXDEALP0                                                   250229
+     C                   MOVEL     '*RECINS'     @@RTCD                                       250229
+     C                   GOTO      EXIT                                                       250229
      C                   ELSE
      C                   WRITE     FXDEALP0
      C/COPY WNCPYSRC,FXFXDLFC01

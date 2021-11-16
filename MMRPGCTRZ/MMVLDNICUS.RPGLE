@@ -23,7 +23,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL036             Date 02Nov21               *
+      *  Last Amend No. CDL063             Date 02Nov21               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -64,7 +64,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
@@ -94,47 +94,47 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for access programs (short)
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                 CDL006
       ** External data structure for access programs (2000 chars long)          CDL006
      D DSLDY         E DS                  EXTNAME(DSLDY)                       CDL006
- 
+
       ** External data structure for Customer Details file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
                                                                                               CSD025
@@ -143,35 +143,35 @@
                                                                                               CSD025
       ** External data structure for access programs (short)                                  CSD025
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSD025
-     
+                                                                                              CDL063
      D SysVal1         C                   'AllowBankNBankCpty'                               CDL063
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#Msgid)
- 
+
       ** Error Message code 2 received as a parameter
      D Msgid2          S                   LIKE(#Msgid)
- 
+
       ** Customer Number/Shortname received as a paramaterr
      D DDCUST          S             10A
- 
+
       ** Deal Type received as a paramater
      D DDTYPE          S              2A
- 
+
       ** Output Customer Number passed as parameter
      D*IKCNUM***       S              6S 0                                                    CSD027
      D IKCNUM          S              6A                                                      CSD027
- 
+
       ** Customer Shortname field passed as a parameter
      D IKCSNM          S             10A
       **
@@ -195,7 +195,7 @@
      D SVal9           S            200                                                       CDL063
      D SValK0          S             20                                                       CDL063
      D SVal10          S            200                                                       CDL063
-     D AllowBNBCpty    S              1                                                       CDL063 
+     D AllowBNBCpty    S              1                                                       CDL063
       **                                                                                      CDL063
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -204,7 +204,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -212,7 +212,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -298,7 +298,7 @@
      C                   END
      C                   ENDIF                                                                CDL063
      C                   END
- 
+
      C                   END
       *
       **  If the customer is valid, update output fields
@@ -311,15 +311,15 @@
      C                   EVAL      IKCNUM = *BLANKS                                           CSD027
      C                   MOVE      *BLANKS       IKCSNM
      C                   END
- 
+
      C                   END
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -331,9 +331,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -345,7 +345,7 @@
      C                   PARM                    IKCSNM
      C                   PARM                    SDCUST
      C                   PARM                    DDACTN            1                          CSD025
- 
+
       ** Check if CSD025 (Customer De-Activation) is active                                   CSD025
       *                                                                                       CSD025
      C                   CALLB     'AOSARDR0'                                                 CSD025
@@ -392,9 +392,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

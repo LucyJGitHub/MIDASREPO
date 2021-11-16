@@ -10,8 +10,9 @@
 0007  *                                                               *
       *  (c) Finastra International Limited 2001                      *
 0011  *                                                               *
-      *  Last Amend No. MD055528           Date 13Aug20               *
-      *  Prev Amend No. MD023916           Date 06Nov19               *
+      *  Last Amend No. MD058764           Date 06Oct21               *
+      *  Prev Amend No. MD055528           Date 13Aug20               *
+      *                 MD023916           Date 06Nov19               *
       *                 MD045515           Date 20Jun17               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
@@ -93,15 +94,17 @@
 0011  *                                                               *
 0012  *****************************************************************
       *                                                               *
+      *  MD058764 - Corrective Batch processing should be conditioned *
+      *             on CGL125.                                        *
       *  MD055528 - Corrective Batches value dates are overwritten by *
       *             Booking Date.                                     *
       *           - When corrective batches value dates are equal to  *
-      *             *BLANKS defaults value date to Booking Date       *      
+      *             *BLANKS defaults value date to Booking Date       *
       *  MD023916 - Profit Centre on batch entries are overwritten.   *
       *             Removed 238728 since warning msg is being shown   *
       *             during insert of batch if retail/nostro and profit*
       *             centre does not match value in ACCNTAB.           *
-      *  MD045515 - Real-time postings resulted in duplicate movements* 
+      *  MD045515 - Real-time postings resulted in duplicate movements*
       *             in Midas. Remove fix MD037046.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -880,23 +883,28 @@
       *                                                                                       CER030
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
-      ** Check if PEA switchable feature is enabled                                           CSC054
+      ***Check*if*PEA*switchable*feature*is*enabled********************              CSC054 MD058764
+      ** Check if Corrective Batch Input feature is enabled                                 MD058764
       *                                                                                       CSC054
-     C                     MOVE 'N'       CSC054  1                                           CSC054
+     C**********           MOVE 'N'       CSC054  1                                  CSC054 MD058764
+     C                     MOVE 'N'       CGL125  1                                         MD058764
      C                     CALL 'AOSARDR0'                                                    CSC054
      C                     PARM *BLANKS   @RTCD                                               CSC054
      C                     PARM '*VERIFY' @OPTN                                               CSC054
-     C                     PARM 'CSC054'  @SARN                                               CSC054
+     C**********           PARM 'CSC054'  @SARN                                      CSC054 MD058764
+     C                     PARM 'CGL125'  @SARN                                             MD058764
      C           SCSARD    PARM SCSARD    DSFDY                                               CSC054
       *                                                                                       CSC054
      C           @RTCD     IFEQ *BLANKS                                                       CSC054
-     C                     MOVE 'Y'       CSC054                                              CSC054
+     C**********           MOVE 'Y'       CSC054                                     CSC054 MD058764
+     C                     MOVE 'Y'       CGL125                                            MD058764
      C                     ELSE                                                               CSC054
      C           @RTCD     IFNE *BLANKS                                                       CSC054
      C           @RTCD     ANDNE'*NRF'                                                        CSC054
      C           *LOCK     IN   LDA                                                           CSC054
      C                     MOVE 'SCSARDPD'DBFILE                                              CSC054
-     C                     MOVE 'CSC054'  DBKEY                                               CSC054
+     C**********           MOVE 'CSC054'  DBKEY                                      CSC054 MD058764
+     C                     MOVE 'CGL125'  DBKEY                                             MD058764
      C                     Z-ADD14        DBASE                                               CSC054
      C                     OUT  LDA                                                           CSC054
      C                     EXSR *PSSR                                                         CSC054
@@ -1102,7 +1110,8 @@
      C** Check if batch in file and set IND08 accordingly                                    BUG4970
      C           DPMT      COMP '   '                0808                                    BUG4970
      C*                                                                                      BUG4970
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           BNUMH     CHAINGLJEHQL0             66                                       CSC054
      C                     ENDIF                                                              CSC054
       *                                                                                       CSC054
@@ -1411,10 +1420,11 @@
      C************         MOVE ACODA     ACALFA  4                S10736 090139
      C                     EXSR ACTYPE                                    S10736
       *                                                                                       CSC054
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528     
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
      C*                                                                   S01408
@@ -1503,7 +1513,8 @@
 0122 C* N45                GOTO AGAIN                                     S01154
 0122 C  N64                GOTO AGAIN                                     S01154
       *                                                                                       CSC054
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     IFEQ '0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
      C                     Z-ADDPSTD      CRMDTE                                              CSC054
@@ -1696,10 +1707,11 @@
      C************         MOVE ACODA     ACALFA  4                E30172 090139
      C                     EXSR ACTYPE                                    E30172
       *                                                                                       CSC054
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528     
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
       *                                                                   087773
@@ -1872,10 +1884,11 @@
      C************         MOVE ACODA     ACALFA  4                E30172 090139
      C                     EXSR ACTYPE                                    E30172
       *                                                                                       CSC054
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528    
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
       *                                                                   087773
@@ -1951,7 +1964,8 @@
      C************         MOVE ACODA     ACALFA  4                E30172 090139
      C                     EXSR ACTYPE                                    E30172
       *                                                                                       CSC054
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
      C           VALD      ANDEQ*ZERO                                                       MD055528
@@ -2011,10 +2025,11 @@
      C************         MOVE ACODA     ACALFA  4                E30172 090139
      C                     EXSR ACTYPE                                    E30172
       *                                                                                       CSC054
-     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C********** CSC054    IFEQ 'Y'                                                  CSC054 MD058764
+     C           CGL125    IFEQ 'Y'                                                         MD058764
      C           *IN66     ANDEQ'0'                                                           CSC054
      C           HQBDTE    ANDNE*ZERO                                                         CSC054
-     C           VALD      ANDEQ*ZERO                                                       MD055528  
+     C           VALD      ANDEQ*ZERO                                                       MD055528
      C                     Z-ADDHQBDTE    VALD                                                CSC054
      C                     ENDIF                                                              CSC054
       *                                                                   087773

@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059191           Date 04Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059233           Date 11Nov21               *
+      *  Prev Amend No. MD059191           Date 04Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD058626A          Date 08Sep21               *
       *                 MD058708           Date 31Aug21               *
       *                 MD058652           Date 27Aug21               *
@@ -98,6 +99,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                               *
+      *  MD059233 - DLC0606B failed, DAMBR not found                  *
       *  MD059191 - DLC0606B failed with mismatch deal currency       *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *  MD058626A - Printer overflow error                           *
@@ -795,8 +797,12 @@
      I                                     26032606 CLAS                                      CDL038
      I                                     26072607 BLRTU                                     CIR020
      I                                     26182621 CALMU                                     CIR020
+     I                                     262226270BADJU                                   MD059233
+     I                                     262826330FLORU                                   MD059233
      I                                     26482648 BLRTT                                     CIR020
      I                                     26592662 CALMT                                     CIR020
+     I                                     266326680BADJT                                   MD059233
+     I                                     266926740FLORT                                   MD059233
      I/COPY WNCPYSRC,DL0250I001
      IDEAMSDIF                                                                             MD031123A
      I              RECI                            RECIDM                                 MD031123A
@@ -1371,8 +1377,10 @@
      C                     EXSR FRAIRS                                    S01119
      C           CIR020    IFEQ 'Y'                                                           CIR020
      C           BLRTU     ANDEQ'Y'                                                           CIR020
+     C           CALMU     ANDNE'MANL'                                                      MD059233
      C           CIR020    OREQ 'Y'                                                           CIR020
      C           BLRTT     ANDEQ'Y'                                                           CIR020
+     C           CALMT     ANDNE'MANL'                                                      MD059233
      C                     EXSR SRLIB2                                                        CIR020
      C                     ENDIF                                                              CIR020
       *                                                                                       CIR020
@@ -1705,6 +1713,9 @@
      C********** UBRTT     IFNE 0                                                      S01119 CSD103
      C           UBRTT     IFNE *BLANKS                                                       CSD103
      C           BLRTU     ANDNE'Y'                                                           CIR020
+     C           UBRTT     ORNE *BLANKS                                                     MD059233
+     C           BLRTU     ANDEQ'Y'                                                         MD059233
+     C           CALMU     ANDEQ'MANL'                                                      MD059233
      C*                                                                   S01119
      C* CHECK OUR DETAILS FOR AVERAGE RATE                                S01119
      C*                                                                   S01119
@@ -1735,6 +1746,9 @@
      C********** TBRTT     IFNE 0                                                      S01119 CSD103
      C           TBRTT     IFNE *BLANKS                                                       CSD103
      C           BLRTT     ANDNE'Y'                                                           CIR020
+     C           TBRTT     ORNE *BLANKS                                                     MD059233
+     C           BLRTT     ANDEQ'Y'                                                         MD059233
+     C           CALMT     ANDEQ'MANL'                                                      MD059233
      C*                                                                   S01119
      C* CHECK THR DETAILS FOR AVERAGE RATE METHOD                         S01119
      C*                                                                   S01119
@@ -1774,6 +1788,9 @@
      C********** UBRTT     IFNE 0                                                      S01119 CSD103
      C           UBRTT     IFNE *BLANKS                                                       CSD103
      C           BLRTU     ANDNE'Y'                                                           CIR020
+     C           UBRTT     ORNE *BLANKS                                                     MD059233
+     C           BLRTU     ANDEQ'Y'                                                         MD059233
+     C           CALMU     ANDEQ'MANL'                                                      MD059233
      C*                                                                   S01119
      C* PROCESS OUR DETAILS USING FRA/IRS SUBROUTINE                      S01119
      C*                                                                   S01119
@@ -1869,6 +1886,9 @@
      C********** TBRTT     IFNE 0                                                      S01119 CSD103
      C           TBRTT     IFNE *BLANKS                                                       CSD103
      C           BLRTT     ANDNE'Y'                                                           CIR020
+     C           TBRTT     ORNE *BLANKS                                                     MD059233
+     C           BLRTT     ANDEQ'Y'                                                         MD059233
+     C           CALMT     ANDEQ'MANL'                                                      MD059233
      C*                                                                   S01119
      C* PROCESS THR DETAILS USING FRA/IRS SUBROUTINE                      S01119
      C*                                                                   S01119
@@ -2001,6 +2021,18 @@
      C                     EXSR *PSSR                                     S01194
      C                     GOTO RLAEND                                    S01119
      C                     END                                            S01119
+     C           CIR020    IFEQ 'Y'                                                         MD059233
+     C           BLRTU     ANDEQ'Y'                                                         MD059233
+     C           CALMU     ANDEQ'MANL'                                                      MD059233
+     C                     Z-ADDBADJU     BANBRT                                            MD059233
+     C                     ADD  FLORU     BANBRT                                            MD059233
+     C                     ENDIF                                                            MD059233
+     C           CIR020    IFEQ 'Y'                                                         MD059233
+     C           BLRTT     ANDEQ'Y'                                                         MD059233
+     C           CALMT     ANDEQ'MANL'                                                      MD059233
+     C                     Z-ADDBADJT     BANBRT                                            MD059233
+     C                     ADD  FLORT     BANBRT                                            MD059233
+     C                     ENDIF                                                            MD059233
 0469 C*                                                                   S01119
 0470 C* CHECK DEALS TO BE GENERATED INDICATOR AND INITIAL RATE SET IND    S01119
 0469 C*                                                                   S01119
@@ -2309,6 +2341,18 @@
      C                     EXSR *PSSR                                     S01194
      C                     GOTO DMREND                                    S01119
      C                     END                                            S01119
+     C           CIR020    IFEQ 'Y'                                                         MD059233
+     C           BLRTU     ANDEQ'Y'                                                         MD059233
+     C           CALMU     ANDEQ'MANL'                                                      MD059233
+     C                     Z-ADDBADJU     BANBRT                                            MD059233
+     C                     ADD  FLORU     BANBRT                                            MD059233
+     C                     ENDIF                                                            MD059233
+     C           CIR020    IFEQ 'Y'                                                         MD059233
+     C           BLRTT     ANDEQ'Y'                                                         MD059233
+     C           CALMT     ANDEQ'MANL'                                                      MD059233
+     C                     Z-ADDBADJT     BANBRT                                            MD059233
+     C                     ADD  FLORT     BANBRT                                            MD059233
+     C                     ENDIF                                                            MD059233
      C*                                                                   S01119
      C* DETERMINE WHICH RATE TO USE- OLD OR NEW                           S01119
 0482 C*                                                                   S01119

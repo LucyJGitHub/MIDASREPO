@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059064           Date 14Oct21               *
+      *  Last Amend No. MD059133           Date 10Nov21               *
       *  Prev Amend No. MD059206           Date 09Nov21               *
+      *                 MD059064           Date 14Oct21               *
       *                 MD058999           Date 07Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -95,6 +96,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059133 - Prohibit the use of backward looking rate if      *
+      *             CIR020 is switched off                            *
       *  MD059206 - Error message for Their Base Rate Code - Their    *
       *             details is not shown when the user entered  back  *
       *             ward looking (Our/Their) and rate change freq is  *

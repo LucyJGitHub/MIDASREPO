@@ -280,6 +280,7 @@
       * Calls          : QMQM                                              *
       *                : sr_trace                                          *
       *                : sr_datacheck                                      *
+      *                : MEC20022A                                         *
       *                                                                    *
       **********************************************************************
       *
@@ -362,8 +363,9 @@
       *
      C                   exsr      sr_datacheck
       ** Prompt Incoming Message Management
-     C                   call      MEC20022A                            9090
+     C                   call      'MEC20022A'                          9090
      C                   parm      *BLANKS       p@rtcd            7
+      **
      C                   endif
      C                   endif
       *

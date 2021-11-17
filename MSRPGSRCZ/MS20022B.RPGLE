@@ -361,6 +361,9 @@
      C     REASON        ifne      RC2033
       *
      C                   exsr      sr_datacheck
+      ** Prompt Incoming Message Management
+     C                   call      MEC20022A                            9090
+     C                   parm      *BLANKS       p@rtcd            7
      C                   endif
      C                   endif
       *
@@ -462,7 +465,7 @@
      C                   ENDDO
       ** Write record on index file
      C                   WRITE     MSIXISD0
-      ** Commit all messages
+      ** Commit all messages both to the database and from the queues
      C                   commit
       *
       ** Pop subroutine
@@ -488,7 +491,7 @@
       ** Initialize fields
      C                   z-add     1             x
      C                   z-add     0             tagF
-      **
+      ** Check if current tag has matches on tag array
      C                   eval      tag = %trim(mxTags(x))
      C                   eval      tagF = %scan(tag:tagName)
      C                   dow       tagF = 0
@@ -501,24 +504,32 @@
      C                   leave
      C                   endif
      C                   enddo
-      *
+      ** If current tag is found on tag array, extract the data and store in on the db field
      C                   if        tagF > 0
      C                   eval      tagVal = %subst(outBytes:pEq+1:pNL-pEq-1)
+      ** Begin data extraction
      C                   select
+      ** Extract UETR
      C                   when      mxTags(x) = 'PmtIdUETR'
      C                   eval      UETR = tagVal
      C                   eval      IUETR = tagVal
+      ** Extract Message Type
      C                   when      mxTags(x) = 'MsgDefIdr'
      C                   eval      MTPY = tagVal
      C                   eval      IMTPY = tagVal
+      ** Extract Transaction Amount
      C                   when      mxTags(x) = 'IntrBkSttlmAmt'
      C                   eval      AMTS = tagVal
+      ** Extract Transaction Currency
      C                   when      mxTags(x) = 'IntrBkSttlmAmtCcy'
+      ** Extract Value Date
      C                   when      mxTags(x) = 'IntrBkSttlmDt'
      C                   eval      SVDT = tagVal
+      ** Extract Message ID
      C                   when      mxTags(x) = 'GrpHdrMsgId'
      C                   eval      MXID = tagVal
      C                   eval      IMXID = tagVal
+      ** Extract Input Date
      C                   when      mxTags(x) = 'GrpHdrCreDtTm'
      C                   eval      MXIDE = tagVal
      C                   endsl

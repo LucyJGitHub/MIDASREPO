@@ -70,7 +70,7 @@
      D SortSQLStmnt    S           2000A   INZ(*BLANKS)                                     MD059184
      D SMFileUpdate  E DS                  EXTNAME(SMFILUPD)                                MD059184
      D TotFldCount     S              5  0 INZ(0)                                           MD059184
-     D ExtFldArray     S             10A   DIM(5)                                           MD059184
+     D ExtFldArray     S             10A   DIM(10)                                          MD059184
      D updStatement    S            500A                                                    MD059184
      D execStatement   S           9000                                                     MD059184
      D sqlStatement    S           9000    DIM(10)                                          MD059184
@@ -127,7 +127,7 @@
       ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059184
       *                                                                                     MD059184
                    DOW SQLCOD = 0;
-      *                                                                                     MD059184
+      *
      C                   EVAL      LayerFromFile = %TRIM(LAYR)                              MD059184
       *                                                                                     MD059184
       ** Processing for Zonal Layer                                                         MD059184
@@ -165,8 +165,11 @@
       *                                                                                     MD059184
      C     TotFldCount   DOWNE     0                                                        MD059184
      C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
+     C                   EVAL      sqlStatement(TotFldCount) = *BLANKS                      MD059184
+     C                   EVAL      condStatement(TotFldCount) = *BLANKS                     MD059184
      C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
      C                   ENDDO                                                              MD059184
+     C                   EVAL      execStatement = *BLANKS                                  MD059184
      C                   EVAL      FieldCounter = 1                                         MD059184
      C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
@@ -218,8 +221,11 @@
       *                                                                                     MD059184
      C     TotFldCount   DOWNE     0                                                        MD059184
      C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
+     C                   EVAL      sqlStatement(TotFldCount) = *BLANKS                      MD059184
+     C                   EVAL      condStatement(TotFldCount) = *BLANKS                     MD059184
      C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
      C                   ENDDO                                                              MD059184
+     C                   EVAL      execStatement = *BLANKS                                  MD059184
      C                   EVAL      FieldCounter = 1                                         MD059184
      C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
      C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
@@ -240,6 +246,14 @@
       *                                                                                     MD059184
                       EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
       *                                                                                     MD059184
+      ** If Record is at the last row.                                                      MD059184
+      *                                                                                     MD059184
+     C     SQLCOD        IFEQ      100                                                      MD059184
+     C                   EVAL      TotFldCount = FieldCounter                               MD059184
+     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
+     C                   EXSR      EnhSqlUpdate                                             MD059184
+     C                   ENDIF                                                              MD059184
+
                       IF SQLCOD <> 0 AND SQLCOD <> 100;
                          EXSR *PSSR;
                       ENDIF;
@@ -504,9 +518,10 @@
       ** Prepare Update Statement                                                           MD059184
       *                                                                                     MD059184
      C                   EVAL      updStatement = 'Update '                                 MD059184
-     C                             + %TRIM(PrevFileName) + ' SET '                          MD059184
+     C                             + %TRIM(PrevFileName) + ' SET  '                         MD059184
       *                                                                                     MD059184
-     C     Cnt           DOWNE     TotFldCount                                              MD059184
+     C                   EVAL      Cnt = TotFldCount                                        MD059184
+     C     Cnt           DOWNE     0                                                        MD059184
       *                                                                                     MD059184
      C     Cnt           IFEQ      1                                                        MD059184
       *                                                                                     MD059184
@@ -516,49 +531,16 @@
      C                             %TRIM(ExtFldArray(Cnt)) +                                MD059184
      C                             ' = CASE ' +                                             MD059184
      C                             'WHEN (' + %TRIM(ExtFldArray(Cnt)) +                     MD059184
-     C                             ' =  '' 0'' OR ' +                                       MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''0 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''00'') THEN '             MD059184
-     C                             + ''' '' WHEN '  + %TRIM(ExtFldArray(Cnt)) +             MD059184
-     C                             ' = ' +                                                  MD059184
-     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 1'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''1 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''01'') THEN '             MD059184
-     C                             + '''01''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 2'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''2 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''02'') THEN '             MD059184
-     C                             + '''02''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 3'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''3 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''03'') THEN '             MD059184
-     C                             +' ''03''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 4'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''4 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''04'') THEN '             MD059184
-     C                             + '''04''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 5'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''5 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''05'') THEN '             MD059184
-     C                             + '''05''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 6'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''6 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''06'') THEN '             MD059184
-     C                             + '''06''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 7'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''7 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''07'') THEN '             MD059184
-     C                             + '''07''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 8'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''8 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''08'') THEN '             MD059184
-     C                             + '''08''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 9'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''9 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''09'') THEN '             MD059184
-     C                             + '''09''' + ' ELSE '                                    MD059184
-     C                             + %TRIM(ExtFldArray(Cnt)) + ' END'                       MD059184
+     C                             ' =  ''00''' + ' OR ' +                                  MD059184
+     C                             %TRIM(ExtFldArray(Cnt)) + ' =  ''''' +                   MD059184
+     C                             ') THEN ''''' +                                          MD059184
+     C                             ' WHEN REPLACE (TRANSLATE(' +                            MD059184
+     C                             %TRIM(ExtFldArray(Cnt)) + ',''0''' +                     MD059184
+     C                             ',''123456789''' + ',''0'')' +                           MD059184
+     C                             ',''0'','''')' + ' <> ''''' +                            MD059184
+     C                             ' THEN (' + %TRIM(ExtFldArray(Cnt))                      MD059184
+     C                             + ') ELSE RIGHT (100+' +                                 MD059184
+     C                             %TRIM(ExtFldArray(Cnt)) + ',2)' + ' END'                 MD059184
      C                   EVAL      Cnt = Cnt - 1                                            MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
@@ -571,49 +553,16 @@
      C                             %TRIM(ExtFldArray(Cnt)) +                                MD059184
      C                             ' = CASE ' +                                             MD059184
      C                             'WHEN (' + %TRIM(ExtFldArray(Cnt)) +                     MD059184
-     C                             ' =  '' 0'' OR ' +                                       MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''0 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''00'') THEN '             MD059184
-     C                             + ''' '' WHEN '  + %TRIM(ExtFldArray(Cnt)) +             MD059184
-     C                             ' = ' +                                                  MD059184
-     C                             ''' '' THEN ' + ''' ''' + ' WHEN (' +                    MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 1'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''1 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''01'') THEN '             MD059184
-     C                             + '''01''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 2'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''2 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''02'') THEN '             MD059184
-     C                             + '''02''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 3'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''3 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''03'') THEN '             MD059184
-     C                             +' ''03''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 4'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''4 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''04'') THEN '             MD059184
-     C                             + '''04''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 5'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''5 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''05'') THEN '             MD059184
-     C                             + '''05''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 6'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''6 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''06'') THEN '             MD059184
-     C                             + '''06''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 7'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''7 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''07'') THEN '             MD059184
-     C                             + '''07''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 8'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''8 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''08'') THEN '             MD059184
-     C                             + '''08''' + ' WHEN (' +                                 MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = '' 9'' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''9 '' OR ' +              MD059184
-     C                             %TRIM(ExtFldArray(Cnt)) + ' = ''09'') THEN '             MD059184
-     C                             + '''09''' + ' ELSE '                                    MD059184
-     C                             + %TRIM(ExtFldArray(Cnt)) + ' END'                       MD059184
+     C                             ' =  ''00''' + ' OR ' +                                  MD059184
+     C                             %TRIM(ExtFldArray(Cnt)) + ' =  ''''' +                   MD059184
+     C                             ') THEN ''''' +                                          MD059184
+     C                             ' WHEN REPLACE (TRANSLATE(' +                            MD059184
+     C                             %TRIM(ExtFldArray(Cnt)) + ',''0''' +                     MD059184
+     C                             ',''123456789''' + ',''0'')' +                           MD059184
+     C                             ',''0'','''')' + ' <> ''''' +                            MD059184
+     C                             ' THEN (' + %TRIM(ExtFldArray(Cnt))                      MD059184
+     C                             + ') ELSE RIGHT (100+' +                                 MD059184
+     C                             %TRIM(ExtFldArray(Cnt)) + ',2)' + ' END'                 MD059184
      C                   EVAL      Cnt = Cnt - 1                                            MD059184
      C                   ENDIF                                                              MD059184
      C                   ENDDO                                                              MD059184
@@ -622,155 +571,11 @@
       *                                                                                     MD059184
      C                   IF        TotFldCount = 1                                          MD059184
      C                   EVAL      sqlStatement(1) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1))                             MD059184
+     C                             ' ' + %TRIM(condStatement(1))                            MD059184
      C                   EVAL      execStatement = %TRIM(sqlStatement(1))                   MD059184
      C/EXEC SQL                                                                             MD059184
      C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
      C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is Equal to 2.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 2                                          MD059184
-     C                   EVAL      sqlStatement(2) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(2))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 3.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 3                                          MD059184
-     C                   EVAL      sqlStatement(3) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(3))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 4.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 4                                          MD059184
-     C                   EVAL      sqlStatement(4) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(4))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 5.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 5                                          MD059184
-     C                   EVAL      sqlStatement(5) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4)) +                           MD059184
-     C                             '' + %TRIM(condStatement(5))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(5))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 6.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 6                                          MD059184
-     C                   EVAL      sqlStatement(6) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4)) +                           MD059184
-     C                             '' + %TRIM(condStatement(5)) +                           MD059184
-     C                             '' + %TRIM(condStatement(6))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(6))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 7.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 7                                          MD059184
-     C                   EVAL      sqlStatement(7) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4)) +                           MD059184
-     C                             '' + %TRIM(condStatement(5)) +                           MD059184
-     C                             '' + %TRIM(condStatement(6)) +                           MD059184
-     C                             '' + %TRIM(condStatement(7))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(7))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 8.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 8                                          MD059184
-     C                   EVAL      sqlStatement(8) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4)) +                           MD059184
-     C                             '' + %TRIM(condStatement(5)) +                           MD059184
-     C                             '' + %TRIM(condStatement(6)) +                           MD059184
-     C                             '' + %TRIM(condStatement(7)) +                           MD059184
-     C                             '' + %TRIM(condStatement(8))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(8))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 9.                                                    MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 9                                          MD059184
-     C                   EVAL      sqlStatement(9) = %TRIM(updStatement) +                  MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4)) +                           MD059184
-     C                             '' + %TRIM(condStatement(5)) +                           MD059184
-     C                             '' + %TRIM(condStatement(6)) +                           MD059184
-     C                             '' + %TRIM(condStatement(7)) +                           MD059184
-     C                             '' + %TRIM(condStatement(8)) +                           MD059184
-     C                             '' + %TRIM(condStatement(9))                             MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(9))                   MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** When Field Count is equal to 10.                                                   MD059184
-      *                                                                                     MD059184
-     C                   IF        TotFldCount = 10                                         MD059184
-     C                   EVAL      sqlStatement(10) = %TRIM(updStatement) +                 MD059184
-     C                             '' + %TRIM(condStatement(1)) +                           MD059184
-     C                             '' + %TRIM(condStatement(2)) +                           MD059184
-     C                             '' + %TRIM(condStatement(3)) +                           MD059184
-     C                             '' + %TRIM(condStatement(4)) +                           MD059184
-     C                             '' + %TRIM(condStatement(5)) +                           MD059184
-     C                             '' + %TRIM(condStatement(6)) +                           MD059184
-     C                             '' + %TRIM(condStatement(7)) +                           MD059184
-     C                             '' + %TRIM(condStatement(8)) +                           MD059184
-     C                             '' + %TRIM(condStatement(10))                            MD059184
-     C                   EVAL      execStatement = %TRIM(sqlStatement(10))                  MD059184
-     C/EXEC SQL                                                                             MD059184
-     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
      C                   EXSR      *PSSR                                                    MD059184
@@ -781,6 +586,260 @@
      C                   CALL      'QCMDEXC'                                                MD059184
      C                   PARM                    Command                                    MD059184
      C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is Equal to 2.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 2                                          MD059184
+     C                   EVAL      sqlStatement(2) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(2))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 3.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 3                                          MD059184
+     C                   EVAL      sqlStatement(3) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(3))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 4.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 4                                          MD059184
+     C                   EVAL      sqlStatement(4) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(4))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 5.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 5                                          MD059184
+     C                   EVAL      sqlStatement(5) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(5))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(5))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 6.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 6                                          MD059184
+     C                   EVAL      sqlStatement(6) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(5)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(6))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(6))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+     C
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 7.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 7                                          MD059184
+     C                   EVAL      sqlStatement(7) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(5)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(6)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(7))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(7))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 8.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 8                                          MD059184
+     C                   EVAL      sqlStatement(8) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(5)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(6)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(7)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(8))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(8))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 9.                                                    MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 9                                          MD059184
+     C                   EVAL      sqlStatement(9) = %TRIM(updStatement) +                  MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(5)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(6)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(7)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(8)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(9))                            MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(9))                   MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** When Field Count is equal to 10.                                                   MD059184
+      *                                                                                     MD059184
+     C                   IF        TotFldCount = 10                                         MD059184
+     C                   EVAL      sqlStatement(10) = %TRIM(updStatement) +                 MD059184
+     C                             ' ' + %TRIM(condStatement(1)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(2)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(3)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(4)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(5)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(6)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(7)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(8)) +                          MD059184
+     C                             ' ' + %TRIM(condStatement(10))                           MD059184
+     C                   EVAL      execStatement = %TRIM(sqlStatement(10))                  MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ EXECUTE IMMEDIATE :execStatement                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        PrevPFMember <> *BLANKS                                  MD059184
+     C                   EVAL      Command = ('DLTOVR '+PrevPFMember+'')                    MD059184
+     C                   CALL      'QCMDEXC'                                                MD059184
+     C                   PARM                    Command                                    MD059184
+     C                   PARM      2764          Length                                     MD059184
+     C                   ENDIF                                                              MD059184
+     C                   LEAVESR                                                            MD059184
      C                   ENDIF                                                              MD059184
       *
      C                   ENDSR

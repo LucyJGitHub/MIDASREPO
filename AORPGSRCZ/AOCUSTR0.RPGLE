@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058440           Date 27Nov21               *
-      *  Prev Amend No. AR989214           Date 28Jun12               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. AR989214           Date 28Jun12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG17927           Date 23Apr08               *
@@ -55,8 +54,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD058440 - Dumps are generated after inserting a Full Trade  *
-      *             Settlement.                                       *
       *  AR989214 - Dbase error AOCUSTR0 if Customer has been flagged *
       *             for or been deleted. Amended program to add msgid *
       *             ACO1012, ACO1013 and msgf GBMIUSRMSG.             *
@@ -508,7 +505,6 @@
       *
       * Return to caller :
       *
-     C                   SETON                                        LR                    MD058440
      C                   RETURN
       *
       *****************************************************

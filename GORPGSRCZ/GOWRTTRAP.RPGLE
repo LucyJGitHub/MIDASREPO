@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058440           Date 27Nov21               *
-      *  Prev Amend No. AR1088819          Date 03Jun20               *
-      *                 MD033110           Date 02Mar19               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. MD033110           Date 02Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
       *                 MD021097           Date 30Sep13               *
@@ -43,8 +42,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058440 - Dumps are generated after inserting a Full Trade  *
-      *             Settlement.                                       *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *
@@ -238,7 +235,6 @@
 
       * RETURN
 
-     C                   SETON                                        LR                    MD058440
      C                   RETURN
       /SPACE 5
       ********************************************************************

@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058440           Date 27Nov21               *
-      *  Prev Amend No. 250019             Date 01Jun20               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. 250019             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,8 +25,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058440 - Dumps are generated after inserting a Full Trade  *
-      *             Settlement.                                       *
       *  250019 - Added fields DDTE and PTFR in KLIST K_GZCDEPPL1     *
       *           after the fields were added as key in GZCDEPPL1.    *
       *  MD046248 - Finastra Rebranding                               *
@@ -95,7 +92,6 @@ O    C                   WRITE     W_CDEPPDF
 O    C                   ENDIF
 O    C                   ENDIF
 
-     C                   SETON                                        LR                    MD058440
      C                   RETURN
 
      C/SPACE 5

@@ -11,36 +11,40 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD058763           Date 08Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058763 - Error message LER5607 is displayed despite valid  *
+      *             input. Amend conditions to conform with           *
+      *             alphanumeric base rates.                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CLE134 - Past Due Call Loan Processing                       *
       *                                                               *
       *****************************************************************
      FSDLOANL1  UP   E           K DISK
- 
+
       *****************************************************************
      D/EJECT
       *****************************************************************
- 
+
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D DSLoop          S              9  0 INZ
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** Main Processing Control
- 
+
       ** Process Record
- 
+
      C                   EXSR      SRSDLOANL1
       *****************************************************************
      C/EJECT
@@ -48,44 +52,46 @@
       *  SRSDLOANL1 - Process Loan Standing Data                      *
       *****************************************************************
      C     SRSDLOANL1    BEGSR
- 
+
       ** Initialise Miscellaneous Values
- 
+
      C                   EVAL      AYCAPI = *BLANKS
      C                   EVAL      AYSIIN = *BLANKS
      C                   EVAL      AYFAMU = *BLANKS
- 
+
      C                   EVAL      AYOVRD = *BLANKS
      C**********         EVAL      AYPCKO = 0                                                 CLE164
- 
+
       ** Initialise Principal Values
- 
+
      C                   EVAL      AYPPLT = *BLANKS
      C                   EVAL      AYPPLS = *BLANKS
      C                   EVAL      AYPPLC = *BLANKS
- 
-     C                   EVAL      AYPBSR = 0
+
+     C**********         EVAL      AYPBSR = 0                                               MD058763
+     C                   EVAL      AYPBSR = *BLANKS                                         MD058763
      C                   EVAL      AYPRSP = 0
      C                   EVAL      AYPRSI = *BLANKS
      C                   EVAL      AYPICB = 0
- 
+
      C                   EVAL      AYPOPR = *BLANKS
- 
+
       ** Initialise Interest Values
- 
+
      C                   EVAL      AYIPLT = *BLANKS
      C                   EVAL      AYIPLS = *BLANKS
      C                   EVAL      AYIPLC = *BLANKS
- 
-     C                   EVAL      AYIBSR = 0
+
+     C**********         EVAL      AYIBSR = 0                                               MD058763
+     C                   EVAL      AYIBSR = *BLANKS                                         MD058763
      C                   EVAL      AYIRSP = 0
      C                   EVAL      AYIRSI = *BLANKS
      C                   EVAL      AYIICB = 0
- 
+
       ** Update Loan Details
- 
+
      C                   UPDATE(E) @AYRECL
- 
+
      C                   ENDSR
      C/EJECT
       *****************************************************************

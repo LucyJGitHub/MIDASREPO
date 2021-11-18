@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058763           Date 08Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
@@ -173,6 +174,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058763 - Error message LER5607 is displayed despite valid  *
+      *             input. Amend conditions to conform with           *
+      *             alphanumeric base rates.                          *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918361 - No error message for rollover frequency when not  *
@@ -9257,7 +9261,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   EVAL      MsgIDXAr(Idx) = '5045925'                                MD020274
      C                   ENDIF                                                              MD019830
                                                                                             MD019830
-     C                   IF        B2PBSR = *ZEROS                                          MD019830
+     C**********         IF        B2PBSR = *ZEROS                                MD019830  MD058763
+     C                   IF        B2PBSR = *BLANKS                                         MD058763
      C                             AND B2PRSP = *ZEROS                                      MD019830
      C                             AND B2PCSP = *ZEROS                                      MD019830
      C                   MOVE      'N'           PBRFLG                                     MD019830
@@ -9265,7 +9270,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVE      'Y'           PBRFLG                                     MD019830
      C                   ENDIF                                                              MD019830
                                                                                             MD019830
-     C                   IF        B2PBSR <> *ZEROS                                         MD019830
+     C**********         IF        B2PBSR <> *ZEROS                                MD019830 MD058763
+     C                   IF        B2PBSR <> *BLANKS                                        MD058763
      C                   MOVE      CCLCCY        @KEY1                                      MD019830
      C                   MOVE      B2PBSR        @KEY2                                      MD019830
                                                                                             MD019830
@@ -9302,7 +9308,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   EVAL      MsgIDXAr(Idx) = '5045925'                                MD020274
      C                   ENDIF                                                              MD019830
                                                                                             MD019830
-     C                   IF        B2IBSR = *ZEROS                                          MD019830
+     C**********         IF        B2IBSR = *ZEROS                                 MD019830 MD058763
+     C                   IF        B2IBSR = *BLANKS                                         MD058763
      C                             AND B2IRSP = *ZEROS                                      MD019830
      C                             AND B2ICSP = *ZEROS                                      MD019830
      C                   MOVE      'N'           IBRFLG                                     MD019830
@@ -9310,7 +9317,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVE      'Y'           IBRFLG                                     MD019830
      C                   ENDIF                                                              MD019830
                                                                                             MD019830
-     C                   IF        B2IBSR <> *ZEROS                                         MD019830
+     C**********         IF        B2IBSR <> *ZEROS                                MD019830 MD058763
+     C                   IF        B2IBSR <> *BLANKS                                        MD058763
      C                   MOVE      CCLCCY        @KEY1                                      MD019830
      C                   MOVE      B2IBSR        @KEY2                                      MD019830
                                                                                             MD019830

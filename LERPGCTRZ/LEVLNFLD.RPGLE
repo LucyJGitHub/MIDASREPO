@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058763           Date 08Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1075853          Date 08Jan13               *
@@ -24,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058763 - Error message LER5607 is displayed despite valid  *
+      *             input. Amend conditions to conform with           *
+      *             alphanumeric base rates.                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -344,7 +348,8 @@
      C                   IF        @RTCD <> *BLANKS
      C**********                   AND AYPBSR <> *ZEROS                                262691 CSD103
      C                             AND AYPBSR <> *BLANKS                                      CSD103
-     C                             OR  AYPBSR = *ZEROS                                        262691
+     C**********                   OR  AYPBSR = *ZEROS                               262691 MD058763
+     C                             OR  AYPBSR = *BLANKS                                     MD058763
      C                             AND AYPRSP = *ZEROS                                        262691
      C                   EVAL      DDORLNOK = 'N'
      C                   EVAL      Idx += 1

@@ -72,9 +72,9 @@
      D TotFldCount     S              5  0 INZ(0)                                           MD059184
      D ExtFldArray     S             10A   DIM(60)                                          MD059184
      D updStatement    S            500A                                                    MD059184
-     D execStatement   S           9000                                                     MD059184
-     D sqlStatement    S           9000    DIM(60)                                          MD059184
-     D condStatement   S           9000    DIM(60)                                          MD059184
+     D execStatement   S          12000                                                     MD059184
+     D sqlStatement    S          12000    DIM(60)                                          MD059184
+     D condStatement   S          12000    DIM(60)                                          MD059184
      D LayerFromFile   S              6A                                                    MD059184
      D Cnt             S              2  0 INZ(0)                                           MD059184
      D ExecCnt         S              2  0 INZ(1)                                           MD059184
@@ -133,7 +133,7 @@
       *                                                                                     MD059184
       ** Processing for Zonal Layer                                                         MD059184
       *                                                                                     MD059184
-     C     Layer         IFEQ      'ZONAL '                                                 MD059184
+     C     Layer         IFEQ      'Zonal '                                                 MD059184
      C     LayerFromFile ANDEQ     'Zonal  '                                                MD059184
       *                                                                                     MD059184
       ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
@@ -190,7 +190,7 @@
       *                                                                                     MD059184
       ** Processing for Global Layer                                                        MD059184
       *                                                                                     MD059184
-     C     Layer         IFEQ      'GLOBAL'                                                 MD059184
+     C     Layer         IFEQ      'Global'                                                 MD059184
      C     LayerFromFile ANDEQ     'Global '                                                MD059184
       *                                                                                     MD059184
       ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184

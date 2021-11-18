@@ -3964,7 +3964,6 @@
      C                             and DDPRYC = *blanks                                     MD056627
      C                             and DDPCOD = *blanks                                     MD056627
      C                             and DDAUTS = *blanks)                                    MD056627
-     C                             OR  TranInSett = *BLANKS                                 MD054680
      C                             or (TranInSett <> *BLANKS                                MD054680
      C                             And TranInSeWoCLT = *BLANKS)                             MD054680
 

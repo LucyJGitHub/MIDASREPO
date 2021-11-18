@@ -66,9 +66,11 @@
      D  tagName        S          12000A   varying
      D  tagVal         S          12000A   varying
      D  tag            S          12000A   varying
+     D  msgEnd         S              2A
      D  tagLen         S              5S 0
      D  tagF           S              5S 0
      D  dataLen        S              5S 0
+     D  valueLen       S              5S 0
      D  pNL            S              5S 0 inz(0)
      D  pOL            S              5S 0 inz(1)
      D  pEq            S              5S 0 inz(0)
@@ -341,7 +343,7 @@
       *
       ** Trace
      C                   movel     '*GET   '     PR@FN
-     C                   movel     p@msgbuf      t@tdat
+     C*                  movel     p@msgbuf      t@tdat
      C                   exsr      sr_trace
       *
       ** If receive message failed, indicate abnormal end
@@ -402,20 +404,29 @@
      C                   z-add     0             pEq
      C                   z-add     0             tagLen
      C                   z-add     0             dataLen
+     C                   z-add     0             valueLen
      C                   clear                   MSMXISD0
      C                   clear                   MSIXISD0
       ** Copy received data to the output field
      C                   eval      outBytes = %trim(p@msgbuf)
       ** Get the length of the data
      C                   eval      dataLen = %len(outBytes)
+      ** Check for CRLF on end of message
+     C                   eval      msgEnd = %subst(outBytes:dataLen-1:2)
+      ** If there is no CRLF on end of message, add them
+     C                   if        msgEnd <> W@CRLF
+     C                   eval      outBytes = outBytes + W@CRLF
+      ** Update the data length
+     C                   eval      dataLen = %len(outBytes)
+     C                   endif
       ** Get the position of the first new line indicator
      C                   eval      pNL = %scan(W@CRLF:outBytes)
       ** Loop through the data until the end
      C                   dow       pNL <> dataLen
       ** Extract tag data
      C                   eval      pEq = %scan('=':outBytes:pOL)
-     C                   eval      dataLen = pNL - pEq - 1
-     C                   eval      tagVal = %subst(outBytes:pEq+1:dataLen)
+     C                   eval      valueLen = pNL - pEq - 1
+     C                   eval      tagVal = %subst(outBytes:pEq+1:valueLen)
       ** Extract tag name
      C                   eval      tagLen = pEq - pOL
      C                   eval      tagName = %subst(outBytes:pOL:tagLen)
@@ -458,7 +469,7 @@
       ** Initialize working fields
      C                   eval      y = 1
      C                   eval      buffer = outBytes
-      ** Start writing records until the buffer has been exhausted
+      ** Start writing records in 256 char increments until the buffer has been exhausted
      C                   EVAL      MXDTA = %SUBST(buffer:y:256)
      C                   DOW       MXDTA <> *BLANKS
      C                   WRITE     MSMXISD0
@@ -506,7 +517,7 @@
      C                   leave
      C                   endif
      C                   enddo
-      ** If current tag is found on tag array, extract the data and store in on the db field
+      ** If current tag is found on tag array, extract the data and store it on the db field
      C                   if        tagF > 0
      C                   eval      tagVal = %subst(outBytes:pEq+1:pNL-pEq-1)
       ** Begin data extraction

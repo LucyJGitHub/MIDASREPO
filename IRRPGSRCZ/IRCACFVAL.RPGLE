@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059133           Date 10Nov21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 12Mar15               *
@@ -56,6 +57,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059133 - Prohibit the use of backward looking rate if      *
+      *             CIR020 is switched off                            *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -400,6 +403,7 @@
      D ModeOfOp        S              6A
      D MsgID1          S                   LIKE(#MsgID)
      D MsgID2          S                   LIKE(#MsgID)
+     D MsgID3          S                   LIKE(#MsgID)                                     MD059133
      D PayNostro       S             12A
      D PaySetCcy       S              3A
      D PaySetMeth      S              2S 0
@@ -1756,6 +1760,7 @@
       **    Return code                          (output)
       **    Error message ID 1                   (output)
       **    Error message ID 2                   (output)
+      **    Error message ID 3                   (output)                                   MD059133
       **    Base rate code                       (input)
       **    Currency code OK flag                (input)
       **    Currency code                        (input)
@@ -1764,9 +1769,11 @@
       **    Rate change freq. temporary field    (input)
       **    Deal type                            (input)
       **    CIR007 switchable feature            (input)
+      **    CIR020 switchable feature            (input)                                    MD059133
      C                   PARM                    RetCodeOut
      C                   PARM                    MsgID1
      C                   PARM                    MsgID2
+     C                   PARM                    MsgID3                                     MD059133
      C                   PARM                    #0BRTT
      C                   PARM                    OKCUCY
      C                   PARM                    #0CUCY
@@ -1775,8 +1782,11 @@
      C                   PARM      *BLANKS       WRtChgFq
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
-
-     C                   IF        MsgID1 = *BLANKS
+     C                   PARM                    CIR020                                     MD059133
+     C
+     C**********         IF        MsgID1 = *BLANKS                                         MD059133
+     C                   IF        MsgID1 = *BLANKS and                                     MD059133
+     C                             MsgID3 = *BLANKS                                         MD059133
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
      C                   MOVE      #0BRTT        RPUBRTT
@@ -1784,11 +1794,18 @@
      C                   MOVE      #0BRTT        RPTBRTT
      C                   ENDSL
      C                   EVAL      OKBRTT = 'Y'
+     C
      C                   GOTO      ESrBaseRt
 
      C                   ELSE
+     C                   IF        MsgID3 <> *BLANKS                                        MD059133
+     C                   ADD       1             Idx                                        MD059133
+     C                   MOVEL     '#0BRTT'      FldNamXAr(Idx)                             MD059133
+     C                   MOVEL     MsgID3        MsgIDXAr(Idx)                              MD059133
+     C                   ELSE                                                               MD059133
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0BRTT'
+     C                   ENDIF                                                              MD059133
      C                   EVAL      OKBRTT = 'N'
      C                   ENDIF
 
@@ -3380,6 +3397,7 @@
      C                   EVAL      RetCodeOut = *BLANKS
      C                   EVAL      MsgID1 = *BLANKS
      C                   EVAL      MsgID2 = *BLANKS
+     C                   EVAL      MsgID3 = *BLANKS                                         MD059133
      C                   EVAL      WarnMsg1 = *BLANKS
      C                   EVAL      WarnMsg2 = *BLANKS
      C                   EVAL      WarnMsg3 = *BLANKS

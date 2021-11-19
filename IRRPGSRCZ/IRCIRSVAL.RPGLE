@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059133           Date 10Nov21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD053400           Date 03Jul19               *
       *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -98,6 +99,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059133 - Prohibit the use of backward looking rate if      *
+      *             CIR020 is switched off                            *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053400 - Details are not correctly reverted back when the  *
@@ -2089,6 +2092,7 @@
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1
      C                   PARM                    MSG2
+     C                   PARM                    MSG3                                       MD059133
      C                   PARM                    SUBRTT
      C                   PARM                    SuCuCyOK
      C                   PARM                    SUCUCY
@@ -2097,6 +2101,7 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
+     C                   PARM                    CIR020                                     MD059133
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2110,6 +2115,12 @@
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
 
+     C     MSG3          IFNE      *BLANK                                                   MD059133
+     C                   ADD       1             Idx                                        MD059133
+     C                   EVAL      FldNameArr(Idx) = 'SUBRTT'                               MD059133
+     C                   EVAL      MsgIDArr(Idx) = MSG3                                     MD059133
+     C                   ENDIF                                                              MD059133
+                                                                                            MD059133
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuBrttOK
@@ -3082,6 +3093,7 @@
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1
      C                   PARM                    MSG2
+     C                   PARM                    MSG3                                       MD059133
      C                   PARM                    STBRTT
      C                   PARM                    StCuCyOK
      C                   PARM                    STCUCY
@@ -3090,6 +3102,7 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
+     C                   PARM                    CIR020                                     MD059133
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -3103,6 +3116,12 @@
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
 
+     C     MSG3          IFNE      *BLANK                                                   MD059133
+     C                   ADD       1             Idx                                        MD059133
+     C                   EVAL      FldNameArr(Idx) = 'STBRTT'                               MD059133
+     C                   EVAL      MsgIDArr(Idx) = MSG3                                     MD059133
+     C                   ENDIF                                                              MD059133
+                                                                                            MD059133
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StBrttOK
@@ -3639,8 +3658,10 @@
       ** Validate backward-looking rate fields if CIR020 is ON (Theirs)                       CIR020
       *                                                                                       CIR020
      C                   IF        CIR020 = 'Y' and                                           CIR020
-     C                             SuBrttOK  <> 'N' and                                       CIR020
-     C                             SuIcbsOK  <> 'N'                                           CIR020
+     C**********                   SuBrttOK  <> 'N' and                              CIR020 MD059133
+     C**********                   SuIcbsOK  <> 'N'                                  CIR020 MD059133
+     C                             StBrttOK <> 'N'  and                                     MD059133
+     C                             SuIcbsOK <> 'N'                                          MD059133
      C                   EXSR      SRTBLRT                                                    CIR020
      C                   ENDIF                                                                CIR020
 

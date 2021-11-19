@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059206           Date 09Nov21               *
-      *  Prev Amend No. MD059064           Date 14Oct21               *
+      *  Last Amend No. MD059133           Date 10Nov21               *
+      *  Prev Amend No. MD059206           Date 09Nov21               *
+      *                 MD059064           Date 14Oct21               *
       *                 MD058999           Date 07Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -95,6 +96,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059133 - Prohibit the use of backward looking rate if      *
+      *             CIR020 is switched off                            *
       *  MD059206 - Error message for Their Base Rate Code - Their    *
       *             details is not shown when the user entered  back  *
       *             ward looking (Our/Their) and rate change freq is  *
@@ -2081,6 +2084,7 @@
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1
      C                   PARM                    MSG2
+     C                   PARM                    MSG3                                       MD059133
      C                   PARM                    SUBRTT
      C                   PARM                    SuCuCyOK
      C                   PARM                    SUCUCY
@@ -2089,6 +2093,7 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
+     C                   PARM                    CIR020                                     MD059133
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2101,6 +2106,12 @@
      C                   EVAL      FldNameArr(Idx) = 'SUBRTT'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
+
+     C     MSG3          IFNE      *BLANK                                                   MD059133
+     C                   ADD       1             Idx                                        MD059133
+     C                   EVAL      FldNameArr(Idx) = 'SUBRTT'                               MD059133
+     C                   EVAL      MsgIDArr(Idx) = MSG3                                     MD059133
+     C                   ENDIF                                                              MD059133
 
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -2746,6 +2757,7 @@
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1
      C                   PARM                    MSG2
+     C                   PARM                    MSG3                                       MD059133
      C                   PARM                    STBRTT
      C                   PARM                    SuCuCyOK
      C                   PARM                    SUCUCY
@@ -2754,6 +2766,7 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
+     C                   PARM                    CIR020                                     MD059133
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2766,6 +2779,12 @@
      C                   EVAL      FldNameArr(Idx) = 'STBRTT'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
+                                                                                            MD059133
+     C     MSG3          IFNE      *BLANK                                                   MD059133
+     C                   ADD       1             Idx                                        MD059133
+     C                   EVAL      FldNameArr(Idx) = 'STBRTT'                               MD059133
+     C                   EVAL      MsgIDArr(Idx) = MSG3                                     MD059133
+     C                   ENDIF                                                              MD059133
 
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'

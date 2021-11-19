@@ -306,7 +306,7 @@
 
       ** Update status flag to 'Y in MSMXISOPD
 
-     C     IMXID         CHAIN     MSIXISOL1
+     C     KeyMX         CHAIN     MSIXISOL1
      C                   IF        %FOUND
      C                   EVAL      IMPF = 'Y'
      C                   UPDATE    MSIXISD0                             98
@@ -335,7 +335,7 @@
 
      C     WEname        CHAIN     MEDESCL1
      C                   IF        %FOUND
-     C                   EVAL      MEENAM = DEDESC
+     C                   EVAL      MEENAM = DEENAM
 
       ** If Element Name is Not found, Add this to the File
       ** Use the Element Name as the Element Description
@@ -377,7 +377,7 @@
 
       ** Access Bank details via access program (Includes Run Date)
       ** (database error handling done in access program)
-      
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     PRTCD
      C                   PARM      '*FIRST '     POPTN

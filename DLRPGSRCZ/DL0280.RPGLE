@@ -9221,6 +9221,19 @@
      C                             OR (DTYP <> 'RR'                                           CIR020
      C                             AND DTYP <> 'RF'                                           CIR020
      C                             AND DTYP <> 'RP')                                          CIR020
+     C                   IF        UBLRT = 'Y'                                              MD059246
+     C                             AND UCALM = 'MANL'                                       MD059246
+     C                             AND (DTYP = 'RR'                                         MD059246
+     C                             OR DTYP = 'RF'                                           MD059246
+     C                             OR DTYP = 'RP')                                          MD059246
+     C                   EVAL      AVERRT = ' '                                             MD059246
+     C                   BITOFF    '01234567'    UDSTI                                      MD059246
+     C                   BITON     '04'          UDSTI                                      MD059246
+     C                   EVAL      UEINR = AACRT                                            MD059246
+     C                   EVAL      UBRTE = AACRT                                            MD059246
+     C                   EVAL      AACRT = 0                                                MD059246
+     C                   EVAL      UINFD = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
      C                   IF        UBLRT = 'Y'                                                CIR020
      C                             AND UCALM <> 'MANL'                                        CIR020
      C                   MOVE      UDNSI         WUDNSI            1                          CIR020
@@ -9261,6 +9274,19 @@
      C                             OR (DTYP <> 'RR'                                           CIR020
      C                             AND DTYP <> 'RF'                                           CIR020
      C                             AND DTYP <> 'RP')                                          CIR020
+     C                   IF        TBLRT = 'Y'                                              MD059246
+     C                             AND TCALM = 'MANL'                                       MD059246
+     C                             AND (DTYP = 'RR'                                         MD059246
+     C                             OR DTYP = 'RF'                                           MD059246
+     C                             OR DTYP = 'RP')                                          MD059246
+     C                   EVAL      AVERRT = ' '                                             MD059246
+     C                   BITOFF    '01234567'    TDSTI                                      MD059246
+     C                   BITON     '04'          TDSTI                                      MD059246
+     C                   EVAL      TEINR = AACRT                                            MD059246
+     C                   EVAL      TBRTE = AACRT                                            MD059246
+     C                   EVAL      AACRT = 0                                                MD059246
+     C                   EVAL      TINFD = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
      C                   IF        TBLRT = 'Y'                                                CIR020
      C                             AND TCALM <> 'MANL'                                        CIR020
      C                   MOVE      TDNSI         WTDNSI            1                          CIR020
@@ -28428,6 +28454,27 @@
      C                   END                                                                   S0111
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
+     C                   IF        CIR020 = 'Y'                                             MD059246
+     C                             AND (DTYP = 'RR'                                         MD059246
+     C                             OR DTYP = 'RF'                                           MD059246
+     C                             OR DTYP = 'RP')                                          MD059246
+     C                   IF        UBLRT = 'Y'                                              MD059246
+     C                             AND UCALM = 'MANL'                                       MD059246
+     C                   BITOFF    '01234567'    UDSTI                                      MD059246
+     C                   BITON     '03'          UDSTI                                      MD059246
+     C                   EVAL      AACRT = UEINR                                            MD059246
+     C                   EVAL      UBRTE = 0                                                MD059246
+     C                   EVAL      UEINR = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
+     C                   IF        TBLRT = 'Y'                                              MD059246
+     C                             AND TCALM = 'MANL'                                       MD059246
+     C                   BITOFF    '01234567'    TDSTI                                      MD059246
+     C                   BITON     '03'          TDSTI                                      MD059246
+     C                   EVAL      AACRT = TEINR                                            MD059246
+     C                   EVAL      TBRTE = 0                                                MD059246
+     C                   EVAL      TEINR = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
+     C                   ENDIF                                                              MD059246
      C                   END                                                                   S0111
      C*                                                                   S01119
      C                   Z-ADD     0             NRRPUR                                        S0111

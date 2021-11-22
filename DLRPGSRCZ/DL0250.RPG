@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059205           Date 17Nov21               *
-      *  Prev Amend No. MD059233           Date 11Nov21               *
+      *  Last Amend No. MD059268           Date 22Nov21               *
+      *  Prev Amend No. MD059205           Date 17Nov21               *
+      *                 MD059233           Date 11Nov21               *
       *                 MD059191           Date 04Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058626A          Date 08Sep21               *
@@ -100,6 +101,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059268 - Incorrect principal amount reflected on DL0250P1  *
+      *             for IRS deal defined with backwad-looking rate.   *
       *  MD059205 - FI field not reflected on DL0250P1 report. Adjust *
       *             the end position of RTSP and use EditCode P such  *
       *             that it will not override the 'FI'. On SR/SRLIB2, *
@@ -3083,6 +3086,7 @@
      C                     MOVE UCUCY     BACYCD                                            MD059191
      C                     Z-ADDURTSP     RTSP                                              MD059205
      C                     MOVE USPIN     SPIN                                              MD059205
+     C                     Z-ADDUPAMT     PCPL                                              MD059268
      C           WOURS     IFEQ 'N'                                                           CIR020
      C                     MOVE 'Y'       WGEN                                                CIR020
      C                     ENDIF                                                              CIR020
@@ -3092,6 +3096,7 @@
      C                     MOVE TCUCY     BACYCD                                            MD059191
      C                     Z-ADDTRTSP     RTSP                                              MD059205
      C                     MOVE TSPIN     SPIN                                              MD059205
+     C                     Z-ADDTPAMT     PCPL                                              MD059268
      C           WTHEI     IFEQ 'N'                                                           CIR020
      C                     MOVE 'Y'       WGEN                                                CIR020
      C                     ENDIF                                                              CIR020
@@ -3116,6 +3121,25 @@
      C           SPIN      IFEQ 'P'                                                         MD059205
      C                     MOVE 'PCT'     SPDI                                              MD059205
      C                     ENDIF                                                            MD059205
+      *                                                                                     MD059268
+      ** Retrive customer details                                                           MD059268
+      *                                                                                     MD059268
+     C                     MOVELCNUM      @KEY1                                             MD059268
+     C                     CALL 'AOCUSTR0'                                                  MD059268
+     C                     PARM *BLANKS   @RTCD                                             MD059268
+     C                     PARM '*KEY   ' @OPTN                                             MD059268
+     C                     PARM           @KEY1                                             MD059268
+     C                     PARM           @KEYST                                            MD059268
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD059268
+      *                                                                                     MD059268
+     C           @RTCD     IFNE *BLANKS                                                     MD059268
+     C                     MOVE '10'      DBASE                                             MD059268
+     C                     MOVEL@KEY1     DBKEY                                             MD059268
+     C                     MOVEL@OPTN     DBOPTN                                            MD059268
+     C                     MOVEL'SDCUSTPD'DBFILE                                            MD059268
+     C                     MOVE *ON       *IN72                                             MD059268
+     C                     GOTO ERROR                                                       MD059268
+     C                     ENDIF                                                            MD059268
       *                                                                                       CIR020
       ** Output to DAMBRDI and report.                                                        CIR020
       *                                                                                       CIR020

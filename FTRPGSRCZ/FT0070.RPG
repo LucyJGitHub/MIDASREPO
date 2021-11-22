@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057558           Date 18Feb21               *
-      *  Prev Amend No. MD052101           Date 22Nov19               *
+      *  Last Amend No. CFT164             Date 22Oct20               *
+      *  Prev Amend No. MD057558           Date 18Feb21               *
+      *                 MD052101           Date 22Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039163           Date 08Jun16               *
       *                 MD037669           Date 25May16               *
@@ -147,6 +148,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CFT164 - Upgrade E06304 to FBM 2.1 SP23                      *
+      *           Validate Account Status.                            *
       *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  MD052101 - Do not override user-input Profit Centre          *
       *  MD046248 - Finastra Rebranding                               *
@@ -399,6 +402,7 @@
       *    07        - F7
       *    08        - SWITCHABLE FEATURE S01499 IS SWTICHED ON           S01499
       *    09        - SWITCHABLE FEATURE S01494 IS SWITCHED ON           S01494
+      *    10        - Blocked Debit or Blocked Credit account            CFT164
       *    12        - F12 PRESSED
       *****13******* - DESCRIPTION SCREEN FIELDS NOT VALID                CEU006
       *    13        - INVALID PAY DELIVERY AMOUNT                        CEU006
@@ -2046,6 +2050,30 @@
      C*******              PARM '*DBERR'  @RTCD   7                S01194 084499
      C*******              PARM '*FIRST'  @OPTN   7                S01194 084499
      C*******    SDMMOD    PARM SDMMOD    DSFDY                    S01194 084499
+      *                                                                   CFT164
+      ** Access SAR details file to determine if CFT164 is switched ON    CFT164
+      *                                                                   CFT164
+     C                     MOVE *BLANK    CFT164  1                       CFT164
+     C                     CALL 'AOSARDR0'                                CFT164
+     C                     PARM *BLANKS   U#RTCD                          CFT164
+     C                     PARM '*VERIFY' U#OPTN                          CFT164
+     C                     PARM 'CFT164'  @SARD   6                       CFT164
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT164
+     C           U#RTCD    IFNE *BLANKS                                   CFT164
+     C           U#RTCD    ANDNE'*NRF   '                                 CFT164
+     C                     MOVE 'FT0070  'DBPGM            ************** CFT164
+     C                     MOVEL'SCSARDPD'DBFILE           * DB ERR 100 * CFT164
+     C                     MOVEL'100'     DBASE            ************** CFT164
+     C                     MOVEL'CFT164'  DBKEY                           CFT164
+     C                     SETON                     U7U8LR               CFT164
+     C                     DUMP                                           CFT164
+     C                     RETRN                                          CFT164
+     C                     ENDIF                                          CFT164
+     C           U#RTCD    IFEQ *BLANK                                    CFT164
+     C                     MOVEL'Y'       CFT164  1                       CFT164
+     C                     ELSE                                           CFT164
+     C                     MOVEL'N'       CFT164                          CFT164
+     C                     ENDIF                                          CFT164
       *                                                                   S01414
       * Move the conditional IF so that AOGELRR0 is always called.        S01414
       *                                                                   S01414
@@ -3659,6 +3687,7 @@
      C*
      C                     MOVE *BLANK    COBT
      C                     MOVE *BLANK    ACST1   1                       047179
+     C                     MOVE *BLANKS   ATYP1                           CFT164
      C           SCBK1     IFEQ *BLANK                     B003
      C                     SETON                     4589
      C                     ADD  1         S
@@ -3839,6 +3868,7 @@
       * If a retail account no. has been entered - chain to ACNUMA        052310
       *                                                                   052310
      C                     MOVE '0'       *IN75                           052310
+     C                     Z-ADD0         RETCHN                          CFT164
      C           *IN76     IFEQ '0'                                       052310
      C                     MOVELSCBK1     RETCHN 100
      C                     EXSR RECHN
@@ -3856,6 +3886,7 @@
      C                     MOVE ' 024'    ERCD,S                          S01117
      C                     ELSE
      C                     MOVE 'R'       COBT
+     C                     MOVE RETB      CBRETB  1                       CFT164
      C                     MOVE CCY       CCYWK
      C                     END
      C*
@@ -3977,6 +4008,10 @@
      C                     MOVE ATYP      ATYP1   1
      C                     MOVE ACST      ACST1                           047179
      C                     Z-ADDDACO      DACO1   50
+      *                                                                   CFT164
+     C           ATYP1     IFEQ 'R'                                       CFT164
+     C                     MOVE RETB      CBRETB                          CFT164
+     C                     ENDIF                                          CFT164
      C*
      C                     END                             E004
      C*
@@ -4020,6 +4055,7 @@
      C*
      C                     MOVE *BLANK    RCRT
      C                     MOVE *BLANK    ACST2   1                       047179
+     C                     MOVE *BLANKS   ATYP2                           CFT164
      C           SRCCO     IFNE *BLANK                     B003
      C*
      C** THERE MUST BE NO EMBEDDED SPACES IN THE FIELD
@@ -4154,6 +4190,7 @@
      C                     ELSE                            X006
      C                     MOVE 'R'       RCRT
      C                     MOVE SRCCO     RCCO
+     C                     MOVE RETB      RCRETB  1                       CFT164
      C                     END                             E006
      C*
      C                     END
@@ -4190,6 +4227,10 @@
      C                     MOVE ATYP      ATYP2   1
      C                     MOVE ACST      ACST2                           047179
      C                     Z-ADDDACO      DACO2   50
+      *                                                                   CFT164
+     C           ATYP2     IFEQ 'R'                                       CFT164
+     C                     MOVE RETB      RCRETB                          CFT164
+     C                     ENDIF                                          CFT164
      C*
      C                     END                             E004
      C                     END                             E003
@@ -4509,6 +4550,19 @@
      C                     END                             E007
      C*
      C                     END                             E006
+      *                                                                   CFT164
+      ** Check for a Blocked Debit Account                                CFT164
+      *                                                                   CFT164
+     C           CFT164    IFEQ 'Y'                                       CFT164
+     C                     TESTB'2'       CBRETB         10               CFT164
+     C           *IN10     IFEQ '1'                                       CFT164
+     C                     MOVELSCBK1     FTMSDT                          CFT164
+     C                     MOVE '1'       *IN45                           CFT164
+     C                     MOVEL'FTM2725' FTMSID                          CFT164
+     C                     MOVEL'Y'       FTNOUP                          CFT164
+     C                     EXSR FTSNMS                                    CFT164
+     C                     ENDIF                                          CFT164
+     C                     ENDIF                                          CFT164
      C*
      C                     END                             E005
      C*
@@ -4533,7 +4587,19 @@
      C                     END                             E007
      C*
      C                     END                             E006
-     C*
+      *                                                                   CFT164
+      ** Check for a Blocked Debit Account                                CFT164
+      *                                                                   CFT164
+     C           CFT164    IFEQ 'Y'                                       CFT164
+     C                     TESTB'2'       RCRETB         10               CFT164
+     C           *IN10     IFEQ '1'                                       CFT164
+     C                     MOVELSRCCO     FTMSDT                          CFT164
+     C                     MOVE '1'       *IN46                           CFT164
+     C                     MOVEL'FTM2726' FTMSID                          CFT164
+     C                     MOVEL'Y'       FTNOUP                          CFT164
+     C                     EXSR FTSNMS                                    CFT164
+     C                     ENDIF                                          CFT164
+     C                     ENDIF                                          CFT164
      C                     END                             E005
      C*
      C                     END                             E004
@@ -4826,6 +4892,9 @@
      C           *IN89     IFEQ '1'                        B002
      C           *IN03     ANDEQ'0'
      C           *IN12     ANDEQ'0'
+     C           FTNOUP    ORNE *BLANKS                                   CFT164
+     C           *IN03     ANDEQ'0'                                       CFT164
+     C           *IN12     ANDEQ'0'                                       CFT164
      C*
      C* If DELETE screen without F10 setof 89
      C*
@@ -4891,6 +4960,7 @@
      C**  IF NO ERRORS PROGRESS TO NEXT SCREEN AND UPDATE RECORDS
      C*
      C           *IN87     IFEQ '0'                        B002
+     C           FTNOUP    ANDEQ*BLANKS                                   CFT164
      C           *IN89     IFEQ '0'                        B003
      C           *IN03     ANDEQ'0'
      C           *IN12     ANDEQ'0'
@@ -5250,6 +5320,8 @@
      C                     END                             E002
      C*
      C                     SETOF                     87
+     C                     MOVE *BLANKS   FTNOUP                          CFT164
+     C                     MOVE '0'       *IN10                           CFT164
      C                     END                             E001
      C*
      C           EXINIT    ENDSR
@@ -5749,6 +5821,7 @@
      C                     MOVE 'R'       CRPT
      C                     MOVE SCRPA     CRPY
      C                     MOVE *BLANKS   CRBR                            S01117
+     C                     MOVE RETB      CPRETB  1                       CFT164
      C                     END                             E007
      C*
      C                     END                             E006
@@ -5891,6 +5964,11 @@
      C           CRPT      ANDEQ'N'
      C           PARTAC    ANDNE'PA'                                      179732
      C                     EXSR ACHAIN
+      *                                                                   CFT164
+     C           ATYP      IFEQ 'R'                                       CFT164
+     C                     MOVE RETB      CPRETB                          CFT164
+     C                     ENDIF                                          CFT164
+      *                                                                   CFT164
      C                     END                             E003
      C/COPY WNCPYSRC,FT0070C001
      C********************                                                056823
@@ -6017,6 +6095,19 @@
      C                     SETON                     5089
      C                     END                             E005
      C                     END                             E004
+      *                                                                   CFT164
+      ** Check for a Blocked Credit Account                               CFT164
+      *                                                                   CFT164
+     C           CFT164    IFEQ 'Y'                                       CFT164
+     C                     TESTB'3'       CPRETB         10               CFT164
+     C           *IN10     IFEQ '1'                                       CFT164
+     C                     MOVELSCRPA     FTMSDT                          CFT164
+     C                     MOVE '1'       *IN50                           CFT164
+     C                     MOVEL'FTM2727' FTMSID                          CFT164
+     C                     MOVEL'Y'       FTNOUP                          CFT164
+     C                     EXSR FTSNMS                                    CFT164
+     C                     ENDIF                                          CFT164
+     C                     ENDIF                                          CFT164
      C*
      C                     END                             E003
      C/COPY WNCPYSRC,FT0070C033
@@ -6927,6 +7018,21 @@
       *                                                                   047179
      C                     END                                            047179
      C*                                                                   047179
+      ** Check for a Blocked Debit Account                                CFT164
+      *                                                                   CFT164
+     C           *IN61     IFEQ '0'                                       CFT164
+     C           CFT164    ANDEQ'Y'                                       CFT164
+     C           ATYP      ANDEQ'R'                                       CFT164
+     C                     TESTB'2'       RETB           10               CFT164
+     C           *IN10     IFEQ '1'                                       CFT164
+     C                     MOVELSCHDB     FTMSDT                          CFT164
+     C                     MOVE '1'       *IN61                           CFT164
+     C                     MOVEL'FTM2724' FTMSID                          CFT164
+     C                     MOVEL'Y'       FTNOUP                          CFT164
+     C                     EXSR FTSNMS                                    CFT164
+     C                     ENDIF                                          CFT164
+     C                     ENDIF                                          CFT164
+      *                                                                   CFT164
      C                     END                             E003
      C*
      C**  VALIDATE TRANSFER COMMISION TARIFF

@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. CFT046             Date 13Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CAP212             Date 15Sep14               *
       *                 CFT120             Date 28Sep12               *
@@ -116,6 +118,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CSW220 - SWIFT Changes 2020                                  *
@@ -481,6 +486,7 @@
      E**********          CARR      100 18                                             CFT006 CGL029
      E                    CARR      100 24                                                    CGL029
      E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZALIGNZ1                                                                   CFT046
      I/EJECT
      IACKEYALF                                                            094407
      I              RECI                            RECIAK                094407
@@ -798,6 +804,21 @@
      I*                                                                                       CGL020
      I              'ZAAMLSETFT'          C         SETFT                                     CGL020
      I              'SWIFTACTV'           C         SWIFT                                     CSW220
+     I*                                                                                       CFT046
+     I              'CFT046RegulRept1'    C         WRGRP1                                    CFT046
+     I*                                                                                       CFT046
+     I            DS                                                                          CFT046
+     I                                        1  35 OPRRP1                                    CFT046
+     I                                        1   4 OPRR14                                    CFT046
+     I*                                                                                       CFT046
+     I            DS                                                                          CFT046
+     I                                        1  35 INRRP1                                    CFT046
+     I                                        1   4 INRR14                                    CFT046
+      *                                                                                       CFT046
+      * Datastructure to hold output parameter for AOSVALR0.                                  CFT046
+     I            DS                                                                          CFT046
+     I                                        1 200 SVAL1                                     CFT046
+     I                                        1   1 SVAL01                                    CFT046
       *                                                                   056031
      C                     MOVEACPY@      BIS@   80
      C/EJECT
@@ -1421,6 +1442,59 @@
      C                     MOVE 'N'       CSW220                                              CSW220
      C                     ENDIF                                                              CSW220
       *                                                                                       CSW220
+      ** Access SAR details to see if CFT046 is enabled.                                      CFT046
+      *                                                                                       CFT046
+     C                     CALL 'AOSARDR0'                                                    CFT046
+     C                     PARM *BLANKS   PRTCD                                               CFT046
+     C                     PARM '*VERIFY' POPTN                                               CFT046
+     C                     PARM 'CFT046'  PSARD                                               CFT046
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT046
+      *                                                                                       CFT046
+     C                     MOVE 'N'       CFT046  1                                           CFT046
+     C           PRTCD     IFEQ *BLANKS                                                       CFT046
+     C                     MOVE 'Y'       CFT046                                              CFT046
+      *                                                                                       CFT046
+     C                     MOVELWRGRP1    SVALK1                                              CFT046
+     C                     CALL 'AOSVALR0'                                                    CFT046
+     C                     PARM           RTNCDE  7                                           CFT046
+     C                     PARM           SVALK1 20                                           CFT046
+     C                     PARM           SVAL1 200                                           CFT046
+     C                     PARM           SVALK2 20                                           CFT046
+     C                     PARM           SVAL2 200                                           CFT046
+     C                     PARM           SVALK3 20                                           CFT046
+     C                     PARM           SVAL3 200                                           CFT046
+     C                     PARM           SVALK4 20                                           CFT046
+     C                     PARM           SVAL4 200                                           CFT046
+     C                     PARM           SVALK5 20                                           CFT046
+     C                     PARM           SVAL5 200                                           CFT046
+     C                     PARM           SVALK6 20                                           CFT046
+     C                     PARM           SVAL6 200                                           CFT046
+     C                     PARM           SVALK7 20                                           CFT046
+     C                     PARM           SVAL7 200                                           CFT046
+     C                     PARM           SVALK8 20                                           CFT046
+     C                     PARM           SVAL8 200                                           CFT046
+     C                     PARM           SVALK9 20                                           CFT046
+     C                     PARM           SVAL9 200                                           CFT046
+     C                     PARM           SVALK0 20                                           CFT046
+     C                     PARM           SVAL10200                                           CFT046
+      *                                                                                       CFT046
+      ** If value of system value 'CFT046RegulRept1' not 'Y', consider CFT046 as OFF          CFT046
+      *                                                                                       CFT046
+     C           RTNCDE    IFNE *BLANKS                                                       CFT046
+     C           SVAL01    ORNE 'Y'                                                           CFT046
+     C                     MOVEL'N'       CFT046                                              CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
+     C                     ELSE                                                               CFT046
+      *                                                                                       CFT046
+     C           PRTCD     IFNE '*NRF'                                                        CFT046
+     C                     Z-ADD034       WBASE                                               CFT046
+     C                     MOVEL'CFT046'  WKEY                                                CFT046
+     C                     MOVEL'SCSARDPD'WFILE                                               CFT046
+     C                     EXSR DBERR                                                         CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
+     C                     ENDIF                                                              CFT046
      C*                                                                   S01408
      C** Core hook for externalisation.                                   S01408
      C/COPY WNCPYSRC,FT0210CCP1                                           S01408
@@ -9727,6 +9801,9 @@
      C************************************************************
      C/COPY ZSRSRC,ZDATE2Z2
      C************************************************************
+     C/EJECT                                                                                  CFT046
+     C************************************************************                            CFT046
+     C/COPY ZSRSRC,ZALIGNZ2                                                                   CFT046
      C/EJECT
      C************************************************************     ***
      C* WRIT SR.
@@ -9839,6 +9916,54 @@
       *                                                                                       CER030
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
+      *                                                                                       CFT046
+      ** When CFT046 - RE Transaction Type on FT Payments is switched ON                      CFT046
+      *                                                                                       CFT046
+     C           CFT046    IFEQ 'Y'                                                           CFT046
+      *                                                                                       CFT046
+     C                     MOVE *BLANKS   SEACQQ                                              CFT046
+      *                                                                                       CFT046
+      ** For Outgoing payments with first 4 characters of 'Regulatory Reporting 1' not blanks CFT046
+      *                                                                                       CFT046
+     C           WTYPE     IFEQ 'OP'                                                          CFT046
+     C           OPRR14    ANDNE*BLANKS                                                       CFT046
+     C                     MOVEL*BLANK    ZFIELD                                              CFT046
+     C                     MOVE OPRR14    ZFIELD                                              CFT046
+     C                     Z-ADD4         ZADIG                                               CFT046
+     C                     Z-ADD0         ZADEC                                               CFT046
+     C                     EXSR ZALIGN                                                        CFT046
+     C                     TESTN          ZFIELD     89                                       CFT046
+      *                                                                                       CFT046
+      ** If first 4 characters of 'Regulatory Reporting 1' numeric, save it into SEACQQ       CFT046
+      ** (Used latter in RPG/FT0220)                                                          CFT046
+      *                                                                                       CFT046
+     C           *IN89     IFEQ '1'                                                           CFT046
+     C                     MOVE ZFIELD    WRK4A   4                                           CFT046
+     C                     MOVELWRK4A     SEACQQ    P                                         CFT046
+     C                     ENDIF                                                              CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
+      ** For Incoming payments with first 4 characters of 'Regulatory Reporting 1' not blanks CFT046
+      *                                                                                       CFT046
+     C           WTYPE     IFEQ 'IN'                                                          CFT046
+     C           INRR14    ANDNE*BLANKS                                                       CFT046
+     C                     MOVEL*BLANK    ZFIELD                                              CFT046
+     C                     MOVE INRR14    ZFIELD                                              CFT046
+     C                     Z-ADD4         ZADIG                                               CFT046
+     C                     Z-ADD0         ZADEC                                               CFT046
+     C                     EXSR ZALIGN                                                        CFT046
+     C                     TESTN          ZFIELD     89                                       CFT046
+      *                                                                                       CFT046
+      ** If first 4 characters of 'Regulatory Reporting 1' numeric, save it into SEACQQ       CFT046
+      ** (Used latter in RPG/FT0220)                                                          CFT046
+      *                                                                                       CFT046
+     C           *IN89     IFEQ '1'                                                           CFT046
+     C                     MOVE ZFIELD    WRK4A                                               CFT046
+     C                     MOVELWRK4A     SEACQQ    P                                         CFT046
+     C                     ENDIF                                                              CFT046
+     C                     ENDIF                                                              CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
      C                     WRITEFPKEYDDF               89
      C/COPY WNCPYSRC,FT0210C036
      C   89                DO                              B003

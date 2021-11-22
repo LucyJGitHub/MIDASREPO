@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR918343           Date 25Apr12               *
+      *  Last Amend No. MD042752           Date 08Jan18               *
+      *  Prev Amend No. 227174             Date 08Jan18               *
+      *                 MD021699A          Date 19Sep13               *
+      *                 259227             Date 16Aug13               *
+      *                 CSD103             Date 10Aug20               *
+      *                 AR918343           Date 25Apr12               *
       *                 MD027517           Date 08Jul14               *      
       *               . MD053093           Date 03Sep19               *
       *                 MD048074           Date 03Sep19               *
@@ -77,6 +81,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042752 - Facility currency being picked up to calculate    *
+      *             interest rather than loan currency                *
+      *  227174 - Int. Basis should default to loan ccy during loan   *
+      *           input                                               *
+      *         - Applied for MD042752                                *
+      *  MD021699A - Additional changes relating to closing date.     *
+      *  259227 - Default closing date to facility start date instead *
+      *           of facility expiry date. Applied fix 126246.        *
+      *           Applied for MD021699.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
@@ -1259,16 +1272,20 @@
 
      C     DDACTN        IFEQ      'I'
      C     DDDICB        ANDEQ     *BLANKS
+     C     DDMCCY        ANDEQ     'N'                                                      MD042752
      C                   MOVEL     DDFCCY        WCURR
      C                   EXSR      SRCURR
      C                   MOVE      A6DICB        DDDICB
      C                   ENDIF
 
      C     DDDICB        IFEQ      *BLANKS
-     C                   Move      'N'           DDDICBOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDICB'      FldNamXAr(Idx)
-     C                   Movel     'LEF0071'     MsgIDXAr(Idx)
+      *                                                                                       227174
+      ** If Blank do nothing.  This field is now optional                                     227174
+      *                                                                                       227174
+     C**********         Move      'N'           DDDICBOK                                     227174
+     C**********         Add       1             Idx                                          227174
+     C**********         Movel     'DDDICB'      FldNamXAr(Idx)                               227174
+     C**********         Movel     'LEF0071'     MsgIDXAr(Idx)                                227174
       *
      C                   ELSE
       *
@@ -1722,11 +1739,11 @@
       *
      C     DDCDTE        IFEQ      *BLANKS
       * Default to start date
-     C     CLE106        IFEQ      'Y'                                                        CLE106
-     C                   MOVE      W#DTEX        ZDAYNO                                       CLE106
-     C                   ELSE                                                                 CLE106
+     C*****CLE106        IFEQ      'Y'                                                 CLE106 259227
+     C**********         MOVE      W#DTEX        ZDAYNO                                CLE106 259227
+     C**********         ELSE                                                          CLE106 259227
      C                   MOVE      W#DTAP        ZDAYNO
-     C                   ENDIF                                                                CLE106
+     C**********         ENDIF                                                         CLE106 259227
       *                                                                                       CLE106
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
@@ -1754,10 +1771,14 @@
 
      C     ZDAYNO        IFLT      W#DTAP
      C     ZDAYNO        ORGT      W#DTEX
-     C                   Move      'N'           DDCDTEOK
-     C                   Add       1             Idx
-     C                   Movel     'DDCDTE'      FldNamXAr(Idx)
-     C                   Movel     'LEF0083'     MsgIDXAr(Idx)
+     C**********         Move      'N'           DDCDTEOK                                  MD021699A
+     C**********         Add       1             Idx                                       MD021699A
+     C**********         Movel     'DDCDTE'      FldNamXAr(Idx)                            MD021699A
+     C**********         Movel     'LEF0083'     MsgIDXAr(Idx)                             MD021699A
+      ** Closing date passed from java layer (DS/TranInSeco)                               MD021699A
+      ** Not set by user. Closing date cannot be seen on User Input Screen                 MD021699A
+      ** Set Closing Date = Start Date                                                     MD021699A
+     C                   MOVE      W#DTAP        ZDAYNO                                    MD021699A
      C                   ENDIF
      C                   ENDIF
 
@@ -1903,7 +1924,7 @@
       *                                                                                       CLE106
      C     DDLPBR        IFEQ      *BLANKS                                                    CLE106
      C     DDLPRT        ANDEQ     *BLANKS                                                    CLE106
-     C*****DDLPBR        OREQ      '0'                                               BUG22100 CSD103
+     C     DDLPBR        OREQ      '0'                                                      BUG22100
      C     DDLPRT        ANDEQ     '0'                                                      BUG22100
      C                   Move      'N'           DDLPFROK                                     CLE106
      C                   Add       1             Idx                                          CLE106

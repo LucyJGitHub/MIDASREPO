@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 257657             Date 16Aug13               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 260408             Date 06Oct17               *
@@ -81,6 +82,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257657 - Syndicated Loan input error LEL0401 when invalid    *
+      *           participant.                                        *
+      *         - Allow value for DDLNRF if CLE106 is on.  Validation *
+      *           is already done in LECLIP1VL.                       *
+      *         - Applied for MD021676.                               * 
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1029,11 +1035,13 @@
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
      C     WFOTRID       ANDNE     'LE000473'                                               MD032052
+     C                   If        CLE106 = 'N'                                               257657
      C                   MOVE      'N'           DDACTNOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'LEL0401'     MsgIdArr(Ix)
      C                   GOTO      EVALAI
+     C                   EndIf                                                                257657
      C                   ENDIF                                                              MD031225
      C                   ENDIF                                                                CSC024
                                                                                               CSC024

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD057288             Date 01Dec20             *
-      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *  Last Amend No. MD058721             Date 28Aug21             *
+      *  Prev Amend No. MD057288             Date 01Dec20             *
+      *                 MD057231             Date 18Nov20             *
       *                 MD054733             Date 02Dec19             *
       *                 MD056020             Date 18Jun20             *
       *                 MD054955             Date 16Dec19             *
@@ -26,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058721 - Consider bespoke API in WIP config.               *
+      *             Delete record in XTD if not found in CTD and BTD. *
+      *             Do not delete BTD record.                         *
+      *           - Applied for MD-59210                              *
       *  MD057288 - During migration, some XTD files are on top of    *
       *             LIBL causing incorrect update. Fix is to add      *
       *             correct library while updating XTD.               *      
@@ -214,12 +219,19 @@
      C                   ELSE
 
       * delete GPWIPXTD records not found in Core
+      * and not found in bespoke                                                            MD058721
+     C                   eval      BINDEX = %SUBST(XINDEX:1:5) + 'BTD'                      MD058721
+     C                   eval      BSCHEMA = %subst(XSCHEMA:1:3) + 'MLIB'                   MD058721
 
      C                   eval      SQLDynStmt = *BLANKS
      C                   eval      SQLDynStmt = 'delete from GPWIPXTD' +
      C                             ' A where not exists (select * from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX +
-     C                             ' B ' + ' where A.WC_API = B.WC_API)'
+     C**********                   ' B ' + ' where A.WC_API = B.WC_API)'                    MD058721
+     C                             ' B ' + ' where A.WC_API = B.WC_API)' +                  MD058721
+     C                             ' and  not exists (select * from ' +                     MD058721
+     C                             %trimr(BSCHEMA) + '/' + BINDEX +                         MD058721
+     C                             ' F ' + ' where A.WC_API = F.WC_API)'                    MD058721
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -237,6 +249,8 @@
      C                   Endif
 
       * Additional process for GPWIPBTD as the Bespoke records are the zonal WIP config
+      * consider now bespoke API in BTD                                                     MD058721
+     C                   leaveSR                                                            MD058721
 
      C                   eval      SQLDynStmt = *BLANKS
      C                   eval      SQLDynStmt = 'delete from GPWIPBTD' +

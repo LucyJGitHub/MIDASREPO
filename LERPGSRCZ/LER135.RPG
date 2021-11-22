@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD028354           Date 01Oct14               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057078           Date 03Mar21               *
       *                 MD057082           Date 16Dec20               *
       *                 MD057048           Date 24Nov20               *
@@ -305,6 +306,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD028354 - Process fee due date that falls on the next month *
+      *             on ANWD-COB run following the month-end run.      *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057078 - Fee settlement amount not converted to settlement *
@@ -2506,6 +2509,7 @@
      C                     Z-ADD0         WLOANA 130                                        MD055069
      C                     Z-ADD0         FEPOST                                            MD047522
      C                     MOVEL*BLANK    WPAYTD  1                                         MD052216
+     C                     MOVE ' '       ATYP                                              MD028354
       *                                                                                     MD055481
      C                     SETOF                     36                                     MD055481
      C           FELOAN    IFNE *BLANKS                                                     MD055481
@@ -3854,7 +3858,14 @@
       *                                                                                       258414
      C           FENPYD    IFLE BJDNWD                                                        258414
      C           FENPYD    ANDNE0                                                             258414
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FEPEND    ORLE BJDNWD                                                        258414
+     C           WDELAY    ANDEQ' '                                                         MD028354
+     C           FEPEND    ORLE BKAPDT                                                      MD028354
+     C           WDELAY    ANDEQ'Y'                                                         MD028354
+     C           FENPYD    ORLE BKAPDT                                                      MD028354
+     C           FENPYD    ANDNE0                                                           MD028354
+     C           WDELAY    ANDEQ'Y'                                                         MD028354
       *****************************************************************                209380 258414
      C/COPY WNCPYSRC,LER135C002
      C*                                                                   100428
@@ -10362,6 +10373,7 @@
      C                     END
       *
      C                     Z-ADDGDAYNO    SMDY    50                      MOF60
+     C                     MOVE ' '       WDELAY  1                                         MD028354
       *
       ** Check whether the start of the new month falls between RUND
       ** and the date of next working day and if so make the start of
@@ -10381,6 +10393,7 @@
      C           BJDNWD    SUB  1         CODT
      C           BKAPDT    IFLT CODT
      C                     Z-ADDBKAPDT    CODT
+     C                     MOVE 'Y'       WDELAY                                            MD028354
      C                     END
      C                     END
       *

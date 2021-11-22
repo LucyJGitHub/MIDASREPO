@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058361           Date 26Jun21               *
-      *  Prev Amend No. MD056752           Date 20Sep20               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. MD058361           Date 26Jun21               *
+      *                 MD056752           Date 20Sep20               *
       *                 MD056560           Date 31Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -61,6 +62,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook ME1100DDC1, ME1100DIPG, ME1100C008    *
       *  MD058361 - Correct SQL request to access MEINFJW0            *
       *  MD056752 - Deliverable Data Split for MEINFMPD               *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *

@@ -13,11 +13,14 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD057231             Date 18Nov20             *
-      *  Prev Amend No. MD056103   *CREATE   Date 17Jun20             *
+      *  Last Amend No. MD058721             Date 28Aug21             *
+      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *                 MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058721 - Consider bespoke API in WIP config.               *
+      *           - Applied for MD-59210                              *
       *  MD057231 - Add fields introduced by MD054733                 *
       *  MD056103 - Deliverable Data Split migration                  *
       *                                                               *
@@ -124,6 +127,11 @@
       *****************************************************************
      C     SR_Default    BEGSR
 
+     C/exec SQL                                                                             MD058721
+     C+ ALTER TABLE GPWIPBTD ALTER COLUMN                                                   MD058721
+     C+ WC_ID restart with 10500                                                            MD058721
+     C/end-exec                                                                             MD058721
+                                                                                            MD058721
      C                   eval      SQLDynStmt = *BLANKS
      C                   eval      SQLDynStmt = 'insert into ' + %trim(SCHEMAM)+
      C                             '/GPWIPBTD OVERRIDING USER VALUE ' +
@@ -214,8 +222,10 @@
      C                             'WC_SYSTEM, WC_BOFLD1, WC_BOFLD2, ' +
      C                             'WC_BOFLD3, WC_BOFLD4, ' +
      C**********                   'WC_BOFLD5, ''B'' FROM ' + %trimr(OLDLIB) +              MD057231
-     C                             'WC_BOFLD5, ''B'', WCAN, WCAC, WCAT, WCBSTP'+            MD057231
-     C                             ' FROM ' + %trimr(OLDLIB) +                              MD057231
+     C**********                   'WC_BOFLD5, ''B'', WCAN, WCAC, WCAT, WCBSTP'+   MD057231 MD058721
+     C**********                   ' FROM ' + %trimr(OLDLIB) +                     MD057231 MD058721
+     C                             'WC_BOFLD5, ''B'', '' '', '' '', '' '', ' +              MD058721
+     C                             ' '' '' FROM ' + %trimr(OLDLIB) +                        MD058721
      C                             '/T_WIPCF A where not exists ' +
      C                             ' (select * from ' + %trimr(SCHEMAM) +
      C                             '/GPWIPBTD B where A.WC_API ' +

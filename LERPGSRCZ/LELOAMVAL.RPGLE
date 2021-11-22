@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *                 CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -103,6 +105,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
+      *  MD026384 - Added generation by assignment processing.        *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
@@ -496,6 +501,9 @@
       ** Loan amendment in screen format - input fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
 
+      ***Loan*amendment in screen format 2                                         MD026384 MD057739
+     D*LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                       MD026384 MD057739
+      ***********                                                                  MD026384 MD057739
       ** Current loan amendment in file format
      D CurFilLoam    E DS                  EXTNAME(LOAMSDK) PREFIX(CAM_)
 
@@ -632,6 +640,11 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
+     DLOAMBuffer       DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -5489,7 +5502,14 @@
      C                   MOVE      'M'           LAMNSG
       *
      C**********         MOVE      'N'           LAGASS                                       CLE106
+      *                                                                                     MD026384
+      ** GASS should be 'A' if generated from assignment else 'P'                           MD026384
+      *                                                                                     MD026384
+     C     DDGASS        IFEQ      'A'                                                      MD026384
+     C                   MOVE      DDGASS        LAGASS                                     MD026384
+     C                   ELSE                                                               MD026384
      C                   MOVE      'P'           LAGASS                                       CLE106
+     C                   ENDIF                                                              MD026384
       *
      C     DDATYP        IFEQ      'BC'
      C                   Z-ADD     BRTE          LABRTE
@@ -6057,6 +6077,11 @@
 
       ** Transaction information (DS) from source system  (screen format)
      C                   PARM                    LoamScnFmt
+      *                                                                                     MD026384
+      ** Transaction information 2                                                          MD026384
+      *                                                                                     MD026384
+     C*********          PARM                    LoamSc2Fmt                        MD026384 MD057739
+     C                   PARM                    LOAMBuffer                                 MD057739
 
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam

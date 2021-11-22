@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057285           Date 17Feb21               *
-      *  Prev Amend No. AR818539           Date 12Mar20               *
+      *  Last Amend No. 250229             Date 02Oct14               *
+      *  Prev Amend No. MD057285           Date 17Feb21               *
+      *                 AR818539           Date 12Mar20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -118,6 +119,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250229 - Display a warning message when inserting a deal that*
+      *           already exist.                                      *
+      *         - Applied for MD030370.                               *
       *  MD057285 - Removed execution of *PSSR after AOCUSTR0         *
       *  AR818539 - Make sure to default settlement based on SSI when *
       *             customer has changed. (Child: AR818540)           *
@@ -1886,6 +1890,7 @@
       *
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*RECUPD'
+     C     @RTCD         ANDNE     '*RECINS'                                                  250229
      C                   MOVEL     '0'           APIRetc
      C                   If        (CSC022 = 'N')                                             CSC022
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                  CSC022
@@ -1922,6 +1927,16 @@
      C                   MOVEL     'MMM1067'     MsgIdArr(1)
      C
      C                   END
+      *                                                                                       250229
+      ** If insert not done due to record being inserted by another                           250229
+      ** workstation send message to screen.                                                  250229
+      *                                                                                       250229
+     C     @RTCD         IFEQ      '*RECINS'                                                  250229
+      *                                                                                       250229
+     C                   MOVEL     '*ANY'        FldNameArr(1)                                250229
+     C                   MOVEL     'FXM0163'     MsgIdArr(1)                                  250229
+     C                                                                                        250229
+     C                   ENDIF                                                                250229
 
      C                   ENDSR
       *****************************************************************

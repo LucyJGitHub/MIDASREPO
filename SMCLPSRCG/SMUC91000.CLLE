@@ -1,0 +1,49 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Utility Program for GPGLFCTD')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC91000 - Midas SM Utility Program for GPGLFCTD           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD058864  *CREATE  Date 18Nov21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058864 - GOC0100 00130 fails during COB due to match      */
+/*                  field error in file GZCDEPPL0.                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2021')
+             DCL        VAR(&TOTREC) TYPE(*DEC) LEN(10 0)
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Update SDCUAHPD file and generate the update report **/
+
+             CALL       PGM(SMU91000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                        CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program SMUC91000 ended abnormally - see joblog') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra +
+                          International Limited')
+
+             ENDPGM

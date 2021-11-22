@@ -203,12 +203,7 @@
      F                                     RENAME(FCLTYFMF:FCLTYFMF7)
      F                                     PREFIX(F7_)
       ** Aggregate Facilities Live or Expired                                                 CLE041
-     F      **  Use CLOANL6 to check o/s loans for syndicated facility                            AR928430
-      *                                                                                     AR928430
-     FCLOANL6   IF   E           K DISK    INFSR(*PSSR)                                     AR928430
-     F                                     RENAME(CLOANCLF:CLOANCL6)                        AR928430
-     F                                     PREFIX(C3)                                       AR928430
-LEAGFCL1  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
+     FLEAGFCL1  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
      F                                     RENAME(FCLTYFMF:AGFCLTF1F)                         CLE041
      F                                     PREFIX(AGF1_)                                      CLE041
       **  Credit Agreement File
@@ -225,6 +220,11 @@ LEAGFCL1  IF   E           K DISK    INFSR(*PSSR)                               
      F                                     IGNORE(CLOANZ1F)
      F                                     IGNORE(CLOANCKF)
      F                                     PREFIX(CL_)
+      **  Use CLOANL6 to check o/s loans for syndicated facility                            AR928430
+      *                                                                                     AR928430
+     FCLOANL6   IF   E           K DISK    INFSR(*PSSR)                                     AR928430
+     F                                     RENAME(CLOANCLF:CLOANCL6)                        AR928430
+     F                                     PREFIX(C3)                                       AR928430
       **  Live Utilisation Retrieval Index
      FLEMNFUL6  IF   E           K DISK    INFSR(*PSSR)
      F**********                           PREFIX(L6_)                                      AR674226
@@ -1017,20 +1017,7 @@ LEAGFCL1  IF   E           K DISK    INFSR(*PSSR)                               
      C                   ENDIF                                                              BUG4555
      C                   ENDIF                                                              BUG4555
      C     EVALAX        ENDSR
-      **************************************      **  If Facility is either closed or expired, c      * and reactivated facilities (i.e. WREAC is *ON)                                      MD022358
-heck for records                            C     WREAC         ANDNE     *ON                                                      MD022358
- MD022358
-      **  in PF/LEFCAMPD if it has been reactivated.                                        MD022358
-     C                   MOVE      *OFF          WREAC                                      MD022358
-     C     F7_RECI       IFEQ      'C'                                                      MD022358
-     C     F7_RECI       OREQ      'E'                                                      MD022358
-     C                   MOVEL     DDCSSN        K3CNUM                                     MD022358
-     C                   MOVE      DDFACT        K3FACT                                     MD022358
-     C                   MOVE      DDFCNO        K3FCNO                                     MD022358
-     C                   EXSR      SRCKFR                                                   MD022358
-     C                   ENDIF                                                              MD022358
-                                                                                            MD022358
-***************************
+      *****************************************************************
       /EJECT
       *****************************************************************
       * VALACA - VALIDATION OF ACTION CODE 'A'
@@ -1060,9 +1047,22 @@ heck for records                            C     WREAC         ANDNE     *ON   
      C                   GOTO      EVALAA
      C                   END
 
+      **  If Facility is either closed or expired, check for records                        MD022358
+      **  in PF/LEFCAMPD if it has been reactivated.                                        MD022358
+     C                   MOVE      *OFF          WREAC                                      MD022358
+     C     F7_RECI       IFEQ      'C'                                                      MD022358
+     C     F7_RECI       OREQ      'E'                                                      MD022358
+     C                   MOVEL     DDCSSN        K3CNUM                                     MD022358
+     C                   MOVE      DDFACT        K3FACT                                     MD022358
+     C                   MOVE      DDFCNO        K3FCNO                                     MD022358
+     C                   EXSR      SRCKFR                                                   MD022358
+     C                   ENDIF                                                              MD022358
+                                                                                            MD022358
       * Amendments are only allowed on live records
+      * and reactivated facilities (i.e. WREAC is *ON)                                      MD022358
      C     F7_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
+     C     WREAC         ANDNE     *ON                                                      MD022358
                                                                                               CLE041
      C     AGF1_RECI     ORNE      'D'                                                        CLE041
      C     WAggregate    ANDEQ     'Y'                                                        CLE041
@@ -1242,40 +1242,7 @@ heck for records                            C     WREAC         ANDNE     *ON   
       *
      C     K#KY02        CHAIN     LEFCLTL1                           80
      C     *IN80         IFEQ      '0'
-     C                 ** Checking for syndicated facility.                                                  AR928430
-      *                                                                                     AR928430
-     C     FC_SYIN       IFEQ      'Y'                                                      AR928430
-     C     FC_PRTR       ANDEQ     'I'                                                      AR928430
-     C     FC_SYIN       OREQ      'Y'                                                      AR928430
-     C     FC_PRTR       ANDEQ     'P'                                                      AR928430
-     C     FC_SYIN       OREQ      'Y'                                                      MD034146
-     C     FC_PRTR       ANDEQ     'R'                                                      MD034146
-     C     FC_SYIN       OREQ      'Y'                                                      MD034146
-     C     FC_PRTR       ANDEQ     'S'                                                      MD034146
-      *                                                                                     AR928430
-     C     K#KY02        SETLL     CLOANL6                                                  AR928430
-     C     K#KY02        READE     CLOANL6                                80                AR928430
-      *                                                                                     AR928430
-     C     *IN80         DOWEQ     *OFF                                                     AR928430
-      *                                                                                     AR928430
-     C     C3RECI        IFEQ      'D'                                                      AR928430
-      *                                                                                     AR928430
-     C     ZDAYNO        IFLT      C3MDAT                                                   AR928430
-     C     DDACTN        OREQ      'R'                                                      AR928430
-     C     DDACTN        OREQ      'C'                                                      AR928430
-     C                   MOVE      'Y'           W#ERR4                                     AR928430
-     C                   LEAVE                                                              AR928430
-     C                   ENDIF                                                              AR928430
-      *                                                                                     AR928430
-     C                   ENDIF                                                              AR928430
-      *                                                                                     AR928430
-     C     K#KY02        READE     CLOANL6                                80                AR928430
-      *                                                                                     AR928430
-     C                   ENDDO                                                              AR928430
-      *                                                                                     AR928430
-     C                   ENDIF                                                              AR928430
-      *                                                                                     AR928430
-        MOVEL     'N'           DDACTNOK
+     C                   MOVEL     'N'           DDACTNOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'LEF0294'     MsgIdArr(Ix)
@@ -1343,6 +1310,39 @@ heck for records                            C     WREAC         ANDNE     *ON   
       *
      C                   ENDDO
       *
+      ** Checking for syndicated facility.                                                  AR928430
+      *                                                                                     AR928430
+     C     FC_SYIN       IFEQ      'Y'                                                      AR928430
+     C     FC_PRTR       ANDEQ     'I'                                                      AR928430
+     C     FC_SYIN       OREQ      'Y'                                                      AR928430
+     C     FC_PRTR       ANDEQ     'P'                                                      AR928430
+     C     FC_SYIN       OREQ      'Y'                                                      MD034146
+     C     FC_PRTR       ANDEQ     'R'                                                      MD034146
+     C     FC_SYIN       OREQ      'Y'                                                      MD034146
+     C     FC_PRTR       ANDEQ     'S'                                                      MD034146
+      *                                                                                     AR928430
+     C     K#KY02        SETLL     CLOANL6                                                  AR928430
+     C     K#KY02        READE     CLOANL6                                80                AR928430
+      *                                                                                     AR928430
+     C     *IN80         DOWEQ     *OFF                                                     AR928430
+      *                                                                                     AR928430
+     C     C3RECI        IFEQ      'D'                                                      AR928430
+      *                                                                                     AR928430
+     C     ZDAYNO        IFLT      C3MDAT                                                   AR928430
+     C     DDACTN        OREQ      'R'                                                      AR928430
+     C     DDACTN        OREQ      'C'                                                      AR928430
+     C                   MOVE      'Y'           W#ERR4                                     AR928430
+     C                   LEAVE                                                              AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
+     C     K#KY02        READE     CLOANL6                                80                AR928430
+      *                                                                                     AR928430
+     C                   ENDDO                                                              AR928430
+      *                                                                                     AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
      C                   ENDSR
       ***********************************************************
       /EJECT

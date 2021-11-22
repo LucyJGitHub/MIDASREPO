@@ -2786,7 +2786,7 @@
      C     #1PYTP        ANDNE     '++'                                                        CFT00
      C     #1PYTP        ANDNE     '**'                                                        CFT00
      C     CRE008        ANDNE     'Y'                                                         CRE00
-     C/COPY WNCPYSRC,UUC104_014
+     C/COPY WNCPYSRC,UUC104_014                                                               UUC104
      C     W0PMT         IFEQ      'N'                                                         CFT00
       *                                                                   CFT006
       **  Send message 'Payment type is invalid'                          CFT006
@@ -2798,7 +2798,7 @@
      C                   MOVE      *ON           *IN32                                         CFT00
      C                   MOVE      *ON           *IN99                                         CFT00
      C                   ENDIF                                                                 CFT00
-     C/COPY WNCPYSRC,UUC104_015
+     C/COPY WNCPYSRC,UUC104_015                                                               UUC104
       *                                                                   CFT006
      C                   ENDIF                                                                 CFT00
       *                                                                   CRE008
@@ -2810,7 +2810,7 @@
      C     #1PYTP        ANDNE     '++'                                                        CRE00
      C     #1PYTP        ANDNE     '**'                                                        CRE00
      C     CRE008        ANDEQ     'Y'                                                         CRE00
-     C/COPY WNCPYSRC,UUC104_016
+     C/COPY WNCPYSRC,UUC104_016                                                               UUC104
      C     W0PMT         IFEQ      'N'                                                         CRE00
       *                                                                   CRE008
       **  Send message 'Payment type is invalid'                          CRE008
@@ -2821,7 +2821,7 @@
      C                   MOVE      *ON           *IN32                                         CRE00
      C                   MOVE      *ON           *IN99                                         CRE00
      C                   ENDIF                                                                 CRE00
-     C/COPY WNCPYSRC,UUC104_017
+     C/COPY WNCPYSRC,UUC104_017                                                               UUC104
       *                                                                   CRE008
      C                   ENDIF                                                                 CRE00
       *                                                                   CFT006

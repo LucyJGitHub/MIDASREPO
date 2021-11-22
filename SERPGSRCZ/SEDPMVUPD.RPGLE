@@ -91,6 +91,8 @@
       *  MD029160 - APISERVER job fall over when trying to send in a  *
       *             LDNI Cancellation. Recompiled due to changes in   *
       *             MMVLDNIPD.                                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *

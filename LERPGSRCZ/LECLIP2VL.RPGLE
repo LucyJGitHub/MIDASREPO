@@ -141,6 +141,7 @@
       *         - Applied for MD042752                                *
       *  AR918333 - Warning message LEL0559 is spurious and should not*
       *             be displayed. As a local fix, do not issue warning*
+      *             LEL0559. (Child: AR918334)                        *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD042329 - Reject button is not working in loan.             *
       *           - Initialize CCLNIDT field at start of SRRSFD subr. *

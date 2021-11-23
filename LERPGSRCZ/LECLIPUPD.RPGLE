@@ -1643,7 +1643,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
-     C                   PARM                    APSRCSYS                                   MD059046
+     C                   PARM      *BLANK        APSRCSYS                                   MD059046
      C/COPY WNCPYSRC,LECLIPPC04
       *
       ***  Error if Timestamp is not the same (record has been changed

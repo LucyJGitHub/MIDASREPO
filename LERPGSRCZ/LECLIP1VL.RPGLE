@@ -1936,15 +1936,14 @@
                                                                                              BUG8436
      C                   MOVE      *BLANKS       WFOTRID           8                        MD032052
      C                   MOVEL     APFOTranID    WFOTRID                                    MD032052
+     C     CAP774        IFEQ      'Y'                                                      MD059046
+     C     APSRCSYS      ANDEQ     'MIDASCOB'                                               MD059046
+     C     WFOTRID       ANDNE     'LE000473'                                               MD059046
+     C                   ELSE                                                               MD059046
      C     CLE134        IFEQ      'N'                                                      MD031225
-     C     CAP774        ANDEQ     'N'                                                      MD059046
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
      C     WFOTRID       ANDNE     'LE000473'                                               MD032052
-     C     APSRCSYS      ANDNE     'MIDASCOB'                                               MD059046
-     C     CAP774        OREQ      'Y'                                                      MD059046
-     C     MPHAS         ANDNE     'C'                                                      MD059046
-     C     APSRCSYS      ANDNE     'MIDASCOB'                                               MD059046
      C                   Eval      Idx = Idx + 1                                             BUG6108
      C                   Eval      DDLNRFOK = 'N'                                            BUG6108
      C                   Eval      FldNamXAr(Idx) = 'DDLNRF'                                 BUG6108
@@ -1955,6 +1954,7 @@
      C                   Eval      MsgIDXAr(Idx) = 'LEL0541'                                 BUG6108
      C                   EndIf                                                           E03 BUG6108
      C                   ENDIF                                                              MD031225
+     C                   ENDIF                                                              MD059046
                                                                                              BUG8436
      C                   ENDIF                                                               BUG8436
                                                                                              BUG8436

@@ -1030,15 +1030,14 @@
                                                                                               CSC024
      C                   MOVE      *BLANKS       WFOTRID           8                        MD032052
      C                   MOVEL     FOTRID        WFOTRID                                    MD032052
+     C     CAP774        IFEQ      'Y'                                                      MD059046
+     C     APSRCSYS      ANDEQ     'MIDASCOB'                                               MD059046
+     C     WFOTRID       ANDNE     'LE000473'                                               MD059046
+     C                   ELSE                                                               MD059046
      C     CLE134        IFEQ      'N'                                                      MD031225
-     C     CAP774        ANDEQ     'N'                                                      MD059046
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
      C     WFOTRID       ANDNE     'LE000473'                                               MD032052
-     C     APSRCSYS      ANDNE     'MIDASCOB'                                               MD059046
-     C     CAP774        OREQ      'Y'                                                      MD059046
-     C     MPHAS         ANDNE     'C'                                                      MD059046
-     C     APSRCSYS      ANDNE     'MIDASCOB'                                               MD059046
      C                   MOVE      'N'           DDACTNOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
@@ -1046,6 +1045,7 @@
      C                   GOTO      EVALAI
      C                   ENDIF                                                              MD031225
      C                   ENDIF                                                                CSC024
+     C                   ENDIF                                                              MD059046
                                                                                               CSC024
       ** Check Loan Reference Duplicate                                                       CSC024
      C                   MOVE      DDLNRF        K@LNRF                                       CSC024

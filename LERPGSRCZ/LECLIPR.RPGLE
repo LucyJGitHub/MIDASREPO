@@ -1008,7 +1008,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
-     C                   PARM                    APSRCSYS          8                        MD059046
+     C                   PARM      *BLANK        APSRCSYS          8                        MD059046
      C/COPY WNCPYSRC,LECLIPYC02
 
      C                   ENDSR

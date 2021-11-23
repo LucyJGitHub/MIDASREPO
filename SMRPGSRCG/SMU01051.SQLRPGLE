@@ -27,6 +27,7 @@
       *****************************************************************
       *
       **---------------------------------------------------------------
+     F***SMFILUPD  IF   E           K DISK    INFSR(*PSSR)                                  MD059184
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
@@ -100,13 +101,56 @@
       ** Processing for Zonal Layer                                                         MD059184
       *                                                                                     MD059184
      C     Layer         IFEQ      'Zonal '                                                 MD059184
-     C                   EXSR      ZonalSQL                                                 MD059184
+      *                                                                                     MD059184
+      ** SORT FILE INTO ASCENDING ORDER WHERE                                               MD059184
+      ** LAYER IS ZONAL.                                                                    MD059184
+      *                                                                                     MD059184
+     C                   EVAL      SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +               MD059184
+     C                             'WHERE LAYR = ''Zonal''' +                               MD059184
+     C                             ' ORDER BY PFILE ASC'                                    MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
       ** Processing for Global Layer                                                        MD059184
       *                                                                                     MD059184
      C     Layer         IFEQ      'Global '                                                MD059184
-     C                   EXSR      GlobalSQL                                                MD059184
+      *                                                                                     MD059184
+      ** SORT FILE INTO ASCENDING ORDER WHERE                                               MD059184
+      ** LAYER IS GLOBAL.                                                                   MD059184
+      *                                                                                     MD059184
+     C                   EVAL      SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +               MD059184
+     C                             'WHERE LAYR = ''Global''' +                              MD059184
+     C                             ' ORDER BY PFILE ASC'                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
+      *                                                                                     MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  PREPARE P1 FROM :SortSQLStmnt                                                      MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  DECLARE P1 CURSOR FOR P1                                                           MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  OPEN P1                                                                            MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  FETCH FROM P1 INTO :SMFileUpdate                                                   MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059184
+      ** Processing for Zonal Layer                                                         MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCOD = -501                                            MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  OPEN P1                                                                            MD059184
+     C/END-EXEC                                                                             MD059184
+      *                                                                                     MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  FETCH NEXT FROM P1 INTO :SMFileUpdate                                              MD059184
+     C/END-EXEC                                                                             MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
       ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059184
@@ -164,19 +208,10 @@
      C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
      C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
       *                                                                                     MD059184
-      ** Fetch next record from file (Zonal)                                                MD059184
+      ** Fetch next record from file                                                        MD059184
       *                                                                                     MD059184
-     C                   IF        Layer = 'Zonal '                                         MD059184
      C/EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate                                       MD059184
      C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** Fetch next record from file (Global)                                               MD059184
-      *                                                                                     MD059184
-     C                   IF        Layer = 'Global '                                        MD059184
-     C/EXEC SQL FETCH NEXT FROM P2 INTO :SMFileUpdate                                       MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100                            MD059184
      C                   EXSR      *PSSR                                                    MD059184
@@ -193,19 +228,9 @@
      C                   EXSR      EnhSqlUpdate                                             MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
-      ** Close Cursor for Zonal Layer                                                       MD059184
-      *                                                                                     MD059184
-     C                   IF        Layer = 'Zonal '                                         MD059184
-     C/EXEC SQL CLOSE P1                                                                    MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+ CLOSE P1                                                                            MD059184
      C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** Close Cursor for Global Layer                                                      MD059184
-      *                                                                                     MD059184
-     C                   IF        Layer = 'Global '                                        MD059184
-     C/EXEC SQL CLOSE P2                                                                    MD059184
-     C/END-EXEC                                                                             MD059184
-     C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
      C**********         DOW       EndOfFile = False                                        MD059184
       *
@@ -435,80 +460,6 @@
      C**********         ENDIF                                                              MD059184
       *
      C**********         ENDSR                                                              MD059184
-      *****************************************************************                     MD059184
-      *                                                               *                     MD059184
-      * ZonalSQL - Update files (Zonal)                               *                     MD059184
-      *                                                               *                     MD059184
-      * Called by: Main Processing                                    *                     MD059184
-      *                                                               *                     MD059184
-      * Calls: None                                                   *                     MD059184
-      *                                                               *                     MD059184
-      *****************************************************************                     MD059184
-     C     ZonalSQL      BEGSR                                                              MD059184
-      *                                                                                     MD059184
-      ** SORT FILE INTO ASCENDING ORDER.                                                    MD059184
-      *                                                                                     MD059184
-       SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +
-                             'WHERE LAYR = ''Zonal'' ' +
-                             'ORDER BY PFILE ASC ';
-      *                                                                                     MD059184
-      ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
-      *                                                                                     MD059184
-                   EXEC SQL PREPARE P1 FROM :SortSQLStmnt;
-                   EXEC SQL DECLARE P1 CURSOR FOR P1;
-                   EXEC SQL OPEN P1;
-                   EXEC SQL FETCH FROM P1 INTO :SMFileUpdate;
-      *                                                                                     MD059184
-      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059184
-      *                                                                                     MD059184
-                   IF SQLCOD = -501;
-                      EXEC SQL OPEN P1;
-                      EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
-                   ENDIF;
-      *                                                                                     MD059184
-      ** IF TABLE FINDS ERROR OR NO RECORD.                                                 MD059184
-      *                                                                                     MD059184
-                   IF SQLCOD <> 0 AND SQLCOD <> 100;
-                      EXSR *PSSR;
-                   ENDIF;
-     C                   ENDSR                                                              MD059184
-      *****************************************************************                     MD059184
-      *                                                               *                     MD059184
-      * GlobalSQL - Update files (Global)                             *                     MD059184
-      *                                                               *                     MD059184
-      * Called by: Main Processing                                    *                     MD059184
-      *                                                               *                     MD059184
-      * Calls: None                                                   *                     MD059184
-      *                                                               *                     MD059184
-      *****************************************************************                     MD059184
-     C     GlobalSQL     BEGSR                                                              MD059184
-      *                                                                                     MD059184
-      ** SORT FILE INTO ASCENDING ORDER.                                                    MD059184
-      *                                                                                     MD059184
-       SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +
-                             'WHERE LAYR = ''Global'' ' +
-                             'ORDER BY PFILE ASC ';
-      *                                                                                     MD059184
-      ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
-      *                                                                                     MD059184
-                   EXEC SQL PREPARE P2 FROM :SortSQLStmnt;
-                   EXEC SQL DECLARE P2 CURSOR FOR P2;
-                   EXEC SQL OPEN P2;
-                   EXEC SQL FETCH FROM P2 INTO :SMFileUpdate;
-      *                                                                                     MD059184
-      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059184
-      *                                                                                     MD059184
-                   IF SQLCOD = -501;
-                      EXEC SQL OPEN P2;
-                      EXEC SQL FETCH NEXT FROM P2 INTO :SMFileUpdate;
-                   ENDIF;
-      *                                                                                     MD059184
-      ** IF TABLE FINDS ERROR OR NO RECORD.                                                 MD059184
-      *                                                                                     MD059184
-                   IF SQLCOD <> 0 AND SQLCOD <> 100;
-                      EXSR *PSSR;
-                   ENDIF;
-     C                   ENDSR                                                              MD059184
       *****************************************************************                     MD059184
       *                                                               *                     MD059184
       * EnhSqlUpdate - Update Files (SQL Update Statement)            *                     MD059184

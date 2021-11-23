@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059046           Date 21Nov21               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -65,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1004,6 +1008,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM                    APSRCSYS          8                        MD059046
      C/COPY WNCPYSRC,LECLIPYC02
 
      C                   ENDSR

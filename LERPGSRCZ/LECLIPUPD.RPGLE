@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058476           Date 23Jul21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059046           Date 21Nov21               *
+      *  Prev Amend No. MD058476           Date 23Jul21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 207964             Date 23Aug02               *
       *                 MD031292           Date 06Nov19               *
@@ -167,6 +168,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
       *  MD058476 - LE 24x7 API - Online Accounts movements not       *
       *             generated (CAP774)                                *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -1639,6 +1643,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM                    APSRCSYS                                   MD059046
      C/COPY WNCPYSRC,LECLIPPC04
       *
       ***  Error if Timestamp is not the same (record has been changed

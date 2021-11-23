@@ -1,8 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
-/*STD *  RPGSQLBND                                                   *
-/*EXI *  TEXT('Midas SM Utility Update Program for SDCUAHPD')         *
+/*STD *  RPGSQLBND                                                    *
+/*EXI *  TEXT('Midas SM Utility Update Program for GPGLFCTD')         *
       *****************************************************************
       *                                                               *
       *  Midas - Implementation Module                                *
@@ -11,14 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD057554  *CREATE  Date 08Jun21               *
+      *  Last Amend No. MD058864  *CREATE  Date 18Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057554 - Unable to Release customer on SP23 that has been  *
-      *             closed on earlier SP version.                     *
-      *             Prevent the deletion of a Non-account Holder      *
-      *             if it still attached to a Customer.               *
+      *  MD058864 - GOC0100 00130 fails during COB due to match       *
+      *             field error in file GZCDEPPL0.                    *
       *                                                               *
       *****************************************************************
       *

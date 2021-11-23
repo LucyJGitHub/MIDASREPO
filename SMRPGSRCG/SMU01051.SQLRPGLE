@@ -16,7 +16,7 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. MD059184  *AMEND   Date 05Nov21               *
+      *  Last Amend No. MD059184           Date 05Nov21               *
       *  Prev Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
@@ -25,8 +25,6 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
-     FSMFILUPD  IF   E           K DISK    INFSR(*PSSR)
-      *Midas SD File Base Rate Fields to Update
       *
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
@@ -40,24 +38,24 @@
       ** ¦ ====================                 ¦
       ** +--------------------------------------+
      D Layer           S              6A
-     D UFILE           S             10A
-     D UFIELD          S             10A
-     D thisSQL         S            500
-     D thisSQL1        S            500
-     D thisSQL2        S            500
-     D thisSQL3        S            500
-     D thisSQL4        S            500
-     D thisSQL5        S            500
-     D thisSQL6        S            500
-     D thisSQL7        S            500
-     D thisSQL8        S            500
-     D thisSQL9        S            500
+     D*UFILE****       S             10A                                                    MD059184
+     D*UFIELD***       S             10A                                                    MD059184
+     D*thisSQL**       S            500                                                     MD059184
+     D*thisSQL1*       S            500                                                     MD059184
+     D*thisSQL2*       S            500                                                     MD059184
+     D*thisSQL3*       S            500                                                     MD059184
+     D*thisSQL4*       S            500                                                     MD059184
+     D*thisSQL5*       S            500                                                     MD059184
+     D*thisSQL6*       S            500                                                     MD059184
+     D*thisSQL7*       S            500                                                     MD059184
+     D*thisSQL8*       S            500                                                     MD059184
+     D*thisSQL9*       S            500                                                     MD059184
       ** Indicator Array
-     D Indicators      DS                  BASED(IndicatorP)
-     D  ErrorOnFl             35     35
-     D  EndOfFile             45     45
+     D*Indicators      DS                  BASED(IndicatorP)                                MD059184
+     D**ErrorOnFl             35     35                                                     MD059184
+     D**EndOfFile             45     45                                                     MD059184
       ** Pointer for the indicator Array
-     D IndicatorP      S               *   INZ(%Addr(*IN))
+     D*IndicatorP      S               *   INZ(%Addr(*IN))                                  MD059184
       **
      D Command         S           2764
       ** Additional Field for File Processing                                               MD059184
@@ -75,7 +73,6 @@
      D execStatement   S          12000                                                     MD059184
      D sqlStatement    S          12000    DIM(60)                                          MD059184
      D condStatement   S          12000    DIM(60)                                          MD059184
-     D LayerFromFile   S              6A                                                    MD059184
      D Cnt             S              2  0 INZ(0)                                           MD059184
      D ExecCnt         S              2  0 INZ(1)                                           MD059184
 
@@ -91,19 +88,371 @@
       *
       ** Database error
       *
-     C***********        IF        ErrorOnFl = True                                         MD059184
-     C******LOCK*        IN        LDA                                                      MD059184
-     C***********        EVAL      DBKey = '*FIRST'                                         MD059184
-     C***********        EVAL      DBFile = 'SMFILUD0'                                      MD059184
-     C***********        EVAL      DBase = 1                                                MD059184
-     C***********        OUT       LDA                                                      MD059184
-     C***********        EXSR      *PSSR                                                    MD059184
-     C***********        ENDIF                                                              MD059184
+     C**********         IF        ErrorOnFl = True                                         MD059184
+     C******LOCK         IN        LDA                                                      MD059184
+     C**********         EVAL      DBKey = '*FIRST'                                         MD059184
+     C**********         EVAL      DBFile = 'SMFILUD0'                                      MD059184
+     C**********         EVAL      DBase = 1                                                MD059184
+     C**********         OUT       LDA                                                      MD059184
+     C**********         EXSR      *PSSR                                                    MD059184
+     C**********         ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Processing for Zonal Layer                                                         MD059184
+      *                                                                                     MD059184
+     C     Layer         IFEQ      'Zonal '                                                 MD059184
+     C                   EXSR      ZonalSQL                                                 MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Processing for Global Layer                                                        MD059184
+      *                                                                                     MD059184
+     C     Layer         IFEQ      'Global '                                                MD059184
+     C                   EXSR      GlobalSQL                                                MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059184
+      *                                                                                     MD059184
+     C                   DOW       SQLCOD = 0                                               MD059184
+      *                                                                                     MD059184
+      ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
+      *                                                                                     MD059184
+     C                   EVAL      CurrFileName = %TRIM(PFILE)                              MD059184
+     C                   EVAL      CurrPFMember = %TRIM(PMBR)                               MD059184
+     C                   IF        IsFileFirstRec = 0                                       MD059184
+     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
+     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
+     C                   EVAL      IsFileFirstRec = 1                                       MD059184
+     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
+     C                   ELSE                                                               MD059184
+      *                                                                                     MD059184
+      ** Process Update when Current File Name <> Previous File Name                        MD059184
+      ** Else Save Extracted Fields Until File Name <> Previous                             MD059184
+      *                                                                                     MD059184
+     C                   IF        %TRIM(PrevFileName) <> %TRIM(CurrFileName)               MD059184
+     C                             OR %TRIM(PrevPFMember) <> %TRIM(CurrPFMember)            MD059184
+      *                                                                                     MD059184
+      ** Execute Update Subroutine - Based on number of fields                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      TotFldCount = FieldCounter                               MD059184
+     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
+     C                   EXSR      EnhSqlUpdate                                             MD059184
+      *                                                                                     MD059184
+      ** Reset Field Counters and Field Array                                               MD059184
+      ** And Set Field Extract and Counter for the Current File                             MD059184
+      *                                                                                     MD059184
+     C     TotFldCount   DOWNE     0                                                        MD059184
+     C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
+     C                   EVAL      sqlStatement(TotFldCount) = *BLANKS                      MD059184
+     C                   EVAL      condStatement(TotFldCount) = *BLANKS                     MD059184
+     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
+     C                   ENDDO                                                              MD059184
+     C                   EVAL      ExecCnt = 1                                              MD059184
+     C                   EVAL      execStatement = *BLANKS                                  MD059184
+     C                   EVAL      FieldCounter = 1                                         MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
+     C                   ELSE                                                               MD059184
+      *                                                                                     MD059184
+      ** Concatenate extracted fields from the same file name.                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
+     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
+     C                   ENDIF                                                              MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
+     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
+      *                                                                                     MD059184
+      ** Fetch next record from file (Zonal)                                                MD059184
+      *                                                                                     MD059184
+     C                   IF        Layer = 'Zonal '                                         MD059184
+     C/EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate                                       MD059184
+     C/END-EXEC                                                                             MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Fetch next record from file (Global)                                               MD059184
+      *                                                                                     MD059184
+     C                   IF        Layer = 'Global '                                        MD059184
+     C/EXEC SQL FETCH NEXT FROM P2 INTO :SMFileUpdate                                       MD059184
+     C/END-EXEC                                                                             MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCOD <> 0 AND SQLCOD <> 100                            MD059184
+     C                   EXSR      *PSSR                                                    MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C                   ENDDO                                                              MD059184
+      *                                                                                     MD059184
+     C                   IF        SQLCOD = 100                                             MD059184
+      *                                                                                     MD059184
+      ** Execute Update Subroutine - Based on number of fields                              MD059184
+      *                                                                                     MD059184
+     C                   EVAL      TotFldCount = FieldCounter                               MD059184
+     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
+     C                   EXSR      EnhSqlUpdate                                             MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Close Cursor for Zonal Layer                                                       MD059184
+      *                                                                                     MD059184
+     C                   IF        Layer = 'Zonal '                                         MD059184
+     C/EXEC SQL CLOSE P1                                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+      ** Close Cursor for Global Layer                                                      MD059184
+      *                                                                                     MD059184
+     C                   IF        Layer = 'Global '                                        MD059184
+     C/EXEC SQL CLOSE P2                                                                    MD059184
+     C/END-EXEC                                                                             MD059184
+     C                   ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C**********         DOW       EndOfFile = False                                        MD059184
+      *
+      ** Process Update of files
+      *
+     C*****Layer         IFEQ      'Zonal '                                                 MD059184
+     C*****LAYR*         ANDEQ     'Zonal  '                                                MD059184
+     C**********         EXSR      SRUpdate                                                 MD059184
+     C**********         ENDIF                                                              MD059184
+      *                                                                                     MD059184
+     C*****Layer         IFEQ      'Global'                                                 MD059184
+     C*****LAYR*         ANDEQ     'Global '                                                MD059184
+     C**********         EXSR      SRUpdate1                                                MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+      ** Read next record
+      *
+     C**********         READ      SMFILUD0                             3545                MD059184
+      *
+     C**********                    IF        ErrorOnFl = True                              MD059184
+     C******LOCK         IN        LDA                                                      MD059184
+     C**********         EVAL      DBKey = '*NEXT'                                          MD059184
+     C**********         EVAL      DBFile = 'SMFILUD0'                                      MD059184
+     C**********         EVAL      DBase = 2                                                MD059184
+     C**********         OUT       LDA                                                      MD059184
+     C**********         EXSR      *PSSR                                                    MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         ENDDO
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *****************************************************************
+      *  P R O G R A M   E N D                                        *
+      *****************************************************************
+      *                                                               *
+      * SRUpdate - Update files                                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*****SRUpdate      BEGSR                                                              MD059184
+      *
+     C**********         IF        PMBR <> *BLANKS                                          MD059184
+     C**********         EVAL      Command = ('OVRDBF FILE('+PMBR+') TOFILE('+              MD059184
+     C**********                   PFILE+') MBR('+PMBR+')')                                 MD059184
+     C**********         CALL      'QCMDEXC'                                                MD059184
+     C**********         PARM                    Command                                    MD059184
+     C**********         PARM      2764          Length           15 5                      MD059184
+      *
+     C**********         EVAL      PFILE = PMBR                                             MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         EVAL      UFILE = PFILE                                            MD059184
+     C**********         EVAL      UFIELD = PFIELD                                          MD059184
+      *
+     C**********         EVAL      thisSQL = 'Update '+UFILE+' SET '+UFIELD                 MD059184
+     C**********                   +' = ''  '' WHERE '+UFIELD+' = ''00'' '                  MD059184
+     C**********                   +'OR '+UFIELD+' = ''0 '' '                               MD059184
+     C**********                   +'OR '+UFIELD+' = '' 0'' '                               MD059184
+     C**********         EVAL      thisSQL1 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''01'' WHERE '+UFIELD+' = ''1 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 1'' '                               MD059184
+     C**********         EVAL      thisSQL2 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''02'' WHERE '+UFIELD+' = ''2 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 2'' '                               MD059184
+     C**********         EVAL      thisSQL3 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''03'' WHERE '+UFIELD+' = ''3 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 3'' '                               MD059184
+     C**********         EVAL      thisSQL4 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''04'' WHERE '+UFIELD+' = ''4 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 4'' '                               MD059184
+     C**********         EVAL      thisSQL5 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''05'' WHERE '+UFIELD+' = ''5 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 5'' '                               MD059184
+     C**********         EVAL      thisSQL6 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''06'' WHERE '+UFIELD+' = ''6 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 6'' '                               MD059184
+     C**********         EVAL      thisSQL7 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''07'' WHERE '+UFIELD+' = ''7 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 7'' '                               MD059184
+     C**********         EVAL      thisSQL8 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''08'' WHERE '+UFIELD+' = ''8 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 8'' '                               MD059184
+     C**********         EVAL      thisSQL9 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''09'' WHERE '+UFIELD+' = ''9 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 9'' '                               MD059184
+      *
+     C*/EXEC*SQL*                                                                           MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL                                                         MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL1                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL2                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL3                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL4                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL5                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL6                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL7                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL8                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL9                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+      *
+     C**********         IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C**********         EXSR      *PSSR                                                    MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         IF        PMBR <> *BLANKS                                          MD059184
+     C**********         EVAL      Command = ('DLTOVR '+PMBR+'')                            MD059184
+     C**********         CALL      'QCMDEXC'                                                MD059184
+     C**********         PARM                    Command                                    MD059184
+     C**********         PARM      2764          Length                                     MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         ENDSR                                                              MD059184
+      *****************************************************************
+      *                                                               *
+      * SRUpdate - Update files (Global)                              *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*****SRUpdate1     BEGSR                                                              MD059184
+      *
+     C**********         IF        PMBR <> *BLANKS                                          MD059184
+     C**********         EVAL      Command = ('OVRDBF FILE('+PMBR+') TOFILE('+              MD059184
+     C**********                   PFILE+') MBR('+PMBR+')')                                 MD059184
+     C**********         CALL      'QCMDEXC'                                                MD059184
+     C**********         PARM                    Command                                    MD059184
+     C**********         PARM      2764          Length           15 5                      MD059184
+      *
+     C**********         EVAL      PFILE = PMBR                                             MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         EVAL      UFILE = PFILE                                            MD059184
+     C**********         EVAL      UFIELD = PFIELD                                          MD059184
+      *
+     C**********         EVAL      thisSQL = 'Update '+UFILE+' SET '+UFIELD                 MD059184
+     C**********                   +' = ''  '' WHERE '+UFIELD+' = ''00'' '                  MD059184
+     C**********                   +'OR '+UFIELD+' = ''0 '' '                               MD059184
+     C**********                   +'OR '+UFIELD+' = '' 0'' '                               MD059184
+     C**********         EVAL      thisSQL1 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''01'' WHERE '+UFIELD+' = ''1 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 1'' '                               MD059184
+     C**********         EVAL      thisSQL2 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''02'' WHERE '+UFIELD+' = ''2 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 2'' '                               MD059184
+     C**********         EVAL      thisSQL3 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''03'' WHERE '+UFIELD+' = ''3 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 3'' '                               MD059184
+     C**********         EVAL      thisSQL4 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''04'' WHERE '+UFIELD+' = ''4 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 4'' '                               MD059184
+     C**********         EVAL      thisSQL5 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''05'' WHERE '+UFIELD+' = ''5 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 5'' '                               MD059184
+     C**********         EVAL      thisSQL6 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''06'' WHERE '+UFIELD+' = ''6 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 6'' '                               MD059184
+     C**********         EVAL      thisSQL7 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''07'' WHERE '+UFIELD+' = ''7 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 7'' '                               MD059184
+     C**********         EVAL      thisSQL8 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''08'' WHERE '+UFIELD+' = ''8 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 8'' '                               MD059184
+     C**********         EVAL      thisSQL9 = 'Update '+UFILE+' SET '+UFIELD                MD059184
+     C**********                   +' = ''09'' WHERE '+UFIELD+' = ''9 '''                   MD059184
+     C**********                   +'OR '+UFIELD+' = '' 9'' '                               MD059184
+      *
+     C*/EXEC*SQL*                                                                           MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL                                                         MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL1                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL2                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL3                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL4                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL5                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL6                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL7                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL8                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+     C*/EXEC*SQL                                                                            MD059184
+     C*+*EXECUTE*IMMEDIATE*:thisSQL9                                                        MD059184
+     C*/END-EXEC*                                                                           MD059184
+      *
+     C**********         IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
+     C**********         EXSR      *PSSR                                                    MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         IF        PMBR <> *BLANKS                                          MD059184
+     C**********         EVAL      Command = ('DLTOVR '+PMBR+'')                            MD059184
+     C**********         CALL      'QCMDEXC'                                                MD059184
+     C**********         PARM                    Command                                    MD059184
+     C**********         PARM      2764          Length                                     MD059184
+     C**********         ENDIF                                                              MD059184
+      *
+     C**********         ENDSR                                                              MD059184
+      *****************************************************************                     MD059184
+      *                                                               *                     MD059184
+      * ZonalSQL - Update files (Zonal)                               *                     MD059184
+      *                                                               *                     MD059184
+      * Called by: Main Processing                                    *                     MD059184
+      *                                                               *                     MD059184
+      * Calls: None                                                   *                     MD059184
+      *                                                               *                     MD059184
+      *****************************************************************                     MD059184
+     C     ZonalSQL      BEGSR                                                              MD059184
       *                                                                                     MD059184
       ** SORT FILE INTO ASCENDING ORDER.                                                    MD059184
       *                                                                                     MD059184
        SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +
-                             'ORDER BY PFILE ASC';
+                             'WHERE LAYR = ''Zonal''' +
+                             'ORDER BY PFILE ASC ';
       *                                                                                     MD059184
       ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
       *                                                                                     MD059184
@@ -124,379 +473,47 @@
                    IF SQLCOD <> 0 AND SQLCOD <> 100;
                       EXSR *PSSR;
                    ENDIF;
-      *                                                                                     MD059184
-      ** EXECUTE LOOP UNTIL RECORDS ARE FOUND.                                              MD059184
-      *                                                                                     MD059184
-                   DOW SQLCOD = 0;
-      *
-     C                   EVAL      LayerFromFile = %TRIM(LAYR)                              MD059184
-      *                                                                                     MD059184
-      ** Processing for Zonal Layer                                                         MD059184
-      *                                                                                     MD059184
-     C     Layer         IFEQ      'Zonal '                                                 MD059184
-     C     LayerFromFile ANDEQ     'Zonal  '                                                MD059184
-      *                                                                                     MD059184
-      ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
-      *                                                                                     MD059184
-     C                   EVAL      CurrFileName = %TRIM(PFILE)                              MD059184
-     C                   EVAL      CurrPFMember = %TRIM(PMBR)                               MD059184
-     C                   IF        IsFileFirstRec = 0                                       MD059184
-     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
-     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
-     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
-     C                   EVAL      IsFileFirstRec = 1                                       MD059184
-     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
-     C                   ELSE                                                               MD059184
-      *                                                                                     MD059184
-      ** Process Update when Current File Name <> Previous File Name                        MD059184
-      ** Else Save Extracted Fields Until File Name <> Previous                             MD059184
-      *                                                                                     MD059184
-     C                   IF        %TRIM(PrevFileName) <> %TRIM(CurrFileName)               MD059184
-     C                             OR %TRIM(PrevPFMember) <> %TRIM(CurrPFMember)            MD059184
-      *                                                                                     MD059184
-      ** Execute Update Subroutine - Based on number of fields                              MD059184
-      *                                                                                     MD059184
-     C                   EVAL      TotFldCount = FieldCounter                               MD059184
-     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
-     C                   EXSR      EnhSqlUpdate                                             MD059184
-      *                                                                                     MD059184
-      ** Reset Field Counters and Field Array                                               MD059184
-      ** And Set Field Extract and Counter for the Current File                             MD059184
-      *                                                                                     MD059184
-     C     TotFldCount   DOWNE     0                                                        MD059184
-     C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
-     C                   EVAL      sqlStatement(TotFldCount) = *BLANKS                      MD059184
-     C                   EVAL      condStatement(TotFldCount) = *BLANKS                     MD059184
-     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
-     C                   ENDDO                                                              MD059184
-     C                   EVAL      ExecCnt = 1                                              MD059184
-     C                   EVAL      execStatement = *BLANKS                                  MD059184
-     C                   EVAL      FieldCounter = 1                                         MD059184
-     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
-     C                   ELSE                                                               MD059184
-      *                                                                                     MD059184
-      ** Concatenate extracted fields from the same file name.                              MD059184
-      *                                                                                     MD059184
-     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
-     C                   ENDIF                                                              MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
-     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** Processing for Global Layer                                                        MD059184
-      *                                                                                     MD059184
-     C     Layer         IFEQ      'Global'                                                 MD059184
-     C     LayerFromFile ANDEQ     'Global '                                                MD059184
-      *                                                                                     MD059184
-      ** INITIALISE FIRST RECORD FROM FILE.                                                 MD059184
-      *                                                                                     MD059184
-     C                   EVAL      CurrFileName = %TRIM(PFILE)                              MD059184
-     C                   EVAL      CurrPFMember = %TRIM(PMBR)                               MD059184
-     C                   IF        IsFileFirstRec = 0                                       MD059184
-     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
-     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
-     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      PMBR = %TRIM(PMBR)                                       MD059184
-     C                   EVAL      IsFileFirstRec = 1                                       MD059184
-     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
-     C                   ELSE                                                               MD059184
-      *                                                                                     MD059184
-      ** Process Update when Current File Name <> Previous File Name                        MD059184
-      ** Else Save Extracted Fields Until File Name <> Previous                             MD059184
-      *                                                                                     MD059184
-     C                   IF        %TRIM(PrevFileName) <> %TRIM(CurrFileName)               MD059184
-     C                             OR %TRIM(PrevPFMember) <> %TRIM(CurrPFMember)            MD059184
-     C                   EVAL      TotFldCount = FieldCounter                               MD059184
-     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
-     C                   EXSR      EnhSqlUpdate                                             MD059184
-      *                                                                                     MD059184
-      ** Reset Field Counters and Field Array                                               MD059184
-      ** And Set Field Extract and Counter for the Current File                             MD059184
-      *                                                                                     MD059184
-     C     TotFldCount   DOWNE     0                                                        MD059184
-     C                   EVAL      ExtFldArray(TotFldCount) = *BLANKS                       MD059184
-     C                   EVAL      sqlStatement(TotFldCount) = *BLANKS                      MD059184
-     C                   EVAL      condStatement(TotFldCount) = *BLANKS                     MD059184
-     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
-     C                   ENDDO                                                              MD059184
-     C                   EVAL      ExecCnt = 1                                              MD059184
-     C                   EVAL      execStatement = *BLANKS                                  MD059184
-     C                   EVAL      FieldCounter = 1                                         MD059184
-     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
-     C                   ELSE                                                               MD059184
-      *                                                                                     MD059184
-      ** Concatenate extracted fields from the same file name.                              MD059184
-      *                                                                                     MD059184
-     C                   EVAL      ExtFldArray(FieldCounter) = %TRIM(PFIELD)                MD059184
-     C                   EVAL      FieldCounter = FieldCounter + 1                          MD059184
-     C                   ENDIF                                                              MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-     C                   EVAL      PrevFileName = %TRIM(CurrFileName)                       MD059184
-     C                   EVAL      PrevPFMember = %TRIM(CurrPFMember)                       MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-      ** Fetch next record from file.                                                       MD059184
-      *                                                                                     MD059184
-                      EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate;
-
-                      IF SQLCOD <> 0 AND SQLCOD <> 100;
-                         EXSR *PSSR;
-                      ENDIF;
-      *                                                                                     MD059184
-                   ENDDO;                                                                   MD059184
-      *
-     C                   IF        SQLCOD = 100                                             MD059184
-      *                                                                                     MD059184
-      ** Execute Update Subroutine - Based on number of fields                              MD059184
-      *                                                                                     MD059184
-     C                   EVAL      TotFldCount = FieldCounter                               MD059184
-     C                   EVAL      TotFldCount = TotFldCount - 1                            MD059184
-     C                   EXSR      EnhSqlUpdate                                             MD059184
-     C                   ENDIF                                                              MD059184
-      *                                                                                     MD059184
-                   EXEC SQL CLOSE P1;
-      *                                                                                     MD059184
-     C***********        DOW       EndOfFile = False                                        MD059184
-      *
-      ** Process Update of files
-      *
-     C*****Layer*        IFEQ      'Zonal '                                                 MD059184
-     C*****LAYR**        ANDEQ     'Zonal  '                                                MD059184
-     C***********        EXSR      SRUpdate                                                 MD059184
-     C***********        ENDIF                                                              MD059184
-      *                                                                                     MD059184
-     C*****Layer*        IFEQ      'Global'                                                 MD059184
-     C*****LAYR**        ANDEQ     'Global '                                                MD059184
-     C***********        EXSR      SRUpdate1                                                MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-      ** Read next record
-      *
-     C***********        READ      SMFILUD0                             3545                MD059184
-      *
-     C***********                   IF        ErrorOnFl = True                              MD059184
-     C******LOCK*        IN        LDA                                                      MD059184
-     C***********        EVAL      DBKey = '*NEXT'                                          MD059184
-     C***********        EVAL      DBFile = 'SMFILUD0'                                      MD059184
-     C***********        EVAL      DBase = 2                                                MD059184
-     C***********        OUT       LDA                                                      MD059184
-     C***********        EXSR      *PSSR                                                    MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        ENDDO
-     C                   EVAL      *INLR = *ON
-     C                   RETURN
-
-      *****************************************************************
-      *  P R O G R A M   E N D                                        *
-      *****************************************************************
-      *                                                               *
-      * SRUpdate - Update files                                       *
-      *                                                               *
-      * Called by: Main Processing                                    *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
-      *****************************************************************
-     C*****SRUpdate      BEGSR                                                              MD059184
-      *
-     C***********        IF        PMBR <> *BLANKS                                          MD059184
-     C***********        EVAL      Command = ('OVRDBF FILE('+PMBR+') TOFILE('+              MD059184
-     C***********                  PFILE+') MBR('+PMBR+')')                                 MD059184
-     C***********        CALL      'QCMDEXC'                                                MD059184
-     C***********        PARM                    Command                                    MD059184
-     C***********        PARM      2764          Length           15 5                      MD059184
-      *
-     C***********        EVAL      PFILE = PMBR                                             MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        EVAL      UFILE = PFILE                                            MD059184
-     C***********        EVAL      UFIELD = PFIELD                                          MD059184
-      *
-     C***********        EVAL      thisSQL = 'Update '+UFILE+' SET '+UFIELD                 MD059184
-     C***********                  +' = ''  '' WHERE '+UFIELD+' = ''00'' '                  MD059184
-     C***********                  +'OR '+UFIELD+' = ''0 '' '                               MD059184
-     C***********                  +'OR '+UFIELD+' = '' 0'' '                               MD059184
-     C***********        EVAL      thisSQL1 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''01'' WHERE '+UFIELD+' = ''1 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 1'' '                               MD059184
-     C***********        EVAL      thisSQL2 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''02'' WHERE '+UFIELD+' = ''2 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 2'' '                               MD059184
-     C***********        EVAL      thisSQL3 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''03'' WHERE '+UFIELD+' = ''3 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 3'' '                               MD059184
-     C***********        EVAL      thisSQL4 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''04'' WHERE '+UFIELD+' = ''4 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 4'' '                               MD059184
-     C***********        EVAL      thisSQL5 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''05'' WHERE '+UFIELD+' = ''5 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 5'' '                               MD059184
-     C***********        EVAL      thisSQL6 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''06'' WHERE '+UFIELD+' = ''6 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 6'' '                               MD059184
-     C***********        EVAL      thisSQL7 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''07'' WHERE '+UFIELD+' = ''7 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 7'' '                               MD059184
-     C***********        EVAL      thisSQL8 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''08'' WHERE '+UFIELD+' = ''8 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 8'' '                               MD059184
-     C***********        EVAL      thisSQL9 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''09'' WHERE '+UFIELD+' = ''9 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 9'' '                               MD059184
-      *
-     C*/EXEC*SQL*                                                                           MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL                                                         MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL1                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL2                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL3                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL4                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL5                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL6                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL7                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL8                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL9                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-      *
-     C***********        IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
-     C***********        EXSR      *PSSR                                                    MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        IF        PMBR <> *BLANKS                                          MD059184
-     C***********        EVAL      Command = ('DLTOVR '+PMBR+'')                            MD059184
-     C***********        CALL      'QCMDEXC'                                                MD059184
-     C***********        PARM                    Command                                    MD059184
-     C***********        PARM      2764          Length                                     MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        ENDSR                                                              MD059184
-      *****************************************************************
-      *                                                               *
-      * SRUpdate - Update files (Global)                              *
-      *                                                               *
-      * Called by: Main Processing                                    *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
-      *****************************************************************
-     C*****SRUpdate1     BEGSR                                                              MD059184
-      *
-     C***********        IF        PMBR <> *BLANKS                                          MD059184
-     C***********        EVAL      Command = ('OVRDBF FILE('+PMBR+') TOFILE('+              MD059184
-     C***********                  PFILE+') MBR('+PMBR+')')                                 MD059184
-     C***********        CALL      'QCMDEXC'                                                MD059184
-     C***********        PARM                    Command                                    MD059184
-     C***********        PARM      2764          Length           15 5                      MD059184
-      *
-     C***********        EVAL      PFILE = PMBR                                             MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        EVAL      UFILE = PFILE                                            MD059184
-     C***********        EVAL      UFIELD = PFIELD                                          MD059184
-      *
-     C***********        EVAL      thisSQL = 'Update '+UFILE+' SET '+UFIELD                 MD059184
-     C***********                  +' = ''  '' WHERE '+UFIELD+' = ''00'' '                  MD059184
-     C***********                  +'OR '+UFIELD+' = ''0 '' '                               MD059184
-     C***********                  +'OR '+UFIELD+' = '' 0'' '                               MD059184
-     C***********        EVAL      thisSQL1 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''01'' WHERE '+UFIELD+' = ''1 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 1'' '                               MD059184
-     C***********        EVAL      thisSQL2 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''02'' WHERE '+UFIELD+' = ''2 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 2'' '                               MD059184
-     C***********        EVAL      thisSQL3 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''03'' WHERE '+UFIELD+' = ''3 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 3'' '                               MD059184
-     C***********        EVAL      thisSQL4 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''04'' WHERE '+UFIELD+' = ''4 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 4'' '                               MD059184
-     C***********        EVAL      thisSQL5 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''05'' WHERE '+UFIELD+' = ''5 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 5'' '                               MD059184
-     C***********        EVAL      thisSQL6 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''06'' WHERE '+UFIELD+' = ''6 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 6'' '                               MD059184
-     C***********        EVAL      thisSQL7 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''07'' WHERE '+UFIELD+' = ''7 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 7'' '                               MD059184
-     C***********        EVAL      thisSQL8 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''08'' WHERE '+UFIELD+' = ''8 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 8'' '                               MD059184
-     C***********        EVAL      thisSQL9 = 'Update '+UFILE+' SET '+UFIELD                MD059184
-     C***********                  +' = ''09'' WHERE '+UFIELD+' = ''9 '''                   MD059184
-     C***********                  +'OR '+UFIELD+' = '' 9'' '                               MD059184
-      *
-     C*/EXEC*SQL*                                                                           MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL                                                         MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL1                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL2                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL3                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL4                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL5                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL6                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL7                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL8                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-     C*/EXEC*SQL                                                                            MD059184
-     C*+*EXECUTE*IMMEDIATE*:thisSQL9                                                        MD059184
-     C*/END-EXEC*                                                                           MD059184
-      *
-     C***********        IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD059184
-     C***********        EXSR      *PSSR                                                    MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        IF        PMBR <> *BLANKS                                          MD059184
-     C***********        EVAL      Command = ('DLTOVR '+PMBR+'')                            MD059184
-     C***********        CALL      'QCMDEXC'                                                MD059184
-     C***********        PARM                    Command                                    MD059184
-     C***********        PARM      2764          Length                                     MD059184
-     C***********        ENDIF                                                              MD059184
-      *
-     C***********        ENDSR                                                              MD059184
+     C                   ENDSR                                                              MD059184
       *****************************************************************                     MD059184
       *                                                               *                     MD059184
-      * EnhSqlUpdate - Update Files (Zonal & Global)                  *                     MD059184
+      * GlobalSQL - Update files (Global)                             *                     MD059184
+      *                                                               *                     MD059184
+      * Called by: Main Processing                                    *                     MD059184
+      *                                                               *                     MD059184
+      * Calls: None                                                   *                     MD059184
+      *                                                               *                     MD059184
+      *****************************************************************                     MD059184
+     C     GlobalSQL     BEGSR                                                              MD059184
+      *                                                                                     MD059184
+      ** SORT FILE INTO ASCENDING ORDER.                                                    MD059184
+      *                                                                                     MD059184
+       SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +
+                             'WHERE LAYR = ''Global''' +
+                             'ORDER BY PFILE ASC ';
+      *                                                                                     MD059184
+      ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
+      *                                                                                     MD059184
+                   EXEC SQL PREPARE P2 FROM :SortSQLStmnt;
+                   EXEC SQL DECLARE P2 CURSOR FOR P2;
+                   EXEC SQL OPEN P2;
+                   EXEC SQL FETCH FROM P2 INTO :SMFileUpdate;
+      *                                                                                     MD059184
+      ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059184
+      *                                                                                     MD059184
+                   IF SQLCOD = -501;
+                      EXEC SQL OPEN P2;
+                      EXEC SQL FETCH NEXT FROM P2 INTO :SMFileUpdate;
+                   ENDIF;
+      *                                                                                     MD059184
+      ** IF TABLE FINDS ERROR OR NO RECORD.                                                 MD059184
+      *                                                                                     MD059184
+                   IF SQLCOD <> 0 AND SQLCOD <> 100;
+                      EXSR *PSSR;
+                   ENDIF;
+     C                   ENDSR                                                              MD059184
+      *****************************************************************                     MD059184
+      *                                                               *                     MD059184
+      * EnhSqlUpdate - Update Files (SQL Update Statement)            *                     MD059184
       *                                                               *                     MD059184
       * Called by: Main Processing                                    *                     MD059184
       *                                                               *                     MD059184
@@ -534,6 +551,8 @@
      C                             'WHEN (' + %TRIM(ExtFldArray(Cnt)) +                     MD059184
      C                             ' =  ''00''' + ' OR ' +                                  MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ' =  ''''' +                   MD059184
+     C                             ' OR %TRIM(ExtFldArray(Cnt)) = '' 0''' +                 MD059184
+     C                             ' OR %TRIM(ExtFldArray(Cnt)) = ''0 ''' +                 MD059184
      C                             ') THEN ''''' +                                          MD059184
      C                             ' WHEN REPLACE (TRANSLATE(' +                            MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ',''0''' +                     MD059184
@@ -556,6 +575,8 @@
      C                             'WHEN (' + %TRIM(ExtFldArray(Cnt)) +                     MD059184
      C                             ' =  ''00''' + ' OR ' +                                  MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ' =  ''''' +                   MD059184
+     C                             ' OR %TRIM(ExtFldArray(Cnt)) = '' 0''' +                 MD059184
+     C                             ' OR %TRIM(ExtFldArray(Cnt)) = ''0 ''' +                 MD059184
      C                             ') THEN ''''' +                                          MD059184
      C                             ' WHEN REPLACE (TRANSLATE(' +                            MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ',''0''' +                     MD059184
@@ -617,8 +638,7 @@
      C                   PARM      2764          Length                                     MD059184
      C                   ENDIF                                                              MD059184
       *                                                                                     MD059184
-      *
-     C                   ENDSR
+     C                   ENDSR                                                              MD059184
       *****************************************************************
       *                                                               *
       * *inzsr - Program Initialisation routine                       *

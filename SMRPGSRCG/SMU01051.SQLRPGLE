@@ -240,13 +240,12 @@
       *****************************************************************
       *  P R O G R A M   E N D                                        *
       *****************************************************************
-      *                                                               *
-      * SRUpdate - Update files                                       *
-      *                                                               *
-      * Called by: Main Processing                                    *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
+      **SRUpdate*-*Update*files****************************************                     MD059184
+      *****************************************************************                     MD059184
+      **Called*by:*Main*Processing*************************************                     MD059184
+      *****************************************************************                     MD059184
+      **Calls:*None****************************************************                     MD059184
+      *****************************************************************                     MD059184
       *****************************************************************
      C*****SRUpdate      BEGSR                                                              MD059184
       *
@@ -339,13 +338,12 @@
       *
      C**********         ENDSR                                                              MD059184
       *****************************************************************
-      *                                                               *
-      * SRUpdate - Update files (Global)                              *
-      *                                                               *
-      * Called by: Main Processing                                    *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
+      **SRUpdate*-*Update*files*(Global)*******************************                     MD059184
+      *****************************************************************                     MD059184
+      **Called*by:*Main*Processing*************************************                     MD059184
+      *****************************************************************                     MD059184
+      **Calls:*None****************************************************                     MD059184
+      *****************************************************************                     MD059184
       *****************************************************************
      C*****SRUpdate1     BEGSR                                                              MD059184
       *
@@ -451,7 +449,7 @@
       ** SORT FILE INTO ASCENDING ORDER.                                                    MD059184
       *                                                                                     MD059184
        SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +
-                             'WHERE LAYR = ''Zonal''' +
+                             'WHERE LAYR = ''Zonal'' ' +
                              'ORDER BY PFILE ASC ';
       *                                                                                     MD059184
       ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
@@ -488,7 +486,7 @@
       ** SORT FILE INTO ASCENDING ORDER.                                                    MD059184
       *                                                                                     MD059184
        SortSQLStmnt = 'SELECT * FROM SMFILUPD ' +
-                             'WHERE LAYR = ''Global''' +
+                             'WHERE LAYR = ''Global'' ' +
                              'ORDER BY PFILE ASC ';
       *                                                                                     MD059184
       ** PREPARE CURSOR TO FETCH RECORDS FROM THE FILE.                                     MD059184
@@ -551,8 +549,10 @@
      C                             'WHEN (' + %TRIM(ExtFldArray(Cnt)) +                     MD059184
      C                             ' =  ''00''' + ' OR ' +                                  MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ' =  ''''' +                   MD059184
-     C                             ' OR %TRIM(ExtFldArray(Cnt)) = '' 0''' +                 MD059184
-     C                             ' OR %TRIM(ExtFldArray(Cnt)) = ''0 ''' +                 MD059184
+     C                             ' OR ' + %TRIM(ExtFldArray(Cnt)) +                       MD059184
+     C                             ' = '' 0''' +                                            MD059184
+     C                             ' OR ' + %TRIM(ExtFldArray(Cnt)) +                       MD059184
+     C                             ' = ''0 ''' +                                            MD059184
      C                             ') THEN ''''' +                                          MD059184
      C                             ' WHEN REPLACE (TRANSLATE(' +                            MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ',''0''' +                     MD059184
@@ -575,8 +575,10 @@
      C                             'WHEN (' + %TRIM(ExtFldArray(Cnt)) +                     MD059184
      C                             ' =  ''00''' + ' OR ' +                                  MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ' =  ''''' +                   MD059184
-     C                             ' OR %TRIM(ExtFldArray(Cnt)) = '' 0''' +                 MD059184
-     C                             ' OR %TRIM(ExtFldArray(Cnt)) = ''0 ''' +                 MD059184
+     C                             ' OR ' + %TRIM(ExtFldArray(Cnt)) +                       MD059184
+     C                             ' = '' 0''' +                                            MD059184
+     C                             ' OR ' + %TRIM(ExtFldArray(Cnt)) +                       MD059184
+     C                             ' = ''0 ''' +                                            MD059184
      C                             ') THEN ''''' +                                          MD059184
      C                             ' WHEN REPLACE (TRANSLATE(' +                            MD059184
      C                             %TRIM(ExtFldArray(Cnt)) + ',''0''' +                     MD059184

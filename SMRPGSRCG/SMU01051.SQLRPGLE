@@ -620,9 +620,9 @@
       *****************************************************************
      C     *PSSR         BEGSR
 
-     C                   EVAL      *INU7 = '1'                                              MD059184
+     C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'
-     C                   EVAL      *INLR = *ON
+     C                   EVAL      *INLR = *ON                                              MD059184
      C                   DUMP
      C                   RETURN
 

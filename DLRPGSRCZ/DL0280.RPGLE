@@ -9210,6 +9210,8 @@
      C*                                                                   S01119
      C                   MOVE      ' '           FLRT              1                        AR887940
      C                   MOVE      ' '           WBLRT             1                          CIR020
+     C                   MOVE      'Y'           WUpdUIACD         1                        MD059253
+     C                   MOVE      'Y'           WUpdTIACD         1                        MD059253
      C                   IF        CIR020 = 'Y'                                               CIR020
      C                   Z-ADD     0             WWUBRT           11 7                        CIR020
      C                   Z-ADD     0             WWTBRT           11 7                        CIR020
@@ -9248,6 +9250,7 @@
      C                   Z-ADD     RTSPIR        UEINR                                        CIR020
      C                   Z-ADD     RTSPIR        WWUBRT                                       CIR020
      C                   Z-ADD     RTSPIR        UBRTE                                        CIR020
+     C                   MOVE      'N'           WUpdUIACD                                  MD059253
      C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     USPIN         IFEQ      'A'                                                        CIR020
@@ -9298,6 +9301,7 @@
      C                   Z-ADD     RTSPIR        TEINR                                        CIR020
      C                   Z-ADD     RTSPIR        WWTBRT                                       CIR020
      C                   Z-ADD     RTSPIR        TBRTE                                        CIR020
+     C                   MOVE      'N'           WUpdTIACD                                  MD059253
      C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     TSPIN         IFEQ      'A'                                                        CIR020
@@ -17039,7 +17043,10 @@
      C     FSUITB        ADD       WINTST        FSUITB
      C                   Z-ADD     WINTST        FSUALB
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -17196,7 +17203,10 @@
      C                   Z-ADD     WINTST        FSTALB
       *                                                                                       CAS005
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -20853,7 +20863,10 @@
      C     FSUITB        ADD       WKINT         FSUITB
      C                   Z-ADD     WINTST        FSUALB
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -21000,7 +21013,10 @@
      C     FSTITB        ADD       WINTST        FSTITB
      C                   Z-ADD     WINTST        FSTALB
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002

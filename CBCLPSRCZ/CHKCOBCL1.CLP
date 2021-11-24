@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055891           Date 01Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058986           Date 11Oct21              */
+/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                    /*S01417*/
+/*       MD058986 - Add Logical Delete for components and dependencie*/
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Tidy up message.              /*S01417*/
@@ -75,15 +77,21 @@
 /**/
 /**********  CPYF       FROMFILE(&LIB/CBCMPNPD) TOFILE(CHKCMPPD) +
                           MBROPT(*REPLACE) */                                           /*MD055891*/
-             CPYF       FROMFILE(&DVLIB/CBCMPJW0) TOFILE(CHKCMPPD) +
+/**********  CPYF       FROMFILE(&DVLIB/CBCMPJW0) TOFILE(CHKCMPPD) +
                           MBROPT(*REPLACE) PRINT(*NONE) FMTOPT(*MAP +
-                          *DROP)                                                        /*MD055891*/
+                          *DROP) */                                           /*MD055891**MD058986*/
+             CPYF       FROMFILE(&DVLIB/CBCMPJW1) TOFILE(CHKCMPPD) +
+                          MBROPT(*REPLACE) PRINT(*NONE) FMTOPT(*MAP +
+                          *DROP)                                                        /*MD058986*/
 /**********  CPYF       FROMFILE(&LIB/CBDPRLPD) TOFILE(CHKDPRPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP) */            /*S01417*/        /*MD055891*/
 /*                        MBROPT(*REPLACE)                            /*S01417*/
-             CPYF       FROMFILE(&DVLIB/CBDPRJW0) TOFILE(CHKDPRPD) +
+/**********  CPYF       FROMFILE(&DVLIB/CBDPRJW0) TOFILE(CHKDPRPD) +
                           MBROPT(*REPLACE) PRINT(*NONE) FMTOPT(*MAP +
-                          *DROP)                                                        /*MD055891*/
+                          *DROP) */                                           /*MD055891**MD058986*/
+             CPYF       FROMFILE(&DVLIB/CBDPRJW1) TOFILE(CHKDPRPD) +
+                          MBROPT(*REPLACE) PRINT(*NONE) FMTOPT(*MAP +
+                          *DROP)                                                        /*MD058986*/
 /**/
 /**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +                                 */ /*CPK018*/
 /**********               MSGDTA('Validation of COB Component and +                    */ /*CPK018*/

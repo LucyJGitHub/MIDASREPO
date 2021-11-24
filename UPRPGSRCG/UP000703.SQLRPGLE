@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058933A            Date 20Oct21             *
-      *  Prev Amend No. MD056891             Date 21Aug21             *
+      *  Last Amend No. MD058986             Date 11Oct21             *
+      *  Prev Amend No. MD058933A            Date 20Oct21             *
+      *                 MD056891             Date 21Aug21             *
       *                 MD058593             Date 20Aug21             *
       *                 MD054346             Date 18Jul21             *
       *                 MD055891             Date 01Sep20             *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD058933A - Same logic as in UP000701 needs to be applied    *
       *  MD056891 - Deliverable Data Split for T_WIPACT               *
       *  MD058593 - GZSCSAREPD was made redundant. Remove it from BTD *
@@ -251,6 +253,10 @@
      C                   eval      First = 'N'
      C                   ELSE
      C                   If        WHFLDI = 'DHCPCA'                                        MD055891
+     C                             or WHFLDI = 'DHLOGD'                                     MD058986
+     C                             or WHFLDI = 'DILOGD'                                     MD058986
+     C                             or WHFLDI = 'DJLOGD'                                     MD058986
+     C                             or WHFLDI = 'DKLOGD'                                     MD058986
      C                   else                                                               MD055891
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
@@ -392,8 +398,16 @@
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD055681
      C                   eval      PSELECT = %trimr(PSELECT) + ', ' + '''Y'''               MD055681
      C                   else                                                               MD055681
+     C                   if        WHFLDI = 'DHLOGD'                                        MD058986
+     C                             or WHFLDI = 'DILOGD'                                     MD058986
+     C                             or WHFLDI = 'DJLOGD'                                     MD058986
+     C                             or WHFLDI = 'DKLOGD'                                     MD058986
+     C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD058986
+     C                   eval      PSELECT = %trimr(PSELECT) + ', ' + '''N'''               MD058986
+     C                   else                                                               MD058986
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   ENDIF                                                              MD058986
      C                   ENDIF                                                              MD055681
      C                   ENDIF
      C                   else

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *  Last Amend No. MD058986           Date 11Oct21               *
+      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *                 MD056555           Date 31Aug20               *
       *                 MD050576           Date 26Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 CCB020C            Date 16May13               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD050576 - Quote is not allowed in Text field.               *
@@ -188,7 +190,8 @@
       * Current/previous master file format fields for change control
       *
      D*#1DBRC***       DS           262                                                     MD055891
-     D #1DBRC          DS           264                                                     MD055891
+     D*#1DBRC***       DS           264                                            MD055891 MD058986
+     D #1DBRC          DS           265                                                     MD058986
       * Stored master file format fields
      D  #1DB1                  1      1
       *
@@ -200,7 +203,8 @@
      D WDHCSEQ         S              5                                                     MD055891
      D TotRow          S             13  0                                                  MD055891
      D*YARDCS***       DS           262                                                     MD055891
-     D YARDCS          DS           264                                                     MD055891
+     D*YARDCS***       DS           264                                            MD055891 MD058986
+     D YARDCS          DS           265                                                     MD058986
      D A@CPY           DS
       * Copyright array
      D  CPY@                   1     80
@@ -3076,6 +3080,7 @@
      C+ , DHTSNO                                                                            MD055891
      C+ , DHMODE                                                                            MD055891
      C+ , DHCPCA                                                                            MD055891
+     C+ , DHLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -3116,6 +3121,7 @@
      C+ , :#1TSNO                                                                           MD055891
      C+ , 'B'                                                                               MD055891
      C+ , 'Y'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -3147,6 +3153,7 @@
      C+ , DHTSNO                                                                            MD055891
      C+ , DHMODE                                                                            MD055891
      C+ , DHCPCA                                                                            MD055891
+     C+ , DHLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -3176,6 +3183,7 @@
      C+ , :#1TSNO                                                                           MD055891
      C+ , 'B'                                                                               MD055891
      C+ , 'Y'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -3202,18 +3210,18 @@
       * USER: Processing before Data update
      C                   MOVEL     'Y'           WUJEST                         work flag
                                                                                             MD055891
-     C     DHMODE        IFEQ      'C'                                          *QUIT       MD055891
-     C                   MOVEL     #1COTT        ZA0031                         Component NaMD055891
-     C                   MOVEL     #1CSEQ        ZA0032                         Component SeMD055891
-      * Send message 'Deletion of Core component is not allowed'                            MD055891
-     C                   MOVEL     'USR0540'     ZAMSID                                     MD055891
-     C                   EXSR      ZASNMS                                                   MD055891
-     C                   SETON                                        99        *           MD055891
-     C                   MOVEL     'N'           WUJEST                         work flag   MD055891
-     C                   MOVEL     'USR0540'     W0RTN             7                        MD055891
-     C                   GOTO      SGEXIT                                       *QUIT       MD055891
-     C                   ENDIF                                                  *QUIT       MD055891
-                                                                                            MD055891
+     C*****DHMODE        IFEQ      'C'                                          *QUMD055891 MD058986
+     C**********         MOVEL     #1COTT        ZA0031                         ComMD055891 MD058986
+     C**********         MOVEL     #1CSEQ        ZA0032                         ComMD055891 MD058986
+      **Send*message 'Deletion of Core component is not allowed'                   MD055891 MD058986
+     C**********         MOVEL     'USR0540'     ZAMSID                            MD055891 MD058986
+     C**********         EXSR      ZASNMS                                          MD055891 MD058986
+     C**********         SETON                                        99        *  MD055891 MD058986
+     C**********         MOVEL     'N'           WUJEST                         worMD055891 MD058986
+     C**********         MOVEL     'USR0540'     W0RTN             7               MD055891 MD058986
+     C**********         GOTO      SGEXIT                                       *QUMD055891 MD058986
+     C**********         ENDIF                                                  *QUMD055891 MD058986
+                                                                                   MD055891 MD058986
       * Check Dep'cy Relations - Dependency Relations  *
      C                   EXSR      SHRVGN
       * CASE: PGM.*Return code is *Record already exists
@@ -3347,13 +3355,16 @@
      C                   END                                                    FI #1DBRC
       *................................................................
      C**********         DELETE    @DHREGG                              91      *           MD055891
-     C                   If        DHMODE = 'B'                                             MD055891
+      * Logical delete is now allowed for both Core and Bespoke components                  MD058986
+     C**********         If        DHMODE = 'B'                                             MD055891
      C/EXEC SQL                                                                             MD055891
-     C+ delete from CBCMPBTD                                                                MD055891
-     C+ where DHCOTT = :#1COTT and DHCSEQ = :#1CSEQ                                         MD055891
-     C/END-EXEC                                                                             MD055891
-     C/EXEC SQL                                                                             MD055891
-     C+ delete from CBCMPXTD                                                                MD055891
+     C**delete*from CBCMPBTD                                                       MD055891 MD058986
+     C**where*DHCOTT = :#1COTT and DHCSEQ = :#1CSEQ                                MD055891 MD058986
+     C*END-EXEC*                                                                   MD055891 MD058986
+     C*EXEC*SQL*                                                                   MD055891 MD058986
+     C**delete*from CBCMPXTD                                                       MD055891 MD058986
+     C+ update CBCMPXTD                                                                     MD058986
+     C+ set DHLOGD = 'Y'                                                                    MD058986
      C+ where DHCOTT = :#1COTT and DHCSEQ = :#1CSEQ                                         MD055891
      C/END-EXEC                                                                             MD055891
      C******IN91         IFEQ      '1'                                                      MD055891
@@ -3372,7 +3383,7 @@
      C                   MOVEL     'Y'           P2SUPD                         Successful Upda
       * End of S01417
      C                   END
-     C                   Endif                                                              MD055891
+     C**********         Endif                                                     MD055891 MD058986
       *================================================================
      CSR   SGEXIT        ENDSR
       /EJECT
@@ -3949,6 +3960,7 @@
      C+ WHERE DHCOTT = :#1COTT and DHCSEQ = :#1CSEQ                                         MD055891
      C/END-EXEC                                                                             MD055891
       * we may also have to update the BTD record                                           MD055891
+     C                   If        DHMODE = 'B'                                             MD058986
      C/EXEC SQL                                                                             MD055891
      C+ update CBCMPBTD                                                                     MD055891
      C+  SET DHCFOB = :#1CFOB                                                               MD055891
@@ -3957,6 +3969,7 @@
      C+  ,   DHTASK = :#1TASK                                                               MD055891
      C+ WHERE DHCOTT = :#1COTT and DHCSEQ = :#1CSEQ                                         MD055891
      C/END-EXEC                                                                             MD055891
+     C                   Endif                                                              MD058986
      C                   ELSE
       * Release record lock
      C**********         UNLOCK    CBCMPNL0                             91      *           MD055891

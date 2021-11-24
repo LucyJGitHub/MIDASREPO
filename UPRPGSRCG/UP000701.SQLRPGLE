@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058933             Date 28Sep21             *
-      *  Prev Amend No. MD058721             Date 28Aug21             *
+      *  Last Amend No. MD058986             Date 11Oct21             *
+      *  Prev Amend No. MD058933             Date 28Sep21             *
+      *                 MD058721             Date 28Aug21             *
       *                 MD058491             Date 28Jul21             *
       *                 MD057288             Date 01Dec20             *
       *                 MD057231             Date 18Nov20             *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD058933 - For CBCMPCTD, field 'Execution parameters' needs  *
       *             update as field is in the XTD.                    *
       *  MD058721 - Consider bespoke API in WIP config.               *
@@ -109,6 +111,14 @@
      C                   exsr      SR_CBCMP                                                 MD058933
      C                   endif                                                              MD058933
                                                                                             MD058933
+      * Special process for field added in XTD                                              MD058986
+     C                   if        XINDEX = 'CBCMPCTD'                                      MD058986
+     C                             or XINDEX = 'CBDPRCTD'                                   MD058986
+     C                             or XINDEX = 'CBMDCCTD'                                   MD058986
+     C                             or XINDEX = 'CBMEXCTD'                                   MD058986
+     C                   exsr      SR_UPDXTD                                                MD058986
+     C                   endif                                                              MD058986
+                                                                                            MD058986
      C                   Seton                                        LR
      C                   Return
 
@@ -559,6 +569,119 @@
      C                   Endif                                                              MD058933
      C                   ENDSR                                                              MD058933
       *                                                                                     MD058933
+      /EJECT
+      *****************************************************************                     MD058986
+      *                                                               *                     MD058986
+      *    SR_UPDXTD - Special process to update XTD file when field *                      MD058986
+      *                                                               *                     MD058986
+      *****************************************************************                     MD058986
+                                                                                            MD058986
+     C     SR_UPDXTD     BEGSR                                                              MD058986
+                                                                                            MD058986
+      * Special process for field added in XTD                                              MD058986
+                                                                                            MD058986
+     C                   if        XINDEX = 'CBCMPCTD'                                      MD058986
+                                                                                            MD058986
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD058986
+                                                                                            MD058986
+     C                   eval      SQLDynStmt = 'update '      +                            MD058986
+     C                             %trimr(KMSCHEMA) + '/CBCMPXTD x '  +                     MD058986
+     C                             ' set  x.dhlogd   =  ''N'' '           +                 MD058986
+     C                             ' where x.dhlogd = '' '' '                               MD058986
+                                                                                            MD058986
+     C/EXEC SQL                                                                             MD058986
+     C+ prepare DynSQLStmnt                                                                 MD058986
+     C+ from :SQLDynStmt                                                                    MD058986
+     C/END-EXEC                                                                             MD058986
+                                                                                            MD058986
+     C/exec SQL                                                                             MD058986
+     C+ execute DynSQLStmnt                                                                 MD058986
+     C/end-exec                                                                             MD058986
+                                                                                            MD058986
+     C                   If        SQLCode <> 0                                             MD058986
+     C                             and SQLCode <> 100                                       MD058986
+     C                   eval      ERROR = '*Error'                                         MD058986
+     C                   Dump                                                               MD058986
+     C                   Endif                                                              MD058986
+     C                   Endif                                                              MD058986
+                                                                                            MD058986
+     C                   if        XINDEX = 'CBDPRCTD'                                      MD058986
+                                                                                            MD058986
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD058986
+                                                                                            MD058986
+     C                   eval      SQLDynStmt = 'update '      +                            MD058986
+     C                             %trimr(KMSCHEMA) + '/CBDPRXTD x '  +                     MD058986
+     C                             ' set  x.dilogd   =  ''N'' '           +                 MD058986
+     C                             ' where x.dilogd = '' '' '                               MD058986
+                                                                                            MD058986
+     C/EXEC SQL                                                                             MD058986
+     C+ prepare DynSQLStmnt                                                                 MD058986
+     C+ from :SQLDynStmt                                                                    MD058986
+     C/END-EXEC                                                                             MD058986
+                                                                                            MD058986
+     C/exec SQL                                                                             MD058986
+     C+ execute DynSQLStmnt                                                                 MD058986
+     C/end-exec                                                                             MD058986
+                                                                                            MD058986
+     C                   If        SQLCode <> 0                                             MD058986
+     C                             and SQLCode <> 100                                       MD058986
+     C                   eval      ERROR = '*Error'                                         MD058986
+     C                   Dump                                                               MD058986
+     C                   Endif                                                              MD058986
+     C                   Endif                                                              MD058986
+                                                                                            MD058986
+     C                   if        XINDEX = 'CBMDCCTD'                                      MD058986
+                                                                                            MD058986
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD058986
+                                                                                            MD058986
+     C                   eval      SQLDynStmt = 'update '      +                            MD058986
+     C                             %trimr(KMSCHEMA) + '/CBMDCXTD x '  +                     MD058986
+     C                             ' set  x.djlogd   =  ''N'' '           +                 MD058986
+     C                             ' where x.djlogd = '' '' '                               MD058986
+                                                                                            MD058986
+     C/EXEC SQL                                                                             MD058986
+     C+ prepare DynSQLStmnt                                                                 MD058986
+     C+ from :SQLDynStmt                                                                    MD058986
+     C/END-EXEC                                                                             MD058986
+                                                                                            MD058986
+     C/exec SQL                                                                             MD058986
+     C+ execute DynSQLStmnt                                                                 MD058986
+     C/end-exec                                                                             MD058986
+                                                                                            MD058986
+     C                   If        SQLCode <> 0                                             MD058986
+     C                             and SQLCode <> 100                                       MD058986
+     C                   eval      ERROR = '*Error'                                         MD058986
+     C                   Dump                                                               MD058986
+     C                   Endif                                                              MD058986
+     C                   Endif                                                              MD058986
+                                                                                            MD058986
+     C                   if        XINDEX = 'CBMEXCTD'                                      MD058986
+                                                                                            MD058986
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD058986
+                                                                                            MD058986
+     C                   eval      SQLDynStmt = 'update '      +                            MD058986
+     C                             %trimr(KMSCHEMA) + '/CBMEXXTD x '  +                     MD058986
+     C                             ' set  x.dklogd   =  ''N'' '           +                 MD058986
+     C                             ' where x.dklogd = '' '' '                               MD058986
+                                                                                            MD058986
+     C/EXEC SQL                                                                             MD058986
+     C+ prepare DynSQLStmnt                                                                 MD058986
+     C+ from :SQLDynStmt                                                                    MD058986
+     C/END-EXEC                                                                             MD058986
+                                                                                            MD058986
+     C/exec SQL                                                                             MD058986
+     C+ execute DynSQLStmnt                                                                 MD058986
+     C/end-exec                                                                             MD058986
+                                                                                            MD058986
+     C                   If        SQLCode <> 0                                             MD058986
+     C                             and SQLCode <> 100                                       MD058986
+     C                   eval      ERROR = '*Error'                                         MD058986
+     C                   Dump                                                               MD058986
+     C                   Endif                                                              MD058986
+     C                   Endif                                                              MD058986
+                                                                                            MD058986
+     C                   ENDSR                                                              MD058986
+      *                                                                                     MD058986
       /EJECT
       *****************************************************************
       *                                                               *

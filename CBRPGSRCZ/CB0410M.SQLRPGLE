@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058986           Date 11Oct21               *
+      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CCB020C            Date 16May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020C - COB Restructure - Secondary COB Infrastructure     *
@@ -893,6 +895,7 @@
      C+  ,DIDDOS                                                                            MD055891
      C+  ,DICDST                                                                            MD055891
      C+  ,DIMODE                                                                            MD055891
+     C+  ,DILOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -903,6 +906,7 @@
      C+  ,:#1DDOS                                                                           MD055891
      C+  ,' '                                                                               MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -914,6 +918,7 @@
      C+  ,DIDDON                                                                            MD055891
      C+  ,DIDDOS                                                                            MD055891
      C+  ,DIMODE                                                                            MD055891
+     C+  ,DILOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -923,6 +928,7 @@
      C+  ,:#1DDON                                                                           MD055891
      C+  ,:#1DDOS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1000,6 +1006,7 @@
      C+  ,DIDDOS                                                                            MD055891
      C+  ,DICDST                                                                            MD055891
      C+  ,DIMODE                                                                            MD055891
+     C+  ,DILOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1010,6 +1017,7 @@
      C+  ,:#1DDOS                                                                           MD055891
      C+  ,' '                                                                               MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -1021,6 +1029,7 @@
      C+  ,DIDDON                                                                            MD055891
      C+  ,DIDDOS                                                                            MD055891
      C+  ,DIMODE                                                                            MD055891
+     C+  ,DILOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1030,6 +1039,7 @@
      C+  ,:#1DDON                                                                           MD055891
      C+  ,:#1DDOS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1590,6 +1600,7 @@
      C+  ,DIDDOS                                                                            MD055891
      C+  ,DICDST                                                                            MD055891
      C+  ,DIMODE                                                                            MD055891
+     C+  ,DILOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1600,6 +1611,7 @@
      C+  ,:#1DDOS                                                                           MD055891
      C+  ,' '                                                                               MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -1611,6 +1623,7 @@
      C+  ,DIDDON                                                                            MD055891
      C+  ,DIDDOS                                                                            MD055891
      C+  ,DIMODE                                                                            MD055891
+     C+  ,DILOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1620,6 +1633,7 @@
      C+  ,:#1DDON                                                                           MD055891
      C+  ,:#1DDOS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1697,15 +1711,15 @@
      C                   END
       *
       * Do not allow deletion of core dependencies                                          MD055891
-     C     DIMODE        IFEQ      'C'                                                      MD055891
-     C                                                                                      MD055891
-      * Send message 'Deletion of Core dependency is not allowed'                           MD055891
-     C                   MOVEL     'USR0541'     ZAMSID                                     MD055891
-     C                   MOVEL     'CBUSRMSG'    ZAMSGF                                     MD055891
-     C                   EXSR      ZASNMS                                                   MD055891
-     C                   MOVEL     'USR0541'     W0RTN                                      MD055891
-     C                   GOTO      SEEXIT                                                   MD055891
-     C                   ENDIF                                                              MD055891
+     C*****DIMODE        IFEQ      'C'                                             MD055891 MD058986
+     C**********                                                                   MD055891 MD058986
+      **Send*message 'Deletion of Core dependency is not allowed'                  MD055891 MD058986
+     C**********         MOVEL     'USR0541'     ZAMSID                            MD055891 MD058986
+     C**********         MOVEL     'CBUSRMSG'    ZAMSGF                            MD055891 MD058986
+     C**********         EXSR      ZASNMS                                          MD055891 MD058986
+     C**********         MOVEL     'USR0541'     W0RTN                             MD055891 MD058986
+     C**********         GOTO      SEEXIT                                          MD055891 MD058986
+     C**********         ENDIF                                                     MD055891 MD058986
                                                                                             MD055891
       * Check for changed record
      C                   eval      @1DBRC = CBDPRL                                          MD055891
@@ -1721,12 +1735,15 @@
      C                   END                                                    FI #1DBRC
       *................................................................
      C**********         DELETE    @DIREGJ                              91      *           MD055891
+      * Logical deletion is now allowed for both core and bespoke                           MD058986
      C/EXEC SQL                                                                             MD055891
-     C+ delete from CBDPRBTD                                                                MD055891
-     C+ where DIDSON = :#1DSON and DIDSOS = :#1DSOS and DIDRUN = :#1DRUN                    MD055891
-     C/END-EXEC                                                                             MD055891
-     C/EXEC SQL                                                                             MD055891
-     C+ delete from CBDPRXTD                                                                MD055891
+     C**delete*from CBDPRBTD                                                       MD055891 MD058986
+     C**where*DIDSON = :#1DSON and DIDSOS = :#1DSOS and DIDRUN = :#1DRUN           MD055891 MD058986
+     C*END-EXEC*                                                                   MD055891 MD058986
+     C*EXEC*SQL*                                                                   MD055891 MD058986
+     C**delete*from CBDPRXTD                                                       MD055891 MD058986
+     C+ update CBDPRXTD                                                                     MD058986
+     C+ set DILOGD = 'Y'                                                                    MD058986
      C+ where DIDSON = :#1DSON and DIDSOS = :#1DSOS and DIDRUN = :#1DRUN                    MD055891
      C/END-EXEC                                                                             MD055891
      C                   If        SQLCODE <> 0                                             MD055891

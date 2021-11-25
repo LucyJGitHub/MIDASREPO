@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055652           Date 13Jul20               *
-      *  Prev Amend No. MD054637           Date 04Nov19               *
+      *  Last Amend No. CGL090             Date 02Nov21               *
+      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *                 MD054637           Date 04Nov19               *
       *                 MD054605           Date 17Oct19               *
       *                 MD054101           Date 08Aug19               *
       *                 MD053950           Date 16Jul19               *
@@ -167,6 +168,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL090 - Add Sort Field Incoming Amount to Events by         *
+      *           Nostro Report                                       *
       *  MD055652 - Dbase error occurs when generating MR event code  *
       *             for discount loan. Add event keys (63R1, 65R1 and *
       *             67R1) & event narrative (REPAY PRIN) for principal*
@@ -584,7 +587,10 @@
 0018 F*DL0580P1O**F*****132*****OF     PRINTER      KINFDS SPOOLUC  S01117E22608
 0018 F*DL0580AUO***F*****132****OE     PRINTER      KINFDS SPOOLU   S01117E22608
 0018 FGL0580P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  E22608
-0018 FGL0580AUO   F     132     OE     PRINTER      KINFDS SPOOLU         E22608
+0018 F***GL0580AUO   F     132     OE     PRINTER      KINFDS SPOOLU                   E22608 CGL090
+0018 FGL0580AUO   F     132     OE     PRINTER      KINFDS SPOOLU     UC                      CGL090
+0018 FGL0583P1O   F     132     OA     PRINTER      KINFDS SPOOL2     UC                      CGL090
+0018 FGL0583AUO   F     132     OB     PRINTER      KINFDS SPOOLA     UC                      CGL090
       *
      F*****ACCNT   IF  F     400 18AI     2 DISK                                              CRE009
      FACCNT   IF  E           K        DISK                                                   CRE009
@@ -675,6 +681,7 @@
 0065 F*       81      TEMP NOSTRO TRAILER READ
 0066 F*       82      NOSTRO EVENT TRAILER READ
       *       83      Read of Fee Detail Main and Extension File      *                     MD052216
+     F*       84      CALLING PROGRAM IS GLC0803                                              CGL090
      F*       89      DEALING EVENT-SUPPRESS RATE                         S01108
      E/EJECT
      E******************* CPY@    1   1 80                        *****   S01194
@@ -1499,6 +1506,16 @@
      I                                       83  92 SFILEU                S01117
      I                                    B 123 1240SFNUMU                S01117
      I*                                                                   S01117
+     ISPOOL2      DS                                                                          CGL090
+      *  FILE INFORMATION DATA STRUCTURE                                                      CGL090
+     I                                       83  92 SFILE2                                    CGL090
+     I                                    B 123 1240SFNUM2                                    CGL090
+      *                                                                                       CGL090
+     ISPOOLA      DS                                                                          CGL090
+      *  AUDIT FILE INFORMATION DATA STRUCTURE                                                CGL090
+     I                                       83  92 SFILEA                                    CGL090
+     I                                    B 123 1240SFNUMA                                    CGL090
+      *                                                                                       CGL090
      I*DLSTAT****UDS                            256                       036796
      I***********                             8   90DYSFWD                036796
      I***********                             8   9 DYSA                  036796
@@ -1566,6 +1583,7 @@
      C           *ENTRY    PLIST                                          S01117
      C                     PARM           SEQ     5                       S01117
      C                     PARM           BRNCH   3                       S01117
+     C                     PARM           CLPGM   7                                           CGL090
       *
       ** KEY LIST TO ACCESS ACCNT                                                             CRE009
      C           NOSKEY    KLIST                                                              CRE009
@@ -2177,6 +2195,23 @@
      C                     EXSR *PSSR                                                      MD022382A
      C                     ENDIF                                                           MD022382A
      C                     MOVE SVAL11    CCYBAS  1                                        MD022382A
+      *                                                                                       CGL090
+      ** Check if CGL090 is switched on and calling pgm is GLC0803                            CGL090
+      *                                                                                       CGL090
+     C                     CALL 'AOSARDR0'                                                    CGL090
+     C                     PARM *BLANKS   PRTCD                                               CGL090
+     C                     PARM '*VERIFY' POPTN                                               CGL090
+     C                     PARM 'CGL090'  PSARD                                               CGL090
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL090
+      *                                                                                       CGL090
+     C           PRTCD     IFEQ *BLANKS                                                       CGL090
+     C           CLPGM     ANDEQ'GLC0803'                                                     CGL090
+     C                     MOVE 'Y'       CGL090  1                                           CGL090
+     C                     SETON                     84                                       CGL090
+     C                     ELSE                                                               CGL090
+     C                     MOVEL'N'       CGL090                                              CGL090
+     C                     SETOF                     84                                       CGL090
+     C                     ENDIF                                                              CGL090
       *
      C/COPY OFCPYSRCZ,CGL124_002                                                              CGL124
       *                                                                                       CGL124
@@ -2201,7 +2236,13 @@
      C* When branch changes, close GL0580P1                               068596
      C*                                                                   068596
      C           *INL3     IFEQ '1'                                       068596
+      *                                                                                       CGL090
+     C           CGL090    IFEQ 'Y'                                                           CGL090
+     C                     CLOSEGL0583P1                                                      CGL090
+     C                     ELSE                                                               CGL090
      C                     CLOSEGL0580P1                                  068596
+     C                     ENDIF                                                              CGL090
+      *                                                                                       CGL090
      C                     MOVE '0'       *IN55                           068596
      C                     MOVE '0'       *IN69                           068596
      C                     MOVE '0'       *IN25                           068596
@@ -2297,15 +2338,27 @@
      C           *IN55     ANDNE'1'                                       052613
      C/COPY WNCPYSRC,GL0580C002
      C                     SETON                     253955               052613
+      *                                                                                       CGL090
+     C                     MOVE *BLANKS   ZFILE  10                                           CGL090
+     C           CGL090    IFEQ 'Y'                                                           CGL090
+     C                     OPEN GL0583P1                                                      CGL090
+     C                     Z-ADDSFNUM2    ZSNUM   60                                          CGL090
+     C                     MOVE SFILE2    ZFILE                                               CGL090
+     C                     ELSE                                                               CGL090
      C                     OPEN GL0580P1                                  052613
+     C                     Z-ADDSFNUM     ZSNUM                                               CGL090
+     C                     MOVE SFILE     ZFILE                                               CGL090
+     C                     ENDIF                                                              CGL090
+      *                                                                                       CGL090
      C*                                                                   052613
-     C** Transfer binary data into numeric field                          052613
-     C                     Z-ADDSFNUM     ZSNUM   60                      052613
+     C***Transfer*binary*data*into*numeric*field***********************                052613 CGL090
+     C**********           Z-ADDSFNUM     ZSNUM   60                                   052613 CGL090
      C*                                                                   052613
      C                     CALL 'ZSFILE'                                  052613
      C                     PARM           SEQ                             052613
      C                     PARM BRCA      @PARM   3                       052613
-     C                     PARM           SFILE                           052613
+     C**********           PARM           SFILE                                        052613 CGL090
+     C                     PARM           ZFILE                                               CGL090
      C                     PARM           ZSNUM                           052613
      C                     PARM *BLANK    ZSERR   1                       052613
      C*                                                                   052613
@@ -2952,7 +3005,10 @@
      C                     EXSR SRACMT                                                        CAP205
      C                     ENDIF                                                              CAP205
       *                                                                   S01473
+     C           CGL090    IFNE 'Y'                                                           CGL090
      C                     WRITERSACMTPO                                  S01473
+     C                     ENDIF                                                              CGL090
+      *                                                                                       CGL090
      C/COPY WNCPYSRC,GL0580C010
      C                     GOTO AFTSIX                                    S01473
      C                     END                                            S01473
@@ -3335,7 +3391,10 @@
      C                     EXSR SRACMT                                                        CAP205
      C                     ENDIF                                                              CAP205
       *                                                                                       CAP205
+     C           CGL090    IFNE 'Y'                                                           CGL090
      C                     WRITERSACMTPO                                  S01154
+     C                     ENDIF                                                              CGL090
+      *                                                                                       CGL090
      C/COPY WNCPYSRC,GL0580C011
      C*                                                                   S01154
      C                     END                                  E001      S01154
@@ -3431,7 +3490,13 @@
       *                                                                   209995
      C**                                                                  LN0819
      C*********************OPEN DL0580P1                           LN0819 E22608
+      *                                                                                       CGL090
+     C           CGL090    IFEQ 'Y'                                                           CGL090
+     C                     OPEN GL0583P1                                                      CGL090
+     C                     ELSE                                                               CGL090
      C                     OPEN GL0580P1                                  E22608
+     C                     ENDIF                                                              CGL090
+      *                                                                                       CGL090
      C*                                                                   052613
      C** Codes removed                                                    052613
      C*                                                                   052613
@@ -3708,6 +3773,13 @@
 0477 C   53 52             EXCPT@BALIN                                    LNO730
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0580CP10                                           S01408
+      *                                                                                       CGL090
+      ** Get TOTAL Incoming/Outgoing amount for GL0583P1 report                               CGL090
+      *                                                                                       CGL090
+     C           CGL090    IFEQ 'Y'                                                           CGL090
+     C   45      INBAL     ADD  EAMT      INBAL  140                                          CGL090
+     C   46      OUTBAL    ADD  EAMT      OUTBAL 140                                          CGL090
+     C                     ENDIF                                                              CGL090
      C*                                                                   S01408
 0478 C                     MOVE ZADATE    EDATA   7
      C*                                                                   S01408
@@ -3799,12 +3871,20 @@
      C**DO*NOT*UPDATE*D/DLSTAT*WITH*CHANGED*'99'*IF*IT*WAS*NOT*SET*BEFORE*036796
      C*LR*54********       MOVE '  '      DYSA                            036796
      C*
-      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
-     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+      ***TRANSFER*BINARY*DATA*INTO*NUMERIC*FIELD**************************             S01117 CGL090
+     C***LR*****           Z-ADDSFNUMU    ZSNUMU  60                                   S01117 CGL090
+     CLR                   MOVE *BLANKS   ZFILEU 10                                           CGL090
+     CLRN84                OPEN GL0580AU                                                      CGL090
+     CLR 84                OPEN GL0583AU                                                      CGL090
+     CLRN84                Z-ADDSFNUMU    ZSNUMU  60                                          CGL090
+     CLR 84                Z-ADDSFNUMA    ZSNUMU                                              CGL090
+     CLRN84                MOVE SFILEU    ZFILEU                                              CGL090
+     CLR 84                MOVE SFILEA    ZFILEU                                              CGL090
      CLR                   CALL 'ZSFILE'                                  S01117
      CLR                   PARM           SEQ                             S01117
      CLR                   PARM *BLANKS   @PARM   3                       S01117
-     CLR                   PARM           SFILEU                          S01117
+     C***LR*****           PARM           SFILEU                                       S01117 CGL090
+     CLR                   PARM           ZFILEU                                              CGL090
      CLR                   PARM           ZSNUMU                          S01117
      CLR                   PARM *BLANK    ZSERR                           S01117
      C*                                                                   S01117
@@ -4793,10 +4873,13 @@
 0837 O*****  OR       NL2 OF                                      *****   S01117
 0838 O*****                              22 'REFERENCE DL0580'    *****   S01117
 0836 O*DL0580P1D**203***L2*55*******                                S01117E22608
-0836 OGL0580P1D  203   L2 55                                              E22608
+     O***GL0580P1D  203   L2 55                                                        E22608 CGL090
+     OGL0580P1D  203   L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0837 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP10                                           S01408
@@ -4812,10 +4895,13 @@
 0843 O                         PAGE     127
 0844 O*****   D  1     L2                                         *****   S01117
 0845 O*****  OR       NL2 OF                                      *****   S01117
-0844 O        D  1     L2 55                                              S01117
+0844 O********D* 1     L2 55                                                           S01117 CGL090
+     O        D  1     L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0845 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP3                                           S01408
@@ -4824,20 +4910,26 @@
 0846 O                                   70 'EVENTS BY NOSTRO'
 0847 O*****   D  2     L2                                         *****   S01117
 0848 O*****  OR       NL2 OF                                      *****   S01117
-0847 O        D  2     L2 55                                              S01117
+0847 O********D* 2     L2 55                                                           S01117 CGL090
+     O        D  2     L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0848 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND***    MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP4                                           S01408
      O*                                                                   S01408
 0846 O                    U4             54 '-------------------'
 0849 O                                   70 '----------------'
-0847 O        D  1     L2 55                                              S01117
+0847 O********D* 1     L2 55                                                           S01117 CGL090
+     O        D  1     L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0848 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP5                                           S01408
@@ -4849,10 +4941,13 @@
 0850 O*****   D  1     L2                                         *****   S01117
 0851 O*****  OR       NL2 OF                                      *****   S01117
 0850 O********D**1*****L2*55***                                    S01117 LN0819
-0850 O        D 11     L2 55                                              LN0819
+0850 O********D*11     L2 55                                                           LN0819 CGL090
+     O        D 11     L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0851 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP6                                           S01408
@@ -4861,10 +4956,13 @@
 0853 O                         CCY       16
 0854 O*****   D  1     L2                                         *****   S01117
 0855 O*****  OR       NL2 OF                                      *****   S01117
-0854 O        D  1     L2 55                                              S01117
+0854 O********D* 1     L2 55                                                           S01117 CGL090
+     O        D  1     L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0855 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP7                                           S01408
@@ -4876,10 +4974,13 @@
 0858 O                                  111 'OUTGOING'
 0859 O*****   D  1     L2                                         *****   S01117
 0860 O*****  OR       NL2 OF                                      *****   S01117
-0859 O        D  1     L2 55                                              S01117
+0859 O********D* 1     L2 55                                                           S01117 CGL090
+     O        D  1     L2 55N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
 0860 O       OR       NL2 OF 55                                           S01117
-     O       OR           55 39                                           BHF276
+     O       AND      N84                                                                     CGL090
+     O*******OR*          55 39                                                        BHF276 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*******AND**     MR                                          LN0730 E26063
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP8                                           S01408
@@ -4898,8 +4999,10 @@
 0867 O*******OR********01N21 55                                     S01117LN0819
      O*******AND*******MR                                           LN0730LN0819
 0866 O********D*11     MR 55 07                                    LN0819 E26063
-0866 O        D 11     L1 55                                              E26063
-0866 O       OR        55 39                                              E26063
+0866 O********D*11     L1 55                                                           E26063 CGL090
+     O        D 11     L1 55N84                                                               CGL090
+0866 O*******OR*       55 39                                                           E26063 CGL090
+     O       OR        55 39N84                                                               CGL090
      O/COPY WNCPYSRC,GL0580O003
 0868 O                                   12 'NOSTRO NAME'
 0869 O*************************CRNM      33                               LN0819
@@ -4911,8 +5014,10 @@
 0872 O*******OR********01N21 55                                     S01117LN0819
      O*******AND*******MR                                           LN0730LN0819
 0866 O********D**2     MR 55 07                                    LN0819 E26063
-0866 O        D  2     L1 55                                              E26063
-0866 O       OR        55 39                                              E26063
+0866 O********D* 2     L1 55                                                           E26063 CGL090
+     O        D  2     L1 55N84                                                               CGL090
+0866 O*******OR*       55 39                                                           E26063 CGL090
+     O       OR        55 39N84                                                               CGL090
      O/COPY WNCPYSRC,GL0580O004
 0873 O                                   12 'TOWN'
 0874 O*************************CTWN      23                               LN0819
@@ -4923,8 +5028,10 @@
 0876 O*******OR********01N21 55                                     S01117LN0819
      O*******AND*******MR                                           LN0730LN0819
 0866 O********D**0     MR 55 07                                    LN0819 E26063
-0866 O        D  0     L1 55                                              E26063
-0866 O       OR        55 39                                              E26063
+0866 O********D* 0     L1 55                                                           E26063 CGL090
+     O        D  0     L1 55N84                                                               CGL090
+0866 O*******OR*       55 39                                                           E26063 CGL090
+     O       OR        55 39N84                                                               CGL090
      O*****                    RUNA       7                               E11718
      O                         FRDATA     7                               E11718
 0878 O***********************30NOBL     131 '   ,   ,   ,   , 0 -'        LN0819
@@ -4942,7 +5049,8 @@
 0882 O*****   E 0      52 53 55                                    S01117 LN0730
 0882 O********E*0******52 53 55@BALIN                               LN0730LN0819
 0882 O        E 10     52 53 55@BALIN                                     LN0819
-     O       AND       MR                                                 LN0730
+     O*******AND       MR                                                              LN0730 CGL090
+     O       AND       MRN84                                                                  CGL090
      O/COPY WNCPYSRC,GL0580O002
 0878 O                       30NOBL     131 '   ,   ,   ,   , 0 -'
 0879 O                       31NOBL     131 '  ,   ,   ,   , 0 . -'
@@ -4952,21 +5060,27 @@
      O/COPY WNCPYSRC,GL0580OOP9                                           S01408
      O*                                                                   S01408
 0887 O        D 10     MR 04 70
-0887 O       AND       55                                                 S01117
+0887 O*******AND       55                                                              S01117 CGL090
+     O       AND       55N84                                                                  CGL090
 0888 O       OR 10     MR 05 70
-0887 O       AND       55                                                 S01117
+0887 O*******AND       55                                                              S01117 CGL090
+     O       AND       55N84                                                                  CGL090
      O       OR 10     MR 15 70
-0887 O       AND       55                                                 S01117
+0887 O*******AND       55                                                              S01117 CGL090
+     O       AND       55N84                                                                  CGL090
      O       OR 10     MR 16 70                                           S01473
-     O       AND       55                                                 S01473
+     O*******AND       55                                                              S01473 CGL090
+     O       AND       55N84                                                                  CGL090
      O*****  OR 10     MR 16 70                                   *****   S01196
 0887 O*****  AND       55                                         *****   S01196
      O*****  OR 10     MR 17 70                                           E36449
 0887 O*****  AND       55                                          S01117 E36449
      O       OR 10     MR 18 70                                           S01129
-0887 O       AND       55                                                 S01117
+0887 O*******AND       55                                                              S01117 CGL090
+     O       AND       55N84                                                                  CGL090
      O       OR 10     MR 26 70                                           209995
-     O       AND       55                                                 209995
+     O*******AND       55                                                              209995 CGL090
+     O       AND       55N84                                                                  CGL090
       *                                                                   S01408
      O/COPY WNCPYSRC,GL0580OPG1                                           S01408
       *                                                                   S01408
@@ -5048,7 +5162,8 @@
      O/COPY WNCPYSRC,GL0580OP14                                           S01408
      O*                                                                   S01408
      O        D 10     MR 19 70                                           S03220
-0887 O       AND       55                                                 S01117
+0887 O*******AND       55                                                              S01117 CGL090
+     O       AND       55N84                                                                  CGL090
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP15                                           S01408
      O*                                                                   S01408
@@ -5073,7 +5188,8 @@
      O/COPY WNCPYSRC,GL0580OP16                                           S01408
       *                                                                                       CAP204
      O        D 10     MR 28 70                                                               CAP204
-     O       AND       55                                                                     CAP204
+     O*******AND       55                                                              CAP204 CGL090
+     O       AND       55N84                                                                  CGL090
       *                                                                                       CAP204
      O                         EDATA      7                                                   CAP204
      O                         TREF      48                                                   CAP204
@@ -5091,7 +5207,8 @@
      O                    46 33EAMT     111 ' ,   ,   , 0 .   '                               CAP204
      O*                                                                   S01408
      O        D 10     MR 20 70                                           073714
-0887 O       AND       55                                                 073714
+0887 O*******AND       55                                                              073714 CGL090
+     O       AND       55N84                                                                  CGL090
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP17                                           S01408
      O*                                                                   S01408
@@ -5129,20 +5246,24 @@
      O/COPY WNCPYSRC,GL0580OP18                                           S01408
      O*                                                                   S01408
 0908 O        D 10     MR 05 70                                           LN0819
-0908 O       AND       55                                                 LN0819
+0908 O*******AND       55                                                              LN0819 CGL090
+     O       AND       55N84                                                                  CGL090
      O       OR 10     MR 16 70                                           S01473
-     O       AND       55                                                 S01473
+     O*******AND       55                                                              S01473 CGL090
+     O       AND       55N84                                                                  CGL090
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP19                                           S01408
      O*                                                                   S01408
 0909 O                                   42 'D/D'                         LN0819
 0910 O                         DDNO      49                               LN0819
      O        D 10     16 79NMR                                                               240943
+     O       AND      N84                                                                     CGL090
      O                                   75 'TRADE INNOVATION REFEREN'                        240943
      O                                   98 'CE FOR ABOVE CUSTOMER :'                         240943
      O                         TIRF     119                                                   240943
      O********D*       16 79                                                           CTI001 240943
      O        D        16 79 MR                                                               240943
+     O       AND      N84                                                                     CGL090
      O                                   75 'TRADE INNOVATION REFEREN'    CTI001
      O                                   98 'CE FOR ABOVE CUSTOMER :'     CTI001
      O                         TIRF     119                               CTI001
@@ -5151,7 +5272,8 @@
       *                                                                                       CGL124
 0911 O*****   T 13     L1 61                                      *****   S01117
 0911 O        T 13     L1 61 55                                           S01117
-0911 O       AND       77                                                 E27024
+0911 O*******AND       77                                                              E27024 CGL090
+0911 O       AND       77N84                                                                  CGL090
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP22                                           S01408
      O*                                                                   S01408
@@ -5170,7 +5292,8 @@
 0915 O                       33NOBL14   131 '  ,   ,   , 0 .   -'         LN0819
      O*                                                                   S01117
 0911 O        T 2      LR U7 U8                                           S01117
-0911 O       AND       55                                                 S01117
+0911 O*******AND       55                                                              S01117 CGL090
+     O       AND       55N84                                                                  CGL090
 0912 O********************************** 22 'REFERENCE DL0580'      S01117E22608
 0912 O                                   22 'REFERENCE GL0580'            E22608
 0913 O                                   62 'PRINT TERMINATED, '          S01117
@@ -5184,7 +5307,8 @@
 0915 O*****                              75 '***'                  LN0730 LN0763
      O*                                                                   068596
      O        T 3      L3 55                                              068596
-     O       AND       25                                                 068596
+     O*******AND       25                                                              068596 CGL090
+     O       AND       25N84                                                                  CGL090
 0915 O                                   68 '*** END OF REPORT FOR'       LN0763
 0915 O*********************              78 'BRANCH ***'           LN0763 LN0819
 0915 O                                   79 'BRANCH ***'                  LN0819
@@ -5193,7 +5317,8 @@
 0918 O*
 0919 O*****   T  203   LRNU7                                      *****   S01117
 0919 O*DL0580AUT**203***LR********                                S01117  E22608
-0919 OGL0580AUT  203   LR                                                 E22608
+0919 O***GL0580AUT  203   LR                                                           E22608 CGL090
+0919 OGL0580AUT  203   LRN84                                                                  CGL090
 0920 O*****                              22 'REFERENCE DL0580'    *****   S01117
 0920 O***********************************24 'REFERENCE DL0580AU'    S01117E22608
 0920 O                                   24 'REFERENCE GL0580AU'          E22608
@@ -5206,22 +5331,28 @@
 0925 O*****                    PAGE     127                       *****   S01117
 0925 O                         PAGE1    127                               S01117
 0926 O********T  1     LRNU7                                              S01117
-0926 O        T  1     LR                                                 S01117
+0926 O********T* 1     LR                                                              S01117 CGL090
+     O        T  1     LRN84                                                                  CGL090
 0927 O                                   70 'EVENTS BY NOSTRO'
 0928 O********T  2     LRNU7                                              S01117
-0928 O        T  2     LR                                                 S01117
+0928 O********T* 2     LR                                                              S01117 CGL090
+     O        T  2     LRN84                                                                  CGL090
 0929 O                                   70 '----------------'
-0930 O        T  136   LRNU7
+0930 O********T* 136   LRNU7                                                                  CGL090
+     O        T  136   LRNU7N84                                                               CGL090
 0931 O                                   18 'RUN CONTROLS'
-0932 O        T  1     LRNU7
+0932 O********T* 1     LRNU7                                                                  CGL090
+     O        T  1     LRNU7N84                                                               CGL090
 0933 O                                   60 'PROGRAM'
 0934 O                                  101 'CONTROL'
-0935 O        T  2     LRNU7
+0935 O********T* 2     LRNU7                                                                  CGL090
+     O        T  2     LRNU7N84                                                               CGL090
 0936 O                                   59 'NUMBER'
 0937 O                                   84 'VALUE'
 0938 O                                  100 'NUMBER'
 0939 O                                  125 'VALUE'
-0940 O        T  2     LRNU7
+0940 O********T* 2     LRNU7                                                                  CGL090
+     O        T  2     LRNU7N84                                                               CGL090
 0941 O                                   32 'RECORDS LISTED IN THIS R'
 0942 O                                   37 'EPORT'
 0943 O                         NSVLIS3   59
@@ -5231,7 +5362,8 @@
 0947 O                         HRWN  Z  122
 0948 O                         HRDC     125
 0949 O                 76               130 '***'
-0950 O        T  2     LRNU7
+0950 O********T* 2     LRNU7                                                                  CGL090
+     O        T  2     LRNU7N84                                                               CGL090
 0951 O                                   32 'PROJECTED NOSTRO RECORDS'
 0952 O                                   40 'CREATED'
 0953 O                         RECRIT3   59
@@ -5240,13 +5372,16 @@
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP20                                           S01408
      O*                                                                   S01408
-0956 O        T  2     LRNU7
+0956 O********T* 2     LRNU7                                                                  CGL090
+     O        T  2     LRNU7N84                                                               CGL090
 0957 O                                   32 'TEMP NOSTRO RECORDS READ'
 0958 O                         PTREC 3   59
 0959 O                         NORE  3  100
 0960 O                 75               130 '***'
 0961 O        T  2     LR 75NU7
+     O       AND      N84                                                                     CGL090
 0962 O       OR        LR 76NU7
+     O       AND      N84                                                                     CGL090
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP21                                           S01408
      O*                                                                   S01408
@@ -5255,18 +5390,22 @@
 0965 O********T  2     LRN49NU7                                           LN0354
 0965 O********T**2     LRN55NU7                                     LN0354LN0819
 0965 O        T  2     LRN23NU7                                           LN0819
+     O       AND      N84                                                                     CGL090
 0966 O                                   63 '***   NO DETAILS TO REPO'
 0967 O                                   71 'RT   ***'
      O** OUTPUT DATABASE ERROR IF NECESSARY                               S01117
      O        T 3      LR U7 U8                                           S01117
+     O       AND      N84                                                                     CGL090
 0969 O*****                              22 'REFERENCE DL0580'    *****   S01117
      O                                   71 '*** PRINT TERMINATED ***'    S01117
      O        T 1      LR U7 U8                                           S01117
+     O       AND      N84                                                                     CGL090
      O                                   57 'DATABASE ERROR'              S01117
      O                         DBASE     61                               S01117
      O                                   67 'FILE'                        S01117
      O                         DBFILE    78                               S01117
      O        T 13     LR U7 U8                                           S01117
+     O       AND      N84                                                                     CGL090
      O                                   46 'KEY'                         S01117
      O                         DBKEY     76                               S01117
 0968 O*****   T  2     LR U7 U8                                   *****   S01117
@@ -5275,15 +5414,401 @@
 0972 O********T*2******LR                                                 LN0135
 0973 O*********************************  65 '***   END OF REPORT'         LN0135
 0974 O*********************************  71 '***'                         LN0135
+     OGL0583P1D  203   L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP10                                                               CGL090
+      *                                                                                       CGL090
+     O                                   24 'REFERENCE GL0583P1'                              CGL090
+     O                         BJURPT    89                                                   CGL090
+     O                                  104 'DATE'                                            CGL090
+     O                         BJMRDT   112                                                   CGL090
+     O                                  122 'PAGE'                                            CGL090
+     O                         PAGE     127                                                   CGL090
+     O        D  1     L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP3                                                               CGL090
+      *                                                                                       CGL090
+     O                    U4             54 'SECURITIES TRADING '                             CGL090
+     O                                   59 'EVENTS BY NOSTRO'                                CGL090
+     O                                   84 'AND BY INCOMING/OUTGOING'                        CGL090
+     O                                   91 'AMOUNT'                                          CGL090
+     O        D  2     L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP4                                                               CGL090
+      *                                                                                       CGL090
+     O                    U4             54 '-------------------'                             CGL090
+     O                                   60 '-----------------'                               CGL090
+     O                                   84 '------------------------'                        CGL090
+     O                                   91 '-------'                                         CGL090
+     O        D  1     L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP5                                                               CGL090
+      *                                                                                       CGL090
+     O                                   12 'BRANCH'                                          CGL090
+     O                         BRCA      16                                                   CGL090
+     O                         A8BRNM    48                                                   CGL090
+     O        D 11     L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP6                                                               CGL090
+      *                                                                                       CGL090
+     O                                    9 'CURRENCY'                                        CGL090
+     O                         CCY       16                                                   CGL090
+     O        D  1     L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP7                                                               CGL090
+      *                                                                                       CGL090
+     O                                   57 'TRANSACTION  EVENT'                              CGL090
+     O                                   70 ' RATE / '                                        CGL090
+     O                                   92 'FED        INCOMING'                             CGL090
+     O                                  111 'OUTGOING'                                        CGL090
+     O        D  1     L2 55 84                                                               CGL090
+     O       OR       NL2 OA 55                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP8                                                               CGL090
+      *                                                                                       CGL090
+     O                                   21 'DATE        CUSTOMER'                            CGL090
+     O                                   57 'NUMBER     TYPE'                                 CGL090
+     O                                   70 'SECURITY'                                        CGL090
+     O                                   90 'FDS         AMOUN'                               CGL090
+     O                                  110 'T             AMOUNT'                            CGL090
+     O                                  128 'BALANCE'                                         CGL090
+     O        D 11     L1 55 84                                                               CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583O003                                                               CGL090
+      *                                                                                       CGL090
+     O                                   12 'NOSTRO NAME'                                     CGL090
+     O                         @CRNM     33                                                   CGL090
+     O                         NOSN      38                                                   CGL090
+     O        D  2     L1 55 84                                                               CGL090
+     O       OR        55 39 84                                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583O004                                                               CGL090
+      *                                                                                       CGL090
+     O                                   12 'TOWN'                                            CGL090
+     O                         @CTWN     23                                                   CGL090
+     O        D  0     L1 55 84                                                               CGL090
+     O       OR        55 39 84                                                               CGL090
+     O                         FRDATA     7                                                   CGL090
+     O                       30@NOBL    131 '   ,   ,   ,   , 0 -'                            CGL090
+     O                       31@NOBL    131 '  ,   ,   ,   , 0 . -'                           CGL090
+     O                       32@NOBL    131 ' ,   ,   ,   , 0 .  -'                           CGL090
+     O                       33@NOBL    131 '   ,   ,   , 0 .   -'                            CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP1                                                               CGL090
+      *                                                                                       CGL090
+     O        E 20     52 53 55@BALIN                                                         CGL090
+     O       AND       MR 84                                                                  CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583O002                                                               CGL090
+      *                                                                                       CGL090
+     O                                   73 'TOTAL'                                           CGL090
+     O                       30INBAL  B  93 '  ,   ,   ,   , 0 -'                             CGL090
+     O                       31INBAL  B  93 ' ,   ,   ,   , 0 . -'                            CGL090
+     O                       32INBAL  B  93 '   ,   ,   , 0 .  -'                             CGL090
+     O                       33INBAL  B  93 '  ,   ,   , 0 .   -'                             CGL090
+     O                       30OUTBAL B 111 '  ,   ,   ,   , 0 -'                             CGL090
+     O                       31OUTBAL B 111 ' ,   ,   ,   , 0 . -'                            CGL090
+     O                       32OUTBAL B 111 '   ,   ,   , 0 .  -'                             CGL090
+     O                       33OUTBAL B 111 '  ,   ,   , 0 .   -'                             CGL090
+     O                       30NOBL     131 '   ,   ,   ,   , 0 -'                            CGL090
+     O                       31NOBL     131 '  ,   ,   ,   , 0 . -'                           CGL090
+     O                       32NOBL     131 ' ,   ,   ,   , 0 .  -'                           CGL090
+     O                       33NOBL     131 '   ,   ,   , 0 .   -'                            CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP9                                                               CGL090
+      *                                                                                       CGL090
+     O        D 20     MR 04 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O       OR 20     MR 05 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O       OR 20     MR 15 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O       OR 20     MR 16 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O       OR 10     MR 18 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O       OR 10     MR 26 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OPG1                                                               CGL090
+      *                                                                                       CGL090
+     O                         EDATA      7                                                   CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP11                                                               CGL090
+      *                                                                                       CGL090
+     O                         CRNM      28                                                   CGL090
+     O                         CTWN      39                                                   CGL090
+     O                N15 16N26          48 '      '                                          CGL090
+     O                N15N16N26PDLNO     48                                                   CGL090
+     O                 26N24   STOR      48                                                   CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP12                                                               CGL090
+      *                                                                                       CGL090
+     O                 16      LCNO      48                                                   CGL090
+     O                 16                42 'LC'                                              CGL090
+     O                 15                42 'LE'                                              CGL090
+     O                 18                42 'SE'                                              CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OOP2                                                               CGL090
+      *                                                                                       CGL090
+     O                 15N48   LNRF      48                                                   CGL090
+     O                 15 48   FTYP      45                                                   CGL090
+     O                 15 48   FSEQ      48                                                   CGL090
+     O                 15 48             46 '/'                                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP13                                                               CGL090
+      *                                                                                       CGL090
+     O                 26                59 'S.O. PYMNT'                                      CGL090
+     O                N73N26N27TABNAM    59                                                   CGL090
+     O                 73N26   CANARR    59                                                   CGL090
+     O                 27      TABNM2    59                                                   CGL090
+     O                 24      WNETD     59                                                   CGL090
+     O                 18      NESS      73                                                   CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OPG2                                                               CGL090
+      *                                                                                       CGL090
+     O                 04N35N89EXRT      73 '   0 .        -'                                 CGL090
+     O                 05      EINRX     73 '  0 .        -'                                  CGL090
+     O                 15      EINRX     73 '  0 .        -'                                  CGL090
+     O                    18 65          75 '* OVERDUE *    '                                 CGL090
+     O                    18 66          75 '* APPROXIMATE *'                                 CGL090
+     O                N15N18   FFIN      75                                                   CGL090
+      *                                                                                       CGL090
+     O                 44 45 30EAMT  J   93                                                   CGL090
+     O                 44 45 31EAMT      93 '   ,   ,   , 0 . -'                              CGL090
+     O                 44 45 32EAMT      93 '  ,   ,   , 0 .  -'                              CGL090
+     O                 44 45 33EAMT      93 ' ,   ,   , 0 .   -'                              CGL090
+     O                 44 46 30EAMT  J  111                                                   CGL090
+     O                 44 46 31EAMT     111 '   ,   ,   , 0 . -'                              CGL090
+     O                 44 46 32EAMT     111 '  ,   ,   , 0 .  -'                              CGL090
+     O                 44 46 33EAMT     111 ' ,   ,   , 0 .   -'                              CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP14                                                               CGL090
+      *                                                                                       CGL090
+     O        D 20     MR 19 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP15                                                               CGL090
+      *                                                                                       CGL090
+     O                         EDATA      7                                                   CGL090
+     O                         PREF      48                                                   CGL090
+     O                N27      TABNAM    59                                                   CGL090
+     O                 27      TABNM2    59                                                   CGL090
+     O                         EXRT      73 '   0 .        '                                  CGL090
+     O                                   75 'N'                                               CGL090
+     O                    45 30EAMT  1   93                                                   CGL090
+     O                    45 31EAMT      93 '   ,   ,   , 0 . '                               CGL090
+     O                    45 32EAMT      93 '  ,   ,   , 0 .  '                               CGL090
+     O                    45 33EAMT      93 ' ,   ,   , 0 .   '                               CGL090
+     O                    46 30EAMT  1  111                                                   CGL090
+     O                    46 31EAMT     111 '   ,   ,   , 0 . '                               CGL090
+     O                    46 32EAMT     111 '  ,   ,   , 0 .  '                               CGL090
+     O                    46 33EAMT     111 ' ,   ,   , 0 .   '                               CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP16                                                               CGL090
+      *                                                                                       CGL090
+     O        D 20     MR 28 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+      *                                                                                       CGL090
+     O                         EDATA      7                                                   CGL090
+     O                         TREF      48                                                   CGL090
+     O                N27      TABNAM    59                                                   CGL090
+     O                 27      TABNM2    59                                                   CGL090
+     O                         EXRT      73 '   0 .        '                                  CGL090
+     O                                   75 'N'                                               CGL090
+     O                    45 30EAMT  1   93                                                   CGL090
+     O                    45 31EAMT      93 '   ,   ,   , 0 . '                               CGL090
+     O                    45 32EAMT      93 '  ,   ,   , 0 .  '                               CGL090
+     O                    45 33EAMT      93 ' ,   ,   , 0 .   '                               CGL090
+     O                    46 30EAMT  1  111                                                   CGL090
+     O                    46 31EAMT     111 '   ,   ,   , 0 . '                               CGL090
+     O                    46 32EAMT     111 '  ,   ,   , 0 .  '                               CGL090
+     O                    46 33EAMT     111 ' ,   ,   , 0 .   '                               CGL090
+      *                                                                                       CGL090
+     O        D 20     MR 20 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP17                                                               CGL090
+      *                                                                                       CGL090
+     O                         EDATA      7                                                   CGL090
+     O                         CRNM      28                                                   CGL090
+     O                         CTWN      39                                                   CGL090
+     O                         TNBR      48                                                   CGL090
+     O                                   42 'FF'                                              CGL090
+     O                N27      TABNAM    59                                                   CGL090
+     O                 27      TABNM2    59                                                   CGL090
+     O                 44 45 30EAMT  J   93                                                   CGL090
+     O                 44 45 31EAMT      93 '   ,   ,   , 0 . -'                              CGL090
+     O                 44 45 32EAMT      93 '  ,   ,   , 0 .  -'                              CGL090
+     O                 44 45 33EAMT      93 ' ,   ,   , 0 .   -'                              CGL090
+     O                 44 46 30EAMT  J  111                                                   CGL090
+     O                 44 46 31EAMT     111 '   ,   ,   , 0 . -'                              CGL090
+     O                 44 46 32EAMT     111 '  ,   ,   , 0 .  -'                              CGL090
+     O                 44 46 33EAMT     111 ' ,   ,   , 0 .   -'                              CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP18                                                               CGL090
+      *                                                                                       CGL090
+     O        D 10     MR 05 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O       OR 10     MR 16 70                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP19                                                               CGL090
+      *                                                                                       CGL090
+     O                                   42 'D/D'                                             CGL090
+     O                         DDNO      49                                                   CGL090
+     O        D 10     16 79NMR                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O                                   75 'TRADE INNOVATION REFEREN'                        CGL090
+     O                                   98 'CE FOR ABOVE CUSTOMER :'                         CGL090
+     O                         TIRF     119                                                   CGL090
+     O        D        16 79 MR                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O                                   75 'TRADE INNOVATION REFEREN'                        CGL090
+     O                                   98 'CE FOR ABOVE CUSTOMER :'                         CGL090
+     O                         TIRF     119                                                   CGL090
+     O        T 23     L1 61 55                                                               CGL090
+     O       AND       77 84                                                                  CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP22                                                               CGL090
+      *                                                                                       CGL090
+     O                                   73 'TOTAL'                                           CGL090
+     O                       30INBAL  B  93 '  ,   ,   ,   , 0 -'                             CGL090
+     O                       31INBAL  B  93 ' ,   ,   ,   , 0 . -'                            CGL090
+     O                       32INBAL  B  93 '   ,   ,   , 0 .  -'                             CGL090
+     O                       33INBAL  B  93 '  ,   ,   , 0 .   -'                             CGL090
+     O                       30OUTBAL B 111 '  ,   ,   ,   , 0 -'                             CGL090
+     O                       31OUTBAL B 111 ' ,   ,   ,   , 0 . -'                            CGL090
+     O                       32OUTBAL B 111 '   ,   ,   , 0 .  -'                             CGL090
+     O                       33OUTBAL B 111 '  ,   ,   , 0 .   -'                             CGL090
+      *                                                                                       CGL090
+     O                       30NOBL14   131 '  ,   ,   ,   , 0 -'                             CGL090
+     O                       31NOBL14   131 ' ,   ,   ,   , 0 . -'                            CGL090
+     O                       32NOBL14   131 '   ,   ,   , 0 .  -'                             CGL090
+     O                       33NOBL14   131 '  ,   ,   , 0 .   -'                             CGL090
+      *                                                                                       CGL090
+     O        T 2      LR U7 U8                                                               CGL090
+     O       AND       55 84                                                                  CGL090
+     O                                   22 'REFERENCE GL0583'                                CGL090
+     O                                   62 'PRINT TERMINATED, '                              CGL090
+     O                                   80 'DATABASE IN ERROR'                               CGL090
+      *                                                                                       CGL090
+     O        T 3      L3 55                                                                  CGL090
+     O       AND       25 84                                                                  CGL090
+     O                                   68 '*** END OF REPORT FOR'                           CGL090
+     O                                   79 'BRANCH ***'                                      CGL090
+     O/EJECT                                                                                  CGL090
+      *                                                                                       CGL090
+      **   R U N  C O N T R O L S                                                             CGL090
+      *                                                                                       CGL090
+     OGL0583AUT  203   LR 84                                                                  CGL090
+     O                                   24 'REFERENCE GL0583AU'                              CGL090
+     O                         BJURPT    89                                                   CGL090
+     O                                  104 'DATE'                                            CGL090
+     O                         BJMRDT   112                                                   CGL090
+     O                                  122 'PAGE'                                            CGL090
+     O                         PAGE1    127                                                   CGL090
+     O        T  1     LR 84                                                                  CGL090
+     O                                   59 'EVENTS BY NOSTRO'                                CGL090
+     O                                   84 'AND BY INCOMING/OUTGOING'                        CGL090
+     O                                   91 'AMOUNT'                                          CGL090
+     O        T  2     LR 84                                                                  CGL090
+     O                                   60 '-----------------'                               CGL090
+     O                                   84 '------------------------'                        CGL090
+     O                                   91 '-------'                                         CGL090
+     O        T  136   LRNU7 84                                                               CGL090
+     O                                   18 'RUN CONTROLS'                                    CGL090
+     O        T  1     LRNU7 84                                                               CGL090
+     O                                   60 'PROGRAM'                                         CGL090
+     O                                  101 'CONTROL'                                         CGL090
+     O        T  2     LRNU7 84                                                               CGL090
+     O                                   59 'NUMBER'                                          CGL090
+     O                                   84 'VALUE'                                           CGL090
+     O                                  100 'NUMBER'                                          CGL090
+     O                                  125 'VALUE'                                           CGL090
+     O        T  2     LRNU7 84                                                               CGL090
+     O                                   32 'RECORDS LISTED IN THIS R'                        CGL090
+     O                                   37 'EPORT'                                           CGL090
+     O                         NSVLIS3   59                                                   CGL090
+     O                         INT,3 Z   81                                                   CGL090
+     O                         DEC,3     84                                                   CGL090
+     O                         NOREN 3  100                                                   CGL090
+     O                         HRWN  Z  122                                                   CGL090
+     O                         HRDC     125                                                   CGL090
+     O                 76               130 '***'                                             CGL090
+     O        T  2     LRNU7 84                                                               CGL090
+     O                                   32 'PROJECTED NOSTRO RECORDS'                        CGL090
+     O                                   40 'CREATED'                                         CGL090
+     O                         RECRIT3   59                                                   CGL090
+     O                         INT,4 Z   81                                                   CGL090
+     O                         DEC,4     84                                                   CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP20                                                               CGL090
+      *                                                                                       CGL090
+     O        T  2     LRNU7 84                                                               CGL090
+     O                                   32 'TEMP NOSTRO RECORDS READ'                        CGL090
+     O                         PTREC 3   59                                                   CGL090
+     O                         NORE  3  100                                                   CGL090
+     O                 75               130 '***'                                             CGL090
+     O        T  2     LR 75NU7                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O       OR        LR 76NU7                                                               CGL090
+     O       AND       84                                                                     CGL090
+      *                                                                                       CGL090
+     O/COPY WNCPYSRC,GL0583OP21                                                               CGL090
+      *                                                                                       CGL090
+     O                                   63 '***  RECORD COUNT DIFFER'                        CGL090
+     O                                   71 'ENCE ***'                                        CGL090
+     O        T  2     LRN23NU7                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O                                   63 '***   NO DETAILS TO REPO'                        CGL090
+     O                                   71 'RT   ***'                                        CGL090
+      ** OUTPUT DATABASE ERROR IF NECESSARY                                                   CGL090
+     O        T 3      LR U7 U8                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O                                   71 '*** PRINT TERMINATED ***'                        CGL090
+     O        T 1      LR U7 U8                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O                                   57 'DATABASE ERROR'                                  CGL090
+     O                         DBASE     61                                                   CGL090
+     O                                   67 'FILE'                                            CGL090
+     O                         DBFILE    78                                                   CGL090
+     O        T 13     LR U7 U8                                                               CGL090
+     O       AND       84                                                                     CGL090
+     O                                   46 'KEY'                                             CGL090
+     O                         DBKEY     76                                                   CGL090
 0975 O*
 0976 O*    PROJECTED NOSTRO BALANCES FILE
 0977 O*
 0978 O*****HH D        03                                         *****   S01117
-0978 OPRONOHH DADD     03                                                 S01117
+0978 O***PRONOHH DADD     03                                                           S01117 CGL090
+0978 OPRONOHH DADD     03N84                                                                  CGL090
 0979 O                                    6 'H   00'
 0980 O                         FSIZE      9P
 0981 O*****PN T        L1 60                                      *****   S01117
-0981 OPRONOPN TADD     L1 60                                              S01117
+0981 O***PRONOPN TADD     L1 60                                                        S01117 CGL090
+0981 OPRONOPN TADD     L1 60N84                                                               CGL090
 0982 O                                    1 'D'
 0983 O                         CCY        4
 0984 O                         NOSN       6

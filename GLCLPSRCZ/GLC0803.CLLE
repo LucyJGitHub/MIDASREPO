@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Events by Nostro and by Incoming/Outgoing')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Mdoule                               */
+/*                                                                   */
+/*       GLC0803 - Events by Nostro and by Incoming/Outgoing Amount  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. CGL090 *CREATE     Date 02Nov21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL090 - Add Sort Field Incoming Amount to Events by        */
+/*                Nostro Report                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM PARM(&RSEQ &RLEV &RENT)
+
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&CLPGM) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2021')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('GLC0803 - Events by Nostro and by +
+                          Incoming/Outgoing Amount') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&CLPGM) VALUE('GLC0803')
+             OVRDBF     FILE(NOSEV) TOFILE(GLNOSEL1)
+
+/** Call Events by Nostro report program */
+
+             CALL       PGM(GL0580)  PARM(&RSEQ &RENT &CLPGM)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GLC0803 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+
+ENDPGM:
+             ENDPGM

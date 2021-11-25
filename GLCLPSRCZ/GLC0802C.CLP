@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036589           Date 14Feb16              */
+/*       Last Amend No. CGL090             Date 02Nov21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036589           Date 14Feb16              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
@@ -45,6 +46,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGL090 - Add Sort Field Incoming Amount to Events by        */
+/*                Nostro Report                                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036589 - FX neeting projection during COB.                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -84,7 +87,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*********** PGM        PARM(&PARM)                                   /*S01117*/
- 
+
 /* &RLEV IS STANDARD RCF PARM NOT USED IN THIS PROGRAM  */            /*S01117*/
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*S01117*/
 /**/
@@ -118,6 +121,7 @@
              DCL        VAR(&TION) TYPE(*CHAR) LEN(1)                 /*CTI001*/
              DCL        VAR(&CAP204) TYPE(*CHAR) LEN(1)                             /*CAP204*/
              DCL        VAR(&CDL002) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD036589*/
+             DCL        VAR(&CLPGM) TYPE(*CHAR) LEN(7) VALUE('       ')                   /*CGL090*/
 /*                                                                    /*S01408*/
 /*/COPY WNCPYSRC,GLC0802C07                                           /*S01408*/
 /*                                                                    /*S01408*/
@@ -131,7 +135,7 @@
 /*  Check if TI module is switched on  */                             /*CTI001*/
              IF         COND(%SST(&FMT 103 1) *EQ 'Y') THEN(CHGVAR +
                           VAR(&TION) VALUE('Y'))                      /*CTI001*/
- 
+
                                                                       /*S01473*/
 /* Access switchable features file to see if feature S01473     */    /*S01473*/
 /* is installed  */                                                   /*S01473*/
@@ -323,7 +327,8 @@
              OVRDBF     FILE(NOSEV) TOFILE(GLNOSEL0)                  /*CGL010*/
            ENDDO                                                      /*CGL010*/
                                                                       /*S01408*/
-                CALL       PGM(GL0580) PARM(&RSEQ &RENT)              /*E22608*/
+/**********     CALL       PGM(GL0580) PARM(&RSEQ &RENT)           */          /*E22608*/ /*CGL090*/
+                CALL       PGM(GL0580) PARM(&RSEQ &RENT &CLPGM)                           /*CGL090*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC0802C04                                           /*S01408*/
                                                                       /*S01408*/

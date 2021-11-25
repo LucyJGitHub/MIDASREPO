@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *  Last Amend No. MD059253           Date 19Nov21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 MD058708           Date 31Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
@@ -31,6 +32,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059253 - DLC0606B failed due to missing record in DAMBRDI. *
+      *             Do a second call of ARR calculator for existing   *
+      *             backward looking IRS deals and next rate change   *
+      *             date is less than the next working date.          *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058708 - SD001110P2 does not reflect BC specific changes   *
       *             (base rate code and ARR parameters). Add Base     *
@@ -235,6 +240,12 @@
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
      D ControlDate     S              5A                                                    MD058182
+     D Wrk2ndCall      S              1A   INZ('N')                                         MD059253
+     D WrkEndDate      S              5P 0                                                  MD059253
+     D WrkBasDate      S              5P 0                                                  MD059253
+     D PMode           S              1A                                                    MD059253
+     D PDealRef        S              6A                                                    MD059253
+     D PLeg            S              1A                                                    MD059253
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -390,6 +401,27 @@
      C                   EXSR      SRUpdFILE
 
      C                   ENDIF
+                                                                                            MD059253
+     C                   IF        Wrk2ndCall = 'Y'                                         MD059253
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059253
+     C                   EXSR      SRReadNEXT                                               MD059253
+     C                   ITER                                                               MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+      ** For IRS deal, issue 2nd call to ARR Calculator if                                  MD059253
+      ** Rate Change Date is less than next working date.                                   MD059253
+     C                   IF        TrMODI = 'RU' or                                         MD059253
+     C                             TrMODI = 'RT'                                            MD059253
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059253
+     C                   IF        TrNIDT >= BJRDNB and                                     MD059253
+     C                             TrNIDT <= EventCtrlDate                                  MD059253
+     C                   EVAL      Wrk2ndCall = 'Y'                                         MD059253
+     C                   ENDIF                                                              MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+     C                   IF        Wrk2ndCall = 'Y'                                         MD059253
+     C                   ITER                                                               MD059253
+     C                   ENDIF                                                              MD059253
 
       ** Read next record
      C                   EXSR      SRReadNEXT
@@ -762,6 +794,13 @@
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
 
+      ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** determine next Interest Period Start Date                                          MD059253
+     C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
+     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C                   EVAL      IntPerSDATE = WrkDATE                                    MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
       ** Save the actual interest payment date to a work variable                           MD058106
      C                   EVAL      IntPayDate = WrkDATE                                     MD058106
                                                                                             MD058106
@@ -790,6 +829,15 @@
      C                   EVAL      IntPerEDATE = WrkDATE                                      CDL102
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
+                                                                                            MD059253
+      ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** determine next Interest Period End Date                                            MD059253
+     C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
+     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C                   EXSR      SRIRSNxtEDATE                                            MD059253
+     C                   EVAL      IntPerEDATE = WrkEndDate                                 MD059253
+     C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059253
+     C                   ENDIF                                                              MD059253
 
      C                   IF        IntPerEDATE <= 0
      C                   EVAL      WZeroMDATFlag = 'Y'
@@ -1002,6 +1050,31 @@
      C                   EVAL      ISODate = %date( ZDATE : *MDY )
 
      C                   ENDSR
+      *****************************************************************                     MD059253
+      /EJECT                                                                                MD059253
+      *****************************************************************                     MD059253
+      *                                                               *                     MD059253
+      * SRIRSNxtEDATE - Calculate next Interest Period End Date       *                     MD059253
+      *                 based on IRS deal details                     *                     MD059253
+      *                                                               *                     MD059253
+      *****************************************************************                     MD059253
+     C     SRIRSNxtEDATE BEGSR                                                              MD059253
+                                                                                            MD059253
+     C                   EVAL      PDealRef = TrTRAN                                        MD059253
+     C                   IF        TrMODI = 'RU'                                            MD059253
+     C                   EVAL      PLeg = 'U'                                               MD059253
+     C                   ELSE                                                               MD059253
+     C                   EVAL      PLeg = 'T'                                               MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+     C                   CALL      'IR001113'                                               MD059253
+     C                   PARM      'L'           PMode                                      MD059253
+     C                   PARM                    PDealRef                                   MD059253
+     C                   PARM                    PLeg                                       MD059253
+     C                   PARM      *ZEROS        WrkEndDate                                 MD059253
+     C                   PARM      *ZEROS        WrkBasDate                                 MD059253
+                                                                                            MD059253
+     C                   ENDSR                                                              MD059253
       *****************************************************************
       /EJECT
       *****************************************************************

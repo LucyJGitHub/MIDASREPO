@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD058791A          Date 23Sep21               *
-      *  Prev Amend No. MD058791           Date 15Sep21               *
+      *  Last Amend No. MD059042           Date 28Oct21               *
+      *  Prev Amend No. MD058791A          Date 23Sep21               *
+      *                 MD058791           Date 15Sep21               *
       *                 MD058751           Date 03Sep21               *
       *                 AR1068690          Date 14Dec12               *
       *                 260897             Date 19Oct12               *
@@ -169,6 +170,8 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD059042 - 'AVAILABLE BALANCE' line is printed on the same   *
+      *             line as 'C/F' line.                               *
       *  MD058791A - Lack of space between '/' and STPG, results in   *
       *             '/' overprinted by STPG. Moved the printing of '/'*
       *             1 position to the left. Amended hook UUC102_007.  *
@@ -6073,7 +6076,8 @@
      O**                                                                  216006
      O/COPY WNCPYSRC,GL0420O036
       *                                                                                       CGL195
-     O          E 1  41 52   TOT028                                                           CGL195
+     O**********E 1  41 52   TOT028                                                  CGL195 MD059042
+     O          E    41 52   TOT028      1                                                  MD059042
      O         AND  N34 84                                                                    CGL195
      O         AND  N33                                                                       CGL195
      O                                           47 'AVAILABLE BALANCE'                       CGL195

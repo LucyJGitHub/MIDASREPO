@@ -112,7 +112,7 @@
       *                                                                                     MD059184
       ** Processing for Global Layer                                                        MD059184
       *                                                                                     MD059184
-     C     Layer         IFEQ      'Global '                                                MD059184
+     C     Layer         IFEQ      'Global'                                                 MD059184
       *                                                                                     MD059184
       ** SORT FILE INTO ASCENDING ORDER WHERE                                               MD059184
       ** LAYER IS GLOBAL.                                                                   MD059184
@@ -141,7 +141,7 @@
      C/END-EXEC                                                                             MD059184
       *                                                                                     MD059184
       ** IF TABLE IS NOT OPEN, OPEN TABLE AND FETCH NEXT RECORD                             MD059184
-      ** Processing for Zonal Layer                                                         MD059184
+      ** Processing for Global/Zonal Layer                                                  MD059184
       *                                                                                     MD059184
      C                   IF        SQLCOD = -501                                            MD059184
      C/EXEC SQL                                                                             MD059184
@@ -210,7 +210,8 @@
       *                                                                                     MD059184
       ** Fetch next record from file                                                        MD059184
       *                                                                                     MD059184
-     C/EXEC SQL FETCH NEXT FROM P1 INTO :SMFileUpdate                                       MD059184
+     C/EXEC SQL                                                                             MD059184
+     C+  FETCH NEXT FROM P1 INTO :SMFileUpdate                                              MD059184
      C/END-EXEC                                                                             MD059184
       *                                                                                     MD059184
      C                   IF        SQLCOD <> 0 AND SQLCOD <> 100                            MD059184

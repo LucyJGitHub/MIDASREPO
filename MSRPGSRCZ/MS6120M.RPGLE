@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW038             Date 13Apr05               *
+      *                 CSW038             Date 13Apr05               *
       *                 BUG2843            Date 28May04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSW025             Date 15Apr02               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022 Changes                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW038 - Change to allow communication with MMM using        *
       *           MQSeries instead of data queues.  Here we force     *
@@ -811,12 +813,22 @@
       *
       ** If current state is *OUTQ, start session
      C     s3stat        ifeq      '*OUTQ'
+      *                                                                                       CSW122
+      ** Check if the comms id to be toggled is INPUT_MX and if CSW122 is on                  CSW122
+      *                                                                                       CSW122
+     C     s3mcid        ifeq      'INPUT_MX'                                                 CSW122
+     C     CSW122        andeq     'N'                                                        CSW122
+     C                   movel     'MX20221'     p@msgid                                      CSW122
+     C                   call      'ZM1001'      p@snmsg                                      CSW122
+     C                   movel     'N'           w@valid                                      CSW122
+     C                   else                                                                 CSW122
      C**********         call      'MS8030P'                                                 BUG2843
      C                   call      'MS6130P'                                                 BUG2843
      C                   parm      '*STARTUP'    p@oper            9
      C                   parm      s3mcid        p@mcid           26
      C                   parm      '*MANUAL'     p@mode            7
      C                   parm      *BLANKS       p@type            7
+     C                   endif                                                                CSW122
      C                   else
       *
       ** Otherwise end session
@@ -905,7 +917,7 @@
      C                   ELSE                                                   CSW025
      C                   MOVE      'N'           CSW025                         CSW025
      C                   ENDIF                                                  CSW025
- 
+
       ** ... or rather, messages are sent to MMM via data queues unless                       CSW038
       **  CSW038 is on, in which case MQSeries queues are used.                               CSW038
      C                   if        CSW025 = 'Y'                                               CSW038
@@ -922,7 +934,19 @@
      C                   ENDIF                                                                CSW038
                                                                                               CSW038
      C                   endif                                                                CSW038
- 
+      *                                                                                       CSW122
+      **  Check if feature CSW122 is switched on                                              CSW122
+      *                                                                                       CSW122
+     C                   CALLB     'AOSARDR0'                                                 CSW122
+     C                   PARM      *BLANKS       @RTCD                                        CSW122
+     C                   PARM      '*VERIFY'     @OPTN                                        CSW122
+     C                   PARM      'CSW122'      @SARD                                        CSW122
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW122
+     C     @RTCD         IFEQ      *BLANKS                                                    CSW122
+     C                   MOVE      'Y'           CSW122            1                          CSW122
+     C                   ELSE                                                                 CSW122
+     C                   MOVE      'N'           CSW122                                       CSW122
+     C                   ENDIF                                                                CSW122
       *
       ** Pop subroutine
      C                   clear                   @STK(Q)

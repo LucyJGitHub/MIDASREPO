@@ -8,10 +8,12 @@
 /*                                                                  */
 /*     Finastra International Limited 2021                          */
 /*                                                                  */
-/*     Last Amend No.   EML114 *CREATE     Date 23Sep21             */
+/*     Last Amend No.   MD059316           Date 17Nov21             */
+/*     Prev Amend No.   EML114 *CREATE     Date 23Sep21             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     MD059316 - Year to Date Balance update from MP to 2021B issue*/
 /*     EML114 - Inter Office Reconcile (TFJ004 Upgrade)             */
 /*     TFJ004 - Inter-office Reconcile                              */
 /*                                                                  */
@@ -51,6 +53,8 @@
              CALL       PGM(XX1420) PARM(&PLCD)
 /**/
              CALL       PGM(XX1421) PARM(&PLCD)
+             CALL       PGM(XX1450) PARM(&PLCD)
+             CALL       PGM(XX1451) PARM(&PLCD)
 
              ENDDO
 

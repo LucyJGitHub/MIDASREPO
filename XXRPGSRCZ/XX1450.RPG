@@ -6,26 +6,22 @@
      F*                                                               *
      F*  Midas - I/O RECONCILE                                        *
      F*                                                               *
-     F*  XX1420 - RE-ORGANIZE I/O ACCOUNT DATA                        *
+     F*  XX1450 - RE-ORGANIZE I/O ACCOUNT DATA                        *
      F*           To run at installation time to setup XXACNTPP with  *
-     F*             up to date balances (based on XX1414)             *
+     F*             up to date balances (APOSTPD FOR IN/EX)           *
      F*                                                               *
      F*  (C) FINASTRA INTERNATIONAL LIMITED 2021                      *
      F*                                                               *
-     F*  Last Amend No. MD059316           Date 17Nov21               *
-     F*  Prev Amend No. EML114   *CREATE   Date 23Sep21               *
+     F*  Last Amend No. MD059316 *CREATE   Date 17Nov21               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
      F*  MD059316 - Year to Date Balance update from MP to 2021B issue*
-     F*           +Remove line of code that compares LCD of static    *
-     F*           data file XXACODPP to PLCD (LCD from XXACNTPP)      *
-     F*           +Ensure date is set to Last Movement Date or        *
-     F*            beginning of Financial Year (whichever is the      *
-     F*            greatest)                                          *
-     F*           +Ensure update of account balance is correct        *
-     F*  EML114 - Upgrade TFJ004 to FM2.1                             *
-     F*  TFJ004 - Inter-office Reconcile                              *
+     F*           +Created program to read APOSTPD file and where the *
+     F*           account is Income or Expense update the Account     *
+     F*           Balance. Only if the posting isn't a TRANSFER       *
+     F*           and is within the current period i.e. the posting   *
+     F*           date is greater than the Previous EoY date          *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
@@ -33,12 +29,12 @@
      F*                                                               *
      F*                                                               *
      F*****************************************************************
-     FACCNTAB IP  E                    DISK
+     FAPOSTPD IP  E                    DISK
      FXXACODPPIF  E                    DISK
      FXXCUSTPPIF  E                    DISK
-     FSDACODL0IF  E           K        DISK                                                 MD059316
+     FSDACODL0IF  E           K        DISK
       *
-     FXXACNTL1UF  E           K        DISK                      A
+     FXXACNTL1UF  E           K        DISK
      F*
       *****************************************************************
       *
@@ -56,7 +52,7 @@
       *
       *****************************************************************
      I*
-     IACCNTABF
+     IAPOSTPDF
      I              RECI                            RECI1
      I              CNUM                            CNUM1
      I              CCY                             CCY1
@@ -74,7 +70,7 @@
      C  N10                EXSR #INIT
      C  N10                SETON                     10
      C*
-     C           RECI1     CABNE'D'       #END
+     C           RECI1     CABNE'P'       #END
      C*
      C                     Z-ADD1         X
      C           ACOD1     LOKUPACD,X                    80
@@ -83,7 +79,6 @@
      C                     SETOF                     86
      C*
      C           CHTA,X    IFNE 'D'
-     C***********LCDA,X****ANDGTPLCD                                                        MD059316
      C           LCDA,X    ANDLEWKRD1
      C*
      C           IOC,X     IFEQ 'Y'
@@ -108,35 +103,30 @@
      C                     MOVE ALT,X     ALTAC
      C  N86                MOVE HCS,X     HOCNUM
      C   86                MOVE HCO,Y     HOCNUM
-     C*********************Z-ADDLCDA,X    LUPDD                                             MD059316
-     C* Ensure date is set to Beginning of Financial Year or Last Movement Date. Whichever  MD059316
-     C* is greatest                                                                         MD059316
-     C           BJPEYD    ADD  1         STRPR   50                                        MD059316
-     C           LMVD      IFGT STRPR                                                       MD059316
-     C                     MOVE LMVD      LUPDD                                             MD059316
-     C                     ELSE                                                             MD059316
-     C                     MOVE STRPR     LUPDD                                             MD059316
-     C                     ENDIF                                                            MD059316
      C*
-     C* Is Account Income or Expense? If so, do not update with Balance as it is not        MD059316
-     C* accurate, simply set to zero so the balance can be calculated in the other programs MD059316
-     C* that are part of this utility                                                       MD059316
-     C                     MOVE ACOD      ACODA  10                                         MD059316
-     C           ACODA     CHAIN@A5UPA7              20                                     MD059316
-     C* Dump if Account Code not found                                                      MD059316
-     C   20                DUMP                                                             MD059316
-     C           A5ACSC    IFNE 'IN'                                                        MD059316
-     C           A5ACSC    ANDNE'EX'                                                        MD059316
-     C***81****************Z-ADDLDBL      YTDBAL                                            MD059316
-     C                     Z-ADDLDBL      YTDBAL                                            MD059316
-     C                     ELSE                                                             MD059316
-     C* Let programs XX1450, XX1451 calculate the balance for Income/Expense accounts       MD059316
-     C                     Z-ADD*ZERO     YTDBAL                                            MD059316
-     C*                                                                                     MD059316
-     C                     ENDIF                                                            MD059316
+     C* Is Account Income or Expense? If so update Balance if Income or Expense
+     C* posting date >= start of financial year and does not contain TRANSFER
+     C*
+     C                     MOVE ACOD      ACODA  10
+     C           ACODA     CHAIN@A5UPA7              20
+     C* Dump if Account Code not found
+     C   20                DUMP
+     C                     MOVELPNAR      PNAR1   8
+     C           A5ACSC    IFEQ 'IN'
+     C           A5ACSC    OREQ 'EX'
+     C           PNAR1     IFNE 'TRANSFER'
+     C           PSTD      ANDGTBJPEYD
+     C*
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      YTDBAL
+     C                     ELSE
+     C                     SUB  PSTA      YTDBAL
+     C                     END
      C*
      C  N81                UPDATXXACNTP0
-     C   81                WRITEXXACNTP0
+     C                     ENDIF
+     C                     ENDIF
+     C*
      C*
      C                     END
      C*

@@ -112,7 +112,7 @@
      D OFO             DS
      D  @OA                    1    128P 0
      D                                     DIM(16)
- 
+
      D W0DS            DS                  INZ
      D  W0KEY#                             LIKE( tpOLPOS.OLKEY )
      D   W0BRCA                            LIKE( BRCA ) OVERLAY( W0KEY# )
@@ -126,33 +126,30 @@
       *
      D @WK             S             15  0 DIM(16)
       *
- 
+
       ** Templates
- 
+
      D tpOLPOS       E DS                  TEMPLATE QUALIFIED
      D                                     EXTNAME( GLOLPSTD )
       *                                                                                     MD058972
       ** Send message data structure                                                        MD058972
       *                                                                                     MD058972
      D DBDTA           DS                                                                   MD058972
-     D  DBPGM                  1     10                                                     MD058972
-     D  DBFILE                11     20                                                     MD058972
-     D  DBKEY                 21     50                                                     MD058972
      D  DBERNB                51     55  0                                                  MD058972
      D  DBNARR                56    135                                                     MD058972
      D  DBSTK                136    145                                                     MD058972
      D  DBPREF               146    175                                                     MD058972
- 
+
       /EJECT
       *****************************************************************
       * MAIN - Main body                                              *
       *****************************************************************
- 
+
       ** Update Olpos file with passed data
- 
+
      C                   EVAL      W0DS = pEntData
      C                   EXSR      SROLPS
- 
+
      C                   RETURN
      C/EJECT
       *****************************************************************

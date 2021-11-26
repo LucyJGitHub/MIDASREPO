@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 264062             Date 23Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR940312           Date 24Mar12               *
       *                 CRE075             Date 06Dec10               *
       *                 AR738915           Date 30Mar11               *
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  264062 - Wrong format of IBAN is generated for French        *
+      *           standard. Added calculation for RIB key which is    *
+      *           found at the end of the IBAN.                       *
+      *         - Applied for MD059271                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -183,6 +188,13 @@
      D  ##CHKD2               20     21                                                       CFT044
      D  ##NIBA                 1     21                                                       CFT044
       *                                                                                       CFT044
+      ** Retail                                                                               264062
+     D                 DS                                                                     264062
+     D  W0IBAN                 1     13                                                       264062
+     D  W0ZERO                 1      1                                                       264062
+     D  W0ACNO                 2     11                                                       264062
+     D  W0RIB                 12     13                                                       264062
+      *                                                                                       264062
      D/COPY WNCPYSRC,AOIBAN6D01
       *
      D A@CPY           DS
@@ -498,6 +510,24 @@
       *
       * Construct Field
      C                   MOVEL     ACNO          WKIBAN
+     C     @@CTRY        IFEQ      'FR'                                                       264062
+     C                   MOVEL     A8IBID        W5A               5 0                        264062
+     C                   MOVE      A8IBID        W5B               5 0                        264062
+     C                   MOVE      ACNO          W11              11 0                        264062
+     C                   MOVEL     '0'           W11                                          264062
+     C     W5A           MULT      89            W15A             15 0                        264062
+     C     W5B           MULT      15            W15B             15 0                        264062
+     C     W11           MULT      3             W15C             15 0                        264062
+     C     W15A          ADD       W15B          W15              15 0                        264062
+     C                   ADD       W15C          W15                                          264062
+     C     W15           DIV       97            W13              13 0                        264062
+     C                   MVR                     RESTE             2 0                        264062
+     C     97            SUB       RESTE         RIB               2 0                        264062
+     C                   MOVEL     RIB           W0RIB                                        264062
+     C                   MOVE      '0'           W0ZERO                                       264062
+     C                   MOVE      ACNO          W0ACNO                                       264062
+     C                   MOVEL     W0IBAN        WKIBAN                                       264062
+     C                   ENDIF                                                                264062
      C                   MOVE      'AAA'         IBSEQN
       *
      C                   ENDSR

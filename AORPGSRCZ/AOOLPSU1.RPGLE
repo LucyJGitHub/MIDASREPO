@@ -135,9 +135,6 @@
       ** Send message data structure                                                        MD058972
       *                                                                                     MD058972
      D DBDTA           DS                                                                   MD058972
-     D  DBPGM                  1     10                                                     MD058972
-     D  DBFILE                11     20                                                     MD058972
-     D  DBKEY                 21     50                                                     MD058972
      D  DBERNB                51     55  0                                                  MD058972
      D  DBNARR                56    135                                                     MD058972
      D  DBSTK                136    145                                                     MD058972

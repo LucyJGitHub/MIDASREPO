@@ -9,13 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059164           Date 24Nov21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BUG27337           Date 29Mar10              */
+/*                      BUG27337           Date 29Mar10              */
 /*                      CAP205  *CREATE    Date 15Feb10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059164 - REC001503 will only end Account Balance Check    */
+/*                  Update job, ABCONUP_xx if there is no more data  */
+/*                  to process in CREABCQ data queue.                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG27337 - Component REC001503 always dumping even if       */
 /*                  no error occured                                 */
@@ -28,34 +32,59 @@
              DCL        VAR(&DTQLIB)  TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTQLEN)  TYPE(*DEC)  LEN(5 0)
              DCL        VAR(&DTQDTA)  TYPE(*CHAR) LEN(10)
- 
+             DCL        VAR(&DATAQ) TYPE(*CHAR) LEN(20)                                 /*MD059164*/
+             DCL        VAR(&DTAQD) TYPE(*CHAR) LEN(80)                                 /*MD059164*/
+             DCL        VAR(&DTAQD1) TYPE(*CHAR) LEN(80)                                /*MD059164*/
+             DCL        VAR(&NUMMSG1) TYPE(*CHAR) LEN(4)                                /*MD059164*/
+             DCL        VAR(&NUMMSG2) TYPE(*DEC) LEN(5 0)                               /*MD059164*/
+             DCL        VAR(&OBJSTAT) TYPE(*CHAR) LEN(6)                                /*MD059164*/
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                               /*MD059164*/
+             DCL        VAR(&COUNT1) TYPE(*DEC) LEN(1)                                  /*MD059164*/
+             DCL        VAR(&COUNT2) TYPE(*DEC) LEN(1)                                  /*MD059164*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Issue a submit message to MOPERQ */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           REC001503 - Midas RE End Account Balance +
                           Check Update job started') TOMSGQ(MOPERQ)
- 
+
 /* Retrieve system prefix */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
- 
+             CHGVAR     VAR(&DTQNAM) VALUE('CREABCQ')                                   /*MD059164*/
+             CHGVAR     VAR(&DTQLIB) VALUE(&PREFIX *CAT 'DPLIB')                        /*MD059164*/
+             CHGVAR     VAR(&DATAQ) VALUE(&DTQNAM *CAT &DTQLIB)                         /*MD059164*/
+             CHGVAR     VAR(&COUNT1) VALUE(0)                                           /*MD059164*/
+             CHGVAR     VAR(&COUNT2) VALUE(0)                                           /*MD059164*/
+                                                                                        /*MD059164*/
+/* Retrieve information about the data queue. */                                        /*MD059164*/
+ CHKDTQ:     CHGVAR     VAR(&DTAQD) VALUE(*BLANK)                                       /*MD059164*/
+             CALL       PGM(UT0073) PARM(&DATAQ &DTAQD)                                 /*MD059164*/
+             CHGVAR     VAR(&DTAQD1) VALUE(&DTAQD)                                      /*MD059164*/
+                                                                                        /*MD059164*/
+/* Get number of messages in data queue. */                                             /*MD059164*/
+             CHGVAR     VAR(&NUMMSG1) VALUE(%SST(&DTAQD1 73 4))                         /*MD059164*/
+             CHGVAR     VAR(&NUMMSG2) VALUE(%BIN(&NUMMSG1))                             /*MD059164*/
+                                                                                        /*MD059164*/
+             IF         COND(&NUMMSG2 *EQ 0) THEN(DO)                                   /*MD059164*/
+
 /* Check if the ABCONUP_xx job is running */
- 
+
              ALCOBJ     OBJ((REABCJLCK *DTAARA *EXCL)) WAIT(0)
              MONMSG     MSGID(CPF1002) EXEC(DO)
- 
+
 /* Send 'END' message to CREABCQ data queue */
- 
-             CHGVAR     VAR(&DTQNAM) VALUE('CREABCQ')
-             CHGVAR     VAR(&DTQLIB) VALUE(&PREFIX *CAT 'DPLIB')
+
+/**********  CHGVAR     VAR(&DTQNAM) VALUE('CREABCQ') */                                /*MD059164*/
+/**********  CHGVAR     VAR(&DTQLIB) VALUE(&PREFIX *CAT 'DPLIB') */                     /*MD059164*/
              CHGVAR     VAR(&DTQLEN) VALUE(10)
              CHGVAR     VAR(&DTQDTA) VALUE('END')
              CALL       PGM(QSNDDTAQ) PARM(&DTQNAM &DTQLIB +
@@ -63,7 +92,59 @@
 /**********  GOTO       CMDLBL(ENDPGM)                               */                 /*BUG27337*/
              ENDDO
              GOTO       CMDLBL(ENDPGM)                                                  /*BUG27337*/
- 
+             ENDDO                                                                      /*MD059164*/
+                                                                                        /*MD059164*/
+             ELSE       CMD(DO)                                                         /*MD059164*/
+                                                                                        /*MD059164*/
+             IF         COND(&NUMMSG2 *GT 0) THEN(DO)                                   /*MD059164*/
+                                                                                        /*MD059164*/
+/* Check if the ABCONUP_xx job is running */                                            /*MD059164*/
+                                                                                        /*MD059164*/
+             CHGVAR     VAR(&OBJSTAT) VALUE('      ')                                   /*MD059164*/
+             ALCOBJ     OBJ((REABCJLCK *DTAARA *EXCL)) WAIT(0)                          /*MD059164*/
+             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&OBJSTAT) +
+                        VALUE('LOCKED'))                                                /*MD059164*/
+                                                                                        /*MD059164*/
+             IF         COND(&OBJSTAT *EQ '      ') THEN(DO)                            /*MD059164*/
+             CHGVAR     VAR(&OBJSTAT)  VALUE('FREE  ')                                  /*MD059164*/
+             DLCOBJ     OBJ((REABCJLCK *DTAARA *EXCL))                                  /*MD059164*/
+             MONMSG     CPF0000                                                         /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+                                                                                        /*MD059164*/
+/* If DTAARA/REABCLCK is locked ABCONUP_xx job is running */                            /*MD059164*/
+                                                                                        /*MD059164*/
+             IF         COND(&OBJSTAT *EQ 'LOCKED') THEN(DO)                            /*MD059164*/
+             CHGVAR     VAR(&COUNT1) VALUE(&COUNT1 + 1)                                 /*MD059164*/
+             IF         COND(&COUNT1 *LE 3) THEN(DO)                                    /*MD059164*/
+             DLYJOB     DLY(60)                                                         /*MD059164*/
+             GOTO       CMDLBL(CHKDTQ)                                                  /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+             ELSE       CMD(DO)                                                         /*MD059164*/
+             SNDPGMMSG  MSG('ABCONUP_xx not ending, please +
+                            check urgently.') TOMSGQ(MOPERQ)                            /*MD059164*/
+             GOTO       CMDLBL(ABNOR)                                                   /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+                                                                                        /*MD059164*/
+             IF         COND(&OBJSTAT *EQ 'FREE  ') THEN(DO)                            /*MD059164*/
+             CHGVAR     VAR(&COUNT2) VALUE(&COUNT2 + 1)                                 /*MD059164*/
+             IF         COND(&COUNT2 *EQ 1) THEN(DO)                                    /*MD059164*/
+             CHGVAR     VAR(&JOBNAME) VALUE('ABCONUP_' *CAT &PREFIX)                    /*MD059164*/
+             SBMJOB     CMD(CALL PGM(REC001501)) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD)                                       /*MD059164*/
+             DLYJOB     DLY(60)                                                         /*MD059164*/
+             GOTO       CMDLBL(CHKDTQ)                                                  /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+             ELSE       CMD(DO)                                                         /*MD059164*/
+             SNDPGMMSG  MSG('ABCONUP_xx cannot be started, please +
+                            check urgently.') TOMSGQ(MOPERQ)                            /*MD059164*/
+             GOTO       CMDLBL(ABNOR)                                                   /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+             ENDDO                                                                      /*MD059164*/
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +

@@ -26,10 +26,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CAP240   *Create   Date 11Jun21               *
+      *  Last Amend No. MD059200           Date 04Nov21               *
+      *  Prev Amend No. CAP240   *Create   Date 11Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059200 - Missing parameter for SDFTNH5VL (introduced by    *
+      *              MD052465)                                        *
       *  CAP240 - SD Non Account Holders JAVA conversion              *
       *                                                               *
       *****************************************************************
@@ -224,6 +227,10 @@
 
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  Extname(DSSDY)
+
+      ** External DS for CRS API Format Definition File - Detail                            MD059200
+     D TranInCRDD    E DS                  EXTNAME(SDCRDDPD)                                MD059200
+     D                                     PREFIX(CR)                                       MD059200
 
      D CrFoFilFmt      DS
      D  WCDESC                 1     50
@@ -810,6 +817,7 @@
      C                   PARM                    WCLAFlag          1
      C                   PARM                    PAINSF
      C                   PARM                    CuCrhScFmt
+     C                   PARM                    TranInCRDD                                 MD059200
 
       ** OUTPUTS :
       ** FATCA Customer Details OK inds

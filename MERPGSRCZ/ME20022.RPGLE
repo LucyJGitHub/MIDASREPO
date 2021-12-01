@@ -1,5 +1,4 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas  MX Elements data file update')                  *

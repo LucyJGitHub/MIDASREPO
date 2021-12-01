@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR898167           Date 07Nov14               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR898167           Date 07Nov14               *
       *                 AR905067           Date 05Nov14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR895223           Date 19Nov12               *
@@ -52,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR898167 - Outgoing payment has inconsistent rate in fld 36  *
       *             (Child: AR898168)                                 *
@@ -244,6 +248,7 @@
      D ZMDI2           S              1
  
      D WRATE0          S             13  0
+     D PMode           S              6A                                                    MD021318
  
       **  Data Structure for input/output parameters
      D/COPY FTCPYSRC,FT0010D001
@@ -521,18 +526,30 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRATE'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1019'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRATE'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1019'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRATE'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1019'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        P#PMSQ = 'FTM2578   '
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRATE'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1020'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRATE'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1020'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRATE'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1020'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        P#PMSQ = 'FTM2579   '
@@ -1241,6 +1258,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       ** =================================================================
       ** Program, module and procedure names for database error processing.

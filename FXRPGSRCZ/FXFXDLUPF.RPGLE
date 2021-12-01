@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251029             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR926404           Date 16Jan13               *      
+      *  Prev Amend No. 251029             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -79,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR926404 - Unable to update Front Office ID. Allow changes   *
+      *             on FHFRNT. (Child: AR926405)                      *      
       *  251029 - Applied fix 231306.                                 *
       *  231306 - Handle file locking properly.                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1493,9 +1496,9 @@
       *                                                                         CAP013
       ** Front office transaction ID                                            CAP013
       *                                                                         CAP013
-     C     F3FRNT        IFNE      *BLANKS                                      228662
+     C*****F3FRNT        IFNE      *BLANKS                                           228662 AR926404
      C                   MOVEL     F3FRNT        FHFRNT                         CAP013
-     C                   ENDIF                                                  228662
+     C**********         ENDIF                                                       228662 AR926404
       *                                                                         CAP013
       ** Associated front office transaction ID                                 CAP013
       *                                                                         CAP013
@@ -1574,9 +1577,9 @@
       *                                                                         CAP013
       ** Front office transaction ID                                            CAP013
       *                                                                         CAP013
-     C     F3FRNT        IFNE      *BLANKS                                      228662
+     C*****F3FRNT        IFNE      *BLANKS                                           228662 AR926404
      C                   MOVEL     F3FRNT        FHFRNT                         CAP013
-     C                   ENDIF                                                  228662
+     C**********         ENDIF                                                       228662 AR926404
       *                                                                         CAP013
       ** Associated front office transaction ID                                 CAP013
       *                                                                         CAP013

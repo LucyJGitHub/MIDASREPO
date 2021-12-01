@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD039547           Date 20Sep16               *
+      *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD021276           Date 31Jul13               *
@@ -63,6 +65,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD039547 - Referred account is not properly validated.       *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
@@ -377,6 +384,7 @@
       * This prog only
      D ##CSID          S              1
      D SwiftOK         S              1
+     D PMode           S              6A                                                    MD021318
  
      D WSId19          S              1A                                                      CSW218
      D CSW218          S              1A                                                      CSW218
@@ -528,10 +536,17 @@
      C**********         ADD       1             Idx                                   260862 CSD089
      C**********         MOVEL     'SDST1'       FldNamXAr(Idx)                        260862 CSD089
      C**********         MOVEL     'FTM0019'     MsgIdXAr(Idx)                         260862 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKDst1                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0019'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKDst1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'FTM0019'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                260862
       *                                                                                       240689
       ** Bankrupt/Liquidated                                                                  240689
@@ -542,10 +557,17 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SDST1'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0015'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKDst1                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0015'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKDst1                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0015'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bad Debt                                                                             240689
@@ -556,24 +578,31 @@
      C**********         ADD       1             Idx                                   240689 CSD089
      C**********         MOVEL     'SDST1'       FldNamXAr(Idx)                        240689 CSD089
      C**********         MOVEL     'FTM0016'     MsgIdXAr(Idx)                         240689 CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   MOVE      'N'           OKDst1                                     MD021318
+     C                   ADD       1             Idx                                        MD021318
+     C                   MOVEL     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   MOVEL     'FTM0016'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   MOVE      'W'           OKDst1                                       CSD089
      C                   ADD       1             WIx                                          CSD089
      C                   MOVEL     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   MOVEL     'FTM0016'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C*****              MOVE      'N'           OKDst1                                       240689
-     C     OKDst1        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKDst1                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'SDST1'       WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C*****OKDst1        IFNE      'N'           OKDst1                                240689 259576
+     C**********         MOVE      'W'           OKDst1                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIx                                   240689 259576
+     C**********         MOVEL     'SDST1'       WFldNmXAr(WIx)                        240689 259576
+     C**********         MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Credit                                                                      240689
       *                                                                                       240689
@@ -1198,10 +1227,17 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SDST1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0938'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKDst1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0938'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKDst1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0938'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1215,10 +1251,17 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SDST1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0939'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKDst1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0939'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKDst1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0939'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1232,10 +1275,17 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SDST1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0940'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKDst1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0940'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKDst1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0940'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1249,10 +1299,17 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SDST1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0941'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKDst1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0941'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKDst1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0941'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1266,10 +1323,17 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SDST1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA0942'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKDst1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SDST1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA0942'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKDst1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SDST1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA0942'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C                   End
  
@@ -1338,6 +1402,8 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
  
       ** ACCESS BANK DETAILS

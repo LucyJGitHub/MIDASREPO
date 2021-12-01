@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Migrate ERZ054 database files')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       XXC900001 - Midas SM Migrate ERZ054 database files          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. ERZ054   *CREATE   Date 29Jan13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       ERZ054 - RZB Data Warehouse Extraction Requirements         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(00000000)
+ 
+/* Retrieve old system prefix */
+ 
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+                CHGVAR     VAR(&LIB1) VALUE(&PFX *TCAT 'DMLIB')
+                CHGVAR     VAR(&LIB2) VALUE(&PFX *TCAT 'DTALIB')
+ 
+/* Copy Database files */
+ 
+             CPYF       FROMFILE(&LIB1/RZACTRPP) TOFILE(RZACTRPP) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&LIB2/RZCOPYPP) TOFILE(RZCOPYPP) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSG('Program XXC900001 ended abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

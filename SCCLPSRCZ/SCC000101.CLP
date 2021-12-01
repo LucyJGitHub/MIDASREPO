@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027054           Date 04Jun15              */
+/*       Last Amend No. MD044835           Date 29Mar17              */   
+/*       Prev Amend No. MD026710           Date 22Sep16              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD027054           Date 04Jun15              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      CGL155             Date 21Mar14              */
@@ -181,6 +183,9 @@
              DCL        VAR(&ERRDTA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1)
              DCL        VAR(&FRSTAT) TYPE(*CHAR) LEN(1)                                /*BUG27831A*/
+                                                                                        /*MD026710*/
+             DCL        VAR(&COUNTR) TYPE(*DEC) LEN(1) VALUE(0)                         /*MD026710*/
+             DCL        VAR(&COUNTR2) TYPE(*DEC) LEN(1) VALUE(0)                        /*MD044835*/      
  
 /* Global monitor message */
  
@@ -603,12 +608,21 @@
              CALL       PGM(SCC2451)
  
 /* Reset message queue MSPECIAL */
+RETRY:                                                                                  /*MD026710*/
  
              CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)
  
 /* If MSPECIAL is allocated to another job then send message and end */
  
              MONMSG     MSGID(CPF2451) EXEC(DO)
+                                                                                        /*MD026710*/
+/*Retry CHGMSGQ for 3 times */                                                          /*MD026710*/
+                                                                                        /*MD026710*/
+             CHGVAR     VAR(&COUNTR) VALUE(&COUNTR + 1)                                 /*MD026710*/
+             IF         COND(&COUNTR *LT 3) THEN(DO)                                    /*MD026710*/
+             GOTO       CMDLBL(RETRY)                                                   /*MD026710*/
+             ENDDO                                                                      /*MD026710*/
+                                                                                        /*MD026710*/   
  
 /***Free*the SCSARDPD file                                        */                     /*243665A*/
 /*********      CHGVAR     VAR(&OPTN) VALUE('*FREE')                                     /*243665A*/
@@ -633,8 +647,30 @@ SNDMSG:
              ENDDO
  
 /* Reset message queue MSTATUS */
+RETRY2:                                                                                 /*MD044835*/   
  
              CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)
+/* Check If MSTATUS is allocated to another job */                                      /*MD044835*/
+                                                                                        /*MD044835*/
+             MONMSG     MSGID(CPF2451) EXEC(DO)                                         /*MD044835*/
+                                                                                        /*MD044835*/
+/*Retry CHGMSGQ for 3 times */                                                          /*MD044835*/
+                                                                                        /*MD044835*/
+             CHGVAR     VAR(&COUNTR2) VALUE(&COUNTR2 + 1)                               /*MD044835*/
+             IF         COND(&COUNTR2 *LT 3) THEN(DO)                                   /*MD044835*/
+             GOTO       CMDLBL(RETRY2)                                                  /*MD044835*/
+             ENDDO                                                                      /*MD044835*/
+                                                                                        /*MD044835*/
+/* Call SCC0010 to inform user that the job cannot be run now */                        /*MD044835*/
+                                                                                        /*MD044835*/
+                RTVMSG     MSGID(SCM0026) MSGF(MIDASMSG) MSG(&MESSAGE)                  /*MD044835*/
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)                    /*MD044835*/
+                CHGDTAARA  DTAARA(MIDASMSG (10 1)) VALUE('1')                           /*MD044835*/
+                CALL       PGM(SCC0010) PARM('SCC0102' 'ENTER' ' ')                     /*MD044835*/
+                                                                                        /*MD044835*/
+                SIGNOFF    LOG(*LIST)                                                   /*MD044835*/
+             ENDDO                                                                      /*MD044835*/
+                                                                                        /*MD044835*/ 
  
 /* Check if this is a restart after a machine failure */
  

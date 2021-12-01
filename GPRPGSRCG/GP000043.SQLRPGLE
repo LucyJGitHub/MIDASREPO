@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR719317*CREATE  Date 19Jul11                 *
+      *  Last Amend No. MD030320         Date 22May15                 *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR719317*CREATE  Date 19Jul11                 *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD030320 - Change customer number length from 10 to 6 digit  *
+      *             character.                                        *
       *  MD046248 - Finastra Rebranding                               *
       *  AR719317 - Include T_GZAMADEX in ATU processing              *
       *                                                               *
@@ -42,8 +45,10 @@
      D DSTACO          S             10A
      D DSTACS          S              2A
      D DSTBRC          S              3A
-     D DSFCNU2         S             10A
-     D DSTCNU2         S             10A
+     D*DSFCNU2**       S             10A                                                    MD030320
+     D*DSTCNU2**       S             10A                                                    MD030320
+     D DSFCNU2         S              6A                                                    MD030320
+     D DSTCNU2         S              6A                                                    MD030320
      D STMT1           S            500A   INZ('UPDATE T_GZAMADEX SET +
      D                                     DDBRCA =      , DDCUSN +
      D                                     =             , DDCCY +
@@ -79,11 +84,11 @@
      C                   EVAL      DSTACO = %SUBST(P@TOAC:10:10)
      C                   EVAL      DSTACS = %SUBST(P@TOAC:20:2)
      C                   EVAL      DSTBRC = %SUBST(P@TOAC:22:3)
-     C                   EVAL      DSFCNU2 = '   -'
-     C                   MOVEL     DSFBRC        DSFCNU2
+     C**********         EVAL      DSFCNU2 = '   -'                                         MD030320
+     C**********         MOVEL     DSFBRC        DSFCNU2                                    MD030320
      C                   MOVE      DSFCNU        DSFCNU2
-     C                   EVAL      DSTCNU2 = '   -'
-     C                   MOVEL     DSTBRC        DSTCNU2
+     C**********         EVAL      DSTCNU2 = '   -'                                         MD030320
+     C**********         MOVEL     DSTBRC        DSTCNU2                                    MD030320
      C                   MOVE      DSTCNU        DSTCNU2
       *
       ** Calculate SQL UPDATE statement.

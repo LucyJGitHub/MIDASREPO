@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend No. 259576             Date 02Apr14               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 06May13               *
       *                 AR1083047          Date 30Jan13               *
@@ -60,6 +61,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD034521A - Error handling of Blocked account is not the     *
@@ -833,16 +836,16 @@
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C**********         MOVE      'N'           OKRco1                                       240689
-     C     OKRco1        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKRco1                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'DDRCO1'      WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C*****OKRco1        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKRco1                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIx                                   240689 259576
+     C**********         MOVEL     'DDRCO1'      WFldNmXAr(WIx)                        240689 259576
+     C**********         MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Debit                                                                       240689
       *                                                                                       240689

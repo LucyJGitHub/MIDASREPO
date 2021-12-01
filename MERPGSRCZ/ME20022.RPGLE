@@ -9,7 +9,8 @@
       *                                                               *
       *  ME20022 - Midas MX Elements data file update                 *
       *                                                               *
-      *  Called By: MEC20022D - Midas MX Extraction Control           *
+      *  Called By: MEC20022C - MS MX IMM Extraction Control - Batch  *
+      *                         process                               *
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *

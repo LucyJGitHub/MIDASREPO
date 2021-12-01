@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058767           Date 07Sep21               *
-      *  Prev Amend No. MD058751           Date 03Sep21               *
+      *  Last Amend No. MD059143           Date 28Oct21               *
+      *  Prev Amend No. MD058767           Date 07Sep21               *
+      *                 MD058751           Date 03Sep21               *
       *                 UUC103             Date 20Oct20               *
       *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
@@ -38,6 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059143 - Third line of fld86 is getting ommitted. Upgrade  *
+      *             fix MMFIX3 from BF Midas 1106.                    *
+      *             Hook GLH00404 amended. (Recompile)                *
       *  MD058767 - MT940s are producing many extra spaces in tag 86. *
       *             Upgraded CAR UUC061 fix MD030976.                 *
       *             Hooks GLH00403, GLH00404 amended.                 *

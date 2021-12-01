@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. UUC104             Date 12Oct20               *
-      *  Prev Amend No. AR1068690          Date 14Dec12               *
+      *  Last Amend No. MD058425           Date 17Nov21               *
+      *  Prev Amend No. UUC104             Date 12Oct20               *
+      *                 AR1068690          Date 14Dec12               *
       *                 223053             Date 16Oct12               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058425 - ME_FT_IMM job terminated due to file locking but  *
+      *             rollback operation is incomplete. Fix is to move  *
+      *             the placement of COMIT operation after call to    *
+      *             FT0300 where the message is being validated.      *
+      *           - Applied for MD059124.                             *
       *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
       *           Use copy hook ME1310DAUT, ME1310DCPG, ME1310DIPG    *
       *  AR1068690 - Apply 223053        (Child:AR1069087)            *
@@ -415,9 +421,10 @@
       *
      C           @RTN      IFEQ 'MIN0109'
       *
-      * Comit changes
+      **Comit*changes**************************************************                     MD058425
       *
-     C                     COMIT
+     C**********           COMIT                                                            MD058425
+     C                     MOVEL@RTN      W0RTRN  7                                         MD058425
       *
      C                     END
       *
@@ -443,6 +450,11 @@
      C                     EXSR SRERR
      C                     END
       *
+      ** Comit changes                                                                      MD058425
+      *                                                                                     MD058425
+     C           W0RTRN    IFEQ 'MIN0109'                                                   MD058425
+     C                     COMIT                                                            MD058425
+     C                     ENDIF                                                            MD058425
       *  Remove reservation
       *
      C                     CALL 'ME1070'               9090
@@ -515,6 +527,7 @@
      C                     MOVE AGDFF     WUDFF   1        Date Format
      C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
       *
+     C                     MOVEL*BLANK    W0RTRN                                            MD058425
       * Get modules information
       *
      C                     CALL 'AOMMODR0'             9090

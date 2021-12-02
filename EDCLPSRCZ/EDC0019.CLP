@@ -16,10 +16,11 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058071           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 20May08              */
+/*                      BG18886            Date 20May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -29,6 +30,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058071 - Deliverable Data Split for Export Data           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Non-standard codes exist in Midas Plus core      */
 /*                  sources                                         */
@@ -37,15 +39,15 @@
 /*                                                                  */
 /********************************************************************/
              PGM        PARM(&WRTCD &EXSC)
- 
+
 /* Copyright statement definition */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /* Other declarations */
- 
+
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(80)
              DCL        VAR(&MSGID)   TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGDTA)  TYPE(*CHAR) LEN(100)
@@ -53,73 +55,74 @@
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&WRTCD) TYPE(*CHAR) LEN(1)
              DCL        VAR(&EXSC) TYPE(*CHAR) LEN(10)
- 
+
 /* Global error monitor */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Copyright statement definition - at runtime */
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              CHGVAR     VAR(&MEM) VALUE('EDC0019 - ED Bulk Transfer +
                           Initialisation')
- 
+
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
- 
+
 /* Prepare for transfer */
- 
+
 /* Select records for this extract */
-             OVRDBF     FILE(EDBUTFPD) SHARE(*YES)
+/**********  OVRDBF     FILE(EDBUTFPD) SHARE(*YES) */                                   /*MD058071*/
 /*           OPNQRYF    FILE((EDBUTFPD)) QRYSLT('(EDEXSC *EQ "' ** +    136831*/
 /*                        &EXSC ** '")')                                136831*/
 /*           OPNQRYF    FILE((EDBUTFPD)) QRYSLT('(EDEXSC *EQ "' ** +
                           &EXSC ** '")') KEYFLD((EDEXSC) (EDSQCD))    */ /*136831  BUG18886 */
-             OPNQRYF    FILE((EDBUTFPD)) QRYSLT('(EDEXSC *EQ "' *CAT +
+/**********  OPNQRYF    FILE((EDBUTFPD)) QRYSLT('(EDEXSC *EQ "' *CAT +
                           &EXSC *CAT '")') KEYFLD((EDEXSC) +
-                          (EDSQCD))                                      /*136831*/ /*BG18886*/
- 
+                          (EDSQCD)) */                           /*136831*/ /*BG18886*/ /*MD058071*/
+
 /* Copy PF/EDBUTFPD to PF/EDFBUTPD and DTAQ/EDBULKQ */
-             CALL       PGM(ED0010)
+/**********  CALL       PGM(ED0010) */                                                  /*MD058071*/
+             CALL       PGM(ED0010) PARM(&EXSC)                                         /*MD058071*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
- 
-             CLOF       OPNID(EDBUTFPD)
- 
+
+/*********   CLOF       OPNID(EDBUTFPD) */                                              /*MD058071*/
+
 /* Normal termination */
              GOTO       CMDLBL(ENDCLPGM)
- 
- 
+
+
 ABNOR:
- 
+
 /* Abnormal termination */
- 
+
              RCVMSG     MSGTYPE(*EXCP) RMV(*NO) MSGDTA(&MSGDTA) +
                           MSGID(&MSGID) MSGF(&MSGF) +
                           MSGFLIB(&MSGFLIB)
              MONMSG     MSGID(CPF0000)
- 
+
              IF         COND(&MSGID *NE '       ') THEN(DO)
                  SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                             MSGDTA(&MSGDTA) TOMSGQ(MOPERQ MRUNQ)
                  MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              SNDPGMMSG  MSG('EDC0019 Midas ED Bulk Transfer +
                           Initialisation TERMINATED ABNORMALLY') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                CHGJOB     SWS(XXXXXX11)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 ENDCLPGM:
              ENDPGM

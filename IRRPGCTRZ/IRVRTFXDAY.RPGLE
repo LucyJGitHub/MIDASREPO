@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059170           Date 29Oct21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CIR018             Date 06Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059170 - Rate fix days not cleared upon amendment of       *
+      *             deal from forward to backward looking rate        *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR018 - Daily Rate Change Frequency for SIRS                *
@@ -238,13 +241,16 @@
      C                   MOVE      RatFixDays    STFRFD                                       CIR020
      C                   ENDIF                                                                CIR020
                                                                                               CIR020
-     C                   IF        PBLRT = 'Y'                                                CIR020
-     C                             AND (STFRFD <> *Blanks AND                                 CIR020
-     C                             (STFRFD <> '  ' AND STFRFD <> ' 0' AND                     CIR020
-     C                             STFRFD <> '0 ' AND STFRFD <> '00'))                        CIR020
-     C                   MOVE      'Y'           ErrorFound                                   CIR020
-     C                   MOVE      '5049523'     Msgid1                                       CIR020
-     C                   ENDIF                                                                CIR020
+     C                   IF        PBLRT = 'Y'                                              MD059170
+     C                   EVAL      STFRFD = *BLANKS                                         MD059170
+     C                   ENDIF                                                              MD059170
+     C**********         IF        PBLRT = 'Y'                                       CIR020 MD059170
+     C**********                   AND (STFRFD <> *Blanks AND                        CIR020 MD059170
+     C**********                   (STFRFD <> '  ' AND STFRFD <> ' 0' AND            CIR020 MD059170
+     C**********                   STFRFD <> '0 ' AND STFRFD <> '00'))               CIR020 MD059170
+     C**********         MOVE      'Y'           ErrorFound                          CIR020 MD059170
+     C**********         MOVE      '5049523'     Msgid1                              CIR020 MD059170
+     C**********         ENDIF                                                       CIR020 MD059170
                                                                                               CIR007
       ** If CIR007 is on , Deal Type is 'RS' and Rate Change Frequency                        CIR007
       ** Code is 'O', then the Rate Fix Days must be zero or blank.                           CIR007

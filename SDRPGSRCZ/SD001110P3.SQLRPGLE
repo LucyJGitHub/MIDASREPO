@@ -12,10 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CIR020  *CREATE    Date 02Aug21               *
+      *  Last Amend No. MD059169           Date 03Nov21               *
+      *  Prev Amend No. CIR020  *CREATE    Date 02Aug21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059169 - Spread Indicator is missing on Daily Rate         *
+      *             Calculation Report SD001110P3                     *
       *  CIR020 - LIBOR Deregulation - IRS                            *
       *                                                               *
       *****************************************************************
@@ -308,11 +311,13 @@
       *
      C                   IF        TRMODI  = 'RU'
      C                   EVAL      P1RTSP = URTSP
+     C                   EVAL      P1SPRD = USPIN                                           MD059169
      C                   ELSE
      C                   EVAL      P1RTSP = TRTSP
+     C                   EVAL      P1SPRD = TSPIN                                           MD059169
      C                   ENDIF
       *
-     C                   EVAL      P1SPRD = *BLANKS
+     C**********         EVAL      P1SPRD = *BLANKS                                         MD059169
       *
      C                   EVAL      P1BADJ = TRBADJ
      C                   EVAL      P1RFRT = TRRFRR

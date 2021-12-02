@@ -19,8 +19,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059133           Date 10Nov21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059133 - Prohibit the user of backward looking rates if    *
+      *             CSD103 is switched off                            *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -204,8 +207,8 @@
       ** Validate the base rate code used in FRA transactions                                 CIR020
       *                                                                                       CIR020
      C     Transtyp      IFEQ      'FR'                                                       CIR020
-     C     CSD103        ANDEQ     'Y'                                                        CIR020
-                                                                                              CIR020
+     C*****CSD103        ANDEQ     'Y'                                                        CIR020
+                                                                                     CIR020 MD059133
      C     BSRTFRA       CHAIN     SDBSRTL0                                                   CIR020
      C                   IF        %FOUND(SDBSRTL0)                                           CIR020
      C     BABLRT        IFEQ      'Y'                                                        CIR020

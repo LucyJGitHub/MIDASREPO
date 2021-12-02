@@ -9224,13 +9224,15 @@
      C                             AND DTYP <> 'RF'                                           CIR020
      C                             AND DTYP <> 'RP')                                          CIR020
      C                   IF        UBLRT = 'Y'                                              MD059246
-     C                             AND UCALM = 'MANL'                                       MD059246
+     C**********                   AND UCALM = 'MANL'                              MD059246 MD059278
      C                             AND (DTYP = 'RR'                                         MD059246
      C                             OR DTYP = 'RF'                                           MD059246
      C                             OR DTYP = 'RP')                                          MD059246
      C                   EVAL      AVERRT = ' '                                             MD059246
      C                   BITOFF    '01234567'    UDSTI                                      MD059246
+     C                   IF        DTYP <> 'RP'                                             MD059278
      C                   BITON     '04'          UDSTI                                      MD059246
+     C                   ENDIF                                                              MD059278
      C                   EVAL      UEINR = AACRT                                            MD059246
      C                   EVAL      UBRTE = AACRT                                            MD059246
      C                   EVAL      AACRT = 0                                                MD059246
@@ -9278,13 +9280,15 @@
      C                             AND DTYP <> 'RF'                                           CIR020
      C                             AND DTYP <> 'RP')                                          CIR020
      C                   IF        TBLRT = 'Y'                                              MD059246
-     C                             AND TCALM = 'MANL'                                       MD059246
+     C**********                   AND TCALM = 'MANL'                              MD059246 MD059278
      C                             AND (DTYP = 'RR'                                         MD059246
      C                             OR DTYP = 'RF'                                           MD059246
      C                             OR DTYP = 'RP')                                          MD059246
      C                   EVAL      AVERRT = ' '                                             MD059246
      C                   BITOFF    '01234567'    TDSTI                                      MD059246
+     C                   IF        DTYP <> 'RP'                                             MD059278
      C                   BITON     '04'          TDSTI                                      MD059246
+     C                   ENDIF                                                              MD059278
      C                   EVAL      TEINR = AACRT                                            MD059246
      C                   EVAL      TBRTE = AACRT                                            MD059246
      C                   EVAL      AACRT = 0                                                MD059246
@@ -25682,7 +25686,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         UAITC                                         S0111
      C                   Z-ADD     WKINT         UIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C     FLRRTF        IFEQ      'Y'                                                         S0111
@@ -25747,7 +25755,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         TAITC                                         S0111
      C                   Z-ADD     WKINT         TIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C                   END                                                                   S0111
@@ -25827,7 +25839,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         TAITC                                         S0111
      C                   Z-ADD     WKINT         TIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C     FLRRTF        IFEQ      'Y'                                                         S0111
@@ -25892,7 +25908,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         UAITC                                         S0111
      C                   Z-ADD     WKINT         UIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C                   END                                                                   S0111
@@ -28475,7 +28495,7 @@
      C                             OR DTYP = 'RF'                                           MD059246
      C                             OR DTYP = 'RP')                                          MD059246
      C                   IF        UBLRT = 'Y'                                              MD059246
-     C                             AND UCALM = 'MANL'                                       MD059246
+     C**********                   AND UCALM = 'MANL'                              MD059246 MD059278
      C                   BITOFF    '01234567'    UDSTI                                      MD059246
      C                   BITON     '03'          UDSTI                                      MD059246
      C                   EVAL      AACRT = UEINR                                            MD059246
@@ -28483,7 +28503,7 @@
      C                   EVAL      UEINR = 0                                                MD059246
      C                   ENDIF                                                              MD059246
      C                   IF        TBLRT = 'Y'                                              MD059246
-     C                             AND TCALM = 'MANL'                                       MD059246
+     C**********                   AND TCALM = 'MANL'                              MD059246 MD059278
      C                   BITOFF    '01234567'    TDSTI                                      MD059246
      C                   BITON     '03'          TDSTI                                      MD059246
      C                   EVAL      AACRT = TEINR                                            MD059246

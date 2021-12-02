@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD059144           Date 28Oct21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059144 - In Account Maintenance, linked account has a wrong*
+      *             value in Linked to Primary Account field.         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  260405 - BRT Participation Date of Birth field is missing.   *
@@ -1228,7 +1231,7 @@
      C                   Z-ADD     LTAC          WLTAC
      C                   Z-ADD     LTAS          WLTAS
       *                                                                                     BUG23671
-     C                   Z-ADD     ACSQ          LTAS                                       BUG23671
+     C**********         Z-ADD     ACSQ          LTAS                              BUG23671 MD059144
       *
       ** If RE number is being used, show RE number of the prime a/c.
       *

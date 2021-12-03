@@ -54,12 +54,14 @@
 
       ** Array containing the recognized tags
 
-     D  mxTags         S            100A   dim(7) ctdata perrcd(1)
+     D  mxTags         S            100A   dim(8) ctdata perrcd(1)
 
       ** Constant for tag array size
       ** If a new element on the mxTags array is added, this must also be updated
 
-     D  arraySize      C                   const(7)
+     D  arraySize      C                   const(8)
+
+     D  cancelMsg      S             20A   varying
 
       ** Output string
 
@@ -82,6 +84,10 @@
      D  pNL            S              5S 0 inz(0)
      D  pOL            S              5S 0 inz(1)
      D  pEq            S              5S 0 inz(0)
+
+      ** MsgId field for cancellation messages
+
+     D  msgIdCancel    S             36A
 
       ** Tag array index controller
 
@@ -525,6 +531,16 @@
      C                   endif
      C                   enddo
 
+      ** Check if message is a cancellation message prior to writing
+
+     C                   eval      cancelMsg = 'camt'+'.'+'056'+'.'+'001'+'.'
+     C                              +'08'
+     C                   if        MTPY = cancelMsg
+     C                             or (UETR = *BLANKS and MXID = *BLANKS)
+     C                   eval      MXID = %trim(msgIdCancel)
+     C                   eval      IMXID = %trim(msgIdCancel)
+     C                   endif
+
       ** Write data on the records
 
      C                   exsr      sr_writerec
@@ -558,6 +574,7 @@
 
      C                   eval      y = 1
      C                   eval      buffer = outBytes
+     C
 
       ** Start writing records in 256 char increments until the buffer has been exhausted
 
@@ -665,6 +682,11 @@
 
      C                   when      mxTags(x) = 'GrpHdrCreDtTm'
      C                   eval      MXIDE = tagVal
+
+      ** Extract MsgId for cancellation messages
+
+     C                   when      mxTags(x) = 'BizMsgIdr'
+     C                   eval      msgIdCancel = tagVal
      C                   endsl
      C                   endif
 
@@ -1095,3 +1117,4 @@ IntrBkSttlmAmtCcy
 IntrBkSttlmDt
 GrpHdrMsgId
 GrpHdrCreDtTm
+BizMsgIdr

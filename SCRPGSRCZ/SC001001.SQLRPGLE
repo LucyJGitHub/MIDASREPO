@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD058986           Date 11Oct21               *
+      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *                 MD055681           Date 31Jul20               *
       *                 CUP040             Date 06Mar14               *
       *                 MD024412           Date 20Jan14               *
       *                 AR1090366          Date 21Feb13               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - Restructure of deliverable data files.              *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058986           Date 11Oct21               *
+      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CPB001 - Amend validation processing for modules to allow    *
@@ -2834,6 +2836,7 @@
      C+ , DJMD10                                                                            MD055891
      C+ , DJMP10                                                                            MD055891
      C+ , DJMODE                                                                            MD055891
+     C+ , DJLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -2861,6 +2864,7 @@
      C+ , :DJMD10                                                                           MD055891
      C+ , :DJMP10                                                                           MD055891
      C+ , 'B'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -2870,6 +2874,7 @@
      C+ , DJCSEQ                                                                            MD055891
      C+ , DJMCUN                                                                            MD055891
      C+ , DJMODE                                                                            MD055891
+     C+ , DJLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -2877,6 +2882,7 @@
      C+ , :DJCSEQ                                                                           MD055891
      C+ , :DJMCUN                                                                           MD055891
      C+ , 'B'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *
@@ -2975,6 +2981,7 @@
      C+ , DJMD10                                                                            MD055891
      C+ , DJMP10                                                                            MD055891
      C+ , DJMODE                                                                            MD055891
+     C+ , DJLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -3002,6 +3009,7 @@
      C+ , :DJMD10                                                                           MD055891
      C+ , :DJMP10                                                                           MD055891
      C+ , 'B'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -3011,6 +3019,7 @@
      C+ , DJCSEQ                                                                            MD055891
      C+ , DJMCUN                                                                            MD055891
      C+ , DJMODE                                                                            MD055891
+     C+ , DJLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -3018,6 +3027,7 @@
      C+ , :DJCSEQ                                                                           MD055891
      C+ , :DJMCUN                                                                           MD055891
      C+ , 'B'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *
@@ -3343,6 +3353,7 @@
      C+ , DJMD10                                                                            MD055891
      C+ , DJMP10                                                                            MD055891
      C+ , DJMODE                                                                            MD055891
+     C+ , DJLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -3370,6 +3381,7 @@
      C+ , :DJMD10                                                                           MD055891
      C+ , :DJMP10                                                                           MD055891
      C+ , 'B'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -3379,6 +3391,7 @@
      C+ , DJCSEQ                                                                            MD055891
      C+ , DJMCUN                                                                            MD055891
      C+ , DJMODE                                                                            MD055891
+     C+ , DJLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -3386,6 +3399,7 @@
      C+ , :DJCSEQ                                                                           MD055891
      C+ , :DJMCUN                                                                           MD055891
      C+ , 'B'                                                                               MD055891
+     C+ , 'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *
@@ -3455,14 +3469,14 @@
      C                   END
                                                                                             MD055891
       * Do not allow deletion of core module conditions                                     MD055891
-     C     DJMODE        IFEQ      'C'                                                      MD055891
-      * Send message 'Deletion of Core component is not allowed'                            MD055891
-     C                   MOVEL     'USR0542'     ZAMSID                                     MD055891
-     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                     MD055891
-     C                   EXSR      ZASNMS                                                   MD055891
-     C                   MOVEL     'USR0542'     W0RTN             7                        MD055891
-     C                   GOTO      SBEXIT                                       *QUIT       MD055891
-     C                   ENDIF                                                  *QUIT       MD055891
+     C*****DJMODE        IFEQ      'C'                                             MD055891 MD058986
+      **Send*message 'Deletion of Core component is not allowed'                   MD055891 MD058986
+     C**********         MOVEL     'USR0542'     ZAMSID                            MD055891 MD058986
+     C**********         MOVEL     'Y2USRMSG'    ZAMSGF                            MD055891 MD058986
+     C**********         EXSR      ZASNMS                                          MD055891 MD058986
+     C**********         MOVEL     'USR0542'     W0RTN             7               MD055891 MD058986
+     C**********         GOTO      SBEXIT                                       *QUMD055891 MD058986
+     C**********         ENDIF                                                  *QUMD055891 MD058986
                                                                                             MD055891
       *
       * Check for changed record
@@ -3479,12 +3493,14 @@
      C                   END                                                    FI #1DBRC
       *................................................................
      C**********         DELETE    @DJREGM                              91      *           MD055891
+      * Logical delete is now allowed for both core and bespoke                             MD058986
      C/EXEC SQL                                                                             MD055891
-     C+ delete CBMDCBTD                                                                     MD055891
-     C+ where DJCOTT = :DJCOTT and DJCSEQ = :DJCSEQ and DJMCUN = :DJMCUN                    MD055891
-     C/END-EXEC                                                                             MD055891
-     C/EXEC SQL                                                                             MD055891
-     C+ delete CBMDCXTD                                                                     MD055891
+     C**delete*CBMDCBTD                                                            MD055891 MD058986
+     C* where*DJCOTT = :DJCOTT and DJCSEQ = :DJCSEQ and DJMCUN = :DJMCUN           MD055891 MD058986
+     C*END-EXEC*                                                                   MD055891 MD058986
+     C*EXEC*SQL*                                                                   MD055891 MD058986
+     C**delete*CBMDCXTD                                                            MD055891 MD058986
+     C+ update CBMDCXTD set DJLOGD = 'Y'                                                    MD058986
      C+ where DJCOTT = :DJCOTT and DJCSEQ = :DJCSEQ and DJMCUN = :DJMCUN                    MD055891
      C/END-EXEC                                                                             MD055891
      C******IN91         IFEQ      '1'                                                      MD055891

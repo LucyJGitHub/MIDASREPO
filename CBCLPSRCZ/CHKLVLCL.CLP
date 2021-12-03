@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055891           Date 01Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058986           Date 11Oct21              */
+/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058986 - Add Logical Delete for components and dependencie*/
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01417 - NEW FIELD ADDED TO CHKDPRPD                        */
@@ -57,12 +59,16 @@
              CLRPFM     FILE(CHKLVLPD)
 /**********  CPYF       FROMFILE(&LIB/CBCMPNPD) TOFILE(CHKCMPPD) +
                           MBROPT(*REPLACE) */                                           /*MD055891*/
-             CPYF       FROMFILE(CBCMPJW0) TOFILE(CHKCMPPD) +
-                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD055891*/
+/**********  CPYF       FROMFILE(CBCMPJW0) TOFILE(CHKCMPPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP) */              /*MD055891**MD058986*/
+             CPYF       FROMFILE(CBCMPJW1) TOFILE(CHKCMPPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD058986*/
 /**********  CPYF       FROMFILE(&LIB/CBDPRLPD) TOFILE(CHKDPRPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP) */            /*S01417*/        /*MD055891*/
-             CPYF       FROMFILE(CBDPRJW0) TOFILE(CHKDPRPD) +
-                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD055891*/
+/**********  CPYF       FROMFILE(CBDPRJW0) TOFILE(CHKDPRPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP) */              /*MD055891**MD058986*/
+             CPYF       FROMFILE(CBDPRJW1) TOFILE(CHKDPRPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD058986*/
 /************             MBROPT(*REPLACE)                         */ /*S01417*/
 /**/
 /** CALL THE PROGRAM TO SET THE COMPONENT LEVEL FILE        **/

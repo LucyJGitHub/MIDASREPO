@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058986           Date 11Oct21               *
+      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -946,6 +948,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -955,6 +958,7 @@
      C+  ,:#1MECN                                                                           MD055891
      C+  ,:#1MECS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -966,6 +970,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -975,6 +980,7 @@
      C+  ,:#1MECN                                                                           MD055891
      C+  ,:#1MECS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1048,6 +1054,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1057,6 +1064,7 @@
      C+  ,:#1MECN                                                                           MD055891
      C+  ,:#1MECS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -1068,6 +1076,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1077,6 +1086,7 @@
      C+  ,:#1MECN                                                                           MD055891
      C+  ,:#1MECS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1161,6 +1171,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1170,6 +1181,7 @@
      C+  ,:#1COTT                                                                           MD055891
      C+  ,:#1CSEQ                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -1181,6 +1193,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1190,6 +1203,7 @@
      C+  ,:#1COTT                                                                           MD055891
      C+  ,:#1CSEQ                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1264,6 +1278,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1273,6 +1288,7 @@
      C+  ,:#1COTT                                                                           MD055891
      C+  ,:#1CSEQ                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -1284,6 +1300,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1293,6 +1310,7 @@
      C+  ,:#1COTT                                                                           MD055891
      C+  ,:#1CSEQ                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1887,6 +1905,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1896,6 +1915,7 @@
      C+  ,:#1MECN                                                                           MD055891
      C+  ,:#1MECS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
      C/EXEC SQL                                                                             MD055891
@@ -1907,6 +1927,7 @@
      C+  ,DKMECN                                                                            MD055891
      C+  ,DKMECS                                                                            MD055891
      C+  ,DKMODE                                                                            MD055891
+     C+  ,DKLOGD                                                                            MD058986
      C+ )                                                                                   MD055891
      C+ Values                                                                              MD055891
      C+ (                                                                                   MD055891
@@ -1916,6 +1937,7 @@
      C+  ,:#1MECN                                                                           MD055891
      C+  ,:#1MECS                                                                           MD055891
      C+  ,'B'                                                                               MD055891
+     C+  ,'N'                                                                               MD058986
      C+ )                                                                                   MD055891
      C/END-EXEC                                                                             MD055891
       *                                                                                     MD055891
@@ -1996,14 +2018,14 @@
      C                   END
                                                                                             MD055891
       * Do not allow deletion of core mutual exclusive                                      MD055891
-     C     DKMODE        IFEQ      'C'                                                      MD055891
-      * Send message 'Deletion of Core component is not allowed'                            MD055891
-     C                   MOVEL     'USR0544'     ZAMSID                                     MD055891
-     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                     MD055891
-     C                   EXSR      ZASNMS                                                   MD055891
-     C                   MOVEL     'USR0544'     W0RTN             7                        MD055891
-     C                   GOTO      SFEXIT                                       *QUIT       MD055891
-     C                   ENDIF                                                  *QUIT       MD055891
+     C*****DKMODE        IFEQ      'C'                                             MD055891 MD058986
+      **Send*message 'Deletion of Core component is not allowed'                   MD055891 MD058986
+     C**********         MOVEL     'USR0544'     ZAMSID                            MD055891 MD058986
+     C**********         MOVEL     'Y2USRMSG'    ZAMSGF                            MD055891 MD058986
+     C**********         EXSR      ZASNMS                                          MD055891 MD058986
+     C**********         MOVEL     'USR0544'     W0RTN             7               MD055891 MD058986
+     C**********         GOTO      SFEXIT                                       *QUMD055891 MD058986
+     C**********         ENDIF                                                  *QUMD055891 MD058986
                                                                                             MD055891
       *
       * Check for changed record
@@ -2020,12 +2042,14 @@
      C                   END                                                    FI #1DBRC
       *................................................................
      C**********         DELETE    @DKREGP                              91      *           MD055891
+      * Logical delete is now allowed for both core and bespoke                             MD058986
      C/EXEC SQL                                                                             MD055891
-     C+ delete from CBMEXBTD                                                                MD055891
-     C+ where DKCOTT = :#1COTT and DKCSEQ = :#1CSEQ and DKMEUN = :#1MEUN                    MD055891
-     C/END-EXEC                                                                             MD055891
-     C/EXEC SQL                                                                             MD055891
-     C+ delete from CBMEXXTD                                                                MD055891
+     C**delete*from CBMEXBTD                                                       MD055891 MD058986
+     C**where*DKCOTT = :#1COTT and DKCSEQ = :#1CSEQ and DKMEUN = :#1MEUN           MD055891 MD058986
+     C*END-EXEC*                                                                   MD055891 MD058986
+     C*EXEC*SQL*                                                                   MD055891 MD058986
+     C**delete*from CBMEXXTD                                                       MD055891 MD058986
+     C+ update      CBMEXXTD  set DKLOGD = 'Y'                                              MD058986
      C+ where DKCOTT = :#1COTT and DKCSEQ = :#1CSEQ and DKMEUN = :#1MEUN                    MD055891
      C/END-EXEC                                                                             MD055891
      C                   If        SQLCODE <> 0                                             MD055891
@@ -2713,12 +2737,14 @@
       *
       *................................................................
      C**********         DELETE    @DKREGP                              91      *           MD055891
+      * Logical delete is now allowed for both core and bespoke                             MD058986
      C/EXEC SQL                                                                             MD055891
-     C+ delete from CBMEXBTD                                                                MD055891
-     C+ where DKCOTT = :#1MECN and DKCSEQ = :#1MECS and DKMEUN = :WUSAVU                    MD055891
-     C/END-EXEC                                                                             MD055891
-     C/EXEC SQL                                                                             MD055891
-     C+ delete from CBMEXXTD                                                                MD055891
+     C**delete*from CBMEXBTD                                                       MD055891 MD058986
+     C**where*DKCOTT = :#1MECN and DKCSEQ = :#1MECS and DKMEUN = :WUSAVU           MD055891 MD058986
+     C*END-EXEC*                                                                   MD055891 MD058986
+     C*EXEC*SQL*                                                                   MD055891 MD058986
+     C**delete*from CBMEXXTD                                                       MD055891 MD058986
+     C+ update      CBMEXXTD  set DKLOGD = 'Y'                                              MD058986
      C+ where DKCOTT = :#1MECN and DKCSEQ = :#1MECS and DKMEUN = :WUSAVU                    MD055891
      C/END-EXEC                                                                             MD055891
      C                   Setoff                                       91                    MD055891

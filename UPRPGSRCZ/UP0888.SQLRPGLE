@@ -10,10 +10,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD055891 *CREATE   Date 01Sep20               *
+      *  Last Amend No. MD058986           Date 11Oct21               *
+      *  Prev Amend No. MD055891 *CREATE   Date 01Sep20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *                                                               *
       *****************************************************************

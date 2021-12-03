@@ -4,8 +4,9 @@
       *                                                               *
       *  ZINTDYZ2- Calculate Number of Interest Days                  *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *  
-      *  Prev Amend No. MD028207           Date 13Apr19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD028207           Date 13Apr19               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 AR996895           Date 25Nov12               *
@@ -33,6 +34,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March                         *
@@ -320,14 +325,14 @@
      C                     Z-ADDZZYY1     ZZYY2                                             MD035545
      C                     MOVE '12'      ZZMM2                                             MD035545
      C                     MOVE '31'      ZZDD2                                             MD035545
-     C                     ELSE                                                             MD035545      
+     C                     ELSE                                                             MD035545
       * Add 1 to starting year number                                     126017
      C           ZZYY1     ADD  1         ZZYY2                           126017
       *                                                                   126017
       * Get Midas day number for 1st Jan of year after start date         126017
      C                     MOVE '01'      ZZMM2                           126017
      C                     MOVE '01'      ZZDD2                           126017
-     C                     ENDIF                                                            MD035545     
+     C                     ENDIF                                                            MD035545
      C                     MOVE ZZDATB    ZZDTIN                          126017
      C                     EXSR ZDAT10                                    126017
      C                     Z-ADDZZMDNO    ZZENDW  50                      126017
@@ -350,7 +355,7 @@
       *                                                                                     MD035545
      C           WCALC6    IFEQ 'Y'                                                         MD035545
      C                     ADD  1         ZZYY2                                             MD035545
-     C                     ENDIF                                                            MD035545     
+     C                     ENDIF                                                            MD035545
       *                                                                   126017
       * Accumulate leap year and non-leap year days for complete          126017
       * years in the interest period                                      126017
@@ -383,10 +388,10 @@
      C                     MOVE '12'      ZZMM2                                             MD035545
      C                     MOVE '31'      ZZDD2                                             MD035545
      C           ZZYY2     SUB  1         ZZYY2                                             MD035545
-     C                     ELSE                                                             MD035545      
+     C                     ELSE                                                             MD035545
      C                     MOVE '01'      ZZMM2                           126017
      C                     MOVE '01'      ZZDD2                           126017
-     C                     ENDIF                                                            MD035545     
+     C                     ENDIF                                                            MD035545
      C                     MOVE ZZDATB    ZZDTIN                          126017
      C                     EXSR ZDAT10                                    126017
      C                     Z-ADDZZMDNO    ZZBEG                           126017
@@ -399,7 +404,7 @@
       *                                                                                     MD035545
      C           WCALC6    IFEQ 'Y'                                                         MD035545
      C           ZZYY2     ADD  1         ZZYY2                                             MD035545
-     C                     ENDIF                                                            MD035545     
+     C                     ENDIF                                                            MD035545
       *                                                                   126017
       * Check if year is a leap year                                      126017
      C           ZZYY2     DIV  4         ZZWN5                           126017
@@ -414,20 +419,25 @@
       *                                                                   CIR013
       * Factoring of non-leap year days is not required for method 9      CIR013
      C           ZZCALC    IFEQ '9'                                       CIR013
-     C                     Z-ADDNLEAP     WNLP2                           CIR013
-     C                     ELSE                                           CIR013
+     C**********           Z-ADDNLEAP     WNLP2                                      CIR013 MD058815
+     C**********           ELSE                                                      CIR013 MD058815
       *                                                                   126017
-      * Multiply non-leap year days by 366/365                            126017
-     C           NLEAP     MULT 366       WNLP1  150                      126017
+      **Multiply*non-leap*year*days*by*366/365*************************              126017 MD058815
+     C********** NLEAP     MULT 366       WNLP1  150                                 126017 MD058815
      C********** WNLP1     DIV  365       WNLP2  157H                                  126017 242286
-     C           WNLP1     DIV  365       WNLP2  159H                                         242286
+     C********** WNLP1     DIV  365       WNLP2  159H                                242286 MD058815
+      *                                                                                     MD058815
+      ** Add leap year and non leap year to give the total days in                          MD058815
+      ** in interest period                                                                 MD058815
+      *                                                                                     MD058815
+     C           LEAP50    ADD  NLEAP     INT6DY 159H                                       MD058815
       *                                                                   CIR013
      C                     ENDIF                                          CIR013
       *                                                                   126017
-      * Add the result to the number of leap year days to give            126017
-      * the total days in interest period                                 126017
+      **Add*the*result*to*the*number*of*leap*year*days*to*give*********              126017 MD058815
+      **the*total*days*in*interest*period******************************              126017 MD058815
      C********** LEAP50    ADD  WNLP2     INT6DY 157H                                  126017 242286
-     C           LEAP50    ADD  WNLP2     INT6DY 159H                                         242286
+     C********** LEAP50    ADD  WNLP2     INT6DY 159H                                242286 MD058815
      C*                                                                   126017
      C                     ELSE                                           126017
       *                                                                                       246141

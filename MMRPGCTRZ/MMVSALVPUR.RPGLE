@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 262653             Date 16Jun19               *
-      *  Prev Amend No. CDL069             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. 262653             Date 16Jun19               *
+      *                 CDL069             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -45,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  262653 - Recompile due to changes in /COPY MM1008C           *
       *           (Replaced hard coded 360).                          *
       *  CDL069 - True Discount for Negotiable Assets.(Recompile)     *
@@ -65,7 +70,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -84,19 +89,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       *****************************************************************
       ** Include the declares for the MM1008 subroutine
       /COPY MMCPYSRC,MM1008D
@@ -105,21 +110,21 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D**  DATA STRUCTURE FOR DATE INPUT TO VARIOUS SUBROUTINES
      D  @@DTIN                 1      8  0
@@ -129,84 +134,84 @@
      D  @@MTH                  5      6  0
      D  @@DD                   7      8  0
      D  @@DAY                  7      8  0
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** ==========
       ** Parameters
- 
+
       ** Warning message ID (7A, returned to caller
      D WMsgID1         S                   LIKE(#MsgID)
- 
+
       ** Message data (45A, returned to caller
      D MsgDta1         S                   LIKE(#MsgData)
- 
+
       ** Negotiable Asset purchased data structure (received from caller)
      D NAPurch       E DS                  EXTNAME(MMDENBPP)
- 
+
       ** Value date in Midas day number format (5,0P, transaction via caller)
      D ILDVSD          S              5P 0
- 
+
       ** Number of decimal places in currency (3,0P, from SDCURRPD via
       ** caller)
      D A6NBDP          S              1S 0
- 
+
       ** Decimal separator (1A, from SDDEALPD via caller)
      D BNDCSP          S              1A
- 
+
       ** Formated version of Yield Rate (11,7P, from transaction via caller)
       **   @@DRAT is declared in the MM1008D /COPY member, as it is only
       **   used in the MM1008 subroutine.
- 
+
       ** Formated version of Sale Price (15,0P, from transaction via caller)
      D ILAMNP          S             15P 0
- 
+
       ** Formated version of Face Value (15,0P, from transaction via caller)
      D ILFVAL          S             15P 0
- 
+
       ** Associated deal number OK flag (1A, from caller)
      D DDDADNOK        S              1A
- 
+
       ** Value date OK flag (1A, from caller)
      D DDVDATOK        S              1A
- 
+
       ** Currency OK flag (1A, from caller)
      D DDCCYOK         S              1A
- 
+
       ** Face value OK flag (1A, from caller)
      D DDFVALOK        S              1A
- 
+
       ** Sale price OK flag (1A, from caller)
      D DDAMNPOK        S              1A
- 
+
       ** Yield rate OK flag (1A, from caller)
      D DDINTROK        S              1A
- 
+
       ** End of parameters
       ** =================
- 
+
       ** Amount passed to ZA0920 for editing
      D @@AMTW          S             13P 0
- 
+
       ** Edited amount received from ZA0920
      D @@AMTD          S             14A
- 
+
       ** Number of decimal places field to pass to ZA0920 (packed, while the
       ** incoming one is zoned)
      D @@QECN          S              1P 0
- 
+
       ** Return code for ZDATE9
      D @@RTN           S              1A
      D @@RONS          S             18A                                                      CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -214,7 +219,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -222,14 +227,14 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flag and message ID and data fields to prevent
       ** problems on subsequent calls.
      C                   RESET                   ErrorFound
      C                   RESET                   WarnFound
      C                   RESET                   WMsgID1
      C                   RESET                   MsgDta1
- 
+
      C**  If all related fields are valid (assoc. deal, value date,
      C**  ccy, yield, face value and sale price) perform cross validation
      C**  checks
@@ -239,35 +244,35 @@
      C     DDFVALOK      ANDNE     'N'
      C     DDAMNPOK      ANDNE     'N'
      C     DDINTROK      ANDNE     'N'
- 
+
       **  Set up the fields for the execution of the routine to
       **  calculate price from the yield. Take value date and yield
       **  from screen entry and get remaining fields from assoc. deal
- 
+
       ** Must convert Value Date from Midas day number form to YYYYMMDD,
       ** for MM1008 (which will promptly convert it back, but that's
       ** reverse engineering).
- 
+
      C                   CALLB     'ZDATE9'
      C                   PARM                    ILDVSD
      C                   PARM                    @@VDAT
      C                   PARM                    @@RTN
- 
+
      C                   Z-ADD     HLMDYY        @@YYYY
      C                   Z-ADD     HLMDMM        @@MTH
      C                   Z-ADD     HLMDDD        @@DAY
      C                   Z-ADD     @@DTIN        @@MDAT
- 
+
      C                   Z-ADD     HLNIYY        @@YYYY
      C                   Z-ADD     HLNIMM        @@MTH
      C                   Z-ADD     HLNIDD        @@DAY
      C                   Z-ADD     @@DTIN        @@IDAT
- 
+
      C                   Z-ADD     HLLIYY        @@YYYY
      C                   Z-ADD     HLLIMM        @@MTH
      C                   Z-ADD     HLLIDD        @@DAY
      C                   Z-ADD     @@DTIN        @@SDAT
- 
+
      C                   Z-ADD     HLFRAT        @@FACR
       *
       ** If parcelled NA must obtain face value from NAS std deal parm
@@ -288,7 +293,7 @@
      C                   MOVEL     HLRSTM        @@RSTM            2 0
      C**********         MOVE      HLRONS        @@RONS           12                          CGL029
      C                   MOVE      HLRONS        @@RONS                                       CGL029
- 
+
       ** Set up currency fieled used by MM1008
      C     HLSTCY        IFNE      *BLANK
      C                   EVAL      @@CCY = HLSTCY
@@ -334,7 +339,7 @@
      C*
      C     ErrorFound    IFEQ      'Y'
      C                   Z-ADD     @@PRIC        @@AMTW
- 
+
      C                   RESET                   ReturnCode
      C                   EVAL      @@QECN = A6NBDP
      C                   CALLB     'ZA0920'
@@ -343,21 +348,21 @@
      C                   PARM                    @@QECN
      C                   PARM                    BNDCSP
      C                   PARM                    @@AMTD
- 
+
      C                   MOVEL     @@AMTD        MsgDta1
      C                   MOVEL     'MMM0411'     WMsgID1
      C                   EVAL      WarnFound = 'Y'
      C                   END
      C                   END
- 
+
       ** Reset ErrorFound, as this module can only return warnings
      C                   RESET                   ErrorFound
- 
+
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -374,9 +379,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Incoming return code (10A, returned to caller)
      C                   PARM                    ReturnCode
@@ -412,15 +417,15 @@
      C                   PARM                    DDAMNPOK
       ** Yield rate OK flag (1A, from caller)
      C                   PARM                    DDINTROK
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

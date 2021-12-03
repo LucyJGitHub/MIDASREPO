@@ -20,8 +20,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044200           Date 21Feb17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044200           Date 21Feb17               *
       *                 AR814519           Date 11Mar15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044200 - Correct parameter passed to ZA0921.               *
       *  AR814519 - Allow negative base rate.                         *
@@ -45,7 +50,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -64,164 +69,164 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Name of the MM1030 routine (Calculate interest)
      D MM1030          C                   CONST('MM1030')
- 
+
       ***Name*of*the*ZA0840*routine*(Validate*field*is*numeric)********                     AR814519
      D*ZA0840***       C                   CONST('ZA0840')                                  AR814519
       ** Name of the ZA0841 routine (Validate field is numeric)                             AR814519
      D ZA0841          C                   CONST('ZA0841')                                  AR814519
- 
+
       ***Name*of*the*ZA0920*routine*(Format*amount*for*output)*********                     AR814519
      D*ZA0920***       C                   CONST('ZA0920')                                  AR814519
       ** Name of the ZA0921 routine (Format amount for output)                              AR814519
      D ZA0921          C                   CONST('ZA0921')                                  AR814519
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** ==========
       ** Parameters
- 
+
       ** Message ID
      D MsgID1          S                   LIKE(#MsgID)
- 
+
       ** Message data
      D MsgData1        S                   LIKE(#MsgData)
- 
+
       ** Total interest amount
      D DDMTTI          S             14A
- 
+
       ** Deal type
      D DDMTYP          S              2A
- 
+
       ** Interest calculation method
      D DDICMT          S              1A
- 
+
       ** Deal value date in Midas day number format
      D @VDYNO          S              5P 0
- 
+
       ** Currency OK flag
      D CurrOK          S              1A
- 
+
       ** Number of decimal places in deal currency
      D A6NBDP          S              1S 0
- 
+
      ** Value date field OK
      D ValDateOK       S              1A
- 
+
      ** Maturity date in Midas day number format (5,0P, from caller)
      D @MDYNO          S                   LIKE(@VDYNO)
- 
+
      ** Maturity date field OK
      D MatDateOK       S              1A
- 
+
       ** Round-down interest flag
      D DDRDFC          S              1A
- 
+
       ** Decimal separator
      D BNDCSP          S              1A
- 
+
      ** Face Value OK
      D FaceValOK       S              1A
- 
+
      **
      D DDINTROK        S              1A
- 
+
      **
      D IHFVAL          S             15  0
- 
+
      **
      D IHFRAT          S             11  7
- 
+
      **
      D IHMTTI          S             15  0
- 
+
       ** End of parameters
       ** =================
- 
+
       ** Beginning of interest period
      D ZZBEG           S                   LIKE(@VDYNO)
- 
+
       ** End of interest period
      D ZZEND           S                   LIKE(@VDYNO)
- 
+
       ** Interest work field
      D @@INTR          S             15P 0
- 
+
       ** Alpha field for numeric validation
      D @@ALPH          S             16A
- 
+
       ** Number of integers in amount
      D @@IINT          S              3P 0
- 
+
       ** Millions/Thousands id (Y=function on)
      D @@MTID          S              1A
- 
+
       ** Error code for ZA0840
      D @@ERCD          S              1P 0
- 
+
       ** Amount after numeric checking
      D @@AMT           S             15P 0
- 
+
       ** Difference between input and calculated rate
      D @DIFI           S             15P 0
- 
+
       ***13,0P*amount*field*for*passing*into*ZA0920********************                     AR814519
       ***13,0P*amount*field*for*passing*into*ZA0921********************            AR814519 MD044200
      D*Amount13        S             13P 0                                                  MD044200
       ** 15,0P amount field for passing into ZA0921                                         MD044200
      D Amount15        S             15P 0                                                  MD044200
- 
+
       ***Packed*version*of*number*of*decimal*places*for*passing*into*ZA0920                 AR814519
       ** Packed version of number of decimal places for passing into ZA0921                 AR814519
      D NbrDecPl1       S              1P 0
- 
+
       ** Packed version of number of decimal places for passing into ZA0840
      D NbrDecPl3       S              3P 0
- 
+
       ***Formatted*amount*returned*from*ZA0920                                              AR814519
       ** Formatted amount returned from ZA0921                                              AR814519
      D*AmountOut       S             14A                                                    MD044200
@@ -232,7 +237,7 @@
      D BChar           DS                                                                   MD044200
      D   BLen                  1      2B 0                                                  MD044200
      D   LenStr                1      2                                                     MD044200
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -240,7 +245,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -248,11 +253,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C                   RESET                   MSGID1
      C                   RESET                   MSGDATA1
- 
+
       *  *--------------------------------*
       *  * Validate Total Interest Amount *
       *  *--------------------------------*
@@ -265,8 +270,8 @@
       *
       **  If the interest has been entered...
      C                   ELSE
- 
- 
+
+
       **  The interest field must not be entered if Deal type is not C1.
      C     DDMTYP        IFNE      'C1'
      C                   MOVEL     'MMM0454'     MSGID1
@@ -276,8 +281,8 @@
       **  Check that the input amount is a valid number.
      C     CurrOK        IFNE      'N'
      C     DDMTYP        ANDEQ     'C1'
- 
- 
+
+
      C     13            SUB       A6NBDP        @@IINT
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDMTTI        @@ALPH
@@ -296,18 +301,18 @@
      C                   PARM                    @@ERCD
      C                   PARM                    @@AMT
      C                   PARM                    BNDCSP
- 
- 
+
+
      C     @@ERCD        IFNE      0
      C                   MOVEL     'MMM0452'     MSGID1
      C                   EVAL      ErrorFound = 'Y'
       *
       **  If the amount is a valid number, cross validate the actual
       **  amount. (Only if all the fields used are valid.)
- 
+
      C                   ELSE
- 
- 
+
+
      C**********         MOVE      @@ALPH        DDMTTI                                     AR814519
      C     @@ALPH        IFNE      *BLANKS                                                  AR814519
      C**********         EVAL      Amount13 = @@AMT                                AR814519 MD044200
@@ -326,12 +331,12 @@
      C                   EVALR     DDMTTI = %TRIM(AmountOut)                                MD044200
      C                   ENDIF                                                              AR814519
      C                   Z-ADD     @@AMT         IHMTTI
- 
+
       *
      C     ValDateOK     IFNE      'N'
- 
+
      C     MatDateOK     IFNE      'N'
- 
+
      C     CurrOK        IFNE      'N'
      C     FaceValOK     ANDNE     'N'
      C     DdintrOK      ANDNE     'N'
@@ -398,7 +403,7 @@
       ** Copy the amount into a 15,0P field for passing to ZA0921                           MD044200
      C**********         EVAL      Amount13 = @@INTR                                        MD044200
      C                   EVAL      Amount15 = @@INTR                                        MD044200
- 
+
      C**********         CALLB     'ZA0920'                                                 AR814519
      C                   CALLB     'ZA0921'                                                 AR814519
      C                   PARM                    RetCodeOut
@@ -408,11 +413,11 @@
      C                   PARM                    BNDCSP
      C                   PARM                    AmountOutP                                 MD044200
      C                   PARM                    AmountOut
- 
+
      C**********         MOVEL     AmountOut     MsgData1                                   MD044200
      C                   EVAL      BLen = %Len(%Trim(AmountOut))                            MD044200
      C                   EVAL      MsgData1 = LenStr +%TRIM(AmountOut)                      MD044200
- 
+
      C                   END
      C                   END
      C                   END
@@ -425,9 +430,9 @@
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -439,9 +444,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Incoming return code (10A)
      C                   PARM                    RetCodeIn
@@ -483,17 +488,17 @@
      C                   PARM                    IHFRAT
       * Midas Total Interest
      C                   PARM                    IHMTTI
- 
- 
+
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

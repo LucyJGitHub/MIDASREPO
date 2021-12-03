@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056838           Date 01Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -69,6 +70,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056838 - Amend SFNUM type to packed decimal                *
@@ -2479,6 +2484,8 @@
      C                   PARM                    PZCALC            1
      C**********         PARM                    INT6DY           15 7                        242286
      C                   PARM                    INT6DY           15 9                        242286
+     C                   PARM      *ZERO         PNLEAP            5 0                      MD058815
+     C                   PARM      *ZERO         PLEAP             5 0                      MD058815
 
      C                   ENDSR
       *****************************************************************

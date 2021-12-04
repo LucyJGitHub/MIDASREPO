@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD049268           Date 02Aug18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD049268           Date 02Aug18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027087           Date 20May14               *
       *                 MD026986           Date 16May14               *
       *                 CDL093             Date 07Apr14               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD049268  - Enhanced interest calculation to be similar to   *
       *              S/R GLINTC.                                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -61,7 +66,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -80,56 +85,56 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Map variable names to indicators to allow use of names instead
       ** of numbers; base the following data structure on a pointer to
       ** the indicator array.
      D Indicators      DS                  BASED(pIndicator)
- 
+
       ** Set the indicator array pointer
      D pIndicator      S               *   INZ(%Addr(*In))
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Start date of period received as a parameter
      D ZZBEG           S              5P 0
       ** End date of period received as a parameter
@@ -144,10 +149,10 @@
      D @@RDFC          S              1A
       ** Calculated Interest output as a parameter
      D @@INTR          S             15P 0
- 
+
       ** Adjusted number of interest days
      D ZZINDY          S              5P 0
- 
+
       ** Adjusted number of interest days                                                     191870
      D***INT6DY*       S             15P 7                                             191870 242286
      D INT6DY          S             15P 9                                                    242286
@@ -163,6 +168,10 @@
      D ZZEndDate       S              8S 0                                                  MD027087
      D @@Rtn           S              1A                                                    MD027087
      D #29Feb          S              1A                                                    MD027087
+      ** number of interest days - non leap year                                            MD058815
+     D ZZNLEAP         S              5P 0                                                  MD058815
+      ** number of interest days - leap year                                                MD058815
+     D ZZLEAP          S              5P 0                                                  MD058815
                                                                                               191870
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -171,7 +180,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -179,7 +188,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *   MM1030 - CALCULATE INTEREST                                 *
       *                                                               *
       *  CALLS        -   ZINTDY CALCULATE NO. OF INTEREST DAYS       *
@@ -198,7 +207,7 @@
       *                @@YEAR - (NUMBER OF DAYS IN YEAR) x 100        *
       *                                                               *
       *****************************************************************
- 
+
      C***/COPY WNCPYSRC,MM0089C076
       *
       *   CALCULATE NUMBER OF INTEREST DAYS
@@ -217,6 +226,8 @@
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       191870
+     C                   PARM                    ZZNLEAP                                    MD058815
+     C                   PARM                    ZZLEAP                                     MD058815
       *
       ***********                                                                    CDL093 MD026986
       ** ZZCALC = 9 (MM Interest method Actual/Actual - AFB)                         CDL093 MD026986
@@ -289,9 +300,9 @@
      C                   Z-ADD     36500         @@YEAR
      C                   END
       *
-     C     ZZCALC        IFEQ      '6'
-     C                   Z-ADD     36600         @@YEAR
-     C                   END
+     C*****ZZCALC        IFEQ      '6'                                                      MD058815
+     C**********         Z-ADD     36600         @@YEAR                                     MD058815
+     C**********         END                                                                MD058815
      C     @@AMT         MULT      @@RATE        ZIWRK1           30 9                      MD049268
       *                                                                                       191870
      C     ZZCALC        IFEQ      '6'                                                        191870
@@ -300,7 +311,14 @@
      C     ZZCALC        OREQ      '9'                                                      MD027087
      C     #29Feb        ANDEQ     'Y'                                                      MD027087
      C*****INT6DY**      MULT      @@RATE        @@W157                              191870 MD049268
+     C     ZZCALC        IFEQ      '6'                                                      MD058815
+     C     ZIWRK1        MULT      ZZNLEAP       ZIWRK2           30 9                      MD058815
+     C     ZIWRK1        MULT      ZZLEAP        ZIWRK3           30 9                      MD058815
+     C     ZIWRK2        DIV       36500         ZIWRK2                                     MD058815
+     C     ZIWRK3        DIV       36600         ZIWRK3                                     MD058815
+     C                   ELSE                                                               MD058815
      C     INT6DY        MULT      ZIWRK1        ZIWRK2           30 9                      MD049268
+     C                   ENDIF                                                              MD058815
      C                   ELSE                                                                 191870
       *
      C*****ZZINDY        MULT      @@RATE        @@W157           15 7                        242286
@@ -311,6 +329,14 @@
       *
      C**  ROUND DOWN IF ROUND DOWN INDICATOR IS 'Y'
       *
+     C     ZZCALC        IFEQ      '6'                                                      MD058815
+     C     @@RDFC        IFEQ      'Y'                                                      MD058815
+     C     ZIWRK2        ADD       ZIWRK3        @@INTR                                     MD058815
+     C                   ELSE                                                               MD058815
+     C     ZIWRK2        ADD(H)    ZIWRK3        @@INTR                                     MD058815
+     C                   ENDIF                                                              MD058815
+     C                   ELSE                                                               MD058815
+
      C     @@RDFC        IFEQ      'Y'
      C*****@@W210**      DIV       @@YEAR        @@INTR                                     MD049268
      C     ZIWRK2        DIV       @@YEAR        @@INTR                                     MD049268
@@ -318,11 +344,12 @@
      C*****@@W210*       DIV(H)    @@YEAR        @@INTR           15 0                      MD049268
      C     ZIWRK2        DIV(H)    @@YEAR        @@INTR           15 0                      MD049268
      C                   END
+     C                   ENDIF                                                              MD058815
      C***/COPY WNCPYSRC,MM0089C077
      C*
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -334,9 +361,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       *         Input field ZZBEG - Start date of period
      C                   PARM                    ZZBEG
@@ -352,16 +379,16 @@
      C                   PARM                    @@RDFC
       *         Output field @@INTR - Calculated Interest
      C                   PARM                    @@INTR
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

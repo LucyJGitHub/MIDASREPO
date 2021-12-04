@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054957           Date 11Dec19               *
-      *  Prev Amend No. MD051554           Date 28Sep18               *      
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD054957           Date 11Dec19               *
+      *                 MD051554           Date 28Sep18               *      
       *                 CSD103             Date 10Aug20               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -64,6 +65,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  MD051554 - Leap Year Fix for interest calculation basis to   *
       *             be used for 1st Jan should not be present in      *

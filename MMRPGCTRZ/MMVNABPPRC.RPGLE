@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 262653             Date 16Jun19               *
-      *  Prev Amend No. CDL069             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. 262653             Date 16Jun19               *
+      *                 CDL069             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 13Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  262653 - Recompile due to changes in /COPY MM1008C           *
       *           (Replaced hard coded 360).                          *
       *  CDL069 - True Discount for Negotiable Assets.(Recompile)     *
@@ -80,7 +85,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -99,86 +104,86 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Include the declares for the MM1008 subroutine
       /COPY MMCPYSRC,MM1008D
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for access programs (short)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for Customer Details file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** FO CUSTOMER DETAILS ACCESSED VIA ACCESS PROGRAM
      D SDFOCS        E DS                  EXTNAME(SDFOCSPD)
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
- 
+
       ** Warning message code 1 received as a parameter
      D Wmsgid1         S                   LIKE(#MSGID)
- 
+
       ** Error message data field received as a parameter
      D WMsgData1       S                   LIKE(#MsgData)
- 
+
       ** DEAL TYPE received as a parameter
      D DDMTYP          S              2A
- 
+
       ** PURCHASE PRICE received as a parameter
      D DDAMNP          S             15A
- 
+
       ** Currency Decimal separator received as parameter
      D BNDCSP          S              1A
- 
+
       ** Next Interest Payment Date received as parameter
      D IHNIPD          S              5  0
- 
+
       ** Start/Last Interest Date received as parameter
      D IHSLID          S              5  0
- 
+
       ** Amount received as parameter
      D IHAMNP          S             15  0
       *
@@ -214,92 +219,92 @@
       *
       ** Maturity Date in Midas Dayno. format received as a parameter
      D @MDYNO          S              5  0
- 
+
       ** Value Date in Midas Dayno. format received as a parameter
      D @VDYNO          S              5  0
- 
+
       ** Currency Number of Decimal Places received as a parameter
      D A6NBDP          S              1S 0
- 
+
       ** Deal Type validation indicator received as a parameter
      D DDMtypOK        S              1A
- 
+
       ** Currency validation indicator received as a parameter
      D DDCcyOK         S              1A
- 
+
       ** Value Date validation indicator received as a parameter
      D DDVdatOK        S              1A
- 
+
       ** Maturity Date validation indicator received as a parameter
      D DDMdatOK        S              1A
- 
+
       ** Face Value validation indicator received as a parameter
      D DDFvalOK        S              1A
- 
+
       ** Interest Rate validation indicator received as a parameter
      D DDIntrOK        S              1A
- 
+
       ** Interest Calculation Method validation indicator
       ** received as a parameter
      D DDIcmtOK        S              1A
- 
+
       ** Start/Last Interest Date validation indicator
       ** received as a parameter
      D DDSlidOK        S              1A
- 
+
      D DDipfqOK        S              1A
- 
+
       ** ========================================================
       ** Fields for checking that number is numeric
       ** (used in call to ZA0840)
- 
+
       ** 16-alpha version of the Purchase Price
      D PriceAlpha      S             16A
- 
+
       ** Number of integers
      D NoOfInt         S              3P 0 INZ(6)
- 
+
       ** Number of decimals
      D NoOfDec         S              3P 0 INZ(0)
- 
+
       ** 15-numeric returned version of number
      D AmountOut       S             15P 0
- 
+
       ** Millions/Thousands id
      D MillThou        S              1A   INZ('N')
- 
+
       ** Error code
      D ErrorCode       S              1  0
- 
+
       ** End of fields for numeric checking
       ** ==================================
- 
+
       ** ========================================================
       ** Fields used in call to ZDATE9
- 
+
       ** Formatted date field for use in the parameter list
      D DateOut         S              8S 0
- 
+
       ** Return Code
      D @@Rtn           S              1A
- 
+
       ** End of fields for ZDATE9
- 
+
       ** ========================================================
       ** Fields used in call to ZA0920
- 
+
       ** Purchase Price field in - 13,0
      D InAmount        S             13P 0
- 
+
       ** 14A returned version of Purchase Price
      D OutAmount       S             14A
- 
+
       ** Number of decimals
      D @@QECN          S              1P 0 INZ(0)
- 
+
       ** End of fields for ZA0920
       ** ==================================
- 
+
      D @@RONS          S             18A                                                      CGL029
                                                                                             MD000091
      D BChar           DS                                                                   MD000091
@@ -312,7 +317,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -320,7 +325,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   WarnFound
@@ -374,7 +379,7 @@
      C                   PARM                    ErrorCode
      C                   PARM                    AmountOut
      C                   PARM                    BNDCSP
- 
+
      C     ErrorCode     IFNE      0
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0405'     Msgid1
@@ -388,9 +393,9 @@
      C                   Z-ADD     IHAMNP        IHNANV
       *
      C     DDVdatOK      IFNE      'N'
- 
+
      C     DDMdatOK      IFNE      'N'
- 
+
      C     DDFvalOK      IFNE      'N'
      C     DDIntrOK      ANDNE     'N'
      C     DDIcmtOK      ANDNE     'N'
@@ -406,28 +411,28 @@
      C                   PARM                    DateOut
      C                   PARM                    @@RTN
      C                   Z-ADD     DateOut       @@MDAT
- 
+
      C                   Z-ADD     @VDYNO        @@DAYN
      C                   CALLB     'ZDATE9'
      C                   PARM                    @@DAYN
      C                   PARM                    DateOut
      C                   PARM                    @@RTN
      C                   Z-ADD     DateOut       @@VDAT
- 
+
      C                   Z-ADD     IHNIPD        @@DAYN
      C                   CALLB     'ZDATE9'
      C                   PARM                    @@DAYN
      C                   PARM                    DateOut
      C                   PARM                    @@RTN
      C                   Z-ADD     DateOut       @@IDAT
- 
+
      C                   Z-ADD     IHSLID        @@DAYN
      C                   CALLB     'ZDATE9'
      C                   PARM                    @@DAYN
      C                   PARM                    DateOut
      C                   PARM                    @@RTN
      C                   Z-ADD     DateOut       @@SDAT
- 
+
       *
       ** FOR INTEREST BEARING NAS USE INTEREST RATE (IHINTR),
       ** ELSE, USE DISCOUNT RATE (IHDCRT)
@@ -494,21 +499,21 @@
      C                   MOVE      'Y'           WarnFound
      C                   MOVE      'Y'           WarnGlobal
      C                   MOVEL     'MMM0407'     WMsgid1
- 
+
      C                   Z-ADD     @@PRIC        InAmount
      C                   Z-ADD     A6NBDP        @@QECN
- 
+
      C                   CALLB     'ZA0920'
      C                   PARM                    ReturnCode
      C                   PARM                    InAmount
      C                   PARM                    @@QECN
      C                   PARM                    BNDCSP
      C                   PARM                    OutAmount
- 
+
      C**********         MOVEL     OutAmount     WMsgData1                                  MD000091
      C                   EVAL      BLen = %Len(%Trim(OutAmount))                            MD000091
      C                   EVAL      WMsgData1 = LenStr +%TRIM(OutAmount)                     MD000091
- 
+
      C                   END
      C                   END
      C                   END
@@ -535,9 +540,9 @@
       *
       ** If an error was found, set the return code appropriately
      C/COPY ZACPYSRC,SETRETCDE
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       ** Include the MM1008 subroutine
@@ -553,9 +558,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    Msgid1
@@ -590,22 +595,22 @@
      C                   PARM                    DDSlidOK
      C                   PARM                    DDipfqOK
      C                   PARM                    WarnGlobal
- 
+
      C                   MOVE      DDMTYP        IHMTYP
- 
+
      C** Define work fields
      C     *LIKE         DEFINE    IHAMNP        Difference
      C     *LIKE         DEFINE    IHAMNP        @WK151
      C     *LIKE         DEFINE    IHAMNP        @WK152
      C     *LIKE         DEFINE    IHAMNP        @WK153
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

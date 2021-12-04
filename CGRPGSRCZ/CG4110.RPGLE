@@ -23,7 +23,7 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058896           Date 21Sep21               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
       *  Prev Amend No. MD057942           Date 26Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057008           Date 27Oct20               *
@@ -193,10 +193,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
-      *  MD058896 - CGC2050 Seq. No. 00007 failed during COB          *
-      *             Changed the condition introduced by CSD103 to     *
-      *             ensure that AOBSRTR0 is accessed if DABRTT is not *
-      *             blank.                                            *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  MD057942 - Field TRBTT is not defined. Used TBRTT instead as *
       *             the corresponding field for Their Base Rate Type. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -4445,8 +4445,7 @@
      C                   MOVEL     CCY           ##CYCD                                     MD030644
      C********** BRTT      IFEQ 0                                                  MD030644 MD033854
      C********** DABRTT        IFEQ      0                                           MD030644 CSD103
-     C*****DABRTT        IFNE      *BLANKS                                           CSD103 MD058896
-     C     DABRTT        IFEQ      *BLANKS                                                  MD058896
+     C     DABRTT        IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       ##D(11)                                    MD030644
      C                   ELSE                                                               MD030644
      C**********           MOVELBRTT      ##BSRC                                   MD030644 MD033854

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051152           Date 02Aug18               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051152           Date 02Aug18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051152 - FRA/IRS Interest Calculation Basis 6.             *
       *  MD046248 - Finastra Rebranding                               *
@@ -393,7 +398,8 @@
      D SZWRK3          S              5P 0
      D SZWRK4          S             14P 7
      D SZWRK5          S             14P 7
-     D SZWRK6          S             15P 0
+     D***SZWRK6*       S             15P 0                                                  MD058815
+     D SZWRK6          S             18P 0                                                  MD058815
      D SZWRK7          S             12P 9
      D SZWRK8          S             15P 0
      D SZWRK9          S             15P 7
@@ -448,6 +454,10 @@
      D ZZTOTD          S              3P 0
      D ZZWK2           S              4P 0
      D ZZWK3           S             15P 0
+     D ZZNLEAP         S              5  0                                                  MD058815
+     D ZZLEAP          S              5  0                                                  MD058815
+     D ZIWRK6          S             30P 9                                                  MD058815
+     D ZIWRK7          S             30P 9                                                  MD058815
 
       ** +--------------------------------------+
       ** ¦ I-specs                              ¦
@@ -5974,7 +5984,12 @@
      C     ZICALC        IFEQ      6
      C     ZICALC        OREQ      9                                                          CIR013
      C     #29Feb        ANDEQ     'Y'                                                        CIR013
+     C     ZICALC        IFEQ      9                                                        MD058815
      C     ZIWRK1        MULT      INT6DY        ZIWRK2
+     C                   ELSE                                                               MD058815
+     C     ZIWRK1        MULT      ZZNLEAP       ZIWRK6                                     MD058815
+     C     ZIWRK1        MULT      ZZLEAP        ZIWRK7                                     MD058815
+     C                   ENDIF                                                              MD058815
      C                   ELSE
      C     ZIWRK1        MULT      ZZINDY        ZIWRK2
      C                   ENDIF
@@ -5998,7 +6013,13 @@
      C     ZICALC        IFEQ      6
      C     ZICALC        OREQ      9                                                          CIR013
      C     #29Feb        ANDEQ     'Y'                                                        CIR013
+     C     ZICALC        IFEQ      6                                                        MD058815
+     C     ZIWRK6        DIV       36500         ZIWRK6                                     MD058815
+     C     ZIWRK7        DIV       36600         ZIWRK7                                     MD058815
+     C     ZIWRK6        ADD(H)    ZIWRK7        ZINTR                                      MD058815
+     C                   ELSE                                                               MD058815
      C     ZIWRK2        DIV(H)    36600         ZINTR
+     C                   ENDIF                                                              MD058815
      C                   ENDIF
 
      C                   ENDSR
@@ -6019,6 +6040,8 @@
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
      C                   PARM      *ZERO         INT6DY
+     C                   PARM      *ZERO         ZZNLEAP                                    MD058815
+     C                   PARM      *ZERO         ZZLEAP                                     MD058815
 
      C                   ENDSR
       *****************************************************************

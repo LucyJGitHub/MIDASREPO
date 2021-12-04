@@ -41,8 +41,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD028207           Date 13Apr19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD028207           Date 13Apr19               *
       *                 MD046248           Date 05Feb18               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -69,6 +70,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March                         *
@@ -869,6 +874,10 @@
      C                   PARM                    ZZCALC
       ** Number of interest days (15,7P, returned to caller)                                  191870
      C                   PARM                    INT6DY                                       191870
+      ** Number of interest days - Non Leap Year                                            MD058815
+     C                   PARM                    NLEAP                                      MD058815
+      ** Number of interest days - Leap Year                                                MD058815
+     C                   PARM                    LEAP50                                     MD058815
 
       ** Access Switchable Features File                                                      CIR004
                                                                                               CIR004

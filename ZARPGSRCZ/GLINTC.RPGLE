@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER016A - German Interest Calculation: Upgarde of FGE059     *
@@ -51,31 +56,31 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -113,13 +118,20 @@
      C                   PARM                    ZICALCA                      I: Calc. basis BUG9005
      C**********         PARM                    INT6DY           15 7          O: Total days 242286
      C                   PARM                    INT6DY           15 9                        242286
+     C                   PARM                    NLEAP             5 0                      MD058815
+     C                   PARM                    LEAP50            5 0                      MD058815
       *
       *
       ** Multiply Rate & Day No. first
       *
      C     ZIAMT         MULT      ZIRATE        ZIWRK1           30 9
      C     ZICALC        IFEQ      6
-     C     ZIWRK1        MULT      INT6DY        ZIWRK2
+     C*****ZIWRK1        MULT      INT6DY        ZIWRK2                                     MD058815
+     C     ZIWRK1        MULT      NLEAP         ZIWRK6           30 9                      MD058815
+     C     ZIWRK1        MULT      LEAP50        ZIWRK7           30 9                      MD058815
+     C     ZIWRK6        DIV       36500         ZIWRK6                                     MD058815
+     C     ZIWRK7        DIV       36600         ZIWRK7                                     MD058815
+     C     ZIWRK6        ADD(H)    ZIWRK7        ZINTR                                      MD058815
      C                   ELSE
      C     ZIWRK1        MULT      ZZINDY        ZIWRK2           30 9
      C                   END
@@ -136,9 +148,9 @@
      C     ZICALC        OREQ      4
      C     ZIWRK2        DIV(H)    36500         ZINTR
      C                   END
-     C     ZICALC        IFEQ      6
-     C     ZIWRK2        DIV(H)    36600         ZINTR
-     C                   END
+     C*****ZICALC        IFEQ      6                                                        MD058815
+     C*****ZIWRK2        DIV(H)    36600         ZINTR                                      MD058815
+     C**********         END                                                                MD058815
      C*
      C                   RETURN
      C*
@@ -153,9 +165,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST                                                  Entry parameter
       *
       * INPUTS

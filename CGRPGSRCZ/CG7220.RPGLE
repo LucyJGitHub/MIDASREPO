@@ -17,14 +17,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR847818           Date 26Apr13               *
       *                 AR996895           Date 25Nov12               *
       *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -44,34 +49,34 @@
       *  89  General chain fail error
       *
       *****************************************************************
- 
+
       ** Historic deals by type deal number and date
      FHIST3     IF   E           K DISK    USROPN
- 
+
       ** Interest Scale Detail file
      FCGISDDPD  O    E             DISK    USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Copy for date conversion
       /COPY ZSRSRC,ZDATE9Z1LE
- 
+
       ** Data structure to allow passed alpha field
      D DINTA           DS
      D  DINTN                  1      9P 0
- 
+
       ** Data structure for interest days calculation routine
       /COPY ZSRSRC,ZINTDYZ1LE
- 
+
       ** Data structure for date conversion routine
       /COPY ZSRSRC,ZDATE9Z2LE
- 
+
       ** Data area to make zero records switchable
       /COPY ZSRSRC,ZDAT10Z1LE
       *****************************************************************
- 
+
       ** Working variables
      D KDLNO           S                   LIKE(DLNO)
      D KEDAT           S                   LIKE(EDAT)
@@ -80,7 +85,7 @@
      D ONRAT           S                   LIKE(NRAT)
      D ORTYP           S                   LIKE(RTYP)
      D NETI            S             17  0
- 
+
       ** Parameters for called programs
      D PBRCA           S                   LIKE(BRCA)
      D PCNUM           S                   LIKE(CNUM)
@@ -110,26 +115,26 @@
       *
       *****************************************************************
      C                   SELECT
- 
+
       ** If the first pass of the program
      C                   WHEN      PFRLS = 'FIRST'
- 
+
       ** Perform the initial houskeeping
      C                   EXSR      FIRST
- 
+
       ** If the last pass of the program
      C                   WHEN      PFRLS = 'LAST'
- 
+
       ** Perform the final houskeeping
      C                   EXSR      LAST
- 
+
       ** If neither first nor last pass
      C                   OTHER
- 
+
       ** Perform detail processing
      C                   EXSR      DETAIL
      C                   ENDSL
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -283,22 +288,22 @@
       *
      C                   WHEN      RTYP = 'IA'
      C                   EXSR      INTADJ
- 
+
       ** Process the history interest details
      C                   OTHER
      C                   EXSR      INTDET
      C                   ENDSL
- 
+
       ** Store the last record type
      C                   MOVE      RTYP          ORTYP
- 
+
       ** Read the history file until eof or end of period
      C     HSKEY         READE     HISTSAAF                               89
      C                   ENDDO
- 
+
       ** Move the net interest to the parameter field
      C                   MOVE      DINTA         PINTA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -318,13 +323,13 @@
       *
      C                   MOVE      PINTA         DINTA
      C                   Z-ADD     DINTN         NETI
- 
+
       ** Clear the return code
      C                   MOVE      *BLANKS       PRTCD
- 
+
       ** Initialise the calculated net interest
      C                   Z-ADD     0             DINTN
- 
+
       ** Set the constant file fields
      C                   MOVE      PBRCA         Z6BRCA
      C                   MOVEL     PCNUM         Z6CNUM
@@ -334,7 +339,7 @@
      C                   MOVE      PREFN         Z6REFN
      C                   MOVE      PREFT         Z6REFT
      C                   Z-ADD     PINTD         Z6INCD
- 
+
      C                   ENDSR
       *
       ** End of initialisation routine
@@ -350,27 +355,27 @@
       *
       *****************************************************************
      C     INTADJ        BEGSR
- 
+
       ** Move the details to the file fields
      C                   Z-ADD     EDAT          Z6MOVD
      C                   Z-ADD     0             Z6ABAL
      C                   Z-ADD     0             Z6DAYS
      C                   Z-ADD     0             Z6RATE
      C                   Z-ADD     EAMT          Z6INTA
- 
+
       ** Add interest amount to running net interest total
      C                   ADD       Z6INTA        DINTN
- 
+
       ** Set the manual adjustment flag to yes
      C                   MOVE      'Y'           Z6MANA
- 
+
      C                   IF        Z6INTA <> 0                                              AR847818
       ** Write an interest details record to the Interest Scale details
      C                   WRITE     CGISDDD0
      C                   ENDIF                                                              AR847818
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -382,7 +387,7 @@
       *                                                               *
       *****************************************************************
      C     INTDET        BEGSR
- 
+
       ** If the deal principal has changed
       ** or the interest rate has changed
       ** or this is the end of the interest period
@@ -394,28 +399,28 @@
      C     NRAT          ORNE      ONRAT
      C     EDAT          OREQ      PINTD
      C     RTYP          ANDEQ     'IP'
- 
+
       ** Move the details to the file fields
      C                   Z-ADD     OEDAT         Z6MOVD
- 
+
       ** If debit interest output as negative
      C     NETI          IFLT      0
      C                   Z-SUB     OPCPL         Z6ABAL
      C                   ELSE
      C                   Z-ADD     OPCPL         Z6ABAL
      C                   ENDIF
- 
+
       ** Calculate the number of days
      C     EDAT          SUB       OEDAT         Z6DAYS
      C                   Z-ADD     ONRAT         Z6RATE
- 
+
       ** If the number of days is not zero calcualte interest
      C     Z6DAYS        IFGT      0
- 
+
       ** Set fields for standard subroutine to calculate interest
      C                   Z-ADD     OEDAT         ZIBEG
      C                   Z-ADD     EDAT          ZIEND
- 
+
       ** If last day accruals subtract one from number of days
      C     PADDI         IFEQ      'L'
      C                   SUB       1             ZIEND
@@ -423,50 +428,50 @@
      C                   Z-ADD     OPCPL         ZIAMT
      C                   MOVE      ICBS          ZICALC
      C                   Z-ADD     ONRAT         ZIRATE
- 
+
       ** Use the standard subroutine to calculate interest
      C                   EXSR      GLINTC
- 
+
       ** If debit interest output as negative
      C     NETI          IFLT      0
- 
+
       ** If round down required, else half adjust
      C     PRDFC         IFEQ      'Y'
      C                   Z-SUB     ZINTR         Z6INTA
      C                   ELSE
      C                   Z-SUB(H)  ZINTR         Z6INTA
      C                   ENDIF
- 
+
       ** Add interest amount to running net interest total
      C                   ADD       Z6INTA        DINTN
- 
+
       ** If credit interest output as positive
      C                   ELSE
- 
+
       ** If round down required, else half adjust
      C     PRDFC         IFEQ      'Y'
      C                   Z-ADD     ZINTR         Z6INTA
      C                   ELSE
      C                   Z-ADD(H)  ZINTR         Z6INTA
      C                   ENDIF
- 
+
       ** Add interest amount to running net interest total
      C                   ADD       Z6INTA        DINTN
      C                   ENDIF
- 
+
       ** If number of days is zero set interest amount to zero
      C                   ELSE
      C                   Z-ADD     0             Z6INTA
      C                   ENDIF
- 
+
       ** If the last entry of the interest period
      C     EDAT          IFEQ      PINTD
      C     RTYP          ANDEQ     'IP'
      C     Z6INTA        ANDNE     0
- 
+
       ** Calculate the difference between vcalculated and posted int.
      C                   SUB       DINTN         NETI
- 
+
       ** If the difference is less than one unit round the last amount
      C     NETI          IFLT      100
      C     NETI          ANDGT     -100
@@ -474,19 +479,19 @@
      C                   ADD       NETI          DINTN
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Set the manual adjustment flag to no
      C                   MOVE      'N'           Z6MANA
- 
+
      C                   IF        Z6INTA <> 0                                              AR847818
       ** Write an interest details record to the Interest Scale details
      C                   WRITE     CGISDDD0
      C                   ENDIF                                                              AR847818
- 
+
       ** Store the old amounts for comparrison
      C                   Z-ADD     EDAT          OEDAT
      C                   Z-ADD     NRAT          ONRAT
- 
+
       ** To cope with a data error in Midas only store the principal
       ** if the record type was an principal change record
      C                   IF        RTYP = 'LD' or
@@ -496,7 +501,7 @@
      C                   Z-ADD     PCPL          OPCPL
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *  End of interest details processing

@@ -1,0 +1,612 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2021')
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+/*EXI *  ALWNULL(*USRCTL)                                             *
+/*EXI *  TEXT('Midas ME Purge Incoming MX Msgs - phase 2/2')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME2220 - Purge Incoming MX Transactions - Phase 2 of 2       *
+      *                                                               *
+      *  Function:  This program runs for a pre-defined amount of     *
+      *  time and deletes all the I.M.M transactions that may be      *
+      *  purged from the IMM files.                                   *
+      *                                                               *
+      *  Called By: MEC2230 - Incoming MX Message Purge Phase 2 of 2  *
+      *                                                               *
+      *  (c) Finastra International Limited 2021                      *
+      *                                                               *
+      *  Last Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW122 - SWIFT ISO20022 Changes                              *
+      *                                                               *
+      *****************************************************************
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  10    Incoming MX Index file EOF indicator                   *
+      *  20    Incoming MX Header file EOF indicator                  *
+      *  30    ME Main details file EOF indicator                     *
+      *  40    ME Element details EOF indicator                       *
+      *  50    First cycle                                            *
+      *  90    Purge file EOF indicator                               *
+      *  99    MX message unprocessed indicator                       *
+      *                                                               *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+
+      ** Incoming MX Message Purge File
+
+     FMEMXINRMPDUF   E           K DISK    infsr(srfile)
+     F                                     usropn
+     F                                     commit
+
+      ** MX Message Header file
+
+     FMSMXISOL1 UF   E           K DISK    infsr(srfile)
+     F                                     usropn
+     F                                     commit
+
+      ** MX Message Index file
+
+     FMSIXISOL2 UF   E           K DISK    infsr(srfile)
+     F                                     usropn
+     F                                     commit
+
+      ** ME MX Header file
+
+     FMEISOML1  UF   E           K DISK    infsr(srfile)
+     F                                     usropn
+     F                                     commit
+
+      ** ME MX Details file
+
+     FMEISODL2  UF   E           K DISK    infsr(srfile)
+     F                                     usropn
+     F                                     commit
+      /EJECT
+
+      ** Array containing Copyright statement
+
+     D cpy@            S             80    dim(1) ctdata perrcd(1)
+
+      ** Working field for message id
+
+     D  w@msgid        S             20A
+
+      ** RUNDAT data area
+
+     D RUNDTA        E DS                  extname(RUNDAT)
+
+      ** Message management data area
+
+     D MEDTA         E DS                  extname(MEDTA)
+
+      ** /Copy point for error processing declarations
+
+      /COPY MECPYSRC,SRERRELE
+      /COPY MECPYSRC,SRERRILE
+      /EJECT
+
+      ** Data structure for time/date comparison - time limit
+
+     D dstl            DS
+     D  tldate                 1      6  0
+     D  tldyy                  1      2  0
+     D  tldmm                  3      5  0
+     D  tlddd                  5      6  0
+      *
+     D  tltime                 7     12  0
+     D  tlthh                  7      8  0
+     D  tltmm                  9     10  0
+     D  tltss                 11     12  0
+
+      ** Data structure for time/date comparison - current
+
+     D dscu            DS
+     D  cudate                 1      6  0
+     D  cudyy                  1      2  0
+     D  cudmm                  3      4  0
+     D  cuddd                  5      6  0
+      *
+     D  cutime                 7     12  0
+     D  cuthh                  7      8  0
+     D  cutmm                  9     10  0
+     D  cutss                 11     12  0
+
+      ** Data structure for data conversion to Midas day no.
+
+     D dscn            DS
+     D  cndate                 1      6
+     D  cndd                   1      2  0
+     D  cnmm                   3      4  0
+     D  cnyy                   5      6  0
+      /EJECT
+
+      *****************************************************************
+      *  Index to Subroutines                                         *
+      *                                                               *
+      *  sr_init       : Initialise program                           *
+      *  sr_purge      : Check for purgeable messages                 *
+      *  srerr         : Error processing (on copysource)             *
+      *  zdate1        : Date conversion (on copysource)              *
+      *                                                               *
+      *****************************************************************
+
+      ** Set up copyright statement
+
+     C                   movea     cpy@          bis@             80
+
+      **  Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'main'        @STK(Q)
+
+      ** Define entry parameters
+
+     C     *entry        plist
+     C                   parm                    w0rtn             7
+
+      ** Initialise program
+
+     C     *in50         ifeq      '0'
+     C                   exsr      sr_init
+     C                   end
+
+      ** Read all message references that are to be purged
+
+     C                   exsr      sr_read
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   seton                                        LR
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_read  : Read all message references that are to be purged *
+      *                                                               *
+      *  CALLED BY: mainline                                          *
+      *                                                               *
+      *  CALLS    :         -                                         *
+      *                                                               *
+      *****************************************************************
+     C     sr_read       begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'sr_read'     @STK(Q)
+
+      ** Set limits to read all records
+
+     C                   read      MEMXINRMPD                             90
+
+      ** Read all records until end of time limit.
+      ** The time limit is stored in the MEDTA data structure
+
+     C     *in90         doweq     '0'
+
+      ** Move Message Id to working field for use on short message id fields
+
+     C                   eval      w@msgid = %trim(RMMXID)
+
+      ** Purge all associated records for the message reference
+
+     C                   exsr      sr_purge
+
+      ** If message is not yet processed on the MX index file, do not delete record from
+      ** purge file for it to be processed next run
+
+     C     *in99         ifeq      '0'
+
+      ** Delete Purge File record and commit all deletes
+
+     C                   delete    @INRMPD
+     C                   commit
+
+      *  Update current time and date. UDATE is set in Header spec to
+      *  be in the format YYMMDD.
+      *
+     C                   time                    cudttm           12 0
+     C                   time                    cutime
+     C                   z-add     cudttm        cudate
+
+      ** Check if processing is still within the time limit.
+      ** If not leave the processing after setting return code to send
+      ** a message to Audit Log on MRUNQ.
+
+     C     dscu          ifge      dstl
+     C*                  movel     'MIN0098'     w0rtn
+     C                   leave
+     C                   end
+      *
+     C                   endif
+
+      ** Read next record
+
+     C                   read      MEMXINRMPD                             90
+      *
+     C                   enddo
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_purge : Purge all records for message reference           *
+      *                                                               *
+      *  CALLED BY: sr_read                                           *
+      *                                                               *
+      *  CALLS    : sr_mxindx                                         *
+      *           : sr_mxhdr                                          *
+      *           : sr_memain                                         *
+      *           : sr_medtls                                         *
+      *                                                               *
+      *****************************************************************
+
+     C     sr_purge      begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'sr_purge'    @STK(Q)
+
+      ** Read and purge records from MX Messages Index file
+
+     C                   exsr      sr_mxindx
+
+      ** If message is not yet processed on the index file, do not purge
+
+     C     *in99         ifeq      '0'
+
+      ** Read and purge records from MX Messages Header file
+
+     C                   exsr      sr_mxhdr
+
+      ** Read and purge records from ME Main details file
+
+     C                   exsr      sr_memain
+
+      ** Read and purge records from ME Element details file
+
+     C                   exsr      sr_medtls
+      *
+     C                   endif
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_mxindx:                                                   *
+      *                                                               *
+      *  CALLED BY: sr_purge                                          *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     sr_mxindx     begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'sr_mxindx'   @STK(Q)
+
+      ** Read the MX Index file
+
+     C     KYMSIX        klist
+     C                   kfld                    RMMXID
+     C                   kfld                    RMUETR
+
+     C     KYMSIX        setll     MSIXISOL2
+     C     KYMSIX        reade     MSIXISOL2                              10
+
+      ** If record found proceed with the purge process
+
+     C     *in10         ifeq      '0'
+
+      ** If the message on the index is not yet processed, do not purge
+
+     C     IMPF          ifne      'Y'
+     C                   seton                                        99
+
+      ** Else continue with the purge
+
+     C                   else
+     C                   setoff                                       99
+     C                   delete    MSIXISD0
+      *
+     C                   endif
+      *
+     C                   endif
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_mxhdr :                                                   *
+      *                                                               *
+      *  CALLED BY: sr_purge                                          *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     sr_mxhdr      begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'sr_mxhdr'    @STK(Q)
+
+      ** Read the MX Header file
+
+     C     KYMSMX        klist
+     C                   kfld                    RMMXID
+     C                   kfld                    RMUETR
+      *
+     C     KYMSMX        setll     MSMXISOL1
+     C     KYMSMX        reade     MSMXISOL1                              20
+
+      ** Read file until the key changes
+
+     C     *in20         doweq     '0'
+
+      ** Delete the corresponding record and read the file again for another record
+     C                   delete    MSMXISD0
+      *
+     C     KYMSMX        setll     MSMXISOL1
+     C     KYMSMX        reade     MSMXISOL1                              20
+      *
+     C                   enddo
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_memain:                                                   *
+      *                                                               *
+      *  CALLED BY: sr_purge                                          *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     sr_memain     begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'sr_mxindx'   @STK(Q)
+
+      ** Read the MX Element header file
+
+     C     KYMEMD        klist
+     C                   kfld                    w@msgid
+     C                   kfld                    RMUETR
+      *
+     C     KYMEMD        setll     MEISOML1
+     C     KYMEMD        reade     MEISOML1                               30
+
+      ** If record is found, proceed with the purge process
+
+     C     *in30         ifeq      '0'
+
+      ** Delete the record if found
+
+     C                   delete    MEISOMD0
+      *
+     C                   endif
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_medtls:                                                   *
+      *                                                               *
+      *  CALLED BY: sr_purge                                          *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     sr_medtls     begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q
+     C                   movel     'sr_mxindx'   @STK(Q)
+
+      ** Read the MX Element details file
+
+     C     KYMEED        klist
+     C                   kfld                    w@msgid
+     C                   kfld                    RMUETR
+      *
+     C     KYMEED        setll     MEISODL2
+     C     KYMEED        reade     MEISODL2                               40
+
+      ** Read until end of file
+
+     C     *in40         doweq     '0'
+
+      ** Delete record from file then read the file again
+
+     C                   delete    MEISODD0
+      *
+     C     KYMEED        setll     MEISODL2
+     C     KYMEED        reade     MEISODL2                               40
+      *
+     C                   enddo
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      *****************************************************************
+      *                                                               *
+      *  sr_init  : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: mainline                                          *
+      *                                                               *
+      *  CALLS    : srerr  - Error Processing                         *
+      *                                                               *
+      *****************************************************************
+     C     sr_init       begsr
+
+      **  Set up subroutine stack name
+
+     C                   add       1             Q                 5 0
+     C                   movel     'sr_init'     @STK(Q)
+
+      ** Open Files
+
+     C                   open      MEMXINRMPD
+     C                   open      MSMXISOL1
+     C                   open      MSIXISOL2
+     C                   open      MEISOML1
+     C                   open      MEISODL2
+
+      ** Get Rundate information
+
+     C     *DTAARA       define    RUNDAT        RUNDTA
+     C                   in        RUNDTA
+     C                   move      AGMRDT        WUMRDT            7            Midas Run date
+     C                   move      AGRDNB        WURDNB            5 0          Run day number
+     C                   move      AGSUC         WUSUC             1            Set up complete
+     C                   move      AGDFF         WUDFF             1            Date Format
+     C                   move      AGMBIN        WUMBIN            1            Multi Branched
+
+      ** Get time limit for purge processing from data area
+      ** If not there, default to 3 hours in minutes
+
+     C     *DTAARA       define                  MEDTA
+     C     *LOCK         in        MEDTA
+
+      ** If the purge time has not been defined, default to 180 minutes
+
+     C                   move      DAPURG        alpurg            3
+     C     alpurg        ifeq      *BLANKS
+     C     alpurg        oreq      '000'
+     C                   z-add     180           DAPURG
+     C                   end
+      *
+     C                   out       MEDTA
+
+      ** Determine Time Limit for processing the purge.
+
+      ** Store system date
+
+     C                   z-add     UDATE         TLDATE
+
+      ** Convert current time into minutes, add on time limit and reset
+      ** to hours and minutes.
+
+     C                   time                    TLTIME
+      *
+     C     TLTHH         MULT      60            TLMINS            5 0
+     C                   ADD       TLTMM         TLMINS
+     C                   ADD       DAPURG        TLMINS
+      *
+     C     TLMINS        DIV       60            TLTHH
+     C                   MVR                     TLTMM
+      *
+      *  If over 24 hours, subtract 24 from the total hours and
+      *  increment day no. by 1.
+      *
+     C     TLTHH         IFGT      24
+     C                   SUB       24            TLTHH
+      *
+      *  Set date in DDMMYY format for conversion
+      *
+     C                   Z-ADD     TLDDD         CNDD
+     C                   Z-ADD     TLDMM         CNMM
+     C                   Z-ADD     TLDYY         CNYY
+      *
+     C                   CALL      'ZDATE1'                             90
+     C                   PARM      *BLANKS       W1RTCD            7            Return Code
+     C                   PARM      CNDATE        W1DATE            6            Date
+     C                   PARM      'D'           W1DTFM            1            Date Format
+     C                   PARM      *ZEROS        W1DAYN            5 0          Day No.
+      *
+     C                   ADD       1             W1DAYN
+      *
+      *  Convert Midas Day no. to system date
+      *
+     C                   CALL      'ZDATE2'                             90
+     C                   PARM      W1DAYN        W2DAYN            5 0          Day No.
+     C                   PARM      'D'           W2DTFM            1            Date Format
+     C                   PARM      *ZEROS        W2DATE            6 0          Date
+     C                   PARM      *ZEROS        W2RUND            6 0          DDM
+      *
+     C                   MOVE      W2DATE        CNDATE
+      *
+      *  Set date in YYMMDD format for compare
+      *
+     C                   Z-ADD     CNDD          TLDDD
+     C                   Z-ADD     CNMM          TLDMM
+     C                   Z-ADD     CNYY          TLDYY
+      *
+     C                   END
+      *
+      *  Indicate that set up is complete
+      *
+     C                   seton                                        50
+      *
+      *  Unwind subroutine stack name
+      *
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      **  File and Program Error Processing
+
+      /COPY MECPYSRC,SRERRCLE
+      /EJECT
+**  cpy@ table
+(c) Finastra International Limited 2021

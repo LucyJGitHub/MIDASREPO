@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058975           Date 20Oct21               *
+      *  Prev Amend No. MD057529           Date 28Jan21               *
+      *                 AR926400           Date 19Jun13               * 
+      *                 MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD058540           Date 24Aug21               *
       *                 250161             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
@@ -144,6 +147,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058975 - Unable to insert a Call Depost deal. Set Maturity *
+      *             Date to 99999 if the field is zero.               *
+      *           - Applied for MD-59112                              *
+      *  MD057529 - Redeliver of the correct version of the program   *
+      *             that was missed during SP24 + compatibility patch *
+      *  AR926400 - Unable to update Front Office ID. Allow changes   *
+      *             on HKFRNT. (Child: AR926403)                      * 
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field             *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -2175,6 +2185,17 @@
 
      C     ValidateAc    BEGSR
 
+      *                                                                                     AR926400
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)                       AR926400
+      ** Otherwise                                                                          AR926400
+      ** Set retrieve mode to blank (Access using Midas transaction ID)                     AR926400
+      *                                                                                     AR926400
+     C     DDFOID        IFNE      *BLANKS                                                  AR926400
+     C                   MOVEL     '*FRONT'      ModeofOp                                   AR926400
+     C                   ELSE                                                               AR926400
+     C                   MOVEL     '      '      ModeofOp                                   AR926400
+     C                   ENDIF                                                              AR926400
+      *                                                                                     AR926400
       * Validate action code versus transaction IDs supplied
       * This function will set the Midas deal number and the Midas
       * associated deal number.
@@ -2189,7 +2210,8 @@
 
       * Mode = '*FRONT' (Front Office transaction interface)
       * Mode = '      ' (Not Front Office transaction interface)
-     C                   PARM      '      '      ModeofOp          6
+     C**********         PARM      '      '      ModeofOp          6                        AR926400
+     C                   PARM                    ModeofOp          6                        AR926400
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE
@@ -2733,6 +2755,9 @@
      C                   IF           DDType = 'IP' OR DDType = 'TI'
      C                             OR DDType = 'CL' OR DDType = 'LN'
      C                             OR DDType = 'DL'
+     C                             OR DDType = 'FL' AND CDL006 =' Y'                        MD058975
+     C                             OR DDType = 'DP' AND CDL006 = 'Y'                        MD058975
+     C                             OR DDType = 'LP' AND CDL006 = 'Y'                        MD058975
      C**********         EVAL      PayDat = ValDateMDN                                        250161
      C                   EVAL      LOD = 'L'                                                  250161
      C                   ELSE
@@ -2796,22 +2821,34 @@
      C                   PARM                    ErrorFlag                                    250161
      C                   EVAL      PayDat = ValDateMDN                                        250161
      C                   ELSE                                                                 250161
+      *                                                                                     MD058975
+     C                   IF        DDMDAT <> *BLANKS                                        MD058975
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDMDAT                                       250161
      C                   PARM                    ValDateMDN                                   250161
      C                   PARM                    BJDFIN                                       250161
      C                   PARM                    ErrorFlag                                    250161
      C                   EVAL      PayDat = ValDateMDN                                        250161
+     C                   ELSE                                                               MD058975
+     C                   Z-ADD     99999         PayDat                                     MD058975
+     C                   ENDIF                                                              MD058975
+      *                                                                                     MD058975
      C                   Endif                                                                250161
                                                                                               250161
       ** Receive date = maturity date for loan, value date for deposit                        250161
      C                   IF        LOD = 'L'                                                  250161
+      *                                                                                     MD058975
+     C                   IF        DDMDAT <> *BLANKS                                        MD058975
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDMDAT                                       250161
      C                   PARM                    ValDateMDN                                   250161
      C                   PARM                    BJDFIN                                       250161
      C                   PARM                    ErrorFlag                                    250161
      C                   EVAL      RecDat = ValDateMDN                                        250161
+     C                   ELSE                                                               MD058975
+     C                   Z-ADD     99999         RecDat                                     MD058975
+     C                   ENDIF                                                              MD058975
+      *                                                                                     MD058975
      C                   ELSE                                                                 250161
      C                   CALLB     'ZDATE1'                                                   250161
      C                   PARM                    DDVDAT                                       250161

@@ -23,8 +23,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD057942           Date 26Apr21               *
+      *  Last Amend No. MD051554           Date 28Sep18               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD058896           Date 21Sep21               *
+      *                 MD057942           Date 26Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057008           Date 27Oct20               *
       *                 MD056543           Date 15Sep20               *
@@ -158,45 +160,52 @@
       *                 150163             Date 14Dec98               *
       *                 145001             Date 19Oct98               *
       *                 CEU015             Date 19Jun98               *
-     F*                 138000             DATE 30JUN98               *
-     F*                 CEU014             DATE 24JUN98               *
+      *                 138000             DATE 30JUN98               *
+      *                 CEU014             DATE 24JUN98               *
       *                 CEU003             Date 07Jan98               *
       *                 119240             Date 12Jun97               *
-     F*                 116840             Date 30May97               *
-     F*                 117163             Date 23Apr97               *
-     F*                 CSW011             Date 19Mar97               *
-     F*                 110874             Date 25Nov96               *
-     F*                 CSW005             Date 01Aug96               *
-     F*                 089776             Date 17Apr96               *
-     F*                 089760             Date 16Apr96               *
-     F*                 089649             DATE 16APR96               *
-     F*                 095473             DATE 02JAN96               *
-     F*                 S01408             DATE 04AUG95               *
-     F*                 088485             DATE 25MAY95               *
-     F*                 088501             DATE 24MAY95               *
-     F*                 088494             DATE 23MAY95               *
-     F*                 088492             DATE 19MAY95               *
-     F*                 087117             DATE 05MAY95               *
-     F*                 087053             DATE 04MAY95               *
-     F*                 087000             DATE 03MAY95               *
-     F*                 086962             DATE 03MAY95               *
-     F*                 086918             DATE 02MAY95               *
-     F*                 086864             DATE 01MAY95               *
-     F*                 086797             DATE 27APR95               *
-     F*                 086780             DATE 27APR95               *
-     F*                 CIR001             DATE 13JUL95               *
-     F*                 086158             DATE 24MAR95               *
-     F*                 082060             DATE 24JAN95               *
-     F*                 081961             DATE 12JAN95               *
-     F*                 S01408             DATE 20FEB95               *
-     F*                 S01522             DATE 22NOV94               *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
+      *                 116840             Date 30May97               *
+      *                 117163             Date 23Apr97               *
+      *                 CSW011             Date 19Mar97               *
+      *                 110874             Date 25Nov96               *
+      *                 CSW005             Date 01Aug96               *
+      *                 089776             Date 17Apr96               *
+      *                 089760             Date 16Apr96               *
+      *                 089649             DATE 16APR96               *
+      *                 095473             DATE 02JAN96               *
+      *                 S01408             DATE 04AUG95               *
+      *                 088485             DATE 25MAY95               *
+      *                 088501             DATE 24MAY95               *
+      *                 088494             DATE 23MAY95               *
+      *                 088492             DATE 19MAY95               *
+      *                 087117             DATE 05MAY95               *
+      *                 087053             DATE 04MAY95               *
+      *                 087000             DATE 03MAY95               *
+      *                 086962             DATE 03MAY95               *
+      *                 086918             DATE 02MAY95               *
+      *                 086864             DATE 01MAY95               *
+      *                 086797             DATE 27APR95               *
+      *                 086780             DATE 27APR95               *
+      *                 CIR001             DATE 13JUL95               *
+      *                 086158             DATE 24MAR95               *
+      *                 082060             DATE 24JAN95               *
+      *                 081961             DATE 12JAN95               *
+      *                 S01408             DATE 20FEB95               *
+      *                 S01522             DATE 22NOV94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
       *             Based from MD052690. (Recompile)                  *
+      *  MD058896 - CGC2050 Seq. No. 00007 failed during COB          *
+      *             Changed the condition introduced by CSD103 to     *
+      *             ensure that AOBSRTR0 is accessed if DABRTT is not *
+      *             blank.                                            *
       *  MD057942 - Field TRBTT is not defined. Used TBRTT instead as *
       *             the corresponding field for Their Base Rate Type. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -4445,7 +4454,8 @@
      C                   MOVEL     CCY           ##CYCD                                     MD030644
      C********** BRTT      IFEQ 0                                                  MD030644 MD033854
      C********** DABRTT        IFEQ      0                                           MD030644 CSD103
-     C     DABRTT        IFNE      *BLANKS                                                    CSD103
+     C*****DABRTT        IFNE      *BLANKS                                           CSD103 MD058896
+     C     DABRTT        IFEQ      *BLANKS                                                  MD058896
      C                   MOVEL     *BLANKS       ##D(11)                                    MD030644
      C                   ELSE                                                               MD030644
      C**********           MOVELBRTT      ##BSRC                                   MD030644 MD033854
@@ -13153,6 +13163,22 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C     DTYP          IFEQ      'FR'                                                     MD051554
+     C     DTYP          OREQ      'RS'                                                     MD051554
+     C     DTYP          OREQ      'RX'                                                     MD051554
+     C     DTYP          OREQ      'RR'                                                     MD051554
+     C     DTYP          OREQ      'RP'                                                     MD051554
+     C     DTYP          OREQ      'RF'                                                     MD051554
+     C                   MOVE      'N'           WCALC6                                     MD051554
+     C                   ELSE                                                               MD051554
+     C                   MOVE      SCALC6        WCALC6                                     MD051554
+     C                   ENDIF                                                              MD051554
       *
      C/COPY WNCPYSRC,CG4110C058
       *---------------------------------------------------------------*
@@ -15154,6 +15180,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                   ENDIF                                                              MD035545
+     C                   MOVE      WCALC6        SCALC6            1                        MD051554
       *
       *................................................................
       *

@@ -2,7 +2,7 @@
       *                                                               *
       *  Midas - STP Functions                                        *
       *                                                               *
-      *  ME1540C005 -  Mapping for Mt101                              *
+      *  UUC104_014 -  Mapping for Mt101                              *
       *                                                               *
       *  Function: This function allows 101 to be processed as        *
       *            Mt103s                                             *
@@ -11,24 +11,27 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. UUC104             Date 12Oct20               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Last Amend No. MD059365           Date 06Dec21               *
+      *  Prev Amend No. UUC104             Date 12Oct20               *
+      *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059365 - Mis-aligned ME1540 copy sources                   *
       *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
       *                                                               *
       *****************************************************************
       *                                                                                       UUC104
-     C                     CALL 'AOSARDR0'                                                    UUC104
-     C                     PARM *BLANKS   @RTCD                                               UUC104
-     C                     PARM '*VERIFY' @OPTN                                               UUC104
-     C                     PARM 'UUC104'  @SARD                                               UUC104
-     C           SCSARD    PARM SCSARD    DSFDY                                               UUC104
+     C********** UUC104    IFEQ 'Y'                                                  UUC104 MD059365
+     C     UUC104        IFEQ      'Y'                                                      MD059365
+      * Incoming payment                                                                      UUC104
+     C********** #1PYTP    ANDNE'IN'                                                 UUC104 MD059365
+     C     #1PYTP        ANDNE     'IN'                                                     MD059365
+      * Outgoing payment                                                                      UUC104
+     C********** #1PYTP    ANDNE'OP'                                                 UUC104 MD059365
+     C     #1PYTP        ANDNE     'OP'                                                     MD059365
+      * Not on                                                                                UUC104
+     C********** UUC104    ORNE 'Y'                                                  UUC104 MD059365
+     C     UUC104        ORNE      'Y'                                                      MD059365
       *                                                                                       UUC104
-     C           @RTCD     IFEQ *BLANKS                                                       UUC104
-     C                     MOVEL'Y'       UUC104  1                                           UUC104
-     C                     ELSE                                                               UUC104
-     C                     MOVEL'N'       UUC104                                              UUC104
-     C                     ENDIF                                                              UUC104
       *****************************************************************

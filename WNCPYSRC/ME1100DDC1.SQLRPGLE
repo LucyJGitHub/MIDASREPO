@@ -46,7 +46,6 @@
      C     ##JOB         ANDNE     C#FTJB                                                   MD059365
      C                   CALL      'MEM0001'                                                MD059365
      C                   PARM      'IC'          PRETN             7            Action      MD059365
-     C                   MOVE      AGMRDT        WUMRDT            7            Midas Run d MD059365
      C                   PARM                    PHEAD                          General Det MD059365
      C                   PARM                    PDATA                          Message Det MD059365
      C                   PARM                    PDAT2                                      MD059365

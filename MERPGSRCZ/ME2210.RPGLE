@@ -305,6 +305,5 @@
       ** /Copy point for Arrays
 
       /COPY ZSRSRC,ZDATE2Z3
-      /EJECT
 **  cpy@ table
 (c) Finastra International Limited 2021

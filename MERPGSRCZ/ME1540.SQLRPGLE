@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT046             Date 13Oct20               *
-      *  Prev Amend No. UUC104             Date 12Oct20               *
+      *  Last Amend No. MD059365           Date 06Dec21               *
+      *  Prev Amend No. CFT046             Date 13Oct20               *
+      *                 UUC104             Date 12Oct20               *
       *                 AR857777           Date 14Nov11               *
       *                 MD056560           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059365 - Mis-aligned ME1540 copy sources                   *
       *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
       *           RE Transaction Type for FT payments                 *
       *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *

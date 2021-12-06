@@ -574,7 +574,6 @@
 
      C                   eval      y = 1
      C                   eval      buffer = outBytes
-     C
 
       ** Start writing records in 256 char increments until the buffer has been exhausted
 

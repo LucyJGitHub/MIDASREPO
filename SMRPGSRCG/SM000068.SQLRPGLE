@@ -11,11 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CUP042   *CREATE   Date 24Nov14               *
-      *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
+      *  Last Amend No. MD059085           Date 08Nov21               *
+      *  Prev Amend No. CUP042   *CREATE   Date 24Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059085 - Rename field AUPROJ to 'Old System Release'       *
       *  CUP042 - Restructure of deliverable data files.              *
       *                                                               *
       *****************************************************************

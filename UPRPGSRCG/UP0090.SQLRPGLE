@@ -11,8 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD056808             Date 20Sep20             *
-      *  Prev Amend No. MD056891             Date 21Aug21             *
+      *  Last Amend No. MD058089             Date 01Sep21             *
+      *  Prev Amend No. MD058079             Date 11May21             *
+      *                 MD058082             Date 11May21             *
+      *                 MD058068             Date 11May21             *
+      *                 MD058071             Date 11May21             *
+      *                 MD056808             Date 20Sep20             *
+      *                 MD056891             Date 21Aug21             *
       *                 MD054346             Date 18Jul21             *
       *                 MD056555             Date 31Aug20             *
       *                 MD055891             Date 01Sep20             *
@@ -80,6 +85,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
+      *  MD058079 - Deliverable Data Split for sundry files           *
+      *  MD058082 - Deliverable Data Split for FRS                    *
+      *  MD058068 - Deliverable Data Split for Bank of England        *
+      *  MD058071 - Deliverable Data Split for Export Data            *
       *  MD056808 - Deliverable Data Split for SDEXMAPD               *
       *  MD056891 - Deliverable Data Split for T_WIPACT               *
       *  MD054346 - Switchable Features Password Encryption           *
@@ -283,6 +293,14 @@
       *********************************************************************                 MD034724
      C     UpdateUDF     BEGSR                                                              MD034724
       *
+      * Check first is file still exists (not DDS converted)                                MD058089
+     C                   CALL      'UTCHKOBJ'                                               MD058089
+     C                   PARM      *blanks       ExistYN          10                        MD058089
+     C                   PARM      'SMGNMGPD'    DFPGM            10                        MD058089
+     C                   PARM      '*LIBL'       Library                                    MD058089
+     C                   PARM      '*FILE'       ObjectType                                 MD058089
+     C                   PARM      *blanks       Member                                     MD058089
+     C                   IF        ExistYN = 'Exist'                                        MD058089
      C/exec SQL                                                                             MD034724
      C+ update UPDLVCPD u set                                                               MD034724
      C+   AUFMTO = 'S*NOCOPY'                                                               MD034724
@@ -293,6 +311,18 @@
      C+     u.AUMBNM = s.NCOBJ                                                              MD034724
      C+ )                                                                                   MD034724
      C/end-exec                                                                             MD034724
+     C                   ELSE                                                               MD058089
+     C/exec SQL                                                                             MD058089
+     C+ update UPDLVCPD u set                                                               MD058089
+     C+   AUFMTO = 'S*NOCOPY'                                                               MD058089
+     C+ where exists                                                                        MD058089
+     C+ (                                                                                   MD058089
+     C+ select * from SMGNMJW0 s                                                            MD058089
+     C+ where                                                                               MD058089
+     C+     u.AUMBNM = s.NCOBJ                                                              MD058089
+     C+ )                                                                                   MD058089
+     C/end-exec                                                                             MD058089
+     C                   ENDIF                                                              MD058089
       *
      C     UpdateUDFE    ENDSR                                                              MD034724
       *
@@ -1130,6 +1160,63 @@
      C                             or ChkFile = 'GPSECXTD'                                  MD054346
      C                             or ChkFile = 'GPWATXTD'                                  MD056891
      C                             or ChkFile = 'SDEXMXTD'                                  MD056808
+     C                             or ChkFile = 'EDBUTXTD'                                  MD058071
+     C                             or ChkFile = 'EDDFTXTD'                                  MD058071
+     C                             or ChkFile = 'EDDKYXTD'                                  MD058071
+     C                             or ChkFile = 'EDFOKXTD'                                  MD058071
+     C                             or ChkFile = 'EDLKYXTD'                                  MD058071
+     C                             or ChkFile = 'EDMKYXTD'                                  MD058071
+     C                             or ChkFile = 'EDSKYXTD'                                  MD058071
+     C                             or ChkFile = 'BYCTYXTD'                                  MD058068
+     C                             or ChkFile = 'BYGTEXTD'                                  MD058068
+     C                             or ChkFile = 'BYGTMXTD'                                  MD058068
+     C                             or ChkFile = 'BYINDXTD'                                  MD058068
+     C                             or ChkFile = 'BYINRXTD'                                  MD058068
+     C                             or ChkFile = 'BYINSXTD'                                  MD058068
+     C                             or ChkFile = 'BYINTXTD'                                  MD058068
+     C                             or ChkFile = 'BYPRDXTD'                                  MD058068
+     C                             or ChkFile = 'BYPRMXTD'                                  MD058068
+     C                             or ChkFile = 'BYREGXTD'                                  MD058068
+     C                             or ChkFile = 'RNAMTXTD'                                  MD058082
+     C                             or ChkFile = 'RNCPYXTD'                                  MD058082
+     C                             or ChkFile = 'RNCTYXTD'                                  MD058082
+     C                             or ChkFile = 'RNECSXTD'                                  MD058082
+     C                             or ChkFile = 'RNEPIXTD'                                  MD058082
+     C                             or ChkFile = 'RNEXCXTD'                                  MD058082
+     C                             or ChkFile = 'RNICPXTD'                                  MD058082
+     C                             or ChkFile = 'RNKYPXTD'                                  MD058082
+     C                             or ChkFile = 'RNSECXTD'                                  MD058082
+     C                             or ChkFile = 'APARCXTD'                                  MD058079
+     C                             or ChkFile = 'EMCOFXTD'                                  MD058079
+     C                             or ChkFile = 'ERLNAXTD'                                  MD058079
+     C                             or ChkFile = 'ERL11XTD'                                  MD058079
+     C                             or ChkFile = 'FCRPAXTD'                                  MD058079
+     C                             or ChkFile = 'FTTRTXTD'                                  MD058079
+     C                             or ChkFile = 'GLFNAXTD'                                  MD058079
+     C                             or ChkFile = 'LEDLLXTD'                                  MD058079
+     C                             or ChkFile = 'MQ540XTD'                                  MD058079
+     C                             or ChkFile = 'MRKEYXTD'                                  MD058079
+     C                             or ChkFile = 'MRMBIXTD'                                  MD058079
+     C                             or ChkFile = 'SECONXTD'                                  MD058079
+     C                             or ChkFile = 'SEEURXTD'                                  MD058079
+     C                             or ChkFile = 'SFAPIXTD'                                  MD058079
+     C                             or ChkFile = 'ZATRGXTD'                                  MD058079
+     C                             or ChkFile = 'SMACFXTD'                                  MD058089
+     C                             or ChkFile = 'SMCNUXTD'                                  MD058089
+     C                             or ChkFile = 'SMCPYXTD'                                  MD058089
+     C                             or ChkFile = 'SMFIDXTD'                                  MD058089
+     C                             or ChkFile = 'SMFITXTD'                                  MD058089
+     C                             or ChkFile = 'SMFIUXTD'                                  MD058089
+     C                             or ChkFile = 'SMGNMXTD'                                  MD058089
+     C                             or ChkFile = 'SMINPXTD'                                  MD058089
+     C                             or ChkFile = 'SMMSRXTD'                                  MD058089
+     C                             or ChkFile = 'SMMTOXTD'                                  MD058089
+     C                             or ChkFile = 'SMRCFXTD'                                  MD058089
+     C                             or ChkFile = 'SMSFCXTD'                                  MD058089
+     C                             or ChkFile = 'SMZNMXTD'                                  MD058089
+     C                             or ChkFile = 'UPMPXXTD'                                  MD058089
+     C                             or ChkFile = 'UTSCRXTD'                                  MD058089
+     C                             or ChkFile = 'UTSRCXTD'                                  MD058089
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1265,6 +1352,15 @@
      C                             or Member = 'GPSRWCTD'                                   MD056555
      C                             or Member = 'GPSECCTD'                                   MD054346
      C                             or Member = 'GPWATCTD'                                   MD056891
+     C                             or Member = 'UPMPXCTD'                                   MD058089
+     C                             or Member = 'UTSCRCTD'                                   MD058089
+     C                             or Member = 'UTSRCCTD'                                   MD058089
+     C                             or Member = 'SMRCFCTD'                                   MD058089
+     C                             or Member = 'SMFITCTD'                                   MD058089
+     C                             or Member = 'SMFIUCTD'                                   MD058089
+     C                             or Member = 'SMGNMCTD'                                   MD058089
+     C                             or Member = 'SMINPCTD'                                   MD058089
+     C                             or Member = 'SMCNUCTD'                                   MD058089
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1345,6 +1441,54 @@
      C                             or Member = 'SCSRWCTD'                                   MD056555
      C                             or Member = 'SCSRXCTD'                                   MD056555
      C                             or Member = 'SDEXMCTD'                                   MD056808
+     C                             or Member = 'EDBUTCTD'                                   MD058071
+     C                             or Member = 'EDDFTCTD'                                   MD058071
+     C                             or Member = 'EDDKYCTD'                                   MD058071
+     C                             or Member = 'EDFOKCTD'                                   MD058071
+     C                             or Member = 'EDLKYCTD'                                   MD058071
+     C                             or Member = 'EDMKYCTD'                                   MD058071
+     C                             or Member = 'EDSKYCTD'                                   MD058071
+     C                             or Member = 'BYCTYCTD'                                   MD058068
+     C                             or Member = 'BYGTECTD'                                   MD058068
+     C                             or Member = 'BYGTMCTD'                                   MD058068
+     C                             or Member = 'BYINDCTD'                                   MD058068
+     C                             or Member = 'BYINRCTD'                                   MD058068
+     C                             or Member = 'BYINSCTD'                                   MD058068
+     C                             or Member = 'BYINTCTD'                                   MD058068
+     C                             or Member = 'BYPRDCTD'                                   MD058068
+     C                             or Member = 'BYPRMCTD'                                   MD058068
+     C                             or Member = 'BYREGCTD'                                   MD058068
+     C                             or Member = 'RNAMTCTD'                                   MD058082
+     C                             or Member = 'RNCPYCTD'                                   MD058082
+     C                             or Member = 'RNCTYCTD'                                   MD058082
+     C                             or Member = 'RNECSCTD'                                   MD058082
+     C                             or Member = 'RNEPICTD'                                   MD058082
+     C                             or Member = 'RNEXCCTD'                                   MD058082
+     C                             or Member = 'RNICPCTD'                                   MD058082
+     C                             or Member = 'RNKYPCTD'                                   MD058082
+     C                             or Member = 'RNSECCTD'                                   MD058082
+     C                             or Member = 'APARCCTD'                                   MD058079
+     C                             or Member = 'EMCOFCTD'                                   MD058079
+     C                             or Member = 'ERLNACTD'                                   MD058079
+     C                             or Member = 'ERL11CTD'                                   MD058079
+     C                             or Member = 'FCRPACTD'                                   MD058079
+     C                             or Member = 'FTTRTCTD'                                   MD058079
+     C                             or Member = 'GLFNACTD'                                   MD058079
+     C                             or Member = 'LEDLLCTD'                                   MD058079
+     C                             or Member = 'MQ540CTD'                                   MD058079
+     C                             or Member = 'MRKEYCTD'                                   MD058079
+     C                             or Member = 'MRMBICTD'                                   MD058079
+     C                             or Member = 'SECONCTD'                                   MD058079
+     C                             or Member = 'SEEURCTD'                                   MD058079
+     C                             or Member = 'SFAPICTD'                                   MD058079
+     C                             or Member = 'ZATRGCTD'                                   MD058079
+     C                             or Member = 'SMACFCTD'                                   MD058089
+     C                             or Member = 'SMCPYCTD'                                   MD058089
+     C                             or Member = 'SMFIDCTD'                                   MD058089
+     C                             or Member = 'SMMSRCTD'                                   MD058089
+     C                             or Member = 'SMMTOCTD'                                   MD058089
+     C                             or Member = 'SMSFCCTD'                                   MD058089
+     C                             or Member = 'SMZNMCTD'                                   MD058089
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

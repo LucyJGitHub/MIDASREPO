@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1007705          Date 20Nov12               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1007705          Date 20Nov12               *
       *                 AR1002981          Date 09Jul12               *
       *                 AR1001649          Date 09Jul12               *
       *                 AR1001631          Date 08Jul12               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1007705 - Accrued interest report field should have 2      *
       *              decimal places                                   *
@@ -94,12 +96,12 @@
       *
       ** Midas SD API Report Control File
       *
-     FAPARCFL0  IF   E           K DISK
+     F*APARCFL0* IF   E           K DISK                                                    MD058079
       *
       ** Midas SD API Report Control File by API and Program
       *
-     FAPARCFL1  IF   E           K DISK
-     F                                          RENAME(APARCFD0:APARCFD1)
+     F*APARCFL1* IF   E           K DISK                                                    MD058079
+     F**********                                RENAME(APARCFD0:APARCFD1)                   MD058079
       *
       ** Midas GL Transaction Transferred to PEA
       *
@@ -138,6 +140,8 @@
       *
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                              MD058079
+      ** Dealing ICD                                                                      MD058079
       ** File information DS for main PRTF
       *
      D SPOOL1          DS
@@ -281,6 +285,7 @@
      D RundCons        S             30A
      D ChkPos          S              2  0
      D WCalInt         S             15P 2                                                 AR1007705
+     D APARCF        E DS                  EXTNAME(APARCJW0)                                MD058079
      D/COPY ZSRSRC,ZEDITZ1LE
       *
       ** +--------------------------------------+
@@ -453,9 +458,29 @@
       ** Get Fields Detail in API Report Control File
       *
      C                   EVAL      ReadInd = *BLANKS
-     C     APIMod        SETLL     APARCFL0
-     C     APIMod        READE     APARCFL0
-     C                   DOW       Not %EOF(APARCFL0)
+     C*****APIMod        SETLL     APARCFL0                                                 MD058079
+     C*****APIMod        READE     APARCFL0                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ close ACursor                                                                       MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ declare ACursor insensitive scroll cursor for                                       MD058079
+     C+ select * from APARCJW0                                                              MD058079
+     C+ where RCAPGM = '               ' and RCAPIN = :APIMod                               MD058079
+     C+ order by RCAPIN, RCSEQN                                                             MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ open ACursor                                                                        MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ fetch next from ACursor into :APARCF                                                MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C**********         DOW       Not %EOF(APARCFL0)                                       MD058079
+     C                   DOW       SQLCODE = 0                                              MD058079
       *
      C                   EVAL      ReadInd = 'Y'
       *
@@ -520,9 +545,16 @@
      C                   EVAL      RDETAIL = *Blanks
      C                   ENDIF
       *
-     C     APIMod        READE     APARCFL0
+     C*****APIMod        READE     APARCFL0                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ fetch next from ACursor into :APARCF                                                MD058079
+     C/END-EXEC                                                                             MD058079
      C                   ENDDO
       *
+     C/EXEC SQL                                                                             MD058079
+     C+ close ACursor                                                                       MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
      C                   IF        RDetail <> *Blanks
      C     '&':' '       XLATE     RDETAIL       RDETAIL
      C                   Exsr      CheckOverflow
@@ -533,13 +565,40 @@
       ** Check if there is a calling program
       *
      C                   EVAL      ReadInd = *BLANKS
-     C     APIMod        CHAIN     APARCFL1
-     C                   IF        %Found(APARCFL1)
+     C*****APIMod        CHAIN     APARCFL1                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :APARCF                                                                        MD058079
+     C+ from APARCJW0                                                                       MD058079
+     C+ where RCAPGM <> '               ' and RCAPIN = :APIMod                              MD058079
+     C/END-EXEC                                                                             MD058079
+     C**********         IF        %Found(APARCFL1)                                         MD058079
+     C                   IF        SQLCODE <> 100                                           MD058079
      C                             And RCAPGM <> *BLANKS
       *
-     C     APIMod        SETLL     APARCFL1
-     C     APIMod        READE     APARCFL1
-     C                   DOW       Not %EOF(APARCFL1)
+     C*****APIMod        SETLL     APARCFL1                                                 MD058079
+     C*****APIMod        READE     APARCFL1                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ close BCursor                                                                       MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ declare BCursor insensitive scroll cursor for                                       MD058079
+     C+ select * from APARCJW0                                                              MD058079
+     C+ where RCAPGM <> '               ' and RCAPIN = :APIMod                              MD058079
+     C+ order by RCAPIN, RCAPGM                                                             MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ open BCursor                                                                        MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ fetch next from BCursor into :APARCF                                                MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C**********         DOW       Not %EOF(APARCFL1)                                       MD058079
+     C                   DOW       SQLCODE = 0                                              MD058079
       *
      C                   EVAL      ReadInd = 'Y'
       *
@@ -589,9 +648,16 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C     APIMod        READE     APARCFL1
+     C*****APIMod        READE     APARCFL1                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ fetch next from BCursor into :APARCF                                                MD058079
+     C/END-EXEC                                                                             MD058079
      C                   ENDDO
       *
+     C/EXEC SQL                                                                             MD058079
+     C+ close BCursor                                                                       MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
      C                   IF        ReadInd = 'Y'
      C                   IF        APIMod = 'CIRS' OR APIMod = 'SIRS'
      C                   EVAL      RundCons = AccDesc(2)
@@ -1368,6 +1434,13 @@
       *
      C                   EVAL      dsTRANSz = *BLANKS
       *
+      ** Access Dealing ICD Details                                                       MD058079
+      *                                                                                   MD058079
+     C                   CALL      'AODEALR0'                                             MD058079
+     C                   PARM      '*DBERR '     @RTCD             7                      MD058079
+     C                   PARM      '*FIRST '     @OPTN             7                      MD058079
+     C     SDDEAL        PARM      SDDEAL        DSFDY                                    MD058079
+      *                                                                                   MD058079
      C                   ENDSR
       *********************************************************************
       /EJECT

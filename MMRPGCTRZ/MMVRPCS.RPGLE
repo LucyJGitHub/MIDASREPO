@@ -22,7 +22,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL063             Date 02Nov21               *
+      *  Last Amend No. CDL063             Date 02Nov21               *      
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,8 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL063 - Allow non-bank/bank counterparty on certain         *
-      *           deal types                                          *
+      *  CDL063 - Allow non-bank, bank counterparty on certain deal   *
+      *           types.                                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -142,9 +142,7 @@
                                                                                               CSD025
       ** Externally described DS for SAR details                                              CSD025
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD025
-
-     D SysVal1         C                   'AllowBankNBankCpty'                               CDL063
-                                                                                              CDL063
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -173,31 +171,6 @@
  
       ** Customer Shortname field passed as a parameter
      D IKCSNM          S             10A
-      *                                                                                       CDL063
-      ** System Values field passed as a parameter                                            CDL063
-      *                                                                                       CDL063 
-     D SValK1          S             20                                                       CDL063
-     D SVal1           S            200                                                       CDL063
-     D SValK2          S             20                                                       CDL063
-     D SVal2           S            200                                                       CDL063
-     D SValK3          S             20                                                       CDL063
-     D SVal3           S            200                                                       CDL063
-     D SValK4          S             20                                                       CDL063
-     D SVal4           S            200                                                       CDL063
-     D SValK5          S             20                                                       CDL063
-     D SVal5           S            200                                                       CDL063
-     D SValK6          S             20                                                       CDL063
-     D SVal6           S            200                                                       CDL063
-     D SValK7          S             20                                                       CDL063
-     D SVal7           S            200                                                       CDL063
-     D SValK8          S             20                                                       CDL063
-     D SVal8           S            200                                                       CDL063
-     D SValK9          S             20                                                       CDL063
-     D SVal9           S            200                                                       CDL063
-     D SValK0          S             20                                                       CDL063
-     D SVal10          S            200                                                       CDL063
-      *                                                                                       CDL063
-     D AllowBNBCpty    S              1                                                       CDL063
       **
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -327,9 +300,10 @@
      C     BBBNBI        IFEQ      'Y'
       *
       ** Customer is a bank
-      ** If AllowBNBCpty is 'Y, bypass the validation for bank                                CDL063
       *
-     C     AllowBNBCpty  IFNE      'Y'                                                        CDL063
+      ** If CDL063 is on, bypass the validation for bank                                      CDL063
+      *                                                                                       CDL063
+     C     CDL063        IFNE      'Y'                                                        CDL063
      C     DDTYPE        IFEQ      'TD'
      C     DDTYPE        OREQ      'TI'
      C                   MOVE      'Y'           ErrorFound
@@ -339,9 +313,9 @@
       *
      C                   ELSE
       *
-      ** If AllowBNBCpty is 'Y, bypass the validation for non-bank                            CDL063
+      ** If CDL063 is on, bypass the validation for non-bank                                  CDL063
       *                                                                                       CDL063
-     C     AllowBNBCpty  IFNE      'Y'                                                        CDL063
+     C     CDL063        IFNE      'Y'                                                        CDL063
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound
@@ -413,36 +387,17 @@
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
                                                                                               CSD025
-      ** Check current setting for 'AllowBankNBankCpty' system value  is active               CDL063
-      *                                                                                       CDL063
-     C                   CALL      'AOSVALR0'                                                 CDL063
-     C                   PARM      *BLANKS       PRtcd                                        CDL063
-     C                   PARM      SysVal1       SValK1                                       CDL063
-     C                   PARM                    SVal1                                        CDL063
-     C                   PARM                    SValK2                                       CDL063
-     C                   PARM                    SVal2                                        CDL063
-     C                   PARM                    SValK3                                       CDL063
-     C                   PARM                    SVal3                                        CDL063
-     C                   PARM                    SValK4                                       CDL063
-     C                   PARM                    SVal4                                        CDL063
-     C                   PARM                    SValK5                                       CDL063
-     C                   PARM                    SVal5                                        CDL063
-     C                   PARM                    SValK6                                       CDL063
-     C                   PARM                    SVal6                                        CDL063
-     C                   PARM                    SValK7                                       CDL063
-     C                   PARM                    SVal7                                        CDL063
-     C                   PARM                    SValK8                                       CDL063
-     C                   PARM                    SVal8                                        CDL063
-     C                   PARM                    SValK9                                       CDL063
-     C                   PARM                    SVal9                                        CDL063
-     C                   PARM                    SValK0                                       CDL063
-     C                   PARM                    SVal10                                       CDL063
+     C                   CALLB     'AOSARDR0'                                                 CDL063
+     C                   PARM      *BLANKS       PRtCd             7                          CDL063
+     C                   PARM      '*VERIFY'     POptn             7                          CDL063
+     C                   PARM      'CDL063'      PSARD             6                          CDL063
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL063
                                                                                               CDL063
-     C                   IF        PRtcd = *Blanks                                            CDL063
-     C                   EVAL      AllowBNBCpty = SVal1                                       CDL063
+     C                   MOVE      'N'           CDL063            1                          CDL063
+     C                   IF        PRtCd = *Blanks                                            CDL063
+     C                   EVAL      CDL063 = 'Y'                                               CDL063
      C                   ENDIF                                                                CDL063
-                                                                                              CDL063
-                                                                                              CDL063
+      *                                                                                       CDL063
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

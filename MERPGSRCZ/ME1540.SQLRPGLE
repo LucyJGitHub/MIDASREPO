@@ -892,7 +892,7 @@
      C                   MOVEL     #1MTPY        #KMTPY                                       CFT046
      C                   MOVE      #1MSET        #KMSET                                       CFT046
      C     #HHKEY        CHAIN     MEGNCRX0                           88                      CFT046
-     C                   UNLCK     MEGNCRX0                                                   CFT046
+     C                   UNLOCK    MEGNCRX0                                                   CFT046
      C     *IN88         IFEQ      '0'                                                        CFT046
      C                   MOVEL     X0TRAT        #1TRAT                                       CFT046
      C                   ELSE                                                                 CFT046
@@ -2193,11 +2193,11 @@
      C                   MOVEL     #1TRAT        X0TRAT                                       CFT046
       *                                                                                       CFT046
      C     *IN88         IFEQ      '0'                                                        CFT046
-     C                   UPDAT     MEGNCRD0               88                                  CFT046
+     C                   UPDATE    MEGNCRD0                             88                    CFT046
      C                   ELSE                                                                 CFT046
      C                   MOVEL     #1MTPY        X0MTPY                                       CFT046
      C                   MOVE      #1MSET        X0MSET                                       CFT046
-     C                   WRITE     MEGNCRD0               88                                  CFT046
+     C                   WRITE     MEGNCRD0                             88                    CFT046
      C                   ENDIF                                                                CFT046
       *                                                                                       CFT046
      C                   ENDIF                                                                CFT046
@@ -3333,7 +3333,7 @@
       *                                                                                       CFT046
      C                   MOVEL     #1TRAT        WQM               1                          CFT046
      C     WQM           IFEQ      '?'                                                        CFT046
-     C                   MOVEL     '?'           #1TRAT    P                                  CFT046
+     C                   MOVEL(P)  '?'           #1TRAT                                       CFT046
      C                   MOVEL     'Y'           W0PMT                                        CFT046
      C                   MOVEL     '1'           *IN99                                        CFT046
      C                   MOVE      *ON           *IN70                                        CFT046
@@ -3387,11 +3387,11 @@
      C                   ELSE                                                                 CFT046
      C     W0PMT         IFEQ      'N'                                                        CFT046
      C**  Send message 'Transaction Type not found '                                          CFT046
-     C                   MOVEL'FTM5055' ZAMSID                                                CFT046
-     C                   MOVEL'FTUSRMSG'ZAMSGF                                                CFT046
-     C                   EXSR ZASNMS                                                          CFT046
-     C                   MOVE '1'       *IN69                                                 CFT046
-     C                   MOVE '1'       *IN99                                                 CFT046
+     C                   MOVEL     'FTM5055'     ZAMSID                                       CFT046
+     C                   MOVEL     'FTUSRMSG'    ZAMSGF                                       CFT046
+     C                   EXSR      ZASNMS                                                     CFT046
+     C                   MOVE      '1'           *IN69                                        CFT046
+     C                   MOVE      '1'           *IN99                                        CFT046
      C                   END                                                                  CFT046
      C                   END                                                                  CFT046
      C*                                                                                       CFT046

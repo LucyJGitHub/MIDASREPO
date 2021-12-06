@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058547           Date 10Aug21               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. MD059049           Date 08Nov21               *
+      *  Prev Amend No. MD058547           Date 10Aug21               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD055010           Date 04Mar20               *
       *                 CER050             Date 16Jun19               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059049 - Time Deposit - Update on Tax Indicator field      *
       *  MD058547 - User cannot amend a call notice deposit taken     *
       *             because of error 45049507. Add DDACTN on call to  *
       *             MMVACTINTR.                                       *
@@ -1658,7 +1660,8 @@
      C                   ELSE                                                                 CDL033
      C                   IF        DDBSRC = *BLANKS                                           CDL033
      C                   EVAL      Idx = Idx + 1                                              CDL033
-     C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                 CDL033
+     C**********         EVAL      FldNameArr(Idx) = 'DDBSRC'                        CDL033 MD059049
+     C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                               MD059049
      C                   EVAL      MsgIDArr(Idx)   = 'FLR0023'                                CDL033
      C                   EVAL      ReturnCode      = 'Error'                                  CDL033
      C**********         ELSE                                                        CDL033 BUG24317

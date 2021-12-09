@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Utility Program to populate SECTYDQD ')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00482 - Midas SM Utility Program to populate SECTYDQD   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD059348 *CREATE   Date 03Dec21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD059348 - Populate SECTYDQD introduced by MD-54631         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             COPYRIGHT  TEXT('(C) Finastra International Limited 2021')
+
+/* Global Monitor Message                                           */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+
+/* Set Switches                                                     */
+
+             CHGJOB     SWS(XXXXX000)
+
+/* Main Process                                                     */
+
+             RUNSQL     SQL('insert into sectydqd (select sesn, frnt +
+                          from sectyd a where not exists (select sesn    +
+                          from sectydqd b    +
+                          where b.sesesn = a.sesn))') COMMIT(*NC)
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+
+             GOTO       CMDLBL(ENDCLPGM)
+
+/* Abnormal termination processing                                  */
+
+ABNORMAL:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+             SNDPGMMSG  MSG('Program SMUC00482 ended abnormally') TOMSGQ(MOPERQ +
+                          MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ENDCLPGM:
+             ENDPGM

@@ -33,10 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059304           Date 11Nov21               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
-      *                 MD056313           Date 21Sep20               *      
+      *                 MD056313           Date 21Sep20               *
       *                 MD051895           Date 22May19               *
       *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
@@ -148,11 +149,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056313 - Settlement validated twice. Used placeholder for  *
-      *             messages in first ZASETINVAL call                 *      
+      *             messages in first ZASETINVAL call                 *
       *  MD051895 - Error when rejecting a change to a loan which     *
       *             settles over a GL account.                        *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
@@ -366,6 +371,11 @@
      F**********                           PREFIX(@@)                                AR314017 CLE164
      FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE168
      F                                     PREFIX(C_)                                         CLE168
+      *                                                                                     MD059304
+     FCLOANLB   IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     F                                     RENAME(CLOANCLF:CLOANCLE)                        MD059304
+     F                                     PREFIX(LE_)                                      MD059304
+     FSDEXSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
 
       *****************************************************************
       ** +--------------------------------------+
@@ -1391,6 +1401,10 @@
      C                   OUT       LEFCLY                                                     CLE168
      C                   ENDIF                                                                CLE168
       *                                                                                       CLE168
+     C                   IF        DDACTN = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   CALLB     'ZASETINVAL'                                              BUG6010
       *                                                                                      BUG6010
       ** Return Code                                                                         BUG6010
@@ -2538,6 +2552,10 @@
      C                   OUT       LEFCLY                                                     CLE168
      C                   ENDIF                                                                CLE168
       *                                                                                       CLE168
+     C                   IF        DDACTN = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
       *                                                                                    MD036838A
       ** Call ZASETINVAL for C_PAY                                                         MD036838A
       *                                                                                    MD036838A
@@ -2581,6 +2599,10 @@
      C                   PARM      DDACTN        ##ACTN                                    MD036838A
      C                   PARM      '1ST'         ##ValIter                                 MD036838A
       *                                                                                    MD036838A
+     C                   IF        DDACTN = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   CALLB     'ZASETINVAL'
 
       * Return Code
@@ -4580,6 +4602,55 @@
       *****************************************************************                    AR1095041
       /EJECT                                                                               AR1095041
       *****************************************************************                    AR1095041
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     CLOANKY       KLIST                                                              MD059304
+     C                   KFLD                    K_BRCA            3                        MD059304
+     C                   KFLD                    K_LNRF            6                        MD059304
+                                                                                            MD059304
+     C                   MOVEL     DDBRCA        K_BRCA                                     MD059304
+     C                   MOVEL     DDLNRF        K_LNRF                                     MD059304
+                                                                                            MD059304
+     C     CLOANKY       CHAIN     CLOANLB                            51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        LE_PSTM = 0 AND                                          MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C                   MOVEL     'LE'          BYTRTY                                     MD059304
+     C                   MOVEL     DDCURR        BYCYCD                                     MD059304
+     C                   MOVEL     DDCUST        BYCUST                                     MD059304
+     C                   MOVEL     BlankBRCA     BYBRCA                                     MD059304
+     C                   MOVEL     BlankSTYP     BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     DDCUST        DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     DDCUST        DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
+      *****************************************************************                     MD059304
 ** PCMD                                                                                    AR1095041
 OVRDBF FILE(LEPDUELB) SHARE(*NO)                                                           AR1095041
 DLTOVR FILE(LEPDUELB)                                                                      AR1095041

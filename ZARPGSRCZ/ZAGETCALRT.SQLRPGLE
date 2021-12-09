@@ -230,7 +230,7 @@
 
      D AMP             c                   const('&')
      D HTTP_HEAD       c                   const('http://')
-     D HTTPS_HEAD      c                   const('https://')
+     D HTTPS_HEAD      c                   const('https://')                                MD059104
      D INSERT          c                   const(0)
      D LELIBEPD        c                   const(1)
      D NO_ERROR        c                   const(0)

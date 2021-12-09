@@ -31,6 +31,12 @@
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&NBR_RCD) TYPE(*DEC) LEN(10 0)
 
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CSW122) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+
 /** Global Monitor Message */
 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
@@ -67,6 +73,21 @@
              CHGVAR     VAR(&STATUS) VALUE('Y')
              CALL       PGM(CB0150) PARM(&COMP_NAME &COMP_SEQ &STATUS)
 
+/** Access the Switchable Features file to see if CSW122 is on. */
+
+             CHGVAR     VAR(&SARD) VALUE('CSW122')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+             IF         COND(&RTN *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CSW122) VALUE('Y')
+             ENDDO
+
+/** If CSW122 is off, end program */
+
+             IF         COND(&CSW122 *NE 'Y') THEN(DO)
+                GOTO       CMDLBL(FINISH)
+             ENDDO
+
 /** Check to see if records in Purge if so do not extract more */
 
              RTVMBRD    FILE(MEMXINRMPD) NBRCURRCD(&NBR_RCD)
@@ -85,6 +106,7 @@
 
 /** Update status to Not Active - component finished */
 
+ FINISH:
              CHGVAR     VAR(&STATUS) VALUE('N')
              CALL       PGM(CB0150) PARM(&COMP_NAME &COMP_SEQ &STATUS)
 

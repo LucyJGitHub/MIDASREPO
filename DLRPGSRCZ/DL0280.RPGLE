@@ -9241,7 +9241,8 @@
      C                   IF        UBLRT = 'Y'                                                CIR020
      C                             AND UCALM <> 'MANL'                                        CIR020
      C                   MOVE      UDNSI         WUDNSI            1                          CIR020
-     C                   BITON     '02'          UDNSI                                        CIR020
+     C*********          BITON     '02'          UDNSI                               CIR020 MD059330
+     C                   BITON     '0'           UDNSI                                      MD059330
       ** Override effective int rate with backward looking rate                               CIR020
      C     DMBRK2        KLIST                                                                CIR020
      C                   KFLD                    DLNO                                         CIR020
@@ -9297,7 +9298,8 @@
      C                   IF        TBLRT = 'Y'                                                CIR020
      C                             AND TCALM <> 'MANL'                                        CIR020
      C                   MOVE      TDNSI         WTDNSI            1                          CIR020
-     C                   BITON     '02'          TDNSI                                        CIR020
+     C**********         BITON     '02'          TDNSI                               CIR020 MD059330
+     C                   BITON     '0'           TDNSI                                      MD059330
       ** Override effective int rate with backward looking rate                               CIR020
      C                   Z-ADD     1             WDASN                                        CIR020
      C     DMBRK2        CHAIN     DAMBR2                                                     CIR020

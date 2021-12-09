@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD059170           Date 29Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059238           Date 03Dec21               *
+      *  Prev Amend No. MD059170           Date 29Oct21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD046248           Date 27Oct17               *
       *                 CIR018             Date 06Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059238 - Rate fix days is defaulted despite field is       *
+      *             inhibited when validation error is encountered    *
       *  MD059170 - Rate fix days not cleared upon amendment of       *
       *             deal from forward to backward looking rate        *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -241,9 +244,9 @@
      C                   MOVE      RatFixDays    STFRFD                                       CIR020
      C                   ENDIF                                                                CIR020
                                                                                               CIR020
-     C                   IF        PBLRT = 'Y'                                              MD059170
-     C                   EVAL      STFRFD = *BLANKS                                         MD059170
-     C                   ENDIF                                                              MD059170
+     C**********         IF        PBLRT = 'Y'                                     MD059170 MD059238
+     C**********         EVAL      STFRFD = *BLANKS                                MD059170 MD059238
+     C**********         ENDIF                                                     MD059170 MD059238
      C**********         IF        PBLRT = 'Y'                                       CIR020 MD059170
      C**********                   AND (STFRFD <> *Blanks AND                        CIR020 MD059170
      C**********                   (STFRFD <> '  ' AND STFRFD <> ' 0' AND            CIR020 MD059170
@@ -251,6 +254,14 @@
      C**********         MOVE      'Y'           ErrorFound                          CIR020 MD059170
      C**********         MOVE      '5049523'     Msgid1                              CIR020 MD059170
      C**********         ENDIF                                                       CIR020 MD059170
+     C                   IF        PBLRT = 'Y'                                              MD059238
+     C                             AND (STFRFD <> *Blanks AND                               MD059238
+     C                             (STFRFD <> '  ' AND STFRFD <> ' 0' AND                   MD059238
+     C                             STFRFD <> '0 ' AND STFRFD <> '00'))                      MD059238
+     C                   MOVE      'Y'           ErrorFound                                 MD059238
+     C                   MOVE      '5049523'     Msgid1                                     MD059238
+     C                   ENDIF                                                              MD059238
+      *                                                                                     MD059238
                                                                                               CIR007
       ** If CIR007 is on , Deal Type is 'RS' and Rate Change Frequency                        CIR007
       ** Code is 'O', then the Rate Fix Days must be zero or blank.                           CIR007
@@ -326,15 +337,17 @@
      C     SAVRAM        OREQ      'Y'
      C     SUCUCY        ANDEQ     BJLCCY
      C     PDealCACF     ANDEQ     'N'                                                        CAP055
-     C     PBLRT         OREQ      'Y'                                                        CIR020
-     C     PDealCACF     ANDEQ     'N'                                                        CIR020
+     C*****PBLRT         OREQ      'Y'                                               CIR020 MD059238
+     C*****PDealCACF     ANDEQ     'N'                                               CIR020 MD059238
      C                   Z-ADD     0             RatFixDays
       *                                                                                      BUG6283
       * Move defaulted value to the screen field as well .                                   BUG6283
      C                   MOVE      RatFixDays    STFRFD                                      BUG6283
       *                                                                                      BUG6283
      C                   ELSE
+     C     PBLRT         IFNE      'Y'                                                      MD059238
      C                   Z-ADD     2             RatFixDays
+     C                   ENDIF                                                              MD059238
       *                                                                        163378
       * Move defaulted value to the screen field as well .                     163378
      C                   MOVE      RatFixDays    STFRFD                         163378

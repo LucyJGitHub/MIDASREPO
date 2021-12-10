@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP003             Date 16Sep10              */
+/*       Last Amend No. MD058089           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP003             Date 16Sep10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP003 - Keep copies in QTEMP to improve re-runnability.    */
 /*       CSM008 - Error handling simplified.                         */
@@ -30,21 +32,21 @@
 /*********************************************************************/
 /**********  PGM        PARM(&PTFUPG)                                                  */ /*CUP003*/
              PGM                                                                          /*CUP003*/
- 
+
 /**********  DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                               */ /*CUP003*/
- 
+
              DCL        VAR(&GENPGM)    TYPE(*CHAR) LEN(10)  VALUE('SMC000012')
              DCL        VAR(&REPORTMSG) TYPE(*CHAR) LEN(100)
- 
+
              DCLF       FILE(SMACFNPD)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2006')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**********  DLTF       FILE(&PTFUPG/SMFLDNEW)                                         */ /*CUP003*/
              DLTF       FILE(QTEMP/SMFLDNEW)                                              /*CUP003*/
              MONMSG     MSGID(CPF0000)
@@ -52,12 +54,12 @@
              MONMSG     MSGID(CPF0000)                                                    /*CUP003*/
              CRTDUPOBJ  OBJ(UPFFDSTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(SMFLDNEW)                                   /*CUP003*/
- 
+
 /* Produce DSPFFD for each file to be converted. */
  READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXTRACT))
- 
+
 /**********  DSPFFD     FILE(&FILE) OUTPUT(*OUTFILE) +                                 */ /*CUP003*/
 /**********               OUTFILE(&PTFUPG/SMFLDNEW) OUTMBR(*FIRST *ADD)                */ /*CUP003*/
              DSPFFD     FILE(&FILE) OUTPUT(*OUTFILE) +
@@ -71,9 +73,9 @@
              CPYF       FROMFILE(QTEMP/SMC000012F) +
                           TOFILE(QTEMP/SMFLDNEW) MBROPT(*ADD) +
                           FMTOPT(*MAP *DROP)                                              /*CUP003*/
- 
+
              GOTO       CMDLBL(READNEXT)
- 
+
 /* Update the starting position of selected fields. */
  EXTRACT:
 /**********  OPNQRYF    FILE((SMACFFPD) (&PTFUPG/SMFLDNEW)) +                          */ /*CUP003*/
@@ -83,20 +85,30 @@
 /**********               FILE) (AXSHRD SHRD) (AXFLDN FIELD) +                         */ /*CUP003*/
 /**********               (AXLENG LENGTH) (AXTEXT TEXT) (AXNDIG +                      */ /*CUP003*/
 /**********               WHFLDD) (AXSPNW WHFOBO))                                     */ /*CUP003*/
-             OPNQRYF    FILE((SMACFFPD) (QTEMP/SMFLDNEW)) +
+/**********  OPNQRYF    FILE((SMACFFPD) (QTEMP/SMFLDNEW)) +
                           FORMAT(SMACFXPD) KEYFLD((AXFILE) +
                           (AXFLDN)) UNIQUEKEY(*ALL) JFLD((FILE +
                           WHFILE) (FIELD WHFLDI)) MAPFLD((AXFILE +
                           FILE) (AXSHRD SHRD) (AXFLDN FIELD) +
                           (AXLENG LENGTH) (AXTEXT TEXT) (AXNDIG +
-                          WHFLDD) (AXSPNW WHFOBO))                                        /*CUP003*/
- 
-             CPYFRMQRYF FROMOPNID(SMACFFPD) TOFILE(SMACFXPD) +
-                          MBROPT(*REPLACE)
-             CLOF       OPNID(SMACFFPD)
- 
+                          WHFLDD) (AXSPNW WHFOBO)) */                           /*CUP003**MD058089*/
+             OPNQRYF    FILE((SMACFJW0) (QTEMP/SMFLDNEW)) +
+                          FORMAT(SMACFXPD) KEYFLD((AXFILE) +
+                          (AXFLDN)) UNIQUEKEY(*ALL) JFLD((FILE +
+                          WHFILE) (FIELD WHFLDI)) MAPFLD((AXFILE +
+                          FILE) (AXSHRD SHRD) (AXFLDN FIELD) +
+                          (AXLENG LENGTH) (AXTEXT TEXT) (AXNDIG +
+                          WHFLDD) (AXSPNW WHFOBO))                                      /*MD058089*/
+
+/**********  CPYFRMQRYF FROMOPNID(SMACFFPD) TOFILE(SMACFXPD) +
+                          MBROPT(*REPLACE) */                                           /*MD058089*/
+             CPYFRMQRYF FROMOPNID(SMACFJW0) TOFILE(SMACFXPD) +
+                          MBROPT(*REPLACE)                                              /*MD058089*/
+/**********  CLOF       OPNID(SMACFFPD) */                                              /*MD058089*/
+             CLOF       OPNID(SMACFJW0)                                                 /*MD058089*/
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
 END:

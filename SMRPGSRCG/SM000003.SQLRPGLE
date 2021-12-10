@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD057599           Date 21Jan21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058089           Date 01Sep21               *
+      *  Prev Amend No. MD057599           Date 21Jan21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1085447          Date 05Feb13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  MD057599 - Deliverable Data Split for Bridge and Util files  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1085447 - Set status field on SMLNRFPD to blank            *
@@ -34,11 +36,12 @@
       * ¦ =======                              ¦
       * +--------------------------------------+
       *
-     FSMCNUMPD  UF   E             DISK
+     F*SMCNUMPD* UF   E             DISK                                                    MD058089
      F*SMLNRFPD  UF   E             DISK                                          AR1085447 MD057599
       *
      D Recursive       S              1    INZ('N')
      D Layer           S              7                                                     MD057599
+     D SMCNUM        E DS                  EXTNAME(SMCNUJW0)                                MD058089
       * +--- Start of Main processing -----------------------------------+
       * ¦                                                                ¦
       * +----------------------------------------------------------------+
@@ -50,16 +53,21 @@
      C                   eval      Layer = Mode                                             MD057599
                                                                                             MD057599
      C                   IF        Optn = '*PREAC'
-     C     1             SETLL     SMCNUMPD
-     C                   READ      SMCNUMPD
-     C                   DOU       %EOF
-     C                   IF        Mode = CNLAYR or
-     C                             Mode = '*ALL   '
-     C                   EVAL      CNUPDF = *blank
-     C                   ENDIF
-      *
-     C                   READ      SMCNUMPD
-     C                   ENDDO
+     C*****1****         SETLL     SMCNUMPD                                                 MD058089
+     C**********         READ      SMCNUMPD                                                 MD058089
+                                                                                            MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ Update SMCNUXTD set CNUPDF = ' '                                                    MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
+     C**********         DOU       %EOF                                                     MD058089
+     C**********         IF        Mode = CNLAYR or                                         MD058089
+     C**********                   Mode = '*ALL   '                                         MD058089
+     C**********         EVAL      CNUPDF = *blank                                          MD058089
+     C**********         ENDIF                                                              MD058089
+      **********                                                                            MD058089
+     C**********         READ      SMCNUMPD                                                 MD058089
+     C**********         ENDDO
      C                   ENDIF                                                             AR1085447
       *
      C                   IF        Optn = '*PREAL'                                         AR1085447

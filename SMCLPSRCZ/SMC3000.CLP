@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054346           Date 18Jul21              */
-/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*       Last Amend No. MD058089           Date 01Sep21              */
+/*       Prev Amend No. MD054346           Date 18Jul21              */
+/*                      MD054605           Date 17Oct19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR936709           Date 19Mar12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD054346 - Switchable Features Password Encryption          */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
@@ -118,8 +120,13 @@ VALIDATE:                                                                       
                                                                                         /*AR936709*/
 /* Override message file and driving file members. */
              OVRMSGF    MSGF(CBUSRMSG) TOMSGF(GBCBUSRMSG)
-             OVRDBF     FILE(SMSARDPD) TOFILE(SMSARDPD) MBR(&MBR) +
-                          OVRSCOPE(*JOB)
+/**********  OVRDBF     FILE(SMSARDPD) TOFILE(SMSARDPD) MBR(&MBR) +
+                          OVRSCOPE(*JOB) */                                             /*MD058089*/
+             CLRPFM     FILE(SMSARDPD)                                                  /*MD058089*/
+             CPYF       FROMFILE(SMMSRJW0) TOFILE(SMSARDPD) +
+                          FROMMBR(*FIRST) MBROPT(*REPLACE) +
+                          INCREL((*IF SAMBR *EQ &MBR)) FMTOPT(*MAP +
+                          *DROP)                                                        /*MD058089*/
 /**********  OVRDBF     FILE(SMPASSPD) TOFILE(SMPASSPD) MBR(&MBR) +
                           OVRSCOPE(*JOB) */                                             /*MD054346*/
 

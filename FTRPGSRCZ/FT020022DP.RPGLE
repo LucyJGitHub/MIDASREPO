@@ -67,8 +67,8 @@
      D PMTAG2          S              5A
      D PMSGRF          S              8S 0
      D PREF            S             15A
-     D PCANC           S              1A
      D PEXIT           S              1A
+     D PCANC           S              1A
      D WrkUETR         S             36A
      D WrkF20          S             20A
      D WrkLen          S              3S 0
@@ -308,6 +308,7 @@
      C                   PARM                    PMSGRF
      C                   PARM                    PREF
      C                   PARM                    PEXIT
+     C                   PARM                    PCANC
 
       ** Define Key Lists
 

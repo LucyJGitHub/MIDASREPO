@@ -9243,6 +9243,7 @@
      C                   MOVE      UDNSI         WUDNSI            1                          CIR020
      C*********          BITON     '02'          UDNSI                               CIR020 MD059330
      C                   BITON     '0'           UDNSI                                      MD059330
+     C                   MOVE      'N'           WUpdUIACD                                  MD059351
       ** Override effective int rate with backward looking rate                               CIR020
      C     DMBRK2        KLIST                                                                CIR020
      C                   KFLD                    DLNO                                         CIR020
@@ -9253,7 +9254,7 @@
      C                   Z-ADD     RTSPIR        UEINR                                        CIR020
      C                   Z-ADD     RTSPIR        WWUBRT                                       CIR020
      C                   Z-ADD     RTSPIR        UBRTE                                        CIR020
-     C                   MOVE      'N'           WUpdUIACD                                  MD059253
+     C**********         MOVE      'N'           WUpdUIACD                         MD059253 MD059351
      C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     USPIN         IFEQ      'A'                                                        CIR020
@@ -9300,6 +9301,7 @@
      C                   MOVE      TDNSI         WTDNSI            1                          CIR020
      C**********         BITON     '02'          TDNSI                               CIR020 MD059330
      C                   BITON     '0'           TDNSI                                      MD059330
+     C                   MOVE      'N'           WUpdTIACD                                  MD059351
       ** Override effective int rate with backward looking rate                               CIR020
      C                   Z-ADD     1             WDASN                                        CIR020
      C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
@@ -9307,7 +9309,7 @@
      C                   Z-ADD     RTSPIR        TEINR                                        CIR020
      C                   Z-ADD     RTSPIR        WWTBRT                                       CIR020
      C                   Z-ADD     RTSPIR        TBRTE                                        CIR020
-     C                   MOVE      'N'           WUpdTIACD                                  MD059253
+     C**********         MOVE      'N'           WUpdTIACD                         MD059253 MD059351
      C                   ENDIF                                                                CIR020
       ** Apply spread rate if effective interest rate is zero                                 CIR020
      C     TSPIN         IFEQ      'A'                                                        CIR020

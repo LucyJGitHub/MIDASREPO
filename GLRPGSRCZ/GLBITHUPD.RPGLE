@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057429           Date 17Jun21               *
-      *  Prev Amend No. 254657             Date 01Jun20               *
+      *  Last Amend No. CGL118             Date 02Nov21               *
+      *  Prev Amend No. MD057429           Date 17Jun21               *
+      *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057237           Date 04Dec20               *
       *                 MD054702           Date 07Sep20               *
@@ -89,6 +90,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD057429 - Check for and delete any items in repair if the   *
       *             batch header is being deleted                     *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
@@ -898,7 +900,12 @@
       *                                                                                      BUG3085
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085
+      ** Use user field from APHEADPD (APMIDUSR) if not blank.                                CGL118
       *                                                                                      BUG3085
+     C     CGL118        IFEQ      'Y'                                                        CGL118
+     C     B1USRA        ANDNE     *BLANKS                                                    CGL118
+     C                   MOVEL     B1USRA        BRUSRA                                       CGL118
+     C                   ELSE                                                                 CGL118
      C     CGL008        IFEQ      'Y'                                                       BUG3085
      C     JAVAUSER      IFEQ      'Y'                                                       BUG3085
      C                   MOVE      USRID         BRUSRA                                      BUG3085
@@ -906,6 +913,7 @@
      C                   MOVE      PSUser        BRUSRA                                      BUG3085
      C                   ENDIF                                                               BUG3085
      C                   ENDIF                                                               BUG3085
+     C                   ENDIF                                                                CGL118
                                                                                               CAP086
       ** Automatic Authorisation flag                                                         CAP086
                                                                                               CAP086
@@ -1062,7 +1070,13 @@
       *
       ** If Security on Journal Entry is *ON, set Last Insert
       ** User field to system user.  Use correct user field if java user
+      ** Use user field from APHEADPD (APMIDUSR) if not blank.                                CGL118
       *
+     C     CGL118        IFEQ      'Y'                                                        CGL118
+     C     B1USRI        ANDNE     *BLANKS                                                    CGL118
+     C                   MOVEL     B1USRI        BRUSRI                                       CGL118
+     C                   MOVEL     B1USRA        BRUSRA                                       CGL118
+     C                   ELSE                                                                 CGL118
      C     CGL008        IFEQ      'Y'
      C/COPY WNCPYSRC,GLBITHDC01                                                               GOC001
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
@@ -1071,6 +1085,7 @@
      C                   MOVE      PSUser        BRUSRI
      C                   ENDIF                                                                CAP084
      C                   ENDIF
+     C                   ENDIF                                                                CGL118
       *                                                                         186206
       ** Write to Today's batch numbers used                                    186206
       *                                                                         186206
@@ -1585,6 +1600,19 @@
      C                   MOVEL     'Y'           CGL016                                    AR792734A
      C                   ENDIF                                                             AR792734A
       *                                                                                    AR792734A
+      ** Access SAR details for CGL118                                                        CGL118
+      *                                                                                       CGL118
+     C                   MOVEL     'N'           CGL118            1                          CGL118
+     C                   CALLB     'AOSARDR0'                                                 CGL118
+     C                   PARM      *BLANKS       @RTCD                                        CGL118
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL118
+     C                   PARM      'CGL118'      @SARD                                        CGL118
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL118
+      *                                                                                       CGL118
+     C     @RTCD         IFEQ      *BLANK                                                     CGL118
+     C                   MOVEL     'Y'           CGL118                                       CGL118
+     C                   ENDIF                                                                CGL118
+      *                                                                                       CGL118
       ** Access SAR details file to see if CER030 is installed.                             BUG26246
       *                                                                                     BUG26246
      C                   CALLB     'AOSARDR0'                                               BUG26246

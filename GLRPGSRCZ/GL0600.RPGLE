@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055785           Date 20May20               *
+      *  Last Amend No. CGL077             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
@@ -193,6 +194,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL077 - Account opening date on Batch Posting.              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
@@ -1780,6 +1782,14 @@
                                                                                             MD055784
      C/COPY WNCPYSRC,GL0600CP17
 
+     C                   IF        CGL077 = 'Y' and CGL148 = 'Y'                              CGL077
+                                                                                              CGL077
+     C                   IF        VALD <= PSTD                                               CGL077
+     C                   EVAL      DACO = VALD                                                CGL077
+     C                   EVAL      LSTD = VALD                                                CGL077
+     C                   ENDIF                                                                CGL077
+     C                   ENDIF                                                                CGL077
+     C                                                                                        CGL077
      C                   Z-ADD     BKAPDT        NSTD
 
       ** Calculate next statement date if daily accruals
@@ -2889,6 +2899,34 @@
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
+      *                                                                                       CGL077
+      *** Call to the Switchable features file to check if CGL077                             CGL077
+      *** is switched on.                                                                     CGL077
+      *                                                                                       CGL077
+     C                   CALL      'AOSARDR0'                                                 CGL077
+     C                   PARM      *BLANKS       @RTCD             7                          CGL077
+     C                   PARM      '*VERIFY'     @OPTN             7                          CGL077
+     C                   PARM      'CGL077'      @SARD             6                          CGL077
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL077
+      *                                                                                       CGL077
+     C                   MOVE      'N'           CGL077            1                          CGL077
+     C     @RTCD         IFEQ      *BLANK                                                     CGL077
+     C                   MOVE      'Y'           CGL077                                       CGL077
+     C                   ENDIF                                                                CGL077
+      *                                                                                       CGL077
+      *** Call to the Switchable features file to check if CGL148                             CGL077
+      *** (Journal Entries for non-existent Accounts) is switched on.                         CGL077
+      *                                                                                       CGL077
+     C                   CALL      'AOSARDR0'                                                 CGL077
+     C                   PARM      *BLANKS       @RTCD             7                          CGL077
+     C                   PARM      '*VERIFY'     @OPTN             7                          CGL077
+     C                   PARM      'CGL148'      @SARD             6                          CGL077
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL077
+      *                                                                                       CGL077
+     C                   MOVE      'N'           CGL148            1                          CGL077
+     C     @RTCD         IFEQ      *BLANK                                                     CGL077
+     C                   MOVE      'Y'           CGL148                                       CGL077
+     C                   ENDIF                                                                CGL077
 
      C/COPY WNCPYSRC,GL0600CCP3
 

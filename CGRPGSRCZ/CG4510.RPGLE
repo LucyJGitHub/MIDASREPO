@@ -294,7 +294,6 @@
      D********************##GRP   1  52 10   ##RDEA 22                                        086780
      D********************##GRP   1  53 10   ##RDEA 22                                  086780086918
      D******************* ##GRP   1  54 10   ##RDEA 22                                  086918089776
-     D* OMITSTART                                                                             CGL193
      D/COPY WNCPYSRC,CG4510E001
      D***********         ##GRP   1  59 10   ##RDEA 22                                  089776CEU013
      D***********         ##GRP   1  66 10   ##RDEA 22                                  CEU013CEU014
@@ -307,7 +306,6 @@
      D*##RDEA***       S             22    DIM(106) ALT(##GRP)                         CRE073 CGL193
      D ##GRP           S             10    DIM(114) CTDATA PERRCD(1)                          CGL193
      D ##RDEA          S             22    DIM(114) ALT(##GRP)                                CGL193
-     D* OMITEND                                                                               CGL193
      D/COPY WNCPYSRC,CG4510E002
      D*
      D**  Array of Currencies accessed by program
@@ -419,7 +417,7 @@
      D  LCX          E                     EXTFLD(LCD)                                        CFT004
       *                                                                                       CGL193
      D SDRETR        E DS                  EXTNAME(SDRETRPD)                                  CGL193
-     D** Midas SD Retail Transaction Types via Access program                                 CGL193
+      ** Midas SD Retail Transaction Types via Access program                                 CGL193
      D/COPY WNCPYSRC,CG4510I003
       *
      D DSFDY         E DS                  EXTNAME(DSFDY)

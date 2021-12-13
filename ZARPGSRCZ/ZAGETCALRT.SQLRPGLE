@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058182           Date 25May21               *
+      *  Last Amend No. MD059104           Date 02Dec21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
       *                 MD058040           Date 11May21               *
       *                 MD057871           Date 30Apr21               *
@@ -21,6 +22,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059104 - SSL Adaptability                                  *
       *  CDL102 - LIBOR Deregulation - Dealing.                       *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
@@ -230,6 +232,7 @@
 
      D AMP             c                   const('&')
      D HTTP_HEAD       c                   const('http://')
+     D HTTPS_HEAD      c                   const('https://')                                MD059104
      D INSERT          c                   const(0)
      D LELIBEPD        c                   const(1)
      D NO_ERROR        c                   const(0)
@@ -498,6 +501,46 @@
                       exsr errorHandler;
                    endif;
 
+                   AuditLogDS.SJMDAY = BJRDNB;                                            //MD059104
+                   pOP01 = 'ARRAdapterURLSSL';                                            //MD059104
+                   pOP02 = 'ARRCalculatorTrace';                                          //MD059104
+                                                                                          //MD059104
+                   CallP ACCESS_SVAL(                                                     //MD059104
+                                       pRetCode                                           //MD059104
+                                     : pOP01                                              //MD059104
+                                     : pVL01                                              //MD059104
+                                     : pOP02                                              //MD059104
+                                     : pVL02                                              //MD059104
+                                     : pOP03                                              //MD059104
+                                     : pVL03                                              //MD059104
+                                     : pOP04                                              //MD059104
+                                     : pVL04                                              //MD059104
+                                     : pOP05                                              //MD059104
+                                     : pVL05                                              //MD059104
+                                     : pOP06                                              //MD059104
+                                     : pVL06                                              //MD059104
+                                     : pOP07                                              //MD059104
+                                     : pVL07                                              //MD059104
+                                     : pOP08                                              //MD059104
+                                     : pVL08                                              //MD059104
+                                     : pOP09                                              //MD059104
+                                     : pVL09                                              //MD059104
+                                     : pOP10                                              //MD059104
+                                     : pVL10                                              //MD059104
+                                       );                                                 //MD059104
+                                                                                          //MD059104
+                   If pRetCode <> *Blanks;                                                //MD059104
+                        AuditLogDS.SJTMST = %timestamp();                                 //MD059104
+                        AuditLogDS.SJEXMS = 'Error in access SDSVALPD ' +                 //MD059104
+                          %trim(Pvl01);                                                   //MD059104
+                        AuditLogDS.SJCODE = '002';                                        //MD059104
+                        isError = True;                                                   //MD059104
+                        exsr errorHandler;                                                //MD059104
+                   Endif;                                                                 //MD059104
+                                                                                          //MD059104
+                   If pVL01 <> *Blanks;                                                   //MD059104
+                         CalcMetURL     = HTTPS_HEAD  + %trim(pVL01);                     //MD059104
+                   Else;                                                                  //MD059104
                    AuditLogDS.SJMDAY = BJRDNB;
                    pOP01 = 'ARRAdapterURL';
                    pOP02 = 'ARRCalculatorTrace';
@@ -545,7 +588,7 @@
                         isError = True;
                         exsr errorHandler;
                    Endif;
-
+                   Endif;                                                                 //MD059104
                    writeLogs = pVL02;
 
                    select;

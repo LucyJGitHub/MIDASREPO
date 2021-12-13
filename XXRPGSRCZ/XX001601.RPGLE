@@ -15,11 +15,14 @@
       *                                                               *
       *  (c) Finastra  International Limited 2018                     *
       *                                                               *
-      *  Last Amend No. MD057256           Date 24Feb21               *
-      *  Prev Amend No. FVT104  *CREATE    Date 11Dec18               *
+      *  Last Amend No. MD059230           Date 02Dec21               *
+      *  Prev Amend No. MD057256           Date 24Feb21               *
+      *                 FVT104  *CREATE    Date 11Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059230 - Add error details in GL001601P1 report.           *
+      *             Pattern MD-57760 fix applied to GL001601.         *
       *  MD057256 - Spool file number not written to FCSFNOPD.        *
       *  FVT104 - 4-Eyes Principle for Journal Upload Tool.           *
       *                                                               *
@@ -163,7 +166,8 @@
       ** Array for the error
       *
      D ErrFlg          S              1A   DIM(3)
-     D Err_Dtl         S             25A   DIM(4) CTDATA PERRCD(1)
+     D*Err_Dtl**       S             25A   DIM(4) CTDATA PERRCD(1)                          MD059230
+     D Err_Dtl         S             37A   DIM(5) CTDATA PERRCD(1)                          MD059230
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -374,6 +378,7 @@
      C                   PARM                    WOBcno
      C                   PARM                    PSbcno
      C                   PARM                    PBatchParm
+     C                   PARM                    ItemErr           1                        MD059230
       *
      C                   IF        %ERROR
      C                   EXSR      *PSSR
@@ -686,6 +691,9 @@
      C                   ENDIF
       *
      C                   EVAL      RBSTAT = Err_Dtl(WCnt)
+     C                   If        ItemErr ='Y' and WCnt = 3                                MD059230
+     C                   EVAL      RBSTAT = Err_Dtl(5)                                      MD059230
+     C                   Endif                                                              MD059230
      C                   EXSR      SRPrint
      C                   EVAL      WPrtCnt = 'Y'
      C                   EVAL      WCnt = WCnt + 1
@@ -930,3 +938,4 @@ Error in Branch
 Error in Dept Code
 Error in Batch
 Successful Transfer
+Error in Batch, check GL0150P1 report

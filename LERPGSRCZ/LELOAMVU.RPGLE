@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 25Jan18               *
-      *  Prev Amend No. MD057922           Date 04May21               *
+      *  Last Amend No. MD059304           Date 11Nov21               *
+      *  Prev Amend No. MD026384           Date 25Jan18               *
+      *                 MD057922           Date 04May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD024811           Date 24Jan20               *
@@ -104,6 +105,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
       *  MD026384 - Added generation by assignment processing.        *
       *           - Applied for MD049367.                             *
       *  MD057922 - SSI details are not defaulted on Loan Events.     *
@@ -223,6 +228,13 @@
      F                                     PREFIX(LO_)                                        240917
      F                                     IGNORE(CLOANHHF)                                   240917
      F                                     IGNORE(CLOANZ1F)                                   240917
+      *                                                                                     MD059304
+     FLELOMKL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     F                                     IGNORE(LOAMSDHF)                                 MD059304
+     F                                     RENAME(LOAMSDKF:LOAMSDLE)                        MD059304
+     F                                     IGNORE(LOAMSZ1F)                                 MD059304
+     F                                     PREFIX(LE_)                                      MD059304
+     FSDEXSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
 
       *****************************************************************
       ** +--------------------------------------+
@@ -1233,6 +1245,10 @@
      C                   EVAL      DDRSTM = '00'                                              CLE034
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
+     C                   IF        DDACTN = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
 
@@ -2340,5 +2356,58 @@
       *                                                                                    AR1095624
      C                   ENDSR                                                             AR1095624
       *****************************************************************
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     LELOMK        KLIST                                                              MD059304
+     C                   KFLD                    K_BRCA            3                        MD059304
+     C                   KFLD                    K_LNRF            6                        MD059304
+     C                   KFLD                    K_VDAT            5 0                      MD059304
+     C                   KFLD                    K_LASN            3 0                      MD059304
+                                                                                            MD059304
+     C                   MOVEL     V_LABRCA      K_BRCA                                     MD059304
+     C                   MOVEL     V_LALNRF      K_LNRF                                     MD059304
+     C                   Z-ADD     V_LAVDAT      K_VDAT                                     MD059304
+     C                   Z-ADD     V_LALASN      K_LASN                                     MD059304
+                                                                                            MD059304
+     C     LELOMK        CHAIN     LOAMSDLE                           51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        LE_SETP = 0 AND                                          MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C                   MOVEL     'LE'          BYTRTY                                     MD059304
+     C                   MOVEL     LO_CCY        BYCYCD                                     MD059304
+     C                   MOVEL     LO_CNUM       BYCUST                                     MD059304
+     C                   MOVEL     BlankBRCA     BYBRCA                                     MD059304
+     C                   MOVEL     BlankSTYP     BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     LO_CNUM       DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     LO_CNUM       DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
+      *****************************************************************                     MD059304
 **CTDATA CPY@
 (c) Finastra International Limited 2003

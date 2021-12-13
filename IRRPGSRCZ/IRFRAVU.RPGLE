@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD059304           Date 11Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSD095CC1          Date 13Sep16               *
@@ -83,6 +84,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -159,6 +164,11 @@
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
                                                                                               244254
      FSDEXSTL1  IF   E           K DISK                                                       244254
+      *                                                                                     MD059304
+     FDLFRASL0  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     F                                     RENAME(DEALSDGF:DEALSDIR)                        MD059304
+     F                                     PREFIX(IR_)                                      MD059304
+      *                                                                                     MD059304
 
       *****************************************************************
       ** +--------------------------------------+
@@ -1399,6 +1409,10 @@ RGC  C                   PARM                    InSwift2013                    
      C                   EVAL      PayDat = BJRDNB
      C                   EVAL      RecDat = BJRDNB
 
+     C                   IF        SACCD = 'A'                                              MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
 
@@ -2091,6 +2105,53 @@ RGC  C                   PARM                    InSwift2013                    
       *****************************************************************
       /EJECT
       *****************************************************************
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     IRFRAK        KLIST                                                              MD059304
+     C                   KFLD                    K_DLNO            6 0                      MD059304
+                                                                                            MD059304
+     C                   MOVE      SDLNO         K_DLNO                                     MD059304
+                                                                                            MD059304
+     C     IRFRAK        CHAIN     DLFRASL0                           51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        IR_PSETM = 0 AND                                         MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C                   MOVEL     SDTYP         BYTRTY                                     MD059304
+     C                   MOVEL     SUCUCY        BYCYCD                                     MD059304
+     C                   MOVEL     SCNUM         BYCUST                                     MD059304
+     C                   MOVEL     SBRCA         BYBRCA                                     MD059304
+     C                   MOVEL     SDLST         BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     SCNUM         DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     SCNUM         DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
+      *****************************************************************                     MD059304
       * The following /COPY contains the standard program status
       * subroutine, including a bound call to the DBERRCTL module.
       *****************************************************************

@@ -10,12 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD038076           Date 27Jul16              */
+/*       Last Amend No. MD059147           Date 10Dec21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD038076           Date 27Jul16              */
 /*                      CGL127AY *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059147 - GLC4450 task split jobs timeout                  */
+/*                - Open database GLACPHL5 if S01520 is ON.          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD038076 - The first GLC4450 running builds access path     */
 /*                  for GLACPHPD causing CPF4126 for all other jobs. */
@@ -24,7 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAME &CSEQ &COPY_RECS)
- 
+
              DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
                           VALUE(GLACHDPD)
              DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
@@ -41,134 +44,153 @@
              DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
- 
+             DCL        VAR(&S01520) TYPE(*CHAR) LEN(1)                                 /*MD059147*/
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)                                 /*MD059147*/
+             DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)                                 /*MD059147*/
+             DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)                                 /*MD059147*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2012')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ */
- 
+
              SNDPGMMSG  MSG('GLC4450T2 - Midas GL Account Postings +
                           History Purge - Task Split Server') +
                           TOMSGQ(MRUNQ)
- 
+/*   Check if SAR S01520 is installed */                                                /*MD059147*/
+/**/                                                                                    /*MD059147*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD059147*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD059147*/
+             CHGVAR     VAR(&SAR)  VALUE('S01520')                                      /*MD059147*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                            /*MD059147*/
+             IF         COND(&RTCD *EQ '       ') THEN(+
+                CHGVAR     VAR(&S01520) VALUE('Y'))                                     /*MD059147*/
+             ELSE       CMD(+
+                CHGVAR     VAR(&S01520) VALUE('N'))                                     /*MD059147*/
+
 /* Start commitment control */
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
- 
+
 /* Read COB components file to check the restart status */
- 
+
              CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)
- 
+
 /* Check if any problems with COB components file */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* Open GLACPHPD file */                                                                /*MD038076*/
+             IF         COND(&S01520 *EQ 'Y') THEN(DO)                                  /*MD059147*/
+             OPNDBF     FILE(GLACPHL5) OPTION(*ALL)                                     /*MD059147*/
+             ENDDO                                                                      /*MD059147*/
+             ELSE       DO                                                              /*MD059147*/
              OPNDBF     FILE(GLACPHL) OPTION(*ALL)                                      /*MD038076*/
                                                                                         /*MD038076*/
+             ENDDO                                                                      /*MD059147*/
 /* If restart status = F, only resend END message to sub-Task */
- 
+
              IF         COND(&STAT = 'F') THEN(DO)
              GOTO       CMDLBL(SNDEND)
              ENDDO
- 
+
 /* Set restart status to 'Y' */
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
- 
+
 /* Wait for data queue entry */
- 
+
  RECEIVE:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)
- 
+
 /* Extract member name */
- 
+
              CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
- 
+
 /* Clear the driving file */
              CLRPFM     FILE(&DRIVER) MBR(&MEMBER)
- 
+
 /* Override driving file */
- 
+
              OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)
- 
+
 /* Call the program to copy records to specified member */
              CALL       PGM(GL4450T2) PARM(&COPY_RECS &RTN_CODE)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* Set up data queue and message data */
- 
+
              CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
              CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')
- 
+
 /* Send message data to data queue ONLY If data is written */
 /* to driver file */
- 
+
              IF         COND(&RTN_CODE *NE 'NRF') THEN(DO)
              CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA)
              ENDDO
- 
+
 /* If return code = EOF, set restart status to 'N' and terminate */
- 
+
              IF         COND(&RTN_CODE = 'EOF' *OR &RTN_CODE = +
                           'NRF') THEN(DO)
- 
+
              CHGVAR     VAR(&STAT) VALUE('F')
              CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
- 
+
              GOTO       CMDLBL(SNDEND)
- 
+
              ENDDO
- 
+
 /* If return code <> EOF, wait for another data queue entry */
- 
+
              GOTO       CMDLBL(RECEIVE)
- 
+
  SNDEND:
 /* Retrieve first member description */
- 
+
              RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
- 
+
 /* Set up data queue and message data */
- 
+
              CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
              CHGVAR     VAR(&MSGDATA) VALUE('END')
- 
+
 /* Send message data to data queue */
- 
+
  LOOP:       CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA)
- 
+
 /* Retrieve next member description */
- 
+
              RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
                           RTNMBR(&SNDDTAQ)
              MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
- 
+
 /* Loop for all members in driving file */
- 
+
              CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
              GOTO       CMDLBL(LOOP)
- 
+
 /* Wait for data queue entry */
- 
+
  RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)
- 
+
 /* If message = FINISH, terminate the program */
- 
+
              IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
@@ -183,14 +205,14 @@
              MONMSG     MSGID(CPF9801)
              GOTO       CMDLBL(RCVDTAQ)
              ENDDO
- 
+
  ABNOR:      SNDPGMMSG  MSG('Program GLC4450T2 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
  END:
              ENDCMTCTL
              ENDPGM

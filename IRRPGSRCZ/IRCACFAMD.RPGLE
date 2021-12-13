@@ -554,7 +554,7 @@
      C**********         IF        #0RTSP <> CrRTSP AND                                       BG1829
      C**********                   (WSide = 'U' AND UINFD = *ZERO OR                          BG1829
      C**********                    WSide = 'T' AND TINFD = *ZERO)                            BG1829
-     C                   IF        CIR020 = 'N'                                             MD059243
+     C                   IF        CIR020 = 'N'                                            MD059243A
      C                   IF        WkFld1 <> WkFld2 AND                                       BG1829
      C                             (WSide = 'U' AND UINFD = *ZERO OR                          BG1829
      C                              WSide = 'T' AND TINFD = *ZERO)                            BG1829
@@ -563,13 +563,13 @@
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0374'
      C                   EVAL      OKRTSP = 'N'
      C                   ENDIF
-     C                   ENDIF                                                              MD059243
+     C                   ENDIF                                                             MD059243A
 
       ** Spread Indicator. Similarly, this field is only amendable if
       ** the Interest Fix Date > zero.
-      ** and if the switchhable feature CIR020 is switch on                                 MD059243
+      ** and if the switchhable feature CIR020 is switch on                                MD059243A
 
-     C                   IF        CIR020 = 'N'                                             MD059243
+     C                   IF        CIR020 = 'N'                                            MD059243A
      C                   IF        #0SPIN <> CrSPIN AND
      C                             (WSide = 'U' AND UINFD = *ZERO OR
      C                              WSide = 'T' AND TINFD = *ZERO)
@@ -578,7 +578,7 @@
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0598'
      C                   EVAL      OKSPIN = 'N'
      C                   ENDIF
-     C                   ENDIF                                                              MD059243
+     C                   ENDIF                                                             MD059243A
 
      C                   TESTB     '3'           TDSTI                    01
 

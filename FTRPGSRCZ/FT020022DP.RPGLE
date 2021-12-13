@@ -125,6 +125,8 @@
 
      C                   IF        *INKC = *ON
      C                   EVAL      PEXIT = 'Y'
+     C                   ELSEIF    *INKL = *ON
+     C                   EVAL      PCANC = 'Y'
      C                   ENDIF
      C                   SETON                                        LR
      C                   RETURN
@@ -399,8 +401,10 @@
      C     SrEName       BEGSR
 
      C     WrkENAM       CHAIN     MEDESCL1
-     C                   IF        %FOUND(MEDESCL1)
+     C                   IF        %FOUND(MEDESCL1) AND DEDESC <> *BLANKS
      C                   EVAL      S0ELEM = DEDESC
+     C                   ELSE
+     C                   EVAL      S0ELEM = WrkENAM
      C                   ENDIF
 
      C                   ENDSR

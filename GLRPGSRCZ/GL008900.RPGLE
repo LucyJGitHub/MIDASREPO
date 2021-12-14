@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD058711           Date 16Sep21               *
-      *  Prev Amend No. MD050216           Date 15Nov18               *
+      *  Last Amend No. MD059370           Date 13Dec21               *
+      *  Prev Amend No. MD058711           Date 16Sep21               *
+      *                 MD050216           Date 15Nov18               *
       *                 MD032070           Date 20Mar15               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
@@ -31,6 +32,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059370 - Component GLC008900 fails in COB with blank DBASE *
+      *             error when CSC054 is OFF and PEASystemPrefix is   *
+      *             blank. Checking of system value PEASystemPrefix   *
+      *             should be dependent on CSC054 and dump generated  *
+      *             will have the information related to DBASE error. *
       *  MD058711 - COB Failure GLC008900.                            *
       *           - Skipped the processing of MANPOZZ when no record  *
       *             exists.                                           *
@@ -172,6 +178,9 @@
       ** Branch Codes Data Structure
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
 
+      ** SAR File Details Accessed via Access Program AOSARDR0                              MD059370
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD059370
+                                                                                            MD059370
       ** Trading Details Data Structure
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D QQACC2        E                     EXTFLD(QQACCD)
@@ -285,10 +294,20 @@
      C                   PARM                    PCurSet10                                  MD050216
                                                                                             MD050216
      C                   IF        PrtCd   = *BLANKS                                        MD050216
-     C                             AND PCurSet01 <> *BLANKS                                 MD050216
+     C**********                   AND PCurSet01 <> *BLANKS                        MD050216 MD059370
      C                   EVAL      WPEA    = PCurSet01                                      MD050216
      C                   EVAL      WSYS    = PCurSet02                                      MD050216
-     C                   ELSE                                                               MD050216
+     C**********         ELSE                                                      MD050216 MD059370
+     C                   ENDIF                                                              MD059073
+                                                                                            MD059073
+     C                   IF        PrtCd <> *BLANKS OR                                      MD059370
+     C                             CSC054 = 'Y' AND                                         MD059370
+     C                             PCurSet01 = *BLANKS                                      MD059370
+     C     *LOCK         IN        LDA                                                      MD059370
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD059370
+     C                   EVAL      DBKey =  PEASystem                                       MD059370
+     C                   EVAL      DBase =  008                                             MD059370
+     C                   OUT       LDA                                                      MD059370
      C                   EXSR      *PSSR                                                    MD050216
      C                   ENDIF                                                              MD050216
                                                                                             MD050216
@@ -965,6 +984,18 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
+      ** Check if CAR CSC054 is switched *ON.                                               MD059370
+                                                                                            MD059370
+     C                   MOVE      'N'           CSC054            1                        MD059370
+     C                   CALL      'AOSARDR0'                                               MD059370
+     C                   PARM      *BLANKS       @RTCD             7                        MD059370
+     C                   PARM      '*VERIFY'     @OPTN             7                        MD059370
+     C                   PARM      'CSC054 '     @SARD             6                        MD059370
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059370
+     C     @RTCD         IFEQ      *BLANKS                                                  MD059370
+     C                   MOVE      'Y'           CSC054                                     MD059370
+     C                   ENDIF                                                              MD059370
+                                                                                            MD059370
       ** Build Income and Expense account codes
 
      C     *LOVAL        SETLL     SDACODL0

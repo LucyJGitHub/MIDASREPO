@@ -6,7 +6,7 @@
       *                                                               *
       *  Midas - Funds Transfer Module                                *
       *                                                               *
-      *  FTOPAY1ADP - MX Element Data Enquiry                         *
+      *  FT020022DP - MX Element Data Enquiry                         *
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *

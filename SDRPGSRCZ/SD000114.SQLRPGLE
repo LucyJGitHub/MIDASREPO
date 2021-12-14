@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058182           Date 25May21               *
-      *  Prev Amend No. MD058040A          Date 25May21               *
+      *  Last Amend No. MD059190           Date 11Dec21               *
+      *  Prev Amend No. MD059137           Date 11Dec21               *
+      *                 MD059128           Date 11Dec21               *
+      *                 MD058182           Date 25May21               *
+      *                 MD058040A          Date 25May21               *
       *                 MD058138           Date 18May21               *
       *                 MD058106           Date 18May21               *
       *                 MD058040           Date 11May21               *
@@ -28,6 +31,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059190 - Do a second call of ARR calculator for existing   *
+      *             backward looking rate loans and next interest due *
+      *             date is equal to rundate. Use ARR rollover details*
+      *             if valued on the the same date and authorised.    *
+      *           - Applied for MD059263                              *
+      *  MD059137 - Determine new interest period start and end date  *
+      *             of migrated loans with rollover date and interest *
+      *             due date equal to rundate.                        *
+      *           - Applied for MD059288                              *
+      *  MD059128 - Also select backward looking loan with future     *
+      *             rollover date.                                    *
+      *           - Applied for MD059197                              *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Pass a Control Date to   *
       *             ZAGETCALRT (used in writing records on SDHSDRTD). *
@@ -217,6 +232,11 @@
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
      D ControlDate     S              5A                                                    MD058182
+     D WrkMigrate      S              1A                                                    MD059137
+     D Wrk2ndCall      S              1A   INZ('N')                                         MD059190
+     D WrkEndDate      S              5P 0                                                  MD059190
+     D WrkBasDate      S              5P 0                                                  MD059190
+     D PMode           S              1A                                                    MD059190
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -368,6 +388,16 @@
      C                   EXSR      SRUpdFILE
 
      C                   ENDIF
+                                                                                            MD059190
+     C                   IF        Wrk2ndCall = 'Y'                                         MD059190
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059190
+     C                   EXSR      SRReadNEXT                                               MD059190
+     C                   ITER                                                               MD059190
+     C                   ENDIF                                                              MD059190
+     C                   EXSR      SRChk2ndCall                                             MD059190
+     C                   IF        Wrk2ndCall = 'Y'                                         MD059190
+     C                   ITER                                                               MD059190
+     C                   ENDIF                                                              MD059190
 
       ** Read next record
      C                   EXSR      SRReadNEXT
@@ -402,7 +432,8 @@
      C+ where RECI = 'D' and VDAT < :BJDNWD
      C+   and BLRT = 'Y' and CALM <> 'MANL'
      C+   and PTYP in ( 61, 62, 64, 66, 68, 69, 70, 71, 72 )
-     C+   and RLDT = 0
+     C****and RLDT = 0                                                                      MD059128
+     C+   and (RLDT = 0 or RLDT >= :BJDNWD)                                                 MD059128
      C+ union all                                                                             CLE172
      C+ select 'LE',   LNRF,   CCY,    VDAT,   MDAT,                                          CLE172
      C+        NIDT,   NRPD,   REPT,   ADDI,   ROBLRT,                                        CLE172
@@ -535,6 +566,27 @@
      C                   ENDIF
 
      C                   ENDIF
+      *                                                                                     MD059137
+      ** If start date is within loan value date then check                                 MD059137
+      ** further if new interest period is started on rollover date                         MD059137
+      ** i.e. loan is being migrated to backward looking on rundate                         MD059137
+      *                                                                                     MD059137
+     C                   EVAL      WrkMigrate = 'N'                                         MD059137
+     C                   IF        WrkDate >= TrVDAT                                        MD059137
+     C/exec SQL                                                                             MD059137
+     C+ select count(*) into :NoOfRecs                                                      MD059137
+     C+ from CLOANCL                                                                        MD059137
+     C+ where LNRF = :TrTRAN                                                                MD059137
+     C+   and (NIDT = :BJRDNB or (NRPD = :BJRDNB and REPT <> 2))                            MD059137
+     C+   and RLDT = :BJRDNB                                                                MD059137
+     C+   and BLRT = 'N'                                                                    MD059137
+     C+   and NBLRT = 'Y'                                                                   MD059137
+     C/end-exec                                                                             MD059137
+     C                   IF        NoOfRecs <> 0                                            MD059137
+     C                   EVAL      WrkMigrate = 'Y'                                         MD059137
+     C                   ENDIF                                                              MD059137
+     C                   ENDIF                                                              MD059137
+     C                   EVAL      NoOfRecs = 0                                             MD059137
 
       ** Determine Interest Period Start Date
      C                   EVAL      IntPerSDATE = 0
@@ -560,6 +612,14 @@
      C                   EVAL      WrkDATE = TrMDAT
 
      C                   ENDSL
+      *                                                                                     MD059137
+      ** Override Interest period Start Date and End date                                   MD059137
+      *                                                                                     MD059137
+     C                   IF        WrkMigrate = 'Y'                                         MD059137
+     C                             and WrkDATE <> TrMDAT                                    MD059137
+     C                             or Wrk2ndCall = 'Y'                                      MD059190
+     C                   EVAL      IntPerSDATE = WrkDATE                                    MD059137
+     C                   ENDIF                                                              MD059137
 
       ** Save the actual interest payment date to a work variable                           MD058106
      C                   EVAL      IntPayDate = WrkDATE                                     MD058106
@@ -583,6 +643,13 @@
      C                   EVAL      WZeroMDATFlag = 'Y'
      C                   EVAL      IntPerEDATE = BJDNWD - 1
      C                   ENDIF
+                                                                                            MD059137
+     C                   IF        WrkMigrate = 'Y'                                         MD059137
+     C                             or Wrk2ndCall = 'Y'                                      MD059190
+     C                   EXSR      SRDetEndDate                                             MD059190
+     C                   EVAL      IntPerEDATE = WrkEndDate                                 MD059190
+     C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059137
+     C                   ENDIF                                                              MD059137
 
      C                   ENDSR
       *****************************************************************
@@ -901,6 +968,58 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD059190
+      *                                                               *                     MD059190
+      * SRChk2ndCall - Check if loan needs a 2nd ARR calculator call  *                     MD059190
+      *                                                               *                     MD059190
+      *****************************************************************                     MD059190
+     C     SRChk2ndCall  BEGSR                                                              MD059190
+                                                                                            MD059190
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059190
+     C/exec SQL                                                                             MD059190
+     C+ select count(*) into :NoOfRecs                                                      MD059190
+     C+ from CLOANCL                                                                        MD059190
+     C+ where LNRF = :TrTRAN                                                                MD059190
+     C+   and (NIDT = :BJRDNB or (NRPD = :BJRDNB and REPT <> 2))                            MD059190
+     C+   and (RLDT = :BJRDNB or RLDT = 0)                                                  MD059190
+     C+   and BLRT = 'Y'                                                                    MD059190
+     C+   and NBLRT <> 'N'                                                                  MD059190
+     C/end-exec                                                                             MD059190
+     C                   IF        NoOfRecs <> 0                                            MD059190
+     C/exec SQL                                                                             MD059190
+     C+ select NCALM, NBADJ, NFLOR, NLBDY,                                                  MD059190
+     C+        NLODY, NOPSH, NRRDP, NDBAV                                                   MD059190
+     C+ into :TrCALM, :TrBADJ, :TrFLOR, :TrLBDY,                                            MD059190
+     C+      :TrLODY, :TrOPSH, :TrRRDP, :TrDBAV                                             MD059190
+     C+ from CLOANCL                                                                        MD059190
+     C+ where LNRF = :TrTRAN                                                                MD059190
+     C+   and NBLRT = 'Y'                                                                   MD059190
+     C+   and :TrTRAN not in (select * from LEWIPROLL)                                      MD059190
+     C/end-exec                                                                             MD059190
+     C                   EVAL      Wrk2ndCall = 'Y'                                         MD059190
+     C                   ENDIF                                                              MD059190
+     C                   EVAL      NoOfRecs = 0                                             MD059190
+     C                   EVAL      SQLCOD = 0                                               MD059190
+                                                                                            MD059190
+     C                   ENDSR                                                              MD059190
+      *****************************************************************                     MD059190
+      /EJECT                                                                                MD059190
+      *****************************************************************                     MD059190
+      *                                                               *                     MD059190
+      * SRDetEndDate - Calculate end date based on loan details       *                     MD059190
+      *                                                               *                     MD059190
+      *****************************************************************                     MD059190
+     C     SRDetEndDate  BEGSR                                                              MD059190
+                                                                                            MD059190
+     C                   CALL      'LE001113'                                               MD059190
+     C                   PARM      'L'           PMode                                      MD059190
+     C                   PARM                    TrTRAN                                     MD059190
+     C                   PARM      *ZEROS        WrkEndDate                                 MD059190
+     C                   PARM      *ZEROS        WrkBasDate                                 MD059190
+                                                                                            MD059190
+     C                   ENDSR                                                              MD059190
+      *****************************************************************                     MD059190
+      /EJECT                                                                                MD059190
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

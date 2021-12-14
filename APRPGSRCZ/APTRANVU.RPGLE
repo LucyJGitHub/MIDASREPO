@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058379           Date 01Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD058991           Date 06Oct21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 MD058379           Date 01Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
@@ -233,6 +235,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058991 - Backward looking rate error encountered           *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of refereNce rate field             *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -821,6 +825,7 @@
      D BufferEx7       S           9999                                                      BUG4646
      D BufferEx8       S           9999                                                      BUG4646
      D BufferEx9       S           9999                                                      BUG4646
+     D InCIR020        S            100                                                       CIR020
      D****** MsgArrOUT       S           2000                                                 BG1105
      D MsgArrOUT       S           9999                                                       BG1105
      D APIRetC         S              1
@@ -3275,6 +3280,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                          MD044553 MD056546
      C**********         ADD       26            Bfp                               MD044553 MD056546
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
+     C                   ADD       RPIFln        Bfp                                          CIR020
+     C                   ADD       1             Bfp                                          CIR020
+     C                   EVAL      InCIR020    = %SUBST(BufferTotal:Bfp:100)                  CIR020
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
 
@@ -3294,6 +3302,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                     BUG6671
      C                   PARM                    ExtData
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    InCIR020                                     CIR020
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -5207,6 +5216,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD05654
      C**********         ADD       26            Bfp                                MD044553 MD05654
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
+     C                   ADD       RPIFln        Bfp                                        MD058991
+     C                   ADD       1             Bfp                                          CIR020
+     C     100           SUBST     BUFFER:Bfp    InCIR020                                     CIR020
                                                                                              BUG6671
 
      C**********         ENDSL                                                               BUG4646
@@ -5228,6 +5240,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                     BUG6671
      C                   PARM                    ExtData                                     BUG6671
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    InCIR020                                     CIR020
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

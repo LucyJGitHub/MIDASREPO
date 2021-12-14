@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -133,6 +135,11 @@
 
      D CIRSFilFmt    E DS                  EXTNAME(DEALSDG)
      D CIRSXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                  CLE025
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Ours)                       CIR020
+     D CurrScnBlrt1    DS            50                                                       CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format (Theirs)                     CIR020
+     D CurrScnBlrt2    DS            50                                                       CIR020
+                                                                                              CIR020
 
      D CIRSScnFmt    E DS                  EXTNAME(IRCIRSPD)
 
@@ -252,6 +259,10 @@
      C                   PARM                    CIRSXFilFmt                                  CLE025
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CIRSScnFmt
+      * LIBOR related fields in screen format (Ours)                                          CIR020
+     C                   PARM                    CurrScnBlrt1                                 CIR020
+      * LIBOR related fields in screen format (Theirs)                                        CIR020
+     C                   PARM                    CurrScnBlrt2                                 CIR020
      C                   PARM                    PSTS
 
      C                   IF        RetCodeOut <> *Blanks

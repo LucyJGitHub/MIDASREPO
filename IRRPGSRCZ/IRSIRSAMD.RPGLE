@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CIR017             Date 10Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -339,6 +341,7 @@
 
       ** Overall Transaction status, to be passed back to calling program
      D AmendOK         S              1A
+     D CIR020          S              1A                                                      CIR020
 
       ** OVERNIGHT INDEX SWAPS                                                                CIR007
      DCIR007           S              1A                                                      CIR007
@@ -655,12 +658,14 @@
      C*
      C** This field is NOT AMENDABLE.
      C*
+     C                   IF        CIR020 = 'N'                                               CIR020
      C     SUBRTT        IFNE      @SUBRTT
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUBRTT'
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0376'
      C                   EVAL      sUBRTTok        = 'N'
      C                   ENDIF
+     C                   ENDIF                                                                CIR020
      C*
      C*-----------------------------------------*                                             184363
      C* Our Spread/Rate                         *                                             184363
@@ -787,12 +792,14 @@
      C*
      C** This field is NOT AMENDABLE.
      C*
+     C                   IF        CIR020 = 'N'                                               CIR020
      C     STBRTT        IFNE      @STBRTT
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STBRTT'
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0376'
      C                   EVAL      sTBRTTok        = 'N'
      C                   ENDIF
+     C                   ENDIF                                                                CIR020
      C*
      C*-----------------------------------------*                                             184363
      C* Thier Spread/Rate                       *                                             184363
@@ -1270,6 +1277,17 @@
      C                   ELSE                                                                 CDL039
      C                   MOVEL     'N'           CDL039                                       CDL039
      C                   END                                                                  CDL039
+      *                                                                                       CIR020
+     C                   EVAL      CIR020 = 'N'                                               CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       @RTCD                                        CIR020
+     C                   PARM      '*VERIFY'     @OPTN                                        CIR020
+     C                   PARM      'CIR020'      @SARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C                   IF        @RTCD = *Blanks                                            CIR020
+     C                   EVAL      CIR020 = 'Y'                                               CIR020
+     C                   ENDIF                                                                CIR020
      C*
      C                   ENDSR
 

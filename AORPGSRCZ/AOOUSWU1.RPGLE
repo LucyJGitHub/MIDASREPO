@@ -1,19 +1,20 @@
      H DEBUG
-      ********************************************************************
+      *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AO On-line update of IRS position files')        *
 /*OVRF*: OVRDBF FILE(DLPCSCRX) TOFILE(DLPCSCPD)                     : *                       240412
-      ********************************************************************
-      *                                                                  *
-      *  Midas - Access Objects Module                                   *
-      *                                                                  *
-      *     AOOUSWU1 - On-line Update of Interest Rate Swap Positions    *
-      *                files                                             *
-      *                                                                  *
-      *  (c) Finastra International Limited 2001                         *
-      *                                                                  *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Access Objects Module                                *
+      *                                                               *
+      *     AOOUSWU1 - On-line Update of Interest Rate Swap Positions *
+      *                files                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD033602           Date 06Jul17               *
@@ -27,20 +28,21 @@
       *                 CAP205             Date 03Mar10               *
       *                 CAP204             Date 09Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 247544             Date 16May07                  *
+      *                 247544             Date 16May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 240412             Date 02Jul06                  *
-      *                 239813             Date 18May06                  *
-      *                 CDL038             Date 10May05                  *
+      *                 240412             Date 02Jul06               *
+      *                 239813             Date 18May06               *
+      *                 CDL038             Date 10May05               *
       *                 CSD027             Date 09Dec05               *
       *                 BUG8242R           Date 19Oct05               *
       *                 BUG8242            Date 25Aug05               *
-      *                 BUG7952            Date 22Jul05                  *
-      *                 BUG6373 *CREATE    Date 24Mar05                  *
-      *                                                                  *
-      *------------------------------------------------------------------*
-      *                                                                  *
+      *                 BUG7952            Date 22Jul05               *
+      *                 BUG6373 *CREATE    Date 24Mar05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

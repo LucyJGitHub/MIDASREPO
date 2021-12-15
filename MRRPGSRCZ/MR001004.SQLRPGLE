@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR828013 *CREATE   Date 30Sep11               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR828013 *CREATE   Date 30Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR828013 - Incremental database for MBI (CCR036)             *
       *                                                               *
@@ -26,7 +28,7 @@
 
       ** Midas MR MBI Extract Key Details File
 
-     FMRKEYDPD  UF A E           K DISK    USROPN
+     F*MRKEYDPD* UF A E           K DISK    USROPN                                          MD058079
 
      D DSFFD           DS                  BASED(DTAPTR)
      D  DFLD                   1     10
@@ -105,6 +107,7 @@
      D SNDJRNE         C                   CONST('SNDJRNE JRN(ICJRN) -
      D                                     ENTDTA(''MBI End of Extract-
      D                                      Marker'') FILE(')
+     D MRKEYD        E DS                  EXTNAME(MRKEYJW0)                                MD058079
      D/COPY QSYSINC/QRPGLESRC,QDBRTVFD
 
      C     *ENTRY        PLIST
@@ -117,13 +120,20 @@
 
       ** Build key file
 
-     C                   OPEN      MRKEYDPD
-     C     PFile         CHAIN     MRKEYDPD
-     C                   IF        %FOUND() AND
+     C**********         OPEN      MRKEYDPD                                                 MD058079
+     C*****PFile         CHAIN     MRKEYDPD                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :MRKEYD                                                                        MD058079
+     C+ from MRKEYJW0                                                                       MD058079
+     C+ where MKFNAM = :PFile                                                               MD058079
+     C/END-EXEC                                                                             MD058079
+     C**********         IF        %FOUND() AND                                             MD058079
+     C                   IF        SQLCODE = 0 AND                                          MD058079
      C                             MKFLDN = *BLANKS
      C                   EXSR      SRBLDKEY
      C                   ENDIF
-     C                   CLOSE     MRKEYDPD
+     C**********         CLOSE     MRKEYDPD                                                 MD058079
 
      C                   EVAL      WFArr(WIdx) = PFile
      C                   EVAL      WIdx += 1
@@ -218,7 +228,8 @@
      C/EXEC SQL EXECUTE U1
      C/END-EXEC
 
-     C                   EVAL      UPDSTM  = 'UPDATE MRMBIFPD SET ' +
+     C**********         EVAL      UPDSTM  = 'UPDATE MRMBIFPD SET ' +                       MD058079
+     C                   EVAL      UPDSTM  = 'UPDATE MRMBIXTD SET ' +                       MD058079
      C                             'MREXDT = ' + %CHAR(PDate) +
      C                             ' WHERE MRFNAM=''' +
      C                             %TRIMR(WFArr(Ix)) + ''' WITH NC'
@@ -314,9 +325,56 @@
      C                   EVAL      MKFLDP = DPOS
 
      C                   IF        WIdx1  = 1
-     C                   UPDATE    MRKEYDD0
+     C**********         UPDATE    MRKEYDD0                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ update MRKEYXTD set                                                                 MD058079
+     C+   MKFLDN = :MKFLDN                                                                  MD058079
+     C+ , MKFLDL = :MKFLDL                                                                  MD058079
+     C+ , MKFLDP = :MKFLDP                                                                  MD058079
+     C+ where MKFNAM = :PFile                                                               MD058079
+     C/END-EXEC                                                                             MD058079
      C                   ELSE
-     C                   WRITE     MRKEYDD0
+     C**********         WRITE     MRKEYDD0                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ insert into MRKEYBTD                                                                MD058079
+     C+ (                                                                                   MD058079
+     C+   MKFNAM                                                                            MD058079
+     C+ , MKKEYF                                                                            MD058079
+     C+ , MKRFMT                                                                            MD058079
+     C+ , MKFLDN                                                                            MD058079
+     C+ , MKFLDL                                                                            MD058079
+     C+ , MKFLDP                                                                            MD058079
+     C+ , MKMODE                                                                            MD058079
+     C+ )                                                                                   MD058079
+     C+ Values                                                                              MD058079
+     C+ (                                                                                   MD058079
+     C+   :MKFNAM                                                                           MD058079
+     C+ , :MKKEYF                                                                           MD058079
+     C+ , :MKRFMT                                                                           MD058079
+     C+ , :MKFLDN                                                                           MD058079
+     C+ , :MKFLDL                                                                           MD058079
+     C+ , :MKFLDP                                                                           MD058079
+     C+ , 'B'                                                                               MD058079
+     C+ )                                                                                   MD058079
+     C/END-EXEC                                                                             MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ insert into MRKEYXTD                                                                MD058079
+     C+ (                                                                                   MD058079
+     C+   MKFNAM                                                                            MD058079
+     C+ , MKFLDN                                                                            MD058079
+     C+ , MKFLDL                                                                            MD058079
+     C+ , MKFLDP                                                                            MD058079
+     C+ , MKMODE                                                                            MD058079
+     C+ )                                                                                   MD058079
+     C+ Values                                                                              MD058079
+     C+ (                                                                                   MD058079
+     C+   :MKFNAM                                                                           MD058079
+     C+ , :MKFLDN                                                                           MD058079
+     C+ , :MKFLDL                                                                           MD058079
+     C+ , :MKFLDP                                                                           MD058079
+     C+ , 'B'                                                                               MD058079
+     C+ )                                                                                   MD058079
+     C/END-EXEC                                                                             MD058079
      C                   ENDIF
 
      C                   EVAL      WIdx1  += 1

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. CGL193             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD056576           Date 21Sep20               *
       *                 MD054681           Date 01Jun20               *
       *                 261705             Date 08Oct19               *
@@ -65,6 +66,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL193 - Transaction Type and GL Additional Info in CM GL    *
+      *           statements                                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
@@ -171,6 +174,8 @@
       *                                                                                     BUG24460
      FGLMNARL1  IF   E           K DISK                                                     BUG24460
       *                                                                                     BUG24460
+     FGLJENXL1  IF   E           K DISK                                                       CGL193
+     FGLJEHXL2  IF   E           K DISK                                                       CGL193
      F/COPY WNCPYSRC,CG4510F003
      F/SPACE 5
      F/COPY WNCPYSRC,CG4510F005
@@ -191,8 +196,10 @@
      D**********          ##GRP   1  95 10   ##RDEA 22                               CER038 BUG24460
      D**********          ##GRP   1  97 10   ##RDEA 22                               BUG24460 CRE073
      D**********          ##GRP   1 106 10   ##RDEA 22                                 CRE073 261705
-     D ##GRP           S             10    DIM(108) CTDATA PERRCD(1)                          261705
-     D ##RDEA          S             22    DIM(108) ALT(##GRP)                                261705
+     D*##GRP****       S             10    DIM(108) CTDATA PERRCD(1)                   261705 CGL193
+     D*##RDEA***       S             22    DIM(108) ALT(##GRP)                         261705 CGL193
+     D ##GRP           S             10    DIM(116) CTDATA PERRCD(1)                          CGL193
+     D ##RDEA          S             22    DIM(116) ALT(##GRP)                                CGL193
      D/COPY WNCPYSRC,CG4510E002
      D*
      D**  Array of Currencies accessed by program
@@ -298,6 +305,9 @@
       ** MIDAS Switchable Features Accessed Via Access Program
       *
      D  LCX          E                     EXTFLD(LCD)
+      *                                                                                       CGL193
+     D SDRETR        E DS                  EXTNAME(SDRETRPD)                                  CGL193
+      ** Midas SD Retail Transaction Types via Access program                                 CGL193
      D/COPY WNCPYSRC,CG4510I003
       *
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -2965,6 +2975,31 @@
      C                   ENDIF
      C                   ENDIF
      C*
+     C     CGL193        IFEQ      'Y'                                                        CGL193
+     C     TRAT          IFNE      0                                                          CGL193
+     C                   MOVE      TRAT          TRATA             5                          CGL193
+     C                   MOVEL     TRATA         ##D(18)                                      CGL193
+      *                                                                                       CGL193
+     C                   CALL      'AORETRR0'                                                 CGL193
+     C                   PARM      '*BLANKS'     PRTCD                                        CGL193
+     C                   PARM      '*KEY   '     POPTN                                        CGL193
+     C                   PARM                    TRATA                                        CGL193
+     C     SDRETR        PARM      SDRETR        DSFDY                                        CGL193
+      *                                                                                       CGL193
+     C     PRTCD         IFNE      *BLANKS                                                    CGL193
+     C     *LOCK         IN        LDA                                                        CGL193
+     C                   MOVEL     TRATA         DBKEY                                        CGL193
+     C                   MOVEL     'SDRETRPD'    DBFILE                                       CGL193
+     C                   Z-ADD     900           DBASE                                        CGL193
+     C                   OUT       LDA                                                        CGL193
+     C                   EXSR      *PSSR                                                      CGL193
+     C                   ELSE                                                                 CGL193
+     C                   MOVEL     A1RTNM        ##D(19)                                      CGL193
+     C                   ENDIF                                                                CGL193
+      *                                                                                       CGL193
+     C                   ENDIF                                                                CGL193
+     C                   ENDIF                                                                CGL193
+	  *                                                                                       CGL193
       **  Accumulate RDE's and associated data and output to                               BUG23277A
       **  PF/CGUDTAPD.                                                                     BUG23277A
      C                   EXSR      SRADTA                                                  BUG23277A
@@ -2985,6 +3020,13 @@
       ****PF/CGUDTAPD.                                                                     BUG23277A
      C**********           EXSR SRADTA                                                     BUG23277A
       **********                                                                           BUG23277A
+     C     CGL193        IFEQ      'Y'                                                        CGL193
+     C                   EXSR      G#ADDI                                                     CGL193
+     C     18            OCCUR     ##SRDT                                                     CGL193
+     C                   MOVEL     ##SPAT        S#PATH                                       CGL193
+     C                   MOVEL     ##PBIN        S#PBIN                                       CGL193
+     C                   MOVEL     ##TBIN        S#TBIN                                       CGL193
+     C                   ENDIF                                                                CGL193
      C/COPY WNCPYSRC,CGH00002
       *................................................................
       *
@@ -3903,6 +3945,22 @@
      C                   KFLD                    ##BANO                                     BUG24460
      C                   KFLD                    W#BITM                                     BUG24460
       *                                                                                     BUG24460
+     C                   CALL      'AOSARDR0'                                                 CGL193
+     C                   PARM      *BLANKS       PRTCD                                        CGL193
+     C                   PARM      '*VERIFY'     POPTN                                        CGL193
+     C                   PARM      'CGL193'      PSARD                                        CGL193
+     C     SCSARD        PARM      SCSARD        DSSDY                                        CGL193
+      *                                                                                       CGL193
+     C     PRTCD         IFEQ      *BLANK                                                     CGL193
+     C                   MOVEL     'Y'           CGL193            1                          CGL193
+     C                   ELSE                                                                 CGL193
+     C                   MOVEL     'N'           CGL193                                       CGL193
+     C                   ENDIF                                                                CGL193
+      *                                                                                       CGL193
+     C     KJENX         KLIST                                                                CGL193
+     C                   KFLD                    PSTD                                         CGL193
+     C                   KFLD                    ##BANO                                       CGL193
+     C                   KFLD                    K#BITM            3 0                        CGL193
      C/COPY WNCPYSRC,CG4510C008
       *
       **  Copyright
@@ -4355,6 +4413,83 @@
       *                                                                                     BUG24460
      C                   ENDSR                                                              BUG24460
       *****************************************************************                       CER038
+     C/SPACE 5                                                                                CGL193
+      *****************************************************************                       CGL193
+      *                                                               *                       CGL193
+      *  G#ADDI - Setup Address Info                                  *                       CGL193
+      *                                                               *                       CGL193
+      *  Called by:                                                   *                       CGL193
+      *                                                               *                       CGL193
+      *  Calls: PSHGRS, SRRRDE, SRADTA, SRODTA, POPGRS                *                       CGL193
+      *****************************************************************                       CGL193
+      *                                                                                       CGL193
+     C     G#ADDI        BEGSR                                                                CGL193
+      *                                                                                       CGL193
+      **  Set up subroutine stack name                                                        CGL193
+     C                   ADD       1             Q                                            CGL193
+     C                   MOVEL     'g_ADDI'      @STK(Q)                                      CGL193
+      *                                                                                       CGL193
+      **  Retrieve subroutine specific data.                                                  CGL193
+     C     14            OCCUR     ##SRDT                                                     CGL193
+      *                                                                                       CGL193
+      **  Set up Path.                                                                        CGL193
+     C                   MOVEL     '\g_ADDI'     ##PNAM                                       CGL193
+     C     S#PATH        CAT       ##PNAM:0      S#PATH                                       CGL193
+     C                   EXSR      PSHGRS                                                     CGL193
+     C                   MOVEL     S#PATH        ##SPAT                                       CGL193
+      *                                                                                       CGL193
+      **  Set up Binds from passed in values.                                                 CGL193
+     C                   Z-ADD     S#PBIN        ##PBIN                                       CGL193
+     C                   Z-ADD     S#TBIN        ##TBIN                                       CGL193
+      *                                                                                       CGL193
+      **  Retrieve RDE information for RDE's in Group Set                                     CGL193
+     C                   MOVEL     'g_ADDI'      ##GRPS                                       CGL193
+     C                   Z-ADD     1             ##RDEN                                       CGL193
+     C                                                                                        CGL193
+     C                   EXSR      SRRRDE                                                     CGL193
+      *                                                                                       CGL193
+     C                   MOVEL     *BLANKS       ##D(1)                                       CGL193
+     C                   MOVEL     *BLANKS       ##D(2)                                       CGL193
+     C                   MOVEL     *BLANKS       ##D(3)                                       CGL193
+     C                   MOVEL     *BLANKS       ##D(4)                                       CGL193
+     C                   MOVEL     *BLANKS       ##D(5)                                       CGL193
+     C                   MOVEL     *BLANKS       ##D(6)                                       CGL193
+      *                                                                                       CGL193
+     C                   MOVEL     ##BITM        K#BITM                                       CGL193
+      *                                                                                       CGL193
+     C     KJENX         CHAIN     GLJENXL1                           53                      CGL193
+     C     *IN53         IFEQ      *OFF                                                       CGL193
+     C                   MOVEL     BAADI1        ##D(1)                                       CGL193
+     C                   MOVEL     BAADI2        ##D(2)                                       CGL193
+     C                   MOVEL     BAADI3        ##D(3)                                       CGL193
+     C                   MOVEL     BAADI4        ##D(4)                                       CGL193
+     C                   MOVEL     BAADI5        ##D(5)                                       CGL193
+     C                   MOVEL     BAADI6        ##D(6)                                       CGL193
+     C                   ELSE                                                                 CGL193
+     C     KJENX         CHAIN     GLJEHXL2                           53                      CGL193
+     C     *IN53         IFEQ      *OFF                                                       CGL193
+     C                   MOVEL     HAADI1        ##D(1)                                       CGL193
+     C                   MOVEL     HAADI2        ##D(2)                                       CGL193
+     C                   MOVEL     HAADI3        ##D(3)                                       CGL193
+     C                   MOVEL     HAADI4        ##D(4)                                       CGL193
+     C                   MOVEL     HAADI5        ##D(5)                                       CGL193
+     C                   MOVEL     HAADI6        ##D(6)                                       CGL193
+     C                   ENDIF                                                                CGL193
+     C                   ENDIF                                                                CGL193
+      *                                                                                       CGL193
+      **  Accumulate RDE's and associated data and output to                                  CGL193
+      **  PF/CGUDTAPD.                                                                        CGL193
+     C                   EXSR      SRADTA                                                     CGL193
+     C                   EXSR      SRODTA                                                     CGL193
+      *                                                                                       CGL193
+     C     EXADDI        TAG                                                                  CGL193
+      *                                                                                       CGL193
+      **  Unwind subroutine stack name                                                        CGL193
+     C                   EXSR      POPGRS                                                     CGL193
+     C                   MOVEA     *BLANKS       @STK(Q)                                      CGL193
+     C                   SUB       1             Q                                            CGL193
+      *                                                                                       CGL193
+     C                   ENDSR                                                                CGL193
      C/COPY WNCPYSRC,CG4510C022
      C/SPACE 5
      C*COPY*CGCPYSRC,SRERRPSSR                                                              MD056543
@@ -4477,6 +4612,14 @@ PSNARR0019 PSNARR19                      Posting Narrative 19                   
 PSNARR0020 PSNARR20                      Posting Narrative 20                                 CER038
 PSNARR0021 PSNARR21                      Posting Narrative 21                               BUG24460
 PSNARR0022 PSNARR22                      Posting Narrative 22                               BUG24460
+g_SPS30018 RETRAT                                                                             CGL193
+g_SPS30019 RTRATD                                                                             CGL193
+g_ADDI0001 ADDINFO1                                                                           CGL193
+g_ADDI0002 ADDINFO2                                                                           CGL193
+g_ADDI0003 ADDINFO3                                                                           CGL193
+g_ADDI0004 ADDINFO4                                                                           CGL193
+g_ADDI0005 ADDINFO5                                                                           CGL193
+g_ADDI0006 ADDINFO6                                                                           CGL193
 **CTDATA ##GE
 AGL
 CRE

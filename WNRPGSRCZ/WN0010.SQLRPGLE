@@ -10,9 +10,10 @@
      F*   WN0010 - Windows Manager - Interface from Core to Branch       *
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
-      *
-      *  Last Amend No. MD057705           Date 21Jan21               *
-      *  Prev Amend No. MD056890           Date 11Oct20               *
+      *                                                               *
+      *  Last Amend No. MD059114           Date 04Dec21               *
+      *  Prev Amend No. MD057705           Date 21Jan21               *
+      *                 MD056890           Date 11Oct20               *
       *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,11 @@
      F*                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD059114 - At Fusion SP25 the "N" for extended Narrative        *
+      *             function does not work on Account movements          *
+      *           - Use the correct parameter on the cursor select       *
+      *             statement.  Also mismatch (packed v zoned) on the    *
+      *             window dimensions passed to the window program.      *
       *  MD057705 - Deliverable Data Split for SDOREFPD               *
       *  MD056890 - Deliverable Data Split for SDMREFPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -188,12 +194,18 @@
      C********** NMCP      READESDMREFJ0                 31        094172 120467
      C********** NMCP      READESDMREFL1                 31                            120467 CPK018
      C*****NMCP*         READE     SDMREFJ0                               31                MD056890
-     C/EXEC SQL                                                                             MD056890
-     C+ declare ACursor insensitive scroll cursor for                                       MD056890
-     C+ select * from SDMRFJW1                                                              MD056890
-     C+ where DLNMCP = :DLNMCP                                                              MD056890
-     C+ order by DLNMCP, DLSQNB                                                             MD056890
-     C/END-EXEC                                                                             MD056890
+     C**XEC*SQL                                                                    MD056890 MD059114
+     C**declare*ACursor*insensitive*scroll*cursor*for                              MD056890 MD059114
+     C**select***from*SDMRFJW1                                                     MD056890 MD059114
+     C**where*DLNMCP*=*:DLNMCP                                                     MD056890 MD059114
+     C**order*by*DLNMCP,*DLSQNB                                                    MD056890 MD059114
+     C**ND-EXEC                                                                    MD056890 MD059114
+     C/EXEC SQL                                                                             MD059114
+     C+ declare ACursor insensitive scroll cursor for                                       MD059114
+     C+ select * from SDMRFJW1                                                              MD059114
+     C+ where DLNMCP = :NMCP                                                                MD059114
+     C+ order by DLNMCP, DLSQNB                                                             MD059114
+     C/END-EXEC                                                                             MD059114
                                                                                             MD056890
      C/EXEC SQL                                                                             MD056890
      C+ open ACursor                                                                        MD056890
@@ -209,6 +221,12 @@
      C******IN31         DOWEQ     '0'                                                      MD056890
      C     SQLCODE       DOWEQ     0                                                        MD056890
      C******************** CALL DLAKNA                                    S01251
+      *                                                                                     MD059114
+     C                   Z-ADD     DLLGWD        W_LGWD            3 0                      MD059114
+     C                   Z-ADD     DLWDWD        W_WDWD            3 0                      MD059114
+     C                   Z-ADD     DLSRWD        W_SRWD            3 0                      MD059114
+     C                   Z-ADD     DLSCWD        W_SCWD            3 0                      MD059114
+      *                                                                                     MD059114
      C                   CALL      DLWNCN                                                      S0125
      C                   PARM                    ACTN
      C                   PARM                    DATA
@@ -218,10 +236,14 @@
      C******************** PARM           DLNBNB                          S01251
      C******************** PARM           DLNCNB                          S01251
      C******************** PARM           DLALNA                          S01251
-     C                   PARM                    DLLGWD                                        S0125
-     C                   PARM                    DLWDWD                                        S0125
-     C                   PARM                    DLSRWD                                        S0125
-     C                   PARM                    DLSCWD                                        S0125
+     C*******************PARM                    DLLGWD                               S0125 MD059114
+     C*******************PARM                    DLWDWD                               S0125 MD059114
+     C*******************PARM                    DLSRWD                               S0125 MD059114
+     C*******************PARM                    DLSCWD                               S0125 MD059114
+     C                   PARM                    W_LGWD                                     MD059114
+     C                   PARM                    W_WDWD                                     MD059114
+     C                   PARM                    W_SRWD                                     MD059114
+     C                   PARM                    W_SCWD                                     MD059114
      C                   PARM                    DLTTWD                                        S0125
      C                   PARM                    SPARE           256                           S0125
      C***********          PARM *BLANK    W0RTN   7                       S01216

@@ -432,6 +432,8 @@
      C                             TrNIDT <= EventCtrlDate                                  MD059253
      C                   EVAL      Wrk2ndCall = 'Y'                                         MD059253
      C                   ENDIF                                                              MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
      C                   IF        Wrk2ndCall = 'Y'                                         MD059190
      C                   ITER                                                               MD059190
      C                   ENDIF                                                              MD059190

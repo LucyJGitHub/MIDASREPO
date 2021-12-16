@@ -28638,7 +28638,8 @@
      C**********                   AND UCALM = 'MANL'                              MD059246 MD059278
      C                   BITOFF    '01234567'    UDSTI                                      MD059246
      C                   BITON     '03'          UDSTI                                      MD059246
-     C                   EVAL      AACRT = UEINR                                            MD059246
+     C**********         EVAL      AACRT = UEINR                                   MD059246 MD059360
+     C                   EVAL      AACRT = UBRTE                                            MD059360
      C                   EVAL      UBRTE = 0                                                MD059246
      C                   EVAL      UEINR = 0                                                MD059246
      C                   ENDIF                                                              MD059246
@@ -28646,7 +28647,8 @@
      C**********                   AND TCALM = 'MANL'                              MD059246 MD059278
      C                   BITOFF    '01234567'    TDSTI                                      MD059246
      C                   BITON     '03'          TDSTI                                      MD059246
-     C                   EVAL      AACRT = TEINR                                            MD059246
+     C**********         EVAL      AACRT = TEINR                                   MD059246 MD059360
+     C                   EVAL      AACRT = TBRTE                                            MD059360
      C                   EVAL      TBRTE = 0                                                MD059246
      C                   EVAL      TEINR = 0                                                MD059246
      C                   ENDIF                                                              MD059246

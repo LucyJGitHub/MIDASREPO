@@ -30,10 +30,12 @@
       *  ~~~~~~~~~~~~~~~                                              *
       *                                                               *
       *  50    First cycle                                            *
-      *  90    Chain fail                                             *
-      *  99    EOF on Read                                            *
+      *  60    MX-MT Join file EOF indicator                          *
+      *  80    ME-MX Join file EOF indicator                          *
+      *  90    ME ICD call result                                     *
+      *  99    Indicator to use MDY format on date conversion         *
+      *  99    Message processed indicator                            *
       *                                                               *
-      *  U7/U8 Error Ocurred                                          *
       *  LR    End program                                            *
       *                                                               *
       *****************************************************************
@@ -43,9 +45,13 @@
 
      FMEMXINFTJ1IF   E           K DISK    infsr(SRFILE)
 
+      ** Incoming MX Message file - joined with MSIXISOPD + MEISOMPD
+
+     FMEMXMTJ1  IF   E           K DISK    infsr(SRFILE)
+
       ** Incoming MX Message Purge File
 
-     FMEMXINRMPDO  A E           K DISK    INFSR(SRFILE)
+     FMEMXINRMPDO  A E           K DISK    infsr(SRFILE)
       /EJECT
 
       **  /Copy point for Array Declarations
@@ -64,15 +70,15 @@
 
       ** RUNDAT data area
 
-     D RUNDTA        E DS                  EXTNAME(RUNDAT)
+     D RUNDTA        E DS                  extname(RUNDAT)
 
       ** Message Management ICD data structure parameter
 
-     D SDMGME        E DS                  EXTNAME(SDMGMEPD)
+     D SDMGME        E DS                  extname(SDMGMEPD)
 
       ** Access object data structure
 
-     D DSFDY         E DS                  EXTNAME(DSFDY)
+     D DSFDY         E DS                  extname(DSFDY)
 
       ** Working field for value date
 
@@ -92,12 +98,17 @@
       ** Working field for message type
 
      D  WMTYP          S             20A
+
+      ** Working field for message id
+
+     D  w@msgid        S             20A
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
       *                                                               *
       *  sr_init       : Initialise program                           *
       *  sr_purge      : Check for purgeable messages                 *
+      *  sr_write      : Write records on purge file                  *
       *  srerr         : Error processing (on copysource)             *
       *  zdate1        : Date conversion (on copysource)              *
       *                                                               *
@@ -160,8 +171,12 @@
 
       ** Access the MX Index and ME Header join file to check for available records.
 
-     C                   READ      MEMXINFTJ1                             80
+     C                   read      MEMXINFTJ1                             80
      C                   dow       *in80 = *off
+
+      ** Move the message id to the working field
+
+     C                   eval      w@msgid = %trim(IMXID)
 
       ** Convert SVDT from MEMXINFTJ1 to YYMMDD format
 
@@ -173,7 +188,7 @@
       ** Get the message received date from MEMXINFTJ1
       ** Add the number of retention days to get the purge date
 
-     C     OMCDTE        ADD       ENDSMN        WKDATE
+     C     OMCDTE        add       ENDSMN        WKDATE
 
       ** Compute for the message value date
 
@@ -183,35 +198,55 @@
      C                   movel     WMMDD         WNDAT
      C                   move      WNDAT         ZDATE
      C                   move      '1'           *in98
-     C                   EXSR      ZDATE1
-     C                   Z-ADD     ZDAYNO        WKVDAT
+     C                   exsr      ZDATE1
+     C                   z-add     ZDAYNO        WKVDAT
      C                   movel     IMTPY         WMTYP
 
       ** Purge incoming MX messages if both the value date and the purge date has passed
 
-     C     WKDATE        IFLE      WURDNB
-     C     WKVDAT        ANDLE     WURDNB
+     C     WKDATE        ifle      WURDNB
+     C     WKVDAT        andle     WURDNB
 
-      ** Build the details to be written on the purge file
+      ** Check the join file if the message has already been processed
 
-     C                   MOVEL     IMXID         RMMXID                         Msg Id
-     C                   MOVEL     IUETR         RMUETR                         UETR
-     C                   MOVEL     ##JOB         RMAJOB                         Job Name
-     C                   MOVEL     ##USR         RMAUSR                         User Name
-     C                   TIME                    RMATIM                         Action Time
-     C                   MOVEL     AGMRDT        RMARDT                         Action Date
-     C                   MOVEL     'I'           RMAACT                         Action Type
-     C                   Z-ADD     AGRDNB        RMRDNB                         Run Day No.
+     C     IMPF          ifeq      'Y'
+     C                   seton                                        99
+     C                   else
+     C                   setoff                                       99
+     C                   endif
 
-      ** Write the record on the purge file
+      ** If message has been processed, continue the purge analysis
+     C     *in99         ifeq      '1'
 
-     C                   WRITE     @INRMPD
+      ** If the message type is non FT, proceed with the purge
+
+     C                   if        %trim(%subst(IMTPY:1:4)) = 'camt'
+     C                   exsr      sr_write
+     C                   else
+
+      ** Else check MX MT Joined file if the MsgId and UETR combination exists
+
+     C     MXMTKL        klist
+     C                   kfld                    w@msgid
+     C                   kfld                    IUETR
       *
-     C                   ENDIF
+     C     MXMTKL        setll     MEMXMTJ1
+     C     MXMTKL        reade     MEMXMTJ1                               60
+
+      ** If record is found, do not proceed with the purge
+      ** This means that the record still exists on the core MT files
+
+     C     *in60         ifne      '0'
+     C                   exsr      sr_write
+     C                   endif
+      *
+     C                   endif
+     C                   endif
+     C                   endif
 
       ** Read next record from the join file and continue until end of file
 
-     C                   READ      MEMXINFTJ1                             80
+     C                   read      MEMXINFTJ1                             80
       *
      C                   enddo
 
@@ -222,15 +257,56 @@
       *
      C                   endsr
       /EJECT
-      *****************************************************************
-      *                                                               *
-      *  sr_init  : Initialise and define fields                      *
-      *                                                               *
-      *  CALLED BY: main                                              *
-      *                                                               *
-      *  CALLS    : srerr  - Error Processing                         *
-      *                                                               *
-      *****************************************************************
+
+      **********************************************************************
+      * sr_write       : Check if message may be purged                    *
+      * --------                                                           *
+      *                                                                    *
+      * Called by      : main                                              *
+      *                                                                    *
+      * Calls          :                                                   *
+      *                                                                    *
+      **********************************************************************
+
+     C     sr_write      begsr
+
+      ** Set up subroutine stack name
+
+     C                   add       1             Q                 5 0
+     C                   movel     'sr_write'    @STK(Q)
+
+      ** Build the details to be written on the purge file
+
+     C                   movel     IMXID         RMMXID                         Msg Id
+     C                   movel     IUETR         RMUETR                         UETR
+     C                   movel     ##JOB         RMAJOB                         Job Name
+     C                   movel     ##USR         RMAUSR                         User Name
+     C                   time                    RMATIM                         Action Time
+     C                   movel     AGMRDT        RMARDT                         Action Date
+     C                   movel     'I'           RMAACT                         Action Type
+     C                   z-add     AGRDNB        RMRDNB                         Run Day No.
+
+      ** Write the record on the purge file
+
+     C                   write     @INRMPD
+
+      ** Unwind subroutine stack name
+
+     C                   clear                   @STK(Q)
+     C                   sub       1             Q
+      *
+     C                   endsr
+      /EJECT
+
+      **********************************************************************
+      *                                                                    *
+      *  sr_init  : Initialise and define fields                           *
+      *                                                                    *
+      *  Called by: main                                                   *
+      *                                                                    *
+      *  Calls    : srerr  - Error Processing                              *
+      *                                                                    *
+      **********************************************************************
 
      C     sr_init       begsr
 
@@ -239,27 +315,22 @@
      C                   add       1             Q                 5 0
      C                   movel     'sr_init'     @STK(Q)
 
-      ** Open Files
-
-     C*                  OPEN      MEINRMPD
-     C*                  OPEN      MEINFTJ1
-
       ** Get Rundate information
 
-     C     *DTAARA       DEFINE    RUNDAT        RUNDTA
-     C                   IN        RUNDTA
-     C                   MOVE      AGMRDT        wumrdt            7            Midas Run date
-     C                   MOVE      AGRDNB        wurdnb            5 0          Run day number
-     C                   MOVE      AGSUC         wusuc             1            Set up complete
-     C                   MOVE      AGDFF         wudff             1            Date Format
-     C                   MOVE      AGMBIN        wumbin            1            Multi Branched
+     C     *DTAARA       define    RUNDAT        RUNDTA
+     C                   in        RUNDTA
+     C                   move      AGMRDT        wumrdt            7            Midas Run date
+     C                   move      AGRDNB        wurdnb            5 0          Run day number
+     C                   move      AGSUC         wusuc             1            Set up complete
+     C                   move      AGDFF         wudff             1            Date Format
+     C                   move      AGMBIN        wumbin            1            Multi Branched
 
       ** Get Retention Days for Message Management Module
 
-     C                   CALL      'AOMGMER0'                           90
-     C                   PARM      *BLANKS       @rtcd             7
-     C                   PARM      '*FIRST '     @optn             7
-     C     SDMGME        PARM      SDMGME        dsfdy
+     C                   call      'AOMGMER0'                           90
+     C                   parm      *BLANKS       @rtcd             7
+     C                   parm      '*FIRST '     @optn             7
+     C     SDMGME        parm      SDMGME        dsfdy
 
       ** If return with an error (LR seton in called program) then
       ** process for database error.
@@ -268,7 +339,7 @@
      C     @rtcd         oreq      '*ERROR*'
      C                   movel     'AOMGMER0'    w0file
      C                   movel     '*CALL'       w0key                          ***************
-     C                   z-add     1             w0ernb                         * DB ERROR 04 *
+     C                   z-add     1             w0ernb                         * DB ERROR 01 *
      C                   movel     'MEM5003'     w0msgd                         ***************
      C                   movel     'MIDAS  '     w0msgf
      C                   exsr      srerr
@@ -277,7 +348,7 @@
       ** If purge period is 0 set to 1.
 
      C     ENDSMN        ifle      0
-     C                   Z-ADD     1             ENDSMN
+     C                   z-add     1             ENDSMN
      C                   endif
 
       ** Indicate that set up is complete

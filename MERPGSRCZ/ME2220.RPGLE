@@ -1,4 +1,5 @@
      H DEBUG
+     H DATEDIT (*DMY)
      H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -34,7 +35,6 @@
       *  40    ME Element details EOF indicator                       *
       *  50    First cycle                                            *
       *  90    Purge file EOF indicator                               *
-      *  99    MX message unprocessed indicator                       *
       *                                                               *
       *  LR    End program                                            *
       *                                                               *
@@ -72,21 +72,9 @@
      F                                     commit
       /EJECT
 
-      ** Array containing Copyright statement
+      **  /Copy point for Array Declarations
 
-     D cpy@            S             80    dim(1) ctdata perrcd(1)
-
-      ** Working field for message id
-
-     D  w@msgid        S             20A
-
-      ** RUNDAT data area
-
-     D RUNDTA        E DS                  extname(RUNDAT)
-
-      ** Message management data area
-
-     D MEDTA         E DS                  extname(MEDTA)
+      /COPY ZSRSRC,ZDATE2Z1LE
 
       ** /Copy point for error processing declarations
 
@@ -94,13 +82,55 @@
       /COPY MECPYSRC,SRERRILE
       /EJECT
 
+      ** Array containing Copyright statement
+
+     D cpy@            S             80    dim(1) ctdata perrcd(1)
+
+      ** Working field for message id
+
+     D w@msgid         S             20A
+
+      ** Working field for date conversion
+
+     D w@date          S              5S 0
+
+      ** Fields for getting system value
+
+     D PSysVal1        C                   const('MxPurgeTime')
+     D PRetCode        S              7A
+     D P@OP01          S             20A
+     D P@VL01          S            200A
+     D P@OP02          S             20A
+     D P@VL02          S            200A
+     D P@OP03          S             20A
+     D P@VL03          S            200A
+     D P@OP04          S             20A
+     D P@VL04          S            200A
+     D P@OP05          S             20A
+     D P@VL05          S            200A
+     D P@OP06          S             20A
+     D P@VL06          S            200A
+     D P@OP07          S             20A
+     D P@VL07          S            200A
+     D P@OP08          S             20A
+     D P@VL08          S            200A
+     D P@OP09          S             20A
+     D P@VL09          S            200A
+     D P@OP10          S             20A
+     D P@VL10          S            200A
+     D alpurg          S              3S 0
+
+      ** RUNDAT data area
+
+     D RUNDTA        E DS                  extname(RUNDAT)
+
       ** Data structure for time/date comparison - time limit
 
      D dstl            DS
      D  tldate                 1      6  0
-     D  tldyy                  1      2  0
-     D  tldmm                  3      5  0
-     D  tlddd                  5      6  0
+     D  tlddd                  1      2  0
+     D  tldmm                  3      4  0
+     D  tldyy                  5      6  0
       *
      D  tltime                 7     12  0
      D  tlthh                  7      8  0
@@ -180,6 +210,7 @@
       *  CALLS    :         -                                         *
       *                                                               *
       *****************************************************************
+
      C     sr_read       begsr
 
       ** Set up subroutine stack name
@@ -204,18 +235,13 @@
 
      C                   exsr      sr_purge
 
-      ** If message is not yet processed on the MX index file, do not delete record from
-      ** purge file for it to be processed next run
-
-     C     *in99         ifeq      '0'
-
       ** Delete Purge File record and commit all deletes
 
      C                   delete    @INRMPD
      C                   commit
 
       *  Update current time and date. UDATE is set in Header spec to
-      *  be in the format YYMMDD.
+      *  be in the format DDMMYY.
       *
      C                   time                    cudttm           12 0
      C                   time                    cutime
@@ -226,11 +252,9 @@
       ** a message to Audit Log on MRUNQ.
 
      C     dscu          ifge      dstl
-     C*                  movel     'MIN0098'     w0rtn
+     C                   movel     'MIN0098'     w0rtn
      C                   leave
      C                   end
-      *
-     C                   endif
 
       ** Read next record
 
@@ -248,7 +272,8 @@
 
       *****************************************************************
       *                                                               *
-      *  sr_purge : Purge all records for message reference           *
+      *  sr_purge : Purge all records with the corresponding message  *
+      *           : reference from the purge logs                     *
       *                                                               *
       *  CALLED BY: sr_read                                           *
       *                                                               *
@@ -270,10 +295,6 @@
 
      C                   exsr      sr_mxindx
 
-      ** If message is not yet processed on the index file, do not purge
-
-     C     *in99         ifeq      '0'
-
       ** Read and purge records from MX Messages Header file
 
      C                   exsr      sr_mxhdr
@@ -285,8 +306,6 @@
       ** Read and purge records from ME Element details file
 
      C                   exsr      sr_medtls
-      *
-     C                   endif
 
       ** Unwind subroutine stack name
 
@@ -325,20 +344,7 @@
       ** If record found proceed with the purge process
 
      C     *in10         ifeq      '0'
-
-      ** If the message on the index is not yet processed, do not purge
-
-     C     IMPF          ifne      'Y'
-     C                   seton                                        99
-
-      ** Else continue with the purge
-
-     C                   else
-     C                   setoff                                       99
      C                   delete    MSIXISD0
-      *
-     C                   endif
-      *
      C                   endif
 
       ** Unwind subroutine stack name
@@ -494,6 +500,7 @@
       *  CALLS    : srerr  - Error Processing                         *
       *                                                               *
       *****************************************************************
+
      C     sr_init       begsr
 
       **  Set up subroutine stack name
@@ -519,23 +526,43 @@
      C                   move      AGDFF         WUDFF             1            Date Format
      C                   move      AGMBIN        WUMBIN            1            Multi Branched
 
-      ** Get time limit for purge processing from data area
-      ** If not there, default to 3 hours in minutes
+      ** Get time limit for purge processing from MxPurgeTime system value
 
-     C     *DTAARA       define                  MEDTA
-     C     *LOCK         in        MEDTA
-
-      ** If the purge time has not been defined, default to 180 minutes
-
-     C                   move      DAPURG        alpurg            3
-     C     alpurg        ifeq      *BLANKS
-     C     alpurg        oreq      '000'
-     C                   z-add     180           DAPURG
-     C                   end
+     C                   call      'AOSVALR0'                                               AR996631
+     C                   parm      *BLANKS       PRetCode                                   AR996631
+     C                   parm      PSysVal1      P@OP01                                     AR996631
+     C                   parm      *BLANKS       P@VL01                                     AR996631
+     C                   parm      *BLANKS       P@OP02                                     AR996631
+     C                   parm      *BLANKS       P@VL02                                     AR996631
+     C                   parm      *BLANKS       P@OP03                                     AR996631
+     C                   parm      *BLANKS       P@VL03                                     AR996631
+     C                   parm      *BLANKS       P@OP04                                     AR996631
+     C                   parm      *BLANKS       P@VL04                                     AR996631
+     C                   parm      *BLANKS       P@OP05                                     AR996631
+     C                   parm      *BLANKS       P@VL05                                     AR996631
+     C                   parm      *BLANKS       P@OP06                                     AR996631
+     C                   parm      *BLANKS       P@VL06                                     AR996631
+     C                   parm      *BLANKS       P@OP07                                     AR996631
+     C                   parm      *BLANKS       P@VL07                                     AR996631
+     C                   parm      *BLANKS       P@OP08                                     AR996631
+     C                   parm      *BLANKS       P@VL08                                     AR996631
+     C                   parm      *BLANKS       P@OP09                                     AR996631
+     C                   parm      *BLANKS       P@VL09                                     AR996631
+     C                   parm      *BLANKS       P@OP10                                     AR996631
+     C                   parm      *BLANKS       P@VL10
       *
-     C                   out       MEDTA
+     C                   if        PRetCode <> *BLANKS
+     C     *LOCK         in        LDA
+     C                   eval      DBFile = 'SDSVALPD'
+     C                   eval      DBKEy = P@OP01
+     C                   eval      DBase = 4
+     C                   out       LDA
+     C                   exsr      SRERR
+     C                   else
+     C                   eval      alpurg = %dec(P@VL01:3:0)
+     C                   endif
 
-      ** Determine Time Limit for processing the purge.
+      ** Determine end time for processing the purge.
 
       ** Store system date
 
@@ -546,57 +573,53 @@
 
      C                   time                    TLTIME
       *
-     C     TLTHH         MULT      60            TLMINS            5 0
-     C                   ADD       TLTMM         TLMINS
-     C                   ADD       DAPURG        TLMINS
+     C     TLTHH         mult      60            TLMINS            5 0
+     C                   add       TLTMM         TLMINS
+     C                   add       alpurg        TLMINS
       *
-     C     TLMINS        DIV       60            TLTHH
-     C                   MVR                     TLTMM
+     C     TLMINS        div       60            TLTHH
+     C                   mvr                     TLTMM
+
+      ** If over 24 hours, subtract 24 from the total hours and
+      ** increment day no. by 1.
+
+     C     TLTHH         ifgt      24
+     C                   sub       24            TLTHH
+
+      ** Set date in DDMMYY format for conversion
+
+     C                   z-add     TLDDD         CNDD
+     C                   z-add     TLDMM         CNMM
+     C                   z-add     TLDYY         CNYY
       *
-      *  If over 24 hours, subtract 24 from the total hours and
-      *  increment day no. by 1.
+     C                   move      cndate        ZDATE
+     C                   move      '0'           *in98
+     C                   exsr      ZDATE1
       *
-     C     TLTHH         IFGT      24
-     C                   SUB       24            TLTHH
+     C                   z-add     ZDAYNO        w@date
+     C                   add       1             w@date
+
+      ** Convert Midas Day no. to system date
+
+     C                   z-add     w@date        ZDAYNO
+     C                   move      '0'           *in98
+     C                   exsr      ZDATE2
+     C                   z-add     ZDATE         w@date
+     C                   move      w@date        cndate
+
+      ** Set date in YYMMDD format for compare
+
+     C                   z-add     CNDD          TLDDD
+     C                   z-add     CNMM          TLDMM
+     C                   z-add     CNYY          TLDYY
       *
-      *  Set date in DDMMYY format for conversion
-      *
-     C                   Z-ADD     TLDDD         CNDD
-     C                   Z-ADD     TLDMM         CNMM
-     C                   Z-ADD     TLDYY         CNYY
-      *
-     C                   CALL      'ZDATE1'                             90
-     C                   PARM      *BLANKS       W1RTCD            7            Return Code
-     C                   PARM      CNDATE        W1DATE            6            Date
-     C                   PARM      'D'           W1DTFM            1            Date Format
-     C                   PARM      *ZEROS        W1DAYN            5 0          Day No.
-      *
-     C                   ADD       1             W1DAYN
-      *
-      *  Convert Midas Day no. to system date
-      *
-     C                   CALL      'ZDATE2'                             90
-     C                   PARM      W1DAYN        W2DAYN            5 0          Day No.
-     C                   PARM      'D'           W2DTFM            1            Date Format
-     C                   PARM      *ZEROS        W2DATE            6 0          Date
-     C                   PARM      *ZEROS        W2RUND            6 0          DDM
-      *
-     C                   MOVE      W2DATE        CNDATE
-      *
-      *  Set date in YYMMDD format for compare
-      *
-     C                   Z-ADD     CNDD          TLDDD
-     C                   Z-ADD     CNMM          TLDMM
-     C                   Z-ADD     CNYY          TLDYY
-      *
-     C                   END
-      *
-      *  Indicate that set up is complete
-      *
+     C                   end
+
+      ** Indicate that set up is complete
+
      C                   seton                                        50
-      *
-      *  Unwind subroutine stack name
-      *
+
+      ** Unwind subroutine stack name
 
      C                   clear                   @STK(Q)
      C                   sub       1             Q
@@ -604,9 +627,19 @@
      C                   endsr
       /EJECT
 
+      ** /Copy point for Date Calculations
+
+      /COPY ZSRSRC,ZDATE1Z2LE
+      /COPY ZSRSRC,ZDATE2Z2LE
+      /EJECT
+
       **  File and Program Error Processing
 
       /COPY MECPYSRC,SRERRCLE
       /EJECT
+
+      ** /Copy point for Arrays
+
+      /COPY ZSRSRC,ZDATE2Z3
 **  cpy@ table
 (c) Finastra International Limited 2021

@@ -28398,6 +28398,25 @@
       *                                                                                       CIR008
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
+     C                   IF        CIR020 = 'Y'                                             MD059371
+     C                             AND (DTYP = 'RR'                                         MD059371
+     C                             OR DTYP = 'RF'                                           MD059371
+     C                             OR DTYP = 'RP')                                          MD059371
+     C                   IF        UBLRT = 'Y'                                              MD059371
+     C                   BITOFF    '01234567'    UDSTI                                      MD059371
+     C                   BITON     '03'          UDSTI                                      MD059371
+     C                   EVAL      AACRT = UBRTE                                            MD059371
+     C                   EVAL      UBRTE = 0                                                MD059371
+     C                   EVAL      UEINR = 0                                                MD059371
+     C                   ENDIF                                                              MD059371
+     C                   IF        TBLRT = 'Y'                                              MD059371
+     C                   BITOFF    '01234567'    TDSTI                                      MD059371
+     C                   BITON     '03'          TDSTI                                      MD059371
+     C                   EVAL      AACRT = TBRTE                                            MD059371
+     C                   EVAL      TBRTE = 0                                                MD059371
+     C                   EVAL      TEINR = 0                                                MD059371
+     C                   ENDIF                                                              MD059371
+     C                   ENDIF                                                              MD059371
      C/COPY WNCPYSRC,DL0280C551
      C                   END                                                                   S0111
      C*                                                                   S01119

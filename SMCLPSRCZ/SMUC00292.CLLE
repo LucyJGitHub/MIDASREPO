@@ -10,12 +10,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. A1084804A          Date 11Feb13              */
+/*       Last Amend No. MD058089           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      A1084804A          Date 11Feb13              */
 /*                      A1084804 *CREATE   Date 28Jan13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       A1084804A- Allow to cope with the from field being alpha    */
 /*                  or numeric.                                      */
@@ -23,25 +25,25 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODE)
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
- 
+
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
- 
+
              DCLF       FILE(SMUC00292F)                                               /*A1084804A*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                             2013')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                             CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Retrieve system prefixes and set library name. */
              CALL       PGM(AOSVALR0) PARM(' ' 'BrgOldZonePrefix' +
                           &SVAL1 'BrgMidasSystemPrefix' &SVAL2 ' ' +
@@ -53,7 +55,7 @@
              IF         COND(%SST(&SVAL2 1 4) *EQ '*NRF') THEN(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* Depending on mode use one of the Ssytem Values. */
              IF         COND(&MODE *EQ '*MIG') THEN(DO)
 /**********     CHGVAR     VAR(&FMLIB) VALUE(%SST(&SVAL1 1 2) *BCAT +               */ /*A1084804A*/
@@ -65,23 +67,23 @@
                 CHGVAR     VAR(&FMLIB) VALUE('#.' *TCAT %SST(&SVAL2 1 +
                              2) *TCAT 'DMLIB')
              ENDDO
- 
+
 /* Check whether from field is alpha or numeric. */                                    /*A1084804A*/
              CALL       PGM(UTC000004) PARM('MMPTRMPD' &FMLIB +
                           'SMUC00292F' '*FIRST' '*REPLACE')                            /*A1084804A*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*A1084804A*/
                 GOTO       CMDLBL(ERROR)                                               /*A1084804A*/
              ENDDO                                                                     /*A1084804A*/
- 
+
 CHKFLD:                                                                                /*A1084804A*/
              RCVF                                                                      /*A1084804A*/
              IF         COND(&WHFLDI *NE 'PTCNUM') THEN(DO)                            /*A1084804A*/
                 GOTO       CMDLBL(CHKFLD)                                              /*A1084804A*/
              ENDDO                                                                     /*A1084804A*/
- 
+
 /* Clear file in case of re-run. */
              CLRPFM     FILE(MMPTRMPD)
- 
+
 /* Insert records from old file. */
              CHGVAR     VAR(&STM_STR) VALUE('insert into MMPTRMPD +
                           (PTRECI, PTDLNO, PTCNUM, PTCCY, PTPCPL,')
@@ -124,21 +126,29 @@ CHKFLD:                                                                         
              CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+
 /* Delete record from SMZNMGPD but only for '*MIG' mode. */
              IF         COND(&MODE *EQ '*MIG') THEN(DO)
-                CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
-                             where ZNOBJ = ''MMPTRMPD''')
+/*********      CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
+                             where ZNOBJ = ''MMPTRMPD''') */                            /*MD058089*/
+                CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMCTD +
+                             where ZNOBJ = ''MMPTRMPD''')                               /*MD058089*/
                 CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
                 RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                              COMMIT(*NONE)
                 MONMSG     MSGID(SQL9010)
+                CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMXTD +
+                             where ZNOBJ = ''MMPTRMPD''')                               /*MD058089*/
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                        /*MD058089*/
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)                                              /*MD058089*/
+                MONMSG     MSGID(SQL9010)                                               /*MD058089*/
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
  ERROR:
              CHGJOB     SWS(XXXXXX11)
- 
+
  ENDPGM:
              ENDPGM

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR911540           Date 10Feb12              */
+/*       Last Amend No. MD058089           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR911540           Date 10Feb12              */
 /*                      BUG27793           Date 08Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR911540 - Need to create file for SQL up front.            */
 /*       BUG27793 - Make migration multi-streamed.                   */
@@ -32,10 +34,10 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&FROMLIB &TOLIB)
- 
+
              DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
@@ -44,19 +46,20 @@
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')                   /*BUG27793*/
              DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
 /**********  DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                            */ /*BUG27793*/
- 
-             DCLF       FILE(SMZNMGPD)
- 
+
+/**********  DCLF       FILE(SMZNMGPD)                                                  /*MD058089*/
+             DCLF       FILE(SMZNMJW0)                                                  /*MD058089*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Set status to ACTIVE. */                                                             /*BUG27793*/
              CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
                           '*UPDATE' 'ACTIVE')                                           /*BUG27793*/
- 
+
              CHKOBJ     OBJ(QTEMP/UPERRMQT) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
@@ -65,7 +68,7 @@
              ENDDO
 /**********  CLRPFM     FILE(QTEMP/UPERRMQT)                                           */ /*CUP038*/
              CLRPFM     FILE(QTEMP/UPERRMQT)                                            /*BUG27793*/
- 
+
 /** Create and rename temporary source file for RUNSQLSTM. */                           /*AR911540*/
              DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*AR911540*/
              MONMSG     MSGID(CPF0000)                                                  /*AR911540*/
@@ -76,7 +79,7 @@
                           file for SMC000031')                                          /*AR911540*/
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)                                                /*AR911540*/
- 
+
 READFILE:
 /* If the file is multi-membered then attempt to remove member with old name */
 /*  from new file.                                                           */
@@ -89,20 +92,20 @@ READFILE:
 /**********     CHGVAR     VAR(&GENERROR) VALUE('Y')                                   */ /*CUP038*/
                 CHGVAR     VAR(&GENERROR) VALUE('Y')                                    /*BUG27793*/
              ENDDO
- 
+
              IF         COND(&ZNOBJ *NE ' ' *AND &ZNMMBR *EQ 'Y') +
                           THEN(DO)
                 RMVM       FILE(&ZNNOBJ) MBR(&ZNOBJ)
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
 /**********     GOTO       CMDLBL(ERRORCHECK)                                          */ /*CUP038*/
 /**********     GOTO       CMDLBL(ENDPGM)                                 */ /*CUP038*/ /*BUG27793*/
                 GOTO       CMDLBL(ERRORCHECK)                                           /*BUG27793*/
              ENDDO
- 
+
 /* Only copy objects if it has a new name.... */
              IF         COND(&ZNNOBJ *NE ' ') THEN(DO)
 /* Check if it is multi-membered. */
@@ -116,7 +119,7 @@ READFILE:
                 ENDDO
 /* Check if it can be copied or it needs a program. */                                    /*CSD027*/
                 IF         COND(&ZNCPYF *EQ '*COPY') THEN(DO)
- 
+
                    CPYF       FROMFILE(&FROMLIB/&ZNOBJ) +
                                 TOFILE(&TOLIB/&ZNNOBJ) FROMMBR(&FROMMBR) +
                                 TOMBR(&TOMBR) MBROPT(*REPLACE) +
@@ -185,9 +188,9 @@ READFILE:
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(DO)
                       GOTO       CMDLBL(TAG02)
                    ENDDO
- 
+
                    GOTO       CMDLBL(READFILE)
- 
+
 TAG02:
                    CPYF       FROMFILE(&FROMLIB/&ZNOBJ) +
                                 TOFILE(&TOLIB/&ZNNOBJ) FROMMBR(&FROMMBR) +
@@ -223,9 +226,9 @@ TAG02:
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
                       GOTO       CMDLBL(TAG03)
                    ENDDO
- 
+
                    GOTO       CMDLBL(READFILE)
- 
+
 TAG03:
                    CPYF       FROMFILE(&FROMLIB/&ZNOBJ) +
                                 TOFILE(&TOLIB/&ZNNOBJ) FROMMBR(&FROMMBR) +
@@ -252,9 +255,9 @@ TAG03:
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
                       GOTO       CMDLBL(READFILE)
                    ENDDO
- 
+
                    GOTO       CMDLBL(READFILE)
- 
+
                 ENDDO
                 ELSE       CMD(DO)                                                        /*CSD027*/
                    IF         COND(&ZNCPYF *EQ '*PROGRAM') THEN(DO)                       /*CSD027*/
@@ -264,9 +267,9 @@ TAG03:
                    ENDDO                                                                  /*CSD027*/
                 ENDDO                                                                     /*CSD027*/
              ENDDO
- 
+
              GOTO       CMDLBL(READFILE)
- 
+
 /*ERRORCHECK:                                                                          */ /*CUP038*/
 /**********  IF         COND(&GENERROR *EQ 'Y') THEN(DO)                               */ /*CUP038*/
 /**********     CALL       PGM(UP008010) PARM('*REPORT' 'SMC000031 ' +                 */ /*CUP038*/
@@ -288,9 +291,9 @@ ERRORCHECK:                                                                     
                 CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
                              '*UPDATE' 'PASSED')                                        /*BUG27793*/
              ENDDO                                                                      /*BUG27793*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
 /**Set*up*general*error*message.**/ /*                                               */ /*BUG27793*/
 /**********  CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('SMC000031 - Copy of +       */ /*BUG27793*/

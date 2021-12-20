@@ -16,14 +16,16 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. CSD103    *CREATE  Date 10Aug20               *
+      *  Last Amend No. MD058089           Date 01Sep21               *
+      *  Prev Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
-     FSMFILUPD  IF   E           K DISK    INFSR(*PSSR)
+     F*SMFILUPD* IF   E           K DISK    INFSR(*PSSR)                                    MD058089
       *Midas SD File Base Rate Fields to Update
       *
       **---------------------------------------------------------------
@@ -59,17 +61,33 @@
       **
      D Command         S           2764
       *
+     D SMFILU        E DS                  EXTNAME(SMFIUJW0)                                MD058089
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *
-     C     *LOVAL        SETLL     SMFILUPD
-     C                   READ      SMFILUD0                             3545
+     C******LOVAL        SETLL     SMFILUPD                                                 MD058089
+     C**********         READ      SMFILUD0                             3545                MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ declare ACursor insensitive scroll cursor for                                       MD058089
+     C+ select * from SMFIUJW0                                                              MD058089
+     C+ order by PFILE, PFIELD                                                              MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ open ACursor                                                                        MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ fetch next from ACursor into :SMFILU                                                MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
       *
       ** Database error
       *
-     C                   IF        ErrorOnFl = True
+     C**********         IF        ErrorOnFl = True                                         MD058089
+     C                   IF        SQLCODE < 0                                              MD058089
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*FIRST'
      C                   EVAL      DBFile = 'SMFILUD0'
@@ -80,7 +98,8 @@
       *
       ** Start loop
       *
-     C                   DOW       EndOfFile = False
+     C**********         DOW       EndOfFile = False                                        MD058089
+     C                   DOW       SQLCODE = 0                                              MD058089
       *
       ** Process Update of files
       *
@@ -96,9 +115,13 @@
       *
       ** Read next record
       *
-     C                   READ      SMFILUD0                             3545
+     C**********         READ      SMFILUD0                             3545                MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ fetch next from ACursor into :SMFILU                                                MD058089
+     C/END-EXEC                                                                             MD058089
       *
-     C                   IF        ErrorOnFl = True
+     C**********         IF        ErrorOnFl = True                                         MD058089
+     C                   IF        SQLCODE < 0                                              MD058089
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*NEXT'
      C                   EVAL      DBFile = 'SMFILUD0'

@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD058089             Date 01Sep21             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -329,7 +331,8 @@
       * If yes, 'Rmv field' and other attributes can be ignored.
      C                   If        %subst(WJOB:3:2) = 'GM'
      C/exec SQL
-     C+ select count(*) into :RcdCount from SMGNMGPD
+     C**select*count(*) into :RcdCount from SMGNMGPD                                        MD058089
+     C+ select count(*) into :RcdCount from SMGNMJW0                                        MD058089
      C+ where NCOBJ = :WFILE  and NCETBL = 'Y'
      C/end-exec
 

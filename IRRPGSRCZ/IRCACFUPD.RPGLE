@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD059375           Date 20Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
@@ -80,6 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059375 - Rate change date should mark the start of the new *
+      *             interest period and not the Interest Payment Date.*
+      *             Do not populate URCHG/TRCHG field as this will be *
+      *             use to store the previous Rate Change Date.       *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1138,14 +1143,14 @@
      C                   IF        CIR020 = 'Y'                                               CIR020
      C                   EXSR      SetupBLRT                                                  CIR020
                                                                                               CIR020
-      ** Set Backward-Looking Rate Change Date                                                CIR020
-                                                                                              CIR020
-     C                   IF        RPUBLRT = 'Y'                                              CIR020
-     C                   Z-ADD     BJRDNB        URCHG                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        RPTBLRT = 'Y'                                              CIR020
-     C                   Z-ADD     BJRDNB        TRCHG                                        CIR020
-     C                   ENDIF                                                                CIR020
+      ***Set*Backward-Looking*Rate*Change*Date*************************              CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+     C**********         IF        RPUBLRT = 'Y'                                     CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        URCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C**********         IF        RPTBLRT = 'Y'                                     CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        TRCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
      C                   ENDIF                                                                CIR020
 
       ** Set up required fields on DEALSDG that were not set up on
@@ -1534,25 +1539,25 @@
      C                   IF        CIR020 = 'Y'                                               CIR020
      C                   EXSR      SetupBLRT                                                  CIR020
                                                                                               CIR020
-      ** Set Rate Change Date to Rundate if deal is amended from                              CIR020
-      ** forward-looking to backward-looking                                                  CIR020
-                                                                                              CIR020
-     C                   IF        UBLRT <> 'Y' and RPUBLRT = 'Y'                             CIR020
-     C                   Z-ADD     BJRDNB        URCHG                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TBLRT <> 'Y' and RPTBLRT = 'Y'                             CIR020
-     C                   Z-ADD     BJRDNB        TRCHG                                        CIR020
-     C                   ENDIF                                                                CIR020
-                                                                                              CIR020
-      ** Set Rate Change Date to zero if deal is amended from                                 CIR020
-      ** backward-looking to forward-looking                                                  CIR020
-                                                                                              CIR020
-     C                   IF        UBLRT = 'Y' and RPUBLRT <> 'Y'                             CIR020
-     C                   Z-ADD     *ZEROS        URCHG                                        CIR020
-     C                   ENDIF                                                                CIR020
-     C                   IF        TBLRT = 'Y' and RPTBLRT <> 'Y'                             CIR020
-     C                   Z-ADD     *ZEROS        TRCHG                                        CIR020
-     C                   ENDIF                                                                CIR020
+      ***Set*Rate*Change*Date*to*Rundate*if*deal*is*amended*from*******              CIR020 MD059375
+      ***forward-looking*to*backward-looking***************************              CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+     C**********         IF        UBLRT <> 'Y' and RPUBLRT = 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        URCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C**********         IF        TBLRT <> 'Y' and RPTBLRT = 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        TRCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+      ***Set*Rate*Change*Date*to*zero*if*deal*is*amended*from**********              CIR020 MD059375
+      ***backward-looking*to*forward-looking***************************              CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+     C**********         IF        UBLRT = 'Y' and RPUBLRT <> 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     *ZEROS        URCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C**********         IF        TBLRT = 'Y' and RPTBLRT <> 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     *ZEROS        TRCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
      C                   ENDIF                                                                CIR020
 
       ** Set up required fields on DEALSDG that were not set up on valid file

@@ -15,11 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059134           Date 22Oct21               *
-      *  Prev Amend No. DRI005  *CREATE    Date 13Apr21               *
+      *  Last Amend No. MD059406           Date 17Dec21               *
+      *  Prev Amend No. MD059134           Date 22Oct21               *
+      *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059406 - Extract issues with Feeder and Proofing files     *
+      *              Add PSTA to LDBL if Include Balance is Y only    *
       *  MD059134 - Net Balance not correct in Proofing file          *
       *  DRI005 - HO and EDW Extracts                                 *
       *                                                               *
@@ -286,12 +289,15 @@ b5   C                   Dow       *In52 = '0'
       *
 b6   C                   If        XXDCCYL = K2CCY and XXDACOD = K2ACOD
       *
+      ** Add up Posting Amount only if Include Balance is 'Y'                   MD059406
+     C                   If        XXDINBL = 'Y'                                MD059406
       ** Calculate Total Ledger Balance
 b7   C                   If        XXDDRCR = 'D'
      C                   Add       XXDPSTA       WKTOTDR          19 0
      C                   Else
      C                   Add       XXDPSTA       WKTOTCR          19 0
 e7   C                   Endif
+     C                   Endif                                                  MD059406
      C     Klist2        READE     XXFEEDDL1                              52
 x6   C                   Else
      C                   MOVE      '1'           *IN52

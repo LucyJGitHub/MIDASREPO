@@ -15,11 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059075           Date 13Oct21               *
-      *  Prev Amend No. DRI005  *CREATE    Date 13Apr21               *
+      *  Last Amend No. MD059406           Date 17Dec21               *
+      *  Prev Amend No. MD059075           Date 13Oct21               *
+      *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059406 - Extract issues with Feeder and Proofing files     *
+      *              Set new flag for Include Balance (XXFEEDDTD)     *
       *  MD059075 - Journal Feeder Header Filler incorrect (Recompile)*
       *  DRI005 - HO and EDW Extracts                                 *
       *                                                               *
@@ -565,6 +568,15 @@
      C                   Z-ADD     PSTA          XXDPSTA
       ** Rate
      C                   MOVE      *BLANKS       XXDRATE
+      ** Set new flag for Include in Balance (Y/N)                              MD059406
+     C                   If        PSTD = WPrev_WrkDay and WVMMP > WVMMV and    MD059406
+     C                                WVYYP <> WVYYV                            MD059406
+     C                             OR PSTD = WPrev_WrkDay and WVMMP < WVMMV and MD059406
+     C                                WVYYP = WVYYV                             MD059406
+     C                   MOVE      'Y'           XXDINBL                        MD059406
+     C                   Else                                                   MD059406
+     C                   MOVE      'N'           XXDINBL                        MD059406
+     C                   ENDIF                                                  MD059406
       *
       ** Add up details for Header and Control Format
       *

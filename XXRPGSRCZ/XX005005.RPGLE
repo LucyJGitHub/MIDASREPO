@@ -15,11 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059075           Date 13Oct21               *
-      *  Prev Amend No. DRI005  *CREATE    Date 13Apr21               *
+      *  Last Amend No. MD059406           Date 17Dec21               *
+      *  Prev Amend No. MD059075           Date 13Oct21               *
+      *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059406 - Extract issues with Feeder and Proofing files     *
+      *              Remove Product Code from Proofing file           *
+      *              Recompile for changes in XXFEEDDTD               *
       *  MD059075 - Journal Feeder Header Filler incorrect (Recompile)*
       *  DRI005 - HO and EDW Extracts                                 *
       *                                                               *
@@ -178,12 +182,16 @@
      D  DSPFIL2               15     15
      D  DSPPACC               16     19
      D  DSPFIL3               20     20
-     D  DSPPHOP               21     24
-     D  DSPFIL4               25     25
-     D  DSPPHOB               26     28
-     D  DSPFIL5               29     29
-     D  DSPPBLC               30     48
-     D  DSPPSGN               49     49
+     D**DSPPHOP               21     24                                         MD059406
+     D**DSPFIL4               25     25                                         MD059406
+     D**DSPPHOB               26     28                                         MD059406
+     D**DSPFIL5               29     29                                         MD059406
+     D**DSPPBLC               30     48                                         MD059406
+     D**DSPPSGN               49     49                                         MD059406
+     D  DSPPHOB               21     23                                         MD059406
+     D  DSPFIL5               24     24                                         MD059406
+     D  DSPPBLC               25     43                                         MD059406
+     D  DSPPSGN               44     44                                         MD059406
 
 
      C/Title Main Processing
@@ -409,8 +417,8 @@
      C                   MOVEL     ','           DSPFIL2
      C                   MOVEL     XXPACC        DSPPACC
      C                   MOVEL     ','           DSPFIL3
-     C                   MOVEL     XXPHOP        DSPPHOP
-     C                   MOVEL     ','           DSPFIL4
+     C*******            MOVEL     XXPHOP        DSPPHOP                        MD059406
+     C*******            MOVEL     ','           DSPFIL4                        MD059406
      C                   MOVEL     XXPHOB        DSPPHOB
      C                   MOVEL     ','           DSPFIL5
      C                   MOVEL     XXPBLC        DSPPBLC

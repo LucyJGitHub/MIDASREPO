@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD056556           Date 31Aug20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD056556           Date 31Aug20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR690003           Date 07Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -101,8 +103,8 @@
      F                                     USROPN
 
       ** Transaction Ranges
-     FZATNRGL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     USROPN
+     F*ZATNRGL0* UF   E           K DISK    INFSR(*PSSR)                                    MD058079
+     F**********                           USROPN                                           MD058079
 
       ** Global Files
      F*GPGLOBFL1 IF   E           K DISK    INFSR(*PSSR)                                    MD056556
@@ -167,6 +169,8 @@
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
+     D ZATNRG        E DS                  EXTNAME(ZATRGJW0)                                MD058079
+     D  LCDX         E                     EXTFLD(LCD)                                      MD058079
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -594,7 +598,7 @@
      C     SrResetFile   BEGSR
 
      C                   OPEN      CANDLNLL
-     C                   OPEN      ZATNRGL0
+     C**********         OPEN      ZATNRGL0                                                 MD058079
      C                   OPEN      FDDLNMLL
 
      C                   READ      CANDLNLL
@@ -604,13 +608,17 @@
      C                   READ      CANDLNLL
      C                   ENDDO
 
-     C     *LOVAL        SETLL     ZATNRGL0
-     C                   READ      ZATNRGL0
-     C                   DOW       NOT %EOF(ZATNRGL0)
+     C******LOVAL        SETLL     ZATNRGL0                                                 MD058079
+     C**********         READ      ZATNRGL0                                                 MD058079
+     C**********         DOW       NOT %EOF(ZATNRGL0)                                       MD058079
      C                   EVAL      FNOR = 1
-     C                   UPDATE    ZATNRGD0
-     C                   READ      ZATNRGL0
-     C                   ENDDO
+     C**********         UPDATE    ZATNRGD0                                                 MD058079
+     C**********         READ      ZATNRGL0                                                 MD058079
+     C**********         ENDDO                                                              MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ update ZATRGXTD set                                                                 MD058079
+     C+   FNOR   = :FNOR                                                                    MD058079
+     C/END-EXEC                                                                             MD058079
 
      C                   READ      FDDLNMLL
      C                   DOW       NOT %EOF(FDDLNMLL)
@@ -620,7 +628,7 @@
      C                   ENDDO
 
      C                   CLOSE     CANDLNLL
-     C                   CLOSE     ZATNRGL0
+     C**********         CLOSE     ZATNRGL0                                                 MD058079
      C                   CLOSE     FDDLNMLL
 
      C                   ENDSR

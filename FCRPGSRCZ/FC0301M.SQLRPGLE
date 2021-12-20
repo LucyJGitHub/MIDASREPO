@@ -26,8 +26,9 @@
       *================================================================
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD056555           Date 31AUG20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD056555           Date 31AUG20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -47,6 +48,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
@@ -88,7 +90,7 @@
      F*FCREPTL0* UF   E           K DISK                                                    MD055265
       * UPD: Report Descriptions       Update index
       *
-     FFCRPDSL0  UF   E           K DISK
+     F*FCRPDSL0* UF   E           K DISK                                                    MD058079
       * UPD: Report Descriptions Audit Update index
       *
      F*FCRSFXL0* UF A E           K DISK                                                    MD055265
@@ -142,6 +144,7 @@
      D                                     PREFIX(L)                                        MD055265
      D*NullInds2       s              5i 0 dim(10)                                 MD055265 MD055681
      D NullInds2       s              5i 0 dim(11)                                          MD055681
+     D FCRPDA        E DS                  EXTNAME(FCRPAJW0)                                MD058079
       *
      D RUNDAT          DS
      D  RUNA                   1      7
@@ -1192,7 +1195,20 @@
       *
      C     KLCHSF        KLIST
      C                   KFLD                    ADFLNM                         Filename
-     C     KLCHSF        CHAIN     @ADREBB                            9091      *
+     C*****KLCHSF        CHAIN     @ADREBB                            9091      *           MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :FCRPDA                                                                        MD058079
+     C+ from FCRPAJW0 where ADFLNM = 'FCREPTPD'                                             MD058079
+     C/END-EXEC                                                                             MD058079
+     C                   SETOFF                                       9091                  MD058079
+     C                   If        SQLCODE = 100                                            MD058079
+     C                   SETON                                        90                    MD058079
+     C                   ENDIF                                                              MD058079
+     C                   If        SQLCODE <> 100 and SQLCODE <> 0                          MD058079
+     C                   SETON                                        91                    MD058079
+     C                   ENDIF                                                              MD058079
+                                                                                            MD058079
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -1223,8 +1239,15 @@
      C                   Z-ADD     WUNOAM        ADNOAM                         No. of Amends
      C                   Z-ADD     WUNODL        ADNODL                         No. of Deletes
       *
-     C                   UPDATE    @ADREBB                              91      *
-     C     *IN91         IFEQ      '1'
+     C**********         UPDATE    @ADREBB                              91      *           MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ update FCRPAXTD set                                                                 MD058079
+     C+   ADNORC = :ADNORC, ADNOIN = :ADNOIN,                                               MD058079
+     C+   ADNOAM = :ADNOAM, ADNODL = :ADNOAM                                                MD058079
+     C+               where ADFLNM = 'FCREPTPD'                                             MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN91         IFEQ      '1'                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
@@ -1696,7 +1719,20 @@
       *
      C     KLCHSL        KLIST
      C                   KFLD                    ADFLNM                         Filename
-     C     KLCHSL        CHAIN     @ADREBB                            9091      *
+     C*****KLCHSL        CHAIN     @ADREBB                            9091      *           MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :FCRPDA                                                                        MD058079
+     C+ from FCRPAJW0 where ADFLNM = 'FCREPTPD'                                             MD058079
+     C/END-EXEC                                                                             MD058079
+     C                   SETOFF                                       9091                  MD058079
+     C                   If        SQLCODE = 100                                            MD058079
+     C                   SETON                                        90                    MD058079
+     C                   ENDIF                                                              MD058079
+     C                   If        SQLCODE <> 100 and SQLCODE <> 0                          MD058079
+     C                   SETON                                        91                    MD058079
+     C                   ENDIF                                                              MD058079
+                                                                                            MD058079
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -1727,8 +1763,15 @@
      C                   Z-ADD     WUNOAM        ADNOAM                         No. of Amends
      C                   Z-ADD     WUNODL        ADNODL                         No. of Deletes
       *
-     C                   UPDATE    @ADREBB                              91      *
-     C     *IN91         IFEQ      '1'
+     C**********         UPDATE    @ADREBB                              91      *           MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ update FCRPAXTD set                                                                 MD058079
+     C+   ADNORC = :ADNORC, ADNOIN = :ADNOIN,                                               MD058079
+     C+   ADNOAM = :ADNOAM, ADNODL = :ADNOAM                                                MD058079
+     C+               where ADFLNM = 'FCREPTPD'                                             MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN91         IFEQ      '1'                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE

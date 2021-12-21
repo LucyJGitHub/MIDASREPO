@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. DRI005  *CREATE    Date 13Apr21              */
+/*       Last Amend No. MD059357           Date 17Dec21              */
+/*       Prev Amend No. DRI005  *CREATE    Date 13Apr21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059357 - XXC005003 failure for LN* and BL* deletion       */
 /*       DRI005 - HO and EDW Extracts                                */
 /*                                                                   */
 /*********************************************************************/
              PGM
 
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
-                          Limited 2021')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2021')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('XXC005003 ')
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -63,9 +65,11 @@
 /**/
 /*    Global monitor message                                         */
 /**/
-             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
 
-             SNDPGMMSG  MSG('XXC005003 - Midas XX GLM/EDW Files Housekeeping') TOMSGQ(MRUNQ)
+             SNDPGMMSG  MSG('XXC005003 - Midas XX GLM/EDW Files Housekeeping') +
+                          TOMSGQ(MRUNQ)
 
 /**/
              CHGJOB     SWS(00000000)
@@ -95,70 +99,79 @@
 /* 'HO_EDW_Ext_Library' */
 /* 'HO_EDW_Ret_Period' */
 
-                CALL       PGM(AOSVALR0) PARM(&PRTCD 'HO_EDW_Ret_Period' &SVAL1 +
-                             'HO_EDW_Ext_Library' &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 &SVALK5 +
-                             &SVAL5 &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
-                             &SVAL9 &SVALK0 &SVAL10)
+             CALL       PGM(AOSVALR0) PARM(&PRTCD +
+                          'HO_EDW_Ret_Period' &SVAL1 'HO_EDW_Ext_Library' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)
 
 /**/
-                CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
 /**/
 
 /**/
 /*    Call program CB0160 to get value of restart indicator.         */
 /**/
-                CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
 
 /**/
 /*    If it is NOT a restart  */
 /**/
-                IF         COND(&STAT *NE 'Y') THEN(DO)
+             IF COND(&STAT *NE 'Y') THEN(DO)
 
 /*    Calculate Retention Period to get YYMM  */
-                   CALL       PGM(XX005006) PARM(&PYYMM)
-                   CHGVAR     VAR(&PFLNE) VALUE('LN' *TCAT &PYYMM *TCAT '*')
-                   CHGVAR     VAR(&PFBLE) VALUE('BL' *TCAT &PYYMM *TCAT '*')
-                   DLTOBJ     OBJ(&SVAL2/&PFLNE) OBJTYPE(*FILE)
-                   DLTOBJ     OBJ(&SVAL2/&PFBLE) OBJTYPE(*FILE)
+             CALL       PGM(XX005006) PARM(&PYYMM)
+             CHGVAR     VAR(&PFLNE) VALUE('LN' *TCAT &PYYMM *TCAT '*')
+             CHGVAR     VAR(&PFBLE) VALUE('BL' *TCAT &PYYMM *TCAT '*')
+             DLTOBJ     OBJ(&SVAL2/&PFLNE) OBJTYPE(*FILE)
+/* Begin MD059357  */
+             MONMSG     MSGID(CPF2105 CPF2125 CPF0000)
+/* End MD059357  */
+             DLTOBJ     OBJ(&SVAL2/&PFBLE) OBJTYPE(*FILE)
+/* Begin MD059357  */
+             MONMSG     MSGID(CPF2105 CPF2125 CPF0000)
+/* End MD059357  */
 
-                ENDDO
+             ENDDO
 /**/
 /*    If no error occured in the program                             */
 /**/
-                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
 /**/
 /** Call CB0150 to update restart indicator */
 /**/
-                   CHGVAR     VAR(&STAT) VALUE('N')
-                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
-                ENDDO
+             ENDDO
 /**/
 /*    Database error processing                                      */
 /**/
-                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
-                   RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
-                   CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
-                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOMSGQ(MOPERQ MRUNQ)
-                ENDDO
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
 
 /**/
 /*    If no error occured in the program                             */
 /**/
-                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
 /**/
 /** Call CB0150 to update restart indicator */
 /**/
-                   CHGVAR     VAR(&STAT) VALUE('N')
-                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
-                ENDDO
+             ENDDO
 
-                CHGVAR     VAR(&STAT) VALUE('Y')
+             CHGVAR     VAR(&STAT) VALUE('Y')
 /**/
 /** Call CB0150 to update restart indicator                          */
 /**/
-                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
              ENDDO
 
@@ -175,5 +188,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)
 
  ENDPGM:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited 2021')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2021')
              ENDPGM

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059253           Date 19Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059270           Date 16Dec21               *
+      *  Prev Amend No. MD059253           Date 19Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD058708           Date 31Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
@@ -32,6 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059270 - Interest period end date of last period for 2nd   *
+      *             call of ARR calculator is set to maturity date.   *
+      *             Amend fix MD-59253 to set it to maturity date - 1.*
       *  MD059253 - DLC0606B failed due to missing record in DAMBRDI. *
       *             Do a second call of ARR calculator for existing   *
       *             backward looking IRS deals and next rate change   *
@@ -835,7 +839,8 @@
      C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
      C                             and Wrk2ndCall = 'Y'                                     MD059253
      C                   EXSR      SRIRSNxtEDATE                                            MD059253
-     C                   EVAL      IntPerEDATE = WrkEndDate                                 MD059253
+     C**********         EVAL      IntPerEDATE = WrkEndDate                        MD059253 MD059270
+     C                   EVAL      IntPerEDATE = WrkEndDate - 1                             MD059270
      C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059253
      C                   ENDIF                                                              MD059253
 

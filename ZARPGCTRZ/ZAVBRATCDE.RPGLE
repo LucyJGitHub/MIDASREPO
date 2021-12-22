@@ -307,7 +307,7 @@
       *                                                                                     MD059368
      C     BABLRT        IFEQ      'Y'                                                      MD059368
      C                   EVAL      ErrorFound = 'Y'                                         MD059368
-     C                   MOVEL     '5049527'     MsgID1                                     MD059368
+     C                   MOVEL     '5049529'     MsgID1                                     MD059368
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
      C*

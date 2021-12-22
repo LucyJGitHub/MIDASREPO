@@ -1181,7 +1181,7 @@
      C                   MOVEL     'N'           DDBRTTOK                                   MD059368
      C                   ADD       1             Idx                                        MD059368
      C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)                             MD059368
-     C                   MOVEL     '5049528'     MsgIDXAr(Idx)                              MD059368
+     C                   MOVEL     '5049529'     MsgIDXAr(Idx)                              MD059368
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
       *                                                                                     MD059368

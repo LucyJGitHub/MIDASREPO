@@ -52,7 +52,9 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
-
+      * Base rate codes (Keyed by currency code and base rate code)                         MD059368
+     FSDBSRTL0  IF   E           K DISK                                                     MD059368
+     F                                     INFSR(*pssr)                                     MD059368
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -118,6 +120,8 @@
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)                                AR755195
       ** External DS for Historic Base Rate details                                         AR755195
                                                                                             AR755195
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD059368
+      ** EXTERNAL DS FOR SAR DETAILS                                                        MD059368
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -163,6 +167,9 @@
 
       ** End of parameters
       ** =================
+     D PRTCD           S              7A                                                    MD059368
+     D POPTN           S              7A                                                    MD059368
+     D PSARD           S              6A                                                    MD059368
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -279,6 +286,36 @@
                                                                                             AR755195
      C                   END
      C                   END
+      ** Access SAR details file to determine if CDL102 is switched on                      MD059368
+      ** (Libor Deregulation Dealing)                                                       MD059368
+                                                                                            MD059368
+     C                   CALLB     'AOSARDR0'                                               MD059368
+     C                   PARM      *Blanks       PRTCD                                      MD059368
+     C                   PARM      '*VERIFY'     POPTN                                      MD059368
+     C                   PARM      'CDL102'      PSARD                                      MD059368
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059368
+      *                                                                                     MD059368
+     C                   MOVE      'N'           CDL102            1                        MD059368
+     C                   IF        PRTCD = *Blanks                                          MD059368
+     C                   EVAL      CDL102 = 'Y'                                             MD059368
+     C                   ENDIF                                                              MD059368
+      *                                                                                     MD059368
+      ** Inhibit the use of backward-looking rates if CDL102 is switched off                MD059368
+      *                                                                                     MD059368
+     C                   IF        CDL102 = 'N'                                             MD059368
+      * Key list                                                                            MD059368
+     C     BSRTKEY       KLIST                                                              MD059368
+     C                   KFLD                    DDCCY                                      MD059368
+     C                   KFLD                    DDBSRC                                     MD059368
+      *                                                                                     MD059368
+     C     BSRTKEY       CHAIN     SDBSRTL0                                                 MD059368
+     C                   IF        %FOUND(SDBSRTL0)                                         MD059368
+     C     BABLRT        IFEQ      'Y'                                                      MD059368
+     C                   EVAL      ErrorFound = 'Y'
+     C                   MOVEL     '5049528'     MsgID1
+     C                   ENDIF                                                              MD059368
+     C                   ENDIF                                                              MD059368
+     C                   ENDIF                                                              MD059368
      C*
      C**  If the base rate code is valid, set up the DRS base rate code
      C**  on the Standard Deal format.

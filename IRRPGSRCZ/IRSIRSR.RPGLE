@@ -71,7 +71,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059183A- Values entered in Our/Their Int Payment           *
-      *             Schedule tab were not saved after authorisation   *
+      *             Schedule tab were not saved after authorisation.  *
       *  MD059183 - Freq is irregular and values entered are missing  *
       *             for Their Int Rate Change Sched, Our / Their      *
       *             Int Payment Schd but values were saved in         *
@@ -812,7 +812,7 @@
      C                   EVAL      BufferEx5=%SUBST(TCFSAST:2385) +                         MD059183
      C                             TCFSAST                                                  MD059183
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST          MD056546 MD059183
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12384)+PCSAST                   MD059183
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12382)+PCSAST                   MD059183
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9281)                   MD056546 MD059183
      C                   EVAL      BufferEx7=%SUBST(PCSAST:9183)                            MD059183
      C                   ENDIF

@@ -25,9 +25,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD059368           Date 17Dec21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD020624A          Date 12Dec13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020624A          Date 12Dec13               *
       *                 AR1082657          Date 30Jan13               *
       *                 263678             Date 05Feb10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,8 +44,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
-      *             is switched off                                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020624A - Prevent MMM0799 warning message from showing     *
       *              when user inserts a TD Deal.                     *
@@ -80,12 +77,10 @@
       *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
       *                                                               *
       *****************************************************************
-
+ 
      FFDDTSTL1  IF   E           K DISK
       ** Midas FD Deal type/subtype file
-      * Base rate codes (Keyed by currency code and base rate code)                         MD059368
-     FSDBSRTL0  IF   E           K DISK                                                     MD059368
-     F                                     INFSR(*pssr)                                     MD059368
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -104,74 +99,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Error message field received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
-     D Msgid2          S                   LIKE(#MsgID)                                     MD059368
-     D Msgid3          S                   LIKE(#MsgID)                                     MD059368
-
+ 
       ** Fix Base Rate indicator received as a parameter
      D DDFBRT          S              1A
-
+ 
       ** Deal Type received as a parameter
      D DDTYPE          S              2A
-
+ 
       ** Deal Subtype received as a parameter
      D DDSTYP          S              2A
-
+ 
       ** Deal Class received as a parameter                                                   CDL038
      D DDCLAS          S              4A                                                      CDL038
                                                                                               CDL038
       ** Base rate code received as a parameter
      D DDBSRC          S              2A
-
-      ** Currency received as a parameter                                                   MD059368
-     D DDCCY           S              3A                                                    MD059368
-                                                                                            MD059368
-      ** CDL102 Fields received as a parameter                                              MD059368
-     D TranScnBlrt     S             50A                                                    MD059368
-                                                                                            MD059368
+ 
       ** Maturity date received as a parameter
      D IKMATD          S              5  0
                                                                                              BUG5812
@@ -180,10 +167,7 @@
                                                                                               241873
       ** For backing up the original Fixed Base Rate Code                                     241873
      D DDFBRTBK        S                   Like(DDFBRT)                                       241873
-                                                                                            MD059368
-      ** LIBOR Deregulation - Dealing                                                       MD059368
-     D CDL102          S              1A                                                    MD059368
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -191,7 +175,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -199,12 +183,12 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   RESET                   Defaulted                                   BUG5812
-
+ 
       *                                                                                       263678
       ** Do not default fix base rate immediately to 'N'.  Check                              263678
       ** FDDTSTL1 first.                                                                      263678
@@ -238,7 +222,7 @@
      C                   MOVEL     'MMM0346'     Msgid1
      C                   GOTO      ERROR
      C                   ENDIF
-
+ 
       ** Default value from Deal type/subtype table
      C*****DDBSRC        IFNE      *BLANKS                                                    263678
      C*****DDFBRT        ANDEQ     *BLANKS                                                    263678
@@ -292,7 +276,7 @@
      C                   ENDIF                                                                263678
      C                   ENDIF                                                                263678
      C                   ENDIF
-
+ 
       ***Fix*Base*Rate*must*be*'Y'*or*'N'*or*blanks********************                     BUG10938
       ** Fix Base Rate must be 'Y' or 'N'                                                   BUG10938
      C                   IF        (DDTYPE = 'IT') OR                                       BUG12810
@@ -305,7 +289,7 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0327'     Msgid1
      C                   ELSE
-
+ 
       ***If*Base*Rate*or*Maturity*Date*not*entered,********************                     BUG10938
       ***Fix*Base*Rate*must*be*blanks.***                                                   BUG10938
      C*****DDBSRC        IFEQ      *BLANKS                                                  BUG10938
@@ -315,7 +299,7 @@
      C**********         EVAL      ErrorFound = 'Y'                                         BUG10938
      C**********         MOVEL     'MMM0333'     Msgid1                                     BUG10938
      C**********         ELSE                                                               BUG10938
-
+ 
       ** If Base Rate and Maturity Date entered,
       ** Fix Base Rate must be 'Y' or 'N'.
      C     DDBSRC        IFNE      *BLANKS
@@ -324,35 +308,12 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0334'     Msgid1
      C                   ENDIF
-
+ 
      C**********         ENDIF                                                              BUG10938
-
+ 
      C                   ENDIF
      C                   ENDIF                                                              BUG12810
-      ** Inhibit the use of backward looking rates if CDL102 is switched off                MD059368
-     C                   IF        CDL102 = 'N'                                             MD059368
-      * Key list                                                                            MD059368
-     C     BSRTKEY       KLIST                                                              MD059368
-     C                   KFLD                    DDCCY                                      MD059368
-     C                   KFLD                    DDBSRC                                     MD059368
-      *                                                                                     MD059368
-     C     BSRTKEY       CHAIN     SDBSRTL0                                                 MD059368
-     C                   IF        %FOUND(SDBSRTL0)                                         MD059368
-     C     BABLRT        IFEQ      'Y'                                                      MD059368
-     C                   EVAL      ErrorFound = 'Y'                                         MD059368
-     C                   MOVEL     '5049508'     Msgid2                                     MD059368
-     C                   ENDIF                                                              MD059368
-     C                   ENDIF                                                              MD059368
-      *                                                                                     MD059368
-      ** Inhibit the LIBOR fields if CDL102 is switched off                                 MD059368
-      *                                                                                     MD059368
-     C                   IF        TranScnBlrt <> *Blanks                                   MD059368
-     C                   EVAL      ErrorFound = 'Y'                                         MD059368
-     C                   MOVEL     '5049527'     Msgid3                                     MD059368
-     C                   ENDIF                                                              MD059368
-     C                   ENDIF                                                              MD059368
-      *                                                                                     MD059368
-
+ 
       ** If an error was found, set the return code appropriately
      C     ERROR         TAG
      C                   IF        ErrorFound = 'Y'
@@ -364,9 +325,9 @@
      C                   EVAL      RetCodeIn = 'Error'
      C                   EndIf                                                               BUG5812
      C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -378,40 +339,35 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
-     C                   PARM                    Msgid2                                     MD059368
-     C                   PARM                    Msgid3                                     MD059368
      C                   PARM                    DDFBRT
      C                   PARM                    DDTYPE
      C                   PARM                    DDSTYP
      C                   PARM                    DDCLAS                                       CDL038
      C                   PARM                    DDBSRC
-     C                   PARM                    DDCCY                                      MD059368
-     C                   PARM                    TranScnBlrt                                MD059368
      C                   PARM                    IKMATD
-     C                   PARM                    CDL102                                     MD059368
-
+ 
       ** Key List for Loan Type/Subtype and Deal Type/Subtype
-
+ 
      C     KLDTST        KLIST
      C                   KFLD                    DDTYPE
      C                   KFLD                    DDSTYP
      C                   KFLD                    DDCLAS                                       CDL038
-
+ 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR                                                  *** InzEnd ***
-
+ 
       *****************************************************************
       /EJECT
       ********************************************************************

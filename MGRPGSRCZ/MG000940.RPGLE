@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *  Last Amend No. CGL094             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL094 - Allow External Destination for MT940 Message.       *
+      *           Remove Spaces when formatting field 61.             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
@@ -550,6 +553,9 @@
      D P@RTCD          S              7A                                                    BUG26075
      D P@OPTN          S              7A                                                    BUG26075
      D P@BRCA          S              3A                                                    BUG26075
+     D CGL094          S              1    INZ('N')                                           CGL094
+     D P@NWRK          S              6A                                        Network Code  CGL094
+     D P@SARD          S              6A                                        Feature       CGL094
       *                                                                                       CER030
      D                 DS
      D  KNwrk                  1      6
@@ -1411,6 +1417,9 @@
      C                   Cat       Subfld8:0     Wstring100
 
      C                   MoveA     *Blanks       AL100
+     C                   If        CGL094 = 'Y'                                               CGL094
+     C                   Exsr      SRRmvBlanks                                                CGL094
+     C                   Endif                                                                CGL094
      C                   MoveA     WString100    AL100
      C                   Exsr      SRDetFldLen
 
@@ -3373,6 +3382,18 @@
      C                   MOVEL     SVAL2         WFld21                                       CMG006
       *                                                                                       CMG006
      C                   ENDIF                                                                CMG006
+                                                                                              CGL094
+      ** Check if feature CGL094 is present.                                                  CGL094
+                                                                                              CGL094
+     C                   CALL      'AOSARDR0'                                                 CGL094
+     C                   PARM      *BLANKS       P@RTCD                                       CGL094
+     C                   PARM      '*KEY   '     P@OPTN                                       CGL094
+     C                   PARM      'CGL094'      P@SARD                                       CGL094
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL094
+      *                                                                                       CGL094
+     C     P@RTCD        IFEQ      *BLANKS                                                    CGL094
+     C                   MOVE      'Y'           CGL094                                       CGL094
+     C                   ENDIF                                                                CGL094
       *
       **  Convert history retention date to YYMMDD
       *
@@ -3551,6 +3572,30 @@
 
      C                   Endsr
       *****************************************************************
+      /EJECT                                                                                  CGL094
+      *****************************************************************                       CGL094
+      *                                                               *                       CGL094
+      * SRRmvBlanks - Remove Blanks                                   *                       CGL094
+      *                                                               *                       CGL094
+      *****************************************************************                       CGL094
+                                                                                              CGL094
+     C     SRRmvBlanks   BEGSR                                                                CGL094
+                                                                                              CGL094
+     C                   Z-add     1             Y                 3 0                        CGL094
+     C                   Z-add     0             Z                 3 0                        CGL094
+     C                   Move      *blanks       XStr100         100                          CGL094
+     C                   Dow       Y <= 100                                                   CGL094
+     C                   If        %subst(WString100:Y:1) <> *blanks                          CGL094
+     C                   Add       1             Z                                            CGL094
+     C                   Eval      %subst(XStr100:Z:1) = %subst(WString100:Y:1)               CGL094
+     C                   Endif                                                                CGL094
+     C                   Add       1             Y                                            CGL094
+     C                   Enddo                                                                CGL094
+                                                                                              CGL094
+     C                   Eval      WString100 = XStr100                                       CGL094
+                                                                                              CGL094
+     C                   Endsr                                                                CGL094
+      *****************************************************************                       CGL094
       /EJECT
       *****************************************************************
       *                                                               *

@@ -466,7 +466,7 @@
      C                   ENDIF                                                                CSD103
       *                                                                                     MD059368
       ** Inhibit the LIBOR fields even if feature CSD103 is switched off                    MD059368
-      *                                                                                     MD095368
+      *                                                                                     MD059368
      C                   IF        CSD103 = 'N'                                             MD059368
      C                   IF        LiborScnFld <> *BLANKS                                   MD059368
      C                   EXSR      RESETERRS                                                MD059368

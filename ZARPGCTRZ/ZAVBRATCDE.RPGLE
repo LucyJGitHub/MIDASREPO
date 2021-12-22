@@ -55,9 +55,6 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
-      * Base rate codes (Keyed by currency code and base rate code)                         MD059368
-     FSDBSRTL0  IF   E           K DISK                                                     MD059368
-     F                                     INFSR(*pssr)                                     MD059368
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -306,10 +303,6 @@
       ** Inhibit the use of backward-looking rates if CDL102 is switched off                MD059368
       *                                                                                     MD059368
      C                   IF        CDL102 = 'N'                                             MD059368
-      * Key list                                                                            MD059368
-     C     BSRTKEY       KLIST                                                              MD059368
-     C                   KFLD                    DDCCY                                      MD059368
-     C                   KFLD                    DDBSRC                                     MD059368
       *                                                                                     MD059368
      C     BABLRT        IFEQ      'Y'                                                      MD059368
      C                   EVAL      ErrorFound = 'Y'                                         MD059368

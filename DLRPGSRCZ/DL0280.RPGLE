@@ -19199,6 +19199,10 @@
      C/COPY WNCPYSRC,DL0280C689
      C                   Z-ADD     TNICD         TIACD                                         S0111
      C                   Z-ADD     TNICD         TLPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and TBLRT = 'Y'                             MD059375
+     C                   MOVE      TNICD         TRCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Their Last Rate Change Date field (PLTLRC)         CPL002
@@ -19467,6 +19471,10 @@
      C/COPY WNCPYSRC,DL0280C690
      C                   Z-ADD     UNICD         UIACD                                         S0111
      C                   Z-ADD     UNICD         ULPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and UBLRT = 'Y'                             MD059375
+     C                   MOVE      UNICD         URCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Our Last Rate Change Date field (PLULRC)           CPL002
@@ -23615,6 +23623,10 @@
      C                   ENDIF
      C                   Z-ADD     TNICD         TIACD                                         S0111
      C                   Z-ADD     TNICD         TLPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and TBLRT = 'Y'                             MD059375
+     C                   MOVE      TNICD         TRCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Their Last Rate Change Date field (PLTLRC)         CPL002
@@ -23852,6 +23864,10 @@
      C                   ENDIF
      C                   Z-ADD     UNICD         UIACD                                         S0111
      C                   Z-ADD     UNICD         ULPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and UBLRT = 'Y'                             MD059375
+     C                   MOVE      UNICD         URCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Our Last Rate Change Date field (PLULRC)           CPL002
@@ -27834,6 +27850,10 @@
      C                   Z-ADD     WIACD         UIACD                                         S0111
      C                   Z-ADD     WINFD         UINFD                                         S0111
      C                   Z-ADD     WLPCD         ULPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and UBLRT = 'Y'                             MD059375
+     C                   MOVE      UNICD         URCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
      C*                                                                   S01119
      C*  HAVING UPDATED BASE RATE DURING RATE FIX PROCESSING APPLY        S01119
      C*  SPREAD IN LINE WITH INDICATOR : ADD,SUB AND ADD PERCENTAGE       S01119
@@ -27913,6 +27933,10 @@
      C                   Z-ADD     WNICD         TNICD                                         S0111
      C                   Z-ADD     WINFD         TINFD                                         S0111
      C                   Z-ADD     WLPCD         TLPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and TBLRT = 'Y'                             MD059375
+     C                   MOVE      TNICD         TRCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
      C*                                                                   S01119
      C*                                                                   S01119
      C*  HAVING UPDATED BASE RATE DURING RATE FIX PROCESSING APPLY        S01119

@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059368           Date 17Dec21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR755195           Date 13Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
+      *             is switched off                                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -308,12 +311,9 @@
      C                   KFLD                    DDCCY                                      MD059368
      C                   KFLD                    DDBSRC                                     MD059368
       *                                                                                     MD059368
-     C     BSRTKEY       CHAIN     SDBSRTL0                                                 MD059368
-     C                   IF        %FOUND(SDBSRTL0)                                         MD059368
      C     BABLRT        IFEQ      'Y'                                                      MD059368
-     C                   EVAL      ErrorFound = 'Y'
-     C                   MOVEL     '5049528'     MsgID1
-     C                   ENDIF                                                              MD059368
+     C                   EVAL      ErrorFound = 'Y'                                         MD059368
+     C                   MOVEL     '5049527'     MsgID1                                     MD059368
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
      C*

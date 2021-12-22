@@ -165,7 +165,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058368 - Inhibit the LIBOR Deregulation fields if CDL102   *
+      *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
       *             is switched off                                   *
       *  MD058543A - BADJ not included in DDAIR during amend of deal. *
       *              Initialise DDAIR to *BLANKS when Short Term Rate *

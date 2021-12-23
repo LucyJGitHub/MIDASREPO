@@ -113,7 +113,7 @@
       *                                                               *
       *  MD059100A - Incorrect deal status on pre-confirmation        *
       *              page during Amend of SIRS. Realigned parameters  *
-      *              for IRSIRSCVT. Applied for CIRS                  *
+      *              for IRSIRSCVT. Applied for CIRS.                 *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

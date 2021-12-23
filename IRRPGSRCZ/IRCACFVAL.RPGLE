@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059133           Date 10Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059246           Date 20Dec21               *
+      *  Prev Amend No. MD059133           Date 10Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059246 - Short term rate become 0 after cob                *
       *  MD059133 - Prohibit the use of backward looking rate if      *
       *             CIR020 is switched off                            *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -2451,6 +2453,11 @@
 
      C                   EXSR      SrResetErrs
 
+      ** Set Average Rate Method to Y if BLRT = Y                                           MD059246
+     C                   IF        CIR020 = 'Y' and DDBLRT = 'Y'                            MD059246
+     C                   EVAL      #0AVRM = 'Y'                                             MD059246
+     C                   ENDIF                                                              MD059246
+                                                                                            MD059246
      C                   CALLB     'IRVSTERMRT'
       ** Parameters:
       **    Return code                          (output)

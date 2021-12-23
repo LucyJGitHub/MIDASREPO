@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059254           Date 11Nov21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
       *                 MD054906           Date 15Jan20               *
@@ -67,6 +68,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059254 - Freq is irregular and values entered are missing  *
+      *             for Their Int Rate Change Sched, Our/Their        *
+      *             Int Payment Schd but values were saved in         *
+      *             DLDTSCPD                                          *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -887,18 +892,26 @@
      C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6030)+TPCSAST          MD044553 MD056546
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1029)                  MD044553 MD056546
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11028)                 MD044553 MD056546
-     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST               MD056546
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST      MD056546 MD059254
+     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1561)+OPDATEAST               MD059254
      C                                      + TRDATEAST                                     MD056546
-     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST               MD056546
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST      MD056546 MD059254
+     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:1960)+TPDATEAST               MD059254
      C                                         +OCFSAST                                     MD056546
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2459)                           MD056546
-     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12458)                          MD056546
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2459)                  MD056546 MD059254
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2359)                           MD059254
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12458)                 MD056546 MD059254
+     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12358)                          MD059254
      C                                      + TCFSAST                                       MD056546
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9257)                           MD056546
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9257)                  MD056546 MD059254
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9157)                           MD059254
      C                                      + OPCSAST                                       MD056546
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST                   MD056546
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1055)                           MD056546
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11054)                          MD056546
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST          MD056546 MD059254
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:5956)+TPCSAST                   MD059254
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1055)                  MD056546 MD059254
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST: 955)                           MD059254
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11054)                 MD056546 MD059254
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:10954)                          MD059254
      C                   ENDIF
 
      C                   EVAL      *INLR = *ON

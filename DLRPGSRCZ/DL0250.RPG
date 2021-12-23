@@ -10,8 +10,13 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059205           Date 17Nov21               *
-      *  Prev Amend No. MD059233           Date 11Nov21               *
+      *  Last Amend No. MD059326           Date 10Dec21               *
+      *  Prev Amend No. MD059329           Date 03Dec21               *
+      *                 MD059317           Date 29Nov21               *
+      *                 MD059268           Date 22Nov21               *
+      *                 MD059282           Date 18Nov21               *
+      *                 MD059205           Date 17Nov21               *
+      *                 MD059233           Date 11Nov21               *
       *                 MD059191           Date 04Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058626A          Date 08Sep21               *
@@ -100,6 +105,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059326 - monthly frequency accrual is wrong                *
+      *  MD059329 - Currency in report is different from deal ccy     *
+      *  MD059317 - Incorrect rate applied                            *
+      *  MD059268 - Incorrect principal amount reflected on DL0250P1  *
+      *             for IRS deal defined with backwad-looking rate.   *
+      *  MD059282 - Backward-looking rate with Calculation Method =   *
+      *             Manual is reported on DL0250P1 and flagged as     *
+      *             'Investigate'. Do not include in report if        *
+      *             Calculation Method = Manual.                      *
       *  MD059205 - FI field not reflected on DL0250P1 report. Adjust *
       *             the end position of RTSP and use EditCode P such  *
       *             that it will not override the 'FI'. On SR/SRLIB2, *
@@ -875,6 +889,7 @@
       ** Named constants                                                                    MD031283
       *                                                                                     MD031283
      I              'UseHistRateforBVDeal'C         SVBVAL                                  MD031283
+     I              'ARRCalculationFreq'  C         SVBVA2                                  MD059326
       *                                                                                     MD031283
      ISDGELR    E DSSDGELRPD                                              S01194
      I** EXTERNAL DS FOR GENERAL LEDGER DETAILS                           S01194
@@ -1107,7 +1122,8 @@
      C                     PARM           PRTCD   7                                         MD031283
      C                     PARM SVBVAL    POP01  20                                         MD031283
      C                     PARM           PVL01 200                                         MD031283
-     C                     PARM *BLANK    POP02  20                                         MD031283
+     C**********           PARM *BLANK    POP02  20                                MD031283 MD059326
+     C                     PARM SVBVA2    POP02  20                                         MD059326
      C                     PARM           PVL02 200                                         MD031283
      C                     PARM *BLANK    POP03  20                                         MD031283
      C                     PARM           PVL03 200                                         MD031283
@@ -2161,6 +2177,13 @@
      C                     MOVE 'PCT'     SPDI                            S01119
      C                     END                                            S01119
      C/COPY WNCPYSRC,DL0250C010
+     C*                                                                                     MD059282
+     C** IF DEAL CALCULATION METHOD IS MANUAL, SKIP REPORT DISPLAY                          MD059282
+     C           CALMU     IFEQ 'MANL'                                                      MD059282
+     C           CALMT     OREQ 'MANL'                                                      MD059282
+     C                     ADD  1         DLTOT                                             MD059282
+     C                     GOTO RLAEND                                                      MD059282
+     C                     ENDIF                                                            MD059282
      C*                                                                   S01119
      C* OUTPUT TO FILE AND REPORT, INCLUDING MESSAGE IF NECESSARY         S01119
      C*                                                                   S01119
@@ -3031,6 +3054,36 @@
       *                                                                                       CIR020
      C           SRLIB2    BEGSR                                                              CIR020
       *                                                                                       CIR020
+     C                     Z-ADD0         WEOD1   50                                        MD059326
+     C                     Z-ADD0         WEOD2   50                                        MD059326
+     C           PVL02     IFEQ 'M'                                                         MD059326
+      ** Check if End of Month Run                                                          MD059326
+     C                     CALL 'SD2000'                                                    MD059326
+     C                     PARM           WEOM    1                                         MD059326
+     C                     PARM           WEOY    1                                         MD059326
+     C                     PARM           WERROR  1                                         MD059326
+     C           WEOM      IFEQ 'Y'                                                         MD059326
+     C           BJRDNB    SUB  1         WEOD1                                             MD059326
+     C           BJRDNB    SUB  1         WEOD2                                             MD059326
+     C                     ENDIF                                                            MD059326
+     C                     ENDIF                                                            MD059326
+     C           UNICD     IFNE 0                                                           MD059326
+     C           UNICD     ANDLEBJRDNB                                                      MD059326
+     C                     Z-ADDUNICD     WEOD1                                             MD059326
+     C                     ENDIF                                                            MD059326
+     C           TNICD     IFNE 0                                                           MD059326
+     C           TNICD     ANDLEBJRDNB                                                      MD059326
+     C                     Z-ADDTNICD     WEOD2                                             MD059326
+     C                     ENDIF                                                            MD059326
+     C           UNIPD     IFNE 0                                                           MD059326
+     C           UNIPD     ANDLEBJRDNB                                                      MD059326
+     C                     Z-ADDUNIPD     WEOD1                                             MD059326
+     C                     ENDIF                                                            MD059326
+     C           TNIPD     IFNE 0                                                           MD059326
+     C           TNIPD     ANDLEBJRDNB                                                      MD059326
+     C                     Z-ADDTNIPD     WEOD2                                             MD059326
+     C                     ENDIF                                                            MD059326
+      *                                                                                     MD059326
      C                     MOVE DLNO      KKDLNO  6                                           CIR020
      C                     MOVE 'N'       WOURS   1                                           CIR020
      C                     MOVE 'N'       WTHEI   1                                           CIR020
@@ -3038,6 +3091,8 @@
      C                     READ IRLIBEL0                 88                                   CIR020
       *                                                                                       CIR020
      C           KKDLNO    DOWEQLRLNRF                                                        CIR020
+     C           *IN88     ANDEQ'0'                                                         MD059317
+     C           LRINDT    IFLE EVCD                                                        MD059317
      C           LRVDAT    ANDLEEVCD                                                          CIR020
      C           *IN88     ANDEQ'0'                                                           CIR020
       *                                                                                       CIR020
@@ -3079,21 +3134,39 @@
      C                     MOVE 'N'       WGEN    1                                           CIR020
      C           LRLEGF    IFEQ 'O'                                                           CIR020
      C                     Z-ADD2         SEQN                                                CIR020
+     C           WEOD1     IFNE 0                                                           MD059326
+     C           WEOD1     ANDEQLRINDT                                                      MD059326
+     C                     Z-ADD4         SEQN                                              MD059326
+     C                     ENDIF                                                            MD059326
      C                     MOVE UBRTT     BRTT                                                CIR020
      C                     MOVE UCUCY     BACYCD                                            MD059191
+     C                     MOVE UCUCY     CCYDC                                             MD059329
      C                     Z-ADDURTSP     RTSP                                              MD059205
      C                     MOVE USPIN     SPIN                                              MD059205
+     C                     Z-ADDUPAMT     PCPL                                              MD059268
      C           WOURS     IFEQ 'N'                                                           CIR020
      C                     MOVE 'Y'       WGEN                                                CIR020
+     C           SEQN      IFEQ 4                                                           MD059326
+     C                     Z-ADD0         WEOD1                                             MD059326
+     C                     ENDIF                                                            MD059326
      C                     ENDIF                                                              CIR020
      C                     ELSE                                                               CIR020
      C                     Z-ADD1         SEQN                                                CIR020
+     C           WEOD2     IFNE 0                                                           MD059326
+     C           WEOD2     ANDEQLRINDT                                                      MD059326
+     C                     Z-ADD3         SEQN                                              MD059326
+     C                     ENDIF                                                            MD059326
      C                     MOVE TBRTT     BRTT                                                CIR020
      C                     MOVE TCUCY     BACYCD                                            MD059191
+     C                     MOVE TCUCY     CCYDC                                             MD059329
      C                     Z-ADDTRTSP     RTSP                                              MD059205
      C                     MOVE TSPIN     SPIN                                              MD059205
+     C                     Z-ADDTPAMT     PCPL                                              MD059268
      C           WTHEI     IFEQ 'N'                                                           CIR020
      C                     MOVE 'Y'       WGEN                                                CIR020
+     C           SEQN      IFEQ 3                                                           MD059326
+     C                     Z-ADD0         WEOD2                                             MD059326
+     C                     ENDIF                                                            MD059326
      C                     ENDIF                                                              CIR020
      C                     ENDIF                                                              CIR020
      C                     SETOF                     36                                       CIR020
@@ -3116,6 +3189,25 @@
      C           SPIN      IFEQ 'P'                                                         MD059205
      C                     MOVE 'PCT'     SPDI                                              MD059205
      C                     ENDIF                                                            MD059205
+      *                                                                                     MD059268
+      ** Retrive customer details                                                           MD059268
+      *                                                                                     MD059268
+     C                     MOVELCNUM      @KEY1                                             MD059268
+     C                     CALL 'AOCUSTR0'                                                  MD059268
+     C                     PARM *BLANKS   @RTCD                                             MD059268
+     C                     PARM '*KEY   ' @OPTN                                             MD059268
+     C                     PARM           @KEY1                                             MD059268
+     C                     PARM           @KEYST                                            MD059268
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD059268
+      *                                                                                     MD059268
+     C           @RTCD     IFNE *BLANKS                                                     MD059268
+     C                     MOVE '10'      DBASE                                             MD059268
+     C                     MOVEL@KEY1     DBKEY                                             MD059268
+     C                     MOVEL@OPTN     DBOPTN                                            MD059268
+     C                     MOVEL'SDCUSTPD'DBFILE                                            MD059268
+     C                     MOVE *ON       *IN72                                             MD059268
+     C                     GOTO ERROR                                                       MD059268
+     C                     ENDIF                                                            MD059268
       *                                                                                       CIR020
       ** Output to DAMBRDI and report.                                                        CIR020
       *                                                                                       CIR020
@@ -3123,15 +3215,20 @@
      C                     EXCPTBRFRA                                                         CIR020
      C                     ADD  1         DLTOT                                               CIR020
      C           LRLEGF    IFEQ 'O'                                                           CIR020
+     C           SEQN      IFNE 4                                                           MD059326
      C                     MOVE 'Y'       WOURS                                               CIR020
+     C                     ENDIF                                                            MD059326
      C                     ELSE                                                               CIR020
+     C           SEQN      IFNE 3                                                           MD059326
      C                     MOVE 'Y'       WTHEI                                               CIR020
+     C                     ENDIF                                                            MD059326
      C                     ENDIF                                                              CIR020
      C                     ENDIF                                                              CIR020
      C                     ENDIF                                                              CIR020
       *                                                                                       CIR020
      C                     MOVE 'Y'       LRFLAG                                              CIR020
      C                     UPDATIRLIBED0                                                      CIR020
+     C                     ENDIF                                                            MD059317
       *                                                                                       CIR020
      C                     READ IRLIBEL0                 88                                   CIR020
      C                     ENDDO                                                              CIR020

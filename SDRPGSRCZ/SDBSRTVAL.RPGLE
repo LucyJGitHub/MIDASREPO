@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057746           Date 18Mar21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059368           Date 17Dec21               *
+      *  Prev Amend No. MD057746           Date 18Mar21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059368 - Inhibit LIBOR fields if feature CSD103 is         *
+      *             switched off                                      *
       *  MD057746 - Field in error should be the base rate code       *
       *             instead of base rate name. Changed DDBSRN to      *
       *             DDBSRC.                                           *
@@ -461,6 +464,18 @@
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
+      *                                                                                     MD059368
+      ** Inhibit the LIBOR fields even if feature CSD103 is switched off                    MD059368
+      *                                                                                     MD059368
+     C                   IF        CSD103 = 'N'                                             MD059368
+     C                   IF        LiborScnFld <> *BLANKS                                   MD059368
+     C                   EXSR      RESETERRS                                                MD059368
+     C                   EVAL      Idx = Idx + 1                                            MD059368
+     C                   EVAL      FldNamXAr(Idx) = 'DDNBRT'                                MD059368
+     C                   EVAL      MsgIdXAr(Idx) = '5049527'                                MD059368
+     C                   EXSR      UPDATERRS                                                MD059368
+     C                   ENDIF                                                              MD059368
+     C                   ENDIF                                                              MD059368
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*

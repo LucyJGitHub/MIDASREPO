@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD058708           Date 31Aug21               *
+      *  Last Amend No. MD059375           Date 20Dec21               *
+      *  Prev Amend No. MD059270           Date 16Dec21               *
+      *                 MD059253           Date 19Nov21               *
+      *                 CIR020             Date 02Aug21               *
+      *                 MD058708           Date 31Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
@@ -31,6 +34,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059375 - Rate change date should mark the start of the new *
+      *             interest period and not the Interest Payment Date.*
+      *             If UIACD/TIACD <> URCHG/TRCHG, use URCHG/TRCHG    *
+      *             field as the start of interest period.            *
+      *  MD059270 - Interest period end date of last period for 2nd   *
+      *             call of ARR calculator is set to maturity date.   *
+      *             Amend fix MD-59253 to set it to maturity date - 1.*
+      *  MD059253 - DLC0606B failed due to missing record in DAMBRDI. *
+      *             Do a second call of ARR calculator for existing   *
+      *             backward looking IRS deals and next rate change   *
+      *             date is less than the next working date.          *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058708 - SD001110P2 does not reflect BC specific changes   *
       *             (base rate code and ARR parameters). Add Base     *
@@ -235,6 +249,12 @@
      D PublTime        S              8A
      D EventCtrlDate   S              5S 0                                                  MD058040
      D ControlDate     S              5A                                                    MD058182
+     D Wrk2ndCall      S              1A   INZ('N')                                         MD059253
+     D WrkEndDate      S              5P 0                                                  MD059253
+     D WrkBasDate      S              5P 0                                                  MD059253
+     D PMode           S              1A                                                    MD059253
+     D PDealRef        S              6A                                                    MD059253
+     D PLeg            S              1A                                                    MD059253
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -390,6 +410,27 @@
      C                   EXSR      SRUpdFILE
 
      C                   ENDIF
+                                                                                            MD059253
+     C                   IF        Wrk2ndCall = 'Y'                                         MD059253
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059253
+     C                   EXSR      SRReadNEXT                                               MD059253
+     C                   ITER                                                               MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+      ** For IRS deal, issue 2nd call to ARR Calculator if                                  MD059253
+      ** Rate Change Date is less than next working date.                                   MD059253
+     C                   IF        TrMODI = 'RU' or                                         MD059253
+     C                             TrMODI = 'RT'                                            MD059253
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059253
+     C                   IF        TrNIDT >= BJRDNB and                                     MD059253
+     C                             TrNIDT <= EventCtrlDate                                  MD059253
+     C                   EVAL      Wrk2ndCall = 'Y'                                         MD059253
+     C                   ENDIF                                                              MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+     C                   IF        Wrk2ndCall = 'Y'                                         MD059253
+     C                   ITER                                                               MD059253
+     C                   ENDIF                                                              MD059253
 
       ** Read next record
      C                   EXSR      SRReadNEXT
@@ -510,7 +551,11 @@
      C+ insert into SDBJEXPD                                                                  CIR020
      C+ select 'RU', digits(DLNO),                                                            CIR020
      C+        UCUCY, VDAT, MDAT,                                                             CIR020
-     C+        UNICD, 0, 0, UIACD, ' ',                                                       CIR020
+     C*********UNICD, 0, 0, UIACD, ' ',                                              CIR020 MD059375
+     C+        UNICD, 0, 0,                                                                 MD059375
+     C+        case when UIACD <> URCHG and URCHG <> 0                                      MD059375
+     C+         then URCHG                                                                  MD059375
+     C+         else UIACD end, ' ',                                                        MD059375
      C+        UBLRT, URFRR, UCALM, UBADJ, UFLOR,                                             CIR020
      C+        ULBDY, ULODY, UOPSH, URRDP, UDBAV, UBRTT                                       CIR020
      C+ from DEALSDG                                                                          CIR020
@@ -527,7 +572,11 @@
      C+ insert into SDBJEXPD                                                                  CIR020
      C+ select 'RT', digits(DLNO),                                                            CIR020
      C+        TCUCY, VDAT, MDAT,                                                             CIR020
-     C+        TNICD, 0, 0, TIACD, ' ',                                                       CIR020
+     C*********TNICD, 0, 0, TIACD, ' ',                                              CIR020 MD059375
+     C+        TNICD, 0, 0,                                                                 MD059375
+     C+        case when TIACD <> TRCHG and TRCHG <> 0                                      MD059375
+     C+         then TRCHG                                                                  MD059375
+     C+         else TIACD end, ' ',                                                        MD059375
      C+        TBLRT, TRFRR, TCALM, TBADJ, TFLOR,                                             CIR020
      C+        TLBDY, TLODY, TOPSH, TRRDP, TDBAV, TBRTT                                       CIR020
      C+ from DEALSDG                                                                          CIR020
@@ -762,6 +811,13 @@
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
 
+      ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** determine next Interest Period Start Date                                          MD059253
+     C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
+     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C                   EVAL      IntPerSDATE = WrkDATE                                    MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
       ** Save the actual interest payment date to a work variable                           MD058106
      C                   EVAL      IntPayDate = WrkDATE                                     MD058106
                                                                                             MD058106
@@ -790,6 +846,16 @@
      C                   EVAL      IntPerEDATE = WrkDATE                                      CDL102
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
+                                                                                            MD059253
+      ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** determine next Interest Period End Date                                            MD059253
+     C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
+     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C                   EXSR      SRIRSNxtEDATE                                            MD059253
+     C**********         EVAL      IntPerEDATE = WrkEndDate                        MD059253 MD059270
+     C                   EVAL      IntPerEDATE = WrkEndDate - 1                             MD059270
+     C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059253
+     C                   ENDIF                                                              MD059253
 
      C                   IF        IntPerEDATE <= 0
      C                   EVAL      WZeroMDATFlag = 'Y'
@@ -1002,6 +1068,31 @@
      C                   EVAL      ISODate = %date( ZDATE : *MDY )
 
      C                   ENDSR
+      *****************************************************************                     MD059253
+      /EJECT                                                                                MD059253
+      *****************************************************************                     MD059253
+      *                                                               *                     MD059253
+      * SRIRSNxtEDATE - Calculate next Interest Period End Date       *                     MD059253
+      *                 based on IRS deal details                     *                     MD059253
+      *                                                               *                     MD059253
+      *****************************************************************                     MD059253
+     C     SRIRSNxtEDATE BEGSR                                                              MD059253
+                                                                                            MD059253
+     C                   EVAL      PDealRef = TrTRAN                                        MD059253
+     C                   IF        TrMODI = 'RU'                                            MD059253
+     C                   EVAL      PLeg = 'U'                                               MD059253
+     C                   ELSE                                                               MD059253
+     C                   EVAL      PLeg = 'T'                                               MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+     C                   CALL      'IR001113'                                               MD059253
+     C                   PARM      'L'           PMode                                      MD059253
+     C                   PARM                    PDealRef                                   MD059253
+     C                   PARM                    PLeg                                       MD059253
+     C                   PARM      *ZEROS        WrkEndDate                                 MD059253
+     C                   PARM      *ZEROS        WrkBasDate                                 MD059253
+                                                                                            MD059253
+     C                   ENDSR                                                              MD059253
       *****************************************************************
       /EJECT
       *****************************************************************

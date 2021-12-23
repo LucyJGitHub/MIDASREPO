@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059100A          Date 23Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
@@ -110,6 +111,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059100A - Incorrect deal status on pre-confirmation        *
+      *              page during Amend of SIRS. Realigned parameters  *
+      *              for IRSIRSCVT. Applied for CIRS                  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -6996,6 +7000,10 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
+      * LIBOR related fields in screen format (Ours)                                       MD059100A
+     C                   PARM                    CurrScnBlrt1                              MD059100A
+      * LIBOR related fields in screen format (Theirs)                                     MD059100A
+     C                   PARM                    CurrScnBlrt2                              MD059100A
       * Deal Status
      C                   PARM                    DDSTS            24
 

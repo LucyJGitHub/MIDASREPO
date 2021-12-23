@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059246           Date 03Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059246 - Short term rate value is not displayed correctly  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with     *
@@ -672,6 +674,8 @@
      C                   TESTB     '0'           TDNSI                    85             MD054095
      C**********         IF        WShtAve = *ZERO                                       MD054095
      C                   IF        *IN85 = *OFF                                          MD054095
+     C                             AND UBLRT <> 'Y'                                      MD059246
+     C                             AND TBLRT <> 'Y'                                      MD059246
      C                   EVAL      #0EINR = *BLANKS
 
      C                   ELSE
@@ -951,6 +955,8 @@
      C                   TESTB     '0'           UDNSI                    85             MD054095
      C**********         IF        WShtAve = *ZERO                                       MD054095
      C                   IF        *IN85 = *OFF                                          MD054095
+     C                             AND UBLRT <> 'Y'                                      MD059246
+     C                             AND TBLRT <> 'Y'                                      MD059246
      C                   EVAL      #0EINR = *BLANKS
 
      C                   ELSE

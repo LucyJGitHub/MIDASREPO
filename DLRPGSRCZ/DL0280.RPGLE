@@ -19182,6 +19182,10 @@
      C                   ENDIF                                                                CIR018
       *                                                                                       CIR018
       *                                                                                       CAS005
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND TCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     TSPIN         IFEQ      'A'                                                         S0111
      C     TBRTE         ADD       TRTSP         TEINR                                         S0111
      C                   END                                                                   S0111
@@ -19196,11 +19200,12 @@
      C     EINR          MULT(H)   TRTSP         TEINR                                         S0111
      C                   ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C     TDYRCU        TAG                                                                  CIR018
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
      C*                                                                   S01119
-     C                   Z-ADD     0             TIALC                                         S0111
+     C                   Z-ADD     0             TIALC                    S01119
      C                   ADD       WKINT         TAITC                                         S0111
      C/COPY WNCPYSRC,DL0280C689
      C                   Z-ADD     TNICD         TIACD                                         S0111
@@ -19454,6 +19459,10 @@
      C                   GOTO      UDYRCU                                                     CIR018
      C                   ENDIF                                                                CIR018
       *                                                                                       CIR018
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND UCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     USPIN         IFEQ      'A'                                                         S0111
      C     UBRTE         ADD       URTSP         UEINR                                         S0111
      C                   END                                                                   S0111
@@ -19468,6 +19477,7 @@
      C     EINR          MULT(H)   URTSP         UEINR                                         S0111
      C                   ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C     UDYRCU        TAG                                                                  CIR018
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
@@ -23582,6 +23592,10 @@
      C                   Z-ADD     TBRTE         FSTEFR
      C                   ENDIF
       *                                                                                       CAS005
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND TCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     TSPIN         IFEQ      'A'                                                         S0111
      C     TBRTE         ADD       TRTSP         TEINR                                         S0111
      C                   END                                                                   S0111
@@ -23596,6 +23610,7 @@
      C     EINR          MULT(H)   TRTSP         TEINR                                         S0111
      C                   ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
      C*                                                                   S01119
@@ -23823,6 +23838,10 @@
      C                   Z-ADD     UBRTE         FSUEFR
      C                   ENDIF
       *                                                                                       CAS005
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND UCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     USPIN         IFEQ      'A'                                                         S0111
      C     UBRTE         ADD       URTSP         UEINR                                         S0111
      C                   END                                                                   S0111
@@ -23837,6 +23856,7 @@
      C     EINR          MULT(H)   URTSP         UEINR                                         S0111
      C                   ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
      C*                                                                   S01119
@@ -27863,6 +27883,10 @@
      C*                                                                   S01119
      C*  HAVING UPDATED BASE RATE DURING RATE FIX PROCESSING APPLY        S01119
      C*  SPREAD IN LINE WITH INDICATOR : ADD,SUB AND ADD PERCENTAGE       S01119
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND UCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     USPIN         IFEQ      'A'                                                         S0111
      C     URTSP         ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
@@ -27877,6 +27901,7 @@
      C     EINR          DIV(H)    100           UEINR                                         S0111
      C     UEINR         ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C**  UPDATE DATES IF FREQUENCY NON BLANK                             S01119
      C     UICFR         IFNE      ' '                                                         S0111
      C                   MOVE      UICFR         ZFREQ                                         S0111
@@ -27947,6 +27972,10 @@
      C*                                                                   S01119
      C*  HAVING UPDATED BASE RATE DURING RATE FIX PROCESSING APPLY        S01119
      C*  SPREAD IN LINE WITH INDICATOR : ADD,SUB AND ADD PERCENTAGE       S01119
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND TCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     TSPIN         IFEQ      'A'                                                         S0111
      C     TRTSP         ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
@@ -27961,6 +27990,7 @@
      C     EINR          DIV(H)    100           TEINR                                         S0111
      C     TEINR         ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C**  UPDATE DATES IF FREQUENCY NON BLANK                             S01119
      C     TICFR         IFNE      ' '                                                         S0111
      C                   MOVE      TICFR         ZFREQ                                         S0111
@@ -28688,7 +28718,8 @@
      C                   BITOFF    '01234567'    UDSTI                                      MD059246
      C                   BITON     '03'          UDSTI                                      MD059246
      C**********         EVAL      AACRT = UEINR                                   MD059246 MD059360
-     C                   EVAL      AACRT = UBRTE                                            MD059360
+     C**********         EVAL      AACRT = UBRTE                                  MD059360 MD059360A
+     C                   EVAL      AACRT = UEINR                                           MD059260A
      C                   EVAL      UBRTE = 0                                                MD059246
      C                   EVAL      UEINR = 0                                                MD059246
      C                   ENDIF                                                              MD059246
@@ -28697,7 +28728,8 @@
      C                   BITOFF    '01234567'    TDSTI                                      MD059246
      C                   BITON     '03'          TDSTI                                      MD059246
      C**********         EVAL      AACRT = TEINR                                   MD059246 MD059360
-     C                   EVAL      AACRT = TBRTE                                            MD059360
+     C**********         EVAL      AACRT = TBRTE                                  MD059360 MD059360A
+     C                   EVAL      AACRT = TEINR                                           MD059360A
      C                   EVAL      TBRTE = 0                                                MD059246
      C                   EVAL      TEINR = 0                                                MD059246
      C                   ENDIF                                                              MD059246

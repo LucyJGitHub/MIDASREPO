@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059253           Date 19Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059375           Date 20Dec21               *
+      *  Prev Amend No. MD059270           Date 16Dec21               *
+      *                 MD059253           Date 19Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD059190           Date 08Nov21               *
       *                 MD059137           Date 29Oct21               *
       *                 MD059128           Date 28Oct21               *
@@ -35,6 +37,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059375 - Rate change date should mark the start of the new *
+      *             interest period and not the Interest Payment Date.*
+      *             If UIACD/TIACD <> URCHG/TRCHG, use URCHG/TRCHG    *
+      *             field as the start of interest period.            *
+      *  MD059270 - Interest period end date of last period for 2nd   *
+      *             call of ARR calculator is set to maturity date.   *
+      *             Amend fix MD-59253 to set it to maturity date - 1.*
       *  MD059253 - DLC0606B failed due to missing record in DAMBRDI. *
       *             Do a second call of ARR calculator for existing   *
       *             backward looking IRS deals and next rate change   *
@@ -558,7 +567,11 @@
      C+ insert into SDBJEXPD                                                                  CIR020
      C+ select 'RU', digits(DLNO),                                                            CIR020
      C+        UCUCY, VDAT, MDAT,                                                             CIR020
-     C+        UNICD, 0, 0, UIACD, ' ',                                                       CIR020
+     C*********UNICD, 0, 0, UIACD, ' ',                                              CIR020 MD059375
+     C+        UNICD, 0, 0,                                                                 MD059375
+     C+        case when UIACD <> URCHG and URCHG <> 0                                      MD059375
+     C+         then URCHG                                                                  MD059375
+     C+         else UIACD end, ' ',                                                        MD059375
      C+        UBLRT, URFRR, UCALM, UBADJ, UFLOR,                                             CIR020
      C+        ULBDY, ULODY, UOPSH, URRDP, UDBAV, UBRTT                                       CIR020
      C+ from DEALSDG                                                                          CIR020
@@ -575,7 +588,11 @@
      C+ insert into SDBJEXPD                                                                  CIR020
      C+ select 'RT', digits(DLNO),                                                            CIR020
      C+        TCUCY, VDAT, MDAT,                                                             CIR020
-     C+        TNICD, 0, 0, TIACD, ' ',                                                       CIR020
+     C*********TNICD, 0, 0, TIACD, ' ',                                              CIR020 MD059375
+     C+        TNICD, 0, 0,                                                                 MD059375
+     C+        case when TIACD <> TRCHG and TRCHG <> 0                                      MD059375
+     C+         then TRCHG                                                                  MD059375
+     C+         else TIACD end, ' ',                                                        MD059375
      C+        TBLRT, TRFRR, TCALM, TBADJ, TFLOR,                                             CIR020
      C+        TLBDY, TLODY, TOPSH, TRRDP, TDBAV, TBRTT                                       CIR020
      C+ from DEALSDG                                                                          CIR020
@@ -881,7 +898,8 @@
      C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
      C                             and Wrk2ndCall = 'Y'                                     MD059253
      C                   EXSR      SRIRSNxtEDATE                                            MD059253
-     C                   EVAL      IntPerEDATE = WrkEndDate                                 MD059253
+     C**********         EVAL      IntPerEDATE = WrkEndDate                        MD059253 MD059270
+     C                   EVAL      IntPerEDATE = WrkEndDate - 1                             MD059270
      C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059253
      C                   ENDIF                                                              MD059253
 

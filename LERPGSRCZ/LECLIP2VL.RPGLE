@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057917           Date 02Jul21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059368           Date 17Dec21               *
+      *  Prev Amend No. MD057917           Date 02Jul21               *
+      *                 CLE172             Date 01Oct20               *
       *                 MD042329           Date 04May21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
@@ -135,6 +136,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059368 - Inhibit the LIBOR fields if the feature CLE172 is *
+      *             switched off                                      *
       *  MD057917 - Allow entry of next interest payment date for     *
       *             non-discount loan with zero interest.             *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -397,6 +400,9 @@
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
+      * Base rate codes (Keyed by currency code and base rate code)                         MD059368
+     FSDBSRTL0  IF   E           K DISK                                                     MD059368
+     F                                     INFSR(*pssr)                                     MD059368
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LECLIP2V01
       *
@@ -1162,6 +1168,35 @@
      C                             DDBRTTOK <> 'N' and                                        CLE172
      C                             DDCALCOK <> 'N'                                            CLE172
      C                   EXSR      SRBLRTE                                                    CLE172
+     C                   ELSE                                                               MD059368
+      *                                                                                     MD059368
+      ** Inhibit the use of backward-looking rates if CLE172 is switched off                MD059368
+      *                                                                                     MD059368
+     C                   IF        CLE172 = 'N'                                             MD059368
+      * Key list                                                                            MD059368
+     C     BSRTKEY       KLIST                                                              MD059368
+     C                   KFLD                    FCCYF                                      MD059368
+     C                   KFLD                    DDBRTT                                     MD059368
+      *                                                                                     MD059368
+     C     BSRTKEY       CHAIN     SDBSRTL0                                                 MD059368
+     C                   IF        %FOUND(SDBSRTL0)                                         MD059368
+     C     BABLRT        IFEQ      'Y'                                                      MD059368
+     C                   MOVEL     'N'           DDBRTTOK                                   MD059368
+     C                   ADD       1             Idx                                        MD059368
+     C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)                             MD059368
+     C                   MOVEL     '5049529'     MsgIDXAr(Idx)                              MD059368
+     C                   ENDIF                                                              MD059368
+     C                   ENDIF                                                              MD059368
+      *                                                                                     MD059368
+      ** Inhibit the LIBOR fields if CLE172 is switched off                                 MD059368
+      *                                                                                     MD059368
+     C                   IF        LoanScnBlrt <> *Blanks                                   MD059368
+     C                   MOVEL     'N'           DDBRTTOK                                   MD059368
+     C                   ADD       1             Idx                                        MD059368
+     C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)                             MD059368
+     C                   MOVEL     '5049527'     MsgIDXAr(Idx)                              MD059368
+     C                   ENDIF                                                              MD059368
+     C                   ENDIF                                                              MD059368
      C                   ENDIF                                                                CLE172
       *
       /COPY WNCPYSRC,LECLIP2V13

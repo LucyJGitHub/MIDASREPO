@@ -115,7 +115,7 @@
       *                                                               *
       *  MD059100A - Incorrect deal status on pre-confirmation        *
       *              page during Amend of SIRS. Realigned parameters  *
-      *              for IRSIRSCVT. Applied for CIRS.                 *
+      *              for IRSIRSCVT. Applied for CIRS                  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058398 - Value Date Settelment error on Our Nostro Receipt *
       *             and Payment fields when data is defaulted from    *

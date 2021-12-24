@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. MD058398           Date 20Aug21               *
+      *  Last Amend No. MD059100A          Date 23Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 MD058398           Date 20Aug21               *
       *                 MD058492           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
@@ -112,6 +113,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059100A - Incorrect deal status on pre-confirmation        *
+      *              page during Amend of SIRS. Realigned parameters  *
+      *              for IRSIRSCVT. Applied for CIRS.                 *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058398 - Value Date Settelment error on Our Nostro Receipt *
       *             and Payment fields when data is defaulted from    *

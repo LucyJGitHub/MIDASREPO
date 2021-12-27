@@ -17,10 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059253 *CREATE   Date 19Nov21               *
+      *  Last Amend No. MD059362           Date 27Dec21               *
+      *  Prev Amend No. MD059253 *CREATE   Date 19Nov21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059362 - Calculator incorrectly processed deals under      *
+      *             monthly frequency due to THEIR next rate change   *
+      *             date is incorrectly computed. Use correct field   *
+      *             to compute the next date.                         *
       *  MD059253 - Create a generic program to calculate IRS deal's  *
       *             next future rate change date.                     *
       *                                                               *
@@ -158,14 +163,24 @@
      C                   MOVEL     L1PDCN        PPayDateCon
      C                   MOVEL     L1CYP1        CYP1
      C                   ELSEIF    PLeg = 'T'
-     C                   MOVEL     UICFR         ICFR
+     C**********         MOVEL     UICFR         ICFR                                       MD059362
+     C                   MOVEL     TICFR         ICFR                                       MD059362
      C                   Z-ADD     TNICD         NICD
-     C                   Z-ADD     UICBD         ICBD
-     C                   Z-ADD     UICFD         ICFD
-     C                   MOVEL     UCUCY         CUCY
+     C**********         Z-ADD     UICBD         ICBD                                       MD059362
+     C**********         Z-ADD     UICFD         ICFD                                       MD059362
+     C**********         MOVEL     UCUCY         CUCY                                       MD059362
+     C                   Z-ADD     TICBD         ICBD                                       MD059362
+     C                   Z-ADD     TICFD         ICFD                                       MD059362
+     C                   MOVEL     TCUCY         CUCY                                       MD059362
      C                   MOVEL     CCYPY2        PPayCurr
      C                   MOVEL     L2PDCN        PPayDateCon
      C                   MOVEL     L2CYP1        CYP1
+     C                   IF        DTYP = 'RP' or DTYP = 'RR' or                            MD059362
+     C                             DTYP = 'RF'                                              MD059362
+     C                   MOVEL     CCYPY1        PPayCurr                                   MD059362
+     C                   MOVEL     L1PDCN        PPayDateCon                                MD059362
+     C                   MOVEL     L1CYP1        CYP1                                       MD059362
+     C                   ENDIF                                                              MD059362
      C                   ENDIF
 
      C                   SELECT

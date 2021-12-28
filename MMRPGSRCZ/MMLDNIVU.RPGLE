@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058975           Date 20Oct21               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. MD059321           Date 21Dec21               *
+      *  Prev Amend No. MD058975           Date 20Oct21               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058540           Date 24Aug21               *
       *                 250161             Date 22May20               *
@@ -145,6 +146,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059321 - Changed Processing to RepoFlag before reaching    *
+      *             main validation module.                           *
       *  MD058975 - Unable to insert a Call Depost deal. Set Maturity *
       *             Date to 99999 if the field is zero.               *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -2624,7 +2627,8 @@
      C                   PARM                    WIdx                                         CDL016
       * Valid Deals layout (DS) from/to caller                                                CDL016
      C                   PARM                    ValidDeal                                    CDL016
-     C                   PARM      'N'           RepoFlag          1                          CDL016
+     C*******************PARM      'N'           RepoFlag          1                 CDL016 MD059321
+     C                   PARM                    RepoFlag          1                        MD059321
      C                   PARM                    CDL016                                       CDL016
      C                   PARM                    CDL019                                       CDL019
      C                   PARM                    CDL020                                       CDL020
@@ -2698,7 +2702,9 @@
      C                   PARM                    WIdx                                        BUG3992
       * Valid Deals layout (DS) from/to caller                                               BUG3992
      C                   PARM                    ValidDeal                                   BUG3992
-     C                   PARM      'N'           RepoFlag          1                         BUG3992
+     C*******************PARM      'N'           RepoFlag          1                BUG3992 MD059321
+     C                   PARM                    RepoFlag          1                        MD059321
+     C
      C/COPY WNCPYSRC,MMLDNIXC07                                                              BUG3992
                                                                                              BUG3992
      C                   ENDSR                                                               BUG3992

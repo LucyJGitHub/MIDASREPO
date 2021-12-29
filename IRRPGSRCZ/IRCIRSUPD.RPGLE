@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD059410           Date 21Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056655A          Date 09Oct20               *
       *                 MD056655           Date 21Sep20               *
@@ -126,6 +127,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059410 - Wrong rate is applied for the computation of int  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -688,6 +690,8 @@
                                                                                               CAP056
      D PModeOfOp       S              6A                                                      CAP056
      D WkActn          S              1A                                                      CIR008
+     D WkUBRTT         S              2A                                                    MD059410
+     D WkTBRTT         S              2A                                                    MD059410
 
       ** Fields defined for Enhancement CSC011                                                CSC011
      D CSC011          S              1A                                                      CSC011
@@ -835,6 +839,7 @@
                                                                                               CRE020
       ** Variables defined for CAS008                                                         CAS008
      D CAS008          S              1A                                                      CAS008
+     D CIR020          S              1A                                                    MD059410
      D/COPY WNCPYSRC,IRH00069
                                                                                               CAS008
       **
@@ -1635,6 +1640,8 @@
      C                   MOVEL     L2CYR8        ##L2CYR8                                     235490
      C                   MOVEL     L2CYR9        ##L2CYR9                                     235490
      C                   MOVEL     L2CYR0        ##L2CYR0                                     235490
+     C                   EVAL      WkUBRTT = UBRTT                                          MD059410
+     C                   EVAL      WkTBRTT = TBRTT                                          MD059410
      C                   Z-ADD     UIPBD         WUIPBD            5 0          CIR005
      C                   Z-ADD     TIPBD         WTIPBD            5 0          CIR005
      C                   Z-ADD     UNIPD         WUNIPD            5 0          CIR005
@@ -1784,7 +1791,23 @@
       *                                                                                       CIR020
       *** Setup new LIBOR related fields                                                      CIR020
       *                                                                                       CIR020
+     C                   IF        CIR020 = 'Y'                                             MD059410
+     C                   IF        UBLRT <> RXUBLR                                          MD059410
+     C                             OR UBLRT = 'Y'                                           MD059410
+     C                             AND RXUBLR = 'Y'                                         MD059410
+     C                             AND UBRTT <> WkUBRTT                                     MD059410
+     C                   BITON     '7'           UDSTI                                      MD059410
+     C                   Z-ADD     UEINR         USTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        TBLRT <> RXTBLR                                          MD059410
+     C                             OR TBLRT = 'Y'                                           MD059410
+     C                             AND RXTBLR = 'Y'                                         MD059410
+     C                             AND TBRTT <> WkTBRTT                                     MD059410
+     C                   BITON     '7'           TDSTI                                      MD059410
+     C                   Z-ADD     TEINR         TSTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
      C                   EXSR      STLIBORF                                                   CIR020
+     C                   ENDIF                                                              MD059410
       *
       * SET UP REQUIRED FIELDS ON DEALSDG THAT WERE NOT SET UP ON
       * VALID FILE
@@ -6306,6 +6329,30 @@
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
      C                   ENDIF                                                                CRE020
+      ** Check if CIR020 - Libor IRS                                                        MD059410
+                                                                                            MD059410
+     C                   CALL      'AOSARDR0'                                               MD059410
+     C                   PARM      *BLANKS       PRTCD                                      MD059410
+     C                   PARM      '*VERIFY'     POPTN                                      MD059410
+     C                   PARM      'CIR020'      PSARD                                      MD059410
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059410
+                                                                                            MD059410
+     C                   IF        PRTCD <> *BLANKS AND                                     MD059410
+     C                             PRTCD <> '*NRF   '                                       MD059410
+     C     *LOCK         IN        LDA                                                      MD059410
+     C                   EVAL      DBASE = 919                                              MD059410
+     C                   EVAL      DBKEY = 'CIR020'                                         MD059410
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD059410
+     C                   OUT       LDA                                                      MD059410
+     C                   EXSR      *PSSR                                                    MD059410
+     C                   ENDIF                                                              MD059410
+                                                                                            MD059410
+     C                   IF        PRTCD = *BLANKS                                          MD059410
+     C                   EVAL      CIR020 = 'Y'                                             MD059410
+     C                   ELSE                                                               MD059410
+     C                   EVAL      CIR020 = 'N'                                             MD059410
+     C                   ENDIF                                                              MD059410
+                                                                                            MD059410
                                                                                               CRE020
       ** Check if a System Value exists for this maintenance.                                 CRE020
                                                                                               CRE020

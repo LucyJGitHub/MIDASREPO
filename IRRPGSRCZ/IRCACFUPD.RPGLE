@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059375           Date 20Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059410           Date 21Dec21               *
+      *  Prev Amend No. MD059375           Date 20Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054117           Date 12Sep19               *
@@ -81,6 +82,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059410 - Wrong rate is applied for the computation of int  *
       *  MD059375 - Rate change date should mark the start of the new *
       *             interest period and not the Interest Payment Date.*
       *             Do not populate URCHG/TRCHG field as this will be *
@@ -529,6 +531,8 @@
      D WL1AMC          S              2A
      D WkBokC          S              2A
      D MidasDlNum      S              6A
+     D WkUBRTT         S              2A                                                    MD059410
+     D WkTBRTT         S              2A                                                    MD059410
 
       ** Switchable features
      D CAP056          S              1A                                                      CAP056
@@ -641,6 +645,7 @@
 
      D #0EINR          S             12A                                                    MD054095
      D OurTheirInd     S              1A                                                    MD054095
+     D WkAACRT         S                   LIKE(AACRT)                                      MD059410
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1436,6 +1441,8 @@
      C                   EVAL      WUNIPD = UNIPD
      C                   EVAL      WTNIPD = TNIPD
      C                   EVAL      WL1AMC = L1AMCN
+     C                   EVAL      WkUBRTT = UBRTT                                          MD059410
+     C                   EVAL      WkTBRTT = TBRTT                                          MD059410
 
       ** Determine activity for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
@@ -1537,6 +1544,30 @@
       ** Setup Backward-Looking Rate Fields                                                   CIR020
                                                                                               CIR020
      C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   IF        UBLRT <> RPUBLRT                                         MD059410
+     C                             OR UBLRT = 'Y'                                           MD059410
+     C                             AND RPUBLRT = 'Y'                                        MD059410
+     C                             AND UBRTT <> WkUBRTT                                     MD059410
+     C                             OR UBLRT = 'Y'                                           MD059410
+     C                             AND RPUBLRT = 'Y'                                        MD059410
+     C                             AND UCALM = 'MANL'                                       MD059410
+     C                             AND RPUCALM = 'MANL'                                     MD059410
+     C                             AND AACRT <> WkAACRT                                     MD059410
+     C                   BITON     '7'           UDSTI                                      MD059410
+     C                   Z-ADD     AACRT         USTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        TBLRT <> RPTBLRT                                         MD059410
+     C                             OR TBLRT = 'Y'                                           MD059410
+     C                             AND RPTBLRT = 'Y'                                        MD059410
+     C                             AND TBRTT <> WkTBRTT                                     MD059410
+     C                             OR TBLRT = 'Y'                                           MD059410
+     C                             AND RPTBLRT = 'Y'                                        MD059410
+     C                             AND TCALM = 'MANL'                                       MD059410
+     C                             AND RPTCALM = 'MANL'                                     MD059410
+     C                             AND AACRT <> WkAACRT                                     MD059410
+     C                   BITON     '7'           TDSTI                                      MD059410
+     C                   Z-ADD     AACRT         TSTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
      C                   EXSR      SetupBLRT                                                  CIR020
                                                                                               CIR020
       ***Set*Rate*Change*Date*to*Rundate*if*deal*is*amended*from*******              CIR020 MD059375

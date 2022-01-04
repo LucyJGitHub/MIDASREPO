@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057437           Date 20Jan21               *
+      *  Last Amend No. MD059304           Date 22Dec21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057437           Date 20Jan21               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
@@ -86,6 +87,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
+      *           - Applied for MD-59358                              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
@@ -190,6 +196,12 @@
      F                                     RENAME(DLPCSCD0:DLPCSCX0)                          240240
      F                                     PREFIX(XX)                           BUG5403
      F                                     COMMIT                               BUG5403
+      *                                                                                     MD059304
+     FDLCACFL0  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     F                                     RENAME(DEALSDGF:DEALSDIR)                        MD059304
+     F                                     PREFIX(IR_)                                      MD059304
+     FSDEXSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+      *                                                                                     MD059304
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,IRCACFC001
       *****************************************************************
@@ -1552,6 +1564,10 @@
      C                   EVAL      PayDat = BJRDNB
      C                   EVAL      RecDat = BJRDNB
 
+     C                   IF        #0ACCD = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   CALLB     'ZASETINVAL'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    CACF
@@ -3956,6 +3972,55 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD059304
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     IRCACFK       KLIST                                                              MD059304
+     C                   KFLD                    K_DLNO            6 0                      MD059304
+     C                   KFLD                    K_DTYP            2                        MD059304
+                                                                                            MD059304
+     C                   MOVE      #0DLNO        K_DLNO                                     MD059304
+     C                   MOVEL     #0DTYP        K_DTYP                                     MD059304
+                                                                                            MD059304
+     C     IRCACFK       CHAIN     DLCACFL0                           51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        IR_PSETM = 0 AND                                         MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C                   MOVEL     #0DTYP        BYTRTY                                     MD059304
+     C                   MOVEL     #0CUCY        BYCYCD                                     MD059304
+     C                   MOVEL     #0CNUM        BYCUST                                     MD059304
+     C                   MOVEL     #0BRCA        BYBRCA                                     MD059304
+     C                   MOVEL     #0DLST        BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     #0CNUM        DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     #0CNUM        DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
       *****************************************************************
       ** Program, module and procedure names for database error processing.
       ** =================================================================

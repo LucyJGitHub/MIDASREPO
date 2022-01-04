@@ -17,8 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056644           Date 14Oct20               *
+      *  Last Amend No. MD056644A          Date 22Dec21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -54,6 +54,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056644A - Incorrect field Short Term rate (field Short Term*
+      *              rate is not amendable). Reopen.                  *
+      *            - Ensure SETTLE record will not be generated when  *
+      *              deal's OUR/THEIRS Interest Payment Dates has no  *
+      *              entry.                                           *
+      *            - Applied for MD059358.                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056644 - Incorrect field Short Term rate (field Short Term *
@@ -845,7 +851,9 @@
      C*****BJRDNB        OREQ      MDAT                                                     MD056644
      C                   IF        (BJRDNB = UNIPD) OR                                      MD056644
      C                             (WPHDAY = 'Y' AND UNIPD = PDATE) OR                      MD056644
-     C                             (WPHDAY = 'N' AND UNIPD < BJRDNB) OR                     MD056644
+     C**********                   (WPHDAY = 'N' AND UNIPD < BJRDNB) OR           MD056644 MD056644A
+     C                             (WPHDAY = 'N' AND UNIPD < BJRDNB AND                    MD056644A
+     C                              UNIPD <> 0) OR                                         MD056644A
      C                             (BJRDNB = MDAT) OR                                       MD056644
      C                             (MDAT > L1BSDT AND MDAT < BJRDNB) OR                     MD056644
      C                             (WPHDAY = 'Y' AND MDAT = PDATE)                          MD056644
@@ -858,7 +866,9 @@
      C*****BJRDNB        OREQ      MDAT                                                     MD056644
      C                   IF        (BJRDNB = TNIPD) OR                                      MD056644
      C                             (WPHDAY = 'Y' AND TNIPD = PDATE) OR                      MD056644
-     C                             (WPHDAY = 'N' AND TNIPD < BJRDNB) OR                     MD056644
+     C**********                   (WPHDAY = 'N' AND TNIPD < BJRDNB) OR           MD056644 MD056644A
+     C                             (WPHDAY = 'N' AND TNIPD < BJRDNB AND                    MD056644A
+     C                              TNIPD <> 0) OR                                         MD056644A
      C                             (BJRDNB = MDAT) OR                                       MD056644
      C                             (MDAT > L1BSDT AND MDAT < BJRDNB) OR                     MD056644
      C                             (WPHDAY = 'Y' AND MDAT = PDATE)                          MD056644

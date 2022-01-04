@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. MD059304           Date 22Dec21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -75,6 +76,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
+      *           - Applied for MD-59358                              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD044880 - BOE Switched On Testing and Fixing                *
@@ -134,6 +140,11 @@
       *****************************************************************
 
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
+      *                                                                                     MD059304
+     FDLDLDDL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     F                                     RENAME(DEALSDDF:DEALSDNP)                        MD059304
+     F                                     PREFIX(MM_)                                      MD059304
+     FSDEXSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
 
       *****************************************************************
       ** +--------------------------------------+
@@ -1420,6 +1431,10 @@
      C                   EVAL      Customer = DDCSNM
      C                   END
 
+     C                   IF        DDACTN = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
       ** Return Code
@@ -2027,6 +2042,53 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     IHDN38        CHAIN     DLDLDDL1                           51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        MM_PSTM = 0 AND                                          MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C     DDFEDF        IFEQ      'Y'                                                      MD059304
+     C                   MOVEL     'FS'          BYTRTY                                     MD059304
+     C                   ELSE                                                               MD059304
+     C                   MOVEL     'NS'          BYTRTY                                     MD059304
+     C                   END                                                                MD059304
+                                                                                            MD059304
+     C                   MOVEL     DDCCY         BYCYCD                                     MD059304
+     C                   MOVEL     DDCSNM        BYCUST                                     MD059304
+     C                   MOVEL     BlankBRCA     BYBRCA                                     MD059304
+     C                   MOVEL     BlankSTYP     BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     DDCSNM        DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     DDCSNM        DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
+      *****************************************************************                     MD059304
       * The following /COPY contains the standard program status
       * subroutine, including a bound call to the DBERRCTL module.
       *****************************************************************

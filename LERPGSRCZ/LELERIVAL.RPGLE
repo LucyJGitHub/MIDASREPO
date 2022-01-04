@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059368           Date 17Dec21               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD057323           Date 09Dec20               *
@@ -1028,7 +1029,17 @@
      C                              DDNBRAOK <> 'N'                                           CLE172
      C                   EXSR      SRBLRTE                                                    CLE172
      C                   ENDIF                                                                CLE172
-
+      *                                                                                     MD059368
+      ** Inhibit the LIBOR fields if CLE172 is switched off                                 MD059368
+      *                                                                                     MD059368
+     C                   IF        CLE172 = 'N'                                             MD059368
+     C                   IF        LeriScnBlrt <> *Blanks                                   MD059368
+     C                   EVAL      DDNBRTOK = 'N'                                           MD059368
+     C                   EVAL      Idx = Idx + 1                                            MD059368
+     C                   EVAL      FldNameArr(Idx) = 'DDNBRTB'                              MD059368
+     C                   EVAL      MsgIDArr(Idx) = '5049527'                                BUG11329
+     C                   ENDIF                                                              MD059368
+     C                   ENDIF                                                              MD059368
       *
       ** Validate New Change Indicator
       *

@@ -38,9 +38,12 @@
      F***DEALS** IF  F    2448  6AI     2 DISK                                         CAS006 CDL017
      F*DEALS****IF   F 2540     6AIDISK    KEYLOC(2)                                  CDL017 CAS008
      F*DEALS****IF   F 2550     6AIDISK    KEYLOC(2)                                   CAS008 CDL038
-     FDEALS     IF   F 2606     6AIDISK    KEYLOC(2)                                         CDL038
+     F***DEALS**   IF   F 2606     6AIDISK    KEYLOC(2)                                CDL038 CIR020
+     FDEALS     IF   F 2688     6AIDISK    KEYLOC(2)                                          CIR020
      F/COPY WNCPYSRC,DL0280F002
 0014 FDAMSX     IF   E           K DISK                                         BHF641
+     FDAMBR2    IF   E           K DISK                                                       CIR020
+     F                                     RENAME(DAMBRDIF:DAMBRDIX)                          CIR020
      FDLEMDAPD  UF A E           K DISK                                         BUG4426
      F                                     RENAME(DEAMSDIF:DLEMDAD0)            BUG4426
      FDLDTSCPD  IF   E           K DISK    USROPN                               CIR001
@@ -102,7 +105,8 @@
      F*DLGHISPDO**F****2448            DISK                      A                     CAS006 217684
      F*DLGHISPD*O**A*F*2468*****   DISK                                                217684 CAS008
      F*DLGHISPD*O  A F 2550        DISK                                                CAS008 CDL038
-     FDLGHISPD  O  A F 2606        DISK                                                       CDL038
+     F***DLGHISPD  O  A F 2606        DISK                                             CDL038 CIR020
+     FDLGHISPD  O  A F 2688        DISK                                                       CIR020
       *                                                                                       CAS001
      F***DEALSL1 UP  F    2247  6AI     2 DISK                                         CAS004 CAS005
      F***DEALSL1 UP  F    2441  6AI     2 DISK                                         CAS005 CAS006
@@ -111,7 +115,8 @@
      F*DEALSL1**UP***F 2540     6AIDISK    KEYLOC(2)                                   CGL029 CAS008
      F*DEALSL1**UP   F 2550     6AIDISK    KEYLOC(2)                                   CAS008 CDL038
      F***DEALSL1   UP   F 2606     6AIDISK    KEYLOC(2)                              CDL038 AR866124
-     FDEALSL1   UP   F 2608     6AIDISK    KEYLOC(2)                                        AR866124
+     F***DEALSL1   UP   F 2608     6AIDISK    KEYLOC(2)                              AR866124 CIR020
+     FDEALSL1   UP   F 2688     6AIDISK    KEYLOC(2)                                          CIR020
      FFDDTSTL0  IF   E           K DISK                                                       CAS009
      FPMHSEXPD  IF   E           K DISK    USROPN                               S01486
      FPMPORTPD  IF   E           K DISK    USROPN                               S01486
@@ -1287,7 +1292,8 @@
      I**********                              12448 UGDATA                             CAS006 217684
      I**********                        1 2468  UGDATA                                 217684 CAS008
      I**********                        1 2550  UGDATA                                 CAS008 CDL038
-     I                                  1 2606  UGDATA                                        CDL038
+     I*********                         1 2606  UGDATA                                 CDL038 CIR020
+     I                                  1 2688  UGDATA                                        CIR020
      I                                  1    1  RECR                            S01119
      I                                  2    7 0DLNO                            S01119
      I                                  8    8  RCDT                            S01119
@@ -1560,6 +1566,30 @@
      I                               2541 2545  FSOFCC                                        CAS008
      I                               2546 2550  FSTFCC                                        CAS008
      I                               2603 2606  CLAS                                          CDL038
+     I                               2607 2607  UBLRT                                         CIR020
+     I                               2608 2617  URFRR                                         CIR020
+     I                               2618 2621  UCALM                                         CIR020
+     I                             P 2622 2627 7UBADJ                                         CIR020
+     I                             P 2628 2633 7UFLOR                                         CIR020
+     I                               2634 2635  ULBDY                                         CIR020
+     I                               2636 2637  ULODY                                         CIR020
+     I                               2638 2638  UOPSH                                         CIR020
+     I                               2639 2640  URRDP                                         CIR020
+     I                               2641 2641  UDBAV                                         CIR020
+     I                               2642 2642  URTKN                                         CIR020
+     I                               2643 2647  URCHG                                         CIR020
+     I                               2648 2648  TBLRT                                         CIR020
+     I                               2649 2658  TRFRR                                         CIR020
+     I                               2659 2662  TCALM                                         CIR020
+     I                             P 2663 2668 7TBADJ                                         CIR020
+     I                             P 2669 2674 7TFLOR                                         CIR020
+     I                               2675 2676  TLBDY                                         CIR020
+     I                               2677 2678  TLODY                                         CIR020
+     I                               2679 2679  TOPSH                                         CIR020
+     I                               2680 2681  TRRDP                                         CIR020
+     I                               2682 2682  TDBAV                                         CIR020
+     I                               2683 2683  TRTKN                                         CIR020
+     I                               2684 2688  TRCHG                                         CIR020
 0397 I*
 0398 I*    DEALS FILE -TRAILER RECORD.
 0399 I*
@@ -1763,6 +1793,39 @@
      I              VLAF                        VLAFDM
      I              VLAL                        VLALDM
      I/COPY WNCPYSRC,DL0280IIP2                                           S01408
+     IDAMBRDIX                                                                                CIR020
+     I              RECI                        RECIIR                                        CIR020
+     I              DLNO                        DLNOIR                                        CIR020
+     I              VDAT                        VDATIR                                        CIR020
+     I              DASN                        DASNIR                                        CIR020
+     I              DTYP                        DTYPIR                                        CIR020
+     I              DLST                        DLSTIR                                        CIR020
+     I              AMTP                        AMTPIR                                        CIR020
+     I              PSEQ                        PSEQIR                                        CIR020
+     I              BRTT                        BRTTIR                                        CIR020
+     I              RTSP                        RTSPIR                                        CIR020
+     I              CCY                         CCYIR                                         CIR020
+     I              DAAM                        DAAMIR                                        CIR020
+     I              MOGI                        MOGIIR                                        CIR020
+     I              CNUM                        CNUMIR                                        CIR020
+     I              SETP                        SETPIR                                        CIR020
+     I              OSACQQ                      OSACIR                                        CIR020
+     I              TSEN                        TSENIR                                        CIR020
+     I              FACO                        FACOIR                                        CIR020
+     I              SPI                         SPIIR                                         CIR020
+     I              ZZ022                       ZZ02IR                                        CIR020
+     I              NAAD                        NAADIR                                        CIR020
+     I              NASN                        NASNIR                                        CIR020
+     I              DAIN                        DAINIR                                        CIR020
+     I              OSBR                        OSBRIR                                        CIR020
+     I              BRCA                        BRCAIR                                        CIR020
+     I              ZZ039                       ZZ03IR                                        CIR020
+     I              ORED                        OREDIR                                        CIR020
+     I              LCD                         LCDIR                                         CIR020
+     I              CHTP                        CHTPIR                                        CIR020
+     I              TNLU                        TNLUIR                                        CIR020
+     I              OSAC                        OSACRR                                        CIR020
+     I              CLAS                        CLASIR                                        CIR020
      IDLEMDAD0                                                                                     B
      I*    Early maturity Deal Amendments                                                    BUG4426
      I              DLNO                        DLNODM                                             B
@@ -2614,6 +2677,19 @@
      C                   ELSE                                                                 CDL102
      C                   MOVE      'N'           CDL102                                       CDL102
      C                   ENDIF                                                                CDL102
+      *                                                                                       CIR020
+      ** Check if CIR020 is switched on                                                       CIR020
+      *                                                                                       CIR020
+     C                   CALL      'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRTCD                                        CIR020
+     C                   PARM      '*VERIFY'     POPTN                                        CIR020
+     C                   PARM      'CIR020'      PSARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+     C     PRTCD         IFEQ      *BLANK                                                     CIR020
+     C                   MOVE      'Y'           CIR020            1                          CIR020
+     C                   ELSE                                                                 CIR020
+     C                   MOVE      'N'           CIR020                                       CIR020
+     C                   ENDIF                                                                CIR020
       *                                                                                      BUG3937
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
@@ -4335,10 +4411,19 @@
      C                   Z-ADD     0             A2AINP                                       CDL034
       *                                                                                     MD058739
      C                   MOVEL     'N'           WSKIP             1                        MD058739
-     C                   IF        CDL102 = 'Y' and                                         MD058739
-     C                             BLRT = 'Y' and                                           MD058739
-     C                             ORED <= BJRDNB and                                       MD058739
-     C                             VDAT <= EVCD                                             MD058739
+     C**********         IF        CDL102 = 'Y' and                                  MD058739 CIR020
+     C**********                   BLRT = 'Y' and                                             CIR020
+     C**********                   ORED <= BJRDNB and                                         CIR020
+     C**********                   VDAT <= EVCD                                               CIR020
+     C                   IF        (CDL102 = 'Y' and                                          CIR020
+     C                             BLRT = 'Y' and                                             CIR020
+     C                             ORED <= BJRDNB and                                         CIR020
+     C                             VDAT <= EVCD)                                              CIR020
+     C                             OR (CIR020 = 'Y' and                                       CIR020
+     C                             (TBLRT = 'Y' OR                                            CIR020
+     C                             UBLRT = 'Y') and                                           CIR020
+     C                             ORED <= BJRDNB and                                         CIR020
+     C                             VDAT <= EVCD)                                              CIR020
      C                   Z-ADD     VDAT          KDATE                                      MD058739
      C     IRHKEY        CHAIN     DLDIRHPD                                                 MD058739
      C                   IF        %FOUND(DLDIRHPD)                                         MD058739
@@ -9127,6 +9212,333 @@
      C     TAXI          COMP      'Y'                                    33                   S0111
      C*                                                                   S01119
      C                   MOVE      ' '           FLRT              1                        AR887940
+     C                   MOVE      ' '           WBLRT             1                          CIR020
+     C                   MOVE      ' '           W2CYCL            1                        MD059326
+     C                   Z-ADD     0             WEVCD             5 0                      MD059326
+     C                   MOVE      'Y'           WUpdUIACD         1                        MD059253
+     C                   MOVE      'Y'           WUpdTIACD         1                        MD059253
+     C                   MOVE      ' '           WUFTB             1                        MD059410
+     C                   MOVE      ' '           WTFTB             1                        MD059410
+     C                   MOVE      ' '           WXFTB             1                        MD059410
+     C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   Z-ADD     0             WWUBRT           11 7                        CIR020
+     C                   Z-ADD     0             WWTBRT           11 7                        CIR020
+     C                   Z-ADD     0             TEINR2           11 7                      MD059326
+     C                   Z-ADD     0             TBRTE2           11 7                      MD059326
+     C                   Z-ADD     0             TEINR3           11 7                      MD059326
+     C                   Z-ADD     0             TBRTE3           11 7                      MD059326
+     C                   Z-ADD     0             TEINR4           11 7                      MD059410
+     C                   Z-ADD     0             TBRTE4           11 7                      MD059410
+     C                   Z-ADD     0             UEINR2           11 7                      MD059326
+     C                   Z-ADD     0             UBRTE2           11 7                      MD059326
+     C                   Z-ADD     0             UEINR3           11 7                      MD059326
+     C                   Z-ADD     0             UBRTE3           11 7                      MD059326
+     C                   Z-ADD     0             UEINR4           11 7                      MD059410
+     C                   Z-ADD     0             UBRTE4           11 7                      MD059410
+     C                   EVAL      WEVCD = EVCD                                             MD059326
+      ** Check for second cycle rate                                                        MD059326
+     C                   Z-ADD     4             WDASN                                      MD059326
+     C     DMBRK2        CHAIN     DAMBR2                                                   MD059326
+     C                   IF        %FOUND(DAMBR2)                                           MD059326
+     C                             AND WDASN = DASNIR                                       MD059410
+     C                   EVAL      W2CYCL = 'Y'                                             MD059326
+     C                   EVAL      EVCD = BJRDNB - 1                                        MD059326
+     C                   ENDIF                                                              MD059326
+     C                   Z-ADD     3             WDASN                                      MD059326
+     C     DMBRK2        CHAIN     DAMBR2                                                   MD059326
+     C                   IF        %FOUND(DAMBR2)                                           MD059326
+     C                             AND WDASN = DASNIR                                       MD059410
+     C                   EVAL      W2CYCL = 'Y'                                             MD059326
+     C                   EVAL      EVCD = BJRDNB - 1                                        MD059326
+     C                   ENDIF                                                              MD059326
+     C                   TESTB     '7'           UDSTI                    61                MD059410
+     C                   IF        *IN61 = '1'                                              MD059410
+     C                   EVAL      W2CYCL = 'Y'                                             MD059410
+     C                   EVAL      EVCD = BJRDNB - 1                                        MD059410
+     C                   MOVE      'Y'           WUFTB                                      MD059410
+     C                   IF        UBLRT = 'N'                                              MD059410
+     C                   IF        (DTYP = 'RR'                                             MD059410
+     C                             OR DTYP = 'RF'                                           MD059410
+     C                             OR DTYP = 'RP')                                          MD059410
+     C                   EVAL      UBRTE3 = AACRT                                           MD059410
+     C                   ELSE                                                               MD059410
+     C                   EVAL      UBRTE3 = UEINR                                           MD059410
+     C                   ENDIF                                                              MD059410
+     C                   ENDIF                                                              MD059410
+     C                   BITOFF    '7'           UDSTI                                      MD059410
+     C                   MOVE      '0'           *IN61                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   TESTB     '7'           TDSTI                    61                MD059410
+     C                   IF        *IN61 = '1'                                              MD059410
+     C                   EVAL      W2CYCL = 'Y'                                             MD059410
+     C                   EVAL      EVCD = BJRDNB - 1                                        MD059410
+     C                   MOVE      'Y'           WTFTB                                      MD059410
+     C                   IF        TBLRT = 'N'                                              MD059410
+     C                   IF        (DTYP = 'RR'                                             MD059410
+     C                             OR DTYP = 'RF'                                           MD059410
+     C                             OR DTYP = 'RP')                                          MD059410
+     C                   EVAL      TBRTE3 = AACRT                                           MD059410
+     C                   ELSE                                                               MD059410
+     C                   EVAL      TBRTE3 = TEINR                                           MD059410
+     C                   ENDIF                                                              MD059410
+     C                   ENDIF                                                              MD059410
+     C                   BITOFF    '7'           TDSTI                                      MD059410
+     C                   MOVE      '0'           *IN61                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C     CYCL2         TAG                                                                MD059326
+      ** Second cycle run, return original event control date                               MD059326
+     C                   IF        W2CYCL = 'P'                                             MD059326
+     C                   EVAL      EVCD = WEVCD                                             MD059326
+     C                   IF        WTFTB = 'Y'                                              MD059410
+     C                             OR WUFTB = 'Y'                                           MD059410
+     C                   EVAL      WXFTB = 'Y'                                              MD059410
+     C                   ENDIF                                                              MD059410
+     C                   MOVE      ' '           WTFTB                                      MD059410
+     C                   MOVE      ' '           WUFTB                                      MD059410
+     C                   IF        UBLRT = 'N'                                              MD059410
+     C                   EVAL      UEINR = UBRTE3                                           MD059410
+     C                   EVAL      UBRTE = UBRTE3                                           MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        TBLRT = 'N'                                              MD059410
+     C                   EVAL      TEINR = TBRTE3                                           MD059410
+     C                   EVAL      TBRTE = TBRTE3                                           MD059410
+     C                   ENDIF                                                              MD059410
+     C                   ENDIF                                                              MD059326
+     C                   IF        ((DTYP = 'RR'                                              CIR020
+     C                             OR DTYP = 'RP')                                            CIR020
+     C                             AND BYSL = 'S')                                            CIR020
+     C                             OR (DTYP = 'RF'                                            CIR020
+     C                             AND BYSL = 'B')                                            CIR020
+     C                             OR (DTYP <> 'RR'                                           CIR020
+     C                             AND DTYP <> 'RF'                                           CIR020
+     C                             AND DTYP <> 'RP')                                          CIR020
+     C                   IF        UBLRT = 'Y'                                              MD059246
+     C**********                   AND UCALM = 'MANL'                              MD059246 MD059278
+     C                             AND (DTYP = 'RR'                                         MD059246
+     C                             OR DTYP = 'RF'                                           MD059246
+     C                             OR DTYP = 'RP')                                          MD059246
+     C                             OR UBLRT = 'N'                                           MD059410
+     C                             AND UCALM <> 'MANL'                                      MD059410
+     C                             AND WUFTB = 'Y'                                          MD059410
+     C                             AND (DTYP = 'RR'                                         MD059410
+     C                             OR DTYP = 'RF'                                           MD059410
+     C                             OR DTYP = 'RP')                                          MD059410
+     C                   EVAL      AVERRT = ' '                                             MD059246
+     C**********         BITOFF    '01234567'    UDSTI                             MD059246 MD059410
+     C                   BITOFF    '0123456'     UDSTI                                      MD059410
+     C                   IF        DTYP <> 'RP'                                             MD059278
+     C                   BITON     '04'          UDSTI                                      MD059246
+     C                   ENDIF                                                              MD059278
+     C                   IF        UBLRT = 'Y'                                              MD059410
+     C                   EVAL      UEINR = AACRT                                            MD059246
+     C**********         EVAL      UBRTE = AACRT                                   MD059246 MD059410
+     C                   EVAL      AACRT = 0                                                MD059246
+     C                   ENDIF                                                              MD059410
+     C                   EVAL      UINFD = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
+     C                   IF        UBLRT = 'Y'                                                CIR020
+     C                             AND UCALM <> 'MANL'                                        CIR020
+     C                             OR UBLRT = 'N'                                           MD059410
+     C                             AND UCALM <> 'MANL'                                      MD059410
+     C                             AND WUFTB = 'Y'                                          MD059410
+     C                   MOVE      UDNSI         WUDNSI            1                          CIR020
+     C*********          BITON     '02'          UDNSI                               CIR020 MD059330
+     C                   BITON     '0'           UDNSI                                      MD059330
+     C                   BITOFF    '2'           UDNSI                                      MD059410
+     C                   MOVE      'N'           WUpdUIACD                                  MD059351
+      ** Override effective int rate with backward looking rate                               CIR020
+     C     DMBRK2        KLIST                                                                CIR020
+     C                   KFLD                    DLNO                                         CIR020
+     C                   KFLD                    WDASN                                        CIR020
+     C                   Z-ADD     2             WDASN             3 0                        CIR020
+      ** Retrieve second cycle rate                                                         MD059326
+     C                   IF        W2CYCL = 'P'                                             MD059326
+     C                   Z-ADD     4             WDASN                                      MD059326
+     C                   ENDIF                                                              MD059326
+     C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
+     C                   IF        UBLRT = 'Y'                                              MD059410
+     C                   IF        %FOUND(DAMBR2)                                             CIR020
+     C                             AND WDASN = DASNIR                                       MD059410
+     C                   Z-ADD     RTSPIR        UEINR                                        CIR020
+     C                   Z-ADD     RTSPIR        WWUBRT                                       CIR020
+     C                   Z-ADD     RTSPIR        UBRTE                                        CIR020
+     C                   ELSE                                                               MD059410
+     C                   IF        MDAT <> EVCD                                             MD059410
+     C                   Z-ADD     UEINR         UBRTE                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C**********         MOVE      'N'           WUpdUIACD                         MD059253 MD059351
+     C                   ENDIF                                                                CIR020
+      ** Apply spread rate if effective interest rate is zero                                 CIR020
+     C     USPIN         IFEQ      'A'                                                        CIR020
+     C     UBRTE         ADD       URTSP         UEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     USPIN         IFEQ      ' '                                                        CIR020
+     C                   Z-ADD     UBRTE         UEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     USPIN         IFEQ      'S'                                                        CIR020
+     C     UBRTE         SUB       URTSP         UEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     USPIN         IFEQ      'P'                                                        CIR020
+     C     UBRTE         DIV       100           EINR                                         CIR020
+     C     EINR          MULT(H)   URTSP         UEINR                                        CIR020
+     C                   ADD       UBRTE         UEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                              MD059410
+      ** Store first cycle rate                                                             MD059326
+     C                   IF        W2CYCL = 'Y'                                             MD059326
+     C                             AND WUFTB <> 'Y'                                         MD059410
+     C                   EVAL      UBRTE2 = UBRTE                                           MD059326
+     C                   EVAL      UEINR2 = UEINR                                           MD059326
+     C                   ENDIF                                                              MD059326
+      ** Load previous deal effective interest rate                                         MD059410
+     C                   IF        WUFTB = 'Y'                                              MD059410
+     C                   Z-ADD     USTRT         UEINR                                      MD059410
+     C                   Z-ADD     USTRT         WWUBRT                                     MD059410
+     C                   Z-ADD     USTRT         UBRTE                                      MD059410
+     C                   EVAL      UBRTE2 = UBRTE                                           MD059410
+     C                   EVAL      UEINR2 = UEINR                                           MD059410
+     C                   Z-ADD     0             USTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
+     C                   IF        UBLRT = 'Y'                                              MD059410
+     C                             AND UCALM = 'MANL'                                       MD059410
+     C                             AND USTRT <> 0                                           MD059410
+     C                   EVAL      UBRTE4 = UBRTE                                           MD059410
+     C                   EVAL      UEINR4 = UEINR                                           MD059410
+     C                   Z-ADD     USTRT         UEINR                                      MD059410
+     C                   Z-ADD     USTRT         WWUBRT                                     MD059410
+     C                   Z-ADD     USTRT         UBRTE                                      MD059410
+     C                   EVAL      UBRTE2 = UBRTE                                           MD059410
+     C                   EVAL      UEINR2 = UEINR                                           MD059410
+     C                   EVAL      W2CYCL = 'Y'                                             MD059410
+     C                   EVAL      EVCD = BJRDNB - 1                                        MD059410
+     C                   Z-ADD     0             USTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        UBLRT = 'Y'                                              MD059410
+     C                             AND UCALM = 'MANL'                                       MD059410
+     C                             AND W2CYCL = 'P'                                         MD059410
+     C                             AND UEINR2 <> 0                                          MD059410
+     C                   EVAL      UBRTE = UBRTE4                                           MD059410
+     C                   EVAL      UEINR = UEINR4                                           MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        ((DTYP = 'RR'                                              CIR020
+     C                             OR DTYP = 'RP')                                            CIR020
+     C                             AND BYSL = 'B')                                            CIR020
+     C                             OR (DTYP = 'RF'                                            CIR020
+     C                             AND BYSL = 'S')                                            CIR020
+     C                             OR (DTYP <> 'RR'                                           CIR020
+     C                             AND DTYP <> 'RF'                                           CIR020
+     C                             AND DTYP <> 'RP')                                          CIR020
+     C                   IF        TBLRT = 'Y'                                              MD059246
+     C**********                   AND TCALM = 'MANL'                              MD059246 MD059278
+     C                             AND (DTYP = 'RR'                                         MD059246
+     C                             OR DTYP = 'RF'                                           MD059246
+     C                             OR DTYP = 'RP')                                          MD059246
+     C                             OR TBLRT = 'N'                                           MD059410
+     C                             AND TCALM <> 'MANL'                                      MD059410
+     C                             AND WTFTB = 'Y'                                          MD059410
+     C                             AND (DTYP = 'RR'                                         MD059410
+     C                             OR DTYP = 'RF'                                           MD059410
+     C                             OR DTYP = 'RP')                                          MD059410
+     C                   EVAL      AVERRT = ' '                                             MD059246
+     C**********         BITOFF    '01234567'    TDSTI                             MD059246 MD059410
+     C                   BITOFF    '0123456'     TDSTI                                      MD059410
+     C                   IF        DTYP <> 'RP'                                             MD059278
+     C                   BITON     '04'          TDSTI                                      MD059246
+     C                   ENDIF                                                              MD059278
+     C                   IF        TBLRT = 'Y'                                              MD059410
+     C                   EVAL      TEINR = AACRT                                            MD059246
+     C**********         EVAL      TBRTE = AACRT                                   MD059246 MD059410
+     C                   EVAL      AACRT = 0                                                MD059246
+     C                   ENDIF                                                              MD059410
+     C                   EVAL      TINFD = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
+     C                   IF        TBLRT = 'Y'                                                CIR020
+     C                             AND TCALM <> 'MANL'                                        CIR020
+     C                             OR TBLRT = 'N'                                           MD059410
+     C                             AND TCALM <> 'MANL'                                      MD059410
+     C                             AND WTFTB = 'Y'                                          MD059410
+     C                   MOVE      TDNSI         WTDNSI            1                          CIR020
+     C**********         BITON     '02'          TDNSI                               CIR020 MD059330
+     C                   BITON     '0'           TDNSI                                      MD059330
+     C                   BITOFF    '2'           TDNSI                                      MD059410
+     C                   MOVE      'N'           WUpdTIACD                                  MD059351
+      ** Override effective int rate with backward looking rate                               CIR020
+     C                   Z-ADD     1             WDASN                                        CIR020
+      ** Retrieve second cycle rate                                                         MD059326
+     C                   IF        W2CYCL = 'P'                                             MD059326
+     C                   Z-ADD     3             WDASN                                      MD059326
+     C                   ENDIF                                                              MD059326
+     C                   IF        TBLRT = 'Y'                                              MD059410
+     C     DMBRK2        CHAIN     DAMBR2                                                     CIR020
+     C                   IF        %FOUND(DAMBR2)                                             CIR020
+     C                             AND WDASN = DASNIR                                       MD059410
+     C                   Z-ADD     RTSPIR        TEINR                                        CIR020
+     C                   Z-ADD     RTSPIR        WWTBRT                                       CIR020
+     C                   Z-ADD     RTSPIR        TBRTE                                        CIR020
+     C                   ELSE                                                               MD059410
+     C                   IF        MDAT <> EVCD                                             MD059410
+     C                   Z-ADD     TEINR         TBRTE                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C**********         MOVE      'N'           WUpdTIACD                         MD059253 MD059351
+     C                   ENDIF                                                                CIR020
+      ** Apply spread rate if effective interest rate is zero                                 CIR020
+     C     TSPIN         IFEQ      'A'                                                        CIR020
+     C     TBRTE         ADD       TRTSP         TEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     TSPIN         IFEQ      ' '                                                        CIR020
+     C                   Z-ADD     TBRTE         TEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     TSPIN         IFEQ      'S'                                                        CIR020
+     C     TBRTE         SUB       TRTSP         TEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C     TSPIN         IFEQ      'P'                                                        CIR020
+     C     TBRTE         DIV       100           EINR                                         CIR020
+     C     EINR          MULT(H)   TRTSP         TEINR                                        CIR020
+     C                   ADD       TBRTE         TEINR                                        CIR020
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                              MD059410
+      ** Store first cycle rate                                                             MD059326
+     C                   IF        W2CYCL = 'Y'                                             MD059326
+     C                             AND WTFTB <> 'Y'                                         MD059410
+     C                   EVAL      TBRTE2 = TBRTE                                           MD059326
+     C                   EVAL      TEINR2 = TEINR                                           MD059326
+     C                   ENDIF                                                              MD059326
+      ** Load previous deal effective interest rate                                         MD059410
+     C                   IF        WTFTB = 'Y'                                              MD059410
+     C                   Z-ADD     TSTRT         TEINR                                      MD059410
+     C                   Z-ADD     TSTRT         WWTBRT                                     MD059410
+     C                   Z-ADD     TSTRT         TBRTE                                      MD059410
+     C                   EVAL      TBRTE2 = TBRTE                                           MD059410
+     C                   EVAL      TEINR2 = TEINR                                           MD059410
+     C                   Z-ADD     0             TSTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+
+     C                   ENDIF                                                                CIR020
+     C                   ENDIF                                                                CIR020
+     C                   IF        TBLRT = 'Y'                                              MD059410
+     C                             AND TCALM = 'MANL'                                       MD059410
+     C                             AND TSTRT <> 0                                           MD059410
+     C                   EVAL      TBRTE4 = TBRTE                                           MD059410
+     C                   EVAL      TEINR4 = TEINR                                           MD059410
+     C                   Z-ADD     TSTRT         TEINR                                      MD059410
+     C                   Z-ADD     TSTRT         WWTBRT                                     MD059410
+     C                   Z-ADD     TSTRT         TBRTE                                      MD059410
+     C                   EVAL      TBRTE2 = TBRTE                                           MD059410
+     C                   EVAL      TEINR2 = TEINR                                           MD059410
+     C                   EVAL      W2CYCL = 'Y'                                             MD059410
+     C                   EVAL      EVCD = BJRDNB - 1                                        MD059410
+     C                   Z-ADD     0             TSTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        TBLRT = 'Y'                                              MD059410
+     C                             AND TCALM = 'MANL'                                       MD059410
+     C                             AND W2CYCL = 'P'                                         MD059410
+     C                             AND TEINR2 <> 0                                          MD059410
+     C                   EVAL      TBRTE = TBRTE4                                           MD059410
+     C                   EVAL      TEINR = TEINR4                                           MD059410
+     C                   ENDIF                                                              MD059410
+     C                   ENDIF                                                                CIR020
      C     *IN47         CASEQ     '1'           FRARVS                                        S0111
      C     DTYP          CASEQ     'FR'          FRSUBR                                        S0111
      C/COPY WNCPYSRC,DL0280C079
@@ -9137,6 +9549,11 @@
      C     DTYP          CASEQ     'RP'          RLSUBR                                        S0115
      C     DTYP          CASEQ     'RF'          RLSUBR                                        S0115
      C                   END                                                                   S0111
+     C                   IF        CIR020 = 'Y'                                             MD059326
+     C                             AND W2CYCL = 'Y'                                         MD059326
+     C                   EVAL      W2CYCL = 'P'                                             MD059326
+     C                   GOTO      CYCL2                                                    MD059326
+     C                   ENDIF                                                              MD059326
      C                   EXSR      UPFAMD
      C/COPY WNCPYSRC,DL0280C030
 2041 C*
@@ -16852,7 +17269,10 @@
      C     FSUITB        ADD       WINTST        FSUITB
      C                   Z-ADD     WINTST        FSUALB
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -17009,7 +17429,10 @@
      C                   Z-ADD     WINTST        FSTALB
       *                                                                                       CAS005
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -17999,6 +18422,17 @@
      C*                                                                   CIR001
      C     RSHAD1        TAG                                                    ** RSHAD1 TAG**S0111
      C*                                                                   S01119
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     UEINR         UEINR3                                     MD059326
+     C                   Z-ADD     UBRTE         UBRTE3                                     MD059326
+     C                   Z-ADD     UEINR2        UEINR                                      MD059326
+     C                   Z-ADD     UBRTE2        UBRTE                                      MD059326
+     C                   Z-ADD     TEINR         TEINR3                                     MD059326
+     C                   Z-ADD     TBRTE         TBRTE3                                     MD059326
+     C                   Z-ADD     TEINR2        TEINR                                      MD059326
+     C                   Z-ADD     TBRTE2        TBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
      C                   MOVEA     'RSI'         AKY(1)                                        S0111
      C                   MOVEA     DLST          AKY(4)                                        S0111
      C                   MOVEA     '    I'       AKY(6)                                        S0111
@@ -18601,6 +19035,15 @@
      C*  ACCESS AMENDMENT RECORD FOR DEAL IF NOT RECORD ALREADY FOUND     S01119
      C*                                                                   S01119
 2424 C                   READ      DAMSX                                  31                   BHF64
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     TBRTE3        RTSPDM                                     MD059326
+     C                   ENDIF                                                              MD059326
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'Y'                                                      MD059410
+     C     WTFTB         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     TBRTE         RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
      C*                                                                   CIR001
      C** IF SEQUENCE NUMBER IS '999', => TRAILER, HENCE IGNORE            CIR001
      C*                                                                   CIR001
@@ -18627,6 +19070,21 @@
      C   LR              GOTO      RSSEND                                                      S0111
      C                   ENDIF                                                                 CSW00
       *                                                                   CSW005
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     TBLRT         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     TBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     TBLRT         ANDEQ     'N'                                                      MD059410
+     C                   MOVE      *IN31         WIN31                                      MD059410
+     C                   TESTB     '2'           WTDNSI                   31                MD059410
+     C     *IN31         IFEQ      '1'                                                      MD059410
+     C                   Z-ADD     TBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C                   MOVE      WIN31         *IN31                                      MD059410
+     C                   ENDIF                                                              MD059410
      C                   EXSR      IRSAMD                                                      S0111
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
@@ -18714,6 +19172,11 @@
      C*  ACCESS AMENDMENT RECORD FOR DEAL IF NOT RECORD ALREADY FOUND     S01119
      C*                                                                   S01119
 2424 C                   READ      DAMSX                                  31                   BHF64
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C     UBLRT         ANDEQ     'Y'                                                      MD049410
+     C                   Z-ADD     UBRTE3        RTSPDM                                     MD059326
+     C                   ENDIF                                                              MD059326
      C*                                                                   CIR001
      C** IF SEQUENCE NUMBER IS '999', => TRAILER, HENCE IGNORE            CIR001
      C*                                                                   CIR001
@@ -18740,6 +19203,21 @@
      C   LR              GOTO      RSSEND                                                      S0111
      C                   ENDIF                                                                 CSW00
       *                                                                   CSW005
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     UBLRT         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     UBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     UBLRT         ANDEQ     'N'                                                      MD059410
+     C                   MOVE      *IN31         WIN31                                      MD059410
+     C                   TESTB     '2'           WUDNSI                   31                MD059410
+     C     *IN31         IFEQ      '1'                                                      MD059410
+     C                   Z-ADD     UBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C                   MOVE      WIN31         *IN31                                      MD059410
+     C                   ENDIF                                                              MD059410
      C                   EXSR      IRSAMD                                                      S0111
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
@@ -18900,6 +19378,10 @@
      C                   ENDIF                                                                CIR018
       *                                                                                       CIR018
       *                                                                                       CAS005
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND TCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     TSPIN         IFEQ      'A'                                                         S0111
      C     TBRTE         ADD       TRTSP         TEINR                                         S0111
      C                   END                                                                   S0111
@@ -18914,15 +19396,20 @@
      C     EINR          MULT(H)   TRTSP         TEINR                                         S0111
      C                   ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C     TDYRCU        TAG                                                                  CIR018
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
      C*                                                                   S01119
-     C                   Z-ADD     0             TIALC                                         S0111
+     C                   Z-ADD     0             TIALC                    S01119
      C                   ADD       WKINT         TAITC                                         S0111
      C/COPY WNCPYSRC,DL0280C689
      C                   Z-ADD     TNICD         TIACD                                         S0111
      C                   Z-ADD     TNICD         TLPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and TBLRT = 'Y'                             MD059375
+     C                   MOVE      TNICD         TRCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Their Last Rate Change Date field (PLTLRC)         CPL002
@@ -19168,6 +19655,10 @@
      C                   GOTO      UDYRCU                                                     CIR018
      C                   ENDIF                                                                CIR018
       *                                                                                       CIR018
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND UCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     USPIN         IFEQ      'A'                                                         S0111
      C     UBRTE         ADD       URTSP         UEINR                                         S0111
      C                   END                                                                   S0111
@@ -19182,6 +19673,7 @@
      C     EINR          MULT(H)   URTSP         UEINR                                         S0111
      C                   ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C     UDYRCU        TAG                                                                  CIR018
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
@@ -19191,6 +19683,10 @@
      C/COPY WNCPYSRC,DL0280C690
      C                   Z-ADD     UNICD         UIACD                                         S0111
      C                   Z-ADD     UNICD         ULPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and UBLRT = 'Y'                             MD059375
+     C                   MOVE      UNICD         URCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Our Last Rate Change Date field (PLULRC)           CPL002
@@ -19670,6 +20166,15 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C                   END                                                                   CIR00
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     UEINR3        EINR                                       MD059326
+     C                   Z-ADD     UEINR3        UEINR                                      MD059326
+     C                   Z-ADD     UBRTE3        UBRTE                                      MD059326
+     C                   Z-ADD     TEINR3        EINR                                       MD059326
+     C                   Z-ADD     TEINR3        TEINR                                      MD059326
+     C                   Z-ADD     TBRTE3        TBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
      C*                                                                   S01119
      C** SET OFF FLAGS & RETURN TO NON-SHADOW POST DATE PROCESSING        S01119
      C*         IN ORDER TO PROCESS NEXT EVENT DATE IN SEQUENCE           S01119
@@ -20666,7 +21171,10 @@
      C     FSUITB        ADD       WKINT         FSUITB
      C                   Z-ADD     WINTST        FSUALB
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -20813,7 +21321,10 @@
      C     FSTITB        ADD       WINTST        FSTITB
      C                   Z-ADD     WINTST        FSTALB
      C                   ENDIF
+      *                                                                                     MD059253
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059253
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059253
      C*                                                                   CIR002
      C** Maintain the unsettled interest amount as well.                  CIR002
      C*                                                                   CIR002
@@ -22365,6 +22876,17 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C     RXSHD1        TAG                                                    ** RXSHD1 TAG**S0111
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     UEINR         UEINR3                                     MD059326
+     C                   Z-ADD     UBRTE         UBRTE3                                     MD059326
+     C                   Z-ADD     UEINR2        UEINR                                      MD059326
+     C                   Z-ADD     UBRTE2        UBRTE                                      MD059326
+     C                   Z-ADD     TEINR         TEINR3                                     MD059326
+     C                   Z-ADD     TBRTE         TBRTE3                                     MD059326
+     C                   Z-ADD     TEINR2        TEINR                                      MD059326
+     C                   Z-ADD     TBRTE2        TBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
      C/COPY WNCPYSRC,DL0280C339
      C                   MOVEA     'RXI'         AKY(1)                                        S0111
      C/COPY WNCPYSRC,DL0280C340
@@ -23010,6 +23532,11 @@
      C*  ACCESS AMENDMENT RECORD FOR DEAL IF NOT RECORD ALREADY FOUND     S01119
      C*                                                                   S01119
 2424 C                   READ      DAMSX                                  31                   BHF64
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C     TBLRT         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     TBRTE3        RTSPDM                                     MD059326
+     C                   ENDIF                                                              MD059326
      C*                                                                   CIR001
      C** IF SEQUENCE NUMBER IS '999', => TRAILER, HENCE IGNORE            CIR001
      C*                                                                   CIR001
@@ -23037,6 +23564,21 @@
      C   LR              GOTO      RXSEND                                                      S0111
      C                   ENDIF                                                                 CSW00
       *                                                                   CSW005
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     TBLRT         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     TBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     TBLRT         ANDEQ     'N'                                                      MD059410
+     C                   MOVE      *IN31         WIN31             1                        MD059410
+     C                   TESTB     '2'           WTDNSI                   31                MD059410
+     C     *IN31         IFEQ      '1'                                                      MD059410
+     C                   Z-ADD     TBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C                   MOVE      WIN31         *IN31                                      MD059410
+     C                   ENDIF                                                              MD059410
      C                   EXSR      IRSAMD                                                      S0111
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
@@ -23114,6 +23656,11 @@
      C*  ACCESS AMENDMENT RECORD FOR DEAL IF NOT RECORD ALREADY FOUND     S01119
      C*                                                                   S01119
      C                   READ      DAMSX                                  31                   BHF64
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C     UBLRT         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     UBRTE3        RTSPDM                                     MD059326
+     C                   ENDIF                                                              MD059326
      C*                                                                   CIR001
      C** IF SEQUENCE NUMBER IS '999', => TRAILER, HENCE IGNORE            CIR001
      C*                                                                   CIR001
@@ -23140,6 +23687,21 @@
      C   LR              GOTO      RXSEND                                                      S0111
      C                   ENDIF                                                                 CSW00
       *                                                                   CSW005
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     UBLRT         ANDEQ     'Y'                                                      MD059410
+     C                   Z-ADD     UBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     UBLRT         ANDEQ     'N'                                                      MD059410
+     C                   MOVE      *IN31         WIN31                                      MD059410
+     C                   TESTB     '2'           WUDNSI                   31                MD059410
+     C     *IN31         IFEQ      '1'                                                      MD059410
+     C                   Z-ADD     UBRTE3        RTSPDM                                     MD059410
+     C                   ENDIF                                                              MD059410
+     C                   MOVE      WIN31         *IN31                                      MD059410
+     C                   ENDIF                                                              MD059410
      C                   EXSR      IRSAMD                                                      S0111
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
@@ -23258,6 +23820,10 @@
      C                   Z-ADD     TBRTE         FSTEFR
      C                   ENDIF
       *                                                                                       CAS005
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND TCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     TSPIN         IFEQ      'A'                                                         S0111
      C     TBRTE         ADD       TRTSP         TEINR                                         S0111
      C                   END                                                                   S0111
@@ -23272,6 +23838,7 @@
      C     EINR          MULT(H)   TRTSP         TEINR                                         S0111
      C                   ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
      C*                                                                   S01119
@@ -23305,6 +23872,10 @@
      C                   ENDIF
      C                   Z-ADD     TNICD         TIACD                                         S0111
      C                   Z-ADD     TNICD         TLPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and TBLRT = 'Y'                             MD059375
+     C                   MOVE      TNICD         TRCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Their Last Rate Change Date field (PLTLRC)         CPL002
@@ -23495,6 +24066,10 @@
      C                   Z-ADD     UBRTE         FSUEFR
      C                   ENDIF
       *                                                                                       CAS005
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND UCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     USPIN         IFEQ      'A'                                                         S0111
      C     UBRTE         ADD       URTSP         UEINR                                         S0111
      C                   END                                                                   S0111
@@ -23509,6 +24084,7 @@
      C     EINR          MULT(H)   URTSP         UEINR                                         S0111
      C                   ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C*                                                                   S01119
      C****** UPDATES                                                      S01119
      C*                                                                   S01119
@@ -23542,6 +24118,10 @@
      C                   ENDIF
      C                   Z-ADD     UNICD         UIACD                                         S0111
      C                   Z-ADD     UNICD         ULPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and UBLRT = 'Y'                             MD059375
+     C                   MOVE      UNICD         URCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
       *                                                                   CPL002
       ** If Midas-Plato Module is ON and this is a floating leg,          CPL002
       ** then maintain Our Last Rate Change Date field (PLULRC)           CPL002
@@ -23714,6 +24294,15 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C                   END                                                                   CIR00
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     UEINR3        EINR                                       MD059326
+     C                   Z-ADD     UEINR3        UEINR                                      MD059326
+     C                   Z-ADD     UBRTE3        UBRTE                                      MD059326
+     C                   Z-ADD     TEINR3        EINR                                       MD059326
+     C                   Z-ADD     TEINR3        TEINR                                      MD059326
+     C                   Z-ADD     TBRTE3        TBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
      C*                                                                   S01119
      C** RETURN TO NON-SHADOW POST DATE PROCESSING                        S01119
      C*         IN ORDER TO PROCESS NEXT EVENT DATE IN SEQUENCE           S01119
@@ -25479,7 +26068,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         UAITC                                         S0111
      C                   Z-ADD     WKINT         UIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C     FLRRTF        IFEQ      'Y'                                                         S0111
@@ -25544,7 +26137,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         TAITC                                         S0111
      C                   Z-ADD     WKINT         TIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C                   END                                                                   S0111
@@ -25624,7 +26221,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         TAITC                                         S0111
      C                   Z-ADD     WKINT         TIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdTIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        TIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C     FLRRTF        IFEQ      'Y'                                                         S0111
@@ -25689,7 +26290,11 @@
      C                   END                                                                   S0111
      C                   ADD       WKINT         UAITC                                         S0111
      C                   Z-ADD     WKINT         UIALC                                         S0111
+      *                                                                                     MD059278
+     C     WUpdUIACD     IFEQ      'Y'                                                      MD059278
      C                   Z-ADD     BJRDNB        UIACD                                         S0119
+     C                   ENDIF                                                              MD059278
+      *                                                                                     MD059278
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
      C                   END                                                                   S0111
@@ -26434,8 +27039,24 @@
      C*                                                                   S01119
      C     USRST         IFEQ      'P'                                                         S0111
      C                   Z-ADD     UEINR         EINR                                          S0111
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     EINR          UEINR3                                     MD059326
+     C                   Z-ADD     UBRTE         UBRTE3                                     MD059326
+     C                   Z-ADD     UEINR2        EINR                                       MD059326
+     C                   Z-ADD     UEINR2        UEINR                                      MD059326
+     C                   Z-ADD     UBRTE2        UBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
      C                   ELSE                                                                  S0111
      C                   Z-ADD     TEINR         EINR                                          S0111
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C                   Z-ADD     EINR          TEINR3                                     MD059326
+     C                   Z-ADD     TBRTE         TBRTE3                                     MD059326
+     C                   Z-ADD     TEINR2        EINR                                       MD059326
+     C                   Z-ADD     TEINR2        TEINR                                      MD059326
+     C                   Z-ADD     TBRTE2        TBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
      C                   END                                                                   S0111
      C                   END                                                                   S0111
      C*                                                                   S01119
@@ -27483,9 +28104,17 @@
      C                   Z-ADD     WIACD         UIACD                                         S0111
      C                   Z-ADD     WINFD         UINFD                                         S0111
      C                   Z-ADD     WLPCD         ULPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and UBLRT = 'Y'                             MD059375
+     C                   MOVE      UNICD         URCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
      C*                                                                   S01119
      C*  HAVING UPDATED BASE RATE DURING RATE FIX PROCESSING APPLY        S01119
      C*  SPREAD IN LINE WITH INDICATOR : ADD,SUB AND ADD PERCENTAGE       S01119
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND UCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     USPIN         IFEQ      'A'                                                         S0111
      C     URTSP         ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
@@ -27500,6 +28129,7 @@
      C     EINR          DIV(H)    100           UEINR                                         S0111
      C     UEINR         ADD       UBRTE         UEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C**  UPDATE DATES IF FREQUENCY NON BLANK                             S01119
      C     UICFR         IFNE      ' '                                                         S0111
      C                   MOVE      UICFR         ZFREQ                                         S0111
@@ -27562,10 +28192,18 @@
      C                   Z-ADD     WNICD         TNICD                                         S0111
      C                   Z-ADD     WINFD         TINFD                                         S0111
      C                   Z-ADD     WLPCD         TLPCD                                         S0111
+      *                                                                                     MD059375
+     C                   IF        CIR020 = 'Y' and TBLRT = 'Y'                             MD059375
+     C                   MOVE      TNICD         TRCHG                                      MD059375
+     C                   ENDIF                                                              MD059375
      C*                                                                   S01119
      C*                                                                   S01119
      C*  HAVING UPDATED BASE RATE DURING RATE FIX PROCESSING APPLY        S01119
      C*  SPREAD IN LINE WITH INDICATOR : ADD,SUB AND ADD PERCENTAGE       S01119
+      ** Bypass spread rate computation for MANL                                            MD059155
+     C                   IF        CIR020 = 'Y'                                             MD059155
+     C                             AND TCALM = 'MANL'                                       MD059155
+     C                   ELSE                                                               MD059155
      C     TSPIN         IFEQ      'A'                                                         S0111
      C     TRTSP         ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
@@ -27580,6 +28218,7 @@
      C     EINR          DIV(H)    100           TEINR                                         S0111
      C     TEINR         ADD       TBRTE         TEINR                                         S0111
      C                   END                                                                   S0111
+     C                   ENDIF                                                              MD059155
      C**  UPDATE DATES IF FREQUENCY NON BLANK                             S01119
      C     TICFR         IFNE      ' '                                                         S0111
      C                   MOVE      TICFR         ZFREQ                                         S0111
@@ -27848,6 +28487,18 @@
      C*                                                                   S01119
      C** RESET WORK FIELDS                                                S01119
      C*                                                                   S01119
+     C     CIR020        IFEQ      'Y'                                                      MD059326
+     C     W2CYCL        ANDEQ     'P'                                                      MD059326
+     C     USRST         IFEQ      'P'                                                      MD059326
+     C                   Z-ADD     UEINR3        EINR                                       MD059326
+     C                   Z-ADD     UEINR3        UEINR                                      MD059326
+     C                   Z-ADD     UBRTE3        UBRTE                                      MD059326
+     C                   ELSE                                                               MD059326
+     C                   Z-ADD     TEINR3        EINR                                       MD059326
+     C                   Z-ADD     TEINR3        TEINR                                      MD059326
+     C                   Z-ADD     TBRTE3        TBRTE                                      MD059326
+     C                   ENDIF                                                              MD059326
+     C                   ENDIF                                                              MD059326
      C                   MOVE      ' '           PRINT                                         S0111
      C                   Z-ADD     0             WINOTT                                        S0111
      C                   Z-ADD     0             WINOTU                                        S0111
@@ -28035,6 +28686,33 @@
       *                                                                                       CIR008
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
+     C                   IF        CIR020 = 'Y'                                             MD059371
+     C                             AND (DTYP = 'RR'                                         MD059371
+     C                             OR DTYP = 'RF'                                           MD059371
+     C                             OR DTYP = 'RP')                                          MD059371
+     C                   IF        UBLRT = 'Y'                                              MD059371
+     C                   BITOFF    '01234567'    UDSTI                                      MD059371
+     C                   BITON     '03'          UDSTI                                      MD059371
+     C                   IF        DTYP <> 'RP'                                             MD059410
+     C                   BITON     '4'           UDSTI                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C**********         EVAL      AACRT = UBRTE                                   MD059371 MD059410
+     C**********         EVAL      UBRTE = 0                                       MD059371 MD059410
+     C                   EVAL      AACRT = UEINR                                            MD059410
+     C                   EVAL      UEINR = 0                                                MD059371
+     C                   ENDIF                                                              MD059371
+     C                   IF        TBLRT = 'Y'                                              MD059371
+     C                   BITOFF    '01234567'    TDSTI                                      MD059371
+     C                   BITON     '03'          TDSTI                                      MD059371
+     C                   IF        DTYP <> 'RP'                                             MD059410
+     C                   BITON     '4'           TDSTI                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C**********         EVAL      AACRT = TBRTE                                   MD059371 MD059410
+     C**********         EVAL      TBRTE = 0                                       MD059371 MD059410
+     C                   EVAL      AACRT = TEINR                                            MD059410
+     C                   EVAL      TEINR = 0                                                MD059371
+     C                   ENDIF                                                              MD059371
+     C                   ENDIF                                                              MD059371
      C/COPY WNCPYSRC,DL0280C551
      C                   END                                                                   S0111
      C*                                                                   S01119
@@ -28121,6 +28799,7 @@
      C                   SETOFF                                         31                     S0111
      C     USRST         IFEQ      'P'                                                         E2340
      C     FLRRTF        ANDEQ     'Y'                                                         S0111
+     C     DTYP          ANDNE     'RF'                                                     MD059410
      C* USE TOPPING UP RATE FOR C'PARTY(TAKER)                            E23400
      C                   Z-ADD     TPUPRT        SZINTR               31  31                   S0111
      C                   END                                                                   S0111
@@ -28196,11 +28875,14 @@
      C*                                                                   S01119
      C     USRST         IFEQ      'T'                                                         E2340
      C     FLRRTF        ANDEQ     'Y'                                                         S0111
+     C     USRST         OREQ      'P'                                                      MD059410
+     C     DTYP          ANDEQ     'RF'                                                     MD059410
      C* USE TOPPING UP RATE FOR USER(TAKER)                               E23400
      C                   Z-ADD     TPUPRT        SZINTR               31  31                   S0111
      C                   END                                                                   S0111
      C*                                                                   S01119
      C     USRST         IFEQ      'P'                                                         E2340
+     C     DTYP          ANDNE     'RF'                                                     MD059410
      C* USE REIMBURSEMENT RATE FOR USER(PROVIDER)                         E23400
      C                   Z-ADD     REIMRT        SZINTR               31  31                   S0111
      C                   END                                                                   S0111
@@ -28267,6 +28949,37 @@
      C                   END                                                                   S0111
      C**  SET DEALS FILE UPDATE INDICATOR                                 S01119
      C                   MOVE      '1'           *IN15                                         S0111
+     C                   IF        CIR020 = 'Y'                                             MD059246
+     C                             AND (DTYP = 'RR'                                         MD059246
+     C                             OR DTYP = 'RF'                                           MD059246
+     C                             OR DTYP = 'RP')                                          MD059246
+     C                   IF        UBLRT = 'Y'                                              MD059246
+     C**********                   AND UCALM = 'MANL'                              MD059246 MD059278
+     C                   BITOFF    '01234567'    UDSTI                                      MD059246
+     C                   BITON     '03'          UDSTI                                      MD059246
+     C                   IF        DTYP <> 'RP'                                             MD059410
+     C                   BITON     '4'           UDSTI                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C**********         EVAL      AACRT = UEINR                                   MD059246 MD059360
+     C**********         EVAL      AACRT = UBRTE                                  MD059360 MD059360A
+     C                   EVAL      AACRT = UEINR                                           MD059260A
+     C**********         EVAL      UBRTE = 0                                       MD059246 MD059410
+     C                   EVAL      UEINR = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
+     C                   IF        TBLRT = 'Y'                                              MD059246
+     C**********                   AND TCALM = 'MANL'                              MD059246 MD059278
+     C                   BITOFF    '01234567'    TDSTI                                      MD059246
+     C                   BITON     '03'          TDSTI                                      MD059246
+     C                   IF        DTYP <> 'RP'                                             MD059410
+     C                   BITON     '4'           TDSTI                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C**********         EVAL      AACRT = TEINR                                   MD059246 MD059360
+     C**********         EVAL      AACRT = TBRTE                                  MD059360 MD059360A
+     C                   EVAL      AACRT = TEINR                                            MD059410
+     C**********         EVAL      TBRTE = 0                                       MD059246 MD059246
+     C                   EVAL      TEINR = 0                                                MD059246
+     C                   ENDIF                                                              MD059246
+     C                   ENDIF                                                              MD059246
      C                   END                                                                   S0111
      C*                                                                   S01119
      C                   Z-ADD     0             NRRPUR                                        S0111
@@ -29304,6 +30017,14 @@
      C**  CALCULATE ACCRUED INTEREST TO POST                              S01119
      C*                                                                   S01119
      C     SZAITD        SUB       SZIPTD        SZAITP           13 0                         S0111
+     C     CIR020        IFEQ      'Y'                                                      MD059410
+     C     W2CYCL        ANDEQ     'P'                                                      MD059410
+     C     WXFTB         ANDEQ     'Y'                                                      MD059410
+     C     SZIACD        ANDEQ     BJRDNB                                                   MD059410
+     C     SZAITP        ANDNE     0                                                        MD059410
+     C     SZAICD        ANDEQ     0                                                        MD059410
+     C                   Z-ADD     SZAITD        SZAITP                                     MD059410
+     C                   ENDIF                                                              MD059410
      C/COPY WNCPYSRC,DL0280C581
       *                                                                                       CIR007
       ** If our side of the deal and our side of the deal is an OIS or                        CIR007
@@ -33286,6 +34007,31 @@
      O                       FIUSRX            2468
      O                       FSOFCC            2545                                           CAS008
      O                       FSTFCC            2550                                           CAS008
+     O                       UBLRT             2607                                           CIR020
+     O                       URFRR             2617                                           CIR020
+     O                       UCALM             2621                                           CIR020
+     O                       UBADJ             2627P                                          CIR020
+     O                       UFLOR             2633P                                          CIR020
+     O                       ULBDY             2635                                           CIR020
+     O                       ULODY             2637                                           CIR020
+     O                       UOPSH             2638                                           CIR020
+     O                       URRDP             2640                                           CIR020
+     O                       UDBAV             2641                                           CIR020
+     O                       URTKN             2642                                           CIR020
+     O                       URCHG             2647                                           CIR020
+     O                       TBLRT             2648                                           CIR020
+     O                       TRFRR             2658                                           CIR020
+     O                       TCALM             2662                                           CIR020
+     O                       TBADJ             2668P                                          CIR020
+     O                       TFLOR             2674P                                          CIR020
+     O                       TLBDY             2676                                           CIR020
+     O                       TLODY             2678                                           CIR020
+     O                       TOPSH             2679                                           CIR020
+     O                       TRRDP             2681                                           CIR020
+     O                       TDBAV             2682                                           CIR020
+     O                       TRTKN             2683                                           CIR020
+     O                       TRCHG             2688                                           CIR020
+      *                                                                                       CIR020
 4225 O*
 4165 ODEALSL1   D    06 15                                                      S01117
 4229 O                       NORD                19P                            S01093
@@ -33509,7 +34255,8 @@
      O**********               UGDATA  2448                                            CAS006 217684
      O**********             UGDATA            2468                                    217684 CAS008
      O**********             UGDATA            2550                                    CAS008 CDL038
-     O                       UGDATA            2606                                           CDL038
+     O**********             UGDATA            2606                                    CDL038 CIR020
+     O                       UGDATA            2688                                           CIR020
      O                       LCD                596P                            S01444
      O*                                                                   S01408
      O/COPY WNCPYSRC,DL0280OOP1                                           S01408

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD058897           Date 08Nov21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD058897           Date 08Nov21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  MD058897 - Serious Midas Error in DLAA message               *
       *           - Bypass calling AOSPOSU0 if settlement method is   *
       *             not '01', '02', '07', '08' or '12'.               *

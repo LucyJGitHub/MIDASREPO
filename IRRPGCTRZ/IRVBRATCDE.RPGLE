@@ -24,8 +24,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059133           Date 10Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059133 - Prohibit the use of backward looking rate if      *
+      *             CIR020 is switched off                            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -51,6 +54,9 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
+      * Base rate codes (Keyed by currency code and base rate code)                         MD059133
+     FSDBSRTL0  IF   E           K DISK                                                     MD059133
+     F                                     INFSR(*pssr)                                     MD059133
 
       *****************************************************************
       ** +--------------------------------------+
@@ -140,6 +146,9 @@
       **Error message passed back to calling programme
      D   Msgid2        S                   LIKE(#Msgid)
 
+      **Error message passed back to calling programme                                      MD059133
+     D   Msgid3        S                   LIKE(#Msgid)                                     MD059133
+                                                                                            MD059133
       ** Rate Change Frequency Code                                                           CIR007
      DPRAtChgFq        S              1A                                                      CIR007
                                                                                               CIR007
@@ -148,6 +157,9 @@
                                                                                               CIR007
       ** OVERNIGHT INDEX SWAPS                                                                CIR007
      DCIR007           S              1A                                                      CIR007
+                                                                                            MD059133
+      ** LIBOR Deregulation - FRA/IRS                                                       MD059133
+     DCIR020           S              1A                                                    MD059133
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -218,7 +230,22 @@
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMA0019'     Msgid2
      C                   END
-
+      ** Prorihibit the use of backward looking rates if CIR020 is switched off             MD059133
+     C                   IF        CIR020 = 'N'                                             MD059133
+      * Key list                                                                            MD059133
+     C     BSRTKEY       KLIST                                                              MD059133
+     C                   KFLD                    SUCUCY                                     MD059133
+     C                   KFLD                    SUBRTT                                     MD059133
+      *                                                                                     MD059133
+     C     BSRTKEY       CHAIN     SDBSRTL0                                                 MD059133
+     C                   IF        %FOUND(SDBSRTL0)                                         MD059133
+     C     BABLRT        IFEQ      'Y'                                                      MD059133
+     C                   MOVE      'Y'           ErrorFound                                 MD059133
+     C                   MOVEL     '5049508'     Msgid3                                     MD059133
+     C                   ENDIF                                                              MD059133
+     C                   ENDIF                                                              MD059133
+     C                   ENDIF                                                              MD059133
+      *                                                                                     MD059133
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
@@ -244,6 +271,7 @@
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
      C                   PARM                    Msgid2
+     C                   PARM                    Msgid3                                     MD059133
      C                   PARM                    SUBRTT
      C                   PARM                    SuCucyOK
      C                   PARM                    SUCUCY
@@ -252,6 +280,7 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM                    PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
+     C                   PARM                    CIR020                                     MD059133
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

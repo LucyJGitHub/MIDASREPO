@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GO Setup S-Ccy Int. Rate Swap TRAP record')
+/*EXI *  TEXT('Midas GO Setup S-Ccy Int. Rate Swap TRAP record')      *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,7 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - Deregulation - Common Layer/Standing Data     *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
+      *  CSD103 - Deregulation - Common Layer/Standing Data           *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11830- branch of settlement account not defaulted         *

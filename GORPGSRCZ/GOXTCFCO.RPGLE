@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GO Extract of Cap/Floor/Collars')
+/*EXI *  TEXT('Midas GO Extract of Cap/Floor/Collars')                *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -40,11 +42,11 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -53,11 +55,11 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD***************179    198                                                       TDA102
      D  E_SETD               185    210                                                       TDA102
- 
- 
+
+
      D CFCOS         E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     20                                                       TDA102
@@ -82,15 +84,15 @@
      D**W#INTA**************** 3     14                                                       TDA102
      D**W#INTB****************15     17                                                       TDA102
      D**W#ISCY****************18     20                                                       TDA102
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * NOTES ABOUT CAPS, FLOORS, COLLARS
       * ---------------------------------
       * Buy floor   They pay us if effective int rate < floor rate.
@@ -119,83 +121,83 @@
       *             (our payments in UAITC & UAIPD).
       *             They pay us if effective int rate < floor rate.
       *             (their payments in TAITC & TAIPD).
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0
      C                   PARM                    I#DNWD            5 0
      C                   PARM                    I#PCOD            5 0
      C                   PARM                    I#TVDI            1
      C                   PARM                    CFCOS
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
- 
+
+
       * 'ASSET' POSITION (Asset details only if a buy or a collar)
       * ----------------
- 
+
      C     BYSL          IFEQ      'B'
      C     DTYP          OREQ      'RR'
- 
+
      C                   MOVE      'A'           W#ASLI            1
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
      C                   ENDIF
- 
+
       * 'LIABILITY' POSITION (Liability details only if a sell or a collar)
       * --------------------
- 
+
      C     BYSL          IFEQ      'S'
      C     DTYP          OREQ      'RR'
- 
+
      C                   MOVE      'L'           W#ASLI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
      C                   ENDIF
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C     I#TVDI        IFEQ      'T'
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -210,7 +212,7 @@
      C                   PARM                    CFCOS
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETCFCO'
      C                   EXSR      *PSSR
@@ -223,11 +225,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -281,7 +283,7 @@
      C                   Z-ADD     UAITC         W#AITC
      C                   MOVE      W#PAYD        W#INTS
      C                   ENDIF
- 
+
       *
       * IMPORT OPENING BALANCE
       *
@@ -306,17 +308,17 @@
       * IMPORT FEE PAYMENT DATE EVENT
       *
      C     UPVD          IFNE      *ZERO
- 
+
      C     DTYP          IFNE      'RR'
- 
+
      C     DTYP          OREQ      'RR'
      C     W#ASLI        ANDEQ     'A'
      C     UPPR          ANDEQ     'R'
- 
+
      C     DTYP          OREQ      'RR'
      C     W#ASLI        ANDEQ     'L'
      C     UPPR          ANDEQ     'P'
- 
+
      C                   EXSR      IMP_FE
      C                   ENDIF
      C                   ENDIF

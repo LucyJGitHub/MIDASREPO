@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054117 - Principal change Increase/Decrease capability     *
@@ -248,6 +250,12 @@
      D  PrPSTM                21     22  0
      D  PrPONS                23     34
 
+      ** Incoming Backward-Looking Rate Screen Fields                                         CIR020
+     D InTranBlrt      DS            50                                                       CIR020
+                                                                                              CIR020
+      ** New Backward-Looking Rate Fields                                                     CIR020
+     D NewTranBlrt     S             50                                                       CIR020
+                                                                                              CIR020
       ** Array for counterparty and broker fields narratives
      D CPBKTxt         S             17    DIM(2) PERRCD(1) CTDATA
 
@@ -299,6 +307,10 @@
       ** First DS for Access Programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **-----------------------------------------------------------------------
+     D BlankFloor      C                   CONST('            ')                              CIR020
+     D ScanString      C                   CONST('9999.9999999')                              CIR020
+     D Pos             S              3P 0                                                    CIR020
+                                                                                              CIR020
       ** Switchable features
      D CDE001          S              1A
      D CEU003          S              1A
@@ -552,6 +564,16 @@
      C                   ENDIF                                                                CSW213
 
      C                   MOVEA     PCSA          PCSAST                         BUG5403
+                                                                                              CIR020
+      ** Replace 9999.9999999 value with blanks                                               CIR020
+     C                   EVAL       NewTranBlrt = InTranBlrt                                  CIR020
+     C                   EVAL       Pos = %SCAN(ScanString:NewTranBlrt)                       CIR020
+     C                   IF         Pos <> 0                                                  CIR020
+     C                   EVAL       NewTranBlrt = %REPLACE(BlankFloor:                        CIR020
+     C                                            NewTranBlrt:Pos:12)                         CIR020
+     C                   EVAL       InTranBlrt = NewTranBlrt                                  CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
       * Build buffer with required output
      C                   EVAL      Buffer = NwIRScnFmt + NwIRScn2Fmt + InfData
      C                                      + PSRecS + PSPayS
@@ -561,6 +583,7 @@
      C**********                            + FORMULAOPC + PCSAST                     BUG6377 CSW213
      C                                      + FORMULAOPC                                      CSW213
      C                                      + InSwift2013                                     CSW213
+     C                                      + InTranBlrt                                      CIR020
      C                                      + PCSAST                                          CSW213
      C**********         EVAL      Buffer2=%SUBST(PCSAST:4857)                  BUG5403      BUG6377
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:7857)                BUG5403      BUG6377
@@ -737,6 +760,7 @@
       ** Deal Status
 
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    InTranBlrt                                   CIR020
      C                   PARM      *BLANKS       #1STAT
       ***Sign*of Short Term Rate                                                     BUG5181 BUG6472
      C**********         PARM                    #0SIGN            1                 BUG5181 BUG6472

@@ -17,12 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029846           Date 24Sep14               *
+      *  Last Amend No. MD024748           Date 03Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029846           Date 24Sep14               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024748 - Error messages for invalid input in IGA Model 1   *
+      *             and Model 2 fields are inconsistent with FDS      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029846 -  Clarifications on FATCA menu action codes        *
       *              Apply Fix MD030170A                              *
@@ -420,7 +423,8 @@
       *
      C                   IF        PRtcd = '*NRF'
      C                   EVAL      *IN82 = *ON
-     C                   EVAL      WMsgId = 'USS0280'
+     C**********         EVAL      WMsgId = 'USS0280'                                       MD024748
+     C                   EVAL      WMsgId = 'USS0173'                                       MD024748
      C                   EVAL      WIdx = WIdx + 1
      C                   EXSR      SRErrDta
      C                   ENDIF
@@ -457,7 +461,8 @@
       *
      C                   IF        PRtcd = '*NRF'
      C                   EVAL      *IN84 = *ON
-     C                   EVAL      WMsgId = 'USS0280'
+     C**********         EVAL      WMsgId = 'USS0280'                                       MD024748
+     C                   EVAL      WMsgId = 'USS0173'                                       MD024748
      C                   EVAL      WIdx = WIdx + 1
      C                   EXSR      SRErrDta
      C                   ENDIF

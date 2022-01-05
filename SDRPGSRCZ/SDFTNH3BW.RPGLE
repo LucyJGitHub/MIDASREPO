@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD025260           Date 03Nov21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025260 - Function Key "F5=Refresh" should be removed       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -349,16 +351,16 @@
      C                   RETURN
      C                   ENDIF
 
-      ** If F5, refresh
-     C                   IF        *INKE = '1'
-     C                   EVAL      SNUSIN = *BLANKS
-     C                   EVAL      SNOVVA = *BLANKS
-     C                   EVAL      SNOVUP = *BLANKS
-     C                   EVAL      SNOVDT = *BLANKS
-     C                   EVAL      SNOVTM = *BLANKS
-     C                   EVAL      SNCOMM1 = *BLANKS
-     C                   EVAL      WLOOP = 'N'
-     C                   ENDIF
+      ***If*F5,*refresh***********************************************                      MD025260
+     C**********         IF        *INKE = '1'                                              MD025260
+     C**********         EVAL      SNUSIN = *BLANKS                                         MD025260
+     C**********         EVAL      SNOVVA = *BLANKS                                         MD025260
+     C**********         EVAL      SNOVUP = *BLANKS                                         MD025260
+     C**********         EVAL      SNOVDT = *BLANKS                                         MD025260
+     C**********         EVAL      SNOVTM = *BLANKS                                         MD025260
+     C**********         EVAL      SNCOMM1 = *BLANKS                                        MD025260
+     C**********         EVAL      WLOOP = 'N'                                              MD025260
+     C**********         ENDIF                                                              MD025260
 
       ** If F16, bypass further processing.
      C                   IF        *INKQ = '1'

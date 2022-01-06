@@ -15,7 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. JMI111A            Date 08Jan20               *
+      *  Prev Amend No. JMI111             Date 18May18               *      
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +34,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111A - Midas-OPICS Interface. Upgrade to FBM 2.1          *
+      *            Added hook JMI111_015                              *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Added hooks JMI111_006, JMI111_012, JMI111_013,     *
+      *                       JMI111_014                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
       *  216612 - Condition 212636 on TI module switched on.          *
@@ -110,6 +117,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
+       /COPY WNCPYSRC,JMI111_006                                                              JMI111
+      *                                                                                       JMI111
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -123,6 +132,9 @@
       ** EXTERNAL DS FOR MODULE ID DETAILS                                                    212636
      D PErrorFlag      S              1
      D PBTNB           S              3
+      *                                                                                       JMI111
+       /COPY WNCPYSRC,JMI111_012                                                              JMI111
+      *                                                                                       JMI111
      D WBTNB           S              3  0
      D WBRBT           S              3  0
      D WIDX            S              3  0
@@ -190,6 +202,9 @@
       * Assign next batch no. after TI batch no. allocation.                                  212636
      C     TIURBN        ADD       1             WBTNB                                        212636
      C                   ENDIF                                                                212636
+      *                                                                                       JMI111
+       /COPY WNCPYSRC,JMI111_013                                                              JMI111
+      *                                                                                       JMI111
       *
       ** If next batch no. is 0 (last batch is 999), determine
       ** if there are batch number gaps.
@@ -243,7 +258,9 @@
      C                   ENDIF
       *
      C                   ENDDO
-      *
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_014                                                               JMI111
+      *                                                                                       JMI111
       ** If no available batch number, then error in return
       ** retuen code.
       *
@@ -268,6 +285,7 @@
      C     *ENTRY        PLIST
      C                   PARM                    PErrorFlag
      C                   PARM                    PBTNB
+      /COPY WNCPYSRC,JMI111_015                                                              JMI111A
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  MD056651           Date 05Oct20               *
-      *  Prev Amend No. MD041767           Date 25Jun20               *
+      *  Last Amend No. JMI111             Date 16May19               *      
+      *  Prev Amend No  MD056651           Date 05Oct20               *
+      *                 MD041767           Date 25Jun20               *
       *                 CSD102             Date 08Jan19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD025083           Date 13Jul18               *
@@ -92,6 +93,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Use of core hook GLH00459                           *      
       *  MD056651 - BITH HashItemNo Input increments during UPDATE    *
       *  MD041767 - COB Component GLC0263 failed. Added *IN43 in the  *
       *             condition to ensure that when record was not read *

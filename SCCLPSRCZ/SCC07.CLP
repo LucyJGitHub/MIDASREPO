@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD056826           Date 27Oct20              */
-/*       Prev Amend No. AR374612           Date 21Mar15              */
+/*       Last Amend No. JMI108             Date 31May18              */
+/*       Prev Amend No. MD056826           Date 27Oct20              */
+/*                      AR374612           Date 21Mar15              */
 /*                      MD021975B          Date 10Dec14              */
 /*                      MD021975           Date 27Nov13              */
 /*                      MD054045           Date 27Aug19              */
@@ -133,6 +134,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI108 - Account Balance Pooling. Upgrade to FBM 2.1        */
+/*                Amend core hook SCC07005                           */
 /*       MD056826 - Schema re-open processing issues for LGBFLIB.    */
 /*                  Move calling of SCC000203 before start of global */
 /*                  background job (GOC0002). This is to let the     */

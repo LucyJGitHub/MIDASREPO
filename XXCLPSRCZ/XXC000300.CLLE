@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Midas/OPICS ICD Control program')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/********SDC9481*-*Midas/OPICS*ICD*Control*program********************/                 /* JMI111 */
+/*       XXC000300 - Midas/OPICS ICD Control program                 */                 /* JMI111 */
+/*                                                                   */
+/********(c)*Misys*International*Banking*Systems*Ltd.*2007************/                 /* JMI111 */
+/*       (c) Finastra International Limited 2018                     */                 /* JMI111 */
+/*                                                                   */
+/*       Last Amend No. JMI111             Date 16May18              */
+/*       Prev Amend No. CGL019  *CREATE    Date 20Apr07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       JMI111 - OPICS-Midas GL Interface. Upgrade to FBM 2.1       */
+/*       CGL019 - OPICS-Midas GL Interface                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+
+             DCL        VAR(&MODE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&WRTNCODE) TYPE(*CHAR) LEN(5)
+
+/* If Mode is 'E' or Enquire call Midas/OPICS Enquiry ICD Program */
+             IF         COND(&MODE *EQ 'E') THEN(DO)
+/***************CALL       PGM(SD9481E) PARM(&RTNCODE 'OPIN' &WRTNCODE)       */        /* JMI111 */
+                CALL       PGM(XX000300) PARM(&RTNCODE 'OPIN' &WRTNCODE)                /* JMI111 */
+             ENDDO
+
+/* If Mode is 'M' or Maintenance call Midas/OPICS Enquiry ICD Program */
+             IF         COND(&MODE *EQ 'M') THEN(DO)
+/***************CALL       PGM(SD9481R) PARM(&RTNCODE 'OPIN' &WRTNCODE ' ')   */        /* JMI111 */
+             CALL       PGM(XX000301) PARM(&RTNCODE 'OPIN' &WRTNCODE +
+                          ' ')                                                          /* JMI111 */
+                    IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
+                               CMDLBL(END))
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+
+END:
+             ENDPGM

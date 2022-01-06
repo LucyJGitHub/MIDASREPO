@@ -14,8 +14,9 @@
  
       *  (c) Finastra International Limited 2001                      *
  
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *  Last Amend No. JMI106             Date 24May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT151             Date 21Mar14               *
       *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24774           Date 06Jul09               *
@@ -30,6 +31,11 @@
  
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI106 - Split FT Sequence Number based on Settlement Type   *
+      *           Use of core hook FTH00069                           *
+      *           Addition of hook JMI106_013                         *
+      *           Addition of hook JMI106_014                         *
+      *           (Upgrade to FB Midas)                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT151 - FT IN/OP Alphanumeric sequence                      *
       *  AR787620 - Hooks Incorporation                               *
@@ -110,6 +116,7 @@
      D @@P_Ref                 8     11
      D @@OP                   12     13
      D @@Sett                 14     15
+     D/COPY WNCPYSRC,JMI106_013                                                               JMI106
  
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -240,6 +247,7 @@
      C                   ELSE                                                                 CFT151
      C                   MOVEL     'N'           CFT151                                       CFT151
      C                   ENDIF                                                                CFT151
+     D/COPY WNCPYSRC,JMI106_014                                                               JMI106
  
      C/COPY ZACPYSRC,DBFIELDS
  

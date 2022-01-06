@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055515           Date 13Apr20               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. JMI111             Date 16May19               *      
+      *  Prev Amend No. MD055515           Date 13Apr20               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031707           Date 02Jul15               *
       *                 MD024136           Date 08Jan14               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111   - OPICS-Midas GL Interface. Upgrade to FBM 2.1      *
+      *             Added hooks: JMI111_001, JMI111_002, JMI111_005   *      
       *  MD055515 - Batch Item allows customer as blank to be         *
       *             accepted. Amend GLVIMAC to ensure that JE Items   *
       *             with blank Customer will not be allowed even when *
@@ -224,6 +227,9 @@
                                                                                               237621
       ** Data structure for data area ZMITEM                                                  237621
      D ZMITEM        E DS                  EXTNAME(ZMITEM) DTAARA(ZMITEM)                     237621
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_001                                                               JMI111
+      *                                                                                       JMI111
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -307,6 +313,7 @@
      C                   ENDIF                                                               BUG2948
      C                   ENDIF                                                               BUG2948
       *
+     C/COPY WNCPYSRC,JMI111_005                                                              JMI111
       ** Validate Account.
       *
      C                   EXSR      SRProc
@@ -1444,6 +1451,9 @@
      C                   PARM                    PKACSN
      C                   PARM                    PKBRCD
      C     SDACCT        PARM      SDACCT        DSSDY
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_002                                                               JMI111
+      *                                                                                       JMI111
       *
      C                   ENDSR
       *

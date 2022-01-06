@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047369A          Date 24Jan18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. JMI105             Date 20May20               *      
+      *  Prev Amend No. MD047369A          Date 24Jan18               *      
+      *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 AR900506           Date 04Nov14               *
       *                 CFT157             Date 29Aug14               *
@@ -81,6 +82,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI105 - Validate Subtype and Settle/Pay Ccy combination     *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
@@ -1122,6 +1124,10 @@
       ** Mode = '*RPR  ' (Repair Function)
       ** Mode = '*SIN  ' (Screen Input Function)
      C                   PARM                    PMode
+      *                                                                                       JMI105
+      ** JMI105 input parameters                                                              JMI105
+      *                                                                                       JMI105
+     C/COPY WNCPYSRC,JMI105_002                                                               JMI105
       *
       ** OUTPUT
       ** ======
@@ -3752,6 +3758,8 @@
       ** Hook to enable non-core initial processing to be included
       *
       /COPY WNCPYSRC,FTIPY1V040
+      *                                                                                       JMI105
+     C/COPY WNCPYSRC,JMI105_001                                                               JMI105
       *
      C                   ENDSR
       *

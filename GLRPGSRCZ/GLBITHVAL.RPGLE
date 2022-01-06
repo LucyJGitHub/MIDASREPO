@@ -16,8 +16,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD057194           Date 16Nov20               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. JMI116             Date 21Jul20               *
+      *  Prev Amend No. JMI111             Date 18May18               *      
+      *                 MD057194           Date 16Nov20               *
+      *                 MD054696           Date 29Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 246752             Date 29Oct15               *
@@ -64,6 +66,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI116 - Reserve Journal Entry Batch Numbers                 *
+      *           Added hooks JMI116_001, JMI116_002, GLH00450        *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Added hooks JMI111_007, JMI111_008, JMI111_009      *      
       *  MD057194 - The Batch goes to repair queue if the Batch       *
       *             coming from SOAP/JMS has Batch Number defined and *
       *             Hold/Accept Indicator = A.                        *
@@ -154,6 +160,11 @@
       ** JE Items file                                                                       BUG3546
      FGLJENPL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG3546
       *                                                                                      BUG3546
+      /COPY WNCPYSRC,JMI111_007                                                               JMI111
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI116_001                                                               JMI116
+      *                                                                                       JMI116
+      *****************************************************************
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,GLBITHV001
       *
@@ -263,6 +274,8 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC024
                                                                                               CSC024
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSC024
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_008                                                               JMI111
       *                                                                                       248749
       ** Externally described DS for Account Code details                                     248749
      D SDACOD        E DS                  EXTNAME(SDACODPD)                                  248749
@@ -626,6 +639,10 @@
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP084
      C                   ENDIF                                                                CAP084
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_009                                                               JMI111
+      *                                                                                       JMI116
+      /COPY WNCPYSRC,JMI116_002                                                               JMI116
       *                                                                                       CAP084
       ** If batch has been requested to be accepted then check currency totals and if the     CAP084
       ** batch is valid then change status to Accepted.                                       CAP084

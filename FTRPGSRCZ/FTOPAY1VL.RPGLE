@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057498           Date 26Jan21               *
-      *  Prev Amend No. 254841B            Date 14May20               *
+      *  Last Amend No. JMI107             Date 10May08               *      
+      *  Prev Amend No. MD057498           Date 26Jan21               *
+      *                 254841B            Date 14May20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
@@ -106,6 +107,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI107 - Upgrade of JMI025 feature. RTS Bank Code Enhancement*
+      *           Amend validation to allow RTS bank code.            *
+      *           Hooks: FTOPA1VC12, FTOPA1VC16, JMI107_005           *      
       *  MD057498 - Unable to complete OPAY transaction due error     *
       *             MMA0932 in SWIFT MT202 indicator field. Change    *
       *             error displayed to be a warning if sender's       *
@@ -3204,6 +3208,8 @@
      C                   ENDIF                                                              AR663078
      C                   ENDIF                                                              AR663078
      D/COPY OFCPYSRCZ,CFT148_016                                                              CFT148
+     C/COPY WNCPYSRC,JMI107_005                                                               JMI107
+
       *
      C                   ENDSR
       *****************************************************************

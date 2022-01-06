@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. JMI107             Date 10May08               *      
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -38,6 +39,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  JMI107 - Upgrade of JMI025 feature. RTS Bank Code Enhancement*
+      *           Amend validation to allow RTS bank code.            *
+      *           Hooks: FTH00377, FTH00378, FTH00379                 *      
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *

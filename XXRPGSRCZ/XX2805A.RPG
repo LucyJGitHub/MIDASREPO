@@ -1,0 +1,277 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Entry Generation Narrative Addition')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger Module                                *
+     F*                                                               *
+     F***GL2805A*-*GL*Entry*Generation*for*Narrative*Addition**********
+      *  XX2805A - GL Entry Generation for Narrative Addition         *
+     F*                                                               *
+     F***Called*By:*GL2805**-**Fontis*I/face*Intraday*Proj.Mvmts*Gen.**
+      *  Called By: XX113008 - Midas GCMS If Intraday Proj.Mvmts Gen.
+     F*                                                               *
+     F***(C)*COPYRIGHT*MKI*LIMITED*2000********************************
+      *  (C) Finastra International Limited 2019                      *
+     F*                                                               *
+      *  Last Amend No. MD054281            Date 04Sep19               *
+      *  Prev Amend No. MD053075           Date 17Jun19               *
+      *                 230578             Date 28Apr05               *
+      *                 228622             Date 20Aug04               *
+      * Midas DBA 3.1 ------------------------------------------------*
+      *                 BFI003 *CREATE     Date 28Nov00               *
+      * Midas DBA 2.0 --------------- Base ---------------------------*
+      *                                                               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD054281- Midas GL GCMS Interface upg to FM2.1                *
+      *  MD053075 - WDRCR recieving variable changed into numerical   *
+      *            because tag 86 is producing incorrect value        *
+      *  230578 - Checked ordering customer type field is settlement  *
+      *           type is 01.                                         *
+      *  228622 - Differenciate DR & CR Narrative for Outgoing Pay-   *
+      *           ment with Settlement Type '01'.  Applied            *
+      *           enhancement JMI016.                                 *
+     F*  BFI003 - Adding Narrative description                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FINPAYBB IF  E           K        DISK                           UC
+     FOTPAYBB IF  E           K        DISK                           UC
+     FACCNTL1 IF  E           K        DISK                                                   228622
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E/EJECT
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *
+     C           PAYKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           PREF
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   7        Action
+     C                     PARM           W0BRCA  3        Branch Code
+     C                     PARM           WREF   15        Payment Ref
+     C                     PARM           WNAR   30        Fontis Payment Narr
+     C****                 PARM           WDRCR   10       Dr/Cr Indicator             230578 228622
+     C****                 PARM           WDRCR   1        Dr/Cr Indicator    230578 228622 MD053075
+     C                     PARM           WDRCR   10       Dr/Cr Indicator                  MD053075
+     C                     PARM           W0RTN   7        Return Code
+      *
+      * Initialise program
+      *
+     C                     EXSR SRINIT
+      *
+      *  What action we should do
+      *
+     C           W0ACT     IFEQ '*TRANS'
+     C                     EXSR SRPROC
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Controlling Subroutine For Translation Process    *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS:     SRERR   - Error Processing                        *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+     C                     MOVEL*BLANKS   WNAR30 30
+      *
+      * GET THE REMITTANCE TYPE
+      *
+     C           2         SUBSTWREF:12   WNAR02  2
+     C                     MOVE W0BRCA    BRCA
+     C                     MOVE WREF      PREF
+      *                                                                                       228622
+      * GET SETTLEMENT TYPE                                                                   228622
+      *                                                                                       228622
+     C           2         SUBSTWREF:14   WSETTL  2                                           228622
+      *
+      * CHECK THE REMITTANCE TYPE
+      *
+     C           WNAR02    IFEQ 'IN'
+     C           WNAR02    OREQ 'OP'
+      *
+     C                     SELEC
+      *
+     C           WNAR02    WHEQ 'OP'
+      *
+      * OUTGOING REMITTANCE, GET THE APPROPRIATE RECORD FROM OTPAYBB
+      *
+     C           PAYKEY    CHAINOTPAYBB              90
+      ***********************************************************                             228622
+      **MOVE*THE*BENEFICIARY*NAME*TO*NARATIVE********************                             228622
+      ***********************************************************                             228622
+     C           *IN90     IFEQ '0'
+      *                                                                                       228622
+      ** MOVE THE ORDERING CUSTOMER TO NARRATIVE                                              228622
+      *                                                                                       228622
+     C           WSETTL    IFEQ '01'                                                          228622
+     C*****      WDRCR     ANDEQ1                                                      230578 228622
+     C*****      WDRCR     ANDEQ'1'                                                  230578 MD053075
+     C           WDRCR     ANDEQ1                                             230578 228622 MD053075
+     C           ORCT      IFEQ 'R'                                                           230578
+     C                     MOVELORC1      ORCX   100                                          228622
+     C           ORCX      CHAINACCNTL1              91                                       228622
+     C      91             MOVELORC1      ANAM                                                228622
+     C                     MOVELANAM      WNAR30                                              228622
+     C                     ELSE                                                               230578
+     C                     MOVELORC1      WNAR30                                              230578
+     C                     ENDIF                                                              230578
+     C                     ELSE                                                               228622
+      *                                                                                       228622
+      ** MOVE THE BENEFICIARY NAME TO NARATIVE                                                228622
+      *                                                                                       228622
+     C                     MOVELBNC2      WNAR30
+     C                     ENDIF                                                              228622
+     C*                                                                                       228622
+     C                     ELSE
+     C                     MOVEL'XXX'     WNAR30
+     C                     ENDIF
+      *
+     C           WNAR02    WHEQ 'IN'
+      *
+      * INCOMING REMITTANCE, GET THE APPROPRIATE RECORD FROM INPAYBB
+      *
+     C           PAYKEY    CHAININPAYBB              90
+      *
+      * MOVE THE ORDERING CUSTOMER TO NARATIVE
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVELORC1      WNAR30
+     C                     ELSE
+     C                     MOVEL'XXX'     WNAR30
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *
+     C                     MOVE *BLANK    WNAR
+     C                     MOVELWNAR30    WNAR
+      *
+     C                     ENDIF
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPFIL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+     C                     EXSR SRCLS                      BFI003
+      * Open Files
+      *
+     C                     OPEN OTPAYBB
+     C                     OPEN INPAYBB
+      *
+     C                     MOVE *ON       *IN50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLS    : Close all open file                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCLS     BEGSR
+      *
+     C                     CLOSEOTPAYBB                90
+     C                     CLOSEINPAYBB                90
+      *
+     CSR                   ENDSR
+      *
+      *  /Copy point for Calculation Specs
+      *
+     C/EJECT
+     C/COPY MECPYSRC,SRERRC
+**  CPY@ table
+(C) Finastra International Limited 2019

@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 241243             Date 07Mar08               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. MD057764           Date 17Mar21               *      
+      *  Prev Amend No. 241243             Date 07Mar08               *
+      *                 MD055733           Date 03Jul20               *
       *                 260263             Date 06Nov19               *
       *                 MD025526           Date 06Nov19               *
       *                 MD024810           Date 06Nov19               *
@@ -240,6 +241,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057764 - Apply AR749052, MD034915                          *
+      *  MD034915 - Added fix if NFSN is blank on rollover.           *
+      *           - Applied for MD-34918                              *
+      *  AR749052 - Funding details not displayed.  Default funding   *
+      *             details.  Apply 263440. (Child: AR749053)         *
+      *           - Applied for MD-34918                              *    
       *  241243 - Missing activity for principal repayment when       *
       *           maturity and next repayment are on the same date    *
       *           but falls on a holiday. Fix is to enable checking   *
@@ -2598,6 +2605,23 @@
      C*                                                                   105046
 0671 C  N49                GOTO NOROL
      C/COPY WNCPYSRC,LE0390C001
+      *                                                                                     AR749052
+      ** If Analytical Accounting is on and new funding details are not present,            AR749052
+      ** default values to current funding details.                                         AR749052
+      *                                                                                     AR749052
+     C           BGN0ST    IFEQ 'Y'                                                         AR749052
+     C           NFSN      IFEQ *BLANK                                                      MD034915
+     C           NFRS      ANDEQ*ZERO                                                       MD034915
+     C                     MOVELFSGN      NFSN                                              MD034915
+     C                     ENDIF                                                            MD034915
+     C           NFRS      IFEQ *ZERO                                                       AR749052
+     C                     Z-ADDFSRP      NFRS                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C           NFPC      IFEQ *BLANK                                                      AR749052
+     C                     MOVELFPRC      NFPC                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C                     ENDIF                                                            AR749052
+      *                                                                                     AR749052
 0672 C* CHECK IF R/O DETAILS ARE PRESENT.(50=ON)
 0673 C           NCAC      COMP 0                    50  53
 0674 C   50      NBRAL     COMP 0                    51

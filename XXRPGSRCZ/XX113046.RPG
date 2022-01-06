@@ -1,0 +1,2501 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL GCMS MT999 Message Generation')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-GCMS Interface                                 *
+      *                                                               *
+      ***GLJ046*-*GCMS*MT999*Message*Generation************************                   JMI113
+      *  XX113046 - GCMS MT999 Message Generation                     *                   JMI113
+      *                                                               *
+      *  Function:  To extract Midas Transactions i.e. Loans, Time    *
+      *             Deposits, and Foreign Exchange, to format them    *
+      *             as MT999 messages to be passed through the Midas- *
+      *             GCMS Interface.                                   *
+      *                                                               *
+      *  Close of Business                                            *
+      *                                                               *
+      ***Called*By:*GLCJ046*-*GCMS*MT999*Message*Generation************                   JMI113
+      *  Called By: XXC113046 - GCMS MT999 Message Generation         *                   JMI113
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************                   JMI113
+      *  (c) Finastra International Limited 2018                      *                   JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 23May18               *
+      *  Prev Amend No. JMI019             Date 21Feb07               *
+      *                 JMI019  (CHG002)   Date 16Jan07               *
+      *                 JMI019  (CHG001)   Date 25Jan06               *
+      *                 JMI019  *CREATE    Date 03Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  JMI019 - Upgrade as is                                       *
+      *  JMI019 - (CHG002) End Tag missing for messages with no detail*
+      *  JMI019 - (CHG001) Additional Changes raised by client        *
+      *  JMI019 - Phase III MT999 Message Processing                  *
+      *                                                               *
+      *****************************************************************
+     FCLOANLB IF  E           K        DISK
+     FDEALSC  IF  E           K        DISK
+     FGCMSFX  IF  E                    DISK
+     F**********SDCUSTY1IF  E           K        DISK                                     JMI113
+     FXXCUSTY1IF  E           K        DISK                                               JMI113
+     FSLACX   IF  E           K        DISK                                                   CHG001
+     F            LEACXHHF                          KIGNORE                                   CHG001
+     F            LEACXZZF                          KIGNORE                                   CHG001
+     F*********GLMREFL0UF  E           K        DISK                      A               JMI113
+     F*********GLMDTAPDO   E                    DISK                                      JMI113
+     F*********GLC999PDO   E                    DISK                                      JMI113
+     F*********GLJ046AUO   E                    PRINTER      KINFDS SPOOLU     UC         JMI113
+     FXXMREFL0UF  E           K        DISK                      A                        JMI113
+     FXXMDTAPDO   E                    DISK                                               JMI113
+     FXXC999PDO   E                    DISK                                               JMI113
+     FXX1146AUO   E                    PRINTER      KINFDS SPOOLU     UC                  JMI113
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      ****21********Member*not*found*on*message*ref.*file*GLMREFL0*****                   JMI113
+      *   21        Member not found on message ref. file XXMREFL0    *                   JMI113
+      *   22        No Record Found/Last record on Transaction Files  *
+      *   31        Error on write of detail line                     *
+      *   40        End of year                                       *
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *   nn        X                                                 *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    ZFX        16  1
+     E                    WA         34  1
+     E                    WA1        34  1
+     E                    WA2        19  1
+     E                    WA3        19  1
+      *
+      ** Rename MARG
+     ICLOANCLF
+     I              MARG                            CLMARG
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** LDA for database error reporting
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     I*********GLGCMS    E DSGLGCMSDA                    256                              JMI113
+     IGLGCMS    E DSXXGCMGDA                    256                                       JMI113
+      ** GCMS Data Area
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      ** Program Status Data Structure - gives Job name, user and
+      ** number
+     ISDBANK    E DSSDBANKPD
+      ** Data structure for bank details table
+      *
+     IGCMS        DS
+      ** Data structure for OPIC's Foreign Exchange File
+      *
+     I                                        1 145 FXTXT
+     I                                        1   80FXDDAT
+     I                                        9  160FXVDAT
+     I                                       17  23 FXDEAL
+     I                                       24  35 FXCUST
+     I                                       36  70 FXCNAM
+     I                                       71  71 FXPSCD
+     I                                       72  74 FXCCY
+     I                                       75  92 FXAMNT
+     I                                       93  95 FXCCCY
+     I                                       96 113 FXCAMT
+     I                                      114 132 FXCRAT
+     I                                      133 135 FXSEQ
+     I                                      136 142 FXSWAP
+     I                                      143 145 FXPTYP
+      *
+     IMNM         DS
+     I                                        1  10 W@MNM
+     I                                        2   7 W@MDAT
+      ** Member name - date
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      ** File Information Data Structure for GLJ046AU
+      *
+     I@20         DS
+     I                                        1   6 @DAT
+     I                                        7   8 @PFX
+     I                                        9  120@TIM
+     I                                       13  150@SEQ
+      *
+     I            DS
+     I                                        1 256 @DATA
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        5 256 @DAT4
+     I                                        6 256 @DAT5
+     I                                       22 256 @DAT6
+      *
+     IDSDLIM      DS
+      *
+      *  To define carriage return delimiters for message scanning
+      *
+      *  Hex value  ' '   = CRLF  Start of text/Field Separator
+      *              0
+      *              D
+      *
+     I                                        1   1 CRLFC
+     I                                        1   1 BTA
+      ** Message data
+      *
+     I            DS
+     I                                        1 256 @F4DAT
+     I I            '{1:F01'                  1   6 @F4S1
+     I                                        7  18 @F4S2
+     I I            '0000000000}{2:I999'     19  36 @F4S3
+     I I            'MHCBJPJ4XXXX'           37  48 @F4S4
+     I I            'N}{4:'                  49  53 @F4S5
+     I                                       54 128 @F4S6
+      ** Swift Header
+      *
+     I            DS
+     I                                        1  30 @FOREX
+     I I            'Foreign Exchange - '     1  19 @FREX1
+     I                                       20  23 @FREX2
+      *
+     I              'FFRONTIER'           C         @FRONT
+     I              'TIME DEPOSIT'        C         @TDEPO
+     I              'XX113046'            C         PGMNAM                                JMI113
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   INIT      Initial process                                   *
+      *   MAIN      Main detail process                               *
+      *   CREAT1    Create ISO MT999 for Loan Transactions            *
+      *   CREAT2    Create ISO MT999 for Time Deposit Transactions    *
+      *   CREAT3    Create ISO MT999 for Foreign Exchange Transactions*
+      *   FLD20     Create field :20: (System Date and Time)          *
+      *   FLD79     Create field :79: (FFRONTIER)                     *
+      *   FLD011    Create field 011: (Transaction Kind)              *
+      *   FLD012    Create field 012: (Data Date)                     *
+      *   FLD013    Create field 013: (Customer Number)               *
+      *   FLD014    Create field 014: (Transaction Ref. No)           *
+      *   FLD015    Create field 015: (Transaction Currency)          *
+      *   FLD016    Create field 016: (Transaction Amount)            *
+      *   FLD017    Create field 017: (Value Date)                    *
+      *   FLD018    Create field 018: (Maturity Date)                 *
+      *   FLD051    Create field 051: (A/C Name)                      *
+      *   FLD052    Create field 052: (Interest Rate)                 *
+      *   FLD053    Create field 053: (Total Interest Amount)         *
+      *   FLD20B    Create field :20: (System Date and Time)          *
+      *   FLD79B    Create field :79: (FFRONTIER)                     *
+      *   FLDB11    Create field 011: (Transaction Kind)              *
+      *   FLDB12    Create field 012: (Data Date)                     *
+      *   FLDB13    Create field 013: (Customer Number)               *
+      *   FLDB14    Create field 014: (Transaction Ref. No)           *
+      *   FLDB15    Create field 015: (Transaction Currency)          *
+      *   FLDB16    Create field 016: (Transaction Amount)            *
+      *   FLDB17    Create field 017: (Value Date)                    *
+      *   FLDB18    Create field 018: (Maturity Date)                 *
+      *   FLDB51    Create field 051: (A/C Name)                      *
+      *   FLDB52    Create field 052: (Interest Rate)                 *
+      *   FLDB53    Create field 053: (Total Interest Amount)         *
+      *   FLD20C    Create field :20: (System Date and Time)          *
+      *   FLD79C    Create field :79: (FFRONTIER)                     *
+      *   FLDC11    Create field 011: (Transaction Kind)              *
+      *   FLDC12    Create field 012: (Data Date)                     *
+      *   FLDC13    Create field 013: (Customer Number)               *
+      *   FLDC14    Create field 014: (Transaction Ref. No)           *
+      *   FLDC15    Create field 015: (Transaction Currency)          *
+      *   FLDC16    Create field 016: (Transaction Amount)            *
+      *   FLDC19    Create field 019: (Settlement Value Date)         *
+      *   FLDC51    Create field 051: (A/C Name)                      *
+      *   FLDC58    Create field 058: (Contract Amount)               *
+      *   FLDC59    Create field 059: (SWAP Reference No.)            *
+      *   FLDC60    Create field 060: (Buy/Sell Classification)       *
+      *   FLDC61    Create field 061: (Contract Rate)                 *
+      *   FLDC62    Create field 062: (Contract Date)                 *
+      *   FLDC63    Create field 063: (Counter Ccy Code)              *
+      *   FLDC64    Create field 064: (Counter Amount)                *
+      *   CLSDWN    Closing Processing                                *
+      *   AUDIT     Audit Trail Report                                *
+      *   *PSSR     Process errors                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+      *
+      *================================================================
+      *  P R O G R A M    S T A R T                                   *
+      *================================================================
+      *
+      ** Receive Parameter List
+     C           *ENTRY    PLIST
+     C                     PARM           MNM    10
+      *
+      ** Execute initial process
+     C                     EXSR INIT
+      *
+      ** Execute main detail process
+     C                     EXSR MAIN
+      *
+      ** Execute closing process
+     C                     EXSR CLSDWN
+      *
+      ** Terminate RPG program with member name being passed back
+      ** to calling program
+     C                     SETON                     LR
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Perform initial processing                     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  AOBANKR0                                       *
+      *             :  AOSARDR0                                       *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Initialise object copyright statement
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C*********            MOVEL'GLJ046'  DBPGM                                           JMI113
+     C                     MOVELPGMNAM    DBPGM                                           JMI113
+     C                     OUT  LDA
+      *
+      ** Initialise record counters
+     C                     Z-ADD0         W@RED
+     C                     Z-ADD0         W@UPD
+     C                     Z-ADD0         W@DEL
+     C                     Z-ADD0         W@WRI
+     C                     Z-ADD0         XXNREC
+      *
+      ***Open*Audit*printer*file*PRTF/GLJ046AU                                            JMI113
+     C**********           OPEN GLJ046AU                                                  JMI113
+      ** Open Audit printer file PRTF/XX1146AU                                            JMI113
+     C                     OPEN XX1146AU                                                  JMI113
+      *
+      ** Access SDBANKPD for bank ICD
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDBANK
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***Dataarea*GLGCMSDA                                                                JMI113
+      ** Dataarea XXGCMGDA                                                                JMI113
+      *
+     C********** *NAMVAR   DEFN GLGCMSDA  GLGCMS                                          JMI113
+     C           *NAMVAR   DEFN XXGCMGDA  GLGCMS                                          JMI113
+     C                     IN   GLGCMS
+      *
+      ** Determine if this is the last run of the year
+     C                     MOVE *BLANKS   W@DNWD  6
+     C                     CALL 'ZM0060'
+     C                     PARM BJDNWD    ZMDAY   50
+     C           W@DNWD    PARM           ZMDATE  6
+      *
+     C                     MOVELW@DNWD    W@DAT2  2
+     C                     MOVE BJMRDT    W@DAT3  2
+     C           W@DAT2    IFNE W@DAT3
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+      ** Determine the member name
+     C                     MOVEL'S'       W@MNM
+     C                     Z-ADDBJRDNB    W@DAT4  50
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C           W@MDAT    PARM           ZMDATE  6
+      *
+      ** Setup field for 'CRLF'
+     C                     BITOF'01236'   BTA
+     C                     BITON'457'     BTA
+      *
+     C                     ENDSR                           INIT
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  MAIN                                           *
+      * Function    :  Perform main detail processing                 *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  CREAT1, CREAT2, CREAT3                         *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+     C                     MOVE 'N'       W#LOAN  1
+     C                     MOVE 'N'       W#DEAL  1
+     C                     MOVE 'N'       W#FORX  1
+      *
+      *
+      ** Loan Transactions
+      ** =================
+      *
+     C           *LOVAL    SETLLCLOANLB
+     C                     READ CLOANLB                  22
+      *
+      ** Write title header
+     C**********           WRITEGLJ046A1                                                  JMI113
+     C                     WRITEXX1146A1                                                  JMI113
+      *
+     C           *IN22     DOWEQ'0'
+      *
+     C                     ADD  1         W@RED
+      *
+      ** Loan details are found
+     C           PTYP      IFNE 66
+     C           PTYP      ANDNE67
+     C           PTYP      ANDNE69
+     C           PTYP      ANDNE72
+      *
+     C           MDAT      IFEQ BJRDNB
+     C           CPAM      ANDEQ0
+     C           MDAT      OREQ BJRDNB
+     C           CPAM      ANDNE0
+     C           MDAT      ORGT BJRDNB
+      *
+      ** Check if Customer is GCMS
+      *
+     C                     MOVE CNUM      WTRAN
+     C*********  WTRAN     CHAINSDCUSTY1             80                                   JMI113
+     C           WTRAN     CHAINXXCUSTY1             80                                   JMI113
+      *
+     C           *IN80     IFEQ *OFF
+     C           J0GIND    ANDEQ'Y'
+      *
+      ** Generate MT999 message
+     C                     EXSR CREAT1
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     READ CLOANLB                  22
+     C                     ENDDO
+      *
+     C           W#LOAN    IFEQ 'N'
+     C                     EXSR SNOLON
+     C                     ENDIF
+      *
+      *
+      ** Time Deposit Transactions
+      ** =========================
+      *
+     C           *LOVAL    SETLLDEALSC
+     C                     READ DEALSC                   22
+      *
+     C           *IN22     DOWEQ'0'
+      *
+     C                     ADD  1         W@RED
+      *
+      ** Time Deposit details are found
+     C           DTYP      IFEQ 'TD'
+      *
+     C           MDAT      IFGE BJRDNB
+      *
+      ** Check if Customer is GCMS
+      *
+     C                     MOVE CNUM      WTRAN
+     C*********  WTRAN     CHAINSDCUSTY1             80                                   JMI113
+     C           WTRAN     CHAINXXCUSTY1             80                                   JMI113
+      *
+     C           *IN80     IFEQ *OFF
+     C           J0GIND    ANDEQ'Y'
+      *
+      ** Generate MT999 message
+     C                     EXSR CREAT2
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     READ DEALSC                   22
+     C                     ENDDO
+      *
+     C           W#DEAL    IFEQ 'N'
+     C                     EXSR SNODEL
+     C                     ENDIF
+      *
+      *
+      ** Foreign Exchange Transactions
+      ** =============================
+      *
+     C           1         SETLLGCMSFX
+     C                     READ GCMSFX                   22
+      *
+     C           *IN22     DOWEQ'0'
+      *
+     C                     ADD  1         W@RED
+      *
+     C                     MOVEA*BLANKS   WA
+     C                     MOVEAFXCUST    WA
+      *
+      ** Remove blanks and leave customer number
+     C                     Z-ADD1         X       20
+     C                     Z-ADD1         Y       20
+     C                     MOVEA*BLANKS   WA1
+     C           X         DOWLT12
+      ** If byte is non blank copy the byte to the second array
+     C           WA,X      IFNE *BLANKS
+     C                     MOVE WA,X      WA1,Y
+     C                     ADD  1         Y
+     C                     ENDIF
+      ** Increment counter to keep track of bytes checked.
+     C                     ADD  1         X
+     C                     ENDDO
+     C                     MOVEAWA1       WTRAN
+     C********** WTRAN     CHAINSDCUSTY1             80                                   JMI113
+     C           WTRAN     CHAINXXCUSTY1             80                                   JMI113
+      *
+     C           *IN80     IFEQ *OFF
+     C           J0GIND    ANDEQ'Y'
+      *
+      ** Generate MT999 message
+     C                     EXSR CREAT3
+     C                     ENDIF
+      *
+     C                     READ GCMSFX                   22
+     C                     ENDDO
+      *
+     C           W#FORX    IFEQ 'N'
+     C                     EXSR SNOFOR
+     C                     ENDIF
+      *
+      ***Add*a*new*record*in*GLC999PD*with                                                JMI113
+      ** Add a new record in XXC999PD with                                                JMI113
+      ** XXNREC is the number of accounts in the message and
+      ** XXMTYP is '999'
+      *
+     C           XXNREC    IFGT 0
+     C                     MOVEL'999'     XXMTYP
+     C**********           WRITEGLC999D0                                                  JMI113
+     C                     WRITEXXC999D0                                                  JMI113
+     C                     ENDIF
+      *
+     C                     ENDSR                           MAIN
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  CREAT1                                         *
+      * Function    :  Create ISO MT999 message for transmission      *
+      *                of Loan Transactions to GCMS                   *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  FLD20      Create field :20:                   *
+      *                FLD79      Create field :79:                   *
+      *                FLD011     Create field 011:                   *
+      *                FLD012     Create field 012:                   *
+      *                FLD013     Create field 013:                   *
+      *                FLD014     Create field 014:                   *
+      *                FLD015     Create field 015:                   *
+      *                FLD016     Create field 016:                   *
+      *                FLD017     Create field 017:                   *
+      *                FLD018     Create field 018:                   *
+      *                FLD051     Create field 051:                   *
+      *                FLD052     Create field 052:                   *
+      *                FLD053     Create field 053:                   *
+      *****************************************************************
+      *
+     C           CREAT1    BEGSR
+      *
+     C                     MOVE 'Y'       W#LOAN
+      *
+      ***Write*Swift*Header*to*PF/GLMDTAPD                                                JMI113
+      ** Write Swift Header to PF/XXMDTAPD                                                JMI113
+     C                     MOVE G6FNBC    @F4S2
+     C                     MOVELCRLFC     @F4S6
+     C                     MOVEL@F4DAT    G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Create field :20: (System Date and Time)
+     C                     EXSR FLD20
+      *
+      ** Create field :79: (FFRONTIER)
+     C                     EXSR FLD79
+      *
+      ** Create field 011: (Transaction Kind)
+     C                     EXSR FLD011
+      *
+      ** Create field 012: (Data Date)
+     C                     EXSR FLD012
+      *
+      ** Create field 013: (Customer Number)
+     C                     EXSR FLD013
+      *
+      ** Create field 014: (Transaction Ref. No)
+     C                     EXSR FLD014
+      *
+      ** Create field 015: (Transaction Currency)
+     C                     EXSR FLD015
+      *
+      ** Create field 016: (Transaction Amount)
+     C                     EXSR FLD016
+      *
+      ** Create field 017: (Value Date)
+     C                     EXSR FLD017
+      *
+      ** Create field 018: (Maturity Date)
+     C                     EXSR FLD018
+      *
+      ** Create field 051: (A/C Name)
+     C                     EXSR FLD051
+      *
+      ** Create field 052: (Interest Rate)
+     C                     EXSR FLD052
+      *
+      ** Create field 053: (Total Interest Amount)
+     C                     EXSR FLD053
+      *
+      ***Write*Swift*Trailer*to*PF/GLMDTAPD                                               JMI113
+      ** Write Swift Trailer to PF/XXMDTAPD                                               JMI113
+     C                     CLEAR@DATA
+     C           '-}'      CAT  CRLFC     @DATA
+     C                     MOVE @DATA     G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+     C                     ADD  1         XXNREC
+      *
+     C                     ENDSR                           CREAT1
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  CREAT2                                         *
+      * Function    :  Create ISO MT999 message for transmission      *
+      *                to GCMS                                        *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  FLD20B     Create field :20:                   *
+      *                FLD79B     Create field :79:                   *
+      *                FLDB11     Create field 011:                   *
+      *                FLDB12     Create field 012:                   *
+      *                FLDB13     Create field 013:                   *
+      *                FLDB14     Create field 014:                   *
+      *                FLDB15     Create field 015:                   *
+      *                FLDB16     Create field 016:                   *
+      *                FLDB17     Create field 017:                   *
+      *                FLDB18     Create field 018:                   *
+      *                FLDB51     Create field 051:                   *
+      *                FLDB52     Create field 052:                   *
+      *                FLDB53     Create field 053:                   *
+      *****************************************************************
+      *
+     C           CREAT2    BEGSR
+      *
+     C                     MOVE 'Y'       W#DEAL
+      *
+      ***Write*Swift*Header*to*PF/GLMDTAPD                                                JMI113
+      ** Write Swift Header to PF/XXMDTAPD                                                JMI113
+     C                     MOVE G6FNBC    @F4S2
+     C                     MOVELCRLFC     @F4S6
+     C                     MOVEL@F4DAT    G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Create field :20: (System Date and Time)
+     C                     EXSR FLD20B
+      *
+      ** Create field :79: (FFRONTIER)
+     C                     EXSR FLD79B
+      *
+      ** Create field 011: (Transaction Kind)
+     C                     EXSR FLDB11
+      *
+      ** Create field 012: (Data Date)
+     C                     EXSR FLDB12
+      *
+      ** Create field 013: (Customer Number)
+     C                     EXSR FLDB13
+      *
+      ** Create field 014: (Transaction Ref. No)
+     C                     EXSR FLDB14
+      *
+      ** Create field 015: (Transaction Currency)
+     C                     EXSR FLDB15
+      *
+      ** Create field 016: (Transaction Amount)
+     C                     EXSR FLDB16
+      *
+      ** Create field 017: (Value Date)
+     C                     EXSR FLDB17
+      *
+      ** Create field 018: (Maturity Date)
+     C                     EXSR FLDB18
+      *
+      ** Create field 051: (A/C Name)
+     C                     EXSR FLDB51
+      *
+      ** Create field 052: (Interest Rate)
+     C                     EXSR FLDB52
+      *
+      ** Create field 053: (Total Interest Amount)
+     C                     EXSR FLDB53
+      *
+      ***Write*Swift*Trailer*to*PF/GLMDTAPD                                               JMI113
+      ** Write Swift Trailer to PF/XXMDTAPD                                               JMI113
+     C                     CLEAR@DATA
+     C           '-}'      CAT  CRLFC     @DATA
+     C                     MOVE @DATA     G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+     C                     ADD  1         XXNREC
+      *
+     C                     ENDSR                           CREAT2
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  CREAT3                                         *
+      * Function    :  Create ISO MT999 message for transmission      *
+      *                to GCMS                                        *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  FLD20C     Create field :20:                   *
+      *                FLD79C     Create field :79:                   *
+      *                FLDC11     Create field 011:                   *
+      *                FLDC12     Create field 012:                   *
+      *                FLDC13     Create field 013:                   *
+      *                FLDC14     Create field 014:                   *
+      *                FLDC15     Create field 015:                   *
+      *                FLDC16     Create field 016:                   *
+      *                FLDC19     Create field 019:                   *
+      *                FLDC51     Create field 051:                   *
+      *                FLDC58     Create field 058:                   *
+      *                FLDC59     Create field 059:                   *
+      *                FLDC60     Create field 060:                   *
+      *                FLDC61     Create field 061:                   *
+      *                FLDC62     Create field 062:                   *
+      *                FLDC63     Create field 063:                   *
+      *                FLDC64     Create field 064:                   *
+      *****************************************************************
+      *
+     C           CREAT3    BEGSR
+      *
+     C                     MOVE 'Y'       W#FORX
+      *
+      ***Write*Swift*Header*to*PF/GLMDTAPD                                                JMI113
+      ** Write Swift Header to PF/XXMDTAPD                                                JMI113
+     C                     MOVE G6FNBC    @F4S2
+     C                     MOVELCRLFC     @F4S6
+     C                     MOVEL@F4DAT    G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Create field :20: (System Date and Time)
+     C                     EXSR FLD20C
+      *
+      ** Create field :79: (FFRONTIER)
+     C                     EXSR FLD79C
+      *
+      ** Create field 011: (Transaction Kind)
+     C                     EXSR FLDC11
+      *
+      ** Create field 012: (Data Date)
+     C                     EXSR FLDC12
+      *
+      ** Create field 013: (Customer Number)
+     C                     EXSR FLDC13
+      *
+      ** Create field 014: (Transaction Ref. No)
+     C                     EXSR FLDC14
+      *
+      ** Create field 015: (Transaction Currency)
+     C                     EXSR FLDC15
+      *
+      ** Create field 016: (Transaction Amount)
+     C                     EXSR FLDC16
+      *
+      ** Create field 019: (Settlement Value Date)
+     C                     EXSR FLDC19
+      *
+      ** Create field 051: (A/C Name)
+     C                     EXSR FLDC51
+      *
+      ** Create field 058: (Contract Amount)
+     C                     EXSR FLDC58
+      *
+      ** Create field 059: (SWAP Reference No.)
+     C                     EXSR FLDC59
+      *
+      ** Create field 060: (Buy/Sell Classification)
+     C                     EXSR FLDC60
+      *
+      ** Create field 061: (Contract Rate)
+     C                     EXSR FLDC61
+      *
+      ** Create field 062: (Contract Date)
+     C                     EXSR FLDC62
+      *
+      ** Create field 063: (Counter Ccy Code)
+     C                     EXSR FLDC63
+      *
+      ** Create field 064: (Counter Amount)
+     C                     EXSR FLDC64
+      *
+      ***Write*Swift*Trailer*to*PF/GLMDTAPD                                               JMI113
+      ** Write Swift Trailer to PF/XXMDTAPD                                               JMI113
+     C                     CLEAR@DATA
+     C           '-}'      CAT  CRLFC     @DATA
+     C                     MOVE @DATA     G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+     C                     ADD  1         XXNREC
+      *
+     C                     ENDSR                           CREAT3
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SNOLON                                         *
+      * Function    :  No Loans was extracted                         *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SNOLON    BEGSR
+      *
+      ***Write*Swift*Header*to*PF/GLMDTAPD                                                JMI113
+      ** Write Swift Header to PF/XXMDTAPD                                                JMI113
+     C                     MOVE G6FNBC    @F4S2
+     C                     MOVELCRLFC     @F4S6
+     C                     MOVEL@F4DAT    G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C           '010000'  CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':79:'    @TAG4
+     C           @FRONT    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *                                                                                       CHG002
+      ***Write*Swift*Trailer*to*PF/GLMDTAPD                                        CHG002 JMI113
+      ** Write Swift Trailer to PF/XXMDTAPD                                               JMI113
+     C                     CLEAR@DATA                                                         CHG002
+     C           '-}'      CAT  CRLFC     @DATA                                               CHG002
+     C                     MOVE @DATA     G4DATA                                              CHG002
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ***Keep*a*count*of*the*number*of*records*written*to*GLMDTAPD                        JMI113
+      ** Keep a count of the number of records written to XXMDTAPD                        JMI113
+     C                     ADD  1         XXNREC
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           SNOLON
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SNDEAL                                         *
+      * Function    :  No Deals was extracted                         *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SNODEL    BEGSR
+      *
+      ***Write*Swift*Header*to*PF/GLMDTAPD                                                JMI113
+      ** Write Swift Header to PF/XXMDTAPD                                                JMI113
+     C                     MOVE G6FNBC    @F4S2
+     C                     MOVELCRLFC     @F4S6
+     C                     MOVEL@F4DAT    G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C           '020000'  CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':79:'    @TAG4
+     C           @FRONT    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *                                                                                       CHG002
+      ***Write*Swift*Trailer*to*PF/GLMDTAPD                                        CHG002 JMI113
+      ** Write Swift Trailer to PF/XXMDTAPD                                               JMI113
+     C                     CLEAR@DATA                                                         CHG002
+     C           '-}'      CAT  CRLFC     @DATA                                               CHG002
+     C                     MOVE @DATA     G4DATA                                              CHG002
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ***Keep*a*count*of*the*number*of*records*written*to*GLMDTAPD                        JMI113
+      ** Keep a count of the number of records written to XXMDTAPD                        JMI113
+     C                     ADD  1         XXNREC
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           SNODEL
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SNFORE                                         *
+      * Function    :  No Forex was extracted                         *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SNOFOR    BEGSR
+      *
+      ***Write*Swift*Header*to*PF/GLMDTAPD                                                JMI113
+      ** Write Swift Header to PF/XXMDTAPD                                                JMI113
+     C                     MOVE G6FNBC    @F4S2
+     C                     MOVELCRLFC     @F4S6
+     C                     MOVEL@F4DAT    G4DATA
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C           '030000'  CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':79:'    @TAG4
+     C           @FRONT    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *                                                                                       CHG002
+      ***Write*Swift*Trailer*to*PF/GLMDTAPD                                        CHG002 JMI113
+      ** Write Swift Trailer to PF/XXMDTAPD                                               JMI113
+     C                     CLEAR@DATA                                                         CHG002
+     C           '-}'      CAT  CRLFC     @DATA                                               CHG002
+     C                     MOVE @DATA     G4DATA                                              CHG002
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ***Keep*a*count*of*the*number*of*records*written*to*GLMDTAPD                        JMI113
+      ** Keep a count of the number of records written to XXMDTAPD                        JMI113
+     C                     ADD  1         XXNREC
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           SNOFOR
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD20                                          *
+      * Function    :  Create field :20: (System Date and Time)       *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD20     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C                     MOVELW@MDAT    @DAT
+     C                     MOVEL'01'      @PFX
+      *
+      ** Initialise Transaction Reference time subfield
+     C                     TIME           W#NEWT  60
+     C           W#NEWT    DIV  100       @TIM
+     C                     MOVEL'001'     @SEQ
+      *
+     C           @20       CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ***Keep*a*count*of*the*number*of*records*written*to*GLMDTAPD                        JMI113
+      ** Keep a count of the number of records written to XXMDTAPD                        JMI113
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           FLD20
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD79                                          *
+      * Function    :  Create field :79: (FFRONTIER)                  *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD79     BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':79:'    @TAG4
+     C           @FRONT    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD79
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD011                                         *
+      * Function    :  Create field 011:(Transaction Kind)            *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD011    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'011:'    @TAG4
+     C           '01'      CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD011
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD012                                         *
+      * Function    :  Create field 012:(Data Date)                   *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD012    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'012:'    @TAG4
+     C           W@MDAT    CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD012
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD013                                         *
+      * Function    :  Create field 013:(Customer Number)             *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD013    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'013:'    @TAG4
+     C                     MOVE CNUM      WTRAN   6
+     C           WTRAN     CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD013
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD014                                         *
+      * Function    :  Create all field 014:(Transaction Ref. No)     *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD014    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'014:'    @TAG4
+     C                     MOVE LNRF      WTRAN
+     C           WTRAN     CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD014
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD015                                         *
+      * Function    :  Create field 015:(Currency)                    *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD015    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'015:'    @TAG4
+      *
+      ** Set up Currency
+      *
+     C           CCY       CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD015
+      *
+      *****************************************************************
+      * Subroutine  :  FLD016                                         *
+      * Function    :  Create field 016:(Transaction Amount)          *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLD016    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'016:'    @TAG4
+      *
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM CPAM      ZAMNT  130
+     C                     PARM CCY       ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 002  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD016
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD017                                         *
+      * Function    :  Create field 017:(Value Date)                  *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *****************************************************************
+      *
+     C           FLD017    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'017:'    @TAG4
+      *
+      ** Last Rollover Date of the Loan if it exists
+     C           LRLD      IFNE 0
+      *
+     C                     Z-ADDLRLD      W@DAT4
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C                     PARM           ZMDATE  6
+      *
+     C                     ELSE
+      *
+      ** Otherwise, use Loan Value Date
+     C                     Z-ADDVDAT      W@DAT4
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C                     PARM           ZMDATE  6
+      *
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZMDATE    CAT  CRLFC     @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD017
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD018                                         *
+      * Function    :  Create field 018:(Maturity Date)               *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *****************************************************************
+      *
+     C           FLD018    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'018:'    @TAG4
+      *
+      ** Next Rollover Date of the Loan if it exists
+     C           NROD      IFNE 0
+      *
+     C                     Z-ADDNROD      W@DAT4
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C                     PARM           ZMDATE  6
+      *
+     C                     ELSE
+      *
+      ** Otherwise, use Maturity Date
+     C                     Z-ADDMDAT      W@DAT4
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C                     PARM           ZMDATE  6
+      *
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZMDATE    CAT  CRLFC     @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD018
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD051                                         *
+      * Function    :  Create field 051:(A/C Name)                    *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD051    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'051:'    @TAG4
+     C           'LOAN'    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD051
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD052                                         *
+      * Function    :  Create field 052:(Interest Rate)               *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  ZM0010     Return Interest Rate in ISO Format  *
+      *****************************************************************
+      *
+     C           FLD052    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'052:'    @TAG4
+      *
+     C                     CALL 'ZM0010'
+     C                     PARM INTR      ZINRT  117
+     C                     PARM           ZSINRT 12
+      *
+     C           ZSINRT    CAT  CRLFC:0   @DAT4
+      *
+      ** Write data to output record
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD052
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD053                                         *
+      * Function    :  Create field 053:(Total Interest Amount)       *
+      *                                                               *
+      * Called by   :  CREAT1                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLD053    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'053:'    @TAG4
+      *                                                                                       CHG001
+      ** Retrieve record from LEACXAC                                                         CHG001
+     C           K#LEAX    KLIST                                                              CHG001
+     C                     KFLD           K#BRCA  3                                           CHG001
+     C                     KFLD           K#CCY   3                                           CHG001
+     C                     KFLD           K#LTYP  2                                           CHG001
+     C                     KFLD           K#SUTP  2                                           CHG001
+      *                                                                                       JMI019
+     C                     KFLD           K#CLAS  4                                           JMI019
+     C**********           KFLD           K#CNUM  60                                   CHG001 JMI113
+     C**********           KFLD           K#LNRF  60                                   CHG001 JMI113
+     C                     KFLD           K#CNUM  6                                           JMI113
+     C                     KFLD           K#LNRF  6                                           JMI113
+      *                                                                                       CHG001
+     C                     MOVE BRCA      K#BRCA                                              CHG001
+     C                     MOVE CCY       K#CCY                                               CHG001
+     C                     MOVE LTYP      K#LTYP                                              CHG001
+     C                     MOVE SUTP      K#SUTP                                              CHG001
+      *                                                                                       JMI019
+     C                     MOVE CLAS      K#CLAS                                              JMI019
+     C                     MOVE CNUM      K#CNUM                                              CHG001
+     C                     MOVE LNRF      K#LNRF                                              CHG001
+      *                                                                                       CHG001
+     C           K#LEAX    CHAINLEACXACF             60                                       CHG001
+     C           *IN60     IFEQ '0'                                                           CHG001
+     C           AMAD      ADD  AMTA      TOTI                                                CHG001
+     C                     ENDIF                                                              CHG001
+      *
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM TOTI      ZAMNT  130
+     C                     PARM CCY       ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 003  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD053
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD20B                                         *
+      * Function    :  Create field :20: (System Date and Time)       *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD20B    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C                     MOVELW@MDAT    @DAT
+     C                     MOVEL'02'      @PFX
+      *
+      ** Initialise Transaction Reference time subfield
+     C                     TIME           W#NEWT  60
+     C           W#NEWT    DIV  100       @TIM
+     C                     MOVEL'001'     @SEQ
+      *
+     C           @20       CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ***Keep*a*count*of*the*number*of*records*written*to*GLMDTAPD                        JMI113
+      ** Keep a count of the number of records written to XXMDTAPD                        JMI113
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           FLD20B
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD79B                                         *
+      * Function    :  Create field :79: (FFRONTIER)                  *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD79B    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':79:'    @TAG4
+     C           @FRONT    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD79B
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB11                                         *
+      * Function    :  Create field 011:(Transaction Kind)            *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDB11    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'011:'    @TAG4
+     C           '02'      CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB11
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB12                                         *
+      * Function    :  Create field 012:(Data Date)                   *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDB12    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'012:'    @TAG4
+     C           W@MDAT    CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB12
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB13                                         *
+      * Function    :  Create field 013:(Customer Number)             *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDB13    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'013:'    @TAG4
+     C                     MOVE CNUM      WTRAN
+     C           WTRAN     CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB13
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB14                                         *
+      * Function    :  Create all field 014:(Transaction Ref. No)     *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDB14    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'014:'    @TAG4
+     C                     MOVE DLNO      WTRAN
+     C           WTRAN     CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB14
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB15                                         *
+      * Function    :  Create field 015:(Currency)                    *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDB15    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'015:'    @TAG4
+      *
+      ** Set up Currency
+      *
+     C           CCY       CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB15
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB16                                         *
+      * Function    :  Create field 016:(Transaction Amount)          *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLDB16    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'016:'    @TAG4
+      *
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM PCPL      ZAMNT  130
+     C                     PARM CCY       ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 004  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB16
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB17                                         *
+      * Function    :  Create field 017:(Value Date)                  *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *****************************************************************
+      *
+     C           FLDB17    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'017:'    @TAG4
+      *
+      ** Value Date
+     C                     Z-ADDVDAT      W@DAT4
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C                     PARM           ZMDATE  6
+      *
+      *
+      ** Move data to output record
+     C           ZMDATE    CAT  CRLFC     @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB17
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB18                                         *
+      * Function    :  Create field 018:(Maturity Date)               *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *****************************************************************
+      *
+     C           FLDB18    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'018:'    @TAG4
+      *
+      ** Maturity Date
+     C                     Z-ADDMDAT      W@DAT4
+     C                     CALL 'ZM0060'
+     C                     PARM W@DAT4    ZMDAY   50
+     C                     PARM           ZMDATE  6
+      *
+      ** Move data to output record
+     C           ZMDATE    CAT  CRLFC     @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB18
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB51                                         *
+      * Function    :  Create field 051:(A/C Name)                    *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDB51    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'051:'    @TAG4
+     C           @TDEPO    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB51
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB52                                         *
+      * Function    :  Create field 052:(Interest Rate)               *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  ZM0010     Return Interest Rate in ISO Format  *
+      *****************************************************************
+      *
+     C           FLDB52    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'052:'    @TAG4
+      *
+     C                     CALL 'ZM0010'
+     C                     PARM INTR      ZINRT  117
+     C                     PARM           ZSINRT 12
+      *
+     C           ZSINRT    CAT  CRLFC:0   @DAT4
+      *
+      ** Write data to output record
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB52
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDB53                                         *
+      * Function    :  Create field 053:(Total Interest Amount)       *
+      *                                                               *
+      * Called by   :  CREAT2                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLDB53    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'053:'    @TAG4
+      *
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM TOTI      ZAMNT  130
+     C                     PARM CCY       ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 005  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDB53
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD20C                                         *
+      * Function    :  Create field :20: (System Date and Time)       *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD20C    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C                     MOVELW@MDAT    @DAT
+     C                     MOVEL'03'      @PFX
+      *
+      ** Initialise Transaction Reference time subfield
+     C                     TIME           W#NEWT  60
+     C           W#NEWT    DIV  100       @TIM
+     C                     MOVEL'001'     @SEQ
+      *
+     C           @20       CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+      ** Keep a count of the number of records written to GLMDTAPD
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           FLD20C
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD79C                                         *
+      * Function    :  Create field :79: (FFRONTIER)                  *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD79C    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL':79:'    @TAG4
+     C           @FRONT    CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLD79C
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC11                                         *
+      * Function    :  Create field 011:(Transaction Kind)            *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC11    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'011:'    @TAG4
+     C           '03'      CAT  CRLFC     @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC11
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC12                                         *
+      * Function    :  Create field 012:(Data Date)                   *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC12    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'012:'    @TAG4
+     C           W@MDAT    CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC12
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC13                                         *
+      * Function    :  Create field 013:(Customer Number)             *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC13    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'013:'    @TAG4
+      *
+     C                     MOVEAFXCUST    WA
+      *
+      ** Remove blanks and leave customer number
+     C                     Z-ADD1         X       20
+     C                     Z-ADD1         Y       20
+     C                     MOVEA*BLANKS   WA1
+     C           X         DOWLT12
+      ** If byte is non blank copy the byte to the second array
+     C           WA,X      IFNE *BLANKS
+     C                     MOVE WA,X      WA1,Y
+     C                     ADD  1         Y
+     C                     ENDIF
+      ** Increment counter to keep track of bytes checked.
+     C                     ADD  1         X
+     C                     ENDDO
+     C                     MOVEAWA1       ZCUST  12
+      *
+     C           ZCUST     CAT  CRLFC:0   @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC13
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC14                                         *
+      * Function    :  Create all field 014:(Transaction Ref. No)     *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC14    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'014:'    @TAG4
+     C           FXDEAL    CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC14
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC15                                         *
+      * Function    :  Create field 015:(Currency)                    *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC15    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'015:'    @TAG4
+      *
+      ** Set up Currency
+      *
+     C           FXCCY     CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC15
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC16                                         *
+      * Function    :  Create field 016:(Transaction Amount)          *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLDC16    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'016:'    @TAG4
+      *
+     C                     MOVE FXAMNT    ZFIELD
+     C                     MOVEAZFIELD    ZFX
+     C                     Z-ADD1         Z       20
+     C           '-'       LOKUPZFX,Z                    90
+     C           *IN90     IFEQ *ON
+     C                     MOVE *BLANK    ZFX,Z
+     C                     ENDIF
+     C                     MOVEAZFX       ZFIELD
+      *
+     C                     Z-ADD2         ZDEC
+     C                     Z-ADD13        ZDIG
+      *
+      ** Convert FXAMNT transaction amount into (16.0)
+     C                     CALL 'ZALIGN'
+     C                     PARM *BLANKS   ZRTCD   7
+     C                     PARM           ZFIELD 16
+     C                     PARM           ZDEC    10
+     C                     PARM           ZDIG    20
+     C                     PARM *BLANKS   ZFLD   16
+     C                     MOVE ZFLD      ZAMNT
+      *
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM           ZAMNT  130
+     C**********           PARM FXCCY     ZCCY    3                                           CHG001
+     C                     PARM FXCCCY    ZCCY    3                                           CHG001
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 006  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC16
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC19                                         *
+      * Function    :  Create field 019:(Value Date)                  *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *****************************************************************
+      *
+     C           FLDC19    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'019:'    @TAG4
+      *
+      ** Settlement Value Date
+      *
+     C                     MOVE FXVDAT    ZMDATE
+      *
+      ** Move data to output record
+     C           ZMDATE    CAT  CRLFC     @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC19
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC51                                         *
+      * Function    :  Create field 051:(A/C Name)                    *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC51    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'051:'    @TAG4
+      *
+     C           FXPSCD    IFEQ 'S'
+     C**********           MOVEL'Buy '    @FREX2                                              CHG001
+     C                     MOVEL'Sell'    @FREX2                                              CHG001
+     C                     ELSE
+     C**********           MOVEL'Sell'    @FREX2                                              CHG001
+     C                     MOVEL'Buy '    @FREX2                                              CHG001
+     C                     ENDIF
+      *
+     C           @FOREX    CAT  CRLFC:0   @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC51
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC58                                         *
+      * Function    :  Create field 058:(Contract Amount)             *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLDC58    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'058:'    @TAG4
+      *
+     C                     MOVE FXAMNT    ZFIELD
+     C                     MOVEAZFIELD    ZFX
+     C                     Z-ADD1         Z
+     C           '-'       LOKUPZFX,Z                    90
+     C           *IN90     IFEQ *ON
+     C                     MOVE *BLANK    ZFX,Z
+     C                     ENDIF
+     C                     MOVEAZFX       ZFIELD
+      *
+     C                     Z-ADD2         ZDEC
+     C                     Z-ADD13        ZDIG
+      *
+      ** Convert FXAMNT transaction amount into (16.0)
+     C                     CALL 'ZALIGN'
+     C                     PARM *BLANKS   ZRTCD
+     C                     PARM           ZFIELD
+     C                     PARM           ZDEC
+     C                     PARM           ZDIG
+     C                     PARM *BLANKS   ZFLD
+     C                     MOVE ZFLD      ZAMNT
+      *
+      ** be ISO standard value
+     C                     CALL 'ZM0040'
+     C                     PARM           ZAMNT  130
+     C                     PARM FXCCY     ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 007  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC58
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC59                                         *
+      * Function    :  Create all field 059:(SWAP Reference No.)      *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC59    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'059:'    @TAG4
+     C           FXSWAP    CAT  CRLFC:0   @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC59
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC60                                         *
+      * Function    :  Create all field 060:(Buy/Sell Classification) *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC60    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'060:'    @TAG4
+      *
+     C           FXPSCD    IFEQ 'P'
+     C                     MOVE 'B'       FXPSCD
+     C                     ENDIF
+     C                     MOVE FXPSCD    WFXPSC  1
+      *
+     C           WFXPSC    CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC60
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC61                                         *
+      * Function    :  Create field 061:(Interest Rate)               *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  ZM0010     Return Interest Rate in ISO Format  *
+      *****************************************************************
+      *
+     C           FLDC61    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'061:'    @TAG4
+      *
+     C                     MOVEAFXCRAT    WA2
+     C                     Z-ADD1         X
+     C           '.'       LOKUPWA2,X                    90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL','       WA2,X
+     C                     ENDIF
+     C                     MOVEAWA2       WA3
+      *
+      ** Remove blanks and leave customer number
+     C                     Z-ADD1         X
+     C                     Z-ADD1         Y
+     C                     MOVEA*BLANKS   WA2
+     C           X         DOWLT20
+      ** If byte is non blank copy the byte to the second array
+     C           WA3,X     IFNE *BLANKS
+     C                     MOVE WA3,X     WA2,Y
+     C                     ADD  1         Y
+     C                     ENDIF
+      ** Increment counter to keep track of bytes checked.
+     C                     ADD  1         X
+     C                     ENDDO
+     C                     MOVEAWA2       ZCRAT  19
+      *
+      ** Write data to output record
+     C           ZCRAT     CAT  CRLFC:0   @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC61
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC62                                         *
+      * Function    :  Create field 062:(Contract Date)               *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *****************************************************************
+      *
+     C           FLDC62    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'062:'    @TAG4
+      *
+      ** Contract Date
+      *
+     C                     MOVE FXDDAT    ZMDATE
+      *
+      ** Move data to output record
+     C           ZMDATE    CAT  CRLFC     @DAT4
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC62
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC63                                         *
+      * Function    :  Create field 063:(Counter Currency Code)       *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLDC63    BEGSR
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     MOVEL'063:'    @TAG4
+      *
+      ** Set up Currency
+      *
+     C           FXCCCY    CAT  CRLFC     @DAT4
+      *
+      ** Move data to output record
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC63
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLDC64                                         *
+      * Function    :  Create field 064:(Counter Amount)              *
+      *                                                               *
+      * Called by   :  CREAT3                                         *
+      * Calls       :  ZM0040     Return Amount in ISO Format         *
+      *****************************************************************
+      *
+     C           FLDC64    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL'064:'    @TAG4
+      *
+     C                     MOVEAFXCAMT    WA2
+     C                     Z-ADD1         X
+     C           '.'       LOKUPWA2,X                    90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL','       WA2,X
+     C                     ENDIF
+     C                     MOVEAWA2       WA3
+      *
+      ** Remove blanks and leave customer number
+     C                     Z-ADD1         X
+     C                     Z-ADD1         Y
+     C                     MOVEA*BLANKS   WA2
+     C           X         DOWLT19
+      ** If byte is non blank copy the byte to the second array
+     C           WA3,X     IFNE *BLANKS
+     C                     MOVE WA3,X     WA2,Y
+     C                     ADD  1         Y
+     C                     ENDIF
+      ** Increment counter to keep track of bytes checked.
+     C                     ADD  1         X
+     C                     ENDDO
+     C                     MOVEAWA2       ZSAMNT
+      *
+      ** Move data to output record
+     C           ZSAMNT    CAT  CRLFC:0   @DAT4
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+     C**********           WRITEGLMDTAD0                                                  JMI113
+     C                     WRITEXXMDTAD0                                                  JMI113
+      *
+     C                     ENDSR                           FLDC64
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  CLSDWN                                         *
+      * Function    :  Closing Processing                             *
+      *                                                               *
+      * Called by   :  Main Processing                                *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           CLSDWN    BEGSR
+      *
+      ** Check for an index record for that day's member
+      *
+     C********** MNM       CHAINGLMREFL0             21                                   JMI113
+     C           MNM       CHAINXXMREFL0             21                                   JMI113
+      *
+     C           *IN21     IFEQ '1'
+     C                     MOVE MNM       F3MBRN
+     C                     MOVE 'P'       F3DNLS
+     C                     Z-ADD0         F3RSTN
+     C                     MOVE *BLANKS   F3RSTU
+     C                     Z-ADD0         F3RSTD
+     C                     Z-ADD0         F3RTIM
+     C                     Z-ADD0         F3DLDL
+     C                     Z-ADD0         F3TDNL
+     C                     MOVE *BLANKS   F3DLFN
+     C**********           WRITEGLMREFD0                                                  JMI113
+     C                     WRITEXXMREFD0                                                  JMI113
+     C                     ELSE
+     C                     MOVE 'P'       F3DNLS
+     C                     Z-ADD0         F3RSTN
+     C                     MOVE *BLANKS   F3RSTU
+     C                     Z-ADD0         F3RSTD
+     C                     Z-ADD0         F3RTIM
+     C                     Z-ADD0         F3DLDL
+     C                     Z-ADD0         F3TDNL
+     C                     MOVE *BLANKS   F3DLFN
+     C**********           UPDATGLMREFD0                                                  JMI113
+     C                     UPDATXXMREFD0                                                  JMI113
+     C                     ENDIF
+      *
+      ** Output Audit Trail Report
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR                           CLSDWN
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  AUDIT                                          *
+      * Function    :  Produce Audit Trail Report                     *
+      *                                                               *
+      * Called by   :  CLSDWN                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ** If no records found
+     C           W@RED     IFEQ 0
+      *
+      ** Write 'no messages to report'
+     C**********           WRITEGLJ046A4
+     C                     WRITEXX1146A4                                                  JMI113
+     C                     ELSE
+      *
+      ** Write out details
+     C**********           WRITEGLJ046A2               31                                 JMI113
+     C                     WRITEXX1146A2               31                                 JMI113
+     C                     ENDIF
+      *
+      ** Write out 'End of Report'
+     C**********           WRITEGLJ046A6                                                  JMI113
+     C                     WRITEXX1146A6                                                  JMI113
+      *
+      ***Close*Audit*printer*file*PRTF/GLJ046AU                                           JMI113
+     C**********           CLOSEGLJ046AU                                                  JMI113
+      ** Close Audit printer file PRTF/XX1146AU                                           JMI113
+     C                     CLOSEXX1146AU                                                  JMI113
+      *
+     C                     ENDSR                           AUDIT
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Called autmatically if a program error occurs  *
+      *                or directly in case of database errors.        *
+      *                This program DUMPs the program just once.      *
+      *                                                               *
+      * Called by   :  Automatically                                  *
+      *                INIT                                           *
+      *                                                               *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      ** Check to see if *PSSR has been already called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** DUMP and write database error report
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C**********           WRITEGLJ046A5                                                  JMI113
+     C**********           WRITEGLJ046A6                                                  JMI113
+     C                     WRITEXX1146A5                                                  JMI113
+     C                     WRITEXX1146A6                                                  JMI113
+      *
+      ***Close*Audit*printer*file*PRTF/GLJ046AU                                           JMI113
+     C**********           CLOSEGLJ046AU                                                  JMI113
+      ** Close Audit printer file PRTF/XX1146AU                                           JMI113
+     C                     CLOSEXX1146AU                                                  JMI113
+      *
+     C                     ENDIF
+      *
+      ** If *PSSR already run, end program.
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2018

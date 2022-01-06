@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059410           Date 21Dec21               *
+      *  Prev Amend No. MD059375           Date 20Dec21               *
+      *                 CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
@@ -79,6 +82,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059410 - Wrong rate is applied for the computation of int  *
+      *  MD059375 - Rate change date should mark the start of the new *
+      *             interest period and not the Interest Payment Date.*
+      *             Do not populate URCHG/TRCHG field as this will be *
+      *             use to store the previous Rate Change Date.       *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054117 - Principal change Increase/Decrease capability     *
@@ -522,6 +531,8 @@
      D WL1AMC          S              2A
      D WkBokC          S              2A
      D MidasDlNum      S              6A
+     D WkUBRTT         S              2A                                                    MD059410
+     D WkTBRTT         S              2A                                                    MD059410
 
       ** Switchable features
      D CAP056          S              1A                                                      CAP056
@@ -534,6 +545,7 @@
      D CSD015          S              1A                                                      CSD015
      D CCF001          S              1A   INZ('N')                                           CSD015
      D CDL028          S              1A                                                      CDL028
+     D CIR020          S              1A                                                      CIR020
 
      D PkDBRC          S              3A
      D PModeOfOp       S              6A                                                      CAP056
@@ -633,6 +645,7 @@
 
      D #0EINR          S             12A                                                    MD054095
      D OurTheirInd     S              1A                                                    MD054095
+     D WkAACRT         S                   LIKE(AACRT)                                      MD059410
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1129,6 +1142,21 @@
                                                                                               CDL038
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
+                                                                                              CIR020
+      ** Setup Backward-Looking Rate Fields                                                   CIR020
+                                                                                              CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   EXSR      SetupBLRT                                                  CIR020
+                                                                                              CIR020
+      ***Set*Backward-Looking*Rate*Change*Date*************************              CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+     C**********         IF        RPUBLRT = 'Y'                                     CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        URCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C**********         IF        RPTBLRT = 'Y'                                     CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        TRCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C                   ENDIF                                                                CIR020
 
       ** Set up required fields on DEALSDG that were not set up on
       ** Valid File
@@ -1413,6 +1441,8 @@
      C                   EVAL      WUNIPD = UNIPD
      C                   EVAL      WTNIPD = TNIPD
      C                   EVAL      WL1AMC = L1AMCN
+     C                   EVAL      WkUBRTT = UBRTT                                          MD059410
+     C                   EVAL      WkTBRTT = TBRTT                                          MD059410
 
       ** Determine activity for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
@@ -1510,6 +1540,56 @@
                                                                                               CDL038
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
+                                                                                              CIR020
+      ** Setup Backward-Looking Rate Fields                                                   CIR020
+                                                                                              CIR020
+     C                   IF        CIR020 = 'Y'                                               CIR020
+     C                   IF        UBLRT <> RPUBLRT                                         MD059410
+     C                             OR UBLRT = 'Y'                                           MD059410
+     C                             AND RPUBLRT = 'Y'                                        MD059410
+     C                             AND UBRTT <> WkUBRTT                                     MD059410
+     C                             OR UBLRT = 'Y'                                           MD059410
+     C                             AND RPUBLRT = 'Y'                                        MD059410
+     C                             AND UCALM = 'MANL'                                       MD059410
+     C                             AND RPUCALM = 'MANL'                                     MD059410
+     C                             AND AACRT <> WkAACRT                                     MD059410
+     C                   BITON     '7'           UDSTI                                      MD059410
+     C                   Z-ADD     AACRT         USTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        TBLRT <> RPTBLRT                                         MD059410
+     C                             OR TBLRT = 'Y'                                           MD059410
+     C                             AND RPTBLRT = 'Y'                                        MD059410
+     C                             AND TBRTT <> WkTBRTT                                     MD059410
+     C                             OR TBLRT = 'Y'                                           MD059410
+     C                             AND RPTBLRT = 'Y'                                        MD059410
+     C                             AND TCALM = 'MANL'                                       MD059410
+     C                             AND RPTCALM = 'MANL'                                     MD059410
+     C                             AND AACRT <> WkAACRT                                     MD059410
+     C                   BITON     '7'           TDSTI                                      MD059410
+     C                   Z-ADD     AACRT         TSTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   EXSR      SetupBLRT                                                  CIR020
+                                                                                              CIR020
+      ***Set*Rate*Change*Date*to*Rundate*if*deal*is*amended*from*******              CIR020 MD059375
+      ***forward-looking*to*backward-looking***************************              CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+     C**********         IF        UBLRT <> 'Y' and RPUBLRT = 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        URCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C**********         IF        TBLRT <> 'Y' and RPTBLRT = 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     BJRDNB        TRCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+      ***Set*Rate*Change*Date*to*zero*if*deal*is*amended*from**********              CIR020 MD059375
+      ***backward-looking*to*forward-looking***************************              CIR020 MD059375
+      *****************************************************************              CIR020 MD059375
+     C**********         IF        UBLRT = 'Y' and RPUBLRT <> 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     *ZEROS        URCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C**********         IF        TBLRT = 'Y' and RPTBLRT <> 'Y'                    CIR020 MD059375
+     C**********         Z-ADD     *ZEROS        TRCHG                               CIR020 MD059375
+     C**********         ENDIF                                                       CIR020 MD059375
+     C                   ENDIF                                                                CIR020
 
       ** Set up required fields on DEALSDG that were not set up on valid file
 
@@ -3501,6 +3581,85 @@
      C                   ENDSR                                                                CSD015
       *****************************************************************                       CSD015
       /EJECT                                                                                  CSD015
+      *****************************************************************                       CIR020
+      *                                                               *                       CIR020
+      * SetupBLRT - Setup Backward-Looking Rate Fields                *                       CIR020
+      *                                                               *                       CIR020
+      *****************************************************************                       CIR020
+     C     SetupBLRT     BEGSR                                                                CIR020
+                                                                                              CIR020
+      ** OURS fields                                                                          CIR020
+      ** Backward Looking Rate                                                                CIR020
+     C                   MOVE      RPUBLRT       UBLRT                                        CIR020
+                                                                                              CIR020
+      ** Risk Free Rate                                                                       CIR020
+     C                   MOVE      RPURFRR       URFRR                                        CIR020
+                                                                                              CIR020
+      ** Calculation Method                                                                   CIR020
+     C                   MOVE      RPUCALM       UCALM                                        CIR020
+                                                                                              CIR020
+      ** Benchmark Adjustment                                                                 CIR020
+     C                   Z-ADD     RPUBADJ       UBADJ                                        CIR020
+                                                                                              CIR020
+      ** Floor                                                                                CIR020
+     C                   Z-ADD     RPUFLOR       UFLOR                                        CIR020
+                                                                                              CIR020
+      ** Lookback Days                                                                        CIR020
+     C                   Z-ADD     RPULBDY       ULBDY                                        CIR020
+                                                                                              CIR020
+      ** Lockout Days                                                                         CIR020
+     C                   Z-ADD     RPULODY       ULODY                                        CIR020
+                                                                                              CIR020
+      ** Observation Period Shift                                                             CIR020
+     C                   MOVE      RPUOPSH       UOPSH                                        CIR020
+                                                                                              CIR020
+      ** Rate Rounding Decimal Places                                                         CIR020
+     C                   Z-ADD     RPURRDP       URRDP                                        CIR020
+                                                                                              CIR020
+      ** Daily Basis for Average                                                              CIR020
+     C                   Z-ADD     RPUDBAV       UDBAV                                        CIR020
+                                                                                              CIR020
+      ** Rates Known Flag                                                                     CIR020
+     C                   MOVE      RPURTKN       URTKN                                        CIR020
+                                                                                              CIR020
+      ** THEIRS Fields                                                                        CIR020
+      ** Backward Looking Rate                                                                CIR020
+     C                   MOVE      RPTBLRT       TBLRT                                        CIR020
+                                                                                              CIR020
+      ** Risk Free Rate                                                                       CIR020
+     C                   MOVE      RPTRFRR       TRFRR                                        CIR020
+                                                                                              CIR020
+      ** Calculation Method                                                                   CIR020
+     C                   MOVE      RPTCALM       TCALM                                        CIR020
+                                                                                              CIR020
+      ** Benchmark Adjustment                                                                 CIR020
+     C                   Z-ADD     RPTBADJ       TBADJ                                        CIR020
+                                                                                              CIR020
+      ** Floor                                                                                CIR020
+     C                   Z-ADD     RPTFLOR       TFLOR                                        CIR020
+                                                                                              CIR020
+      ** Lookback Days                                                                        CIR020
+     C                   Z-ADD     RPTLBDY       TLBDY                                        CIR020
+                                                                                              CIR020
+      ** Lockout Days                                                                         CIR020
+     C                   Z-ADD     RPTLODY       TLODY                                        CIR020
+                                                                                              CIR020
+      ** Observation Period Shift                                                             CIR020
+     C                   MOVE      RPTOPSH       TOPSH                                        CIR020
+                                                                                              CIR020
+      ** Rate Rounding Decimal Places                                                         CIR020
+     C                   Z-ADD     RPTRRDP       TRRDP                                        CIR020
+                                                                                              CIR020
+      ** Daily Basis for Average                                                              CIR020
+     C                   Z-ADD     RPTDBAV       TDBAV                                        CIR020
+                                                                                              CIR020
+      ** Rates Known Flag                                                                     CIR020
+     C                   MOVE      RPTRTKN       TRTKN                                        CIR020
+                                                                                              CIR020
+     C                   ENDSR                                                                CIR020
+      ****************************************************************                        CIR020
+      /EJECT                                                                                  CIR020
+      ****************************************************************                        CIR020
       /COPY ZACPYSRC,PSSR_ILE
       /EJECT
       *****************************************************************
@@ -3877,6 +4036,19 @@
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
                                                                                               CSD083
+      ** Access SAR details file to determine if CIR020 is on                                 CIR020
+                                                                                              CIR020
+     C                   MOVE      'N'           CIR020                                       CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       PRTCD                                        CIR020
+     C                   PARM      '*VERIFY '    POPTN                                        CIR020
+     C                   PARM      'CIR020'      PSARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+      *                                                                                       CIR020
+     C     PRTCD         IFEQ      *BLANK                                                     CIR020
+     C                   MOVE      'Y'           CIR020                                       CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   CALLB     'AOSVALR0'                                               MD054117
      C                   PARM      *BLANKS       PRtCd                                      MD054117
      C                   PARM                    PSysVal01                                  MD054117

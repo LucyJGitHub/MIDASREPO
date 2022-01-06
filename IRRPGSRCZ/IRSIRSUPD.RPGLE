@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059410           Date 21Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056655A          Date 09Oct20               *
       *                 MD056655           Date 21Sep20               *
       *                 MD031031           Date 24Feb15               *
@@ -122,6 +124,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059410 - Wrong rate is applied for the computation of int  *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056655A - Deal no already exists is encountered when NASP  *
@@ -612,6 +616,7 @@
      D CDL028          S              1A                                                      CDL028
      D CIR006          S              1A                                                    BUG7217R
      D CIR017          S              1A                                                      CIR017
+     D CIR020          S              1A                                                    MD059410
                                                                                               CIR008
       ** Parameter fields when calling ZAFUTSTATP                                             CIR008
      D P_ACTN          S              1A                                                      CIR008
@@ -620,6 +625,8 @@
                                                                                               CIR008
      D WkActn          S              1A                                                      CIR008
      D PModeOfOp       S              6A                                                      CAP056
+     D WkUBRTT         S              2A                                                    MD059410
+     D WkTBRTT         S              2A                                                    MD059410
                                                                                               CAS004
       ** Index for arrays of of warning message ids etc                                       CAS004
      D WIdx            S              3P 0                                                    CAS004
@@ -1272,6 +1279,10 @@
      C                   MOVEL     RSAWBN        CPRBK                          CSW097
      C                   MOVEL     RSBENN        FACO
      C                   MOVEL     RSBTB1        SPI
+      *                                                                                       CIR020
+      *** Setup new LIBOR related fields                                                      CIR020
+      *                                                                                       CIR020
+     C                   EXSR      STLIBORF                                                   CIR020
       *
       * SET UP REQUIRED FIELDS ON DEALSDG THAT WERE NOT SET UP ON
       * VALID FILE
@@ -1445,6 +1456,8 @@
      C                   Z-ADD     UNIPD         WUNIPD            5 0          CIR005
      C                   Z-ADD     TNIPD         WTNIPD            5 0          CIR005
      C                   MOVEL     L1AMCN        WL1AMC            2            CIR005
+     C                   EVAL      WkUBRTT = UBRTT                                          MD059410
+     C                   EVAL      WkTBRTT = TBRTT                                          MD059410
 
       ** Determine activity for on-line updates                                               CIR008
       ** only if the deal is authorised. Else perform in SrAuthorise.                         CIR008
@@ -1582,6 +1595,26 @@
      C                   MOVEL     RSAWBN        CPRBK                          CSW097
      C                   MOVEL     RSBENN        FACO
      C                   MOVEL     RSBTB1        SPI
+      *                                                                                       CIR020
+      *** Setup new LIBOR related fields                                                      CIR020
+      *                                                                                       CIR020
+     C                   IF        CIR020 = 'Y'                                             MD059410
+     C                   IF        UBLRT <> RSUBLR                                          MD059410
+     C                             OR UBLRT = 'Y'                                           MD059410
+     C                             AND RSUBLR = 'Y'                                         MD059410
+     C                             AND UBRTT <> WkUBRTT                                     MD059410
+     C                   BITON     '7'           UDSTI                                      MD059410
+     C                   Z-ADD     UEINR         USTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   IF        TBLRT <> RSTBLR                                          MD059410
+     C                             OR TBLRT = 'Y'                                           MD059410
+     C                             AND RSTBLR = 'Y'                                         MD059410
+     C                             AND TBRTT <> WkTBRTT                                     MD059410
+     C                   BITON     '7'           TDSTI                                      MD059410
+     C                   Z-ADD     TEINR         TSTRT                                      MD059410
+     C                   ENDIF                                                              MD059410
+     C                   EXSR      STLIBORF                                                   CIR020
+     C                   ENDIF                                                              MD059410
       *
       * SET UP REQUIRED FIELDS ON DEALSDG THAT WERE NOT SET UP ON
       * VALID FILE
@@ -4507,6 +4540,92 @@
                                                                                               CRE020
      C                   ENDSR                                                                CRE020
       *****************************************************************                       CRE020
+      /EJECT                                                                                  CIR020
+      ****************************************************************                        CIR020
+      *                                                              *                        CIR020
+      * STLIBORF - Setup LIBOR Fields                                *                        CIR020
+      *                                                              *                        CIR020
+      ****************************************************************                        CIR020
+     C     STLIBORF      BEGSR                                                                CIR020
+                                                                                              CIR020
+      ** ---------------------------------------------------------- **                        CIR020
+      *  LIBOR fields (OURS)                                         *                        CIR020
+      ** ---------------------------------------------------------- **                        CIR020
+                                                                                              CIR020
+      *                                                                                       CIR020
+      ** Backward Looking Rate                                                                CIR020
+     C                   MOVE      RSUBLR        UBLRT                                        CIR020
+      *                                                                                       CIR020
+      ** Risk Free Rate                                                                       CIR020
+     C                   MOVE      RSURFR        URFRR                                        CIR020
+      *                                                                                       CIR020
+      ** Calculation Method                                                                   CIR020
+     C                   MOVE      RSUCAL        UCALM                                        CIR020
+      *                                                                                       CIR020
+      ** Benchmark Adjustment                                                                 CIR020
+     C                   Z-ADD     RSUBAD        UBADJ                                        CIR020
+      *                                                                                       CIR020
+      ** Floor                                                                                CIR020
+     C                   Z-ADD     RSUFLR        UFLOR                                        CIR020
+      *                                                                                       CIR020
+      ** Lookback Days                                                                        CIR020
+     C                   Z-ADD     RSULBD        ULBDY                                        CIR020
+      *                                                                                       CIR020
+      ** Lockout Days                                                                         CIR020
+     C                   Z-ADD     RSULOD        ULODY                                        CIR020
+      *                                                                                       CIR020
+      ** Observation Period Shift                                                             CIR020
+     C                   MOVE      RSUOPS        UOPSH                                        CIR020
+      *                                                                                       CIR020
+      ** Rate Rounding Decimal Places                                                         CIR020
+     C                   Z-ADD     RSURRD        URRDP                                        CIR020
+      *                                                                                       CIR020
+      ** Daily Basis for Average                                                              CIR020
+     C                   Z-ADD     RSUDBA        UDBAV                                        CIR020
+      *                                                                                       CIR020
+      ** Rates Known Flag                                                                     CIR020
+     C                   MOVE      RSURKN        URTKN                                        CIR020
+                                                                                              CIR020
+      ** ---------------------------------------------------------- **                        CIR020
+      *  LIBOR fields (THEIRS)                                       *                        CIR020
+      ** ---------------------------------------------------------- **                        CIR020
+                                                                                              CIR020
+      *                                                                                       CIR020
+      ** Backward Looking Rate                                                                CIR020
+     C                   MOVE      RSTBLR        TBLRT                                        CIR020
+      *                                                                                       CIR020
+      ** Risk Free Rate                                                                       CIR020
+     C                   MOVE      RSTRFR        TRFRR                                        CIR020
+      *                                                                                       CIR020
+      ** Calculation Method                                                                   CIR020
+     C                   MOVE      RSTCAL        TCALM                                        CIR020
+      *                                                                                       CIR020
+      ** Benchmark Adjustment                                                                 CIR020
+     C                   Z-ADD     RSTBAD        TBADJ                                        CIR020
+      *                                                                                       CIR020
+      ** Floor                                                                                CIR020
+     C                   Z-ADD     RSTFLR        TFLOR                                        CIR020
+      *                                                                                       CIR020
+      ** Lookback Days                                                                        CIR020
+     C                   Z-ADD     RSTLBD        TLBDY                                        CIR020
+      *                                                                                       CIR020
+      ** Lockout Days                                                                         CIR020
+     C                   Z-ADD     RSTLOD        TLODY                                        CIR020
+      *                                                                                       CIR020
+      ** Observation Period Shift                                                             CIR020
+     C                   MOVE      RSTOPS        TOPSH                                        CIR020
+      *                                                                                       CIR020
+      ** Rate Rounding Decimal Places                                                         CIR020
+     C                   Z-ADD     RSTRRD        TRRDP                                        CIR020
+      *                                                                                       CIR020
+      ** Daily Basis for Average                                                              CIR020
+     C                   Z-ADD     RSTDBA        TDBAV                                        CIR020
+      *                                                                                       CIR020
+      ** Rates Known Flag                                                                     CIR020
+     C                   MOVE      RSTRKN        TRTKN                                        CIR020
+                                                                                              CIR020
+     C                   ENDSR                                                                CIR020
+      ****************************************************************                        CIR020
      C/COPY WNCPYSRC,IRH00077
       /EJECT                                                                                  CAP084
       *****************************************************************
@@ -5148,6 +5267,30 @@
      C                   EVAL      CIR017 = 'N'                                               CIR017
      C                   ENDIF                                                                CIR017
                                                                                               CIR017
+      ** Check if CIR020 - Libor IRS                                                        MD059410
+                                                                                            MD059410
+     C                   CALL      'AOSARDR0'                                               MD059410
+     C                   PARM      *BLANKS       PRTCD                                      MD059410
+     C                   PARM      '*VERIFY'     POPTN                                      MD059410
+     C                   PARM      'CIR020'      PSARD                                      MD059410
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059410
+                                                                                            MD059410
+     C                   IF        PRTCD <> *BLANKS AND                                     MD059410
+     C                             PRTCD <> '*NRF   '                                       MD059410
+     C     *LOCK         IN        LDA                                                      MD059410
+     C                   EVAL      DBASE = 919                                              MD059410
+     C                   EVAL      DBKEY = 'CIR020'                                         MD059410
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD059410
+     C                   OUT       LDA                                                      MD059410
+     C                   EXSR      *PSSR                                                    MD059410
+     C                   ENDIF                                                              MD059410
+                                                                                            MD059410
+     C                   IF        PRTCD = *BLANKS                                          MD059410
+     C                   EVAL      CIR020 = 'Y'                                             MD059410
+     C                   ELSE                                                               MD059410
+     C                   EVAL      CIR020 = 'N'                                             MD059410
+     C                   ENDIF                                                              MD059410
+                                                                                            MD059410
      C                   CALLB     'AOSVALR0'                                               MD054117
      C                   PARM      *BLANKS       PRtCd                                      MD054117
      C                   PARM                    PSysVal01                                  MD054117

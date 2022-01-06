@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GO Setup FRA TRAP record')
+/*EXI *  TEXT('Midas GO Setup FRA TRAP record')                       *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -44,27 +46,27 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXTL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D FRAS          E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -72,30 +74,30 @@
      C                   PARM                    FRAS
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    FltRateSet        1
      C                   PARM                    FltRateTyp        1
      C                   PARM                    FltRate          11 7
      C                   PARM                    FixRate          11 7
      C                   PARM                    SettleAmt        15 0
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -142,13 +144,13 @@
      C                   Z-ADD     VDAT          T_SDAT
       * End Date
      C                   Z-ADD     MDAT          T_EDAT
- 
+
       * CHECK WHETHER FRA RATE HAS BEEN FIXED
- 
+
      C                   EXSR      CHKRATFIX
- 
+
       * Current Market Value
- 
+
      C     FltRateSet    IFEQ      'Y'
      C                   Z-ADD     SettleAmt     T_MKVL
      C                   ELSE
@@ -171,7 +173,7 @@
      C                   ELSE
      C                   MOVEL     'A'           T_ACTN
      C                   ENDIF
- 
+
       * Customer branch                                                                     BUG11830
      C                   MOVEL     T_CNUM        @KEY1                                      BUG11830
      C                   EXSR      ACS_CUST                                                 BUG11830
@@ -183,9 +185,9 @@
       * CHECK WHETHER FRA RATE HAS BEEN FIXED
       ********************************************************************
      C     CHKRATFIX     BEGSR
- 
+
       * Get floating side fields
- 
+
      C*****UBRTT         IFNE      *ZERO                                                      CSD103
      C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      OUR
@@ -194,9 +196,9 @@
      C                   EXSR      THEIR
      C                   Z-ADD     UEINR         FixRate
      C                   ENDIF
- 
+
       ** IF INITIAL RATE SET USE EFFECTIVE INTEREST RATE
- 
+
      C                   TESTB     '0'           W#DNSI                   99
       *
      C     *IN99         IFEQ      '1'
@@ -225,16 +227,16 @@
      C                   GOTO      ECHKRATFIX
      C                   END
      C                   END
- 
+
       * Calculate FRA settlement amount
- 
+
      C     UIPRD         IFNE      *ZERO
      C                   Z-SUB     UIPRD         SettleAmt
      C                   ELSE
      C     TIPRD         IFNE      *ZERO
      C                   Z-ADD     TIPRD         SettleAmt
      C                   ELSE
- 
+
      C                   CALLB     'GOCALFRST'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           50
@@ -249,15 +251,15 @@
      C                   PARM      *ZERO         W#IANP           13 0
      C                   PARM      *ZERO         W#RDS            13 0
      C                   PARM      *ZERO         SettleAmt        15 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOCALFRST'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ECHKRATFIX    ENDSR
       *****************************************************************
       /SPACE 5
@@ -371,18 +373,18 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
+
       * Get Extract control information
- 
+
       /COPY GOCPYSRC,GOGETEXCT
- 
- 
+
+
       * key list
- 
+
      C     GPUTXTK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_MOD

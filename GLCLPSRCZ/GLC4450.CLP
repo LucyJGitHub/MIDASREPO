@@ -13,8 +13,9 @@
 /*                                                                   */                 /*CGL127AY*/
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD002850           Date 08Apr13              */
+/*       Last Amend No. MD059147           Date 10Dec21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD002850           Date 08Apr13              */
 /*                      CGL127AY           Date 06Aug12              */
 /*                      CCB020             Date 06Aug12              */
 /*                      CGL127AB           Date 06Aug12              */
@@ -42,6 +43,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059147 - GLC4450 task split jobs timeout                  */
+/*                - Increase time wait from 900 to 1200.             */
 /*       MD046248 - Finastra Rebranding                              */
 /*  MD002850 - Correct the processing for restart of subtasks        */
 /*             after failure.                                        */
@@ -87,7 +90,7 @@
 /*********************************************************************/
 /*********PGM                                                         /*S01189*/
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
- 
+
 /**DCL*VAR(&BISCPY)*TYPE(*CHAR)*LEN(64)*VALUE('(c)*+*              */ /*107793*/
 /******COPYRIGHT*ACT*INTERNATIONAL*LIMITED*1990,*1995')*           */ /*107793*/
 /**/                                                                  /*S01408*/
@@ -139,7 +142,8 @@
              DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
                           VALUE('ACPHPSERVE')                                           /*CGL127AY*/
              DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10)                               /*CGL127AY*/
-             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)                    /*CGL127AY*/
+/**********  DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)  */       /*CGL127AY MD059147*/
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(900)                    /*MD059147*/
              DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)                                /*CGL127AY*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                                   /*CGL127AY*/
              DCL        VAR(&SNDMSG) TYPE(*CHAR) LEN(1) VALUE('N')                      /*CGL127AY*/
@@ -150,7 +154,7 @@
                                                                                         /*CGL127AY*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))                                                /*CGL127AY*/
- 
+
              SNDPGMMSG  MSG('GLC4450 - Postings History +
                           Maintenance') TOMSGQ(MRUNQ)
 /*                                                                      CCB009*/
@@ -159,7 +163,7 @@
 /**********  CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +     */                   /*CGL127AY*/
 /**********               'CCB009' &AOFMT)                         */            /*CCB009 CGL127AY*/
 /**********  CHGJOB     SWS(XXXXXX00)                              */                   /*CGL127AY*/
- 
+
 /**Determine*phase*of*system**/                                                    /*107793 CCB020*/
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                            */ /*107793 CCB020*/
                                                                       /*107793*/
@@ -237,7 +241,8 @@
              CHGVAR     VAR(&RCVWAIT) VALUE(5)                                          /*CGL127AY*/
              CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
                           &MSGLENGTH &MSGDATA &RCVWAIT)                                 /*CGL127AY*/
-             CHGVAR     VAR(&RCVWAIT) VALUE(600)                                        /*CGL127AY*/
+/**********  CHGVAR     VAR(&RCVWAIT) VALUE(600) */                            /*CGL127AY MD059147*/
+             CHGVAR     VAR(&RCVWAIT) VALUE(900)                                        /*MD059147*/
              CHGVAR     VAR(&MSGLENGTH) VALUE(50)                                       /*CGL127AY*/
              IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)                       /*CGL127AY*/
              CALL       PGM(QSNDDTAQ) PARM(&MEMBER &DTAQLIBL +

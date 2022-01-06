@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD022861           Date 03Nov21               *
+      *  Prev Amend No. 252069             Date 22May20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -104,6 +105,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022861 - 1st and 2nd line of MT3xx Receiver Party Infor-   *
+      *             mation fields were not defaulted.                 *
+      *           - Applied for MD023212                              *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -4712,7 +4716,8 @@
      C                   IF        B3BICC <> *BLANKS                                          CFT050
      C                   EVAL      DDRI01 = '/ABIC/' + B3BICC                                 CFT050
      C                   ELSE                                                                 CFT050
-     C                   EVAL      DDRI01 = '/ABIC/UKNW'                                      CFT050
+     C**********         EVAL      DDRI01 = '/ABIC/UKNW'                             CFT050 MD022861
+     C                   EVAL      DDRI01 = '/ABIC/UKWN'                                    MD022861
      C                   ENDIF                                                                CFT050
      C                   ENDIF                                                                CFT050
       **                                                                                      CFT050

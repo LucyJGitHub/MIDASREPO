@@ -10,13 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD044909           Date 10Jan17              */
+/*       Last Amend No. MD059147           Date 10Dec21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD044909           Date 10Jan17              */
 /*                      MD033115           Date 11Sep15              */
 /*                      CGL127AY *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059147 - GLC4450 task split jobs timeout                  */
+/*                - Allocate GLACPHL5 if S01520 is ON.               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD044909 - Allocate GLACPHL to prevent GLC4450 starting     */
 /*                 whilst system is updating access path.            */
@@ -27,7 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
                           VALUE('GLC4450   ')
              DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
@@ -69,52 +72,66 @@
              DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)                                /*MD044909*/
              DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)                                /*MD044909*/
              DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)                                /*MD044909*/
- 
+             DCL        VAR(&S01520) TYPE(*CHAR) LEN(1)                                 /*MD059147*/
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)                                 /*MD059147*/
+             DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)                                 /*MD059147*/
+             DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)                                 /*MD059147*/
+
              DCLF       FILE(CBCMPNLC)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2012')
- 
+
 /* Global monitor message. */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ. */
- 
+
              SNDPGMMSG  MSG('GLC4450T1 - Midas GL Account Postings +
                           History Purge - Start Task Split') +
                           TOMSGQ(MRUNQ)
- 
+/*   Check if SAR S01520 is installed */                                                /*MD059147*/
+/**/                                                                                    /*MD059147*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD059147*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD059147*/
+             CHGVAR     VAR(&SAR)  VALUE('S01520')                                      /*MD059147*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR)                            /*MD059147*/
+             IF         COND(&RTCD *EQ '       ') THEN(+
+                CHGVAR     VAR(&S01520) VALUE('Y'))                                     /*MD059147*/
+             ELSE       CMD(+
+                CHGVAR     VAR(&S01520) VALUE('N'))                                     /*MD059147*/
+
 /* Determine full DTAQLIB library name. */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
- 
+
 /* Clear Audit file. */
- 
+
              CLRPFM     FILE(&AUDITFL)
- 
+
 /* Build GLACHMPD */
- 
+
 /**********  SCRUNSQL   SQL('INSERT INTO GLACHMPD (ACOD, NOHP) +      */                /*MD033115*/
 /**********               SELECT DISTINCT ACOD, COUNT (ACOD) FROM +   */                /*MD033115*/
 /**********               GLACPHPD GROUP BY ACOD')                    */                /*MD033115*/
- 
+
              SCRUNSQL   SQL('INSERT INTO GLACHMPD (ACOD, NOHP) +
                           SELECT DISTINCT ACOD, COUNT (ACOD) FROM +
                           GLACPHPD GROUP BY ACOD ORDER BY ACOD')                        /*MD033115*/
 /* Remove all members from driving file. */
- 
+
              RMVM       FILE(&DRIVER) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
- 
+
 /* Clear main data queue. */
- 
+
              CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
- 
+
 /* Retrieve number of sub-tasks. */
- 
+
  CHAIN:
              RCVF
              CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
@@ -122,40 +139,40 @@
                           &CSEQ)) THEN(DO)
                 GOTO       CMDLBL(CHAIN)
              ENDDO
- 
+
 /* Add all members and create data queues. */
- 
+
              CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
  LOOP:
              IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
                 GOTO       CMDLBL(START)
              ENDDO
- 
+
              CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
              ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
- 
+
 /* Create data queue if it doesn't already exist */
 /* and set authorities. */
- 
+
              CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
              ENDDO
              CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
- 
+
              IF         COND(&LOOP *EQ 1) THEN(DO)
                    CHGVAR     VAR(&NAME2_N) VALUE(01000)
                    CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
              ENDDO
- 
+
              CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
              CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
              CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
              GOTO       CMDLBL(LOOP)
- 
+
  START:
- 
- 
+
+
 /**/                                                                                    /*MD044909*/
 /* Check if the current setting of 'Time Allocation for GLACPHL'             */         /*MD044909*/
 /**/                                                                                    /*MD044909*/
@@ -171,20 +188,28 @@
                           GlacDelayTime') TOMSGQ(MRUNQ)                                 /*MD044909*/
                GOTO       CMDLBL(END)                                                   /*MD044909*/
              ENDDO                                                                      /*MD044909*/
- 
+
 /* Allocate GLACPHL to ensure access paths rebuilt before GLC4450* continues  */        /*MD044909*/
+             IF         COND(&S01520 *EQ 'Y') THEN(DO)                                  /*MD059147*/
+             ALCOBJ     OBJ((GLACPHL5 *FILE *EXCL)) WAIT(&GLCDLY)                       /*MD059147*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))                         /*MD059147*/
+             DLCOBJ     OBJ((GLACPHL5 *FILE *EXCL))                                     /*MD059147*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD059147*/
+             ENDDO                                                                      /*MD059147*/
+             ELSE       DO                                                              /*MD059147*/
                                                                                         /*MD044909*/
              ALCOBJ     OBJ((GLACPHL *FILE *EXCL)) WAIT(&GLCDLY)                        /*MD044909*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))                         /*MD044909*/
              DLCOBJ     OBJ((GLACPHL *FILE *EXCL))                                      /*MD044909*/
              MONMSG     MSGID(CPF0000)                                                  /*MD044909*/
+             ENDDO                                                                      /*MD059147*/
                                                                                         /*MD044909*/
              GOTO       CMDLBL(END)
- 
+
  ABNOR:      SNDPGMMSG  MSG('Program GLC4450T1 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
  END:
              ENDPGM

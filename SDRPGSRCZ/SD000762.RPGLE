@@ -11,9 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG14834           Date 03Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CSW207             Date 09Jul07               *
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG14834 - SWIFT ID field should be optional                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *  CSW207 - SWIFT 2007 Changes                                  *
@@ -735,8 +737,10 @@
      C                             #1SWCD <> 'CUST' AND #1SWCD <> 'DRLC' AND                  CSW207
      C                             #1SWCD <> 'EMPL' AND #1SWCD <> 'IBEI' AND                  CSW207
      C                             #1SWCD <> 'NIDN' AND #1SWCD <> 'SOSE' AND                  CSW207
-     C                             #1SWCD <> 'TXID') AND (CSW207 = 'Y' OR                     CSW207
-     C                             BGN4ST = 'Y')                                              CSW207
+     C**********                   #1SWCD <> 'TXID') AND (CSW207 = 'Y' OR            CSW207 BUG14834
+     C**********                   BGN4ST = 'Y')                                     CSW207 BUG14834
+     C                             #1SWCD <> 'TXID' AND #1SWCD <> *BLANKS)                  BUG14834
+     C                             AND (CSW207 = 'Y' OR BGN4ST = 'Y')                       BUG14834
      C                   EVAL      *IN24 = *ON                                                CSW207
      C                   EVAL      WTErrFlg = 'Y'                                             CSW207
      C                   EVAL      PMsgID = 'USR9900'                                         CSW207
@@ -811,8 +815,10 @@
      C                             #2SWCD <> 'CUST' AND #2SWCD <> 'DRLC' AND                  CSW207
      C                             #2SWCD <> 'EMPL' AND #2SWCD <> 'IBEI' AND                  CSW207
      C                             #2SWCD <> 'NIDN' AND #2SWCD <> 'SOSE' AND                  CSW207
-     C                             #2SWCD <> 'TXID') AND (CSW207 = 'Y' OR                     CSW207
-     C                             BGN4ST = 'Y')                                              CSW207
+     C**********                   #2SWCD <> 'TXID') AND (CSW207 = 'Y' OR            CSW207 BUG14834
+     C**********                   BGN4ST = 'Y')                                     CSW207 BUG14834
+     C                             #2SWCD <> 'TXID' AND #2SWCD <> *BLANKS)                  BUG14834
+     C                             AND (CSW207 = 'Y' OR BGN4ST = 'Y')                       BUG14834
      C                   EVAL      *IN34 = *ON                                                CSW207
      C                   EVAL      WIErrFlg = 'Y'                                             CSW207
      C                   EVAL      PMsgID = 'USR9900'                                         CSW207

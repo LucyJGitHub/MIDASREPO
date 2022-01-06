@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD057401           Date 05Jan21              */
-/*       Prev Amend No. AR957053           Date 14May12              */
+/*       Last Amend No. MD059393           Date 19Dec21              */
+/*       Prev Amend No. MD057401           Date 05Jan21              */
+/*                      AR957053           Date 14May12              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CSC054             Date 23Feb12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -29,6 +30,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059393 - PEA job GPPEASxxxx submitted even with CSC054 OFF*/
+/*                  Amend to check if CSC054 is switched ON before   */
+/*                  submitting GP_PEA job.                           */
 /*       MD057401 - LEC2016 00001 loops during COB. Change feature   */
 /*                  CLE016 to CLE006, Change *BLANKS to '  ', comment*/
 /*                  out call to GLC005020.                           */
@@ -172,9 +176,13 @@
                                                                                           /*245526*/
 /** Submit PEA Handshaking Jobs */                                                        /*CSC054*/
                                                                                           /*CSC054*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD059393*/
+             CALL PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' 'CSC054' &FMT)                   /*MD059393*/
+             IF         COND(&RTCD *EQ '     ') THEN(DO)                                /*MD059393*/
              SBMJOB     JOB(GP_PEA) JOBD(GPBATCH) +
                           JOBQ(GPNOMAX) USER(*JOBD) RTGDTA(*JOBD) +
                           RQSDTA('CALL GPC000300') INLLIBL(*JOBD) OUTQ(*JOBD)             /*CSC054*/
+             ENDDO                                                                      /*MD059393*/
              GOTO       CMDLBL(END)
 
  ABNOR:

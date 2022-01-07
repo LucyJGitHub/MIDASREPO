@@ -34,7 +34,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. MD058975           Date 20Oct21               *
+      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *                 MD058975           Date 20Oct21               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058540           Date 24Aug21               *
@@ -150,6 +151,8 @@
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
       *             the Beneficiary.                                  *
+      *  MD058368 - Inhibit the LIBOR Deregulation fields if CDL102   *
+      *             is switched off                                   *
       *  MD058975 - Unable to insert a Call Depost deal. Set Maturity *
       *             Date to 99999 if the field is zero.               *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -1186,9 +1189,9 @@
      C                   IF        CER050 = 'Y'                                             MD054028
      C                   EVAL      DDAPRC = %SUBST(Buffer2:1774)                            MD054028
      C                   ENDIF                                                              MD054028
-     C                   IF        CDL102 = 'Y'                                               CDL102
+     C**********         IF        CDL102 = 'Y'                                      CDL102 MD059368
      C                   EVAL      TranScnBlrt = %SUBST(Buffer2:1783)                         CDL102
-     C                   ENDIF                                                                CDL102
+     C**********         ENDIF                                                       CDL102 MD059368
      C                   IF        CDL033 = 'Y'                                               CDL033
      C**********         EVAL      RFormula = %SUBST(Buffer:454:8)                    CDL033 BUG9827
      C**********         EVAL      PFormula = %SUBST(Buffer:462:8)                    CDL033 BUG9827

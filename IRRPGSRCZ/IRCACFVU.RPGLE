@@ -29,7 +29,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
@@ -91,6 +92,7 @@
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
       *             the Beneficiary.                                  *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057437 - IRS - Their Details - Negative Principal Amount   *
@@ -269,6 +271,8 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
+     D BlankFloor      C                   CONST('            ')                              CIR020
+     D ScanString      C                   CONST('9999.9999999')                              CIR020
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -327,6 +331,15 @@
       ** Caps/Collars/Floors Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(IRCPEXPD)
 
+      ** Incoming Backward-Looking Rate Screen Fields                                         CIR020
+     D InTranBlrt      DS            50                                                       CIR020
+                                                                                              CIR020
+      ** New Backward-Looking Rate Fields                                                     CIR020
+     D NewTranBlrt     S             50                                                       CIR020
+                                                                                              CIR020
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CIR020
+     D CurrScnBlrt     DS            50                                                       CIR020
+                                                                                              CIR020
       ** Array message for RPIF                                                               CSW213
      D DFldNameArr     S             10A   DIM(ArrayMax)                                      CSW213
      D DMsgIDArr       S              7A   DIM(ArrayMax)                                      CSW213
@@ -639,6 +652,7 @@
      D Ix              S              3P 0
      D Iy              S              3P 0
      D WIdx            S              3P 0
+     D Pos             S              3P 0                                                    CIR020
 
       ** Entry Parameters
      D ExtData500      S            500A
@@ -862,10 +876,16 @@
      C                   EVAL      STINFD=%SUBST(Buffer:2079)                               MD031861
      C                   EVAL      #1STAT=%SUBST(Buffer:2085)                               MD031861
      C                   EVAL      FORMULAOPC=%SUBST(Buffer:2109)                           MD031861
+                                                                                              CIR020
+      ** Backward-Looking Rate Fields                                                         CIR020
+     C                   EVAL      InTranBlrt = %SUBST(Buffer:4268:50 )                       CIR020
+                                                                                              CIR020
      C**********         EVAL      PCSAST=%SUBST(Buffer:4228) + Buffer2 +            MD031861 CSW216
      C**********                   BufferEx2                                         MD031861 CSW216
-     C                   EVAL      PCSAST=%SUBST(Buffer:4268) + Buffer2 +                     CSW216
-     C                             BufferEx2                                                  CSW216
+     C**********         EVAL      PCSAST=%SUBST(Buffer:4268) + Buffer2 +              CSW216 CIR020
+     C**********                   BufferEx2                                           CSW216 CIR020
+     C                   EVAL      PCSAST=%SUBST(Buffer:4318) + Buffer2 +                     CIR020
+     C                             BufferEx2                                                  CIR020
      C
      C                   MOVEA     PCSAST        PCSA                           BUG5403
 
@@ -1036,6 +1056,15 @@
      C                   ENDIF                                                               BUG4390
      C                   ENDIF
 
+      ** Replace 9999.9999999 value with blanks                                               CIR020
+     C                   EVAL       NewTranBlrt = InTranBlrt                                  CIR020
+     C                   EVAL       Pos = %SCAN(ScanString:NewTranBlrt)                       CIR020
+     C                   IF         Pos <> 0                                                  CIR020
+     C                   EVAL       NewTranBlrt = %REPLACE(BlankFloor:                        CIR020
+     C                                            NewTranBlrt:Pos:12)                         CIR020
+     C                   EVAL       InTranBlrt = NewTranBlrt                                  CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   SETON                                        LR
 
      C                   IF        UpdateYN = 'Y' and Idx = 0                                BUG6377
@@ -1067,6 +1096,7 @@
      C**********                        + FORMULAOPC + PCSAST                         BUG5871 CSW213
      C                                  + FORMULAOPC                                          CSW213
      C                                  + OutSwift2013                                        CSW213
+     C                                  + InTranBlrt                                          CIR020
      C                                  + PCSAST                                              CSW213
      C**********         EVAL      Buffer2=%SUBST(PCSAST:4857)                  BUG5403      BUG6377
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:7857)                BUG5403      BUG6377
@@ -1517,6 +1547,7 @@
      C                   PARM                    PayNostro
      C                   PARM                    ExtData
      C                   PARM                    WValBDC
+     C                   PARM                    InTranBlrt                                   CIR020
      C                   PARM                    SDBANK
      C                   PARM                    SDMMOD
      C                   PARM                    SDDEAL
@@ -1625,6 +1656,7 @@
      C                   PARM                    BGPFMG
      C                   PARM                    BNDCSP
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C**********         PARM                    PDealSts                                    BUG5871
      C                   PARM                    #1STAT                                      BUG5871
       ***Sign*of Short Term Rate                                                     BUG5181 BUG6472
@@ -1720,6 +1752,7 @@
      C                   PARM                    BGPFMG
      C                   PARM                    BNDCSP
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C**********         PARM                    PDealSts                                    BUG5871
      C                   PARM                    #1STAT                                      BUG5871
       ***Sign*of Short Term Rate                                                     BUG5181 BUG6472
@@ -1729,6 +1762,8 @@
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    TranInCACF
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    InTranBlrt                                   CIR020
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C                   PARM                    CrIRFilFmt
      C*******************PARM      'N'           PResetErrs                                   CDL038
      C                   PARM      'Y'           PResetErrs                                   CDL038

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR662846           Date 03Nov21               *      
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR927047           Date 21Mar12               *      
       *                 MD055694           Date 09Mar20               *
       *                 CMG008             Date 20Feb20               *
@@ -127,6 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR662846 - Field 50F not produced on MT103.                  *      
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -2802,9 +2804,9 @@
      C                             and PMInpType <> 'S'                                      250804A
      C                             AND PMInpType <> ' '                                     BUG19193
       *                                                                                     BUG15178
-     C                             Or %Subst(PMInpParm1:1:1) <> '/'                         BUG15178
-     C                             And (PMInpType = 'C' Or PMInpType = 'S')                 BUG15178
-     C                             And PMValType = 'FRMT'                                   BUG15178
+     C**********                   Or %Subst(PMInpParm1:1:1) <> '/'                BUG15178 AR662846
+     C**********                   And (PMInpType = 'C' Or PMInpType = 'S')        BUG15178 AR662846
+     C**********                   And PMValType = 'FRMT'                          BUG15178 AR662846
       *                                                                                     BUG15178
      C                             Or %Subst(PMInpParm1:1:1) = '/'                          BUG15209
      C                             And PMInpParm2 = *Blanks                                 BUG15209

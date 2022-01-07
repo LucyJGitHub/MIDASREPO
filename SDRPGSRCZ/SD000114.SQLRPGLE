@@ -17,8 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059190           Date 08Nov21               *
-      *  Prev Amend No. MD059137           Date 29Oct21               *
+      *  Last Amend No. MD059375           Date 20Dec21               *
+      *  Prev Amend No. MD059270           Date 16Dec21               *
+      *                 MD059253           Date 19Nov21               *
+      *                 CIR020             Date 02Aug21               *
+      *                 MD059190           Date 08Nov21               *
+      *                 MD059137           Date 29Oct21               *
       *                 MD059128           Date 28Oct21               *
       *                 MD058708           Date 31Aug21               *
       *                 CDL102             Date 01Jun21               *
@@ -33,6 +37,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059375 - Rate change date should mark the start of the new *
+      *             interest period and not the Interest Payment Date.*
+      *             If UIACD/TIACD <> URCHG/TRCHG, use URCHG/TRCHG    *
+      *             field as the start of interest period.            *
+      *  MD059270 - Interest period end date of last period for 2nd   *
+      *             call of ARR calculator is set to maturity date.   *
+      *             Amend fix MD-59253 to set it to maturity date - 1.*
+      *  MD059253 - DLC0606B failed due to missing record in DAMBRDI. *
+      *             Do a second call of ARR calculator for existing   *
+      *             backward looking IRS deals and next rate change   *
+      *             date is less than the next working date.          *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD059190 - Do a second call of ARR calculator for existing   *
       *             backward looking rate loans and next interest due *
       *             date is equal to rundate. Use ARR rollover details*
@@ -230,6 +246,7 @@
       ** Program Variables
      D CLE172          S              1A                                                      CDL102
      D CDL102          S              1A                                                      CDL102
+     D CIR020          S              1A                                                      CIR020
      D WRUN            S              1A
      D ARRCalcFreq     S              1A
      D CallARR         S              1A
@@ -249,6 +266,8 @@
      D WrkEndDate      S              5P 0                                                  MD059190
      D WrkBasDate      S              5P 0                                                  MD059190
      D PMode           S              1A                                                    MD059190
+     D PDealRef        S              6A                                                    MD059253
+     D PLeg            S              1A                                                    MD059253
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -413,6 +432,17 @@
      C                   IF        TrMODI = 'LE'                                            MD059190
      C                   EXSR      SRChk2ndCall                                             MD059190
      C                   ENDIF                                                              MD059190
+      ** For IRS deal, issue 2nd call to ARR Calculator if                                  MD059253
+      ** Rate Change Date is less than next working date.                                   MD059253
+     C                   IF        TrMODI = 'RU' or                                         MD059253
+     C                             TrMODI = 'RT'                                            MD059253
+     C                   EVAL      Wrk2ndCall = 'N'                                         MD059253
+     C                   IF        TrNIDT >= BJRDNB and                                     MD059253
+     C                             TrNIDT <= EventCtrlDate                                  MD059253
+     C                   EVAL      Wrk2ndCall = 'Y'                                         MD059253
+     C                   ENDIF                                                              MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
      C                   IF        Wrk2ndCall = 'Y'                                         MD059190
      C                   ITER                                                               MD059190
      C                   ENDIF                                                              MD059190
@@ -529,6 +559,51 @@
      C/end-exec                                                                               CDL102
      C                   ENDIF                                                                CDL102
                                                                                               CDL102
+     C                   IF        CIR020 = 'Y'                                               CIR020
+                                                                                              CIR020
+      ** Select the IRS deal if OURS interest detail                                          CIR020
+      ** is using a backward looking-rate                                                     CIR020
+     C/exec SQL                                                                               CIR020
+     C+ insert into SDBJEXPD                                                                  CIR020
+     C+ select 'RU', digits(DLNO),                                                            CIR020
+     C+        UCUCY, VDAT, MDAT,                                                             CIR020
+     C*********UNICD, 0, 0, UIACD, ' ',                                              CIR020 MD059375
+     C+        UNICD, 0, 0,                                                                 MD059375
+     C+        case when UIACD <> URCHG and URCHG <> 0                                      MD059375
+     C+         then URCHG                                                                  MD059375
+     C+         else UIACD end, ' ',                                                        MD059375
+     C+        UBLRT, URFRR, UCALM, UBADJ, UFLOR,                                             CIR020
+     C+        ULBDY, ULODY, UOPSH, URRDP, UDBAV, UBRTT                                       CIR020
+     C+ from DEALSDG                                                                          CIR020
+     C+ where RECI = 'D' and VDAT < :BJDNWD                                                   CIR020
+     C+   and UBLRT = 'Y' and UCALM <> 'MANL'                                                 CIR020
+     C+   and UICFR <> 'O'                                                                    CIR020
+     C+   and DTYP in ('RS','RX','RP','RR','RF')                                              CIR020
+     C+ with nc                                                                               CIR020
+     C/end-exec                                                                               CIR020
+                                                                                              CIR020
+      ** Select the IRS deal if THEIRS interest detail                                        CIR020
+      ** is using a backward looking-rate                                                     CIR020
+     C/exec SQL                                                                               CIR020
+     C+ insert into SDBJEXPD                                                                  CIR020
+     C+ select 'RT', digits(DLNO),                                                            CIR020
+     C+        TCUCY, VDAT, MDAT,                                                             CIR020
+     C*********TNICD, 0, 0, TIACD, ' ',                                              CIR020 MD059375
+     C+        TNICD, 0, 0,                                                                 MD059375
+     C+        case when TIACD <> TRCHG and TRCHG <> 0                                      MD059375
+     C+         then TRCHG                                                                  MD059375
+     C+         else TIACD end, ' ',                                                        MD059375
+     C+        TBLRT, TRFRR, TCALM, TBADJ, TFLOR,                                             CIR020
+     C+        TLBDY, TLODY, TOPSH, TRRDP, TDBAV, TBRTT                                       CIR020
+     C+ from DEALSDG                                                                          CIR020
+     C+ where RECI = 'D' and VDAT < :BJDNWD                                                   CIR020
+     C+   and TBLRT = 'Y' and TCALM <> 'MANL'                                                 CIR020
+     C+   and TICFR <> 'O'                                                                    CIR020
+     C+   and DTYP in ('RS','RX','RP','RR','RF')                                              CIR020
+     C+ with nc                                                                               CIR020
+     C/end-exec                                                                               CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
      C                   IF        SQLCODE <> NO_ERROR and                                    CDL102
      C                             SQLCODE <> NO_RECORD                                       CDL102
      C                   EVAL      DBFILE = 'SQLERROR'                                        CDL102
@@ -638,6 +713,20 @@
      C+ set HKRTKN = :RatesKnown                                                              CDL102
      C+ where HKDN38 = :TransREF                                                              CDL102
      C/end-exec                                                                               CDL102
+                                                                                              CIR020
+     C                   WHEN      TrMODI = 'RU'                                              CIR020
+     C/exec SQL                                                                               CIR020
+     C+ update DEALSDG                                                                        CIR020
+     C+ set URTKN = :RatesKnown                                                               CIR020
+     C+ where DLNO = :TransREF                                                                CIR020
+     C/end-exec                                                                               CIR020
+                                                                                              CIR020
+     C                   WHEN      TrMODI = 'RT'                                              CIR020
+     C/exec SQL                                                                               CIR020
+     C+ update DEALSDG                                                                        CIR020
+     C+ set TRTKN = :RatesKnown                                                               CIR020
+     C+ where DLNO = :TransREF                                                                CIR020
+     C/end-exec                                                                               CIR020
                                                                                               CDL102
      C                   ENDSL                                                                CDL102
 
@@ -645,7 +734,8 @@
      C                             SQLCODE <> NO_RECORD
      C                   EVAL      DBFILE = 'SQLERROR'
      C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBASE  = 006
+     C**********         EVAL      DBASE  = 006                                               CIR020
+     C                   EVAL      DBASE  = 008                                               CIR020
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -688,6 +778,8 @@
      C                   ENDIF                                                                CDL102
      C                                                                                        CDL102
      C                   IF        TrMODI = 'DL'                                              CDL102
+     C                             or TrMODI = 'RU'                                           CIR020
+     C                             or TrMODI = 'RT'                                           CIR020
      C                   EVAL      WrkDATE = TrSLID                                           CDL102
      C                   ENDIF                                                                CDL102
 
@@ -756,6 +848,8 @@
      C                   ENDIF                                                                CDL102
      C                                                                                        CDL102
      C                   IF        TrMODI = 'DL'                                              CDL102
+     C                             or TrMODI = 'RU'                                           CIR020
+     C                             or TrMODI = 'RT'                                           CIR020
      C                   IF        TrNIDT <> 0                                                CDL102
      C                   EVAL      WrkDATE = TrNIDT                                           CDL102
      C                   ELSE                                                                 CDL102
@@ -763,6 +857,13 @@
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
 
+      ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** determine next Interest Period Start Date                                          MD059253
+     C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
+     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C                   EVAL      IntPerSDATE = WrkDATE                                    MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
       ** Save the actual interest payment date to a work variable                           MD058106
      C                   EVAL      IntPayDate = WrkDATE                                     MD058106
                                                                                             MD058106
@@ -791,6 +892,16 @@
      C                   EVAL      IntPerEDATE = WrkDATE                                      CDL102
      C                   ENDIF                                                                CDL102
      C                   ENDIF                                                                CDL102
+                                                                                            MD059253
+      ** If IRS deal and 2nd call to ARR Calculator is needed,                              MD059253
+      ** determine next Interest Period End Date                                            MD059253
+     C                   IF        (TrMODI = 'RU' or TrMODI = 'RT')                         MD059253
+     C                             and Wrk2ndCall = 'Y'                                     MD059253
+     C                   EXSR      SRIRSNxtEDATE                                            MD059253
+     C**********         EVAL      IntPerEDATE = WrkEndDate                        MD059253 MD059270
+     C                   EVAL      IntPerEDATE = WrkEndDate - 1                             MD059270
+     C                   EVAL      WZeroMDATFlag = 'Y'                                      MD059253
+     C                   ENDIF                                                              MD059253
 
      C                   IF        IntPerEDATE <= 0
      C                   EVAL      WZeroMDATFlag = 'Y'
@@ -1012,6 +1123,31 @@
      C                   EVAL      ISODate = %date( ZDATE : *MDY )
 
      C                   ENDSR
+      *****************************************************************                     MD059253
+      /EJECT                                                                                MD059253
+      *****************************************************************                     MD059253
+      *                                                               *                     MD059253
+      * SRIRSNxtEDATE - Calculate next Interest Period End Date       *                     MD059253
+      *                 based on IRS deal details                     *                     MD059253
+      *                                                               *                     MD059253
+      *****************************************************************                     MD059253
+     C     SRIRSNxtEDATE BEGSR                                                              MD059253
+                                                                                            MD059253
+     C                   EVAL      PDealRef = TrTRAN                                        MD059253
+     C                   IF        TrMODI = 'RU'                                            MD059253
+     C                   EVAL      PLeg = 'U'                                               MD059253
+     C                   ELSE                                                               MD059253
+     C                   EVAL      PLeg = 'T'                                               MD059253
+     C                   ENDIF                                                              MD059253
+                                                                                            MD059253
+     C                   CALL      'IR001113'                                               MD059253
+     C                   PARM      'L'           PMode                                      MD059253
+     C                   PARM                    PDealRef                                   MD059253
+     C                   PARM                    PLeg                                       MD059253
+     C                   PARM      *ZEROS        WrkEndDate                                 MD059253
+     C                   PARM      *ZEROS        WrkBasDate                                 MD059253
+                                                                                            MD059253
+     C                   ENDSR                                                              MD059253
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1085,6 +1221,18 @@
      C     PRtCd         IFEQ      *BLANK                                                     CDL102
      C                   MOVE      'Y'           CDL102                                       CDL102
      C                   ENDIF                                                                CDL102
+                                                                                              CIR020
+      ** Determine if CIR020 is installed                                                     CIR020
+     C                   MOVE      'N'           CIR020                                       CIR020
+     C                   CALL      'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANK        PRtCd                                        CIR020
+     C                   PARM      '*VERIFY'     POptn                                        CIR020
+     C                   PARM      'CIR020'      PSard                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+                                                                                              CIR020
+     C     PRtCd         IFEQ      *BLANK                                                     CIR020
+     C                   MOVE      'Y'           CIR020                                       CIR020
+     C                   ENDIF                                                                CIR020
 
       ** Get setting of system value ARR Calculation Frequency
      C                   EVAL      ARRCalcFreq = *BLANKS

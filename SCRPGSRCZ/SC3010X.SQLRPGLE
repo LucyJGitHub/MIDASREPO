@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059381           Date 14Dec21               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059381 - Issue on Converted SCSARXPD to DDS SCSRX*TD Midas *
+      *             SC Switchable Features Dependencies File.         *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -217,7 +220,8 @@
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
      C/EXEC SQL                                                                             MD056555
-     C+ fetch next from ACursor into :SCSARD                                                MD056555
+     C**********+ fetch next from ACursor into :SCSARD                             MD056555 MD059381
+     C+ fetch next from ACursor into :SCSARX                                                MD059381
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
      C                   SETOFF                                       82                    MD056555
@@ -260,7 +264,8 @@
      C                   ENDIF                                                                 CSC00
      C*****DDDON         READE     SCSARXL2                               77          CSC00 MD056555
      C/EXEC SQL                                                                             MD056555
-     C+ fetch next from ACursor into :SCSARD                                                MD056555
+     C**********+ fetch next from ACursor into :SCSARD                             MD056555 MD059381
+     C+ fetch next from ACursor into :SCSARX                                                MD059381
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
      C                   SETOFF                                       77                    MD056555
@@ -326,7 +331,8 @@
      C/EXEC SQL                                                                             MD056555
      C+ declare BCursor insensitive scroll cursor for                                       MD056555
      C+ select * from SCSRXJW0                                                              MD056555
-     C+ where DSON = :ACSARN and RECI = :RECI                                               MD056555
+     C**********+ where DSON = :ACSARN and RECI = :RECI                            MD056555 MD059381
+     C+ where DSON = :ACSARN and RECI = :ACRECI                                             MD059381
      C+ order by DSON, RECI, SEQ                                                            MD056555
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
@@ -335,7 +341,8 @@
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
      C/EXEC SQL                                                                             MD056555
-     C+ fetch next from BCursor into :SCSARD                                                MD056555
+     C**********+ fetch next from BCursor into :SCSARD                             MD056555 MD059381
+     C+ fetch next from BCursor into :SCSARX                                                MD059381
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
      C                   SETOFF                                       82                    MD056555
@@ -390,7 +397,8 @@
      C                   ENDIF                                                                 CSC00
      C*****KPOS*         READE     SCSARXL0                               77          CSC00 MD056555
      C/EXEC SQL                                                                             MD056555
-     C+ fetch next from BCursor into :SCSARD                                                MD056555
+     C**********+ fetch next from BCursor into :SCSARD                             MD056555 MD059381
+     C+ fetch next from BCursor into :SCSARX                                                MD059381
      C/END-EXEC                                                                             MD056555
                                                                                             MD056555
      C                   SETOFF                                       77                    MD056555

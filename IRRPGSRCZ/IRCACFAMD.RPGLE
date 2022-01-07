@@ -16,8 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059243A          Date 09Dec21               *
+      *  Prev Amend No. MD059234           Date 08Nov21               *
+      *                 MD059146           Date 29Oct21               *
+      *                 CIR020             Date 02Aug21               *
+      *                 MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +44,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059243A - Allow the amendment of Spread Rate and Spread    *
+      *              Indicator is feature CIR020 is swicthed on       *
+      *  MD059234 - Unable to amend base rate code due to Rates Known *
+      *             field validation. Remove Rates Known validation   *
+      *             since this is not input-capable field.            *
+      *  MD059146 - Rejected amendment on WIP did not revert to its   *
+      *             forward looking rate details due to validation    *
+      *             error for fields #0FRFD, #0EINR and #0AVRM. Skip  *
+      *             the validation if backward-looking rate is Y.     *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058285 - Change base rate code to alphanumeric             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -167,6 +181,34 @@
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CIR020
+     D CurrScnBlrt     DS                                                                     CIR020
+     D  @DDBLRT                       1A                                                      CIR020
+     D  @DDRFRR                      10A                                                      CIR020
+     D  @DDCALM                       4A                                                      CIR020
+     D  @DDBADJ                      13A                                                      CIR020
+     D  @DDFLOR                      13A                                                      CIR020
+     D  @DDLBDY                       2A                                                      CIR020
+     D  @DDLODY                       2A                                                      CIR020
+     D  @DDOPSH                       1A                                                      CIR020
+     D  @DDRRDP                       2A                                                      CIR020
+     D  @DDDBAV                       1A                                                      CIR020
+     D  @DDRTKN                       1A                                                      CIR020
+                                                                                              CIR020
+      ** New Backward-Looking Rate Fields Screen Fields                                       CIR020
+     D InTranBlrt      DS                                                                     CIR020
+     D  DDBLRT                        1A                                                      CIR020
+     D  DDRFRR                       10A                                                      CIR020
+     D  DDCALM                        4A                                                      CIR020
+     D  DDBADJ                       13A                                                      CIR020
+     D  DDFLOR                       13A                                                      CIR020
+     D  DDLBDY                        2A                                                      CIR020
+     D  DDLODY                        2A                                                      CIR020
+     D  DDOPSH                        1A                                                      CIR020
+     D  DDRRDP                        2A                                                      CIR020
+     D  DDDBAV                        1A                                                      CIR020
+     D  DDRTKN                        1A                                                      CIR020
+                                                                                              CIR020
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -187,6 +229,7 @@
       ** Switchable Features Entry Parameters
      D CIR001          S              1A
      D CIR006          S              1A
+     D CIR020          S              1A                                                      CIR020
 
       ** Output Parameters
      D PIdx            S              3P 0
@@ -209,6 +252,9 @@
      D  WkFld1         S             11  7                                                    209379
      D  WkFld2         S             11  7                                                    209379
                                                                                               209379
+     D BChar           DS                                                                     CIR020
+     D   BLen                  1      2B 0                                                    CIR020
+     D   LenStr                1      2
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -469,6 +515,7 @@
       **   Interest Fix Date > 0  AND
       **   Interest Fix Date <= Value Date
 
+     C                   IF        CIR020 = 'N'                                               CIR020
      C                   IF        #0BRTT <> CrBRTT
      C                   IF        VDAT < PRunDayNo OR
      C                             (WSide = 'U' AND
@@ -485,6 +532,7 @@
      C                   EVAL      OKBRTT = 'N'
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                                CIR020
 
       ** Spread/Rate. This field is only amendable if the Interest
       ** Fix Date > zero.
@@ -512,6 +560,7 @@
      C**********         IF        #0RTSP <> CrRTSP AND                                       BG1829
      C**********                   (WSide = 'U' AND UINFD = *ZERO OR                          BG1829
      C**********                    WSide = 'T' AND TINFD = *ZERO)                            BG1829
+     C                   IF        CIR020 = 'N'                                            MD059243A
      C                   IF        WkFld1 <> WkFld2 AND                                       BG1829
      C                             (WSide = 'U' AND UINFD = *ZERO OR                          BG1829
      C                              WSide = 'T' AND TINFD = *ZERO)                            BG1829
@@ -520,10 +569,13 @@
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0374'
      C                   EVAL      OKRTSP = 'N'
      C                   ENDIF
+     C                   ENDIF                                                             MD059243A
 
       ** Spread Indicator. Similarly, this field is only amendable if
       ** the Interest Fix Date > zero.
+      ** and if the switchhable feature CIR020 is switch on                                MD059243A
 
+     C                   IF        CIR020 = 'N'                                            MD059243A
      C                   IF        #0SPIN <> CrSPIN AND
      C                             (WSide = 'U' AND UINFD = *ZERO OR
      C                              WSide = 'T' AND TINFD = *ZERO)
@@ -532,18 +584,29 @@
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0598'
      C                   EVAL      OKSPIN = 'N'
      C                   ENDIF
+     C                   ENDIF                                                             MD059243A
 
      C                   TESTB     '3'           TDSTI                    01
 
+      ** Skip validation if Backward-Looking Rate is Y                                      MD059146
+                                                                                            MD059146
+     C                   MOVEL     'N'           WSKIP                                      MD059146
+     C                   IF        CIR020 = 'Y' and                                         MD059146
+     C                             (@DDBLRT = 'Y' or DDBLRT = 'Y')                          MD059146
+     C                   MOVEL     'Y'           WSKIP                                      MD059146
+     C                   ENDIF                                                              MD059146
+     C                                                                                      MD059146
       ** Rate Fix Days. This field is not amendable if Average Rate
       ** Method is 'Y'.
 
+     C                   IF        WSKIP = 'N'                                              MD059146
      C                   IF        #0FRFD <> CrFRFD AND *IN01 = *ON
      C                   ADD       1             WIdx
      C                   EVAL      FldNameArr(WIdx) = '#0FRFD'
      C                   EVAL      MsgIDArr(WIdx)   = 'MMA0107'
      C                   EVAL      OKFRFD = 'N'
      C                   ENDIF
+     C                   ENDIF                                                              MD059146
 
       ** Short Term Rate/Current Average. This field is not amendable
       ** if Average Rate Method is 'Y' and Value date >= Rundate.
@@ -571,6 +634,7 @@
      C                   ENDIF                                                                209379
                                                                                               209379
      C**********         IF        #0EINR <> CrEINR AND *IN01 = *ON AND                       209379
+     C                   IF        WSKIP = 'N'                                              MD059146
      C                   IF        WkFld1 <> WkFld2 AND *IN01 = *ON AND                       209379
      C                             VDAT >= PRunDayNo
      C                   ADD       1             WIdx
@@ -578,6 +642,7 @@
      C                   EVAL      MsgIDArr(WIdx)   = 'MMA0111'
      C                   EVAL      OKEINR = 'N'
      C                   ENDIF
+     C                   ENDIF                                                              MD059146
 
       ** Ceiling Rate. This field is not amendable.
 
@@ -645,12 +710,22 @@
 
       ** Average Rate Method. This field is not amendable.
 
+     C                   MOVEL     'N'           WSKIP             1                          CIR020
+     C                   IF        CIR020 = 'Y' and                                           CIR020
+     C                             (@DDBLRT = 'Y' or DDBLRT = 'Y')                          MD059146
+     C**********                   DDBLRT = 'Y' and                                  CIR020 MD059146
+     C**********                   #0AVRM = 'Y'                                      CIR020 MD059146
+     C                   MOVEL     'Y'           WSKIP                                        CIR020
+     C                   ENDIF                                                                CIR020
+                                                                                              CIR020
+     C                   IF        WSKIP = 'N'                                                CIR020
      C                   IF        #0AVRM <> CrAVRM
      C                   ADD       1             WIdx
      C                   EVAL      FldNameArr(WIdx) = '#0AVRM'
      C                   EVAL      MsgIDArr(WIdx)   = 'MMM0696'
      C                   EVAL      OKAVRM = 'N'
      C                   ENDIF
+     C                   ENDIF                                                                CIR020
 
       ** Premium Value Date. This field is non-amendable if CIR001 is
       ** off, or CIR006 is on, or Original Entry Date <> Rundate.
@@ -703,6 +778,20 @@
       ** #0ICFD - Our Rate Change Day in Month
       ** Business Day Convention Fields
 
+     C*****CIR020        IFEQ      'Y'                                               CIR020 MD059234
+      **********                                                                     CIR020 MD059234
+      ***Rates*Known*Flag*cannot*be*amended****************************              CIR020 MD059234
+      **********                                                                     CIR020 MD059234
+     C*****DDRTKN        IFNE      @DDRTKN                                           CIR020 MD059234
+     C**********         ADD       1             WIdx                                CIR020 MD059234
+     C**********         EVAL      FldNameArr(WIdx) = 'DDRTKN'                       CIR020 MD059234
+     C**********         EVAL      MsgIDArr(WIdx) = '5049469'                        CIR020 MD059234
+     C**********         EVAL      BLen = %Len(%Trim(@DDRTKN))                       CIR020 MD059234
+     C**********         EVAL      MsgDtaArr(WIdx) = LenStr +%TRIM(@DDRTKN)          CIR020 MD059234
+     C**********         ENDIF                                                       CIR020 MD059234
+      **********                                                                     CIR020 MD059234
+     C**********         ENDIF                                                       CIR020 MD059234
+      **********                                                                     CIR020 MD059234
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -936,6 +1025,14 @@
 
      C                   PARM                    CrIRScnFmt
 
+      ** New Backward-Looking Rate fields in Screen Format                                    CIR020
+                                                                                              CIR020
+     C                   PARM                    InTranBlrt                                   CIR020
+                                                                                              CIR020
+      ** (Current) Backward-Looking Rate fields in Screen Format                              CIR020
+                                                                                              CIR020
+     C                   PARM                    CurrScnBlrt                                  CIR020
+                                                                                              CIR020
       ** Current Deal in file format
 
      C                   PARM                    CrIRFilFmt
@@ -1042,6 +1139,19 @@
      C                   ELSE                                                                 CDL039
      C                   MOVEL     'N'           CDL039                                       CDL039
      C                   END                                                                  CDL039
+                                                                                              CIR020
+      ** Determine if CIR020 feature is installed                                             CIR020
+                                                                                              CIR020
+     C                   MOVEL     'N'           CIR020                                       CIR020
+     C                   CALLB     'AOSARDR0'                                                 CIR020
+     C                   PARM      *BLANKS       @RTCD                                        CIR020
+     C                   PARM      '*VERIFY'     @OPTN                                        CIR020
+     C                   PARM      'CIR020'      @SARD                                        CIR020
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CIR020
+      *                                                                                       CIR020
+     C     @RTCD         IFEQ      *BLANK                                                     CIR020
+     C                   MOVEL     'Y'           CIR020                                       CIR020
+     C                   END                                                                  CIR020
 
      C                   ENDSR
       *****************************************************************

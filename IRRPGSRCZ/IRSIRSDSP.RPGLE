@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CIR017             Date 10Apr14               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CIR017             Date 10Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR017 - SIRS Business Day Conventions for both Legs         *
       *           (Recompile)                                         *
@@ -128,56 +130,56 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FRA/IRS standard declares
      D***/COPY IRCPYSRC,STDDECLARE                                                          BUG11376
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D*@Z0******       S              1    DIM(60) CTDATA PERRCD(60)                          CLE025
      D @Z0             S              1    DIM(62) CTDATA PERRCD(62)                          CLE025
      D @NAR            S             40    DIM(2) CTDATA PERRCD(1)
- 
+
      D*@EI******       S              1    DIM(60)                                            CLE025
      D @EI             S              1    DIM(62)                                            CLE025
- 
+
      D CPBKTxt         S             17    DIM(2) PERRCD(1) CTDATA                            186458
       ** Array for counterparty and broker fields narratives                                  186458
                                                                                               186458
@@ -187,26 +189,26 @@
                                                                                               186458
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
                                                                                 CSW097
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CSW097
       ** EXTERNAL DS FOR SWITCHABLE FEATURE DETAILS                             CSW097
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  186458
       ** External DS for Midas Modules Details                                                186458
                                                                                               186458
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D IRSIRS        E DS                  EXTNAME(IRSIRSPD)
      D IRESIRS       E DS                  EXTNAME(IRESIRSPD)
- 
+
      D                 DS
      D  DDFOTX                 1     40
      D  DDSIDN                10     15
- 
+
       ** CFFEEDL0 key                                                                         186458
      D  WCFKY          DS            16                                                       186458
      D  WTST1                  1      8                                                       186458
@@ -238,7 +240,7 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦

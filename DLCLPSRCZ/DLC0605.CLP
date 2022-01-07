@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058708           Date 31Aug21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059205           Date 17Nov21              */
+/*       Prev Amend No. MD058708           Date 31Aug21              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059205 - Add recovery process for file IRLIBEPD           */
 /*       MD058708 - Add recovery process for file DLLIBEPD           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
@@ -66,6 +68,7 @@
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                    /*CAS009*/
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CAS009*/
              DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD058708*/
+             DCL        VAR(&CIR020) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD059205*/
                                                                                           /*CAS009*/
 /* Setup system prefix variable from SDSTAT data area. */                                 /*CAS009*/
                                                                                           /*CAS009*/
@@ -93,6 +96,16 @@
              IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD058708*/
                 CHGVAR     VAR(&CDL102) VALUE('Y')                                      /*MD058708*/
              ENDDO                                                                      /*MD058708*/
+                                                                                        /*MD059205*/
+/** Check if CIR020 is enabled */                                                       /*MD059205*/
+                                                                                        /*MD059205*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD059205*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD059205*/
+             CHGVAR     VAR(&SARD) VALUE('CIR020')                                      /*MD059205*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                   /*MD059205*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD059205*/
+                CHGVAR     VAR(&CIR020) VALUE('Y')                                      /*MD059205*/
+             ENDDO                                                                      /*MD059205*/
 
 /*   BASE RATE CHANGES                                        */
              SNDPGMMSG  MSG('BASE RATE CHANGES') TOMSGQ(MRUNQ) +
@@ -120,6 +133,14 @@
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD058708*/
              ENDDO                                                                      /*MD058708*/
                                                                                         /*MD058708*/
+             IF         COND(&CIR020 *EQ 'Y') THEN(DO)                                  /*MD059205*/
+                DLTF       FILE(XIRLIBEPD)                                              /*MD059205*/
+                MONMSG     MSGID(CPF2105)                                               /*MD059205*/
+                CPYF       FROMFILE(IRLIBEPD) TOFILE(&DPLIB/XIRLIBEPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD059205*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD059205*/
+             ENDDO                                                                      /*MD059205*/
+                                                                                        /*MD059205*/
 /*********** OVRDBF     FILE(TABLE) TOFILE(TABDLEE)                   /*S01194*/
 /*********** OVRDBF     FILE(TABLE2) TOFILE(TABDLEI)                  /*S01194*/
              OVRDBF     FILE(SDBANKL1) SHARE(*NO)                     /*P01101*/
@@ -166,6 +187,20 @@
                ENDDO                                                                    /*MD058708*/
              ENDDO                                                                      /*MD058708*/
                                                                                         /*MD058708*/
+             IF         COND(&CIR020 *EQ 'Y') THEN(DO)                                  /*MD059205*/
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                             /*MD059205*/
+                   DLTF       FILE(XIRLIBEPD)                                           /*MD059205*/
+                   MONMSG     MSGID(CPF2105)                                            /*MD059205*/
+                ENDDO                                                                   /*MD059205*/
+                IF         COND(%SWITCH(XXXXXX1X) *OR +
+                             %SWITCH(XXXXXXX1)) THEN(DO)                                /*MD059205*/
+                   CPYF       FROMFILE(XIRLIBEPD) TOFILE(IRLIBEPD) +
+                                MBROPT(*REPLACE)                                        /*MD059205*/
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                                FILE(IRLIBEPD))                                         /*MD059205*/
+               ENDDO                                                                    /*MD059205*/
+             ENDDO                                                                      /*MD059205*/
+                                                                                        /*MD059205*/
 /*   ERROR MESSAGES                                          */
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
                 SNDPGMMSG  MSG('JOB TERMINATED-DATABASE IN ERROR') +

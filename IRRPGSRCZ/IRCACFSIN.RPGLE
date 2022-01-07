@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CIR017             Date 10Apr14               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -296,6 +298,12 @@
       ** Previous Control Indicators for Main Detail Screen
      D WDSPrevInd      DS             7
 
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CIR020
+     D CurrScnBlrt     DS            50                                                       CIR020
+                                                                                              CIR020
+      ** New Backward-Looking Rate Screen Fields                                              CIR020
+     D InTranBlrt      DS            50                                                       CIR020
+                                                                                              CIR020
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
@@ -1171,12 +1179,16 @@
       ** Return Code
       ** New Deal in Screen Format
       ** Current Deal in Screen Format
+      ** New Backward-Looking Rate fields in Screen Format                                    CIR020
+      ** (Current) Backward-Looking Rate fields in Screen Format                              CIR020
       ** Current Deal in file format
       ** Reset of Fields in Error Required (Y/N)
 
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    NwIRScnFmt
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    InTranBlrt                                   CIR020
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C                   PARM                    CrIRFilFmt
      C                   PARM      'Y'           PResetErrs
 
@@ -1245,6 +1257,7 @@
       ** Pay Settlement Nostro
       ** Caps/Collars/Floors Extra Data Layout File
       ** Validate Business Day Convention flag
+      ** Backward-Looking Rate Fields Screen Format                                           CIR020
 
      C                   PARM      RPRSCY        PrRSCY
      C                   PARM      RPRSTM        PrRSTM
@@ -1254,6 +1267,7 @@
      C                   PARM      RPPONS        PrPONS
      C                   PARM                    ExtData
      C                   PARM                    WValBDC
+     C                   PARM                    InTranBlrt                                   CIR020
 
       ** Bank details
       ** Module details
@@ -2098,6 +2112,7 @@
       ** Deal Status
 
      C                   PARM                    CrIRScnFmt
+     C                   PARM                    CurrScnBlrt                                  CIR020
      C                   PARM      *BLANKS       #1STAT
       ***Sign*of Short Term Rate                                                     BUG5707 BUG6472
      C**********         PARM                    #0SIGN                              BUG5707 BUG6472
@@ -2674,6 +2689,7 @@
      C                   PARM      RPPONS        PrPONS
      C                   PARM                    ExtData
      C                   PARM                    WValBDC
+     C                   PARM                    InTranBlrt                                   CIR020
      C                   PARM                    SDBANK
      C                   PARM                    SDMMOD
      C                   PARM                    SDDEAL

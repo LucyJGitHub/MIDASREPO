@@ -13,6 +13,7 @@
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
       *  Last Amend No. MD059104           Date 02Dec21               *
+      *  Last Amend No. CIR020             Date 02Aug21               *
       *  Prev Amend No. CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
@@ -25,6 +26,7 @@
       *  MD059104 - Connection error encountered in SDC000114 when    *
       *             using SSL port in ARR Adapter Service.            *
       *             Use https if ARRadapterURLSSL is configured.      *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing.                       *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Write returned rates     *
@@ -214,6 +216,8 @@
       ** Extract file for LE0370 consumption and BR event creation
      D LELIBEDS      e ds                  extname(LELIBEPD)
      D ExtractFLDS     ds                  likeds(LELIBEDS)
+     D IRLIBEDS      e ds                  extname(IRLIBEPD)                                  CIR020
+     D ExtractFLIR     ds                  likeds(IRLIBEDS)                                   CIR020
 
       ** Audit Log
      D SDARRLDS      e ds                  extname(SDARRLOGTD)
@@ -506,7 +510,7 @@
                    AuditLogDS.SJMDAY = BJRDNB;
                    pOP01 = 'ARRAdapterURL';
                    pOP02 = 'ARRCalculatorTrace';
-                   pOP03 = 'ARRAdapterURLSSL';                                            //MD059104
+                   pOP03 = 'ARRAdapterURLSSL';                                              MD059104
 
                    CallP ACCESS_SVAL(
                                        pRetCode
@@ -544,7 +548,7 @@
                    If pVL03 <> *Blanks;                                                   //MD059104
                          CalcMetURL     = HTTPS_HEAD  + %trim(pVL03);                     //MD059104
                    Else;                                                                  //MD059104
-                   if pVL01 <> *Blanks;
+                   If pVL01 <> *Blanks;
                          CalcMetURL     = HTTP_HEAD  + %trim(pVL01);
                    Else;
                         AuditLogDS.SJTMST = %timestamp();
@@ -1257,33 +1261,78 @@
        begsr insertExtractFile;
 
                    clear ExtractFLDS;
+                   //start of change CIR020
+                   clear ExtractFLIR;
+                   //end of change CIR020
                    clear compAveRate;
                    clear finalAveRate;
-                   ExtractFLDS.LDLNRF = transactREF;
-                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
-                   ExtractFLDS.LDINDT = result.list(i).intPDMidas;
-                   ExtractFLDS.LDINPD = result.list(i).intPrdDays;
-
+                   //start of change CIR020
+                   select;
+                      when not(moduleID = 'RU' or moduleID = 'RT');
+                   //end of change CIR020
+                         ExtractFLDS.LDLNRF = transactREF;
+                         ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+                         ExtractFLDS.LDINDT = result.list(i).intPDMidas;
+                         ExtractFLDS.LDINPD = result.list(i).intPrdDays;
+                   //start of change CIR020
+                      other;
+                         ExtractFLIR.LRLNRF = transactREF;
+                         ExtractFLIR.LRVDAT = result.list(i).intPDMidas;
+                         ExtractFLIR.LRINDT = result.list(i).intPDMidas;
+                         ExtractFLIR.LRINPD = result.list(i).intPrdDays;
+                   endsl;
+                   //end of change CIR020
                    select;
                         when calcMethod = 'NCCR';
                              compAveRate =
                                %dec(Result.List(i).dlyCompRate:11:7);
                         when calcMethod = 'CCR';
+                           //start of change CIR020
+                           select;
+                           when not(moduleID = 'RU' or moduleID = 'RT');
+                           //end of change CIR020
                              ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
+                           //start of change CIR020
+                           other;
+                              ExtractFLIR.LRVDAT = %dec(intPrdStrMDAY:5:0);
+                         endsl;
+                          //end of change CIR020
                              compAveRate =
                                %dec(Result.List(i).aveCompRate:11:7);
                         when calcMethod = 'SARR';
                              compAveRate =
                                %dec(Result.List(i).rateApplied:11:7);
                         when calcMethod = 'SAVG';
+                             //start of change CIR020
+                           select;
+                           when not(moduleID = 'RU' or moduleID = 'RT');
+                           //end of change CIR020
                              ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
+                           //start of change CIR020
+                           other;
+                              ExtractFLIR.LRVDAT = %dec(intPrdStrMDAY:5:0);
+                         endsl;
+                          //end of change CIR020
                              compAveRate =
                                %dec(Result.List(i).simpleAve:11:7);
                    endsl;
 
                    finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
-                   ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
-
+                   //start of change CIR020
+                   select;
+                      when not(moduleID = 'RU' or moduleID = 'RT');
+                   //end of change CIR020
+                      ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
+                   //start of change CIR020
+                      other;
+                         ExtractFLIR.LRCART = %dech(finalAveRate:11:7);
+                         if moduleID = 'RU';
+                            ExtractFLIR.LRLEGF = 'O';
+                         else;
+                            ExtractFLIR.LRLEGF = 'T';
+                         endif;
+                   endsl;
+                   //end of change CIR020
                    // Start of change CDL102
                    select;
                    when moduleID  = 'LE';
@@ -1294,7 +1343,12 @@
                       FileID = 'DLLIBEPD';
                       exec sql insert into DLLIBEPD
                       values (:ExtractFLDS);
-
+                    // Start of change CIR020
+                   when moduleID  = 'RU' or moduleID = 'RT';
+                     FileID = 'IRLIBEPD';
+                      exec sql insert into IRLIBEPD
+                      values (:ExtractFLIR);
+                    // End of change CIR020
                    endsl;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       AuditLogDS.SJTMST = %timestamp();

@@ -13,8 +13,8 @@
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
       *  Last Amend No. MD059104           Date 02Dec21               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
       *                 MD058040           Date 11May21               *

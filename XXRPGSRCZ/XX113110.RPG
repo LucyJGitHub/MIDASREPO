@@ -1,0 +1,1561 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME GCMS convert Excel to SWIFT format')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      ***MEJ010*-*GCMS*Convert Excel to SWIFT format*******************         JMI113
+      *  XX113110 - GCMS Convert Excel to SWIFT format                *         JMI113
+      *                                                               *
+      *  Function:  This program reads the messages from the excel    *
+      *             format file downloaded from GCMS then convert     *
+      *             them to SWIFT format.                             *
+      *                                                               *
+      ***Called*By:*MECJ010********************************************         JMI113
+      *  Called By: XXC113110                                         *         JMI113
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************         JMI113
+      *  (c) Finastra International Limited 2018                      *         JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 22May18               *
+      *  Prev Amend No. MD035166           Date 15Dec15               *
+      *                 250784             Date 05Oct07               *
+      *                 237138A            Date 13Apr07               *
+      *                 237138             Date 02Jan06               *
+      *                 JMI019             Date 21Feb07               *
+      *                 227311             Date 04Jun04               *
+      *                 227061             Date 24May04               *
+      *                 226367             Date 21May04               *
+      *                 JMI019  *CREATE    Date 23Jul03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  MD035166 - Incorrectly calculated the number of spaces       *
+      *             between concatenated strings.                     *
+      *  250784 - Removed M1 ANDNE 2 condition that do not allow the  *
+      *           program to write the character if it is preceded by *
+      *           2 blanks character. Apply fix 247711.               *
+      *  237138A- Also remove the trailing spaces before the CR       *
+      *           character of the first part/record of the message   *
+      *  237138 - Remove the trailing spaces before the CR character  *
+      *           (Carriage return having a value of Hex 0D).         *
+      *  JMI019 - Upgrade as is including related fixes               *
+      *  227311 - Destination account is not shown in FT screen.      *
+      *           There is a problem in SR/SRDTL1.  FS3, (carriage    *
+      *           return is moved to array FMTY starting position     *
+      *           255.  Since FS3 is a 3 character field, the last    *
+      *           character is dropped.  This causes the program to   *
+      *           be misled because it could not identify the end of  *
+      *           the field and start of the second.                  *
+      *  227061 - Duplicate entries error and somr GCMS transaction   *
+      *           are not shown in route screen.                      *
+      *  226367 - Fields missing in GCMS route screen.  Cannot be     *
+      *           routed.  Fix is to store the previous value of      *
+      *           variable X before lookup because it is being reset  *
+      *           when lookup is not successful.  This causes FMTY    *
+      *           to be overwritten.                                  *
+      *         - last character was being repeated on the next       *
+      *           record.                                             *
+      *  JMI019 - Midas GCMS Interface                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      ***60****Read Indicator for MGGEXCPD and MGGCEXPD****************         JMI113
+      ***61****Chain Indicator for MGG101PD****************************         JMI113
+      *  60    Read Indicator for XXGEXCPD and XXGCEXPD               *         JMI113
+      *  61    Chain Indicator for XXG101PD                           *         JMI113
+      *  63    Look Up Indicator                                      *
+      *  60    Shutdown                                               *
+      *                                                               *
+      *  U7/U8 Error Ocurred                                          *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SRINIT - Initialise and define fields                        *
+      *  SRDETL - Detail Processing                                   *
+      *  SRBLK1 - Format Block 1                                      *
+      *  SRBLK2 - Format Block 2                                      *
+      *  SRBLK3 - Format Block 3                                      *
+      *  SRTRNC - Truncate Separated Messages in only one record      *
+      *  SRBLK4 - Format Block 4                                      *
+      *  SRMVBK - Move Default value to Blocks 1 2 & 3                *
+      *  SRCPBK - Copy Default value to Blocks 1 2 & 3                *
+      *  SRDTLS - Format detail part                                  *
+      *  SREBK4 - Format End of Block 4                               *
+      *  SRDTL1 - Write detail message in SWIFT format                *
+      *  SRCVTD - Convert GCMS MM/DD/YYYY to Midas Date No.           *
+      *  ZDAT10 - Convert date YYYYMMDD to Midas Number               *
+      *  SRDECI - Check No. of Decimal Places and Concat with Amount  *
+      *  SRMAP  - Reformat if more than one line                      *
+      *  SREND  - End Program                                         *
+      *                                                               *
+      *****************************************************************
+     F***MGGCEXPDIF  E                    DISK         KINFSR SRFILE            JMI113
+     FXXGCEXPDIF  E                    DISK         KINFSR SRFILE               JMI113
+      ** GCMS interface file in excel format
+      *
+     F***MGGEXCPDUF  E                    DISK         KINFSR SRFILEA           JMI113
+     FXXGEXCPDUF  E                    DISK         KINFSR SRFILEA              JMI113
+      ** GCMS Message Only in excel format
+      *
+     F***MGG101PDUF  E           K        DISK         KINFSR SRFILEA           JMI113
+     FXXG101PDUF  E           K        DISK         KINFSR SRFILEA              JMI113
+      ** GCMS processed MT101 messages file
+      *
+     F***MGGCMSPDO   E                    DISK         KINFSR SRFILE            JMI113
+     FXXGCMGPDO   E                    DISK         KINFSR SRFILE               JMI113
+      ** GCMS interface file
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      ** Copyright table
+      *
+     E                    STAG    1  17  4   LTAG    1 0
+      ** Message Tag for GCMS
+      *
+     E                    ITRM      256  1
+     E                    ITRX      256  1
+     E                    ITRY      256  1
+      ** Interim arrays for field formatting
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+      ** Copy point for ZDATE subroutine E specs
+      *
+     E                    FMTX      172  1
+     E                    FMTY      256  1
+      ** Format arrays for parts 1 and 2 of the MT101 message
+      *
+     E/COPY MECPYSRC,SRERRE
+      ** Copy source for error processing
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      ** Copy source for Ins Dec point & 0s for numeric
+      *
+     E/EJECT
+     I/COPY ZSRSRC,ZDAT10Z1
+      ** Date Input to Convert YYYYMMDD to Day Number
+      *
+     I/COPY MECPYSRC,SRERRI
+      ** End of Program Error Processing copysource
+      *
+     IRUNDAT    E DS
+      ** Define rundat data area
+      *
+     IDSDLIM      DS
+      ** To define carriage return delimiters for message scanning
+      ** Hex value  '  :'  = CRLF: Start of text/Field Separator
+      **             027
+      **             D5A
+      *
+     I                                        1   3 CRLFC
+     I                                        1   1 BTA
+     I                                        2   2 BTB
+     I                                        3   3 CLN
+     I                                        1   2 CRLFE
+     IDSDLMT      DS
+      ** To define carriage return delimiters for message scanning
+      ** Hex value  ' "'  = CRLF: End of text/Field Separator
+      *
+     I                                        1   1 CRLF
+     I                                        1   1 BT1
+      *
+     I            DS
+     I                                        1   80ZDATE
+     I                                        1   40ZYY
+     I                                        5   60ZMM
+     I                                        7   80ZDD
+      *
+     I            DS
+     I                                        1 256 BLK123
+     I                                        1  40 BLK1
+     I                                       41  55 BLK2
+     I                                       56  81 BLK3
+      *
+     I            DS
+     I                                        1 175 WK35
+     I                                        1  35 WK35A
+     I                                       36  70 WK35B
+     I                                       71 105 WK35C
+     I                                      106 140 WK35D
+     I                                      141 175 WK35E
+      *
+     IDSSWD       DS                          19999
+      ** Data structure used in scanning SWIFT message data
+      *
+     IDSSWD1      DS                          19999
+      ** Data structure used in storing first part of message before concat
+      *
+     IDSSWD2      DS                          19999
+      ** Data structure used in storing next part of message before concat
+     IDSSWD3      DS                          19999                                           237138
+     IDSSWD4      DS                          19999                                           237138
+      *
+     I            DS
+     I                                        1 256 J0DATA
+     I                                        1 256 FMTY
+     I                                        1  40 FMT1
+     I                                        1   6 FMT11
+     I                                        7  39 FMT12
+     I                                       40  40 FMT13
+     I                                       41  55 FMT2
+     I                                       41  47 FMT21
+     I                                       55  55 FMT22
+     I                                       56  81 FMT3
+     I                                       56  63 FMT31
+     I                                       64  79 FMT32
+     I                                       80  81 FMT33
+     I                                       82 256 FMT4
+     I                                       82  84 FMT41
+     I                                       85 256 FMTX
+      *
+      ** DATA COUNT constant
+      *
+     I              'Data Count ='        C         DTACNT
+      *
+      ** String to Translate LowerCase to UpperCase
+      *
+     I              'ABCDEFGHIJKLMNOPQRS- C         UP
+     I              'TUVWXYZ'
+      *
+     I              'abcdefghijklmnopqrs- C         LO
+     I              'tuvwxyz'
+     I/EJECT
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      ** Initialise program
+      *
+     C                     EXSR SRINIT
+      *
+      ** Detail processing
+      *
+     C                     EXSR SRDETL
+      *
+      ** End Program
+      *
+     C                     EXSR SREND
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initialise and define fields                      *
+      *  Called By: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define fields
+      *
+     C                     MOVEL*OFF      SEC     1
+     C                     MOVEL*OFF      GTEND   1
+     C                     MOVEL*BLANKS   WKTRAN256
+     C                     MOVEL*BLANKS   WKDATA256
+     C                     MOVEL*BLANKS   WKTMPA256
+     C                     MOVEL*BLANKS   WKTMPB256
+     C                     MOVEL*BLANKS   WKTMPC256
+     C                     MOVEL*BLANKS   WKTMPD256
+     C                     Z-ADD0         B       40
+     C           *LIKE     DEFN B         D
+     C           *LIKE     DEFN B         E
+     C           *LIKE     DEFN B         L
+     C           *LIKE     DEFN B         S
+     C           *LIKE     DEFN B         X
+     C           *LIKE     DEFN B         C
+     C           *LIKE     DEFN B         Y
+     C           *LIKE     DEFN B         W
+     C           *LIKE     DEFN B         U
+     C           *LIKE     DEFN B         V
+     C           *LIKE     DEFN B         G
+     C           *LIKE     DEFN B         H
+     C           *LIKE     DEFN B         CNT
+     C           *LIKE     DEFN B         J                                                   226367
+      *
+      ** Get Rundate information
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     Z-ADDAGRDNB    J0PRDT
+      *
+      ** Setup constant fields in Block 4
+      *
+      ** Setup field for 'CRLF', used in SCAN checking to determine
+      ** delimiters for Block data strings
+      *
+     C                     BITOF'01236'   BTA
+     C                     BITON'457'     BTA
+     C                     BITOF'01346'   BTB
+     C                     BITON'257'     BTB
+     C                     BITOF'01236'   BT1
+     C                     BITON'457'     BT1
+      *
+      ** Setup Block 4 delimiters
+      *
+      ** Setup delimiter FS2/FS3 - start of tag within message block
+      *
+     C                     MOVELCRLF      FS2     1
+      *
+     C                     MOVE ':'       CLN
+     C                     MOVELCRLFC     FS3     3
+      *
+      ** Setup delimiter FS4 - end of Block 4:
+      *
+     C                     MOVE '-'       CLN
+     C                     MOVELCRLFC     FS4     3
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Detail Processing                                 *
+      *  Called By: Main routine                                      *
+      *  Calls    : SRBLK1 - Format Block 1                           *
+      *             SRBLK2 - Format Block 2                           *
+      *             SRBLK3 - Format Block 3                           *
+      *             SRBLK4 - Format Block 4                           *
+      *             SRMVBK - Move Default value to Blocks 1 2 & 3     *
+      *             SRTRNC - Truncate Separated Messages              *
+      *             SRCPBK - Copy Default value to Blocks 1 2 & 3     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDETL    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+      *
+      ** Set up Blocks 1 2 & 3
+      *
+     C                     EXSR SRBLK1
+      *
+     C                     EXSR SRBLK2
+      *
+     C                     EXSR SRBLK3
+      *
+      ** Move value of Blocks 1 2 & 3 to BLK123
+      *
+     C                     EXSR SRMVBK
+      *
+      ** Set up Message Details (Block 4)
+      *
+     C                     EXSR SRTRNC
+      *
+      ** Retrieve the message in the temporary file
+      *
+     C***********1         SETLLMGGEXCPD                                        JMI113
+     C***********          READ MGGEXCPD                 60                     JMI113
+     C           1         SETLLXXGEXCPD                                        JMI113
+     C                     READ XXGEXCPD                 60                     JMI113
+      *
+      ** If record found setup block 4
+      *
+     C           *IN60     DOWEQ*OFF
+      *
+     C                     Z-ADD2         B
+     C                     Z-ADD0         E
+     C                     Z-ADD1         X
+     C                     Z-ADD1         CNT
+     C                     MOVE *OFF      SEC
+      *
+     C                     EXSR SRBLK4
+      *
+     C           GTEND     IFEQ *ON
+     C                     MOVE *OFF      GTEND
+     C                     GOTO EXREAD
+     C                     ENDIF
+      *
+     C*********************WRITEMGGCMSD0                                        JMI113
+     C                     WRITEXXGCMGD0                                        JMI113
+      *
+     C                     TIME           J0PTIM
+     C*********************WRITEMGG101D0                                        JMI113
+     C                     WRITEXXG101D0                                        JMI113
+      *
+     C                     MOVE *BLANKS   J0DATA
+      *
+     C           EXREAD    TAG
+     C*********************READ MGGEXCPD                 60                     JMI113
+     C                     READ XXGEXCPD                 60                     JMI113
+      *
+      ** Copy value from BLK123 to Blocks 1 2 & 3
+      *
+     C                     EXSR SRCPBK
+      *
+     C                     ENDDO
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXDETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLK1  -  Format Block 1                                    *
+      *  Called By: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBLK1    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBLK1'  @STK,Q
+      *
+      ** Read first record of the excel file to get file name
+      *
+     C***********1         SETLLMGGCEXPD                                        JMI113
+     C***********          READ MGGCEXPD                 60                     JMI113
+     C           1         SETLLXXGCEXPD                                        JMI113
+     C                     READ XXGCEXPD                 60                     JMI113
+      *
+     C           *IN60     IFEQ *OFF
+      *
+      ** Assuming that file name always appear after the 2nd '= ' sign.
+      ** Get the data between the 2nd '= ' and the next ',' and that's
+      ** the data in Block 1.
+      *
+     C                     ADD  1         B
+     C                     Z-ADD0         CNT
+     C                     MOVELJ0DTAX    DSSWD
+      *
+     C           CNT       DOWNE2
+     C           '= ':2    SCAN DSSWD:B   S
+     C           S         ADD  2         B
+     C                     ADD  1         CNT
+     C                     ENDDO
+      *
+      ** File name has a fixed length of 33 chars anyway
+      *
+     C           33        SUBSTDSSWD:B   WKDATA    P
+     C                     MOVEL'{1:F01'  FMT11
+     C                     MOVELWKDATA    FMT12
+     C                     MOVEL'}'       FMT13
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXBLK1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLK2  -  Format Block 2                                    *
+      *  Called By: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBLK2    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBLK2'  @STK,Q
+      *
+     C                     MOVEL'{2:101'  FMT21
+     C                     MOVEL'}'       FMT22
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXBLK2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLK3  -  Format Block 3                                    *
+      *  Called By: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBLK3    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBLK3'  @STK,Q
+      *
+     C                     MOVEL'{3:{108:'FMT31
+     C                     MOVEL'}}'      FMT33
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXBLK3    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRNC  -  Truncate Separated Messages in only one record    *
+      *  Called By: SRDETL                                            *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRTRNC    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRTRNC'  @STK,Q
+      *
+      ** Assuming that message details always starts
+      ** on the 4th record in the excel file
+      *
+     C***********4         SETLLMGGCEXPD                                        JMI113
+     C***********          READ MGGCEXPD                 60                     JMI113
+     C           4         SETLLXXGCEXPD                                        JMI113
+     C                     READ XXGCEXPD                 60                     JMI113
+      *
+      ***If*record*found,*setup*file*MGGEXCPD*wherein*messages*are*******       JMI113
+      ***always*in*the*same*record***********                                   JMI113
+      ** If record found, setup file XXGEXCPD wherein messages are              JMI113
+      ** always in the same record                                              JMI113
+      *
+B1   C           *IN60     DOWEQ*OFF
+      *
+      ** Clear Temporary Scanning String and Reset counter of fields
+      *
+     C                     MOVEL*BLANKS   DSSWD
+     C                     MOVEL*BLANKS   WKDATA
+     C                     Z-ADD0         CNT
+      *
+     C                     MOVELJ0DTAX    DSSWD
+      *
+      ** Check if record is 'DATA COUNT' part which indicates end of message
+      *
+     C           12        SUBSTDSSWD:2   WKDATA    P
+B2   C           WKDATA    IFEQ DTACNT
+     C                     GOTO EXTRNC
+E2   C                     ENDIF
+      *
+     C           1         SUBSTDSSWD:1   WKDATA    P
+B2   C           WKDATA    IFEQ '"'
+     C                     Z-ADD2         S
+      *                                                                                      237138A
+      ** Remove trailing spaces in the first part/record of the message.                     237138A
+      *                                                                                      237138A
+      ** Obtain end of record                                                                237138A
+      *                                                                                      237138A
+     C           FS2:1     SCAN DSSWD:1   A1      40                                         237138A
+      *                                                                                      237138A
+     C                     MOVE *BLANKS   DSSWD1                                             237138A
+     C                     MOVE *BLANKS   DSSWD2                                             237138A
+     C                     MOVE DSSWD     DSSWD1                                             237138A
+     C                     MOVE *BLANKS   DSSWD                                              237138A
+     C                     Z-ADD0         M1                                                 237138A
+     C                     Z-ADD1         R1                                                 237138A
+B3   C           R1        DOUEQA1                                                           237138A
+     C           1         SUBSTDSSWD1:R1 VARA    1                                          237138A
+      *                                                                                      237138A
+B4   C           VARA      IFNE ' '                                                          237138A
+     C********** M1        ANDNE2                                                     237138A 250784
+     C                     MOVE VARA      VARB    1                                          237138A
+     C                     CAT  VARB:M1   DSSWD2                                             237138A
+     C                     ADD  1         R1                                                 237138A
+     C                     Z-ADD0         M1                                                 237138A
+X4   C                     ELSE                                                              237138A
+     C                     ADD  1         R1                                                 237138A
+     C                     ADD  1         M1                                                 237138A
+E4   C                     ENDIF                                                             237138A
+E3   C                     ENDDO                                                             237138A
+      *                                                                                      237138A
+B3   C           R1        IFEQ A1                                                           237138A
+     C                     CAT  FS2:0     DSSWD2                                             237138A
+E3   C                     ENDIF                                                             237138A
+      *                                                                                      237138A
+     C                     MOVE DSSWD2    DSSWD                                              237138A
+     C                     MOVE *BLANKS   DSSWD1                                             237138A
+     C                     MOVE *BLANKS   DSSWD2                                             237138A
+      *
+      ** Count number of fields in message by scanning the delimiters
+      *
+B3   C           CNT       DOUEQ24
+      *
+     C           '","':3   SCAN DSSWD:S   W
+      *
+B4   C           W         IFNE 0
+     C                     ADD  1         CNT
+     C                     ADD  3         W
+     C                     MOVE W         S
+     C                     Z-ADD0         W
+X4   C                     ELSE
+      *
+      ** Obtain end of record
+      *
+     C           FS2:1     SCAN DSSWD:S   W
+      *
+      ** Concatenate separated message into one record
+      *
+     C           W         SUB  S         P
+     C           35        SUB  P         P
+      *
+     C                     SUB  1         W
+     C                     MOVE *BLANKS   DSSWD1
+     C                     MOVE *BLANKS   DSSWD2
+      *
+     C           W         IFLT 0                           YBFIX
+     C                     MOVE '1'       YANN    1         YBFIX
+     C                     DUMP                             YBFIX
+     C                     ENDIF                            YBFIX
+     C           W         SUBSTDSSWD:1   DSSWD1
+     C*********************READ MGGCEXPD                 60                     JMI113
+     C                     READ XXGCEXPD                 60                     JMI113
+     C                     SUBSTJ0DTAX:1  DSSWD2
+      *
+     C                     MOVE *BLANKS   DSSWD3                                              237138
+     C                     MOVE *BLANKS   DSSWD4                                              237138
+     C           FS2:1     SCAN DSSWD2:1  G1      40                                          237138
+     C           G1        SUBSTDSSWD2:1  DSSWD3    P                                         237138
+      *                                                                                       237138
+     C                     Z-ADD0         M1      40                                          237138
+     C                     Z-ADD1         R1      40                                          237138
+B5   C           R1        DOUEQG1                                                            237138
+     C           1         SUBSTDSSWD3:R1 VARA    1                                           237138
+      *                                                                                       237138
+B6   C           VARA      IFNE ' '                                                           237138
+     C********** M1        ANDNE2                                                      237138 250784
+     C                     MOVE VARA      VARB    1                                           237138
+     C                     CAT  VARB:M1   DSSWD4                                              237138
+     C                     ADD  1         R1                                                  237138
+     C                     Z-ADD0         M1                                                  237138
+X6   C                     ELSE                                                               237138
+     C                     ADD  1         R1                                                  237138
+     C                     ADD  1         M1                                                  237138
+E6   C                     ENDIF                                                              237138
+E5   C                     ENDDO                                                              237138
+      *                                                                                       237138
+B5   C           R1        IFEQ G1                                                            237138
+     C                     CAT  FS2:0     DSSWD4                                              237138
+E5   C                     ENDIF                                                              237138
+      *                                                                                       237138
+     C                     ADD  1         W
+     C           P         ADD  W         W
+      *
+     C********** DSSWD1    CAT  DSSWD2:P  DSSWD                                               237138
+     C           DSSWD1    CAT  DSSWD4:P  DSSWD                                               237138
+     C                     MOVE W         S
+     C                     Z-ADD0         W
+E4   C                     ENDIF
+      *
+      ** Check if the last field is divided
+      *
+B4   C           CNT       IFEQ 24
+     C*********************READ MGGCEXPD                 60                     JMI113
+     C                     READ XXGCEXPD                 60                     JMI113
+     C                     MOVE *BLANKS   WKDATA
+     C           1         SUBSTJ0DTAX:1  WKDATA
+B5   C           WKDATA    IFNE '"'
+      *
+      ** Obtain last quote of separated message
+      *
+     C                     MOVE *BLANKS   DSSWD1
+     C                     MOVE *BLANKS   DSSWD2
+      *
+     C           FS2:1     SCAN DSSWD:S   W
+      *
+     C                     SUB  1         W
+     C           W         SUBSTDSSWD:1   DSSWD1
+     C                     SUBSTJ0DTAX:1  DSSWD2
+     C           DSSWD1    CAT  DSSWD2    DSSWD
+      *
+X5   C                     ELSE
+     C*********************READPMGGCEXPD                 60                     JMI113
+     C                     READPXXGCEXPD                 60                     JMI113
+      *
+E5   C                     ENDIF
+E4   C                     ENDIF
+      *
+E3   C                     ENDDO
+E2   C                     ENDIF
+      *
+     C                     MOVE DSSWD     J0DTA1
+     C*********************WRITEMGGEXCD0                                        JMI113
+     C                     WRITEXXGEXCD0                                        JMI113
+      *
+     C*********************READ MGGCEXPD                 60                     JMI113
+     C                     READ XXGCEXPD                 60                     JMI113
+      *
+E1   C                     ENDDO
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXTRNC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLK4  -  Format Block 4                                    *
+      *  Called By: SRDETL                                            *
+      *  Calls    : SRDTLS - Format detail part                       *
+      *             SREBK4 - Format End of Block 4                    *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBLK4    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBLK4'  @STK,Q
+      *
+     C                     MOVEL'{4:'     FMT41
+      *
+     C                     MOVELJ0DTA1    DSSWD
+      *
+      ** Scan message for next delimiter
+      *
+     C           '","':3   SCAN DSSWD:B   S
+      *
+     C           CNT       DOWNE26
+      *
+     C           S         IFNE 0
+      *
+     C           CNT       IFEQ 1
+     C           CNT       OREQ 2
+     C           CNT       OREQ 3
+     C           CNT       OREQ 4
+     C           CNT       OREQ 5
+     C           CNT       OREQ 7
+     C           CNT       OREQ 10
+     C           CNT       OREQ 11
+     C           CNT       OREQ 12
+     C           CNT       OREQ 13
+     C           CNT       OREQ 14
+     C           CNT       OREQ 17
+     C           CNT       OREQ 18
+     C           CNT       OREQ 20
+     C           CNT       OREQ 21
+     C           CNT       OREQ 22
+     C           CNT       OREQ 23
+      *
+     C                     ADD  1         E
+      *
+      ** Move data string to convert fields
+      *
+     C           S         SUB  B         L
+     C           L         IFGT 0
+      *
+     C                     EXSR SRDTLS
+      *
+     C           GTEND     IFEQ *ON
+     C                     GOTO EXBLK4
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C           S         ADD  3         B
+     C                     ENDIF
+     C                     ADD  1         CNT
+      *
+     C           '","':3   SCAN DSSWD:B   S
+      *
+     C                     ENDDO
+      *
+     C                     EXSR SREBK4
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXBLK4    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMVBK  -  Move Default value to Blocks 1 2 & 3              *
+      *  Called By: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMVBK    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMVBK'  @STK,Q
+      *
+     C                     MOVELFMT1      BLK1
+     C                     MOVELFMT2      BLK2
+     C                     MOVELFMT3      BLK3
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXMVBK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCPBK  -  Copy Default value to Blocks 1 2 & 3              *
+      *  Called By: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCPBK    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCPBK'  @STK,Q
+      *
+     C                     MOVELBLK1      FMT1
+     C                     MOVELBLK2      FMT2
+     C                     MOVELBLK3      FMT3
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXCPBK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDTLS  -  Format detail part                                *
+      *  Called By: SRBLK4                                            *
+      *  Calls    : SRCVTD - Convert GCMS MM/DD/YYYY to Midas Date No.*
+      *             SRDTL1 - Write detail message in SWIFT format     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDTLS    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDTLS'  @STK,Q
+      *
+      ** Allowable length of Block 4 in the first record is 172,
+      ** so, if field is longer than that, only fill up to the
+      ** 172th field, then continue the field on the 2nd record.
+      *
+      ** L = length of each field
+      ** X = position of the next field in the SWIFT format
+      ** S = position of the current ','
+      ** B = starting position of the read field in the excel format
+      ** M = length of the part of the field that did not make to the 1st record
+      *
+     C           L         SUBSTDSSWD:B   WKTRAN    P
+     C           LO:UP     XLATEWKTRAN    WKDATA    P
+      *
+      ** When first field is read, move the data to format 3 and
+      ** initialise field counter (X) to 1
+      *
+     C           CNT       IFEQ 1
+     C                     MOVEL*OFF      GTEND
+     C                     MOVELWKDATA    J0REF#
+     C***********J0REF#    CHAINMGG101PD             61                         JMI113
+     C           J0REF#    CHAINXXG101PD             61                         JMI113
+     C           *IN61     IFEQ *OFF
+     C                     MOVEL*ON       GTEND
+     C                     GOTO EXDTLS
+     C                     ELSE
+     C                     MOVELWKDATA    FMT32
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** The 3rd field is Account No, which is to be concatenated with
+      ** 5th and 6th fields.  At this point, store it in a temporary field.
+      *
+     C           CNT       IFEQ 3
+     C                     Z-ADDL         U
+     C                     MOVELWKDATA    WKTMPA    P
+     C                     GOTO EXDTLS
+     C                     ENDIF
+      *
+      ** The 4th field is Debit Account Ccy, which is to be concatenated with
+      ** 12th field.  At this point, store it in a temporary field.
+      *
+     C           CNT       IFEQ 4
+     C                     Z-ADDL         V
+     C                     MOVELWKDATA    WKTMPB    P
+     C                     GOTO EXDTLS
+     C                     ENDIF
+      *
+      ** The 5th field is Principal Name & Address.  Concatenate first with 3rd field
+      ** before writing to array.
+      *
+     C           CNT       IFEQ 5
+     C           U         SUBSTWKTMPA:1  WKTMPA    P
+     C           35        SUB  U         U
+     C           WKTMPA    CAT  WKDATA:U  WKTMPA    P
+     C           35        ADD  L         U
+     C                     GOTO EXDTLS
+     C                     ENDIF
+      *
+      ** The 7th field is Customer Name.  Concatenate first with 3rd and 5th field
+      ** before writing to array.
+      *
+     C           CNT       IFEQ 7
+     C           U         SUBSTWKTMPA:1  WKTMPA    P
+     C           WKTMPA    CAT  WKDATA:1  WKDATA    P
+     C                     ADD  1         U
+     C           U         ADD  L         L
+     C                     ENDIF
+      *
+      ** The 10th field is Remittance Ccy, which is to be concatenated with
+      ** 11th field.  At this point, store it in a temporary field.
+      *
+     C           CNT       IFEQ 10
+     C                     Z-ADDL         G
+     C                     MOVELWKDATA    WKTMPC    P
+     C                     GOTO EXDTLS
+     C                     ENDIF
+      *
+      ** The 11th field is Remittance Amt.  Concatenate first with 10th field
+      ** before writing to array.
+      *
+     C           CNT       IFEQ 11
+     C           '.':1     SCAN WKDATA:1  P
+     C           P         IFNE 0
+     C           L         SUB  P         ZADEC
+     C           P         SUB  1         ZADIG
+     C                     ELSE
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADDL         ZADIG
+     C                     ENDIF
+     C                     MOVELWKDATA    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C                     MOVELZFIELD    WKFLD  160
+     C                     MOVELWKTMPC    @CCY
+     C                     EXSR SRDECI
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** The 12th field is Debit Abount.  Concatenate first with 4th field
+      ** before writing to array.
+      *
+     C           CNT       IFEQ 12
+     C           '.':1     SCAN WKDATA:1  P
+     C           P         IFNE 0
+     C           L         SUB  P         ZADEC
+     C           P         SUB  1         ZADIG
+     C                     ELSE
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADDL         ZADIG
+     C                     ENDIF
+     C                     MOVELWKDATA    ZFIELD
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C                     MOVELZFIELD    WKFLD  160
+     C                     MOVELWKTMPB    @CCY
+     C                     EXSR SRDECI
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CNT       IFEQ 13
+     C                     EXSR SRCVTD
+     C                     ENDIF
+      *
+      ** Reformat Remittance Information
+      *
+     C           CNT       IFEQ 14
+     C                     EXSR SRMAP
+     C                     ENDIF
+      *
+      ** The 17th field is Beneficiary Acnt, which is to be concatenated with
+      ** 18th field.  At this point, store it in a temporary field.
+      *
+     C           CNT       IFEQ 17
+     C                     MOVE *BLANKS   ITRX
+     C                     MOVEA'/'       ITRX,1
+     C                     MOVEAWKDATA    ITRX,2
+     C                     Z-ADDL         H
+     C                     ADD  1         H
+     C                     MOVEAITRX      WKTMPD    P
+     C                     GOTO EXDTLS
+     C                     ENDIF
+      *
+      ** The 18th field is Beneficiary Name.  Concatenate first with 17th field
+      ** before writing to array.
+      *
+     C           CNT       IFEQ 18
+     C           H         SUBSTWKTMPD:1  WKTMPD    P
+     C********** 35        SUB  H         H                                                 MD035166
+     C********** WKTMPD    CAT  WKDATA:H  WKDATA    P                                       MD035166
+     C                     MOVEL*BLANKS   WRK35  35                                         MD035166
+     C                     MOVELWKTMPD    WRK35                                             MD035166
+     C           WRK35     CAT  WKDATA    WKDATA    P                                       MD035166
+     C           35        ADD  L         L
+     C                     EXSR SRMAP
+     C                     ENDIF
+      *
+      ** Reformat Remittance Information
+      *
+     C           CNT       IFEQ 23
+     C                     EXSR SRMAP
+     C                     ENDIF
+      *
+     C                     EXSR SRDTL1
+      *
+      ** If part of the field did not make it to the 1st record,
+      ** write the record, then start formatting the 2nd record.
+      *
+     C           M         IFNE 0
+      *
+     C*********************WRITEMGGCMSD0                                        JMI113
+     C                     WRITEXXGCMGD0                                        JMI113
+      *
+     C                     Z-ADD1         X
+     C                     MOVE *ON       SEC
+     C                     MOVE *BLANKS   J0DATA
+      *
+     C           S         ADD  1         B
+     C                     SUB  M         B
+     C                     MOVEAITRM,K    FMTY,X
+     C           M         ADD  1         X
+      *
+     C                     Z-ADD0         M
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXDTLS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREBK4  -  Format End of Block 4                             *
+      *  Called By: SRBLK4 - Format Block 4                           *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SREBK4    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SREBK4'  @STK,Q
+      *
+     C                     Z-ADD0         Z                                                   227061
+     C           4         ADD  X         Z                                                   227061
+     C                     MOVE *BLANKS   ITRY                                                227061
+     C                     MOVEAFS4       ITRY,1                                              227061
+     C                     MOVEA'}'       ITRY,4                                              227061
+      *                                                                                       227061
+     C           CNT       IFEQ 26
+     C           SEC       IFEQ *OFF
+     C           Z         IFLE 172                                                           227061
+     C                     MOVEAFS4       FMTX,X
+     C           ' '       LOKUPFMTX,X                   63
+     C                     MOVEA'}'       FMTX,X
+     C                     ELSE                                                               227061
+     C*********************WRITEMGGCMSD0                                               227061 JMI113
+     C                     WRITEXXGCMGD0                                                      JMI113
+     C                     MOVE *BLANKS   FMTX                                                227061
+     C                     Z-ADD1         X                                                   227061
+     C                     MOVEAITRY,1    FMTX,X                                              227061
+     C                     ENDIF                                                              227061
+     C                     ELSE
+     C           Z         IFLE 256                                                           227061
+     C                     MOVEAFS4       FMTY,X
+     C           ' '       LOKUPFMTY,X                   63
+     C                     MOVEA'}'       FMTY,X
+     C                     ELSE                                                               227061
+     C*********************WRITEMGGCMSD0                                               227061 JMI113
+     C                     WRITEXXGCMGD0                                                      JMI113
+     C                     MOVE *BLANKS   FMTY                                                227061
+     C                     Z-ADD1         X                                                   227061
+     C                     MOVEAITRY,1    FMTY,X                                              227061
+     C                     ENDIF                                                              227061
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXEBK4    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDTL1  -  Write detail message in SWIFT format              *
+      *  Called By: SRDTLS                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDTL1    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDTL1'  @STK,Q
+      *
+     C           SEC       IFEQ *OFF
+      *
+     C                     Z-ADD1         K       30
+     C                     MOVE *BLANKS   ITRM
+      *
+      **  Move field tags and field contents into array ITRM to get
+      **  total length of the field to check if it fits or not.
+      *
+     C                     MOVEAFS3       ITRM,K
+     C                     ADD  3         K
+     C                     MOVELSTAG,E    @TAG    5
+     C                     MOVEA@TAG      ITRM,K
+     C                     ADD  LTAG,E    K
+     C                     MOVEAWKDATA    ITRM,K
+     C                     ADD  L         K
+      *
+     C           K         SUB  1         K
+     C           K         ADD  X         F       30
+      *
+     C           F         IFGT 172
+     C           F         SUB  172       M       30
+     C                     SUB  1         M                                                   226367
+     C                     SUB  M         K
+     C                     ENDIF
+      *
+     C                     MOVEAITRM,1    FMTX,X
+     C                     ADD  K         X
+     C           F         IFGT 172
+     C                     ADD  1         K
+     C                     MOVE ITRM,K    WKDATA
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   ITRM
+     C                     MOVEAWKDATA    ITRM,1
+      *
+     C           X         IFLE 254                                                           227311
+     C                     MOVEAFS3       FMTY,X
+     C                     ELSE                                                               227311
+     C*********************WRITEMGGCMSD0                                               227311 JMI113
+     C                     WRITEXXGCMGD0                                                      JMI113
+     C                     MOVE *BLANKS   FMTY                                                227311
+     C                     Z-ADD1         X                                                   227311
+     C                     MOVEAFS3       FMTY,X                                              227311
+     C                     ENDIF                                                              227311
+      *                                                                                       227311
+     C                     Z-ADDX         J                                                   226367
+      *                                                                                       227311
+     C           ' '       LOKUPFMTY,X                   63
+      *                                                                                       227311
+     C           *IN63     IFEQ *OFF                                                          226367
+     C**********           Z-ADDJ         X                                            226367 227311
+     C           3         ADD  J         X                                                   227311
+     C                     ENDIF                                                              226367
+      *
+     C**********           MOVELSTAG,E    @TAG    5                                           227311
+     C**********           MOVEA@TAG      FMTY,X                                              227311
+     C                     Z-ADDLTAG,E    K
+     C           K         ADD  X         Z       30
+      *                                                                                       227311
+     C           Z         IFGT 256                                                           227311
+     C           X         ANDLE256                                                           227311
+     C                     MOVELSTAG,E    @TAG    5                                           227311
+     C                     MOVEA@TAG      FMTY,X                                              227311
+     C                     ENDIF                                                              227311
+      *                                                                                       227311
+     C           Z         IFLE 256
+     C                     MOVELSTAG,E    @TAG    5                                           227311
+     C                     MOVEA@TAG      FMTY,X                                              227311
+     C           ' '       LOKUPFMTY,X                   63
+      *
+     C           L         ADD  X         F       30
+     C           F         IFGT 256
+     C           F         SUB  256       M       30
+     C                     SUB  M         L
+     C           256       SUB  X         K
+     C                     ADD  2         K
+     C                     ENDIF
+      *
+     C                     MOVEAWKDATA    FMTY,X
+     C                     ADD  L         X
+      *
+     C                     ELSE
+     C           256       SUB  X         M
+     C                     ADD  2         M
+     C                     MOVEA@TAG      ITRY,1
+     C*********************WRITEMGGCMSD0                                                      JMI113
+     C                     WRITEXXGCMGD0                                                      JMI113
+     C                     Z-ADD1         X
+     C                     MOVELSTAG,E    @TAG    5                                           227311
+     C                     MOVEA@TAG      FMTY,X                                              227311
+     C                     MOVE *ON       SEC
+     C                     MOVEAITRY,M    FMTY,X
+     C           ' '       LOKUPFMTY,X                   63
+     C                     MOVEAITRM,1    FMTY,X
+     C********** ' '       LOKUPFMTY,X                   63                                   227061
+     C                     ADD  L         X                                                   227061
+     C                     Z-ADD0         M
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXDTL1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCVTD  -  Convert GCMS MM/DD/YYYY to Midas Date No.         *
+      *  Called By: SRDTLS                                            *
+      *  Calls    : ZDAT10 - Convert date YYYYMMDD to Midas Number    *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCVTD    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCVTD'  @STK,Q
+      *
+      ** Change Transaction Date to Midas day no. format
+      *
+     C                     Z-ADD0         R       10
+     C                     Z-ADD1         T       10
+     C                     Z-ADD0         N       10
+     C                     MOVEL*BLANKS   GYY     4
+     C                     MOVEL*BLANKS   GMM1    1
+     C                     MOVEL*BLANKS   GMM     2
+     C                     MOVEL*BLANKS   GDD1    1
+     C                     MOVEL*BLANKS   GDD     2
+     C                     MOVELWKDATA    GCDATE 10
+     C                     MOVEL*BLANKS   WKDATA
+     C           '/':1     SCAN GCDATE:T  N
+     C           N         SUB  T         R
+     C           R         IFEQ 1
+     C           R         SUBSTGCDATE:T  GDD1      P
+     C                     MOVE GDD1      ZDD
+     C                     ELSE
+     C           R         SUBSTGCDATE:T  GDD       P
+     C                     MOVE GDD       ZDD
+     C                     ENDIF
+     C           N         ADD  1         T
+     C           '/':1     SCAN GCDATE:T  N
+     C           N         SUB  T         R
+     C           R         IFEQ 1
+     C           R         SUBSTGCDATE:T  GMM1      P
+     C                     MOVE GMM1      ZMM
+     C                     ELSE
+     C           R         SUBSTGCDATE:T  GMM       P
+     C                     MOVE GMM       ZMM
+     C                     ENDIF
+     C           N         ADD  1         T
+     C           4         SUBSTGCDATE:T  GYY       P
+     C                     MOVE GYY       ZYY
+     C                     Z-ADDZDATE     ZZDTIN
+     C                     EXSR ZDAT10
+      *
+      **  Format value date to SWIFT format (YYMMDD)
+      *
+     C                     CALL 'ZM0060'               15
+     C                     PARM ZZMDNO    ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+      **  Indicate length of the date field.  Move SWIFT format date to
+      **  work variable for the field.
+      *
+     C                     Z-ADD6         L
+     C                     MOVELZSDATE    WKDATA
+      *
+     C           EXCVTD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDECI  -  Check No. of Decimal Places and Concat with Amount*
+      *  Called By: SRDTLS                                            *
+      *  Calls    : AOCURRR0 - Currency Codes Access Object           *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDECI    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDECI'  @STK,Q
+      *
+     C                     Z-ADD0         P       30
+     C           WKFLD     DIV  1         WKAMT  248
+      *
+     C           ZADEC     IFGT 0
+     C           P         DOUEQZADEC
+     C                     DIV  10        WKAMT
+     C                     ADD  1         P
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     Z-ADD0         P
+     C                     MULT 1         WKAMT
+      *
+     C           A6NBDP    IFGT 0
+     C           P         DOUEQA6NBDP
+     C                     MULT 10        WKAMT
+     C                     ADD  1         P
+     C                     ENDDO
+      *
+     C                     Z-ADD0         P
+     C           P         DOUEQA6NBDP
+     C                     DIV  10        WKAMT
+     C                     ADD  1         P
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           A6NBDP    WHEQ 0
+     C                     Z-ADDWKAMT     WKAMT0 160
+     C                     MOVE WKAMT0    ZFIELD
+     C           A6NBDP    WHEQ 1
+     C                     Z-ADDWKAMT     WKAMT1 171
+     C                     MOVE WKAMT1    ZFIELD
+     C           A6NBDP    WHEQ 2
+     C                     Z-ADDWKAMT     WKAMT2 182
+     C                     MOVE WKAMT2    ZFIELD
+     C           A6NBDP    WHEQ 3
+     C                     Z-ADDWKAMT     WKAMT3 193
+     C                     MOVE WKAMT3    ZFIELD
+     C           A6NBDP    WHEQ 4
+     C                     Z-ADDWKAMT     WKAMT4 204
+     C                     MOVE WKAMT4    ZFIELD
+     C           A6NBDP    WHEQ 5
+     C                     Z-ADDWKAMT     WKAMT5 215
+     C                     MOVE WKAMT5    ZFIELD
+     C           A6NBDP    WHEQ 6
+     C                     Z-ADDWKAMT     WKAMT6 226
+     C                     MOVE WKAMT6    ZFIELD
+     C           A6NBDP    WHEQ 7
+     C                     Z-ADDWKAMT     WKAMT7 237
+     C                     MOVE WKAMT7    ZFIELD
+     C           A6NBDP    WHEQ 8
+     C                     Z-ADDWKAMT     WKAMT8 248
+     C                     MOVE WKAMT8    ZFIELD
+     C                     ENDSL
+      *
+     C                     MOVE A6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   ITRM
+     C                     MOVE *BLANKS   ITRX
+     C                     CLEARWKDATA
+     C           @CCY      CAT  ZFIELD:1  WKDATA
+     C                     MOVEAWKDATA    ITRM,1
+     C                     MOVEA@CCY      ITRX,1
+     C                     Z-ADD3         P
+     C           ITRM,P    DOUNE' '
+     C                     ADD  1         P
+     C                     ENDDO
+     C                     MOVEAITRM,P    ITRX,4
+     C                     CLEARWKDATA
+     C                     MOVEAITRX      WKDATA
+     C                     Z-ADD1         P
+     C           ITRX,P    DOUEQ' '
+     C                     ADD  1         P
+     C                     ENDDO
+     C           P         SUB  1         L
+      *
+     C                     ENDIF
+      *
+     C           EXDECI    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAP   -  Reformat if more than one line                    *
+      *  Called By: SRDTLS                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMAP     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMAP'   @STK,Q
+      *
+     C                     CLEARWK35
+     C                     MOVE *BLANKS   ITRX
+     C                     MOVELWKDATA    WK35
+     C                     Z-ADD1         P
+      *
+     C           WK35A     IFNE *BLANKS
+     C                     MOVEAWK35A     ITRX,P
+     C                     Z-ADD35        L
+     C                     ENDIF
+      *
+     C           WK35B     IFNE *BLANKS
+     C                     ADD  35        P
+     C                     MOVEACRLFE     ITRX,P
+     C                     ADD  2         P
+     C                     MOVEAWK35B     ITRX,P
+     C           P         ADD  34        L
+     C                     ENDIF
+      *
+     C           WK35C     IFNE *BLANKS
+     C                     ADD  35        P
+     C                     MOVEACRLFE     ITRX,P
+     C                     ADD  2         P
+     C                     MOVEAWK35C     ITRX,P
+     C           P         ADD  34        L
+     C                     ENDIF
+      *
+     C           WK35D     IFNE *BLANKS
+     C                     ADD  35        P
+     C                     MOVEACRLFE     ITRX,P
+     C                     ADD  2         P
+     C                     MOVEAWK35D     ITRX,P
+     C           P         ADD  34        L
+     C                     ENDIF
+      *
+     C           WK35E     IFNE *BLANKS
+     C                     ADD  35        P
+     C                     MOVEACRLFE     ITRX,P
+     C                     ADD  2         P
+     C                     MOVEAWK35E     ITRX,P
+     C           P         ADD  34        L
+     C                     ENDIF
+      *
+     C                     CLEARWKDATA
+     C                     MOVEAITRX      WKDATA
+      *
+     C           EXMAP     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  End Program                                       *
+      *  Called By: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SREND     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SREND'   @STK,Q
+      *
+     C                     SHTDN                     64
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXEND     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           *IN64     IFEQ '1'
+     C                     MOVEL'1'       *INLR
+     C                     ELSE
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      ** File and Program Error Processing
+      *
+      /TITLE SR/SRERRC
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+      /TITLE SR/ZDATE10
+      /COPY ZSRSRC,ZDAT10Z2
+     C/EJECT
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2L
+     C/EJECT
+      /TITLE SR/ZALIGN
+     C/COPY ZSRSRC,ZALIGNZ2L
+     C/EJECT
+      *****************************************************************
+**  CPY@ table
+(c) Finastra International Limited 2018
+**  STAG Message Tag No (3)
+20: 3
+21R:4
+50H:4
+33B:4
+50H:4
+50H:4
+32B:4
+32B:4
+33B:4
+30: 3
+57A:4
+59: 3
+59: 3
+71A:4
+25A:4
+23E:4
+70: 3
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

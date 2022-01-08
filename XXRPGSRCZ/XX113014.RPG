@@ -1,0 +1,509 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL GCMS file transfer process')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-GCMS Interface                                 *
+      *                                                               *
+      ***GLJ014*-*GCMS*File Transfer Process***************************         JMI113
+      *  XX113014 - GCMS File Transfer Process                        *         JMI113
+      *                                                               *
+      *  Function:  It formats FTP request for the GCMS interface.    *
+      *                                                               *
+      ***Called*By:*GLCJ014*-*GCMS*File*Transfer*Process***************         JMI113
+      *  Called By: XXC113014 - GCMS File Transfer Process            *         JMI113
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************         JMI113
+      *  (c) Finastra International Limited 2018                      *         JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 22May18               *
+      *  Prev Amend No. JMI019  *CREATE    Date 21Feb07               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  JMI019 - Upgrade as is                                       *
+      *  JMI019 - Midas GCMS Interface                                *
+      *                                                               *
+      *****************************************************************
+     FGL2806AUO   E                    PRINTER                        UC
+      *
+     F***GLGOINPDO   E                    DISK                                  JMI113
+     FXXGOINPDO   E                    DISK                                     JMI113
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  INIT  - Initial processing                                   *
+      *  MAIN  - Main detail processing                               *
+      *  CLOSE - Closedown processing                                 *
+      *  GET   - Prepare transfer request                             *
+      ***WUSRID- Write transfer request user id to PF/GLGOINPD*********         JMI113
+      ***WGET**- Write transfer request user id to PF/GLGOINPD*********         JMI113
+      ***WPASV*- Write transfer request to quit to PF/GLGOINPD*********         JMI113
+      ***WQUIT*- Write transfer request to quit to PF/GLGOINPD*********         JMI113
+      ***WLIST*- Write transfer request to list files PF/GLGOINPD******         JMI113
+      *  WUSRID- Write transfer request user id to PF/XXGOINPD        *         JMI113
+      *  WGET  - Write transfer request user id to PF/XXGOINPD        *         JMI113
+      *  WPASV - Write transfer request to quit to PF/XXGOINPD        *         JMI113
+      *  WQUIT - Write transfer request to quit to PF/XXGOINPD        *         JMI113
+      *  WLIST - Write transfer request to list files PF/XXGOINPD     *         JMI113
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    @FM10     256  1
+     E                    @FM50     256  1
+     E                    @T10      256  1
+     E                    @T50      256  1
+      *
+      ** Array containing Copyright statement
+      *
+     I            DS
+      *
+      ** Data structure for User ID on PF/GLGOINPD
+      *
+     I                                        1  41 @USRID
+     I                                        1  20 USER
+     I                                       21  21 @1
+     I                                       22  41 PASW
+      *
+     I            DS
+      *
+      ***Data*Structure*for*GET*write*to*PF/GLGOINPD*****                       JMI113
+      ** Data Structure for GET write to PF/XXGOINPD                            JMI113
+      *
+     I                                        1 124 @GET
+     I                                        1   3 GET
+     I                                        4   4 @2
+     I                                        5  81 PATH
+     I                                       82  82 @5
+     I                                       83  92 LIBNM
+     I                                       93  93 @6
+     I                                       94 101 FILNM
+     I                                      102 102 @7
+     I                                      103 111 MBRNM
+     I                                      112 124 REPLC
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     I                                    P   8  100RUND
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+      *
+     I***GLGCMS    E DSGLGCMSDA                    256                          JMI113
+     IGLGCMS    E DSXXGCMGDA                    256                             JMI113
+      ** GCMS Data Area Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     I***SDGCMS    E DSSDGCMSPD                                                 JMI113
+     ISDGCMS    E DSXXGCMSPD                                                    JMI113
+      ** External DS for GCMS Details
+      *
+     IDSSDY     E DSDSSDY
+      *   Second DS for access programs; long data structure
+      *
+     I              'XX113014'            C         PGMNAM                      JMI113
+      *
+      *****************************************************************
+      *                                                               *
+      *   M A I N   P R O C E S S I N G                               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Recieve Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    7
+     C                     PARM           LIBNAM 10
+     C                     PARM           MNM    10
+     C                     PARM           MSGTYP  3
+     C                     PARM           RTCD    7
+     C                     PARM           RETRY   10
+     C                     PARM           HOST   30
+     C                     PARM           WAITTM  50
+      *
+      ** Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ** Detail Processing
+      *
+     C                     EXSR MAIN
+      *
+      ** Closedown processing
+      *
+     C                     EXSR CLOSE
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Subroutine for Program Initialisation                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls:                                                        *
+      * AOBANKR0  Access Object                                       *
+      * AOGCMSR0                                                      *
+      * CLOSE                                                         *
+      * *PSSR                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C*********************MOVEL'GLJ014'  DBPGM            JMI113
+     C                     MOVELPGMNAM    DBPGM            JMI113
+     C                     OUT  LDA
+      *
+      ** Call Access Program to obtain Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Database Error.
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD001       DBASE             * DBERR 001*
+     C                     OUT  LDA                         ************
+     C                     EXSR *PSSR
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      ** Call Access Program to obtain GCMS Details
+      *
+     C******************** CALL 'AOGCMSR0'                 JMI113
+     C                     CALL 'XXGCMSR0'                 JMI113
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDGCMS    PARM SDGCMS    DSSDY
+      *
+      ** Database Error.
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C******************** MOVEL'SDGCMSPD'DBFILE           JMI113
+     C                     MOVEL'XXGCMSPD'DBFILE           JMI113
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD002       DBASE             * DBERR 002*
+     C                     OUT  LDA                         ************
+     C                     EXSR *PSSR
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      ** Set up return parameters
+      *
+     C                     MOVELJ0101H    HOST
+     C                     MOVELJ0MAXT    RETRY
+     C           J0PYPF    MULT 60        WAITTM
+      *
+      ** Retrieve run date
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Retrieve GCMS settings from Data Area.
+      *
+     C********** *NAMVAR   DEFN GLGCMSDA  GLGCMS           JMI113
+     C           *NAMVAR   DEFN XXGCMGDA  GLGCMS           JMI113
+     C           *LOCK     IN   GLGCMS
+     C                     OUT  GLGCMS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MAIN
+      *****************************************************************
+      *                                                               *
+      * MAIN  - Subroutine for main processing                        *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls:                                                        *
+      * GET                                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+      ** Get GCMS MT101 file
+      *
+     C           MODE      IFEQ '*GET'
+     C                     EXSR GETSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CLOSE
+      *****************************************************************
+      *                                                               *
+      * CLOSE - Subroutine for closedown processing                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls:  NONE                                                  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLOSE     BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/GETSR
+      *****************************************************************
+      *                                                               *
+      * GETSR - Subroutine to prepare Transfer request                *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * WUSER                                                         *
+      * WGET                                                          *
+      * WQUIT                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GETSR     BEGSR
+      *
+     C                     EXSR WUSER
+     C                     EXSR WPASV
+     C                     EXSR WGET
+     C                     EXSR WQUIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WGET
+      *****************************************************************
+      *                                                               *
+      * WGET - Subroutine to write transfer request userid to         *
+      *        PF/GLGOINPD                                            *
+      *                                                               *
+      * Called by: GET                                                *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WGET      BEGSR
+      *
+      ** Set up fields for transfer request to be written.
+      *
+     C                     MOVEL'GET'     GET
+     C                     MOVEL*BLANKS   @2
+      *
+      ** Compress blanks from BTR Path
+      *
+     C                     CLEAR@T50
+     C                     CLEAR@FM50
+     C                     MOVEAJ0101T    @FM50
+     C                     Z-ADD77        Y       50
+     C                     Z-ADD77        X       50
+      *
+     C           X         DOWGT0
+     C           @FM50,X   IFNE ' '
+     C                     MOVE @FM50,X   @T50,Y
+     C                     SUB  1         Y
+     C                     ENDIF
+     C                     SUB  1         X
+     C                     ENDDO
+      *
+     C                     MOVEA@T50      PATH
+      *
+     C                     MOVELMNM       MBRNM
+     C                     MOVEL'(REPLACE'REPLC
+     C                     MOVEL*BLANKS   @5
+      *
+     C                     MOVEL'/'       @6
+     C**********           MOVEL'MGGCEXPD'FILNM                                           JMI113
+     C                     MOVEL'XXGCEXPD'FILNM                                           JMI113
+     C           MBRNM     IFEQ *BLANK
+     C                     MOVEL*BLANK    @7
+     C                     ELSE
+     C                     MOVEL'.'       @7
+     C                     ENDIF
+      *
+      ** Compress blanks from Library name parameter
+      *
+     C                     CLEAR@T10
+     C                     CLEAR@FM10
+     C                     MOVEALIBNAM    @FM10
+     C                     Z-ADD10        T       50
+     C                     Z-ADD10        S       50
+      *
+     C           S         DOWGT0
+     C           @FM10,S   IFNE ' '
+     C                     MOVE @FM10,S   @T10,T
+     C                     SUB  1         T
+     C                     ENDIF
+     C                     SUB  1         S
+     C                     ENDDO
+      *
+     C                     MOVEA@T10      LIBNM
+      *
+      ** Output to file.
+      *
+     C                     CLEARGWFTPI
+     C                     MOVEL@GET      GWFTPI
+     C******************** WRITEGLGOIND0                   JMI113
+     C                     WRITEXXGOIND0                   JMI113
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WQUIT
+      *****************************************************************
+      *                                                               *
+      * WQUIT - Subroutine to write transfer request to quit to       *
+      *         PF/GLGOINPD                                           *
+      *                                                               *
+      * Called by: GET, CHECK, ACCEPT, REJECT                         *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WQUIT     BEGSR
+      *
+      ** Write quit for transfer request to PF/GLGOINPD
+      *
+     C                     CLEARGWFTPI
+     C                     MOVEL'QUIT'    GWFTPI
+     C******************** WRITEGLGOIND0                   JMI113
+     C                     WRITEXXGOIND0                   JMI113
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/WPASV
+      *****************************************************************
+      *                                                               *
+      * WPASV - Subroutine to write transfer request to quit to       *
+      **********PF/GLGOINPD********************************************         JMI113
+      *         PF/XXGOINPD                                           *         JMI113
+      *                                                               *
+      * Called by: GET, CHECK, ACCEPT, REJECT                         *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WPASV     BEGSR
+      *
+      ** Write quit for transfer request to PF/GLGOINPD
+      *
+     C                     CLEARGWFTPI
+     C                     MOVEL'SENDPASV'GWFTPI
+     C******************** WRITEGLGOIND0                   JMI113
+     C                     WRITEXXGOIND0                   JMI113
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WUSER
+      *****************************************************************
+      *                                                               *
+      * WUSER - Subroutine to write transfer requset user id to       *
+      *         PF/GLGOINPD                                           *
+      *                                                               *
+      * Called by: GET                                                *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WUSER     BEGSR
+      *
+      ** Write user id for Transfer Request to PF/GLGOINPD
+      *
+     C                     MOVELJ0101U    USER
+     C                     MOVEL*BLANKS   @1
+     C                     MOVELJ0101P    PASW
+      *
+     C                     CLEARGWFTPI
+     C                     MOVEL@USRID    GWFTPI
+     C******************** WRITEGLGOIND0                   JMI113
+     C                     WRITEXXGOIND0                   JMI113
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C           *INU7     IFEQ '1'
+     C                     OPEN GL2806AU
+     C                     WRITEGL2806A1
+     C                     CLOSEGL2806AU
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2018

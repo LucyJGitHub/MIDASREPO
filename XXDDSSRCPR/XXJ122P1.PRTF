@@ -1,0 +1,677 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas GL All Batch Report')                            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      ***PRTF/GL0121PM*-*All*batch*report******************************         JMI108
+      *  PRTF/XXJ122P1 - All batch report                             *         JMI108
+      *                                                               *
+      ***(c)*Finastra*International*Limited*2001***********************         JMI108
+      *  (c) Finastra International Limited 2018                      *         JMI108
+      *                                                               *
+      *  Last Amend No. JMI108             Date 31May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL135A            Date 10Jul13               *
+      *                 AR1065437          Date 23Jan13               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23742           Date 09May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL013             Date 29Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 05Mar99               *
+      *                 CEU013             DATE 02Apr98               *
+      *                 096517             DATE 04Mar97               *
+      *                 S01408             DATE 07AUG96               *
+      *                 S01408             DATE 05SEP95               *
+      *                 S01408             DATE 04AUG95               *
+      *                 S01413                  13APR93               *
+      *                 S10736                  09SEP92               *
+      *                 E38270                  06JUL92               *
+      *                 E40269                  27MAY92               *
+      *                 E36338                  26FEB92               *
+      *                 S01340                  23SEP91               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  JMI108 - Account Balance Pooling. Upgrade to FBM 2.1         *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL135A - Accounting Rules Process                           *
+      *            Added hook: CGL135_024                             *
+      *  AR1065437 - Extra fields on PEA Audit Report                 *
+      *  BUG23742 - Improper handling of Ext Narr from Batch          *
+      *             Interface Input                                   *
+      *  CER001 - Lux Upgrade to MidasPlus                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL013 - MT94x Messages Generation                           *
+      *  CGL008 - Security on Journal Entry                           *
+      *  CEU013 - EMU Account Postings Narrative                      *
+      *  096517 - Overprinting in use messsage                        *
+      *  S01408 - Addition of Core hook GL0121PM13                    *
+      *         - Addition of Core hook GL0121PM12                    *
+      *         - Addition of Core hook GL0121PM11                    *
+      *  S01408 - Addition of Core hook GL0121PM03                    *
+      *                                 GL0121PM04                    *
+      *                                 GL0121PM05                    *
+      *                                 GL0121PM06                    *
+      *                                 GL0121PM07                    *
+      *                                 GL0121PM08                    *
+      *                                 GL0121PM09                    *
+      *                                 GL0121PM10                    *
+      *  S01408 - Addition of Core hook GL0121PM01                    *
+      *                                 GL0121PM02                    *
+      *  S01413 - Retail 3 Incorporation                              *
+      *  S10736 - Management Accounts                                 *
+      *  E38270 - No branch should be shown when single branching     *
+      *  E40269 - Overprinting occurs on single-branch system         *
+      *           because SPACEB conditioned on *IN78 - fix is to     *
+      *           use SPACEA(1) on previous line                      *
+      *  E36338 - Create AU printer file                              *
+      *  S01340 - MIS Release 10 Changes.                             *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A*********             Start of Change                /*S01413*/
+     A                                      REF(MFRFL)
+     A*********             End of Change                  /*S01413*/
+      *=========================================================================
+     A          R ZZPAGHDR
+      ** Start of JMI108
+     A*********                             TEXT('(c) Finastra International +
+     A*********                             Limited +
+     A*********                             2001')
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited 2018')
+      ** End of JMI108
+     A*/COPY WNCPYSRC,GL0121PM19
+     A                                      SKIPB(3)
+     A*/COPY WNCPYSRC,GL0121PM20
+      *.........................................................................
+     A                                     2'REFERENCE'
+     A            ##PGM         10        12TEXT('*PROGRAM')
+     A            ##URPT        53        46TEXT('User Report Title')
+     A                                   111'DATE'
+     A            ##MRDT         7       116TEXT('Midas Rundate')
+     A                                   124'PAGE'
+     A                                   129PAGNBR
+     A                                      EDTCDE(3)
+     A            ##REPT        53        46TEXT('Report Title')
+     A                                      SPACEB(2)
+     A            ##UNDL        53        46TEXT('Underline')
+     A                                      SPACEB(1)
+      * 'Hidden' internal version of *COMPANY NAME
+     A  99N99     ##CMP         40         1SPACEB(1)
+      * 'Hidden' internal version of Command text 1
+     A  99N99     ##CTX1        78         1SPACEB(1)
+      * 'Hidden' internal version of Command text 2
+     A  99N99     ##CTX2        78         1SPACEB(1)
+      *=========================================================================
+     A          R Z1KEYHDR                  TEXT('Branch Code (Batch Headr)')
+     A                                      SPACEB(2)
+      *.........................................................................
+     A                                     2'Batch Branch Code . .:'
+     A            Z1BCBH         3        25TEXT('Branch Code (Batch Headr)')
+     A            Z1BNMD        30        29TEXT('Branch name (display)')
+      *=========================================================================
+     A          R Z2KEYHDR                  TEXT('Batch number             ')
+     A                                      SPACEB(2)
+     A                                      SPACEA(1)
+      *.........................................................................
+     A                                     2'Batch . . . . . . . .:'
+     A            Z2BTNB         3        25TEXT('Batch number')
+     A                                    29'Status. . . .:'
+     A            Z2BSTD         6        44TEXT('Batch Status (Display)')
+     A N79        Z2BUM1        25        63TEXT('Batch in use msg. 1')
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM11
+     A*                                                         End /*S01408*/
+      **Start of change JMI108
+     A                                     2'Interface Batch No. .:'
+     A                                      SPACEB(1)
+     A            XIBTNB         3        25TEXT('Interface Batch Number')
+      **End of change JMI108
+     A                                    90'Description:'
+     A            Z2BDSC        30       103TEXT('batch description Screen')
+      *
+     A                                     2'Department. . . . . .:'
+     A                                      SPACEB(1)
+     A            Z2DCDP         3        25TEXT('Department Code (Print)')
+     A            Z2DNDS        30        29TEXT('Department name (display)')
+     A N79        Z2BUM2        25        63TEXT('Batch in use msg. 2')
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM12
+     A*                                                         End /*S01408*/
+     A                                    90'Total: Input . . .:'
+     A            Z2FMA2        23       110TEXT('Formatted amount 2')
+     A*                                                      /*E40269*/
+     A                                      SPACEA(1)
+     A*                                                      /*E40269*/
+      *
+     A*                                    /E38270/
+     A*N78******                           2'Multiple Branch Batch:'
+     A N80                                 2'Multiple Branch Batch:'
+     A**********                            SPACEB(1)        /*E40269*/
+     A*N78******  Z2MBIP         1        25TEXT('Multiple Branch Ind Print')
+     A N80        Z2MBIP         1        25TEXT('Multiple Branch Ind Print')
+     A*                                    /E38270/
+     A N79        Z2BUM3        25        63TEXT('Batch in use msg. 3')
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM13
+     A*                                                         End /*S01408*/
+     A                                    98'Calculated:'
+     A            Z2FMAM        23       110TEXT('Formatted amount')
+     A*                                                      /*S01340*/
+     A**********                           2'Reverse/Void. . . . .:'
+     A**********                            SPACEB(1)
+     A**********  Z2REVI         1        25TEXT('Reversal/void indicator')
+     A                                     2'Terminal.............:'
+     A                                      SPACEB(1)
+     A            Z2TIDP        10        25TEXT('Terminal I.D. (Print)')
+     A*                                                      /*S01340*/
+     A N79        Z2BUM4        25        63TEXT('Batch in use msg. 4')
+     A                                    90'Items: Input......:'
+     A            Z2IINP         3  0    130TEXT('Items Input (Print)')
+     A                                      EDTCDE(3)
+     A*                                                      /*S01340*/
+     A****                                 2'Terminal. . . . . . .:'
+     A****                                  SPACEB(1)
+     A****        Z2TIDP        10        25TEXT('Terminal I.D. (Print)')
+     A*/COPY WNCPYSRC,GL0121PM14
+     A*         /*096517*/
+     A                                     2' '
+     A                                      SPACEB(1)
+     A*         /*096517*/
+      *                                              Begin /CGL008/
+     A N22                                 2'Last Insert User.....:'
+     A N22        Z2USRI        10        25TEXT('Last Insert User')
+      *                                              End   /CGL008/
+     A N79        Z2BUM5        25        63TEXT('Batch in use msg. 5')
+     A                                    98'Calculated:'
+     A**********                            SPACEB(1)                    096517
+     A*                                                      /*S01340*/
+     A            Z2ICLP         3  0    130TEXT('Items Calculated (Print)')
+     A                                      EDTCDE(3)
+     A*                                    /E38270/
+     A**********                           2'Item        Account number    Bran-
+     A**********                            ch        Amount                   -
+     A**********                                Narrative                 Type -
+     A**********                                  Retail A/C    Nostro'
+     A**********                            SPACEB(2)
+     A**********                           2'----      ------------------  -----
+     A**********                            --   --------------------      -----
+     A**********                            -------------------------     ------
+     A**********                                  ----------    ------'
+     A*********             Start of Change                /*S01413*/
+     A**80*****                            2'Item        Account number        -
+     A*********                                       Amount                   -
+     A*********                                 Narrative                 Type -
+     A*********                                   Retail A/C    Nostro'
+      *                                              Begin /CGL008/
+     A N22                                 2'Last Amend User......:'
+     A                                      SPACEB(1)
+     A N22        Z2USRA        10        25TEXT('Last Amend User')
+      *                                              End   /CGL008/
+     A**Start of change CGL029
+      **Start of change AR1065437
+     A  98                                53'Journal Entry Type......:'
+     A  98        ZQJETP         1A  O    79TEXT('Journal Entry Type')
+     A  98                                 2'Booking Date.........:'
+     A                                      SPACEB(1)
+     A  98        ZQBDTE         7A  O    25TEXT('Booking Date')
+     A  98                                53'Prevent Transfer to Sys.:'
+     A  98        ZQPTRS         1A  O    79TEXT('Prevent Transfer to +
+     A                                             ')
+      **End of change AR1065437
+     A**80N51***                           2'Item        Account number        -              CGL029
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,GL0121PM22
+     A**Start of change CGL029
+     A**********                                      Amount                   -              CGL029
+     A**********                             Narrative              Type       -              CGL029
+     A**********                                    Retail A/C  Nostro'                       CGL029
+     A  80N51                              2'Itm      Account number           -
+     A                                                Amount                   -
+     A                                       Narrative              Type  -
+     A                                                   Retail A/C  Nostro'
+     A**End of change CGL029
+     A                                      SPACEB(2)
+     A**80*****                            2'----      ------------------      -
+     A*********                                  --------------------      -----
+     A*********                             -------------------------     ------
+     A*********                                   ----------    ------'
+     A**Start of change CGL029
+     A**80N51***                           2'----      ------------------      -              CGL029
+     A**********                                 --------------------   --------              CGL029
+     A**********                            ----------------------  ----- -                   CGL029
+     A**********                                         ----------  ------'                  CGL029
+     A  80N51                              2'--- ------------------------      -
+     A                                           --------------------   --------
+     A                                      ----------------------  ----- -
+     A                                                   ----------  ------'
+     A**End of change CGL029
+     A                                      SPACEB(1)
+     A*N80*****                            2'Item        Account number    Bran-
+     A*********                             ch        Amount                   -
+     A*********                                 Narrative                 Type -
+     A*********                                   Retail A/C    Nostro'
+     A**Start of change CGL029
+     A*N80N51***                           2'Item        Account number    Bran-              CGL029
+     A**********                            ch        Amount                   -              CGL029
+     A**********                             Narrative              Type       -              CGL029
+     A**********                                    Retail A/C  Nostro'                       CGL029
+     A N80N51                              2'Itm      Account number       Bran-
+     A                                      ch        Amount                   -
+     A                                       Narrative              Type -
+     A                                                    Retail A/C  Nostro'
+     A**End of change CGL029
+     A                                      SPACEB(2)
+     A*N80*****                            2'----      ------------------  -----
+     A*********                             --   --------------------      -----
+     A*********                             -------------------------     ------
+     A*********                                   ----------    ------'
+     A**Start of change CGL029
+     A*N80N51***                           2'----      ------------------  -----              CGL029
+     A**********                            --   --------------------   --------              CGL029
+     A**********                            ----------------------  ----- -                   CGL029
+     A**********                                         ----------  ------'                  CGL029
+     A N80N51                              2'--- ------------------------  -----
+     A                                      --   --------------------   --------
+     A                                      ----------------------  ----- -
+     A                                                   ----------  ------'
+     A**End of change CGL029
+     A*                                    /E38270/
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**80*51***                           2'Item        Account number        -              CGL029
+     A**********                                      Amount                   -              CGL029
+     A**********                             Narrative              Type  No of-              CGL029
+     A**********                             Items  Retail A/C  Nostro'                       CGL029
+     A  80 51                              2'Itm      Account number           -
+     A                                                Amount                   -
+     A                                       Narrative              Type  No of-
+     A                                       Items  Retail A/C  Nostro'
+     A**End of change CGL029
+     A                                      SPACEB(2)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM05
+     A*                                                         End /*S01408*/
+     A**Start of change CGL029
+     A**80*51***                           2'----      ------------------      -              CGL029
+     A**********                                 --------------------   --------              CGL029
+     A**********                            ----------------------  ----- -                   CGL029
+     A**********                            -----------  ----------  ------'                  CGL029
+      **Start of change CER001
+     A**80*51***                           2'--- ------------------------      -              CER001
+     A**********                                 --------------------   --------              CER001
+     A**********                            ----------------------  ----- -                   CER001
+     A**********                            -----------  ----------  ------'                  CER001
+     A  80 51N52                           2'--- ------------------------      -
+     A                                           --------------------   --------
+     A                                      ----------------------  ----- -
+     A                                      -----------  ----------  ------'
+      **End of change CER001
+     A**End of change CGL029
+     A                                      SPACEB(1)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM06
+     A*                                                         End /*S01408*/
+     A**Start of change CGL029
+     A*N80*51***                           2'Item        Account number    Bran-              CGL029
+     A**********                            ch        Amount                   -              CGL029
+     A**********                             Narrative              Type  No of-              CGL029
+     A**********                             Items  Retail A/C  Nostro'                       CGL029
+     A N80 51                              2'Itm      Account number       Bran-
+     A                                      ch        Amount                   -
+     A                                       Narrative              Type  No of-
+     A                                       Items  Retail A/C  Nostro'
+     A**End of change CGL029
+     A                                      SPACEB(2)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM07
+     A*                                                         End /*S01408*/
+     A**Start of change CGL029
+     A*N80*51***                           2'----      ------------------  -----              CGL029
+     A**********                            --   --------------------   --------              CGL029
+     A**********                            ----------------------  ----- -                   CGL029
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,GL0121PM23
+     A**Start of change CGL029
+     A**********                            -----------  ----------  ------'                  CGL029
+      **Start of change CER001
+     A*N80*51***                           2'--- ------------------------  -----              CER001
+     A**********                            --   --------------------   --------              CER001
+     A**********                            ----------------------  ----- -                   CER001
+     A**********                            -----------  ----------  ------'                  CER001
+     A N80 51N52                           2'--- ------------------------  -----
+     A                                      --   --------------------   --------
+     A                                      ----------------------  ----- -
+     A                                      -----------  ----------  ------'
+      **End of change CER001
+     A**End of change CGL029
+     A                                      SPACEB(1)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM08
+     A*                                                         End /*S01408*/
+     A*********             End of Change                  /*S01413*/
+     A                                     4' '
+     A                                      SPACEB(1)
+      * 'Hidden' internal version of Branch Code (Batch Headr)
+     A  99N99     Z2BCBH         3         1SPACEB(1)
+      * 'Hidden' internal version of Batch status
+     A  99N99     Z2BSTS        10         1SPACEB(1)
+      * 'Hidden' internal version of Branch Code (Print)
+     A  99N99     Z2BCDP         3         1SPACEB(1)
+      *=========================================================================
+     A          R ZZDTLRCD                  TEXT('Detail line.             ')
+     A                                      SPACEB(1)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM01
+     A*                                                         End /*S01408*/
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM03
+     A*                                                         End /*S01408*/
+      **Start of change CER001
+     A  80 51 52                           2'----      ------------------      -
+     A                                           --------------------   --------
+     A                                      ----------------------  ----- -
+     A                                      -----------  ----------  ------'
+     A                                      SPACEA(1)
+     A N80 51 52                           2'----      ------------------  -----
+     A                                      --   --------------------   --------
+     A                                      ----------------------  ----- -
+     A                                      -----------  ----------  ------'
+     A                                      SPACEA(1)
+      *
+      **End of change CER001
+      *.........................................................................
+     A            XRBINB         3  0      2TEXT('Batch item no.')
+     A                                      EDTCDE(4)
+     A**Start of change CGL029
+     A**********  XRCUST         6        12TEXT('Customer number')                           CGL029
+     A**********  XRCYCD         3        19TEXT('Currency code')                             CGL029
+     A**********  XRACCD         4        23TEXT('Account code')                              CGL029
+     A            XRCUST         6         6TEXT('Customer number')
+     A            XRCYCD         3        13TEXT('Currency code')
+     A            XRACCD        10        17TEXT('Account code')
+     A**End of change CGL029
+     A            XRACSN         2        28TEXT('Account sequence number')
+     A*                                    /E38270/
+     A**********  XRIBCA         3        33TEXT('Input Branch Code - Alpha')
+     A*/COPY WNCPYSRC,GL0121PM24
+     A N80        XRIBCA         3        33TEXT('Input Branch Code - Alpha')
+     A*                                    /E38270/
+     A            XRPAMP        18        41TEXT('Posting Amount (Print)')
+     A            XRDCIN         1        60TEXT('Debit/credit indicator')
+     A*********             Start of Change                /*S01413*/
+     A*********   XRNRTV        30        66TEXT('Narrative')
+     A            XRNRTV        30        63TEXT('Narrative')
+     A*********   XRTRTY         5       101TEXT('Transaction type')
+     A            XRTRTY         5        95TEXT('Transaction type')
+      ** Start of JMI108
+     A**51********XRNITM    R            104REFFLD(NOITMS)
+     A  51        XRNITM         5  0    104
+      ** End of JMI108
+     A                                      EDTCDE(4)
+     A*N77*****   XRRACN        10  0    112TEXT('Retail account number')
+     A N77        XRRACN        10  0    114TEXT('Retail account number')
+     A*********             End of Change                  /*S01413*/
+     A            XRNOCD         5       127TEXT('Nostro Code')
+     A*/COPY WNCPYSRC,GL0121PM15
+     A N76                                 2' '
+     A                                      SPACEB(1)
+     A*/COPY WNCPYSRC,GL0121PM18
+     A N75                                12'Cheque:'
+     A N75        XRCQNB         8        20TEXT('Cheque number')
+     A N74                                30'Assoc. Customer:'
+     A N74        XRACNB         6        47TEXT('Assoc. Customer number')
+     A N73                                55'Value Date:'
+     A N73        XRVDTP         8        67TEXT('Value Date (Print)')
+     A N72                                77'Profit centre:'
+     A N72        XRPRCN         4        92TEXT('Profit centre')
+     A N71                                98'SWIFT:'
+     A N71        XRSWCR        16       105TEXT('Swift common reference')
+     A N70                                12'Customer Name . . .:'
+     A                                      SPACEB(1)
+     A N70        XRDCNM        20        33TEXT('Display Customer Name')
+     A N69                                55'Account Name. . . . . .:'
+     A N69        XRDACN        20        80TEXT('Display Account Name')
+     A*/COPY WNCPYSRC,GL0121PM16
+     A N68                               103'Book Code. . .:'
+     A N68        XRBKCD         2       119TEXT('Book Code')
+     A*                                                      /*S10736*/
+     A N63                               122'Void:'
+     A N63        XRRVDI         1       128TEXT('Reverse/Void indicator')
+     A*                                                      /*S10736*/
+     A*                                                /*Start CEU013*/
+      **Start of change AR1065437
+     A  98                                12'Base Currency Rate.:'
+     A                                      SPACEB(1)
+     A  98        ZQBCRT        14A  O    33TEXT('Base Currency Rate')
+     A  98                                55'Base Ccy Rate Ind . . .:'
+     A  98        ZQBCIN         1A  O    80TEXT('Base Ccy Rate +
+     A                                            Indicator')
+      **End of change AR1065437
+     A*/COPY OFCPYSRCZ,CGL135_024                                                            CGL135A
+     A N45                                12'Original Ccy/Amount:'
+     A                                      SPACEB(1)
+     A N45        XROCCY         3        33TEXT('Original Currency')
+     A N45        XROAMT        23        37TEXT('Original Amount')
+     A*                                                /*End   CEU013*/
+     A N67                                12'O''ride:'
+     A                                      SPACEB(1)
+     A N67        XRRINO         1        20TEXT('Retail ind.: Override')
+     A            XRIEMP        80        23TEXT('Item error message-print')
+      ** Start of Change CGL013
+      *
+     A  31                                12'Additional Information:'
+     A                                      SPACEB(1)
+     A  31                                70'ERI Information Indicator:'
+     A  31        XRAERI         1        97TEXT('Add Info Line 1')
+      *
+     A  31        XRADI1        65        17TEXT('Add Info Line 1')
+     A                                      SPACEB(1)
+     A  31 32     XRADI2        65        17TEXT('Add Info Line 2')
+     A                                      SPACEB(1)
+     A  31 33     XRADI3        65        17TEXT('Add Info Line 3')
+     A                                      SPACEB(1)
+     A  31 34     XRADI4        65        17TEXT('Add Info Line 4')
+     A                                      SPACEB(1)
+     A  31 35     XRADI5        65        17TEXT('Add Info Line 5')
+     A                                      SPACEB(1)
+     A  31 36     XRADI6        65        17TEXT('Add Info Line 6')
+     A                                      SPACEB(1)
+      *
+      ** End of Change CGL013
+      *
+      *
+      **Start of change BUG23742
+      *
+     A  37                                12'Multicash Narrative:'
+     A                                      SPACEB(1)
+     A  37 38     XRAD1         65        17TEXT('Multicash Nar 1')
+     A                                      SPACEB(1)
+     A  37 39     XRAD2         65        17TEXT('Multicash Nar 2')
+     A                                      SPACEB(1)
+     A  37 40     XRAD3         65        17TEXT('Multicash Nar 3')
+     A                                      SPACEB(1)
+     A  37 41     XRAD4         65        17TEXT('Multicash Nar 4')
+     A                                      SPACEB(1)
+     A  37 42     XRAD5         65        17TEXT('Multicash Nar 5')
+     A                                      SPACEB(1)
+     A  37 43     XRAD6         65        17TEXT('Multicash Nar 6')
+     A                                      SPACEB(1)
+     A  37 44     XRAD7         65        17TEXT('Multicash Nar 7')
+     A                                      SPACEB(1)
+     A  37 46     XRAD8         65        17TEXT('Multicash Nar 8')
+     A                                      SPACEB(1)
+     A  37 47     XRAD9         65        17TEXT('Multicash Nar 9')
+     A                                      SPACEB(1)
+     A  37 48     XRAD10        65        17TEXT('Multicash Nar 10')
+     A                                      SPACEB(1)
+     A  37 49     XRAD11        65        17TEXT('Multicash Nar 11')
+     A                                      SPACEB(1)
+     A  37 50     XRAD12        65        17TEXT('Multicash Nar 12')
+     A                                      SPACEB(1)
+     A  37 53     XRAD13        65        17TEXT('Multicash Nar 13')
+     A                                      SPACEB(1)
+     A  37 54     XRAD14        65        17TEXT('Multicash Nar 14')
+     A                                      SPACEB(1)
+     A  37 55     XRAD15        65        17TEXT('Multicash Nar 15')
+     A                                      SPACEB(1)
+     A  37 56     XRAD16        65        17TEXT('Multicash Nar 16')
+     A                                      SPACEB(1)
+     A  37 57     XRAD17        65        17TEXT('Multicash Nar 17')
+     A                                      SPACEB(1)
+     A  37 58     XRAD18        65        17TEXT('Multicash Nar 18')
+     A                                      SPACEB(1)
+     A  37 59     XRAD19        65        17TEXT('Multicash Nar 19')
+     A                                      SPACEB(1)
+     A  37 60     XRAD20        65        17TEXT('Multicash Nar 20')
+     A                                      SPACEB(1)
+     A  37 61     XRAD21        65        17TEXT('Multicash Nar 21')
+     A                                      SPACEB(1)
+     A  37 62     XRAD22        65        17TEXT('Multicash Nar 22')
+     A                                      SPACEB(1)
+      *
+      **End of change BUG23742
+      *
+     A*/COPY WNCPYSRC,GL0121PM21
+     A N66        XRWNFF       131         2TEXT('Window Function Field')
+     A                                      SPACEB(1)
+     A N65        XRWNF1       131         2TEXT('Window Function Field 1')
+     A                                      SPACEB(1)
+     A N64        XRWNF2       131         2TEXT('Window Function Field 2')
+     A                                      SPACEB(1)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM09
+     A*                                                         End /*S01408*/
+      **Start of change JMI108
+     A                                    12'Scheme No:'
+     A                                      SPACEB(1)
+     A            XSHMN         10        23TEXT('Scheme Number')
+     A                                    34'Instruction Sequence:'
+     A            XINSS          5        56TEXT('Instruction Sequence')
+     A                                    62'Instruction Type:'
+     A            XINST          3        81TEXT('Instruction Type')
+     A                                    85'Accounting Code:'
+     A            XACOD          1       102TEXT('Accounting Code')
+     A                                   104'Internal Branch Code:'
+     A            XBRCH          3       126TEXT('Int Branch Code')
+     A                                    12'-----------------------------------
+     A                                      ------------------------------------
+     A                                      -------------------'
+     A                                      SPACEB(1)
+      **End of change JMI108
+      **Start of change CER001
+     A**********                          12'-----------------------------------              CER001
+     A**********                            ------------------------------------              CER001
+     A**********                            -------------------'                              CER001
+     A**********                            SPACEB(1)                                         CER001
+     A N52                                12'-----------------------------------
+     A                                      ------------------------------------
+     A                                      -------------------'
+     A                                      SPACEB(1)
+      **End of change CER001
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM10
+     A*                                                         End /*S01408*/
+      * 'Hidden' internal version of Batch number
+     A  99N99     XRBTNB         3         1SPACEB(1)
+      * 'Hidden' internal version of Nostro number (Item)
+     A  99N99     XRNNBI         2         1SPACEB(1)
+      * 'Hidden' internal version of Retail ind.: Error
+     A  99N99     XRRINE         1         1SPACEB(1)
+      * 'Hidden' internal version of Posting amount
+     A  99N99     XRPTAM        13  0      1SPACEB(1)
+      * 'Hidden' internal version of Posting date
+     A  99N99     XRPTDT         5  0      1SPACEB(1)
+      * 'Hidden' internal version of Value date
+     A  99N99     XRVLDT         5  0      1SPACEB(1)
+     A*/COPY WNCPYSRC,GL0121PM25
+      * 'Hidden' internal version of Narrative code
+     A  99N99     XRNVCD         2         1SPACEB(1)
+      * 'Hidden' internal version of Narrative description
+     A  99N99     XRNRDC        30         1SPACEB(1)
+     A*/COPY WNCPYSRC,GL0121PM26
+      * 'Hidden' internal version of Account type
+     A  99N99     XRACTY         1         1SPACEB(1)
+      * 'Hidden' internal version of Customer originated ind.
+     A  99N99     XRCOIN         1         1SPACEB(1)
+      * 'Hidden' internal version of Spread Factor
+     A  99N99     XRSPFC         8  0      1SPACEB(1)
+     A**'Hidden'*internal*version*of*Reverse/Void*Indicator  /*S10736*/
+     A**99N99*****XRRVDI*********1*********1SPACEB(1)******  /*S10736*/
+      * 'Hidden' internal version of Branch Code (Batch Headr)
+     A  99N99     XRBCBH         3         1SPACEB(1)
+      * 'Hidden' internal version of Retail advice printed
+     A  99N99     XRRADP         1         1SPACEB(1)
+      * 'Hidden' internal version of Shadow post indicator
+     A  99N99     XRSHPI         1         1SPACEB(1)
+      * 'Hidden' internal version of Relative rec no of memos
+     A  99N99     XRRRNM         5  0      1SPACEB(1)
+      * 'Hidden' internal version of Retail Number Entered
+     A  99N99     XRRNBE         1         1SPACEB(1)
+      * 'Hidden' internal version of Retail Ac Referral Cond.
+     A  99N99     XRRARC        10         1SPACEB(1)
+      * 'Hidden' internal version of Transaction (Sub - Type)
+     A  99N99     XRTSTY        10         1SPACEB(1)
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM02
+     A*                                                         End /*S01408*/
+      *=========================================================================
+     A          R Z3KEYTTL                  TEXT('Batch number             ')
+      *.........................................................................
+      * 'Hidden' internal version of Batch number
+     A  99N99     Z3BTNB         3         1SPACEB(1)
+      * 'Hidden' internal version of Branch Code (Batch Headr)
+     A  99N99     Z3BCBH         3         1SPACEB(1)
+      *=========================================================================
+     A          R Z4KEYTTL                  TEXT('Branch Code (Batch Headr)')
+     A                                      SPACEB(2)
+      *.........................................................................
+     A                                    56'*** END OF REPORT FOR BRANCH ***'
+      * 'Hidden' internal version of Branch Code (Batch Headr)
+     A  99N99     Z4BCBH         3         1SPACEB(1)
+      *=========================================================================
+     A          R ZZFINTTL                  TEXT('Final totals             ')
+      *.........................................................................
+      * 'Hidden' internal version of *CON (Screen constant)
+     A  99N99     ZTCON          1         1SPACEB(1)
+      *=========================================================================
+     A*                                                       Begin /*S01408*/
+     A*/COPY WNCPYSRC,GL0121PM04
+     A*                                                         End /*S01408*/
+      **Start of change CER001
+     A          R ZZEXBLNK                  TEXT('Blank line')
+     A  52                                 2' '
+     A                                      SPACEB(1)
+     A          R ZZEXIBLC                  TEXT('Extended IBLC informations')
+      *.........................................................................
+     A  52        RRLINE       132         1SPACEA(1)
+      *
+      **End of change CER001
+      *                     BEGIN  E36338                              =========
+     A********* R ZZENDRPT                  TEXT('End of report            ')
+     A*********                             SPACEB(2)
+     A*                                    /E38270/
+     A          R Z5KEYTTL                  TEXT('End of report            ')
+     A                                      SPACEB(2)
+     A                                    56'*** END OF REPORT ***'
+     A*                                    /E38270/
+     A**78                                56'** NO DETAILS TO REPORT ***'
+      **........................................................................
+      **Dummy field to keep format.
+     A**99N99                              1' '
+      *                     END    E36338                              =========
+      *=========================================================================
+     A*/COPY WNCPYSRC,GL0121PM17

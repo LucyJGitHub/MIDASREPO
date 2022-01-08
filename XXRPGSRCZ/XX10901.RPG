@@ -1,0 +1,514 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('G-AML Adhoc Date Pre-processor Prompt Program')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      ***SCJ00009*- G-AML Adhoc Date Pre-processor Prompt Program     *                       JMI109
+      *  XX10901  - G-AML Adhoc Date Pre-processor Prompt Progran     *                       JMI109
+      *                                                               *
+      *  Function:  This program allows the user to specify the adhoc *
+      *             date.                                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. JMI109             Date 05Jun18               *
+      *  Prev Amend No. JMI026  *CREATE    Date 08Sep08               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  JMI109 - G-AML PreProcessor (Upgrade to FB Midas)            *
+      *  JMI026 - Extract for G-AML Interface.                        *
+      *                                                               *
+      *****************************************************************
+     F***SCJ009# CF  E                    WORKSTN                                             JMI109
+     FXX10901#CF  E                    WORKSTN                                                JMI109
+      * DSP: Input Date Range          Prompt & validate record
+     F***APOSTY1 IF  E           K        DISK                                                JMI109
+     FXXPOSTL1IF  E           K        DISK                                                   JMI109
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E*
+     E/COPY MECPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E*PMTRCD: Cpysrc Templates Initialise Program E-Spec
+     I/COPY MECPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     I*PMTRCD: Cpysrc Templates Initialise Program I-Spec
+      /EJECT
+      * Data structures:
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP RCF Sequence
+     I                                        1   5 P1RSEQ
+     IP2PARM      DS
+      * I : MAP RCF Level
+     I                                        1   1 P2RLVL
+     IP3PARM      DS
+      * I : MAP RCF Entity
+     I                                        1   3 P3RENT
+     IP4PARM      DS
+      * I : MAP RCF Action
+     I                                        1   1 P4RACT
+     IP5PARM      DS
+      * O : MAP RCF F key pressed
+     I                                        1   1 P5RFKY
+     IP6PARM      DS
+      * O : MAP RCF Selection Parameters
+     I                                        1 100 P6RPRM
+      *
+      *  Input parameters data structure
+      *           Report selection dates - From/To
+      *
+     I                                        2   60O#RUN
+     I                                        2   60O#FDAT
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Date invalid'
+      * From date
+     I                                        1   6 ZA0001
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+      *
+     I#MSTX2      DS                            512
+      *
+      *  Define fields for extended message
+      *
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+      /EJECT
+      *
+      * Data to be passed to window processing
+      *
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           WNEXSQ  5
+     C                     PARM           WLVELQ  1
+     C                     PARM           WENTY   1
+     C           P6RPRM    PARM P6RPRM    WP0006100        RCF Selection P
+     C                     PARM           WACTN   1
+     C                     PARM           WCMD    1
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+     C   12                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * USER: Process command keys
+      * PMTRCD: Process Cmd Key - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Process Command Keys
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * Window processing
+     C           *IN99     IFEQ '0'
+     C                     EXSR SRWIND
+     C                     END
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * If warning, redisplay
+     C           WDISP     CABEQ'Y'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: User defined action
+      *
+      *  Input parameters data structure
+      *
+      *           Report selection dates - From
+      *
+     C                     Z-ADD#FDATE    O#FDAT
+      * PMTRCD: User Defined Acts - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates User Defined Actions
+      * Exit program
+     C                     EXSR ZXEXPG
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      * USER: Validate fields
+      *
+      *  Validate dates entered FROM
+      *
+     C                     MOVEL#DFDTE    ZDATE            Value date
+     C           *LIKE     DEFN ZDAYNO    #FDATE           From date
+      *
+     C                     CALL 'ZDATE1'                   Entry parameter
+     C                     PARM *BLANKS   ZERR    7        error code (Z r
+     C                     PARM           ZDATE   60       Value date
+     C                     PARM WUDFF     ZDATFM  1        Date format ind
+     C           #FDATE    PARM *ZEROS    ZDAYNO  50       Value date
+      *
+      * Setup message data for message
+      *
+     C           ZERR      IFNE *BLANKS
+     C                     MOVEL#DFDTE    ZA0001           From date
+      * Send message 'Date invalid'
+     C                     MOVEL'MIN0136' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+     C                     END
+      *
+      *
+      * PMTRCD: Validate keys - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Validate Keys
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      * CALC: Screen function fields
+      * PMTRCD: Screen Func. Flds - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Screen Function Fields
+      * USER: Validate relations
+      * From date required
+     C           #DFDTE    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *
+      * Dates must not be forward or equal to rundate
+      *
+     C           #FDATE    IFGE WURDNB                     IF
+     C                     SETON                     9931  *
+      * Send message 'Date in the future or equal to rundate'
+     C                     MOVEL'XXX1173' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *
+      * Dates must be within one month the system date
+      *
+     C           *LIKE     DEFN WURDNB    W1MPRI
+     C           WURDNB    SUB  30        W1MPRI
+     C           #FDATE    IFLT W1MPRI                     IF
+     C                     SETON                     9931  *
+      * Send message 'Date must be backvalued within 30 days
+      * the current rundate.
+     C                     MOVEL'XXX1171' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      * Check if there are posting records for the
+      * specified ad-hoc date
+     C           *IN99     IFEQ '0'
+     C           #FDATE    SETLL@@POSY0
+     C           #FDATE    READE@@POSY0                  32
+     C           *IN32     IFEQ '1'
+     C           #FDATE    SETLL@@POSY1
+     C           #FDATE    READE@@POSY1                  32
+     C           *IN32     IFEQ '1'
+     C           WDISP     IFEQ 'N'
+     C           #FDATE    ORNE W#FDAT
+     C                     MOVEL'Y'       WDISP
+     C                     Z-ADD#FDATE    W#FDAT
+     C                     SETON                     99    *
+      * Send message 'No activity found for the specified
+      * ad-hoc date.'
+     C                     MOVEL'XXX1172' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVEL'N'       WDISP
+     C                     Z-ADD*ZERO     W#FDAT
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'N'       WDISP
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'N'       WDISP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * PMTRCD: Validate Relation - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Validate Relations
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+     C                     MOVEL*BLANK    ##CMD1           Action Codes
+     C                     MOVEL*BLANK    ##CMD2           F keys
+     C                     MOVEL'N'       WDISP
+     C                     Z-ADD*ZERO     W#FDAT  50
+      *
+      *
+      *  Function keys
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0140' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##CMD2
+      *
+     C                     MOVEL*BLANK    #DFDTE           From date
+      * CALC: Screen function fields
+      * PMTRCD: Screen Func. Flds - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Screen Function Fields
+      * USER: Load screen
+      *
+      * PMTRCD: Load Screen - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Load Screen
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+     C                     MOVEL*BLANK    WCMD
+      *
+      * CASE: CTL.*CMD key is CF03
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'E'       WCMD             *Command
+     C                     END                             *FI
+      * CASE: CTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'F'       WCMD             *Command
+     C                     END                             *FI
+      *
+      * PMTRCD: Exit program - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Exit Program Processing
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL'N'       WDISP   1
+     C                     MOVEL'N'       W#FDAT
+     C                     MOVEL'Y'       O#RUN
+      * Initialise indicators for re-entry
+     C                     MOVE '0'       *IN
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'MEMSG'   ZADFMF 10
+     C                     MOVEL*BLANK    W0GRP   1
+     C                     Z-ADD0         Q       50
+      * USER: Initialise program
+      * Retrieve Midas Date - R10 Standard Functions  *
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      * PMTRCD: Initialise prog. - R10 Copy source templates  *
+     C*PMTRCD: Cpysrc Templates Initialise Program C-Spec
+      * Load screen
+     C                     EXSR MALDSC
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     C/EJECT
+      *================================================================
+      *                                                               *
+      *  SRWIND   : Control Window Processing                         *
+      *                                                               *
+      *================================================================
+     CSR         SRWIND    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRWIND'  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXWIND    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *================================================================
+     C/EJECT
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY MECPYSRC,SRERRC
+     O*PMTRCD: Cpysrc Templates Initialise Program O-Spec
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2008

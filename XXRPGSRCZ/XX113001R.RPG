@@ -1,0 +1,1346 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD GCMS interface ICD maintenance')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      ***SDJ002R*-*GCMS*Interface*ICD*Maintenance.*********************                       JMI113
+      *  XX113001R - GCMS Interface ICD Maintenance.                  *                       JMI113
+      *                                                               *
+      *  Function:  This program maintains the GCMS Interface ICD     *
+      *             record.                                           *
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************                       JMI113
+      *  (c) Finastra International Limited 2018                      *                       JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 16May18               *
+      *  Prev Amend No. JMI019             Date 20Feb07               *
+      *                 JMI019B            Date 28Apr05               *
+      *                 JMI019  *CREATE    Date 21Aug03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  JMI019 - Upgrade as is                                       *
+      *  JMI019 - Phase III MT999 Message Processing                  *
+      *  JMI019 - JMI019B - GCMS. File Name and Confirmation File     *
+      *  JMI019 - Midas GCMS Interface                                *
+      *                                                               *
+      *****************************************************************
+     F**********SDJ002R#CF  E                    WORKSTN                        UC            JMI113
+     FXX1131R#CF  E                    WORKSTN                        UC                      JMI113
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      ** DSP: Midas SD GCMS interface ICD maintenance
+      *
+     F**********SDGCMSL1UF  E           K        DISK                           UC            JMI113
+     FXXGCMSL1UF  E           K        DISK                           UC                      JMI113
+     F                                              KCOMIT
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      ** RTV : Midas SD GCMS Interface ICD      Retrieval index
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      ** RTV : Midas SD Midas module flags retrieval
+      *
+     FFDDTSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      ** RTV  : BIS Midas ABS Deal Deal sub-type
+      *
+      ********************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+     I              'XX113001R'           C         PGMNAM                                JMI113
+     I              'XX113002R'           C         XX002R                                JMI113
+      *
+      /EJECT
+      ** Data structures:
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure
+     IJBDTTM      DS
+      ** Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IINFDS#    E DSY2I#DSP
+      ** Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      ** File information data structure
+      *
+     I**********@1DBRC    E DSSDGCMSL1                                                        JMI113
+     I@1DBRC    E DSXXGCMSL1                                                                  JMI113
+      ** UPD : Midas SD Fontis Interface ICD      Update index
+      ** Current/previous master file format fields for change control
+      *
+     I**********#1DBRC      DS                            331                                JMI019B
+     I#1DBRC      DS                            485                                          JMI019B
+     I@2DBRC      DS                            485                                           JMI019
+      ** Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     IYARDCS      DS                            279
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      ** File information data structure
+      *
+     IID0004      DS                            528
+      ** File information data structure
+      *
+      /EJECT
+      *
+      ** Data Structures used by Access Programs
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Book detail
+     ISDBOOK    E DSSDBOOKPD
+      *
+      ** Profit Centers detail
+     ISDPRFC    E DSSDPRFCPD
+      *
+      ** Deals sub-types
+     ISDDLST    E DSSDDLSTPD
+      /EJECT
+      *
+      ** Parameter declarations
+     IP1PARM      DS                             10
+      ** KEY: Midas SD GCMS Interface ICD
+      ** I : RST GCMS Interface ICD Key
+     I                                        1  10 P1GKEY
+     IP2PARM      DS
+      ** O :  *Return code
+     I                                        1   7 P2RTN
+     IP3PARM      DS
+      ** B : MAP Work Return code
+     I                                        1   5 P3WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      *
+      ***Outward*Parameters*for*calling*SDJ004R                                        JMI019 JMI113
+      ** Outward Parameters for calling XX11302R                                              JMI113
+     IPARC        DS                            712                                           JMI019
+      **Midas*SD*GCMS*Maintenance*File*(SDGCMSPD)                                      JMI019 JMI113
+      * Midas SD GCMS Maintenance File (XXGCMSPD)                                             JMI113
+      * I : GCMS Interface ICD Key                                                            JMI019
+     I                                        1  10 PAGKEY                                    JMI019
+      * I : Maximum no. of Re-tries                                                           JMI019
+     I                                       11  110PAMAXT                                    JMI019
+      * I : History Retention Period                                                          JMI019
+     I                                       12  130PAHREP                                    JMI019
+      * I : Last Change Date                                                                  JMI019
+     I                                    P  14  160PALCD                                     JMI019
+      * I : Type of Last Change                                                               JMI019
+     I                                       17  17 PATYLC                                    JMI019
+      * I : Host name for GCMS Incoming Server                                                JMI019
+     I                                       18  47 PA101H                                    JMI019
+      * I : Midas user name on GCMS Incoming Server                                           JMI019
+     I                                       48  67 PA101U                                    JMI019
+      * I : Password for Midas User on GCMS Incoming Server                                   JMI019
+     I                                       68  87 PA101P                                    JMI019
+      * I : Host name for GCMS Outgoing Server                                                JMI019
+     I                                       88 117 PA9NNH                                    JMI019
+      * I : Midas user name on GCMS Outgoing Server                                           JMI019
+     I                                      118 137 PA9NNU                                    JMI019
+      * I : Password for Midas User on GCMS Outgoing Server                                   JMI019
+     I                                      138 157 PA9NNP                                    JMI019
+      * I : MT942 Processing Frequency                                                        JMI019
+     I                                    P 158 1590PA942F                                    JMI019
+      * I : MT999 Processing Frequency                                                        JMI019
+     I                                    P 160 1610PA999F                                    JMI019
+      * I : GCMS Incoming Server Datafile Path                                                JMI019
+     I                                      162 238 PA101T                                    JMI019
+      * I : GCMS Outgoing Server Datafile Path                                                JMI019
+     I                                      239 315 PA9NNT                                    JMI019
+      * I : MT101 Payments Processing Frequency                                               JMI019
+     I                                    P 316 3170PAPYPF                                    JMI019
+      * I : MT101 Payments Message Retention Days                                             JMI019
+     I                                      318 3190PAPYMR                                    JMI019
+      * I : MT101 Payments Outgoing Payment Subtype                                           JMI019
+     I                                      320 321 PAPYOP                                    JMI019
+      * I : MT101 Payments Incoming Payment Subtype                                           JMI019
+     I                                      322 323 PAPYIP                                    JMI019
+      * I : MT101 Payments Settlement Method                                                  JMI019
+     I                                      324 3250PAPYSM                                    JMI019
+      * I : MT101 Payments Book Code                                                          JMI019
+     I                                      326 327 PAPYBC                                    JMI019
+      * I : MT101 Payments Profit Centre                                                      JMI019
+     I                                      328 331 PAPYPC                                    JMI019
+      * I : Confirmation File Path for MT940 and MT942                                        JMI019
+     I                                      332 408 PA9NNC                                    JMI019
+      * I : Confirmation File Path for MT999                                                  JMI019
+     I                                      409 485 PA19NC                                    JMI019
+      * I : Host name for Outgoing MT999                                                      JMI019
+     I                                      486 515 PA999H                                    JMI019
+      * I : Midas user name on GCMS Outgoing MT999                                            JMI019
+     I                                      516 535 PA999U                                    JMI019
+      * I : Password for Midas user on GCMS                                                   JMI019
+     I                                      536 555 PA999P                                    JMI019
+      * I : GCMS Outgoing Server Data file for MT999                                          JMI019
+     I                                      556 632 PA999T                                    JMI019
+      * I : GCMS Outgoing Confirmation File Path for MT999                                    JMI019
+     I                                      633 709 PA999C                                    JMI019
+      * I : Maximum no. of Re-tries for MT999                                                 JMI019
+     I                                      710 7100PAMAX9                                    JMI019
+      * I : History Retention Period for MT999                                                JMI019
+     I                                      711 7120PAREP9                                    JMI019
+      *                                                                                       JMI019
+      /EJECT
+      *****************************************************************
+      *
+     C                     MOVEACPY@      CPY2@  80
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM
+     C           P2RTN     PARM P2RTN     WP0001  7
+     C           P3WRTC    PARM P3WRTC    WP0002  5
+      *****************************************************************
+      ** Initialize
+     C                     EXSR ZZINIT
+      *
+      ** Check passed parameters
+     C                     EXSR FACKPM
+      ** Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      ** Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      ** Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      ** Display and process key screen
+      *================================================================
+      ** Initialize key screen
+     C                     EXSR MDIZ#K
+      ** Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      ** Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      ** Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      ** Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      ** Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1GKEY    IFEQ *BLANK
+      ** One or more key fields is blank
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      ** Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      ** Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      ** Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      ** Process response to key screen
+      ** Cancel & exit program
+     C   03                CAS            ZXEXPG
+      ** Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      ** Set screen conditioning indicators
+     C                     EXSR GADSAK
+      ** Update screen time
+     C                     TIME           ##TME
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      ** Update job time
+     C                     TIME           ##JTM
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      ** Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      ** Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      ** Initialise detail screen
+     C                     EXSR MAIZ#1
+      ** Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      ** Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           J0GKEY
+      ** Setup key
+     C                     MOVEL#1GKEY    J0GKEY
+     C********** KRTV      CHAINSDGCMSP0             9091  *                                  JMI113
+     C           KRTV      CHAINXXGCMSP0             9091  *                                  JMI113
+     C           *IN91     IFEQ '1'
+      ** Record locked
+     C                     SETON                     9932  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      ** If record does not exist, error
+      *
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9932  *
+      ** Send message 'GCMS Interface ICD   NF'
+     C                     MOVEL'XXX9201' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+     C                     END
+      *
+      *..................................................
+     C   99                GOTO BEEXIT
+      ** No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      ** USER: Validate key screen
+      ** GCMS Interface ICD Key required
+     C           #1GKEY    IFEQ *BLANK
+     C                     SETON                     9932  *
+      ** Send message '*Value required'
+     C                     MOVEL'XXX9202' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      ** Conduct detail screen conversation
+      ** - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      ** Display detail screen
+     C                     EXSR CBEXFM
+      ** Process response to detail screen
+      ** Cancel & exit program
+     C   03                CAS            ZXEXPG
+      ** Redisplay previous screen
+      * Disable F12 on first screen
+     C*  12                CAS            CCDSPV                                              JMI019
+      ** Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      ** Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      ** Update screen time
+     C                     TIME           ##TME
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     WRITE#RCDDTL1
+     C                     WRITE#RCDDTL2
+     C                     READ #RCDDTL1                 90
+     C                     READ #RCDDTL2                 90
+      ** Update job time
+     C                     TIME           ##JTM
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      ** Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      ** Reset global error indicator
+     C                     SETOF                         99
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      ** USER: Process key screen request
+      ** Bypass Key screen if F12 is taken at Detail screen
+     C                     MOVEL*BLANK    P3WRTC           Work Return cod
+     C                     MOVEL'PREV'    P3WRTC           Work Return cod
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      ** Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      ** Validate details
+     C                     EXSR DCVLDL
+      ** QUIT if error:
+     C   99                GOTO CFEXIT
+      ** Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      ** No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      ** USER: Validate detail screen fields
+      *
+      ** Incoming Server Host Name
+      ** CASE: DTL. GCMS Server Host Name is Blank
+      *
+     C           S0101H    IFEQ *BLANK
+      ** Setup message data for message
+      ** Send message 'Server Host Name REQ'
+     C                     MOVEL'XXX9207' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9934
+      *
+     C                     END
+      ** Midas User on MT101 Server
+      ** CASE: DTL.Midas User on MT101 Srvr is Blank
+     C           S0101U    IFEQ *BLANK
+      ** Setup message data for message
+      ** Send message 'Midas Usr on Server   REQ'
+     C                     MOVEL'XXX9208' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9935
+      *
+     C                     END
+      ** Password for Midas User
+      ** CASE: DTL.Password for Midas User is Blank
+     C           S0101P    IFEQ *BLANK
+      ** Setup message data for message
+      ** Send message 'Passwd for Midas User REQ'
+     C                     MOVEL'XXX9209' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9936
+      *
+     C                     END
+      *
+      ** Outgoing Server Host Name
+      ** CASE: DTL.Outgoing Server Host Name is Blank
+      *
+     C           S09NNH    IFEQ *BLANK
+      ** Setup message data for message
+      ** Send message 'Server Host Name REQ'
+     C                     MOVEL'XXX9211' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9944
+      *
+     C                     END
+      ** Midas User on MT9NN Server
+      ** CASE: DTL.Midas User on MT9NN Srvr is Blank
+     C           S09NNU    IFEQ *BLANK
+      ** Setup message data for message
+      ** Send message 'Midas Usr on Server   REQ'
+     C                     MOVEL'XXX9212' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941
+      *
+     C                     END
+      ** Password for Midas User
+      ** CASE: DTL.Password for Midas User is Blank
+     C           S09NNP    IFEQ *BLANK
+      ** Setup message data for message
+      ** Send message 'Passwd for Midas User REQ'
+     C                     MOVEL'XXX9213' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945
+      *
+     C                     END
+      *
+     C           S0MAXT    IFLT 1
+     C           S0MAXT    ORGT 3
+      ** Setup message data for message
+      ** Send message 'Max no. of Re-tries   INV'
+     C                     MOVEL'XXX9205' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932
+      *
+     C                     END
+     C           S0HREP    IFLT 1
+     C           S0HREP    ORGT 15
+      ** Setup message data for message
+      ** Send message 'Hist Retention Period INV'
+     C                     MOVEL'XXX9206' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933
+      *
+     C                     END
+      *
+      ** Validate MT942 Processing Frequency
+      *
+     C           S0942F    IFLT 15
+     C           S0942F    ORGT 180
+      *
+      ** Send message
+      *
+     C                     MOVEL'XXX9216' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+      ***Validate MT999 Processing Frequency                                                 JMI019B
+      **********                                                                             JMI019B
+     C********** S0999F    IFLT 15                                                           JMI019B
+     C********** S0999F    ORGT 180                                                          JMI019B
+      **********                                                                             JMI019B
+      ***Send*message                                                                        JMI019B
+      **********                                                                             JMI019B
+     C**********           MOVEL'XXX9217' ZAMSID                                             JMI019B
+     C**********           EXSR ZASNMS                                                       JMI019B
+     C**********           MOVE '1'       *IN40                                              JMI019B
+     C**********           MOVE '1'       *IN99                                              JMI019B
+     C**********           ENDIF                                                             JMI019B
+      *
+      ** Validate MT101 Payments Processing Frequency
+      *
+     C           S0PYPF    IFLT 15
+     C           S0PYPF    ORGT 180
+      *
+      ** Send message
+      *
+     C                     MOVEL'XXX9219' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN46
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+      ** Validate MT101 Payments Outgoing Payment Sub type
+      *
+     C           KTYST     KLIST
+     C                     KFLD           DTPE11
+     C                     KFLD           #2PYST  2
+      *
+     C           S0PYOP    IFEQ *BLANK
+      *
+      ** Send message 'Value required'
+      *
+     C                     MOVEL'XXX9221' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN99
+     C                     ELSE
+     C                     CALL 'AODLSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C           S0PYOP    PARM S0PYOP    @DSTC   2
+     C           SDDLST    PARM SDDLST    DSFDY
+     C           P@RTCD    IFNE *BLANK
+      *
+      ** Send message 'Deal sub-type invalid'
+      *
+     C                     MOVEL'XXX9222' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN99
+     C                     ELSE
+     C                     MOVEL'OP'      DTPE11
+     C                     MOVELS0PYOP    #2PYST
+     C           KTYST     CHAINFDDTSTL1             90
+     C           *IN90     IFEQ '1'
+     C           *IN90     OREQ '0'
+     C           RCID11    ANDEQ'*'
+      *
+      ** Send message 'Invalid combination Deal type/sub-type'
+      *
+     C                     MOVEL'XXX9223' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           S0PYMR    IFLT 1
+      *
+      ** Send message 'Value required'
+      *
+     C                     MOVEL'XXX9220' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+      ** Validate incoming payment subtype
+      *
+     C           S0PYIP    IFEQ *BLANK
+      *
+      ** Send message 'Value required'
+      *
+     C                     MOVEL'XXX9224' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN99
+     C                     ELSE
+     C                     CALL 'AODLSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C           S0PYIP    PARM S0PYIP    @DSTC   2
+     C           SDDLST    PARM SDDLST    DSFDY
+     C           P@RTCD    IFNE *BLANK
+      *
+      ** Send message 'Deal sub-type invalid'
+      *
+     C                     MOVEL'XXX9225' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN99
+      *
+     C                     ELSE
+     C                     MOVEL'IN'      DTPE11
+     C                     MOVELS0PYIP    #2PYST
+     C           KTYST     CHAINFDDTSTL1             90
+     C           *IN90     IFEQ '1'
+     C           *IN90     OREQ '0'
+     C           RCID11    ANDEQ'*'
+      *
+      ** Send message 'Invalid combination Deal type/sub-type'
+      *
+     C                     MOVEL'XXX9226' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN48
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate MT101 Payments Settlement method
+      *
+     C           S0PYSM    IFEQ *BLANK
+      *
+      ** Send message 'Value required'
+      *
+     C                     MOVEL'XXX9227' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN99
+     C                     ELSE
+     C           S0PYSM    IFNE '01'
+     C           S0PYSM    ANDNE'02'
+     C           S0PYSM    ANDNE'08'
+     C           S0PYSM    ANDNE'10'
+     C           S0PYSM    ANDNE'12'
+     C           S0PYSM    ANDNE'13'
+      *
+      ** Send message 'Settlement values authorized are :'
+      *
+     C                     MOVEL'XXX9228' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN49
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+     C                     ENDIF
+     C           S0PYBC    IFEQ *BLANK
+      *
+      ** Send message 'Value required'
+      *
+     C                     MOVEL'XXX9229' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN99
+     C                     ELSE
+     C                     CALL 'AOBOOKR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C           S0PYBC    PARM S0PYBC    P@BKCD  2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+      *
+      ** Send message 'Book code not found'
+      *
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVEL'XXX9230' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate MT101 Payments Profit Center (only if analytical accounting)
+      *
+     C           WUANAC    IFEQ 'Y'
+     C           S0PYPC    IFNE *BLANK
+     C                     CALL 'AOPRFCR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C           S0PYPC    PARM S0PYPC    P@PCCD  4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANK
+      *
+      ** Send message 'Profit center code not found'
+      *
+     C                     MOVEL'XXX9231' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'XXX9232' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                       JMI019
+      *  Call extention maintenance program when no error is found on the                     JMI019
+      *   first transaction screen                                                            JMI019
+     C           *IN99     IFNE '1'                                                           JMI019
+      *                                                                                       JMI019
+      *  Clear data structure for parameters                                                  JMI019
+     C                     CLEARPARC                                                          JMI019
+      *                                                                                       JMI019
+      *  Move values to parameter fields                                                      JMI019
+     C                     MOVEL#1GKEY    PAGKEY                                              JMI019
+     C                     Z-ADDS0LCD     PALCD                                               JMI019
+     C                     MOVELS0TYLC    PATYLC                                              JMI019
+     C                     Z-ADDS0MAXT    PAMAXT                                              JMI019
+     C                     Z-ADDS0HREP    PAHREP                                              JMI019
+     C                     MOVELS0101H    PA101H                                              JMI019
+     C                     MOVELS0101U    PA101U                                              JMI019
+     C                     MOVELS0101P    PA101P                                              JMI019
+     C                     MOVELS0101T    PA101T                                              JMI019
+     C                     MOVELS09NNH    PA9NNH                                              JMI019
+     C                     MOVELS09NNU    PA9NNU                                              JMI019
+     C                     MOVELS09NNP    PA9NNP                                              JMI019
+     C                     MOVELS09NNT    PA9NNT                                              JMI019
+     C                     MOVELS0942F    PA942F                                              JMI019
+     C                     MOVELS09NNC    PA9NNC                                              JMI019
+     C                     Z-ADDS0PYPF    PAPYPF                                              JMI019
+     C                     Z-ADDS0PYMR    PAPYMR                                              JMI019
+     C                     MOVELS0PYOP    PAPYOP                                              JMI019
+     C                     MOVELS0PYIP    PAPYIP                                              JMI019
+     C                     MOVELS0PYBC    PAPYBC                                              JMI019
+     C                     MOVELS0PYPC    PAPYPC                                              JMI019
+     C                     MOVELS0PYSM    PAPYSM                                              JMI019
+     C*                                                                                       JMI019
+     C                     MOVELWU999H    PA999H                                              JMI019
+     C                     MOVELWU999U    PA999U                                              JMI019
+     C                     MOVELWU999P    PA999P                                              JMI019
+     C                     MOVELWU999T    PA999T                                              JMI019
+     C                     MOVELWU999C    PA999C                                              JMI019
+     C                     Z-ADDWUMAX9    PAMAX9                                              JMI019
+     C                     Z-ADDWUREP9    PAREP9                                              JMI019
+      *                                                                                       JMI019
+     C**********           CALL 'SDJ004R'              90  Extended screen             JMI019 JMI113
+     C                     CALL XX002R                 90  Extended screen                    JMI113
+     C                     PARM *BLANK    W0RTN   7        Extended screen                    JMI019
+     C                     PARM           PARC                                                JMI019
+     C           WUDRTC    PARM *BLANK    WQ0170  7                                           JMI019
+      *                                                                                       JMI019
+     C           *IN90     IFEQ '1'                                                           JMI019
+      *  Call to program ended in error                                                       JMI019
+     C                     MOVEL'Y2U0032' W0RTN                                               JMI019
+     C                     MOVEL*BLANKS   W0CLPG 10                                           JMI019
+     C**********           MOVEL'SDJ004R' W0CLPG                                       JMI019 JMI113
+     C                     MOVELXX002R    W0CLPG                                              JMI113
+      * Send message '*Error occured on CALL...'                                              JMI019
+     C                     MOVEL'Y2U0032' ZAMSID                                              JMI019
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              JMI019
+     C                     MOVELW0CLPG    ZAMSDA           Message data                       JMI019
+     C                     EXSR ZASNMS                                                        JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      * Error detected?                                                                       JMI019
+     C           W0RTN     IFNE *BLANK                                                        JMI019
+     C                     SETON                     993132*                                  JMI019
+     C                     SETON                     354648*                                  JMI019
+     C                     SETON                     47    *                                  JMI019
+     C                     END                                                                JMI019
+      * Check Return code                                                                     JMI019
+      * CASE: WRK.Duplicate Return Code is *User QUIT requested                               JMI019
+     C           WUDRTC    IFEQ 'Y2U9999'                  *IF                                JMI019
+     C                     MOVELW0RTN     P0RTN            *Return code                       JMI019
+     C                     EXSR ZYEXPG                                                        JMI019
+     C                     ELSE                                                               JMI019
+      * CASE: WRK.Duplicate Return Code is *Previous Screen                                   JMI019
+     C           WUDRTC    IFEQ 'USR0790'                  *IF                                JMI019
+     C                     MOVEL'Y'       W0DCF            *Defer confirm                     JMI019
+     C                     END                             *FI                                JMI019
+     C                     END                             *FI                                JMI019
+      *                                                                                       JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      *
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      ** Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      ** Error: ROLLBACK any DBF changes
+     C                     ROLBK
+     C                     GOTO EBEXIT
+     C                     ELSE
+      ** Otherwise COMMIT any DBF changes
+     C                     COMIT
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      ** USER: Process command keys
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      ** USER: Change DBF record
+     C                     EXSR SACHRC
+     C           W0RTN     IFNE *BLANK
+      ** Data update error
+      ** Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      ** Is full key present?
+     C           P1GKEY    IFEQ *BLANK
+      ** Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      ** Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89
+      ** Protect key fields on detail screen
+     C                     SETON                     88
+      ** Enable key screen
+      * Disable F12 on first screen
+     C*                    SETON                     87                                       JMI019
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     MOVELP3WRTC    #PWRTC
+     C                     Z-ADD*ZERO     S0LCD
+     C                     MOVEL*BLANK    S0TYLC
+     C                     Z-ADD*ZERO     S0MAXT
+     C                     Z-ADD*ZERO     S0HREP
+     C                     MOVEL*BLANK    S0101H
+     C                     MOVEL*BLANK    S0101U
+     C                     MOVEL*BLANK    S0101P
+     C                     MOVEL*BLANK    S0101T
+     C                     MOVEL*BLANK    S09NNH
+     C                     MOVEL*BLANK    S09NNU
+     C                     MOVEL*BLANK    S09NNP
+     C                     MOVEL*BLANK    S09NNT
+     C                     Z-ADD*ZERO     S0942F
+     C**********           Z-ADD*ZERO     S0999F                                             JMI019B
+     C                     MOVEL*BLANK    S09NNC                                             JMI019B
+     C                     Z-ADD*ZERO     S0PYPF
+     C                     Z-ADD*ZERO     S0PYMR
+     C                     MOVEL*BLANK    S0PYOP
+     C                     MOVEL*BLANK    S0PYIP
+     C                     MOVEL*BLANK    S0PYSM
+     C                     MOVEL*BLANK    S0PYBC
+     C                     MOVEL*BLANK    S0PYPC
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      **Move*SDGCMSP0*fields*to*screen                                                        JMI113
+      * Move XXGCMSP0 fields to screen                                                        JMI113
+      *================================================================
+     C                     MOVELJ0GKEY    #1GKEY
+     C                     Z-ADDJ0LCD     S0LCD
+     C                     MOVELJ0TYLC    S0TYLC
+     C                     Z-ADDJ0MAXT    S0MAXT
+     C                     Z-ADDJ0HREP    S0HREP
+     C                     MOVELJ0101H    S0101H
+     C                     MOVELJ0101U    S0101U
+     C                     MOVELJ0101P    S0101P
+     C                     MOVELJ0101T    S0101T
+     C                     MOVELJ09NNH    S09NNH
+     C                     MOVELJ09NNU    S09NNU
+     C                     MOVELJ09NNP    S09NNP
+     C                     MOVELJ09NNT    S09NNT
+     C                     MOVELJ0942F    S0942F
+     C**********           MOVELJ0999F    S0999F                                             JMI019B
+     C                     MOVELJ09NNC    S09NNC                                             JMI019B
+     C                     MOVELJ0PYPF    S0PYPF
+     C                     Z-ADDJ0PYMR    S0PYMR
+     C                     MOVELJ0PYOP    S0PYOP
+     C                     MOVELJ0PYIP    S0PYIP
+     C           J0PYSM    IFEQ 0
+     C                     MOVE *BLANK    S0PYSM
+     C                     ELSE
+     C                     MOVE J0PYSM    S0PYSM
+     C                     ENDIF
+     C                     MOVELJ0PYBC    S0PYBC
+     C                     MOVELJ0PYPC    S0PYPC
+      ** Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *                                                                                       JMI019
+      *  Move other file field values to working variables for                                JMI019
+      ***parameter*passing*to*SDJ004R*program                                          JMI019 JMI113
+      *  parameter passing to XX113002R program                                               JMI113
+     C                     MOVELJ0999H    WU999H                                              JMI019
+     C                     MOVELJ0999U    WU999U                                              JMI019
+     C                     MOVELJ0999P    WU999P                                              JMI019
+     C                     MOVELJ0999T    WU999T                                              JMI019
+     C                     MOVELJ0999C    WU999C                                              JMI019
+     C                     Z-ADDJ0MAX9    WUMAX9                                              JMI019
+     C                     Z-ADDJ0REP9    WUREP9                                              JMI019
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP3WRTC    #PWRTC           Work Return cod
+     C                     MOVELP1GKEY    #1GKEY
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SACHRC    BEGSR
+      *================================================================
+      * Change GCMS Interface - GCMS Interface ICD  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      ** Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      ***Move*key*fields*to*SDGCMSP0                                                          JMI113
+      ** Move key fields to XXGCMSP0                                                          JMI113
+     C                     MOVEL#1GKEY    J0GKEY
+      *
+     C           KLCHSA    KLIST
+     C                     KFLD           J0GKEY
+     C********** KLCHSA    CHAINSDGCMSP0             9091  *                                  JMI113
+     C           KLCHSA    CHAINXXGCMSP0             9091  *                                  JMI113
+      *
+     C           *IN90     IFEQ '1'
+      ** Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      ** Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SAEXIT
+     C                     END
+      ** Check for if mandatory fields in second screen are supplied                          JMI019
+     C           J0999H    IFNE *BLANKS                                                       JMI019
+     C           J0999U    ANDNE*BLANKS                                                       JMI019
+     C           J0999P    ANDNE*BLANKS                                                       JMI019
+     C           J0MAX9    ANDNE0                                                             JMI019
+     C           J0REP9    ANDNE0                                                             JMI019
+     C                     GOTO SAEXIT                                                        JMI019
+     C                     END                                                                JMI019
+      *
+      ** Check for changed record
+     C                     MOVEL@1DBRC    @2DBRC                                              JMI019
+     C********** #1DBRC    IFNE @1DBRC                                                        JMI019
+     C           #1DBRC    IFNE @2DBRC                                                        JMI019
+     C                     MOVEL'Y2U0007' W0RTN   7
+      ** Release record lock
+     C**********           UNLCKSDGCMSL1               91                                     JMI113
+     C                     UNLCKXXGCMSL1               91                                     JMI113
+     C                     GOTO SAEXIT
+     C                     END
+      ** Store record data for null update check
+     C                     MOVE @1DBRC    YARDCS
+      ** USER: Processing after Data read
+      ***Move*non-key*fields*to*SDGCMSP0                                                      JMI113
+      ** Move non-key fields to XXGCMSP0                                                      JMI113
+     C                     Z-ADDS0MAXT    J0MAXT
+     C                     Z-ADDS0HREP    J0HREP
+     C                     MOVELS0101H    J0101H
+     C                     MOVELS0101U    J0101U
+     C                     MOVELS0101P    J0101P
+     C                     MOVELS0101T    J0101T
+     C                     MOVELS09NNH    J09NNH
+     C                     MOVELS09NNU    J09NNU
+     C                     MOVELS09NNP    J09NNP
+     C                     MOVELS09NNT    J09NNT
+     C                     MOVELS0942F    J0942F
+     C**********           MOVELS0999F    J0999F                                             JMI019B
+     C                     MOVELS09NNC    J09NNC                                             JMI019B
+     C                     MOVELS0PYPF    J0PYPF
+     C                     Z-ADDS0PYMR    J0PYMR
+     C                     MOVELS0PYOP    J0PYOP
+     C                     MOVELS0PYIP    J0PYIP
+     C           S0PYSM    IFEQ *BLANK
+     C                     Z-ADD0         J0PYSM
+     C                     ELSE
+     C                     MOVE S0PYSM    J0PYSM
+     C                     ENDIF
+     C                     MOVELS0PYBC    J0PYBC
+     C                     MOVELS0PYPC    J0PYPC
+      *
+      ** Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      *
+      ** Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      ** If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C**********           UPDATSDGCMSP0               91                                     JMI113
+     C                     UPDATXXGCMSP0               91                                     JMI113
+     C                     ELSE
+      ** Release record lock
+     C**********           UNLCKSDGCMSL1               91                                     JMI113
+     C                     UNLCKXXGCMSL1               91                                     JMI113
+     C                     END
+     C           *IN91     IFEQ '1'
+      ** Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      ** Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      ** Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS
+      ** Move fields to key list
+     C                     MOVE *BLANK    BGMODS
+     C                     MOVEL'MMOD'    BGMODS
+     C           KRSSC     CHAIN@BGREC8              90
+      ** Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      *
+      ** Analytical accounting present
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVEL'Y'       WUANAC
+     C                     MOVE '1'       *IN52
+     C                     ELSE
+      *
+      ** Protect and hide profit centers
+      *
+     C                     MOVE '0'       *IN52
+     C                     ENDIF
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      ** If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      ** Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      ** USER: Exit program processing
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      ** ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      ** Terminate program
+     C                     SETON                     LR
+      *
+      ** Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      ** Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      ** Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      ** Update screen time
+     C                     TIME           ##TME   60
+     C                     MOVEL'XXUSRMSG'ZADFMF 10
+      ** Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      ** Define work field Last Change Date
+     C                     Z-ADD*ZERO     WULCD   50
+      ** Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      ** Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      ** Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      ** Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      ** Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      ** Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      ** Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      ** Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      ** Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      *
+      ** Define work field Access obj dummy DS (76)
+      *
+     C                     MOVEL*BLANK    WUFDY  76
+      *
+      ** Define work field Analytical Accounting
+      *
+     C                     MOVEL*BLANK    WUANAC  1
+      *                                                                                       JMI019
+      ** Define work field Duplicate Return Code                                              JMI019
+     C                     MOVEL*BLANK    WUDRTC  7                                           JMI019
+      ** Define work field Host name for Outgoing MT999                                       JMI019
+     C                     MOVEL*BLANK    WU999H 30                                           JMI019
+      ** Define work field Midas user name on GCMS Outgoing MT999                             JMI019
+     C                     MOVEL*BLANK    WU999U 20                                           JMI019
+      ** Define work field Password for Midas user on GCMS Outgoing MT999                     JMI019
+     C                     MOVEL*BLANK    WU999P 20                                           JMI019
+      ** Define work field GCMS Outgoing Server DataFile for MT999                            JMI019
+     C                     MOVEL*BLANK    WU999T 77                                           JMI019
+      ** Define work field GCMS Outgoing ConfirmationFile Path for MT999                      JMI019
+     C                     MOVEL*BLANK    WU999C 77                                           JMI019
+      ** Define work field Maximum no. of Retries for MT999                                   JMI019
+     C                     Z-ADD*ZERO     WUMAX9  10                                          JMI019
+      ** Define work field History Retention Period for MT999                                 JMI019
+     C                     Z-ADD*ZERO     WUREP9  20                                          JMI019
+      ** Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      *
+      ** Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+      ** Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      ** Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C**********           OPEN SDJ002R#                                                      JMI113
+     C**********           OPEN SDGCMSL1                                                      JMI113
+     C                     OPEN XX1131R#                                                      JMI113
+     C                     OPEN XXGCMSL1                                                      JMI113
+     C                     OPEN SDMMODL1
+     C                     OPEN FDDTSTL1
+     C                     MOVEL'N'       W0PMT   1
+      ** Set to *CHANGE mode
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANK    W0GRP   1
+      ** USER: Initialize program
+      ** Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      ** Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRICD
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@
+(c) Finastra International Limited 2018

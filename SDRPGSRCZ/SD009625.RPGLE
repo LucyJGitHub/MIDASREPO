@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/*S*D ***RPGBASEBND****************************************************                     MD041126
+/*STD *  RPGBASEMOD                                                   *                     MD041126
 /*EXI *  TEXT('Midas SD Validate MQ queue manager')
       *****************************************************************
       *                                                               *
@@ -11,13 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041126           Date 20Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 245310  *CREATE    Date 30Jan07               *
+      *                 245310  *CREATE    Date 30Jan07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD053614.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  245310 - validate that the value supplied relates to a       *
       *           Websphere MQ Queue Manager that actually exists.    *
@@ -83,11 +87,13 @@
  
       **  Declare MQI structures needed
       * MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
  
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
  
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
@@ -115,6 +121,12 @@
  
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D QMNAME          S             48A                                                    MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
  
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -129,12 +141,19 @@
  
       **  Attempt to CONNECT to the MQ Manager
       *              ~~~~~~~
-     C                   CALL      'QMQM'
-     C                   PARM      MQCONN        CID               9 0
-     C                   PARM      QManagerUC    QMNAME           48
-     C                   PARM      *ZERO         HCONN             9 0
-     C                   PARM      *ZERO         OCODE             9 0
-     C                   PARM      *ZERO         REASON            9 0
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM      MQCONN        CID               9 0                      MD041126
+     C**********         PARM      QManagerUC    QMNAME           48                        MD041126
+     C**********         PARM      *ZERO         HCONN             9 0                      MD041126
+     C**********         PARM      *ZERO         OCODE             9 0                      MD041126
+     C**********         PARM      *ZERO         REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   EVAL      QMNAME = QManagerUC                                      MD041126
+     C                   Z-ADD     *ZERO         HCONN                                      MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HCONN :                                 MD041126
+     C                                     OCODE : REASON )                                 MD041126
  
       ** Error processing
      C     REASON        IFNE      RCNONE
@@ -152,12 +171,15 @@
  
       **  DISCONNECT from the MQ Manager
       *
-     C                   CALL      'QMQM'
-     C                   PARM      MQDISC        CID               9 0
-     C                   PARM                    HCONN
-     C                   PARM      *ZERO         OCODE
-     C                   PARM      *ZERO         REASON
- 
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM      MQDISC        CID               9 0                      MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM      *ZERO         OCODE                                      MD041126
+     C**********         PARM      *ZERO         REASON                                     MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
  
      C                   EVAL      *INLR = *ON
  

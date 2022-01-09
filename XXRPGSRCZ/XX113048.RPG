@@ -1,0 +1,381 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL GCMS MT999 History Processing')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-GCMS Interface                                 *
+      *                                                               *
+      ***GLJ048*-*GCMS*MT999*History*processing************************                   JMI113
+      *  XX113048 - GCMS MT999 History processing                     *                   JMI113
+      *                                                               *
+      ***Function*-*This*program*is*called*by*GLCJ048.*It*checks*for***                   JMI113
+      *  Function - This program is called by XXC113048. It checks    *                   JMI113
+      **************records*on*LF/GLMREFL0*which*are*older*than*the****                   JMI113
+      *             records on LF/XXMREFL0 which are older than the   *                   JMI113
+      *             GCMS History date and deletes them.               *
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************                   JMI113
+      *  (c) Finastra International Limited 2018                      *                   JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 25May18               *
+      *  Prev Amend No. JMI019  *CREATE    Date 21Oct05               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  JMI019 - Phase III MT999 Message Processing                  *
+      *                                                               *
+     F*****************************************************************
+     F*
+     F*********GLMREFL0UF  E           K        DISK                                      JMI113
+     FXXMREFL0UF  E           K        DISK                                               JMI113
+     F*
+     F*********GLJ048AUO   E                    PRINTER                                   JMI113
+     FXX1148AUO   E                    PRINTER                                            JMI113
+     F*
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  80 - END OF FILE                                             *
+     F*                                                               *
+     F*  U7 - DATABASE ERROR                                          *
+     F*  U8 - DATABASE ERROR                                          *
+     F*  LR -                                                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  INIT  - Initial processing                                   *
+     F*  MAIN  - Main detail processing                               *
+     F*  MILL  - Millenium drop processing                            *
+     F*  CLOSE - Closedown processing                                 *
+     F*  *PSSR                                                        *
+     F*  ZDATE2                                                       *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE SR. ARRAY
+     E*
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I** Copyright Array
+     I*
+     I            DS
+     I                                        1   7 #RDNB
+     I                                        1   1 RSS
+     I                                        2   3 RYY
+     I                                        4   5 RMM
+     I                                        6   7 RDD
+      *
+     I*
+     ILDA         DS
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     I*********GLGCMS    E DSGLGCMSDA                                                     JMI113
+     IGLGCMS    E DSXXGCMGDA                                                              JMI113
+      ** GCMS Data Area Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     I**********SDGCMS    E DSSDGCMSPD                                                    JMI113
+     ISDGCMS    E DSXXGCMSPD                                                              JMI113
+      ** External DS for GCMS Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      *   Second DS for access programs; long data structure
+      *
+      *****************************************************************
+      *                                                               *
+      *   M A I N   P R O C E S S I N G                               *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+     C                     EXSR INIT
+      *
+     C                     EXSR MAIN
+      *
+     C                     EXSR CLOSE
+      *
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *   INIT - Subroutine to perform Initial processing             *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   AOBANKR0 - Access program                                   *
+      ****AOGCMSR0*-*Access*program************************************                   JMI113
+      *   XXGCMSR0 - Access program                                   *                   JMI113
+      *   ZM0060   - Convert Day No. to YYMMDD format                 *
+      *   *PSSR                                                       *
+      *   CLOSE                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Call Access Program to obtain Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      * Database Error.
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD001       DBASE             * DBERR 001*
+     C                     EXSR *PSSR                       ************
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Call Access Program to obtain GCMS Details
+      *
+     C**********           CALL 'AOGCMSR0'                                                JMI113
+     C                     CALL 'XXGCMSR0'                                                JMI113
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDGCMS    PARM SDGCMS    DSSDY
+      * Database Error.
+     C           @RTCD     IFNE *BLANK
+     C**********           MOVEL'SDGCMSPD'DBFILE                                          JMI113
+     C                     MOVEL'XXGCMSPD'DBFILE                                          JMI113
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD002       DBASE             * DBERR 002*
+     C                     EXSR *PSSR                       ************
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      ** Calculate day number for GCMS History backvalue period.
+      *
+     C           BJRDNB    SUB  J0REP9    HIST    50
+      *
+      ** Convert History day no and Run day no. by calling ZM0060
+      *
+     C                     CALL 'ZM0060'
+     C                     PARM HIST      ZMDAY   50
+     C                     PARM           ZSDATE  6
+     C           'S'       CAT  ZSDATE    #HIST   7
+      *
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+     C           'S'       CAT  ZSDATE    #RDNB   7
+      *
+      ** Initialise counts of records processed.
+      *
+     C                     Z-ADD0         RCNT
+     C                     Z-ADD0         UPCNT
+     C                     Z-ADD0         DLCNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MAIN
+      *****************************************************************
+      *                                                               *
+      *   MAIN - Subroutine to perform Main processing                *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *                                                               *
+      *   Calls :                                                     *
+      *   MILL                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+      ** Read first record.
+      *
+     C**********           READ GLMREFL0                 80                               JMI113
+     C                     READ XXMREFL0                 80                               JMI113
+      *
+      ** Do main processing while not end of file.
+      *
+     C           *IN80     DOWEQ'0'                        B001
+      *
+      ** Add one to number of records processed.
+      *
+     C                     ADD  1         RCNT
+      *
+     C           RYY       IFNE '00'                       B003
+      *
+      ** If member is older than history period, delete record.
+      ** Add one to number of deleted records.
+      *
+     C           F3MBRN    IFLE #HIST                      B004
+     C**********           DELETGLMREFD0                                                  JMI113
+     C                     DELETXXMREFD0                                                  JMI113
+     C                     ADD  1         DLCNT
+     C                     ENDIF                           E004
+      *
+      ** If Run Year is '00', perform Millennium processing
+      *
+     C                     ELSE                            X003
+      *
+     C                     EXSR MILL
+      *
+     C                     ENDIF                           E003
+      *
+      ** Read next record.
+      *
+     C**********           READ GLMREFL0                 80                               JMI113
+     C                     READ XXMREFL0                 80                               JMI113
+      *
+     C                     ENDDO                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MILL
+      *****************************************************************
+      *                                                               *
+      *   MILL - Subroutine to perform Millenium Drop                 *
+      *                                                               *
+      *   Called by : MAIN                                            *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MILL      BEGSR
+      *
+      ** If dates are in different centuries, delete recent
+      ** members only.
+      *
+     C           #HIST     IFGT #RDNB                      B001
+      *
+      ** Drop values between history period and run date
+      *
+     C           F3MBRN    IFLT #HIST                      B002
+     C           F3MBRN    ANDGT#RDNB
+     C**********           DELETGLMREFD0                                                  JMI113
+     C                     DELETXXMREFD0                                                  JMI113
+     C                     ADD  1         DLCNT
+     C                     ENDIF                           E002
+      *
+      ** If dates are in the same century, ensure dates are
+      ** dropped from end of previous century.
+      *
+     C                     ELSE                            X001
+      *
+      ** Also drop high values in last century
+      *
+     C           F3MBRN    IFLE #HIST                      B002
+     C           F3MBRN    ORGT #RDNB
+     C**********           DELETGLMREFD0                                                  JMI113
+     C                     DELETXXMREFD0                                                  JMI113
+     C                     ADD  1         DLCNT
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CLOSE
+      *****************************************************************
+      *                                                               *
+      *   CLOSE - Subroutine to perform Closedown processing          *
+      *                                                               *
+      *   Called by : Main Processing                                 *
+      *                                                               *
+      *   Calls :  NONE                                               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLOSE     BEGSR
+      *
+      ** Calculate No. of records remaining.
+      *
+     C           RCNT      SUB  DLCNT     UPCNT
+      *
+      ** Write Standard File control report.
+      *
+     C                     WRITE#CRPT
+      *
+      ** If database error has ocurred, write error report.
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITE#ERROR
+     C                     ENDIF
+      *
+      ** Terminate the program.
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2018
+**  ZYDY - Years in Days Cumulative. Four Year Span
+0366073110961461
+**  ZMDY - Months in Days Cumulative through year
+000031059090120151181212243273304334365
+**  ZMNM - Months Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

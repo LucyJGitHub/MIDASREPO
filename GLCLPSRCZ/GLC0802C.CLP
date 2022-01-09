@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036589           Date 14Feb16              */
+/*       Last Amend No. JMI112             Date 24May18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036589           Date 14Feb16              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
@@ -45,6 +46,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI112 - Midas-Opics Data Transfer Amendments. Upgrade to   */
+/*                FBM 2.1                                            */
+/*                Use of core hook GLC0802C04                        */
+/*                Use of core hook GLC0802C07                        */
+/*                Use of core hook GLC0802C13                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036589 - FX neeting projection during COB.                */
 /*       CER059 - German Feature Upgrade to Delhi                    */

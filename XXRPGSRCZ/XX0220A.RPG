@@ -1,0 +1,425 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Entry Generation Narrative Addition')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Fund Transfer Module                                 *
+      *                                                               *
+      ***FT0220A*-*FT*Entry*Generation*for*Narrative*Addition**********   JMI103
+      *  FT0220A - FT Entry Generation for Narrative Addition         *   JMI103
+      *                                                               *
+      *  Called By: FT0220  -  Fund Transfer Entry Generation         *
+      *                                                               *
+      ***(C)*COPYRIGHT*MKI*LIMITED*1999********************************   JMI103
+      *  (C) Finastra International Limited 2018                      *   JMI103
+      *                                                               *
+      *  Last Amend No. JMI102             Date 11Oct18               *
+      *  Prev Amend No. JMI103             Date 11Oct18               *
+      *                 JMI019             Date 12Dec07               *
+      *                 JMI024             Date 15Sep06               *
+      *                 228628             Date 30Aug04               *
+      * Midas DBA 3.1 ------------------------------------------------*
+      *                 JMI016             Date 07Feb03               *
+      *                 BFI003             Date 16Nov00               *
+      * Midas DBA 2.4 ------------------------------------------------*
+      *                 IMP009 *CREATE     Date 12MAR99               *
+      * Midas DBA 2.0 --------------- Base ---------------------------*
+      *                 XXXXXX             Date XXXXXXX               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  JMI102 - FT TPP Fontis Narrative Splitter                    *
+      *           (Upgrade of JMI016)                                 *
+      *  JMI103 - Adding FT Narrative to Customer Statements          *
+      *           (Upgrade of JMI019)                                 *
+      *  JMI019 - Midas-GCMS interface (upgrade as is except JMI024)  *
+      *  JMI024 - Add customer details to posting narrative           *
+      *  228628 - Narrative of posting of routed outgoing payment     *
+      *           message is incorrect.                               *
+      *  JMI016 - Differenciate DR & CR Narrative for Outgoing Pay-   *
+      *           ment with Settlement Type '01'.                     *
+      *  BFI003 - Put a blank space between FT reference and Benefi-  *
+      *           CIARY NAME.                                         *
+      *  IMP009 - Adding Narrative description                        *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+     FINPAYBB IF  E           K        DISK                           UC
+     FOTPAYBB IF  E           K        DISK                           UC
+     FACCNTL1 IF  E           K        DISK                               JMI102
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E/EJECT
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**********DSFDY     E DSDSFDY                                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ************ Short data structure for access programs                            JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     I**********DSSDY     E DSDSSDY                                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ************ Long data structure for access programs                             JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     I**********SDCNST    E DSSDCNSTPD                                                 JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ************ Calling parameter data structure for ME1400                         JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     I**********SDCUST    E DSSDCUSTPD                                                 JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ************ External Data structure for customer details.                       JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     I**********MEBICD    E DSMEBICDPD                                                 JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ************ Calling parameter data structure for ME1400                         JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     I***********SCSARD    E DSSCSARDPD                                                JMI024 JMI019
+      ************                                                                     JMI024 JMI019
+      ************* External data structure - SAR details                              JMI024 JMI019
+      ************                                                                     JMI024 JMI019
+     ISCSARD    E DSSCSARDPD                                                           JMI102
+      ** External data structure - SAR details                                         JMI102
+      *                                                                                JMI102
+     IDSFDY     E DSDSFDY                                                              JMI102
+      * Short data structure for access programs                                       JMI102
+      *                                                                                JMI102
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/EJECT
+      *
+     C           PAYKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           PREF
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   7        Action
+     C                     PARM           W0BRCA  3        Branch Code
+     C                     PARM           WREF   15        Payment Ref
+     C                     PARM           WNAR   30        Payment Narrative
+     C                     PARM           WDRCR   10       Dr/Cr Indicator
+     C                     PARM           W0RTN   7        Return Code
+      *
+      * Initialise program
+      *
+     C                     EXSR SRINIT
+      *
+      *  What action we should do
+      *
+     C           W0ACT     IFEQ '*TRANS'
+     C                     EXSR SRPROC
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Controlling Subroutine For Translation Process    *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS:     SRERR   - Error Processing                        *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+     C***********          MOVEL*BLANKS   WNAR15 15        BFI003
+     C                     MOVEL*BLANKS   WNAR15 14        BFI003
+      *
+      * GET THE REMITTANCE TYPE
+      *
+     C           2         SUBSTWREF:12   WNAR02  2
+     C                     MOVE W0BRCA    BRCA
+     C                     MOVE WREF      PREF
+      *
+      * GET SETTLEMENT TYPE
+      *
+     C           2         SUBSTWREF:14   WSETTL  2
+      *
+      * CHECK THE REMITTANCE TYPE
+      *
+     C           WNAR02    IFEQ 'IN'
+     C           WNAR02    OREQ 'OP'
+      *
+     C                     SELEC
+      *
+     C           WNAR02    WHEQ 'OP'
+      *
+      * OUTGOING REMITTANCE, GET THE APPROPRIATE RECORD FROM OTPAYBB
+      *
+     C           PAYKEY    CHAINOTPAYBB              90
+     C           *IN90     IFEQ '0'
+      *                                                         JMI102
+      * Move the Ordering Customer to Narrative                 JMI102
+      *                                                         JMI102
+     C           JMI102    IFEQ 'Y'                             JMI102
+     C           WSETTL    IFEQ '01'                            JMI102
+     C           WDRCR     ANDEQ1                               JMI102
+     C           ORCT      IFEQ 'R'                                                           228628
+     C                     MOVELORC1      ORCX   100            JMI102
+     C           ORCX      CHAINACCNTL1              91         JMI102
+     C      91             MOVELORC1      ANAM                  JMI102
+     C                     MOVELANAM      WNAR15                JMI102
+     C                     ELSE                                                               228628
+     C                     MOVELORC1      WNAR15    P                                         228628
+     C                     ENDIF                                                              228628
+     C                     ELSE                                 JMI102
+      *
+      ** Move the Beneficiary Name to Narrative
+      *
+     C                     MOVELBNC2      WNAR15
+     C                     ENDIF                                JMI102
+     C                     ELSE                                 JMI102
+     C                     MOVELBNC2      WNAR15                JMI102
+     C                     ENDIF                                JMI102
+      *                                                         JMI102
+     C                     ELSE
+     C                     MOVEL'XXX'     WNAR15
+     C                     ENDIF
+      *
+     C           WNAR02    WHEQ 'IN'
+      *
+      * INCOMING REMITTANCE, GET THE APPROPRIATE RECORD FROM INPAYBB
+      *
+     C           PAYKEY    CHAININPAYBB              90
+      *
+      * MOVE THE ORDERING CUSTOMER TO NARATIVE
+      *
+     C           *IN90     IFEQ '0'
+     C***********JMI024    IFEQ 'Y'                                                    JMI024 JMI019
+     C***********ORCT      ANDEQ'S'                                                    JMI024 JMI019
+     C***********JMI024    OREQ 'Y'                                                    JMI024 JMI019
+     C***********ORCT      ANDEQ'C'                                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** Ordering customer is SWIFT                                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********ORCT      IFEQ 'S'                                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** Call Access object to validate identifier                                     JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          MOVELORC1      ##001   1                                    JMI024 JMI019
+     C***********##001     IFEQ '/'                                                    JMI024 JMI019
+     C***********          MOVELORC2      W9BICC                                       JMI024 JMI019
+     C***********3         SUBSTORC2:9    W9BICB                                       JMI024 JMI019
+     C***********          ELSE                                                        JMI024 JMI019
+     C***********          MOVELORC1      W9BICC                                       JMI024 JMI019
+     C***********3         SUBSTORC1:9    W9BICB                                       JMI024 JMI019
+     C***********          END                                                         JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** Access SWIFT BIC identifier info                                              JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          CALL 'ME1400'                                               JMI024 JMI019
+     C***********          PARM *BLANKS   W9RTN   7                                    JMI024 JMI019
+     C***********          PARM           W9BICC  8                                    JMI024 JMI019
+     C***********          PARM           W9BICB  3                                    JMI024 JMI019
+     C***********          PARM           SDCUST                                       JMI024 JMI019
+     C***********          PARM           SDCNST                                       JMI024 JMI019
+     C***********          PARM           MEBICD                                       JMI024 JMI019
+     C***********          PARM *BLANKS   W9CUST  1                                    JMI024 JMI019
+     C***********          PARM *BLANKS   W9CNST  1                                    JMI024 JMI019
+     C***********          PARM *BLANKS   W9BICD  1                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** If customer details exist then set up CUSTNO                                  JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********W9CUST    IFEQ 'Y'                                                    JMI024 JMI019
+     C***********          MOVELBBCNA1    WNAR15    P                                  JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          ELSE                                                        JMI024 JMI019
+     C***********          MOVELORC1      WNAR15    P                                  JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          ENDIF                                                       JMI024 JMI019
+     C***********          ENDIF                                                       JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** Ordering customer is a customer number                                        JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********ORCT      IFEQ 'C'                                                    JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** If using account line construct then use second line                          JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          MOVELORC1      ##001   1                                    JMI024 JMI019
+     C***********##001     IFEQ '/'                                                    JMI024 JMI019
+     C***********          MOVELORC2      WCUST     P                                  JMI024 JMI019
+     C***********          ELSE                                                        JMI024 JMI019
+     C***********          MOVELORC1      WCUST     P                                  JMI024 JMI019
+     C***********          ENDIF                                                       JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** Access SDCUSTPD using customer number                                         JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          CALL 'AOCUSTR0'                                             JMI024 JMI019
+     C***********          PARM '*MSG   ' @RTCD                                        JMI024 JMI019
+     C***********          PARM '*KEY   ' @OPTN                                        JMI024 JMI019
+     C***********          PARM           WCUST  10                                    JMI024 JMI019
+     C***********          PARM *BLANKS   @KYST   7                                    JMI024 JMI019
+     C***********SDCUST    PARM SDCUST    DSSDY                                        JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ** Customer record not found - Error                                             JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********@RTCD     IFEQ *BLANKS                                                JMI024 JMI019
+     C***********          MOVELBBCNA1    WNAR15    P                                  JMI024 JMI019
+     C***********          ELSE                                                        JMI024 JMI019
+     C***********          MOVELORC1      WNAR15    P                                  JMI024 JMI019
+     C***********          ENDIF                                                       JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+      ***********                                                                      JMI024 JMI019
+     C***********          ENDIF                                                       JMI024 JMI019
+     C***********          ELSE                                                        JMI024 JMI019
+     C                     MOVELORC1      WNAR15
+     C***********          ENDIF                                                       JMI024 JMI019
+     C                     ELSE
+     C                     MOVEL'XXX'     WNAR15
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     MOVE WNAR15    WNAR
+     C                     MOVELWREF      WNAR
+      *
+     C                     ENDIF
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPFIL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+     C                     EXSR SRCLS                      BFI003
+      * Open Files
+      *
+     C                     OPEN OTPAYBB
+     C                     OPEN INPAYBB
+      *
+     C                     MOVE *ON       *IN50
+      **********                                                                       JMI024 JMI019
+      ** Access SAR details to determine if JMI024 is switched on                      JMI024 JMI019
+      **********                                                                       JMI024 JMI019
+     C**********           MOVE 'N'       JMI024  1                                    JMI024 JMI019
+      **********                                                                       JMI024 JMI019
+     C**********           CALL 'AOSARDR0'                                             JMI024 JMI019
+     C**********           PARM *BLANKS   @RTCD   7                                    JMI024 JMI019
+     C**********           PARM '*VERIFY' @OPTN   7                                    JMI024 JMI019
+     C**********           PARM 'JMI024'  @SARD  10                                    JMI024 JMI019
+     C********** SCSARD    PARM SCSARD    DSFDY                                        JMI024 JMI019
+      **********                                                                       JMI024 JMI019
+     C********** @RTCD     IFNE *BLANKS                                                JMI024 JMI019
+     C********** @RTCD     ANDNE'*NRF   '                                              JMI024 JMI019
+     C**********           MOVEL'SCSARDPD'W0FILE                                       JMI024 JMI019
+     C**********           Z-ADD01        W0ERNB                                       JMI024 JMI019
+     C**********           MOVE 'JMI024'  W0KEY                                        JMI024 JMI019
+     C**********           EXSR SRERR                                                  JMI024 JMI019
+     C**********           ENDIF                                                       JMI024 JMI019
+      **********                                                                       JMI024 JMI019
+     C********** @RTCD     IFEQ *BLANKS                                                JMI024 JMI019
+     C**********           MOVE 'Y'       JMI024                                       JMI024 JMI019
+     C**********           ENDIF                                                       JMI024 JMI019
+      *
+      ** Access SAR details to determine if JMI024 is switched on                      JMI102
+      *                                                                                JMI102
+     C                     MOVE 'N'       JMI102  1                                    JMI102
+      *                                                                                JMI102
+     C                     CALL 'AOSARDR0'                                             JMI102
+     C                     PARM *BLANKS   @RTCD   7                                    JMI102
+     C                     PARM '*VERIFY' @OPTN   7                                    JMI102
+     C                     PARM 'JMI102'  @SARD  10                                    JMI102
+     C           SCSARD    PARM SCSARD    DSFDY                                        JMI102
+      *                                                                                JMI102
+     C           @RTCD     IFEQ *BLANKS                                                JMI102
+     C                     MOVE 'Y'       JMI102                                       JMI102
+     C                     ENDIF                                                       JMI102
+      *                                                                                JMI102
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLS    : Close all open file                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCLS     BEGSR
+      *
+     C                     CLOSEOTPAYBB                90
+     C                     CLOSEINPAYBB                90
+      *
+     CSR                   ENDSR
+      *
+      *  /Copy point for Calculation Specs
+      *
+     C/EJECT
+     C/COPY MECPYSRC,SRERRC
+**  CPY@ table
+(C) Finastra International Limited 2018

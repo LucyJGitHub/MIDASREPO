@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. JMI105             Date 12May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI105 - Validate Subtype and Settle/Pay Ccy combination     *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -178,6 +180,8 @@
       ** Validate Payment Subtype.
       *
      C                   EXSR      SRValStyp
+      *                                                                                       JMI105
+     C/COPY WNCPYSRC,JMI105_003                                                               JMI105
       *
       ** If an error has been found, set return code appropriately.
       ** Otherwise, update Valid File field.
@@ -279,6 +283,8 @@
       *
      C     EValStyp      ENDSR
       *
+     C/COPY WNCPYSRC,JMI105_004                                                               JMI105
+      *                                                                                       JMI105
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -312,6 +318,8 @@
       ** Mode = '*SIN  ' (Screen Input Function)
      C                   PARM                    PMode             6
       *
+     C/COPY WNCPYSRC,JMI105_005                                                               JMI105
+      *                                                                                       JMI105
       ** OUTPUT
       ** ======
       *

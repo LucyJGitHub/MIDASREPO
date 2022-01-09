@@ -1,0 +1,459 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL GCMS MT999 SWIFT TCP/IP FTP Monitor oper')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-GCMS Interface                                 *
+      *                                                               *
+      ***GLJ049*-*Monitor*TCP/IP*FTP*operation*************************                   JMI113
+      ************Based*on*GLJ007**************************************                   JMI113
+      *  XX113049 - Monitor TCP/IP FTP operation                      *                   JMI113
+      *             Based on XX113047                                 *                   JMI113
+      *                                                               *
+      ***Function*:*This*program*reads*through*PF/GLG9OTPD*-*MS*FTP** *                   JMI113
+      *  Function : This program reads through PF/XXG9OTPD - MS FTP   *                   JMI113
+      *             output file and determines the status of the FTP  *
+      *             operation.                                        *
+      *                                                               *
+      ***Called*By:*GLCJ049*-*File*Transfer*Protocol*Functions*********                   JMI113
+      *  Called By: XXC113049 - FTP Functions                         *                   JMI113
+      *                                                               *
+      *  Calls:     -                                                 *
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************                   JMI113
+      *  (c) Finastra International Limited 2018                      *                   JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 25May18               *
+      *  Prev Amend No. JMI019  *CREATE    Date 21Feb07               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  JMI118 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  JMI019 - Update as is                                        *
+      *  JMI019 - Phase III MT999 Message Processing                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     F**********GLG9OTPDIF  E                    DISK         KINFSR *PSSR                JMI113
+     FXXG9OTPDIF  E                    DISK         KINFSR *PSSR                          JMI113
+      ** TCP/IP FTP Output File
+      *
+     FGLRCODL0IF  E           K        DISK         KINFSR *PSSR
+      ** FTP Return Codes File - contain succesful Return Codes -
+      *
+      /EJECT
+      *****************************************************************
+      *                     INDICATOR USAGE                           *
+      *                     ---------------                           *
+      *                                                               *
+      *   86      SCAN is successfully executed                       *
+      *   87      Error occured in SUBST                              *
+      ****88******End*of*File*is*encountered*on*PF/GLG9OTPD************                   JMI113
+      *   88      End of File is encountered on PF/XXG9OTPD           *                   JMI113
+      *   89      Chain Failed on LF/GLRCODL0                         *
+      *   U7      Job Switch 7                                        *
+      *   U8      Job Switch 8                                        *
+      *   LR      End of program                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Copyright Statement
+      *
+      /EJECT
+      *
+     ICPYR@#      DS
+      ** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I            DS
+      ** Data Structure for FTP Output.
+     I                                        1  80 F7LN80
+     I                                        1   3 WLN03
+     I                                        1   1 WLN01
+     I                                        4   7 WLN04
+     I                                        1   7 WLN07
+     I                                        1  11 WLN11
+     I                                        1  41 WLN41
+     I            DS
+      ** Data Structure for Constants.
+     I I            'Use command'             1  11 WSYNTX
+     I I            'Command not valid.'     12  29 WINVLD
+     I I            'Not able to connect -   30  70 WLINK
+     I              'to remote host -
+     I              'system'
+      *
+      /EJECT
+      *
+      ** Copyright Statement.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Entry Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    7
+     C                     PARM           PRTNC   7
+      *
+      ** LF/GLRCODL0 Key list
+      *
+     C           PMRCOD    KLIST
+     C                     KFLD           @FTPC
+     C                     KFLD           @FTPW
+      *
+      ** Define Fields
+      *
+     C           *LIKE     DEFN PFTPC     @FTPC
+     C           *LIKE     DEFN PFTPW     @FTPW
+      *
+      ** Initialisation.
+      *
+     C                     MOVE *BLANKS   PRTNC
+      *
+     C           MODE      IFEQ 'SEND'
+     C                     MOVE 'S'       @FTPW
+     C                     ELSE
+     C                     MOVE 'R'       @FTPW
+     C                     END
+      *
+      ** Check link to remote system.
+      *
+     C                     EXSR ZRLINK
+      *
+      ** Check for invalid command and syntax error for the subcommands
+      ** used in transferring of file.
+      *
+     C                     EXSR ZSYNTX
+      *
+      ** If the subcommands are all valid (no invalid command & syntax
+      ** error), then check if the user has successfully logged-on to
+      ** the remote system and if each subcommand was executed
+      ** successfully.
+      *
+     C                     EXSR ZCOMND
+      *
+      ** Set-on LR and return to the calling program.
+      *
+     C                     SETON                     LR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  SUB-ROUTINE DEFINITIONS                      *
+      *                  -----------------------                      *
+      *                                                               *
+      *     ZRLINK - Check link to remote system                      *
+      *     ZSYNTX - Check for invalid subcommand and incorrect syntax*
+      *     ZCOMND - Check for user logged-on and return codes        *
+      *     ZRCODE - Check Subcommands' Return codes                  *
+      *     *PSSR  - Error Handling Subroutine                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : ZRLINK - Check link to remote system            *
+      *                                                               *
+      *  CALLED BY  : MAIN   - Main Controlling Routine               *
+      *                                                               *
+      *  CALLS      : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZRLINK    BEGSR
+      *
+      ** Retrieve Operating System version and level, as V3R1M0 and
+      ** above protocol (TCP/IP) uses different format for returning
+      ** FTP commands in output file.
+      *
+     C                     CALL 'UTC0280'
+     C                     PARM           IBMLVL  6
+     C                     PARM           RPYTYP  5
+      *
+     C           1         SUBSTIBMLVL:2  IBMVRS  1
+      *
+     C           IBMVRS    IFEQ '1'
+     C           IBMVRS    OREQ '2'
+     C           IBMLVL    OREQ 'V3R0M5'
+     C                     MOVE 'N'       TCPIP   1
+     C                     ELSE
+     C                     MOVE 'Y'       TCPIP
+     C                     END
+      *
+      ** Position pointer to first record on file.
+      *
+     C********** 1         SETLLGLFOOTD0                                                  JMI113
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C           1         SETLLXXFOOTD0                                                  JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+      ** Check if link is down...
+      *
+     C           *IN88     DOWEQ'0'
+      *
+      ** If the first 41 characters of FTP output is 'Not able to
+      ** connect to remote host system', the link is down. Hence set
+      ** retun code to 'FAILED', seton LR and terminate.
+      *
+     C           WLN41     IFEQ WLINK
+     C                     MOVEL'FAILED'  PRTNC
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : ZSYNTX - Check for invalid subcommand and       *
+      *                        incorrect syntax                       *
+      *                                                               *
+      *  CALLED BY  : MAIN   - Main Controlling Routine               *
+      *                                                               *
+      *  CALLS      : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZSYNTX    BEGSR
+      *
+      ** Position pointer to first record on file.
+      *
+     C********** 1         SETLLGLFOOTD0                                                  JMI113
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C           1         SETLLXXFOOTD0                                                  JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+      ** Check for invalid command and syntax error for the subcommands
+      ** used in transferring of file.
+      *
+     C           *IN88     DOWEQ'0'
+      *
+      ** If the first 11 characters of FTP output is 'Use command',
+      ** there is a syntax error in the subcommand, hence execute *PSSR
+      *
+     C           WLN11     IFEQ WSYNTX
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If the first 7 characters of FTP output is 'Command', scan the
+      ** FTP output from position 9 until it encounters a blank. Merge
+      ** the first 7 characters (which is 'Command') and all the chars
+      ** from the point it encounters the blank. If the resulting
+      ** string formed is 'Command not valid', then execute *PSSR.
+      *
+     C                     MOVE *BLANK    WSTR1  80
+     C                     MOVE *BLANK    WSTR2  80
+      *
+     C           WLN07     IFEQ 'Command'
+      *
+     C           ' '       SCAN F7LN80:9  X1      20     86
+     C           81        SUB  X1        X2      20
+     C           X2        SUBSTF7LN80:X1 WSTR1        87
+     C           WLN07     CAT  WSTR1     WSTR2
+      *
+     C           WSTR2     IFEQ WINVLD
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read the next record on file.
+      *
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : ZCOMND - Check for user logged-on and return    *
+      *                        codes sent after executing subcommands *
+      *                                                               *
+      *  CALLED BY  : MAIN   - Main Controlling Routine               *
+      *                                                               *
+      *  CALLS      : ZRCODE - Check Subcommands' Return codes        *
+      *               *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZCOMND    BEGSR
+      *
+      ** Position pointer to first record on file.
+      *
+     C********** 1         SETLLGLFOOTD0                                                  JMI113
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C           1         SETLLXXFOOTD0                                                  JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+      ** Check if user has successfully logged-on to the remote system.
+      *
+     C           *IN88     DOWEQ'0'
+     C           TCPIP     ANDEQ'Y'
+     C           WLN03     ANDNE'331'
+     C           *IN88     OREQ '0'
+     C           TCPIP     ANDEQ'N'
+     C           WLN07     ANDNE'>>>PASS'
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+     C                     ENDDO
+      *
+      ** If end of file was reached (there is no return code for the
+      ** subcommand, the database was corrupted, hence execute *PSSR.
+      *
+     C           *IN88     IFEQ '1'
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+      ** Read the next record to get the return code. If the first 3
+      ** characters of the return code is not '230', log-on failed, because
+      ** the user is not authorised to log-on to the system or the
+      ** password used by the user is not valid. Hence, set return code
+      ** to 'LOGIN' and terminate.
+      *
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+     C           WLN03     IFNE '230'
+     C                     MOVEL'LOGIN'   PRTNC
+     C                     ELSE
+      *
+      ** The user has successfully logged-on to the system... Check for
+      ** the return codes sent after performing each subcommand.
+      *
+     C                     EXSR ZRCODE
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : ZRCODE - Check Subcommands' Return codes        *
+      *                                                               *
+      *  CALLED BY  : ZCOMND - Check for user logged-on and return    *
+      *                        codes sent after executing subcommands *
+      *                                                               *
+      *  CALLS      : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZRCODE    BEGSR
+      *
+      ** Check for the return codes sent after performing each
+      ** subcommand... Terminate the program after scanning all records
+      ** in the FTP output or if a subcommand failed.
+      *
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+      *
+     C           *IN88     DOWEQ'0'                        B01
+      *
+      ** Search for Subcommands ">"
+      *
+     C           WLN01     IFEQ '>'                        B02
+      *
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+     C           *IN88     IFEQ '1'                        B03
+     C                     EXSR *PSSR
+     C                     END                             E03
+      *
+      ** A VALID RETURN CODE TO BE FOUND BEFORE NEXT SUBCOMMANDS
+      *
+     C                     MOVE '0'       *IN87
+     C           *IN87     DOWEQ'0'                        B03
+      *
+     C           WLN01     IFEQ '>'                        B04
+     C                     EXSR *PSSR
+     C                     END                             E04
+      *
+     C                     MOVELWLN03     @FTPC
+     C           PMRCOD    CHAINGLRCODL0             89
+      *
+     C           *IN89     IFEQ '1'                        B04
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+     C           *IN88     IFEQ '1'                        B05
+     C                     EXSR *PSSR
+     C                     END                             E05
+     C                     ELSE                            X04
+     C                     MOVE '1'       *IN87
+     C                     ENDIF                           E04
+      *
+     C                     ENDDO                           E03
+     C                     ENDIF                           E02
+      *
+      ** CONTINUE TO READ UNTIL END OF FILE
+      *
+     C**********           READ GLFOOTD0                 88                               JMI113
+     C                     READ XXFOOTD0                 88                               JMI113
+     C                     ENDDO                           E01
+      *
+      ** Operation is successful, set Return Code to 'READY.
+      *
+     C                     MOVEL'READY'   PRTNC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *  CALLED BY  : This routine is called if there are any program *
+      *               or file errors.                                 *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Ensure only performed once
+      *
+     C           WPSSR     IFEQ ' '
+     C                     MOVEL'Y'       WPSSR   1
+      *
+      ** Set on Error Indicators, U7 and U8 and LR.
+      *
+     C                     SETON                     U7U8LR
+      *
+      ** If Return code is blank -> set to Failed.
+      *
+     C           PRTNC     IFEQ *BLANKS
+     C                     MOVEL'FAILED'  PRTNC
+     C                     END
+      *
+      **  Dump program and return.
+      *
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+**  CPY@
+(C) Finastra International Limited 2018

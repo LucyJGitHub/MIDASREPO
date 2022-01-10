@@ -510,7 +510,7 @@
                    AuditLogDS.SJMDAY = BJRDNB;
                    pOP01 = 'ARRAdapterURL';
                    pOP02 = 'ARRCalculatorTrace';
-                   pOP03 = 'ARRAdapterURLSSL';                                              MD059104
+                   pOP03 = 'ARRAdapterURLSSL';                                            //MD059104
 
                    CallP ACCESS_SVAL(
                                        pRetCode

@@ -1243,13 +1243,13 @@
      C                   EVAL      DDRSTM = '00'                                              CLE034
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
-     C                   RESET                   ReturnCode
-     C                   CALLB     'ZASETINVAL'
-
      C                   IF        DDACTN = 'A'                                             MD059304
      C                   EXSR      CHECKSSI                                                 MD059304
      C                   ENDIF                                                              MD059304
                                                                                             MD059304
+     C                   RESET                   ReturnCode
+     C                   CALLB     'ZASETINVAL'
+
       ** Return code
      C                   PARM                    ReturnCode
 

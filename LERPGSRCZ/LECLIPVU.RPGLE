@@ -33,10 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059046           Date 05Jan22               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
-      *                 MD056313           Date 21Sep20               *      
+      *                 MD056313           Date 21Sep20               *
       *                 MD051895           Date 22May19               *
       *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
@@ -148,11 +149,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059046 - 24x7 API: CLIP: Final LNRF value may differ from  *
+      *             the one sent in response. Amend to skip checking  *
+      *             of Auto Loan allocate if loan is from 24X7.       *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056313 - Settlement validated twice. Used placeholder for  *
-      *             messages in first ZASETINVAL call                 *      
+      *             messages in first ZASETINVAL call                 *
       *  MD051895 - Error when rejecting a change to a loan which     *
       *             settles over a GL account.                        *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
@@ -1728,6 +1732,7 @@
       ** Reject Button                                                                      AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM                    APSRCSYS                                   MD059046
      C/COPY WNCPYSRC,LECLIPXC03
 
      C                   Z-ADD     CL_TNLU       H#TNLU            5 0
@@ -2039,6 +2044,7 @@
       ** Front Office ID                                                                    MD032052
      C                   PARM                    APFOTranID       20                        MD032052
      C**********         PARM                    WBLKACCT                         MD022807 MD022807C
+     C                   PARM                    APSRCSYS                                   MD059046
                                                                                               247441
      C                   MOVE      DDAPRC        @DDAPRC           1                        MD054028
      C                   MOVE      DDPREM        @DDPREM          15                        MD054028

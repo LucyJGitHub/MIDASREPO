@@ -348,7 +348,7 @@
      FDLDLDCL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
      F                                     RENAME(DEALSDCF:DEALSDMM)                        MD059304
      F                                     PREFIX(MM_)                                      MD059304
-     FSDEXSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     FSDEXSTL1  IF   E           K DISK                                                     MD059304
 
       *****************************************************************
       ** +--------------------------------------+

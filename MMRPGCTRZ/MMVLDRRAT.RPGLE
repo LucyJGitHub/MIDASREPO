@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD057558           Date 18Feb21               *
-      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *  Last Amend No. MD059322           Date 11Dec21               *
+      *  Prev Amend No. MD057558           Date 18Feb21               *
+      *                 MD057049           Date 03Nov20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
@@ -31,6 +32,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059322 - FM2021.A DL: MM deal with Negative Reference rate *
+      *             cannot be inserted due to error.                  *
+      *           - Use ZA0841 instead of ZA0840 because it also      *
+      *             validate negative value.                          *
       *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  MD057049 - Amended ZA0840 result checking                    *
       *           - Moved @@AMT to ZFIELD for formatting              *
@@ -207,7 +212,9 @@
      C**********         PARM                    ZFIELD                                     MD023981
      C**********         PARM                    ZADEC                                      MD023981
      C**********         PARM                    ZADIG                                      MD023981
-     C                   CALLB     'ZA0840'                                                 MD023981
+     C**********         CALLB     'ZA0840'                                        MD023981 MD059322
+     C                   EVAL      @Rtcde = *Blanks                                         MD059322
+     C                   CALLB     'ZA0841'                                                 MD059322
      C                   PARM                    @Rtcde                                     MD023981
      C                   PARM                    @@ALPH                                     MD023981
      C                   PARM                    @@IDP                                      MD023981
@@ -230,14 +237,16 @@
      C**********         MOVE      ZFIELD        MM#REF           13 8                      MD023981
      C                   MOVE      @@AMT         MM#REF           13 8                      MD023981
      C                   Z-ADD     MM#REF        RefRate          13 8
-     C                   MOVE      @@AMT         ZFIELD                                     MD057049
+      ** Remove below codes, ZA0841 already converted the reference rate                    MD059322
+     C**********         MOVE      @@AMT         ZFIELD                            MD057049 MD059322
       *
-      * Convert numeric field - insert decimal point
-     C                   CALLB     'ZEDIT'
-     C                   PARM                    ZFIELD
-     C                   PARM      8             ZADEC
+      **Convert*numeric*field*-*insert*decimal*point                                        MD059322
+     C**********         CALLB     'ZEDIT'                                                  MD059322
+     C**********         PARM                    ZFIELD                                     MD059322
+     C**********         PARM      8             ZADEC                                      MD059322
 
-     C                   MOVE      ZFIELD        DDRRAT
+     C**********         MOVE      ZFIELD        DDRRAT                                     MD059322
+     C                   MOVE      @@ALPH        DDRRAT                                     MD059322
       *
       **  Check tolerance
       *

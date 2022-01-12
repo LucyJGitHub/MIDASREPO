@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260858             Date 04Oct21               *
-      *  Prev Amend No. MD033891           Date 07Jul15               *
+      *  Last Amend No. MD059336           Date 20Dec21               *
+      *  Prev Amend No. 260712             Date 20Dec21               *
+      *                 260858             Date 04Oct21               *
+      *                 MD033891           Date 07Jul15               *
       *                 AR1049910          Date 26Oct12               *
       *                 MD030796           Date 30Oct14               *
       *                 MD050604           Date 21Feb20               *
@@ -296,6 +298,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059336 - Field differnce in BKPOSD and BKPHDD              *
+      *             BKPOSD - APPN; APNN                               *
+      *             BKPHDD - LAVN; BUDN; DPAN                         *
+      *             Changes done in  SR/AAMORN of FM20 not in FM21.   *
+      *             Incorporate to FM21.                              *
+      *           - Field difference in BKPOSD and BKPHDD             *
+      *             BKPOSD - FXAP; BKPHDD - LXFP                      *
+      *             Apply 260712 From FM20 to FM21.                   *
+      *  260712 - No amortization should take place if average price  *
+      *           is 100. Applied fix 232220                          *
+      *           Applied for MD-59336.                               *
       *  260858 - Incorrect coupon rate used for discount securities. *
       *           Initialised working field WPCPNR with CPNR value.   *
       *         - Applied for MD-58878                                *
@@ -7021,6 +7034,7 @@
      C           SYBS      ANDNE*BLANK                                    CSE032
      C           NPSN      ANDNE0                                         CSE032
      C           LAMDAT    ANDLTBCAD                                      CSE032
+     C           LAVP      ANDNE100                                                           260712
      C*                                                                   CSE032
      C* AMORTIZE PREM/DISC ON YIELD CURVE BASIS FOR AUSTRALIA.            CSE032
      C* -IF YIELD CURVE BASIS                                             CSE032
@@ -8273,7 +8287,16 @@
       ** If initial date has not been reached yet, then bypass                                CAS006
       *                                                                                       CAS006
      C           ITLD      IFGT BCAD                                                          CAS006
-     C           CSE065    OREQ 'Y'                                                           CSE065
+     C           CSE065    ANDEQ'N'                                                         MD059336
+     C           CSE105    ANDEQ'Y'                                                         MD059336
+     C           CSE032    ANDEQ'Y'                                                         MD059336
+     C           BHTV      ANDEQ'T'                                                         MD059336
+     C********** CSE065    OREQ 'Y'                                                  CSE065 MD059336
+     C                     ELSE                                                             MD059336
+     C                     GOTO AAENN                                                       MD059336
+     C                     ENDIF                                                            MD059336
+      *                                                                                     MD059336
+     C           CSE065    IFEQ 'Y'                                                         MD059336
      C           ALDT      ANDLTRUND                                                          CSE065
      C           WAMORT    ANDNE' '                                                           CSE065
      C                     GOTO AAENN                                                         CAS006

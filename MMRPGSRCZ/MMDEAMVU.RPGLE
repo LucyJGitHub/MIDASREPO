@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053472           Date 27Oct20               *
-      *  Prev Amend No. MD055318           Date 17Feb20               *
+      *  Last Amend No. MD059304           Date 22Dec21               *
+      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *                 MD055318           Date 17Feb20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 CDL051             Date 02May18               *
@@ -91,6 +92,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
+      *           - Applied for MD-59358                              *
       *  MD053472 - Payment settlement details cleared for Early      *
       *             Maturity                                          *
       *  MD055318 - Customer may not be amended error                 *
@@ -172,6 +178,9 @@
      FDLDLDCL1  IF   E           K DISK    PREFIX(DC_)                                        CSD095
      F                                     INFSR(*PSSR)                                       CSD095
                                                                                               CSD095
+      *                                                                                     MD059304
+     FSDEXSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+      *                                                                                     MD059304
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -1401,6 +1410,10 @@
      C                   ENDIF                                                               BUG6534
      C                   ENDIF                                                               BUG6534
       *                                                                                      BUG6534
+     C                   IF        DDACTN = 'A'                                             MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
 
@@ -2255,5 +2268,48 @@
       *                                                                                       CDL051
      C                   ENDSR
       ********************************************************************
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C                   MOVEL     DDDLNO        DEALNR                                     MD059304
+     C     DEALNR        CHAIN     DLDLDCL1                           51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        DC_PSTM = 0 AND                                          MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C                   MOVEL     'MM'          BYTRTY                                     MD059304
+     C                   MOVEL     DDCCY         BYCYCD                                     MD059304
+     C                   MOVEL     DDCSNM        BYCUST                                     MD059304
+     C                   MOVEL     DDBRCA        BYBRCA                                     MD059304
+     C                   MOVEL     DDSTYP        BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     DDCSNM        DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     DDCSNM        DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
+      *****************************************************************                     MD059304
 **  CPY@
 (c) Finastra International Limited 2003

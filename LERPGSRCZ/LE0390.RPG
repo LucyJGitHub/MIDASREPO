@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057976           Date 20May21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD059190           Date 08Nov21               *
+      *  Prev Amend No. MD057976           Date 20May21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 241243             Date 07Mar08               *
       *                 MD055733           Date 03Jul20               *
@@ -243,6 +244,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD059190 - Use current details if rollover fields are empty. *
+      *             This is to prevent blanking out of base rate code *
+      *             despite not amending backward looking rate flag.  *
+      *           - Applied for MD-59358                              *
       *  MD057976 - Letter of credit back-valued to prior year accrued*
       *             incorrectly. Calculate WINDAY using PDDI setting. *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -2631,6 +2636,23 @@
      C                     END                                            105046
      C*                                                                   105046
 0671 C  N49                GOTO NOROL
+      *                                                                                     MD059190
+     C           CLE172    IFEQ 'Y'                                                         MD059190
+     C           NEWCOB    ANDEQ'N'                                                         MD059190
+     C           BLRT      ANDEQ'Y'                                                         MD059190
+     C           NBLRT     ANDEQ' '                                                         MD059190
+     C           BRTT      ANDNE*BLANKS                                                     MD059190
+     C           NBRAL     ANDEQ*BLANKS                                                     MD059190
+     C           NCAC      ANDEQ0                                                           MD059190
+     C           NRTSL     ANDEQ0                                                           MD059190
+     C           NSIN      ANDEQ*BLANKS                                                     MD059190
+     C           NCHI      ANDEQ*BLANKS                                                     MD059190
+     C                     MOVE BRTT      NBRAL                                             MD059190
+     C                     Z-ADDICBS      NCAC                                              MD059190
+     C                     Z-ADDRTSPL     NRTSL                                             MD059190
+     C                     MOVE SPINL     NSIN                                              MD059190
+     C                     MOVE CHIN      NCHI                                              MD059190
+     C                     ENDIF                                                            MD059190
      C/COPY WNCPYSRC,LE0390C001
 0672 C* CHECK IF R/O DETAILS ARE PRESENT.(50=ON)
 0673 C           NCAC      COMP 0                    50  53
@@ -7016,6 +7038,18 @@
      C           PRTCD     IFEQ *BLANK                                                        CLE141
      C                     MOVE 'Y'       CLE141                                              CLE141
      C                     ENDIF                                                              CLE141
+      *                                                                                     MD059190
+      ** Check if CLE172 is switched ON                                                     MD059190
+      *                                                                                     MD059190
+     C                     MOVEL'N'       CLE172  1                                         MD059190
+     C                     CALL 'AOSARDR0'                                                  MD059190
+     C                     PARM *BLANK    PRTCD                                             MD059190
+     C                     PARM '*VERIFY' POPTN                                             MD059190
+     C                     PARM 'CLE172'  PSARD                                             MD059190
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD059190
+     C           PRTCD     IFEQ *BLANK                                                      MD059190
+     C                     MOVE 'Y'       CLE172                                            MD059190
+     C                     ENDIF                                                            MD059190
       **********                                                                   AR826115 MD034840
       ***Get*Lending*ICD*                                                          AR826115 MD034840
       **********                                                                   AR826115 MD034840

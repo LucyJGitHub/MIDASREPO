@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058173           Date 28Jun21               *
-      *  Prev Amend No. AR573975           Date 01Jun20               *
+      *  Last Amend No. JMI111             Date 16May19               *       
+      *  Prev Amend No. MD058173           Date 28Jun21               *
+      *                 AR573975           Date 01Jun20               *
       *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057744           Date 24Mar21               *
@@ -97,6 +98,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Use of core hook GLH00459                           *      
       *  MD058173 - Hash Item input count on JRNE is updated when user*
       *             amend the batch item details. Hash Item No. Input *
       *             from Header should be retained during amend or de-*

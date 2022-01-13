@@ -23,8 +23,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058361           Date 26Jun21               *
-      *  Prev Amend No. MD056752           Date 20Sep20               *
+      *  Last Amend No. 254598             Date 20Feb20               *
+      *  Prev Amend No. JMI113             Date 22May18               *      
+      *                 MD058361           Date 26Jun21               *
+      *                 MD056752           Date 20Sep20               *
       *                 MD056560           Date 31Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -61,6 +63,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  254598 - Increase length of DP32B and DATA2 (JMI106/113)     *
+      *           (Recompile)                                         *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *           Add hook JMI113_016                                 *
+      *           Amend core hook ME1100C008                          *      
       *  MD058361 - Correct SQL request to access MEINFJW0            *
       *  MD056752 - Deliverable Data Split for MEINFMPD               *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
@@ -958,6 +965,7 @@
      C                   EXSR      SRFILL                                                      CFT00
      C                   MOVEL     DSOUT         PH20                                          CFT00
       *                                                                   CFT006
+     C/COPY WNCPYSRC,JMI113_016                                                               JMI113      
      C     PRMDS         WHENEQ    'PH71G'                                                     CFT00
      C                   MOVEL     DSTRAN        DSIN                                          CFT00
      C                   MOVEL     *BLANK        DSOUT                                         CFT00

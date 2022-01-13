@@ -16,7 +16,7 @@
       *****************************************************************
       *
      F*SDOPINPDIF  E                    DISK                                                  JMI111
-     FXXOPINPDIF  E                    DISK                                                   JMI111
+     FXXOPINPD  IF   E             DISK                                                       JMI111
       ** SD MIDAS/OPICS Interface ICD
       *
       *****************************************************************

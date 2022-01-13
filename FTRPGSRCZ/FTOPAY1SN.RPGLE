@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Last Amend No. JMI113             Date 19Feb20               *
+      *  Prev Amend No. JMI106             Date 16May19               *       
+      *                 CSD103             Date 10Aug20               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
       *                 MD054130           Date 28Aug19               *
@@ -174,6 +176,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI113 - Midas-GCMS Interface. Upgrade to FBM 2.1            *
+      *           (It includes SC254598)                              *
+      *           Amendment of hook JMI106_009                        *
+      *           Amendment of hook JMI106_012                        *
+      *           Amendment of hook FTOPA1SC11                        *
+      *           Amendment of hook FTOPA1SC12                        *
+      *           Addition of hooks JMI113_023 to JMI113_033          *
+      *  JMI106 - Split FT Sequence Number based on Settlement Type   *
+      *           Use of core hook FTH00064                           *
+      *           Addition of hook JMI106_009                         *
+      *           Addition of hook JMI106_010                         *
+      *           Addition of hook JMI106_011                         *
+      *           Addition of hook JMI106_012                         *
+      *           (Upgrade to FB Midas)                               *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
@@ -1202,6 +1218,7 @@
      D  WPTACD                 7     16                                                       CGL029
      D  WPTSQN                17     18                                                       CGL029
      D  WPTBCH                19     21                                                       CGL029
+     D/COPY WNCPYSRC,JMI106_009                                                               JMI106
       *                                                                                       187056
       ** Calling parameter DS for FT0035                                                      187056
      D P0DTA           DS           256                                                       187056
@@ -5184,6 +5201,7 @@
      C                   END
       *                                                                         CGL009
      C                   ENDSL                                                  CGL009
+     C/COPY WNCPYSRC,JMI113_023                                                               JMI106
       *
       * Ordering Bank file fields
       *
@@ -5331,6 +5349,7 @@
       *                                                                                     MD022446
       *                                                                         CGL009
      C                   ENDSL                                                  CGL009
+     C/COPY WNCPYSRC,JMI113_024                                                               JMI106
       *
       * Beneficiary
       *
@@ -5395,6 +5414,7 @@
      C                   MOVEL     P21           DSTRAN
      C                   MOVEL     TTREF         SRLPR
      C                   END
+     C/COPY WNCPYSRC,JMI113_025                                                               JMI106
       *
      C                   END
                                                                                 CFT014
@@ -5650,6 +5670,7 @@
      C                   ENDIF                                                  CFT014
      C                   ENDIF                                                  CFT014
      C                   ENDIF                                                  CFT014
+     C/COPY WNCPYSRC,JMI113_026                                                               JMI106
       *
       * Details of Charges
       *
@@ -5982,6 +6003,7 @@
      C                   ENDIF
       *                                                                         CGL009
      C                   ENDSL                                                  CGL009
+     C/COPY WNCPYSRC,JMI113_027                                                               JMI113
       *
       * Destination                                                             CGL009
      C                   SELECT                                                 CGL009
@@ -6247,6 +6269,7 @@
      C                   MOVEL     TMLIN5        SACB5                                        242100
      C                   END                                                                  242100
       *                                                                                       242100
+     C/COPY WNCPYSRC,JMI113_028                                                               JMI113
       *                                                                         CGL009
       ****Map*details*of payment for Fontis network only                               CGL009 212575
       *   Map details of payment                                                              212575
@@ -6265,6 +6288,7 @@
      C                   MOVEL     *BLANKS       SDTP3                                        212575
      C                   MOVEL     *BLANKS       SDTP4                                        212575
      C                   END                                                    CGL009
+     C/COPY WNCPYSRC,JMI113_029                                                               JMI113
       *                                                                                       CER030
       ** Details of Extended Narrative                                                        CER030
       *                                                                                       CER030
@@ -6552,6 +6576,7 @@
       *  Default in VALUE DATE
      C                   MOVE      SPYDT         SPYVD
      C                   MOVE      OTSLDT        OTPVDT
+     C/COPY WNCPYSRC,JMI113_030                                                               JMI113
       *                                                                         CGL009
      C                   ENDSL                                                  CGL009
       *                                                                         CGL009
@@ -7246,6 +7271,7 @@
      C                   MOVE      *BLANK        SACB4
      C                   MOVE      *BLANK        SACB5
      C                   END
+     C/COPY WNCPYSRC,JMI113_031                                                               JMI113
       *
       * Ordering Bank
      C                   SELECT                                                 CGL009
@@ -7890,6 +7916,7 @@
      C                   ENDIF                                                  CFT012
       *
       * Set up the detail screen fields from the message.
+     C/COPY WNCPYSRC,JMI113_032                                                               JMI113
       *
       * Destination
       *
@@ -8366,6 +8393,7 @@
      C                   END
       *                                                                          CGL009
      C                   ENDSL                                                   CGL009
+     C/COPY WNCPYSRC,JMI113_033                                                               JMI113
       *
       * Ordering Bank
       *
@@ -9146,6 +9174,7 @@
      C**********         SUB       1             OSQNM                                209067 BUG4776
      C**********         SUB       1             OSQNM                               BUG4776R CFT151
      C                   SUB       1             WOTSQ                                        CFT151
+     C/COPY WNCPYSRC,JMI106_010                                                               JMI106
      C**********         EVAL      OSQNM = PRNUM                                    BUG4776 BUG4776R
       * Ensure PREF is generated again if entering a new payment after cance                  209067
      C                   eval      FirstTime = 'Y'                                            209067
@@ -9947,6 +9976,7 @@
      C**********         SUB       1             OSQNM                                204152 BUG4776
      C**********         SUB       1             OSQNM                               BUG4776R CFT151
      C                   SUB       1             WOTSQ                                        CFT151
+     C/COPY WNCPYSRC,JMI106_011                                                               JMI106
      C**********         EVAL      OSQNM = PRNUM                                    BUG4776 BUG4776R
      C                   endif                                                                209067
       *                                                                                       209067
@@ -12152,6 +12182,7 @@
      C                   ELSE                                                                 CER030
      C                   EVAL      CGL013 = 'N'                                               CER030
      C                   ENDIF                                                                CER030
+     C/COPY WNCPYSRC,JMI106_012                                                               JMI106
       *                                                                                     MD024335
       ** Get Default for Charges Indicator                                                  MD024335
       *                                                                                     MD024335

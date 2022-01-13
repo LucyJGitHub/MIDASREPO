@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD056358           Date 14Sep20               *
+      *  Last Amend No. JMI111             Date 16May19               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD056358           Date 14Sep20               *
       *                 MD054605           Date 17Oct19               *
       *                 CSD101             Date 07Dec18               *
       *                 CLE071             Date 18Jul18               *
@@ -201,6 +202,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Use of core hook SD9000PFP1                         *
+      *           Use of core hook SD9000PEP1                         *
+      *           Use of core hook SD9000PEP2                         *
+      *           Use of core hook SD9000PC16                         *
+      *           Use of core hook SD9000PC17                         *
+      *           Use of core hook SD9000PCP8                         *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056358 - SDC0602 goes MSGW because of a decimal data error *
       *             Make sure to retrive the decimal value of the base*
@@ -814,6 +822,7 @@
      D**********                          P  51  582FSSB2S                             CAS009 233545
      D**********                             59  61 FSNDYR                             CAS009 233545
      D*                                                                                       CAS009
+     D/COPY WNCPYSRC,SD9000PEP1                                                               JMI111
      I*COPY*ZSRSRC,ZDATE2Z1                                               S01117            MD054605
      D/COPY ZSRSRC,ZDATE2Z1LE                                                               MD054605
      I*COPY*ZSRSRC,ZALIGNZ1                                               S01117            MD054605
@@ -911,7 +920,7 @@
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D                                     PREFIX(AB)                                       MD055681
      I*                                                                   S01408
-     I/COPY WNCPYSRC,SD9000PEP1                                           S01408
+     I*/C*PY*WNCPYSRC,SD9000PEP1****************                          S01408              JMI111
      I*                                                                   S01408
      I**                                                              *
      I@AHREAU
@@ -5481,6 +5490,7 @@ SDDEALY0                                                                        
 SDCOCCPD                                                                                    BUG23100
 SCSARDPD                                                                                    BUG23100
 SCSARDPD                                                                                    BUG23100
+XXOPINPD                                                                                      JMI111
 **   DBK DATA BASE KEY TO FILE USED
 SDBANKPD BANK DETAILS
 SDMMODPD MIDAS MODULES
@@ -5543,6 +5553,7 @@ CDL048   IAS FORWARD REVALUATION                                                
 CLE025   CREDIT LINES                                                                       BUG23100
 CFT013                                                                                      BUG23100
 CAS005                                                                                      BUG23100
+JMI111   OPICS-MIDAS GL INTERFACE                                                             JMI111
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

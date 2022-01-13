@@ -25,42 +25,42 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-     C           PFOPSR    BEGSR
+     C     PFOPSR        BEGSR
       *
      C***********          READ SDOPINPD                 76                                   JMI111
-     C                     READ XXOPINPD                 76                                   JMI111
-     C           *IN76     IFEQ '1'
-     C                     MOVE 60        N                **************
-     C                     EXSR DBERR                      *     60     *
-     C                     GOTO ENDT                       **************
-     C                     ENDIF
+     C                   READ      XXOPINPD                               76                  JMI111
+     C     *IN76         IFEQ      '1'
+     C                   MOVE      60            N                              **************
+     C                   EXSR      DBERR                                        *     60     *
+     C                   GOTO      ENDT                                         **************
+     C                   ENDIF
       *
-     C           P@MODE    IFNE 'A'
-     C           P@MODE    OREQ 'A'
-     C           OPLCD     ANDEQWURDNB
+     C     P@MODE        IFNE      'A'
+     C     P@MODE        OREQ      'A'
+     C     OPLCD         ANDEQ     WURDNB
       *
       ** Convert Last Change Date, Day Number, To DDMMMYY Format.
-     C                     Z-ADDOPLCD     ZDAYNO
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    LCDA    7
-     C                     MOVE ZADATE    WULCD   7
+     C                   Z-ADD     OPLCD         ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        LCDA              7
+     C                   MOVE      ZADATE        WULCD             7
       *
       ** Determine Last Change Type.
-     C           OPTYLC    IFEQ 'A'
-     C                     MOVE 'Amend '  WUCHTP
-     C                     ELSE
-     C                     MOVE 'Insert'  WUCHTP
-     C                     END
+     C     OPTYLC        IFEQ      'A'
+     C                   MOVE      'Amend '      WUCHTP
+     C                   ELSE
+     C                   MOVE      'Insert'      WUCHTP
+     C                   END
       *
       ** Print Midas/OPICS  Interface Data Page.
-     C                     WRITEICDHDR
-     C                     WRITEPFOPRCD
+     C                   WRITE     ICDHDR
+     C                   WRITE     PFOPRCD
       *
-     C           NROF      ADD  1         NROF
+     C     NROF          ADD       1             NROF
       *
-     C                     ENDIF
+     C                   ENDIF
       *
-     C           ZPFOP     ENDSR
+     C     ZPFOP         ENDSR
       *
       *****************************************************************
       **End*of*/COPY**SD9000PCP8***************************************                       JMI111

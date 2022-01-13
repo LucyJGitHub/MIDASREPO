@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057429           Date 17Jun21               *
-      *  Prev Amend No. 254657             Date 01Jun20               *
+      *  Last Amend No. JMI111             Date 16May19               *       
+      *  Prev Amend No. MD057429           Date 17Jun21               *
+      *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057237           Date 04Dec20               *
       *                 MD054702           Date 07Sep20               *
@@ -89,6 +90,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Use of core hook GLH00446                           *
+      *           Addition of hook JMI111_011                         *
+      *           Addition of hook JMI111_010                         *       
       *  MD057429 - Check for and delete any items in repair if the   *
       *             batch header is being deleted                     *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
@@ -669,8 +674,14 @@
      C                   MOVE      B1AFRT        BRAFRT
      C                   MOVE      B1TMST        BRTMST
      C**********         MOVE      B1BHAI        BRBHAI                                       239155
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_010                                                               JMI111
+      *                                                                                       JMI111
      C     CGL016        IFEQ      'Y'                                                     AR792734A
      C     CRE023        OREQ      'Y'                                                     AR792734A
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_011                                                               JMI111
+      *                                                                                       JMI111     
      C                   MOVE      B1BHAI        BRBHAI                                    AR792734A
      C                   ENDIF                                                             AR792734A
      C                   MOVE      B1MEAB        BRMEAB                                       CSC024

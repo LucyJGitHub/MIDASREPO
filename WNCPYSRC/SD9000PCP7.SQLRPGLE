@@ -19,9 +19,9 @@
       *****************************************************************
       *
      C***********CGL019    IFEQ 'Y'                                                           JMI111
-     C           JMI111    IFEQ 'Y'                                                           JMI111
-     C                     EXSR PFOPSR
-     C                     ENDIF
+     C     JMI111        IFEQ      'Y'                                                        JMI111
+     C                   EXSR      PFOPSR
+     C                   ENDIF
       *
       **End*of*/COPY**SD9000PCP7***************************************                       JMI111
       * End of /COPY  SD9000PCP7                                      *                       JMI111

@@ -18,20 +18,20 @@
       ***Determine*if*CGL019*is*installed                                                     JMI111
       ** Determine if JMI111 is installed                                                     JMI111
       *
-     C                     CALL 'AOSARDR0'
-     C                     PARM *BLANKS   PRTCD   7
-     C                     PARM '*VERIFY' POPTN   7
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD             7
+     C                   PARM      '*VERIFY'     POPTN             7
      C***********          PARM 'CGL019'  PSARD   6                                           JMI111
-     C                     PARM 'JMI111'  PSARD   6                                           JMI111
-     C           SCSARD    PARM SCSARD    DSFDY
+     C                   PARM      'JMI111'      PSARD             6                          JMI111
+     C     SCSARD        PARM      SCSARD        DSFDY
       *
-     C           PRTCD     IFEQ *BLANK
+     C     PRTCD         IFEQ      *BLANK
      C***********          MOVEL'Y'       CGL019  1                                           JMI111
-     C                     MOVEL'Y'       JMI111  1                                           JMI111
-     C                     ELSE
+     C                   MOVEL     'Y'           JMI111            1                          JMI111
+     C                   ELSE
      C***********          MOVEL'N'       CGL019                                              JMI111
-     C                     MOVEL'N'       JMI111                                              JMI111
-     C                     ENDIF
+     C                   MOVEL     'N'           JMI111                                       JMI111
+     C                   ENDIF
       *
       *****************************************************************
       **End*of*/COPY*SD9000PC16****************************************                       JMI111

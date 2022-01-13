@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057689           Date 04Mar21               *
-      *  Prev Amend No. MD056556           Date 13Aug20               *
+      *  Last Amend No. MD059340           Date 05Jan22               *
+      *  Prev Amend No. MD057689           Date 04Mar21               *
+      *                 MD056556           Date 13Aug20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +24,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059340 - Performance issue with repeating accesses to      *
+      *             view GPGLFJW0 while ODP are not re-usable.        *
+      *             Store data into array as cache.                   *
       *  MD057689 - Amending branch of batch header creates a new     *
       *             record in GZ file. Correct access to GPGLFJW0.    *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
@@ -38,6 +42,12 @@
      D #_SPOS          S              4  0 DIM(10)
      D #_SIZE          S              4  0 DIM(10)
      D GPGLOBF       E DS                  EXTNAME(GPGLFJW0)                                MD056556
+     D Idx             S              3  0                                                  MD059340
+     D IX              S              3  0                                                  MD059340
+     D GFileDS         DS                                                                   MD059340
+     D GPGLF                               DIM(500)                                         MD059340
+     D ZFile                         10A   OVERLAY(GPGLF : *NEXT)                           MD059340
+     D GFile                         10A   OVERLAY(GPGLF : *NEXT)                           MD059340
 
 
      C     *ENTRY        PLIST
@@ -154,7 +164,10 @@
      C                   Z-ADD     1             C                 4 0
      C                   Z-ADD     *ZERO         #_SPOS
      C                   Z-ADD     *ZERO         #_SIZE
+     C                   Z-ADD     1             IX                                         MD059340
 
+     C     I#FILE        LOOKUP    ZFILE(IX)                              99                MD059340
+     C     *IN99         IFEQ      '0'                                                      MD059340
       * Access the global physical file name
 
      C*****I#FILE        CHAIN     GPGLOBFD0                          99                    MD056556
@@ -166,6 +179,16 @@
      C+ where GFZPF = :I#FILE                                                               MD057689
      C/END-EXEC                                                                             MD056556
      C******IN99         IFEQ      *OFF                                                     MD056556
+     C                   IF        SQLCODE = 0                                              MD059340
+     C                   ADD       1             Idx                                        MD059340
+     C                   EVAL      ZFILE(Idx) = I#FILE                                      MD059340
+     C                   EVAL      GFILE(Idx) = GFGPF                                       MD059340
+     C                   Endif                                                              MD059340
+     C                   else                                                               MD059340
+     C                   eval      SQLCODE = 0                                              MD059340
+     C                   EVAL      GFGPF = GFILE(IX)                                        MD059340
+     C                   Endif                                                              MD059340
+                                                                                            MD059340
      C                   IF        SQLCODE = 0                                              MD056556
 
       * Load up the key fields of the global physical file

@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to call SMU90006')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC90006 - CL program to call SMU90006                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2022                     */
+/*                                                                   */
+/*       Last Amend No. MD059186  *CREATE  Date 11Jan22              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD059186 -  FM2021.B Branch entitlements cannot be removed  */
+/*                   from a user's role in UXP input following the   */
+/*                   SP2021.B upgrade because they are not shown as  */
+/*                   assigned.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2022')
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR1))
+/**/
+/* Start of program */
+
+
+/* Create backup */
+/* CPYF command is not applicable for BF tables because of alternate name*/
+/* Create a back up copy using WRKOBJ command */
+/* Please see CDD for file back up and restore instructions */
+/**/
+/**/
+/* Call ILE/UTCSM0864*/
+/**/
+             CHGJOB     SWS(XXXXXX00)
+
+             CALL       PGM(SMU90006)
+
+/**/
+/* If errror occurred*/
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SMUC90006 completed normally.') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program */
+/**/
+ABNOR:
+
+ ABNOR1:     SNDPGMMSG  MSG('Error occurred in SMUC90006 program') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2022')
+             SNDPGMMSG  MSG('End of SMUC90006') TOMSGQ(MRUNQ MOPERQ)
+             ENDPGM

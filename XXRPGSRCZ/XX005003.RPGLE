@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059406           Date 17Dec21               *
-      *  Prev Amend No. MD059075           Date 13Oct21               *
+      *  Last Amend No. MD059439           Date 12Jan22               *
+      *  Prev Amend No. MD059406           Date 17Dec21               *
+      *                 MD059075           Date 13Oct21               *
       *                 DRI005  *CREATE    Date 13Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059439 - GLM Feeder Files Extracts issues                  *
       *  MD059406 - Extract issues with Feeder and Proofing files     *
       *              Set new flag for Include Balance (XXFEEDDTD)     *
       *  MD059075 - Journal Feeder Header Filler incorrect (Recompile)*
@@ -306,11 +308,14 @@
       *
       ** Retrieve Previous Working Day
 
-     C                   CALL      'ZBKDT'
+     C                   Z-add     1             WDays                          MD059439
+     C****************   CALL      'ZBKDT'                                      MD059439
+     C                   CALLB     'ZBKDT'                                      MD059439
      C                   PARM      WCurr_RunDay  WDayNo
      C                   PARM      BJLCCY        WCcy
      C                   PARM      BJSLCD        WLoc
-     C                   PARM      BJBVPD        WDays
+     C****************   PARM      BJBVPD        WDays                          MD059439
+     C                   PARM                    WDays                          MD059439
      C                   PARM      *Zero         WPrev_WrkDay
       *
       ***  Check System Date Format, DDMMYY (*IN98 off)

@@ -183,11 +183,11 @@
      C                   ADD       1             Idx                                        MD059340
      C                   EVAL      ZFILE(Idx) = I#FILE                                      MD059340
      C                   EVAL      GFILE(Idx) = GFGPF                                       MD059340
-     C                   Endif                                                              MD059340
-     C                   else                                                               MD059340
-     C                   eval      SQLCODE = 0                                              MD059340
+     C                   ENDIF                                                              MD059340
+     C                   ELSE                                                               MD059340
+     C                   EVAL      SQLCODE = 0                                              MD059340
      C                   EVAL      GFGPF = GFILE(IX)                                        MD059340
-     C                   Endif                                                              MD059340
+     C                   ENDIF                                                              MD059340
                                                                                             MD059340
      C                   IF        SQLCODE = 0                                              MD056556
 

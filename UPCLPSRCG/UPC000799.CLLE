@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD058171           Date 11Jun21              */
-/*       Prev Amend No. MD029086           Date 20Aug14              */
+/*       Last Amend No. MD059289           Date 11Nov21              */
+/*       Prev Amend No. MD058171           Date 11Jun21              */
+/*                      MD029086           Date 20Aug14              */
 /*                      CUP040             Date 10Mar14              */
 /*                      MD020016           Date 19Apr13              */
 /*                      AR1092254          Date 27Feb13              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059289 - Do not generate empty report                     */
 /*       MD058171 - Delete the temporary file in QTEMP when running  */
 /*                  *PRC.                                            */
 /*       MD029086 - Running of UPT_WIPCF encountered duplicate       */
@@ -75,6 +77,7 @@
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&RPT) TYPE(*CHAR) LEN(1)                                    /*MD059289*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
@@ -143,14 +146,19 @@ BUILD:
 /* Call program to perform comparison. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
+/**********     CALL       PGM(UP009006) PARM('*BLD' &FILE &FILE +
+                             &RECLEN ' ' &OFFSET 'N' &OLDLIB &NEWLIB) */                /*MD059289*/
+                CHGVAR     VAR(&RPT) VALUE(' ')                                         /*MD059289*/
                 CALL       PGM(UP009006) PARM('*BLD' &FILE &FILE +
-                             &RECLEN ' ' &OFFSET 'N' &OLDLIB &NEWLIB)
+                             &RECLEN ' ' &OFFSET 'N' &OLDLIB &NEWLIB &RPT)              /*MD059289*/
                 DLTOVR     FILE(UPAFODPD UPAFNDPD)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
+             IF         COND(&RPT *EQ 'Y') THEN(DO)                                     /*MD059289*/
                 CHGVAR     VAR(&USRDTA) VALUE('B' *BCAT &FILE)
                 CHGSPLFA   FILE(UP009006P1) SPLNBR(*LAST) USRDTA(&USRDTA)
+             ENDDO                                                                      /*MD059289*/
 /* Perform special processing after build. */
                 CALLSUBR   SUBR(PSTBLD)  RTNVAL(&SUBRERR)
              ENDDO
@@ -189,14 +197,19 @@ REVIEW:
 /* Call program to produce report of Action File. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
+/**********     CALL       PGM(UP009006) PARM('*RVW' &FILE ' ' &RECLEN +
+                             'Y' &OFFSET 'Y' ' ' ' ') */                                /*MD059289*/
+                CHGVAR     VAR(&RPT) VALUE(' ')                                         /*MD059289*/
                 CALL       PGM(UP009006) PARM('*RVW' &FILE ' ' &RECLEN +
-                             'Y' &OFFSET 'Y' ' ' ' ')
+                             'Y' &OFFSET 'Y' ' ' ' ' &RPT)                              /*MD059289*/
                 DLTOVR     FILE(UPAFODPD UPAFNDPD)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
+                IF         COND(&RPT *EQ 'Y') THEN(DO)                                  /*MD059289*/
                 CHGVAR     VAR(&USRDTA) VALUE('R' *BCAT &FILE)
                 CHGSPLFA   FILE(UP009006P1) SPLNBR(*LAST) USRDTA(&USRDTA)
+                ENDDO                                                                   /*MD059289*/
              ENDDO
 
 CONFLICT:
@@ -235,14 +248,19 @@ CONFLICT:
 /* Call program to produce conflict report. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
+/**********     CALL       PGM(UP009006) PARM('*CFT' &FILE 'UPAFDVPD' +
+                             &RECLEN 'Y' &OFFSET 'N' ' ' &NEWLIB) */                    /*MD059289*/
+                CHGVAR     VAR(&RPT) VALUE(' ')                                         /*MD059289*/
                 CALL       PGM(UP009006) PARM('*CFT' &FILE 'UPAFDVPD' +
-                             &RECLEN 'Y' &OFFSET 'N' ' ' &NEWLIB)
+                             &RECLEN 'Y' &OFFSET 'N' ' ' &NEWLIB &RPT)                  /*MD059289*/
                 DLTOVR     FILE(UPAFODPD UPAFNDPD)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
+                IF         COND(&RPT *EQ 'Y') THEN(DO)                                  /*MD059289*/
                 CHGVAR     VAR(&USRDTA) VALUE('X' *BCAT &FILE)
                 CHGSPLFA   FILE(UP009006P1) SPLNBR(*LAST) USRDTA(&USRDTA)
+                ENDDO                                                                   /*MD059289*/
 
 /* Perform special processing after running conflict report. */
                 CALLSUBR   SUBR(PSTCFT) RTNVAL(&SUBRERR)

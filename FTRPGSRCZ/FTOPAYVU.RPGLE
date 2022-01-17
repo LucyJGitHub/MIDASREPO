@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054059           Date 28Nov19               *
+      *  Last Amend No. JMI106             Date 16May19               *       
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -109,6 +110,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI106 - Split FT Sequence Number based on Settlement Type   *
+      *           Addition of hook JMI106_015                         *
+      *           Addition of hook JMI106_016                         *
+      *           Addition of hook JMI106_017                         *
+      *           (Upgrade to FB Midas)                               *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054059 - Missing outgoing payment reference in the         *
@@ -590,6 +596,7 @@
      D  PRNUM                  8     11                                                       CFT151
      D  PmntType              12     13
      D  StmtType              14     15  0
+     D/COPY WNCPYSRC,JMI106_015                                                               JMI106
       *
                                                                                               CSF011
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CSF011
@@ -2234,6 +2241,7 @@
      C                   PARM                    WNEWSQ            4                          CFT151
      C                   ENDIF                                                                CFT151
      C                   END
+     C/COPY WNCPYSRC,JMI106_016                                                               JMI106
 
      C                   MOVE      IPREF         SPREF
 
@@ -3404,6 +3412,7 @@
      C                   ELSE                                                                 CFT157
      C                   EVAL      CFT157 = 'N'                                               CFT157
      C                   ENDIF                                                                CFT157
+     C/COPY WNCPYSRC,JMI106_017                                                               JMI106
 
       * Set up User id
      C                   Eval      PSUSER = WUSRID

@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD040181           Date 16Jun19              */
-/*       Prev Amend No. CER050             Date 16Jun19              */
+/*       Last Amend No. JMI112             Date 16May19              */
+/*       Prev Amend No. MD040181           Date 16Jun19              */
+/*                      CER050             Date 16Jun19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD052820           Date 21Feb19              */
 /*                      MD049309           Date 14Feb18              */
@@ -68,6 +69,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     JMI112 - Midas-OPICS Data Transfer Amendments (Upg to FM2.1) */
+/*              Use of hook LEC0605001                              */
 /*     MD040181 - CER050 error. Changed file XLEPARHTD to XLEAPRHTD.*/
 /*     CER050 - Annualised Percentage Rate                          */
 /*     MD020934 - COB component LERC135 failed due to CDL045.       */

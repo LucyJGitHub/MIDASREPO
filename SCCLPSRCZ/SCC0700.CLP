@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*       Last Amend No. JMI108             Date 31May18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031644           Date 08Jan15              */
 /*                      CGL155             Date 21Mar14              */
 /*                      MD022112           Date 05Sep13              */
 /*                      CSC048             Date 06Aug12              */
@@ -49,6 +50,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI108 - Account Balance Pooling. Upgrade to FBM 2.1        */
+/*                Amend core hook SCC0700MPE                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */

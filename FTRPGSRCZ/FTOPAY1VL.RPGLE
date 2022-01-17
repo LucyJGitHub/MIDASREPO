@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057597           Date 19Feb21               *
+      *  Last Amend No. JMI107             Date 10May08               *       
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057597           Date 19Feb21               *
       *                 MD057498           Date 26Jan21               *
       *                 254841B            Date 14May20               *
       *                 MD046248           Date 27Oct17               *
@@ -108,6 +109,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI107 - Upgrade of JMI025 feature. RTS Bank Code Enhancement*
+      *           Amend validation to allow RTS bank code.            *
+      *           Hooks: FTOPA1VC12, FTOPA1VC16, JMI107_005           *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057597 - Move re-execution of VSETCA after DFTCHG to       *
@@ -3214,6 +3218,7 @@
      C                   ENDIF                                                              AR663078
      C                   ENDIF                                                              AR663078
      D/COPY OFCPYSRCZ,CFT148_016                                                              CFT148
+     C/COPY WNCPYSRC,JMI107_005                                                               JMI107
       *
      C                   ENDSR
       *****************************************************************

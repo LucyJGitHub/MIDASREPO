@@ -55,6 +55,8 @@
 
       ** Data Structure for Global Branch
      D GZSDBRCH      E DS                  EXTNAME(GZSDBRCHPD)
+      ** Data Structure for Global Zone
+     D GPZONE        E DS                  EXTNAME(GPZONEPD)
       *
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -81,7 +83,6 @@
      D EntType         S              6A
      D EntValue        S              3A
      D SQLStmt         S           1500A   VARYING INZ
-     D SingleQoute     S              1A   INZ('''')
 
       /EJECT
 
@@ -117,7 +118,7 @@
      C                   EVAL      PBRCA = EntValue
 
       *
-      ** Get zone from GZSDBRCHPD
+      ** Get zone name from GZSDBRCHPD
       *
      C                   CALL      'GPACSBRCH'
      C                   PARM      *BLANKS       PRTCD
@@ -134,13 +135,44 @@
      C                   ENDIF
 
      C                   EVAL      SQLStmt = *BLANKS
+     C                   EVAL      SQLStmt = 'SELECT * FROM GPZONEPD '
+     C                             + 'WHERE ZOZONE = '''
+     C                             + A8ZONE + ''''
+      *
+      ** Get zone prefix from GPZONEPD
+      *
+     C/exec SQL
+     C+ PREPARE C2 FROM :SQLStmt
+     C/end-exec
 
-      /free
-        SQLStmt = 'Update BFTB_ENTITLEMENTS set BFZONE = '
-                  + SingleQoute + %trim(A8ZONE) + SingleQoute
-                  + ' where BFIDPK = ' + SingleQoute + %trim(EntID)
-                  + SingleQoute;
-      /end-free
+     C/exec SQL
+     C+ DECLARE C2 CURSOR FOR C2
+     C/end-exec
+
+     C/exec SQL
+     C+ OPEN C2
+     C/end-exec
+
+     C/exec SQL
+     C+  FETCH FROM C2 INTO :GPZONE
+     C/end-exec
+
+     C                   IF        SQLCOD <> 0 and SQLCOD <> 100
+     C                   EVAL      DBFILE = 'GPZONEPD'
+     C                   EVAL      DBKEY  = A8ZONE
+     C                   EVAL      DBASE  = 002
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C/exec SQL
+     C+ close C2
+     C/end-exec
+
+     C                   EVAL      SQLStmt = *BLANKS
+     C                   EVAL      SQLStmt = 'UPDATE BFTB_ENTITLEMENTS '
+     C                             + 'SET BFZONE = '''
+     C                             + ZOMSYS + ''''
+     C                             + ' WHERE BFIDPK = '''
+     C                             + %TRIM(EntID) + ''''
 
       ** Prepare and Execute SQL for Update on BFTB_ENTITLEMENTS
      C/exec SQL

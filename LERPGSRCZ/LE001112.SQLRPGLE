@@ -7,7 +7,7 @@
       *                                                               *
       *  Midas - Customer Lending Module                              *
       *                                                               *
-      *  LE001114 - Midas LE Backward-Looking Rate Rollover Input     *
+      *  LE001112 - Midas LE Backward-Looking Rate Rollover Input     *
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
@@ -19,10 +19,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE172  *CREATE    Date 01Oct20               *
+      *  Last Amend No. MD059190           Date 08Nov21               *
+      *  Prev Amend No. CLE172  *CREATE    Date 01Oct20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059190 - Use current ARR parameters if:                    *
+      *             1. interest and rollover date are input, equal and*
+      *                less than next working date, BLRT is Y,        *
+      *                NBLRT is blank or Y and rollover is authorised *
+      *           - Use rollover ARR parameters if:                   *
+      *             2. interest and rollover date are input, equal and*
+      *                less than next working date, BLRT is N,        *
+      *                NBLRT is Y and rollover is authorised          *
+      *             Applied for MD-59463.                             *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *                                                               *
       *****************************************************************
@@ -115,6 +125,7 @@
      C+ from CLOANCL
      C+ where RLDT <> 0 and RLDT < :BJDNWD and NBLRT = 'Y'
      C+   and LNRF not in (select * from LEWIPROLL)
+     C+   and (NIDT <> RLDT or (NRPD <> RLDT and REPT <> 2))                                MD059190
      C/end-exec
 
      C                   IF        SQLCODE <> NO_ERROR and
@@ -145,6 +156,52 @@
      C                   EVAL      DBASE  = 004
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                            MD059190
+      ** Condition 1                                                                        MD059190
+      ** this will be used on first call of calculator                                      MD059190
+      ** second call parameters will be retrieved in SD000114                               MD059190
+     C/exec SQL                                                                             MD059190
+     C+ insert into LEROBLPD                                                                MD059190
+     C+ select LNRF,  RLDT,                                                                 MD059190
+     C+        BLRT, RFRR, CALM, BADJ, FLOR,                                                MD059190
+     C+        LBDY, LODY, OPSH, RRDP, DBAV                                                 MD059190
+     C+ from CLOANCL                                                                        MD059190
+     C+ where RLDT <> 0 and RLDT < :BJDNWD                                                  MD059190
+     C+   and LNRF not in (select * from LEWIPROLL)                                         MD059190
+     C+   and (NIDT = RLDT or (NRPD = RLDT and REPT <> 2))                                  MD059190
+     C+   and BLRT = 'Y' and NBLRT <> 'N'                                                   MD059190
+     C/end-exec                                                                             MD059190
+                                                                                            MD059190
+     C                   IF        SQLCODE <> NO_ERROR and                                  MD059190
+     C                             SQLCODE <> NO_RECORD                                     MD059190
+     C                   EVAL      DBFILE = 'SQLERROR'                                      MD059190
+     C                   EVAL      DBKEY  = 'SQL ERROR'                                     MD059190
+     C                   EVAL      DBASE  = 005                                             MD059190
+     C                   EXSR      *PSSR                                                    MD059190
+     C                   ENDIF                                                              MD059190
+                                                                                            MD059190
+      ** Condition 2                                                                        MD059190
+      ** specific to rollover changes from forward to backward looking                      MD059190
+      *  on interest due date                                                               MD059190
+     C/exec SQL                                                                             MD059190
+     C+ insert into LEROBLPD                                                                MD059190
+     C+ select LNRF,  RLDT,                                                                 MD059190
+     C+        NBLRT, NRFRR, NCALM, NBADJ, NFLOR,                                           MD059190
+     C+        NLBDY, NLODY, NOPSH, NRRDP, NDBAV                                            MD059190
+     C+ from CLOANCL                                                                        MD059190
+     C+ where RLDT <> 0 and RLDT < :BJDNWD                                                  MD059190
+     C+   and LNRF not in (select * from LEWIPROLL)                                         MD059190
+     C+   and (NIDT = RLDT or (NRPD = RLDT and REPT <> 2))                                  MD059190
+     C+   and BLRT = 'N' and NBLRT = 'Y'                                                    MD059190
+     C/end-exec                                                                             MD059190
+                                                                                            MD059190
+     C                   IF        SQLCODE <> NO_ERROR and                                  MD059190
+     C                             SQLCODE <> NO_RECORD                                     MD059190
+     C                   EVAL      DBFILE = 'SQLERROR'                                      MD059190
+     C                   EVAL      DBKEY  = 'SQL ERROR'                                     MD059190
+     C                   EVAL      DBASE  = 006                                             MD059190
+     C                   EXSR      *PSSR                                                    MD059190
+     C                   ENDIF                                                              MD059190
 
       ** Commit Changes
      C                   COMMIT

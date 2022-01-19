@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1019919          Date 30Oct15               *
+      *  Last Amend No. MD059273           Date 13Jan22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1019919          Date 30Oct15               *
       *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059273 - IRS does not allow 0 Spread Rate to be input      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1019919 - Negative Base Rate input. (Child: AR1019920)     *
       *              Applied for MD034478                             *
@@ -52,7 +54,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -71,79 +73,79 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * spread rate
      D SURTSP          S             12A
- 
+
       * interest payment frequency
      D SUIPFR          S              1A
- 
+
       * base rate code
      D SUBRTT          S              1A
- 
+
       * returns 'Y' or 'N' depending on whether validation has been successful
      D ZALIGNok        S              1A
- 
+
       * interst rate calendars.
      D CIR001          S              1A
- 
+
       *  Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
- 
+
       *  A 16 character alphanumeric field to contain numeric input
       *  The field may contain leading and trailing blanks and a
       *  decimal point,and may have up to 15 digits.
      D ZFIELD          S             16A
- 
+
       *  contains the required number of digits before the decimal
       *  point as a constant.
      D ZADEC           S              1P 0
- 
+
       * contains required number of digits before the decimal point as
       * a constant in program.
      D ZADIG           S              2P 0
- 
+
      D PDealType       S              2                                                       CAP055
                                                                                               CAP055
                                                                                               245692
@@ -175,7 +177,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -186,9 +188,9 @@
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
- 
+
       ** Validate Spread/Rate using ZALIGN.
- 
+
      C                   Z-ADD     0             URTSPX           11 7
      C                   Z-ADD     0             @@AMT                                        245692
      C                   Z-ADD     0             @@ERCD                                       245692
@@ -221,19 +223,19 @@
      C                   PARM                    BNDCSP                                       245692
      C*****ZALIGNok      IFEQ      'Y'                                                        245692
      C     @@ERCD        IFEQ      0                                                          245692
- 
+
       **  Send error message if user entered a zero spread.
- 
+
      C                   Z-ADD     0             SRNUMB           12 0
      C**********         MOVE      ZFIELD        SRNUMB                                       245692
      C                   MOVE      @@AMT         SRNUMB                                       245692
      C     SRNUMB        IFEQ      0
- 
+
      C** spread/rate must not be equal to zero if switchable
      C**   feature is OFF OR interest payment frequency <> 'C'
       ** If entered, spread rate cannot be '0' for Caps/Collars/Floors                        CAP055
       ** regardless of the interest payment frequency                                         CAP055
- 
+
      C     CIR001        ANDEQ     'N'
      C     SRNUMB        OREQ      0
      C     CIR001        ANDEQ     'Y'
@@ -244,15 +246,23 @@
      C     PDealType     ANDNE     'RR'                                                       CAP055
      C     SRNUMB        OREQ      *ZERO                                                      CAP055
      C     PDealType     ANDNE     'RF'                                                       CAP055
+      *                                                                                     MD059273
+      ** Allow a 0 rate unless it is a Cap, Collar or Floor.                                MD059273
+     C     PDealType     IFEQ      'RP'                                                     MD059273
+     C     PDealType     OREQ      'RR'                                                     MD059273
+     C     PDealType     OREQ      'RF'                                                     MD059273
      C                   MOVE      'MMA0021'     Msgid1
      C                   MOVE      'Y'           ErrorFound
+     C                   ELSE                                                               MD059273
+     C                   MOVE      @@AMT         URTSPX                                     MD059273
+     C                   ENDIF                                                              MD059273
      C                   ELSE
      C**********         MOVE      ZFIELD        URTSPX                                       245692
      C                   MOVE      @@AMT         URTSPX                                       245692
- 
+
      C** spread/rate must be zero if int payment frequency is 'C'
       ** Except for Caps/Collars/Floors, this is not applicable                               CAP055
- 
+
      C     CIR001        IFEQ      'Y'
      C     URTSPX        ANDNE     *ZERO
      C     SUIPFR        ANDEQ     'C'
@@ -263,18 +273,18 @@
      C                   MOVE      'Y'           ErrorFound
      C                   END
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      'MMA0023'     Msgid1
      C                   MOVE      'Y'           ErrorFound
      C                   END
      C                   END
- 
+
       **  base rate code and spread/rate must not be blank
       **     if CIR001 is OFF or CIR001 is ON and payment frequency
       **     is not 'C'
       ** For Caps/Collars/Floors, Spread rate may be blank/is optional                        CAP055
- 
+
      C     CIR001        IFEQ      'N'
      C     CIR001        OREQ      'Y'
      C     SUIPFR        ANDNE     'C'
@@ -288,12 +298,12 @@
      C                   MOVE      'Y'           ErrorFound
      C                   END
      C                   END
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -305,9 +315,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -318,15 +328,15 @@
      C                   PARM                    PDealType                                    CAP055
      C                   PARM                    URTSPX
      C                   PARM                    BNDCSP                                       245692
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

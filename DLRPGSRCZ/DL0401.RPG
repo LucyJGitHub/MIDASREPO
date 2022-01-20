@@ -9,8 +9,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. CGL091             Date 02Nov21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD051152           Date 02Aug18               *
       *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
@@ -125,6 +126,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CGL091 - Add maturity date and value date of deal as "other  *
+      *           dates" for rate swap principal events. Also add     *
+      *           effective interest rate for interest payment events *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
@@ -864,6 +868,29 @@
      C                     MOVE 'N'       CLE025                                              CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
+      ** Check if CGL091 is on                                                                CGL091
+      *                                                                                       CGL091
+     C                     CALL 'AOSARDR0'                                                    CGL091
+     C                     PARM *BLANKS   PRTCD                                               CGL091
+     C                     PARM '*VERIFY' POPTN                                               CGL091
+     C                     PARM 'CGL091'  PSARD                                               CGL091
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL091
+      *                                                                                       CGL091
+     C           CGL091    IFNE *BLANKS                                                       CGL091
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL091
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL091
+     C                     MOVEL'CGL091'  DBKEY                                               CGL091
+     C                     Z-ADD31        DBASE                                               CGL091
+     C                     MOVE 'CGL091'  ERROR                                               CGL091
+     C                     EXSR *PSSR                                                         CGL091
+     C                     ENDIF                                                              CGL091
+      *                                                                                       CGL091
+     C           PRTCD     IFEQ *BLANKS                                                       CGL091
+     C                     MOVE 'Y'       CGL091  1                                           CGL091
+     C                     ELSE                                                               CGL091
+     C                     MOVE 'N'       CGL091                                              CGL091
+     C                     ENDIF                                                              CGL091
+      *                                                                                       CGL091
       ** Check if SAR CIR014 is intalled                                                      CIR014
       *                                                                                       CIR014
      C                     CALL 'AOSARDR0'                                                    CIR014
@@ -1653,6 +1680,62 @@
      C                     ENDIF                                          CEU003
      C*                                                                   CEU003
      C           COUNTE    ADD  1         COUNTE
+      *                                                                   CGL091
+     C           CGL091    IFEQ 'Y'                                       CGL091
+      *                                                                   CGL091
+      * Reset interest rate which was previously always zero              CGL091
+     C                     Z-ADD0         EXRT                            CGL091
+      *                                                                   CGL091
+      * Output effective floating rate for IRS events                     CGL091
+     C           ETYP      IFEQ '22I1'                                    CGL091
+     C           ETYP      OREQ '22S2'                                    CGL091
+     C           ETYP      OREQ '22C2'                                    CGL091
+     C           ETYP      OREQ '22S1'                                    CGL091
+     C           ETYP      OREQ '22C1'                                    CGL091
+     C           ETYP      OREQ '23I1'                                    CGL091
+     C           ETYP      OREQ '23S2'                                    CGL091
+     C           ETYP      OREQ '23C2'                                    CGL091
+     C           ETYP      OREQ '23C1'                                    CGL091
+     C           ETYP      OREQ '23S1'                                    CGL091
+     C           TBRTT     IFNE *BLANKS                                   CGL091
+     C                     Z-ADDTEINR     EXRT                            CGL091
+      *                                                                   CGL091
+     C           ETYP      IFEQ '22I1'                                    CGL091
+     C           ETYP      OREQ '23I1'                                    CGL091
+     C                     Z-ADDTPAMT     OTHA                            CGL091
+     C                     END                                            CGL091
+     C                     ELSE                                           CGL091
+     C                     Z-ADDUEINR     EXRT                            CGL091
+     C           ETYP      IFEQ '22I1'                                    CGL091
+     C           ETYP      OREQ '23I1'                                    CGL091
+     C                     Z-ADDUPAMT     OTHA                            CGL091
+     C                     END                                            CGL091
+     C                     END                                            CGL091
+     C                     END                                            CGL091
+      *                                                                   CGL091
+      * Output effective rate and principal amount for cap/collar/        CGL091
+      * floor interest and principal events                               CGL091
+      *                                                                   CGL091
+     C           ETYP      IFEQ '24I1'                                    CGL091
+     C           ETYP      OREQ '24S2'                                    CGL091
+     C           ETYP      OREQ '24C2'                                    CGL091
+     C           ETYP      OREQ '24S1'                                    CGL091
+     C           ETYP      OREQ '24C1'                                    CGL091
+     C           TBRTT     IFNE *BLANKS                                   CGL091
+     C                     Z-ADDWTICRT    EXRT                            CGL091
+     C           ETYP      IFEQ '24I1'                                    CGL091
+     C                     Z-ADDTPAMT     OTHA                            CGL091
+     C                     END                                            CGL091
+     C                     ELSE                                           CGL091
+     C                     Z-ADDWUICRT    EXRT                            CGL091
+     C           ETYP      IFEQ '24I1'                                    CGL091
+     C                     Z-ADDUPAMT     OTHA                            CGL091
+     C                     END                                            CGL091
+     C                     END                                            CGL091
+     C                     END                                            CGL091
+      *                                                                   CGL091
+     C                     END                                            CGL091
+      *                                                                   CGL091
      C           EAMT      DIV  1000      ZZAMT
      C           ZZAMT     IFLT 0
      C                     Z-SUBZZAMT     ZZAMT
@@ -4409,6 +4492,13 @@
      C** CALCULATE 'OUR' INTEREST DUE USING RATE FROM OURICR
      C*
      C                     Z-ADDICRT      ZIRATE
+      *                                                                   CGL091
+     C           CGL091    IFEQ 'Y'                                       CGL091
+      * Save Our effective interest rate for possible output to           CGL091
+      * interest payment event                                            CGL091
+     C                     Z-ADDICRT      WUICRT 117                      CGL091
+     C                     END                                            CGL091
+      *                                                                   CGL091
      C/COPY WNCPYSRC,DL0401CP14                                           S01408
      C                     EXSR INTDUE
      C                     Z-ADDWINTD     OUTAMT 130
@@ -4423,6 +4513,13 @@
      C*
      C                     Z-ADDICRT      ZIRATE
      C/COPY WNCPYSRC,DL0401CP15                                           S01408
+      *                                                                   CGL091
+     C           CGL091    IFEQ 'Y'                                       CGL091
+      * Save Their effective interest rate for possible output to         CGL091
+      * interest payment event                                            CGL091
+     C                     Z-ADDICRT      WTICRT 117                      CGL091
+     C                     END                                            CGL091
+      *                                                                   CGL091
      C                     EXSR INTDUE
      C                     Z-ADDWINTD     INAMT  130
      C*
@@ -6284,6 +6381,12 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0401CCP7                                           S01408
      C*                                                                   S01408
+     C           CGL091    IFEQ 'Y'                                       CGL091
+      * Save Our effective interest rate for possible output to           CGL091
+      * interest payment event                                            CGL091
+     C                     Z-ADDICRT      WUICRT 117                      CGL091
+     C                     END                                            CGL091
+      *                                                                   CGL091
      C                     EXSR GLINTC
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0401CCP8                                           S01408
@@ -6298,6 +6401,12 @@
      C                     Z-ADDICRT      ZIRATE
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0401CCP9                                           S01408
+      *                                                                   CGL091
+     C           CGL091    IFEQ 'Y'                                       CGL091
+      * Save Their effective interest rate for possible output to         CGL091
+      * interest payment event                                            CGL091
+     C                     Z-ADDICRT      WTICRT 117                      CGL091
+     C                     END                                            CGL091
      C*                                                                   S01408
      C                     EXSR GLINTC
      C*                                                                   S01408

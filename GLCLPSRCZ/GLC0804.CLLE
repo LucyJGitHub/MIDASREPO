@@ -1,0 +1,94 @@
+000100220120/*********************************************************************/
+000101220120/*STD    CLPBASEBND                                                     */
+000102220120/*EXI    TEXT('Midas Events by Currency with Running Totals Rpt')    */
+000103220120/*********************************************************************/
+000104220120/*                                                                   */
+000105220120/*       Midas - General Ledger Module                               */
+000106220120/*                                                                   */
+000107220120/*       GLC0804 - Events by Currency with Running Totals Report     */
+000108220120/*                                                                   */
+000109220120/*       (c) Finastra International Limited 2021                     */
+000110220120/*                                                                   */
+000111220120/*       Last Amend No. CGL091 *Create     Date 02Nov21              */
+000112220120/*                                                                   */
+000113220120/*********************************************************************/
+000114220120/*                                                                   */
+000115220120/*       CGL091 - Events by Currency with Running Totals Report      */
+000116220120/*                                                                   */
+000117220120/*********************************************************************/
+000118220120             PGM        PARM(&TYPE &PARM &RSEQ &RLEV &RENT &RPARM)
+000119220120/**/
+000120220120             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra Inernational +
+000121220120                          Limited 2021')
+000122220120             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+000123220120             DCL        VAR(&PARM) TYPE(*CHAR) LEN(1)
+000124220120             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(2)
+000125220120             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+000126220120             DCL        VAR(&DAYS) TYPE(*CHAR) LEN(3)
+000127220120             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */
+000128220120             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)*/
+000129220120             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)*/
+000130220120             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+000131220120
+000132220120             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+000133220120
+000134220120/**/
+000135220120             CHGJOB     SWS(00000000)
+000136220120             SNDMSG     MSG('EVENTS BY CURRENCY REPORT')  TOMSGQ(MRUNQ)
+000137220120
+000138220120/* Get number of days forward on from the prompt screen */
+000139220120             CHGVAR     VAR(&DAYS) VALUE(%SST(&RPARM 1 3))
+000140220120             IF         COND((&DAYS *EQ '   ') *OR (&DAYS *EQ '0  ') +
+000141220120                          *OR (&DAYS *EQ '  0') *OR (&DAYS *EQ '00 +
+000142220120                          ') *OR (&DAYS *EQ ' 00')) THEN(DO)
+000143220120             CHGVAR     VAR(&DAYS) VALUE('000')
+000144220120             ENDDO
+000145220120
+000146220120/*/COPY WNCPYSRC,GLC0804B05                                          */
+000147220120/**/
+000148220120             IF         COND(&PARM = '1') THEN(DO)
+000149220120
+000150220120                IF      COND(%SST(&MMOD 21 1) *NE 'Y') THEN(DO)
+000151220120                        OVRDBF FILE(EVNTM) TOFILE(STEVE)
+000152220120                        CHGJOB SWS(XXXX1XXX)
+000153220120                ENDDO
+000154220120                IF      COND(%SST(&MMOD 21 1) *EQ 'Y') +
+000155220120                        THEN(OVRDBF FILE(EVNTM) TOFILE(DLMEV))
+000156220120                CHGJOB  SWS(XXX1XXXX)
+000157220120             ENDDO
+000158220120
+000159220120/*/COPY WNCPYSRC,GLC0804B01                                          */
+000160220120
+000161220120
+000162220120/* REPORT BY SYSTEM   */
+000163220120/*/COPY WNCPYSRC,GLC0804B06                                          */
+000164220120             IF         COND((&RLEV *EQ 'S') *OR (&RLEV *EQ ' ')) +
+000165220120                          THEN(CALL PGM(GL0557) PARM(&TYPE &RSEQ &DAYS))
+000166220120/*/COPY WNCPYSRC,GLC0804B07                                          */
+000167220120
+000168220120/* REPORT BY BRANCH   */
+000169220120/*/COPY WNCPYSRC,GLC0804B08                                          */
+000170220120                IF   COND(&RLEV *EQ 'B') THEN(CALL PGM(GL0558) +
+000171220120                                  PARM(&TYPE &RSEQ &RENT &DAYS))
+000172220120/*/COPY WNCPYSRC,GLC0804B09                                          */
+000173220120
+000174220120/* REPORT BY COMPANY  */
+000175220120/*/COPY WNCPYSRC,GLC0804B10                                          */
+000176220120                IF   COND(&RLEV *EQ 'C') THEN(CALL PGM(GL0559) +
+000177220120                                  PARM(&TYPE &RSEQ &RENT &DAYS))
+000178220120/*/COPY WNCPYSRC,GLC0804B11                                          */
+000179220120/**/
+000180220120             IF         COND(&PARM = '1') THEN(DLTOVR FILE(EVNTM))
+000181220120             RTVJOBA    SWS(&SWS)
+000182220120/**/
+000183220120             IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(SNDMSG +
+000184220120                        MSG('Job terminated - database in error') +
+000185220120                        TOMSGQ(MOPERQ))
+000186220120/**/
+000187220120             IF         COND(%SUBSTRING(&SWS 7 2) = '01') THEN(SNDMSG +
+000188220120                        MSG('File controls out of balance') +
+000189220120                        TOMSGQ(MOPERQ))
+000190220120/*/COPY WNCPYSRC,GLC0804B03                                          */
+000191220120/**/
+000192220120             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited 2021 ')
+000193220120 ENDPGM:     ENDPGM

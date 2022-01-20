@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CGL118             Date 02Nov21               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1078953          Date 18Jan13               *
       *                 260029             Date 29Apr09               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -651,6 +653,10 @@
      C                   EVAL      B1FRNT = APFOTranID
      C                   EVAL      B1AFRT = APFOAsocID
      C                   EVAL      B1TMST = PTimeStamp
+     C     CGL118        IFEQ      'Y'                                                        CGL118
+     C                   EVAL      B1USRI = APMIDUSR                                          CGL118
+     C                   EVAL      B1USRA = APMIDUSR                                          CGL118
+     C                   END                                                                  CGL118
       *
       ** Default Batch Status to Held.
       *
@@ -877,6 +883,19 @@
      C                   ENDIF                                                                CSC022
                                                                                               CSC022
      C                   ENDIF                                                                CSC022
+      *                                                                                       CGL118
+      ** Access SAR details for CGL118                                                        CGL118
+      *                                                                                       CGL118
+     C                   MOVEL     'N'           CGL118            1                          CGL118
+     C                   CALLB     'AOSARDR0'                                                 CGL118
+     C                   PARM      *BLANKS       @RTCD                                        CGL118
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL118
+     C                   PARM      'CGL118'      @SARD                                        CGL118
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL118
+      *                                                                                       CGL118
+     C     @RTCD         IFEQ      *BLANK                                                     CGL118
+     C                   MOVEL     'Y'           CGL118                                       CGL118
+     C                   ENDIF                                                                CGL118
       *
       ** Set up the name of the server/database updater data queue.
       *

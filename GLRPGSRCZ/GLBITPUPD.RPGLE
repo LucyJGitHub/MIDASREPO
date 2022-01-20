@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058173           Date 28Jun21               *
-      *  Prev Amend No. AR573975           Date 01Jun20               *
+      *  Last Amend No. CGL118             Date 02Nov21               *
+      *  Prev Amend No. MD058173           Date 28Jun21               *
+      *                 AR573975           Date 01Jun20               *
       *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057744           Date 24Mar21               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD058173 - Hash Item input count on JRNE is updated when user*
       *             amend the batch item details. Hash Item No. Input *
       *             from Header should be retained during amend or de-*
@@ -1414,9 +1416,13 @@ E1   C                   ENDIF                                                  
       ** If Security on Journal Entry is *ON, set Last Insert
       ** User field to system user.
       *
+     C     BRUSRI        IFEQ      *BLANKS                                                    CGL118
+     C     CGL118        ANDEQ     'Y'                                                        CGL118
+     C     CGL118        OREQ      'N'                                                        CGL118
      C     CGL008        IFEQ      'Y'
      C                   MOVE      PSUser        BRUSRI
      C                   ENDIF
+     C                   ENDIF                                                                CGL118
       *                                                                         186206
       ** Write to Today's batch numbers used                                    186206
       *                                                                         186206
@@ -1671,6 +1677,10 @@ E1   C                   ENDIF                                                  
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085
       *                                                                                      BUG3085
+     C     CGL118        IFEQ      'Y'                                                        CGL118
+     C     BRUSRA        ANDEQ     *BLANKS                                                    CGL118
+     C     CGL118        OREQ      'N'                                                        CGL118
+      *                                                                                       CGL118
      C     CGL008        IFEQ      'Y'                                                       BUG3085
      C     JAVAUSER      IFEQ      'Y'                                                       BUG3085
      C                   MOVE      USRID         BRUSRA                                      BUG3085
@@ -1678,6 +1688,8 @@ E1   C                   ENDIF                                                  
      C                   MOVE      PSUser        BRUSRA                                      BUG3085
      C                   ENDIF                                                               BUG3085
      C                   ENDIF                                                               BUG3085
+      *                                                                                       CGL118
+     C                   ENDIF                                                                CGL118
       *                                                                                       CAP084
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     B2BTNB        ANDNE     *BLANKS                                                 AR1027164
@@ -2517,6 +2529,19 @@ z    C     KCHQB2        READPE    CHQBKPDF                               43    
       *                                                                         CGL016
      C     *DTAARA       DEFINE                  RUNDAT                         CGL016
      C                   IN        RUNDAT                                       CGL016
+      *                                                                                       CGL118
+      ** Access SAR details for CGL118                                                        CGL118
+      *                                                                                       CGL118
+     C                   MOVEL     'N'           CGL118            1                          CGL118
+     C                   CALLB     'AOSARDR0'                                                 CGL118
+     C                   PARM      *BLANKS       @RTCD                                        CGL118
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL118
+     C                   PARM      'CGL118'      @SARD                                        CGL118
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL118
+      *                                                                                       CGL118
+     C     @RTCD         IFEQ      *BLANK                                                     CGL118
+     C                   MOVEL     'Y'           CGL118                                       CGL118
+     C                   ENDIF                                                                CGL118
                                                                                               CSC024
       ***Check*if*enhancement*CSC024*(Open*Month*End)*is*on                            CSC024 CSC054
       ** Check if enhancement CSC054 (Period End Adjustments) is on                           CSC024

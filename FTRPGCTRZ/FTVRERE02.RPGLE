@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD035555           Date 17Jan22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035555 - MT101 not STP due to field 77B.                   *
+      *           - Applied for MD-59139.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
@@ -241,25 +244,25 @@
                                                                                 184047
       * The second and third lines may continue the information                 184047
       *  each preceded by a double slash, '//'.                                 184047
-     C                   If        PREGRP2 <> *Blanks          AND              184047
-     C                             %Subst(PREGRP2:1:2) <> '//'                  184047
-     C                   Eval      Idx            =   Idx+1                     184047
-     C                   Eval      RetCodeIn      =   'Error'                   184047
-     C                   Eval      MsgIdXAr(Idx)  =   'RFV0060'                 184047
+     C**********         If        PREGRP2 <> *Blanks          AND                   184047 MD035555
+     C**********                   %Subst(PREGRP2:1:2) <> '//'                       184047 MD035555
+     C**********         Eval      Idx            =   Idx+1                          184047 MD035555
+     C**********         Eval      RetCodeIn      =   'Error'                        184047 MD035555
+     C**********         Eval      MsgIdXAr(Idx)  =   'RFV0060'                      184047 MD035555
      C****************** Eval      FldNamXAr(Idx) =   DDSName             184047CAP084
-     C                   Eval      FldNamXAr(Idx) =   'PREGRP2'                 CAP084
-     C                   Eval      OKRGRP2 = 'N'                                184047
-     C                   Endif                                                  184047
-                                                                                184047
-     C                   If        PREGRP3 <> *Blanks          AND              184047
-     C                             %Subst(PREGRP3:1:2) <> '//'                  184047
-     C                   Eval      Idx            =   Idx+1                     184047
-     C                   Eval      RetCodeIn      =   'Error'                   184047
-     C                   Eval      MsgIdXAr(Idx)  =   'RFV0060'                 184047
+     C**********         Eval      FldNamXAr(Idx) =   'PREGRP2'                      CAP084 MD035555
+     C**********         Eval      OKRGRP2 = 'N'                                     184047 MD035555
+     C**********         Endif                                                       184047 MD035555
+      **********                                                                     184047 MD035555
+     C**********         If        PREGRP3 <> *Blanks          AND                   184047 MD035555
+     C**********                   %Subst(PREGRP3:1:2) <> '//'                       184047 MD035555
+     C**********         Eval      Idx            =   Idx+1                          184047 MD035555
+     C**********         Eval      RetCodeIn      =   'Error'                        184047 MD035555
+     C**********         Eval      MsgIdXAr(Idx)  =   'RFV0060'                      184047 MD035555
      C*******************Eval      FldNamXAr(Idx) =   DDSName             184047CAP084
-     C                   Eval      FldNamXAr(Idx) =   'PREGRP3'                 CAP084
-     C                   Eval      OKRGRP3 = 'N'                                184047
-     C                   Endif                                                  184047
+     C**********         Eval      FldNamXAr(Idx) =   'PREGRP3'                      CAP084 MD035555
+     C**********         Eval      OKRGRP3 = 'N'                                     184047 MD035555
+     C**********         Endif                                                       184047 MD035555
                                                                                 184047
      C                   Else                                                   184047
                                                                                 184047

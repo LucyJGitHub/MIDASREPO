@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD035555           Date 17Jan22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035555 - MT101 not STP due to field 77B.                   *
+      *           - Applied for MD-59139.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
@@ -364,25 +367,25 @@
       ** The second and third lines may continue the information
       ** each preceded by a double slash, '//'.
       *
-     C                   IF        PRegRp2 <> *Blanks and
-     C                             %Subst(PRegRp2:1:2) <> '//'
-     C                   EVAL      Idx            =   Idx+1
-     C                   EVAL      RetCodeIn      =   'Error'
-     C                   EVAL      MsgIdXAr(Idx)  =   'RFV0060'
+     C**********         IF        PRegRp2 <> *Blanks and                                  MD035555
+     C**********                   %Subst(PRegRp2:1:2) <> '//'                             MD035555
+     C**********         EVAL      Idx            =   Idx+1                                MD035555
+     C**********         EVAL      RetCodeIn      =   'Error'                              MD035555
+     C**********         EVAL      MsgIdXAr(Idx)  =   'RFV0060'                            MD035555
      C****************** EVAL      FldNamXAr(Idx) =   DDSName                   CAP084
-     C                   EVAL      FldNamXAr(Idx) =   'PREGRP2'                 CAP084
-     C                   EVAL      OKRRP2 = 'N'
-     C                   ENDIF
+     C**********         EVAL      FldNamXAr(Idx) =   'PREGRP2'                     CAP084 MD035555
+     C**********         EVAL      OKRRP2 = 'N'                                            MD035555
+     C**********         ENDIF                                                             MD035555
       *
-     C                   IF        PRegRp3 <> *Blanks and
-     C                             %Subst(PRegRp3:1:2) <> '//'
-     C                   EVAL      Idx            =   Idx+1
-     C                   EVAL      RetCodeIn      =   'Error'
-     C                   EVAL      MsgIdXAr(Idx)  =   'RFV0060'
+     C**********         IF        PRegRp3 <> *Blanks and                                  MD035555
+     C**********                   %Subst(PRegRp3:1:2) <> '//'                             MD035555
+     C**********         EVAL      Idx            =   Idx+1                                MD035555
+     C**********         EVAL      RetCodeIn      =   'Error'                              MD035555
+     C**********         EVAL      MsgIdXAr(Idx)  =   'RFV0060'                            MD035555
      C*******************EVAL      FldNamXAr(Idx) =   DDSName                   CAP084
-     C                   EVAL      FldNamXAr(Idx) =   'PREGRP3'                 CAP084
-     C                   EVAL      OKRrp3 = 'N'
-     C                   ENDIF
+     C**********         EVAL      FldNamXAr(Idx) =   'PREGRP3'                     CAP084 MD035555
+     C**********         EVAL      OKRrp3 = 'N'                                            MD035555
+     C**********         ENDIF                                                             MD035555
       *
      C                   ELSE
       *

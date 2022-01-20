@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058986           Date 11Oct21               *
-      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *  Last Amend No. MD059470           Date 19Jan22               *
+      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *                 MD055891           Date 01Sep20               *
       *                 MD055681           Date 31Jul20               *
       *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
@@ -28,6 +29,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD059470 - Return parameter from components file             *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -126,6 +128,7 @@
      C                   SETON                                        50                    MD055891
      C                   Else                                                               MD055891
      C                   Setoff                                       50                    MD055891
+     C                   MOVE      DHCPRM        XXCPRM                                     MD059470
      C                   ENDIF                                                              MD055891
      C*
      C** IF COMPONENT NOT FOUND CHECK THE RCF FILE

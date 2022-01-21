@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250655             Date 20Jan22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -82,6 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250655 - Temp fix to add 'X' for authorise when validating   *
+      *           action code in VALD.                                *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -592,6 +595,7 @@
      C     DDACTN        ANDNE     'A'
      C     DDACTN        ANDNE     'D'
      C     DDACTN        ANDNE     'E'
+     C     DDACTN        ANDNE     'X'                                                        250655
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)

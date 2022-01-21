@@ -28,8 +28,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD059464 - COB component requested via Peroidic request not  *
-      *              selected for COB Run                             *
+      *  MD059464 - New component GLC0804 is not selected for COB run *
+      *              even when requested via Periodic Report  Request *
+      *              Maintenance                                      *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1096560 - Report SE0915 was not generated (Child:AR1096561)*

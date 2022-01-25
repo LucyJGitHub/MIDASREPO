@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056565           Date 21Jan21               *
-      *  Prev Amend No. MD056564           Date 24Aug20               *
+      *  Last Amend No. MD059264           Date 21Jan22               *
+      *  Prev Amend No. MD056565           Date 21Jan21               *
+      *                 MD056564           Date 24Aug20               *
       *                 MD055681           Date 31Jul20               *
       *                 MD046657           Date 12Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059264 - SP2021.B API: BSRT returns error for              *
+      *             “display only” fields                             *
       *  MD056565 - Deliverable Data Split for APDFFLDPD              *
       *  MD056564 - Deliverable Data Split for No Display field cond  *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -200,6 +203,7 @@
      C+ , FLDNMD                                                                            MD056565
      C+ , FLMODD                                                                            MD056565
      C+ , NDMODE                                                                            MD056565
+     C+ , FILGDL                                                                            MD059264
      C+ )                                                                                   MD056565
      C+ values                                                                              MD056565
      C+ (                                                                                   MD056565
@@ -216,6 +220,7 @@
      C+ , ' '                                                                               MD056565
      C+ , ' '                                                                               MD056565
      C+ , 'C'                                                                               MD056565
+     C+ , 'N'                                                                               MD059264
      C+ )                                                                                   MD056565
      C/end-exec                                                                             MD056565
      C                   else                                                               MD056565
@@ -235,6 +240,7 @@
      C+ , FLDNMD                                                                            MD056565
      C+ , FLMODD                                                                            MD056565
      C+ , NDMODE                                                                            MD056565
+     C+ , FILGDL                                                                            MD059264
      C+ )                                                                                   MD056565
      C+ values                                                                              MD056565
      C+ (                                                                                   MD056565
@@ -251,6 +257,7 @@
      C+ , ' '                                                                               MD056565
      C+ , ' '                                                                               MD056565
      C+ , 'B'                                                                               MD056565
+     C+ , 'N'                                                                               MD059264
      C+ )                                                                                   MD056565
      C/end-exec                                                                             MD056565
      C                   endif                                                              MD056565
@@ -264,6 +271,7 @@
      C+ , FILNMX                                                                            MD056565
      C+ , FLDNMX                                                                            MD056565
      C+ , NDMODE                                                                            MD056565
+     C+ , FILGDL                                                                            MD059264
      C+ )                                                                                   MD056565
      C+ values                                                                              MD056565
      C+ (                                                                                   MD056565
@@ -274,6 +282,7 @@
      C+ , ' '                                                                               MD056565
      C+ , ' '                                                                               MD056565
      C+ , :NCMODE                                                                           MD056565
+     C+ , 'N'                                                                               MD059264
      C+ )                                                                                   MD056565
      C/end-exec                                                                             MD056565
 

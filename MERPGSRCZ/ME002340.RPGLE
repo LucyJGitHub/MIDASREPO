@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057679           Date 24Mar21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. CGL094             Date 02Nov21               *
+      *  Prev Amend No. MD057679           Date 24Mar21               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD050698           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD040941           Date 05Sep16               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL094 - Allow External Destination for MT940 Message.       *
+      *           If the destination entered matches the value on     *
+      *           the System Value Parameter, then do not issue       *
+      *           error message.                                      *
       *  MD057679 - Enhance fix MD-50698 such that error message is   *
       *             returned if SWIFT ID to be used as Destination    *
       *             is being used by more than one live customer AND  *
@@ -197,6 +202,9 @@
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
+      *                                                                                       CGL094
+      * Constant to hold System Value Paramter External Destination                           CGL094
+     D ExtDestination  C                   Const('ExtNetworkDest')                            CGL094
       *                                                                                       CER030
       ** Fields for CER030                                                                    CER030
       *                                                                                       CER030
@@ -373,13 +381,19 @@
      C                   PARM      *Blanks       @IBICD            1            O:Bic found
  
  B2  C                   IF        EDPROT = '*SWIFT'
- 
+
+      * IF CGL094 is ON, allow a destination that is on the System Value Parameter            CGL094
+      * If there is no match, issue error message                                             CGL094
+      *                                                                                       CGL094
+ B3  C                   IF        CGL094 = 'Y' AND F0DSTN =  PCurSet01                       CGL094
+     C                   ELSE                                                                 CGL094
  B3  C                   IF        @ICUST <> 'Y' AND @IBICD <> 'Y'
  B3  C                             OR @ICUST = 'Y' AND BBCSID = *BLANKS
      C                   MOVE      'ME00056'     ZAMSID
      C                   MOVE      *On           *IN41
  E3  C                   ENDIF
- 
+ E3  C                   ENDIF                                                                CGL094
+
      ** Do not convert automatically the customer number in SWIFT address
       *
  B3  C*******            IF        @ICUST = 'Y' AND BBCSID <> *BLANKS
@@ -387,7 +401,9 @@
  E3  C*******            ENDIF
  
  X2  C                   ELSE
- 
+
+ B3  C                   IF        CGL094 = 'Y' AND F0DSTN =  PCurSet01                       CGL094
+     C                   ELSE                                                                 CGL094
      C                   MOVE      'N'           ZWARN             1                        MD040941
  B3  C                   IF        @ICUST <> 'Y'
      C                   IF        WSysVal01 = 'N'                                          MD040941
@@ -398,7 +414,8 @@
      C                   MOVE      'Y'           ZWARN                                      MD040941
      C                   ENDIF                                                              MD040941
  E3  C                   ENDIF
- 
+ E3  C                   ENDIF                                                                CGL094
+
  E2  C                   ENDIF
  
       ** Check if SWIFT BIC is being used/shared by more than one live customer             MD050698
@@ -723,6 +740,54 @@
      C                   MOVEL     PCurSet01     WSysVal01                                  MD040941
      C                   ENDIF                                                              MD040941
                                                                                             MD040941
+      *                                                                                       CGL094
+      ** Check if CGL094 is switched *ON                                                      CGL094
+      *                                                                                       CGL094
+     C                   MOVE      'N'           CGL094            1                          CGL094
+     C                   CALL      'AOSARDR0'                                                 CGL094
+     C                   PARM      *BLANKS       P@RTCD            7                          CGL094
+     C                   PARM      '*VERIFY'     P@OPTN            7                          CGL094
+     C                   PARM      'CGL094'      P@SARD            6                          CGL094
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL094
+      *                                                                                       CGL094
+     C     P@RTCD        IFEQ      *BLANKS                                                    CGL094
+     C                   MOVE      'Y'           CGL094                                       CGL094
+      *                                                                                       CGL094
+      ** Check for External Destination System Value Parameter                                CGL094
+     C                   CALLB     'AOSVALR0'                                                 CGL094
+     C                   PARM      *BLANKS       PRtCd                                        CGL094
+     C                   PARM      ExtDestinationPSysVal01                                    CGL094
+     C                   PARM                    PCurSet01                                    CGL094
+     C                   PARM                    PSysVal02                                    CGL094
+     C                   PARM                    PCurSet02                                    CGL094
+     C                   PARM                    PSysVal03                                    CGL094
+     C                   PARM                    PCurSet03                                    CGL094
+     C                   PARM                    PSysVal04                                    CGL094
+     C                   PARM                    PCurSet04                                    CGL094
+     C                   PARM                    PSysVal05                                    CGL094
+     C                   PARM                    PCurSet05                                    CGL094
+     C                   PARM                    PSysVal06                                    CGL094
+     C                   PARM                    PCurSet06                                    CGL094
+     C                   PARM                    PSysVal07                                    CGL094
+     C                   PARM                    PCurSet07                                    CGL094
+     C                   PARM                    PSysVal08                                    CGL094
+     C                   PARM                    PCurSet08                                    CGL094
+     C                   PARM                    PSysVal09                                    CGL094
+     C                   PARM                    PCurSet09                                    CGL094
+     C                   PARM                    PSysVal10                                    CGL094
+     C                   PARM                    PCurSet10                                    CGL094
+                                                                                              CGL094
+     C                   If        P@RtCd <> *Blanks                                          CGL094
+     C     *LOCK         In        LDA                                                        CGL094
+     C                   Eval      DBFile = 'SDSVALPD'                                        CGL094
+     C                   Eval      DBase = 003                                                CGL094
+     C                   Eval      DBKey = PSysVal01                                          CGL094
+     C                   Out       LDA                                                        CGL094
+     C                   ExSR      *PSSR                                                      CGL094
+     C                   EndIf                                                                CGL094
+      *                                                                                       CGL094
+     C                   ENDIF                                                                CGL094
+                                                                                              CGL094
       *    ----------    ------
      C     @INZSR        ENDSR
  

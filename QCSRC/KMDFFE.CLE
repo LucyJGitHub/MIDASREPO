@@ -1,0 +1,403 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMDFFE - Build SQLDA for file to be replicated
+ *
+ *       (c) Misys International Banking Systems Ltd. 2001
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. 001090 Bugzilla    Date 23Aug06
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       001090 - Prevent Misleading "Data was truncated ..."
+ *                messages from appearing in the Server joblog.
+ *
+ ********************************************************************
+ */
+
+#include <stdlib.h>
+#include <string.h>
+#include <decimal.h>
+#include <xxcvt.h>
+#include <xxfdbk.h>
+#include <recio.h>
+
+#include "kmdffh.h"
+
+/*
+    This set of routines returns an sqlda structure that describes the
+    columns of a table. The information for the table is captured using
+    DSPFFD
+
+    22/4/99 Ommited field WHFDSL from list of conversions due to it
+            not being there at V3R2M0
+*/
+
+/* --------------------------------------------------------------------------*/
+/* PHYSICAL FILE: QSYS/QADSPFFD                                              */
+/* FILE CREATION DATE: 97/03/06                                              */
+/* RECORD FORMAT: QWHDRFFD                                                   */
+/* FORMAT LEVEL IDENTIFIER: 476EDA116FD4D                                    */
+/* --------------------------------------------------------------------------*/
+
+typedef struct {
+    char WHFILE[10];  /*  File                                               */
+    char WHLIB[10];   /*  Library                                            */
+    char WHCRTD[7];   /*  File creation date: century/date                   */
+    char WHFTYP[1];   /*  Type of file: P=Physical, L=Logical, D=Device      */
+    char WHCNT[5];    /*  Number of record formats                           */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHDTTM[13];  /*  Retrieval date: century/date/time                  */
+    char WHNAME[10];  /*  Record format                                      */
+    char WHSEQ[13];   /*  Format level identifier                            */
+    char WHTEXT[50];  /*  Format text description                            */
+    char WHFLDN[5];   /*  Number of fields and indicators                    */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHRLEN[5];   /*  Record format length                               */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHFLDI[10];  /*  Internal field name                                */
+    char WHFLDE[10];  /*  External field name                                */
+    char WHFOBO[5];   /*  Output buffer position                             */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHIBO[5];    /*  Input buffer position                              */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHFLDB[5];   /*  Field length in bytes                              */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHFLDD[2];   /*  Number of digits                                   */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHFLDP[2];   /*  Decimal positions to right of decimal              */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHFTXT[50];  /*  Field text description                             */
+    char WHRCDE[3];   /*  32=Data Type,64=Name, 128=None                     */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHRFIL[10];  /*  Reference file                                     */
+    char WHRLIB[10];  /*  Reference library                                  */
+    char WHRFMT[10];  /*  Reference record format                            */
+    char WHRFLD[10];  /*  Reference field                                    */
+    char WHCHD1[20];  /*  Column heading 1                                   */
+    char WHCHD2[20];  /*  Column heading 2                                   */
+    char WHCHD3[20];  /*  Column heading 3                                   */
+    char WHFLDT[1];   /*  Field type: B, A, S, P, F, O, J, E, H, L, T, Z, G  */
+    char WHFIOB[1];   /*  I/O attribute: I=Input,O=Output,B=Both,N=Neither   */
+    char WHECDE[2];   /*  Edit code                                          */
+    char WHEWRD[32];  /*  Edit word: Truncated after 30 characters           */
+    char WHVCNE[4];   /*  Number of validity checks                          */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHNFLD[5];   /*  Number of fields                                   */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHNIND[2];   /*  Number of indicators                               */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHSHFT[1];   /*  Keyboard shift                                     */
+    char WHALTY[1];   /*  Character field may be DBSC activated: N=No, Y=Yes */
+    char WHALIS[30];  /*  Alternative field name                             */
+    char WHJREF[2];   /*  Join reference to JFILE                            */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHDFTL[2];   /*  DFT value length: -1=Greater than 30 characters    */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHDFT[30];   /*  DFT value: Truncated after 30 characters           */
+    char WHCHRI[1];   /*  Character Id changes allowed: N=No, Y=Yes          */
+    char WHCTNT[1];   /*  Translation table used:  N=No, Y=Yes               */
+    char WHFONT[10];  /*  Font identifier                                    */
+    char WHCSWD[3];   /*  Character size width                               */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHCSHI[3];   /*  Character size height                              */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHBCNM[10];  /*  Barcode name                                       */
+    char WHBCHI[3];   /*  Barcode height:  000=No height specified           */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHMAP[1];    /*  Substring specified: N=No, Y=Yes                   */
+    char WHMAPS[5];   /*  Substring starting position                        */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHMAPL[5];   /*  Substring number of bytes (characters, if graphic) */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHSYSN[8];   /*  System Name (Source System, if file is DDM)        */
+    char WHRES1[2];   /*  Reserved                                           */
+    char WHSQLT[1];   /*  SQL file type: 0=None, T=TABLE, I=INDEX, V=VIEW    */
+    char WHHEX[1];    /*  Hexadecimal:  Y=Yes                                */
+    decimal(4,1) WHPNTS; /*  Point size: 0 = none                            */
+                         /*  PACKED SPECIFIED IN DDS                         */
+    decimal(5,0) WHCSID; /*  Coded Character set Identifier                  */
+                         /*  PACKED SPECIFIED IN DDS                         */
+    char WHFMT[4];    /*  Date and time format parameters                    */
+    char WHSEP[1];    /*  '/', '-', '.', ',', ':', or ' '                    */
+    char WHVARL[1];   /*  Variable length field: N=No, Y=Yes                 */
+    decimal(5,0) WHALLC; /*  Allocated length                                */
+                         /*  PACKED SPECIFIED IN DDS                         */
+    char WHNULL[1];   /*  Allow Null Value: N=No,Y=Yes                       */
+    char WHFCSN[10];  /*  Font character set, blank = none                   */
+    char WHFCSL[10];  /*  Char set lib, blank = none                         */
+    char WHFCPN[10];  /*  Font code page, blank = none                       */
+    char WHFCPL[10];  /*  Code page lib, blank = none                        */
+    char WHCDFN[10];  /*  Coded Font, blank = none                           */
+    char WHCDFL[10];  /*  Coded font lib, blank = none                       */
+    char WHDCDF[10];  /*  DBCS Coded Font, blank = none                      */
+    char WHDCDL[10];  /*  DBCS font lib, blank = none                        */
+    decimal(3,0) WHTXRT; /*  Degree of text rotation, -1 = not specified     */
+                         /*  PACKED SPECIFIED IN DDS                         */
+    char WHFLDG[5];   /*  Field length in characters, 0 = not graphic        */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+    char WHFDSL[5];   /*  Displayed field length                             */
+                      /*  ZONED SPECIFIED IN DDS                             */
+                      /*  REPLACED BY CHARACTER TYPE                         */
+} in_t;
+
+
+/*  Move a DSPFFD record into a non-packed/zoned data structure              */
+
+void mover(ffd_t * pout, in_t * pin)
+{
+
+#define movec(x) memmove(pout->x,pin->x,sizeof(pin->x))
+#define movec(x) memmove(pout->x,pin->x,sizeof(pin->x))
+#define movec1(x) pout->x = *pin->x
+#define movez(x) pout->x = QXXZTOI(pin->x,sizeof(pin->x),0)
+#define movep(x) pout->x = pin->x
+
+    /* character fields */
+
+    movec(WHFILE);
+    movec(WHLIB);
+    movec(WHCRTD);
+    movec1(WHFTYP);
+    movec(WHDTTM);
+    movec(WHNAME);
+    movec(WHSEQ);
+    movec(WHTEXT);
+    movec(WHFLDI);
+    movec(WHFLDE);
+    movec(WHFTXT);
+    movec(WHRFIL);
+    movec(WHRLIB);
+    movec(WHRFMT);
+    movec(WHRFLD);
+    movec(WHCHD1);
+    movec(WHCHD2);
+    movec(WHCHD3);
+    movec1(WHFLDT);
+    movec1(WHFIOB);
+    movec(WHECDE);
+    movec(WHEWRD);
+    movec1(WHSHFT);
+    movec1(WHALTY);
+    movec(WHALIS);
+    movec(WHDFT);
+    movec1(WHCHRI);
+    movec1(WHCTNT);
+    movec(WHFONT);
+    movec(WHBCNM);
+    movec1(WHMAP);
+    movec(WHSYSN);
+    movec(WHRES1);
+    movec1(WHSQLT);
+    movec1(WHHEX);
+    movec(WHFMT);
+    movec1(WHSEP);
+    movec1(WHVARL);
+    movec1(WHNULL);
+    movec(WHFCSN);
+    movec(WHFCSL);
+    movec(WHFCPN);
+    movec(WHFCPL);
+    movec(WHCDFN);
+    movec(WHCDFL);
+    movec(WHDCDF);
+    movec(WHDCDL);
+
+    /* zoned fields */
+
+    movez(WHCNT);
+    movez(WHFLDN);
+    movez(WHRLEN);
+    movez(WHFOBO);
+    movez(WHIBO);
+    movez(WHFLDB);
+    movez(WHFLDD);
+    movez(WHFLDP);
+    movez(WHRCDE);
+    movez(WHVCNE);
+    movez(WHNFLD);
+    movez(WHNIND);
+    movez(WHJREF);
+    movez(WHDFTL);
+    movez(WHCSWD);
+    movez(WHCSHI);
+    movez(WHBCHI);
+    movez(WHMAPS);
+    movez(WHMAPL);
+    movez(WHFLDG);
+/*  movez(WHFDSL); */
+
+    /* decimal fields */
+
+    movep(WHPNTS);
+    movep(WHCSID);
+    movep(WHALLC);
+    movep(WHTXRT);
+
+    return;
+}
+
+
+/*  Capture file field descriptions                                          */
+static in_t data;
+static ffd_t outdata;
+static _RFILE * file;
+
+int open_ffd(char * filename)
+{
+    char s[100];
+
+    system("DLTF QTEMP/QADSPFFD");
+    sprintf(s, "DSPFFD %s OUTPUT(*OUTFILE) OUTFILE(QTEMP/QADSPFFD)", filename);
+    if (system(s) != 0)
+    {
+        return 0;
+    }
+/**** Start of 001090 ****                                                      *001090*/
+/* The DSPFFD above will have generated a file for the current OS level.        *001090*/
+/* However this program expects to read a file from OS V1R3M0, or thereabouts.  *001090*/
+/* So copy the generated data into a file with a V1R3M0 layout and read that    *001090*/
+/* instead.                                                                     *001090*/
+/*                                                                              *001090*/
+    system("CPYF FROMFILE(QTEMP/QADSPFFD) TOFILE(QTEMP/RPFFD310) \
+            MBROPT(*REPLACE) FMTOPT(*MAP *DROP)");                             /*001090*/
+/***if*((file = _Ropen("QTEMP/QADSPFFD","rr")) == NULL)                         *001090*/
+    if ((file = _Ropen("QTEMP/RPFFD310","rr")) == NULL)                        /*001090*/
+    {
+        return 0;
+    }
+/**** End of 001090 ****                                                        *001090*/
+    return 1;
+}
+
+ffd_t * get_ffd()
+{
+    if(_Rreadn(file,&data,sizeof(data),__NO_LOCK)->num_bytes == EOF)
+    {
+        return NULL;
+    }
+    mover(&outdata,&data);
+    return &outdata;
+}
+
+void close_ffd()
+{
+    _Rclose(file);
+}
+
+/*                                                                           */
+/*  Create SQLDA for a named file                                            */
+/*                                                                           */
+
+sqlda* psqlda = NULL;
+
+sqlda* get_sqlda(char * filename)
+{
+    _XXOPFB_T* opfb;
+    int i = 0;
+
+    if (open_ffd(filename) == 0)
+    {
+        return NULL;
+    }
+    opfb = _Ropnfbk(file);
+    psqlda = (sqlda *) malloc(SQLDASIZE(opfb->num_records));
+    memcpy(psqlda->sqldaid,"SQLDA    ",8);
+    psqlda->sqldabc = SQLDASIZE(opfb->num_records);
+    psqlda->sqln = psqlda->sqld = opfb->num_records;
+    while (get_ffd() != NULL)
+    {
+        psqlda->sqlvar[i].sqllen = outdata.WHFLDB; /* Usually                */
+        switch(outdata.WHFLDT)
+        {
+        case 'B':
+            if (outdata.WHFLDB == 4)
+            {
+                psqlda->sqlvar[i].sqltype = 496;   /* Long                   */
+            }
+            else
+            {
+                psqlda->sqlvar[i].sqltype = 500;   /* Short                  */
+            }
+            break;
+
+        case 'A':
+        case 'Z':  /* assume a timestamp is character */
+            if (outdata.WHVARL == 'Y')
+            {
+                if (outdata.WHFLDB < 6000)
+                {
+                    psqlda->sqlvar[i].sqltype = 448; /* varchar              */
+                }
+                else
+                {
+                    psqlda->sqlvar[i].sqltype = 456; /* long varchar         */
+                }
+            }
+            else
+            {
+                psqlda->sqlvar[i].sqltype = 452;  /* char                    */
+            }
+            break;
+
+        case 'S':
+            psqlda->sqlvar[i].sqltype = 488;  /*  zoned                      */
+            psqlda->sqlvar[i].sqllen = outdata.WHFLDD * 256 + outdata.WHFLDP;
+            break;
+
+        case 'P':
+            psqlda->sqlvar[i].sqltype = 484;  /*  packed                     */
+            psqlda->sqlvar[i].sqllen = outdata.WHFLDD * 256 + outdata.WHFLDP;
+            break;
+
+        case 'F':
+            psqlda->sqlvar[i].sqltype = 480;  /*  Floating point             */
+            break;
+        }
+
+        if (outdata.WHNULL == 'Y') /*  If data is null-able, add 1 to sqltype*/
+        {
+            psqlda->sqlvar[i].sqltype++;
+        }
+        memset(psqlda->sqlvar[i].sqlname.data, ' ', 30);
+        memcpy(psqlda->sqlvar[i].sqlname.data, outdata.WHFLDI, 10);
+        psqlda->sqlvar[i].sqlname.length = 30;
+        while(*(psqlda->sqlvar[i].sqlname.data +
+            psqlda->sqlvar[i].sqlname.length - 1) == ' ')
+        {
+            *(psqlda->sqlvar[i].sqlname.data +
+                psqlda->sqlvar[i].sqlname.length - 1) = 0;
+            psqlda->sqlvar[i].sqlname.length--;
+        }
+        i++;
+    }
+    close_ffd();
+    return psqlda;
+}

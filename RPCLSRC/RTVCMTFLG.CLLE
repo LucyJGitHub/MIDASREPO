@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RTVCMTFLG - Retrieve Commitment Control Flag                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP021 *CREATE     Date 13Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP021 - Enable Commitment Control to be optional.          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CMTCTLFLG)
+
+/*  Parameters                                                      */
+             DCL        VAR(&CMTCTLFLG) TYPE(*CHAR) LEN(1)
+
+/*  Others                                                          */
+             DCL        VAR(&CMTFLGRTV) TYPE(*CHAR) LEN(4)
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2003')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Retrieve flag from data area in QTEMP.                          */
+
+/* If data area is not found default to 'Y'                        */
+             CHKOBJ     OBJ(QTEMP/CMTCTLFLG) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&CMTCTLFLG) VALUE('Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/* If data area contains an invalid value default to 'Y'           */
+             RTVDTAARA  DTAARA(QTEMP/CMTCTLFLG (1 4)) +
+                          RTNVAR(&CMTFLGRTV)
+
+             IF         COND(     &CMTFLGRTV *NE '*YES' +
+                             *AND &CMTFLGRTV *NE '*NO' ) +
+                           THEN(DO)
+                CHGVAR     VAR(&CMTCTLFLG) VALUE('Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/* Convert retreived *YES/*NO to Y/N                               */
+             CHGVAR     VAR(&CMTCTLFLG) VALUE(%SST(&CMTFLGRTV 2 1))
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPF0001) MSGF(QCPFMSG) +
+                          MSGDTA('RTVCMTFLG') TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+
+             ENDPGM

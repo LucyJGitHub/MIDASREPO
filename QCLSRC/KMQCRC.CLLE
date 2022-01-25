@@ -1,0 +1,218 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       KMQCRC - Create/Delete MQ objects                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 000867 (Bugzilla)  Date 13Apr06              */
+/*                      CRP026             Date 18Jul05              */
+/*                      194303             Date 11Jun01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       000867 - Only try and create MQ object(s) if they don't     */
+/*                exist.                                             */
+/*                Also add a return code so that this code can pass  */
+/*                error information back.                            */
+/*       CRP026 - Create keyed MQ queue as a buffer for new Feeder   */
+/*                when running in *SECURE mode.                      */
+/*                User specified Queue Manager added.                */
+/*       194303 - MQSeries objects were being created with           */
+/*                unsuitable parameters.                             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMQCRC                                       */
+/*          Program Title - Create MQ objects for replication            */
+/*          Creation Date - 22/08/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  Called to create MQ objects to support the configuration for         */
+/*  replication                                                          */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*-----------------------------------------------------------------------*/
+/**********  PGM        PARM(&CHANNEL &SHORT &DS &ENV &RQM &DSNAME)       /*000867*/
+             PGM        PARM(&CHANNEL &SHORT &DS &ENV &RQM &DSNAME +
+                          &RETURNCODE)                                    /*000867*/
+                                                                          /*000867*/
+             DCL        VAR(&CHANNEL) TYPE(*CHAR) LEN(40)
+             DCL        VAR(&SHORT) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&ENV) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&DS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RQM) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)              /*000867*/
+                                                                          /*000867*/
+             DCL        VAR(&DELENV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ENVQ) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&DSQ) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&DSENVQ) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&CHLSRV) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&DSNAME) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ENVUSER) TYPE(*CHAR) LEN(10)
+                                                                          /*CRP026*/
+             DCL        VAR(&RTNDATA) TYPE(*CHAR) LEN(64) /* Data +
+                          returned by 'access object' from RPBOIFDA */    /*CRP026*/
+             DCL        VAR(&DATALEN) TYPE(*DEC) LEN(2 0) /* Length +
+                          of value in &RTNDATA */                         /*CRP026*/
+             DCL        VAR(&MQMNAME) TYPE(*CHAR) LEN(48) /* Queue +
+                          Manager name */                                 /*CRP026*/
+
+/*  Variables to act like named constants on calls                  */    /*000867*/
+             DCL        VAR(&QUEUE) TYPE(*CHAR) LEN(7) VALUE(QUEUE)       /*000867*/
+             DCL        VAR(&CHANNELNC) TYPE(*CHAR) LEN(7) VALUE(CHANNEL) /*000867*/
+/* Work fields            */                                              /*000867*/
+             DCL        VAR(&EXIST) TYPE(*CHAR) LEN(4)                    /*000867*/
+                                                                          /*000867*/
+             MONMSG     MSGID(CPF0000 MCH0000 AMQ0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                                  /*000867*/
+                                                                          /*000867*/
+             CALL       PGM(KMDICC) PARM('ENVOWNER' &ENV &ENVUSER)
+
+             CHGVAR     VAR(&ENVQ) VALUE(&CHANNEL *TCAT '.' *CAT &ENV)
+             CHGVAR     VAR(&DSENVQ) VALUE(&CHANNEL *TCAT '.' *CAT +
+                          &ENV *CAT '.' *CAT &DS)
+             CHGVAR     VAR(&DSQ) VALUE(&CHANNEL *TCAT '.' *CAT &DS)
+             CHGVAR     VAR(&CHLSRV) VALUE('REP.' *CAT &SHORT *TCAT +
+                          '.' *CAT &DS)
+
+/* Get the Queue Manager name                   */                        /*CRP026*/
+             CALLPRC    PRC(RPBOIF99) PARM(('MQMNAME   ') (&RTNDATA) +
+                          (&DATALEN))                                     /*CRP026*/
+             CHGVAR     VAR(&MQMNAME) VALUE(%SST(&RTNDATA 1 &DATALEN))    /*CRP026*/
+                                                                          /*CRP026*/
+             /*  START THE Q MANAGER  */
+/************STRMQM                   */                                  /*CRP026*/
+             STRMQM     MQMNAME(&MQMNAME)                                 /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+
+/*********** CRTMQMQ    QNAME(&ENVQ) QTYPE(*LCL) TEXT('Environment +
+                          feeder job queue') ************/            /*194303*/
+/************CRTMQMQ    QNAME(&ENVQ) QTYPE(*LCL) TEXT('Environment +  **/ /*CRP026*/
+/************             feeder job queue') DFTMSGPST(*YES) +        **/ /*CRP026*/
+/************             MAXDEPTH(640000)                     /*194303*/ /*CRP026*/
+/*  Bypass processing if queue already exists                       */    /*000867*/
+             CALLPRC    PRC(RPCHKMQEX) PARM(&ENVQ &QUEUE &EXIST +
+                          &RETURNCODE)                                    /*000867*/
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))                                  /*000867*/
+             IF         COND(&EXIST = '*YES') THEN(GOTO CMDLBL(BYPASS1))  /*000867*/
+                                                                          /*000867*/
+             CRTMQMQ    QNAME(&ENVQ) QTYPE(*LCL) MQMNAME(&MQMNAME) +
+                          TEXT('Replication Feeder queue') +
+                          PUTENBL(*YES) DFTMSGPST(*YES) +
+                          GETENBL(*YES) MAXDEPTH(999999999) +
+                          USAGE(*NORMAL)                                  /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+/************GRTMQMAUT  OBJ(&ENVQ) OBJTYPE(*LCLQ) USER(&ENVUSER) +     */ /*CRP026*/
+/************             AUT(*ALL)                                    */ /*CRP026*/
+             GRTMQMAUT  OBJ(&ENVQ) OBJTYPE(*LCLQ) USER(&ENVUSER) +
+                          AUT(*ALL) MQMNAME(&MQMNAME)                     /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+BYPASS1:                                                                  /*000867*/
+
+/*********** CRTMQMQ    QNAME(&DSQ) QTYPE(*LCL) TEXT('Transmission +
+                          queue for departmental server') USAGE(*TMQ) +
+                          **************/                             /*194303*/
+/************CRTMQMQ    QNAME(&DSQ) QTYPE(*LCL) TEXT('Transmission +  **/ /*CRP026*/
+/************             queue for departmental server') +           **/ /*CRP026*/
+/************             DFTMSGPST(*YES) MAXDEPTH(640000) USAGE(*TMQ)*+/ /*CRP026*/
+/************                                                  /*194303*/ /*CRP026*/
+/*  Bypass processing if queue already exists                       */    /*000867*/
+             CALLPRC    PRC(RPCHKMQEX) PARM(&DSQ &QUEUE &EXIST +
+                          &RETURNCODE)                                    /*000867*/
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))                                  /*000867*/
+             IF         COND(&EXIST = '*YES') THEN(GOTO CMDLBL(BYPASS2))  /*000867*/
+                                                                          /*000867*/
+             CRTMQMQ    QNAME(&DSQ) QTYPE(*LCL) MQMNAME(&MQMNAME) +
+                          TEXT('Replication Transmission queue') +
+                          PUTENBL(*YES) DFTMSGPST(*YES) +
+                          GETENBL(*YES) MAXDEPTH(999999999) +
+                          USAGE(*TMQ)                                     /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+/************GRTMQMAUT  OBJ(&DSQ) OBJTYPE(*LCLQ) USER(&ENVUSER) +      */ /*CRP026*/
+/************             AUT(*ALL)                                    */ /*CRP026*/
+             GRTMQMAUT  OBJ(&DSQ) OBJTYPE(*LCLQ) USER(&ENVUSER) +
+                          AUT(*ALL) MQMNAME(&MQMNAME)                     /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+BYPASS2:                                                                  /*000867*/
+
+/*********** CRTMQMQ    QNAME(&DSENVQ) QTYPE(*RMT) TEXT('Remote +
+                          queue definition') RMTQNAME(&DSENVQ) +
+                          RMTMQMNAME(&RQM) TMQNAME(&DSQ) ********/    /*194303*/
+/************CRTMQMQ    QNAME(&DSENVQ) QTYPE(*RMT) TEXT('Remote +     **/ /*CRP026*/
+/************             queue definition') DFTMSGPST(*YES) +        **/ /*CRP026*/
+/************             RMTQNAME(&DSENVQ) RMTMQMNAME(&RQM) +        **/ /*CRP026*/
+/************             TMQNAME(&DSQ)                        /*194303*/ /*CRP026*/
+/*  Bypass processing if queue already exists                       */    /*000867*/
+             CALLPRC    PRC(RPCHKMQEX) PARM(&DSENVQ &QUEUE &EXIST +
+                          &RETURNCODE)                                    /*000867*/
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))                                  /*000867*/
+             IF         COND(&EXIST = '*YES') THEN(GOTO CMDLBL(BYPASS3))  /*000867*/
+                                                                          /*000867*/
+             CRTMQMQ    QNAME(&DSENVQ) QTYPE(*RMT) MQMNAME(&MQMNAME) +
+                          TEXT('Replication Remote queue +
+                          definition') PUTENBL(*YES) +
+                          DFTMSGPST(*YES) RMTQNAME(&DSENVQ) +
+                          RMTMQMNAME(&RQM) TMQNAME(&DSQ)                  /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+/************GRTMQMAUT  OBJ(&DSENVQ) OBJTYPE(*RMTQ) USER(&ENVUSER) +   */ /*CRP026*/
+/************             AUT(*ALL)                                    */ /*CRP026*/
+             GRTMQMAUT  OBJ(&DSENVQ) OBJTYPE(*RMTQ) USER(&ENVUSER) +
+                          AUT(*ALL) MQMNAME(&MQMNAME)                     /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+BYPASS3:                                                                  /*000867*/
+
+/************                                                         **/ /*CRP026*/
+/*********** CRTMQMCHL  CHLNAME(&CHLSRV) CHLTYPE(*SVR) TRPTYPE(*TCP) +/*194303*/
+/***********              CONNAME(&DSNAME) TMQNAME(&DSQ) CVTMSG(*YES) /*194303*/
+/************CRTMQMCHL  CHLNAME(&CHLSRV) CHLTYPE(*SVR) TRPTYPE(*TCP) + */ /*CRP026*/
+/************             CONNAME(&DSNAME) TMQNAME(&DSQ) DSCITV(0) +   */ /*CRP026*/
+/************             CVTMSG(*YES)                         /*194303*/ /*CRP026*/
+/*  Bypass processing if channel already exists                     */    /*000867*/
+             CALLPRC    PRC(RPCHKMQEX) PARM(&CHLSRV &CHANNELNC &EXIST +
+                          &RETURNCODE)                                    /*000867*/
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))                                  /*000867*/
+             IF         COND(&EXIST = '*YES') THEN(GOTO CMDLBL(BYPASS4))  /*000867*/
+                                                                          /*000867*/
+             CRTMQMCHL  CHLNAME(&CHLSRV) CHLTYPE(*SVR) +
+                          MQMNAME(&MQMNAME) TRPTYPE(*TCP) +
+                          CONNAME(&DSNAME) TMQNAME(&DSQ) DSCITV(0) +
+                          CVTMSG(*YES)                                    /*CRP026*/
+             MONMSG     MSGID(CPF0000)
+BYPASS4:                                                                  /*000867*/
+
+/* Create MQ queue as a buffer for new Feeder using a common function */  /*CRP026*/
+             CALLPRC    PRC(RPCRTENV) PARM('M' '1' '*LIBL     ' +
+                                                   '*LIBL     ')          /*CRP026*/
+                                                                          /*CRP026*/
+             GOTO       CMDLBL(END)                                       /*000867*/
+                                                                          /*000867*/
+ ABNOR:                                                                   /*000867*/
+             IF         COND(&RETURNCODE = ' ') THEN(CHGVAR +
+                          VAR(&RETURNCODE) VALUE('OTHER'))                /*000867*/
+                                                                          /*000867*/
+             SNDPGMMSG  MSGID(CPF0001) MSGF(QCPFMSG) +
+                          MSGDTA('KMQCRC') TOPGMQ(*SAME) +
+                          MSGTYPE(*ESCAPE)                                /*000867*/
+             MONMSG     MSGID(CPF0000)                                    /*000867*/
+                                                                          /*000867*/
+ END:                                                                     /*000867*/
+             ENDPGM

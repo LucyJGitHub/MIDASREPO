@@ -1,0 +1,1091 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+/******************************************************************************
+Some brief notes on Reverse Polish Notation.
+
+  Used to restate an expression in a way which is amenable to evaluation by a
+  simple algorithm.
+
+  Take a valid expression eg:
+
+  (a  =  -(b + c / d)) or e >  f + g - h * i
+
+  Insert extra brackets to remove all implicit precedence and associativity
+  rules.
+
+  ((a  =  (-(b + (c / d)))) or (e > (((f + g) - h) * i)))
+
+  Working from the innermost bracket outward, take the operators out of the
+  immediately enclosing brackets, and place them to the left of the
+  appropriate closing bracket.
+
+  ((a   ((b  (c  d)/)+)-)=  (e  (((f  g)+  h)-  i)*)>)or
+
+  Drop the brackets.
+
+  a b c d / + - = e f g + h - i * > or
+
+  This is the Reverse Polish form of the original expression.
+
+  The evaluation algorithm is very simple. Starting from the left of the
+  expression, move right until an operator is encountered. Perform the
+  operation on the operands immediately preceding, then replace the operator
+  and operands used by the result, closing up from the left. Repeat until a
+  single value remains.
+
+  Exploding out this operation on the previous expression shows how the
+  intention of the original expression is preserved.
+
+  a  b c d / + - = e f g + h - i * > or
+       c/d
+     b+***
+    -*****
+  a=******
+                     f+g
+                     *** - h
+                     ******* * i
+                   e>***********
+  ********    or   *************
+
+  The great advantage of this technique is that a single evaluation module can
+  act as an efficient interpreter for any number of pre-prepared or
+  dynamically prepared expressions.
+
+  In the replicator software, expressions are first reorganised as a stack of
+  elements in reverse polish sequence, then fed to the evaluation module,
+  along with the target row, and a work area containing constants and reserved
+  spaces for intermediate values.
+
+  The individual items are defined as instances of the s_item structure, This
+  has the following fields.
+
+  operation.  0 indicates an operand. The different operators have
+              their own non-zero values. The value of this field is
+              changed 0 to after the operator is used, with the
+              remainder of the element being used to identify the
+              result.
+
+  buffer.     0 indicates that the data is to be found in the database
+              row. 1 indicates that the data is to be found in the
+              work area.
+
+  type.       A unique number identifying the data type.
+
+  length.     The length of the data. (Or length * 256 + precision for
+              DECIMAL or ZONED types).
+
+  offset.     The start position of the data in the indicated buffer.
+
+  extra_1     and
+  extra_2.    Work fields.
+
+  Notes on s_item usage.
+
+  1. LOGICAL types (used to hold results of comparison and logical operations)
+     do not have any associated buffer space. The offset field is set to
+     0 (FALSE) or 1 (TRUE).
+
+  2. VARCHAR types (Used to hold the result of character string operations)
+     are implemented by storing a character pointer in the work area. The
+     actual storage is allocated when the evaluation is made, and freed before
+     the resulting operand is dropped.
+
+  3. s_item arrays are also used to describe the rows in the replicated
+     files. In this case the extra_1 and extra_2 fields are use to identify
+     key fields and the parent field number for each column. This is very
+     useful when it comes to building the evaluation stacks for user selections
+     since the s_item describing a field in a replicated file can be moved
+     directly to the appropriate position in the stack.
+
+******************************************************************************/
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <limits.h>
+
+#include "decimal.h"
+#include "kmdslh.h"
+
+#define base sa
+#define op(i) (base + i)->operation
+#define opdepth(i) (base + i)->extra_2
+#define optype(i) (base + i)->type
+#define opoffset(i) (base + i)->extra_1
+#define bnd_of(ty)                                   \
+              ( (sizeof(ty) <= 2) ? (sizeof(ty) - 1): \
+              ( (sizeof(ty) <= 4) ? 3 :               \
+              ( (sizeof(ty) <= 8) ? 7 : 15 ) ) )
+
+#define align(ptr, ty) (ptr == NULL) ? NULL : ( (ptr) + bnd_of(ty) - \
+                           (((unsigned) (ptr) - 1) & bnd_of(ty)) )
+
+/*******************************************************************************************/
+/*                                                                                         */
+/*        ROW SELECTION 'COMPILER'                                                         */
+/*                                                                                         */
+/*******************************************************************************************/
+
+/* Array to map specific data types to compatibility classes */
+
+datatype_t data_class[] =   {
+   CHAR,
+   CHAR,
+   NUMERIC,
+   NUMERIC,
+   NUMERIC,
+   NUMERIC,
+   NUMERIC,
+   NUMERIC,
+   LOGICAL,
+   NUMERIC,
+   DATA,
+   ANY
+};
+
+/* Array to map items to general classes */
+
+item_t item_type[] = {
+    _FIELD, /* FIELD */
+    PUNCTUATION, /* MARKER */
+    PUNCTUATION, /* COMMA */
+    OPERATOR, /* ADD */
+    OPERATOR, /* SUB */
+    OPERATOR, /* MUL */
+    OPERATOR, /* DIV */
+    OPERATOR, /* EXP */
+    OPERATOR, /* IMINUS */
+    OPERATOR, /* IPLUS */
+    OPERATOR, /* _NOT */
+    OPERATOR, /* NOT */
+    OPERATOR, /* OR */
+    OPERATOR, /* AND */
+    OPERATOR, /* LT */
+    OPERATOR, /* GT */
+    OPERATOR, /* LE */
+    OPERATOR, /* GE */
+    OPERATOR, /* EQ */
+    OPERATOR, /* NE */
+    OPERATOR, /* CONCAT */
+    OPERATOR, /* LIKE */
+    OPERATOR, /* NOT_LIKE */
+    FUNCTION, /* SUBSTR */
+    FUNCTION, /* TRANSLATE */
+    FUNCTION, /* UNKNOWN */
+    PUNCTUATION /* DONE */
+};
+
+#define ITEM_TYPE(i) (item_type[(int) op(i)])
+#define DATA_CLASS(i) (data_class[(int) (base + i)->type])
+
+/* Operator information */
+
+_Packed struct {
+    short argc;
+    short precedence;
+    assoc_t associativity;
+    datatype_t argtype;
+    datatype_t result;
+} optab[] = {
+    {2,12,LtoR,NUMERIC,NUMERIC}, /* ADD */
+    {2,12,LtoR,NUMERIC,NUMERIC}, /* SUB */
+    {2,13,LtoR,NUMERIC,NUMERIC}, /* MUL */
+    {2,13,LtoR,NUMERIC,NUMERIC}, /* DIV */
+    {2,14,LtoR,NUMERIC,NUMERIC}, /* EXP */
+    {1,15,RtoL,NUMERIC,NUMERIC}, /* IMINUS */
+    {1,15,RtoL,NUMERIC,NUMERIC}, /* IPLUS */
+    {1,15,RtoL,LOGICAL,LOGICAL}, /* _NOT */
+    {1,15,RtoL,LOGICAL,LOGICAL}, /* NOT */
+    {2,4,LtoR,LOGICAL,LOGICAL}, /* OR */
+    {2,5,LtoR,LOGICAL,LOGICAL}, /* AND */
+    {2,10,LtoR,DATA,LOGICAL}, /* LT */
+    {2,10,LtoR,DATA,LOGICAL}, /* GT */
+    {2,10,LtoR,DATA,LOGICAL}, /* LE */
+    {2,10,LtoR,DATA,LOGICAL}, /* GE */
+    {2,9,LtoR,DATA,LOGICAL}, /* EQ */
+    {2,9,LtoR,DATA,LOGICAL}, /* NE */
+    {2,13,LtoR,CHAR,CHAR}, /* CONCAT */
+    {2,13,LtoR,CHAR,LOGICAL}, /* LIKE */
+    {2,13,LtoR,CHAR,LOGICAL} /* NOT LIKE */
+};
+#define OP(i) (optab[((int) op(i)) - ((int) FIRST_OPERATOR)])
+
+/* Function information */
+
+/* Parameters */
+
+datatype_t SUBSTR_parms[] = {CHAR,LONG,LONG};
+datatype_t TRANSLATE_parms[] = {CHAR};
+datatype_t UNKNOWN_parms[] = {ANY,ANY,ANY,ANY,ANY,ANY,ANY,ANY,ANY,ANY};
+
+_Packed struct {
+    short maxargc;
+    short minargc;
+    datatype_t * parmlist;
+    datatype_t result;
+}functab[] = {
+    {3,2,SUBSTR_parms,CHAR},
+    {1,1,TRANSLATE_parms,CHAR},
+    {10,0,UNKNOWN_parms,ANY}
+};
+
+static int error_count = 0; /* Errors found during current pass */
+static error_msg * error_list = NULL;
+
+void record_error(int offset,char * text)
+{
+    error_msg * ep;
+    error_msg * tp = (error_msg *) &error_list;
+
+    ep = (error_msg *) calloc(sizeof(error_msg),1);
+    ep->offset = offset;
+    memcpy(ep->text,text,(strlen(text) < sizeof(ep->text)) ? strlen(text) :
+        sizeof(ep->text) - 1);
+    while ((tp->next != NULL) && (tp->next->offset <= offset))
+    {
+        tp = tp->next;
+    }
+    ep->next = tp->next;
+    tp->next = ep;
+    error_count++;
+}
+
+void clear_errors()
+{
+    error_msg * tp;
+
+    error_count = 0;
+    while (error_list != NULL)
+    {
+        tp = error_list->next;
+        free(error_list);
+        error_list = tp;
+    }
+}
+
+static char * cp;   /* Points to current character in the input stream */
+static char * tstart; /* First char in current token */
+static int depth = 1; /* Current nesting depth */
+static item = 0;
+static s_item * sa;
+static s_item * aSTACK;
+static char * aROW;
+static char * where;
+static char * work;
+static char ** pawork;
+static int ba[50];
+static int i,j;
+static int * wl;
+
+/* Extend size of work area */
+
+char * work_(int i)
+{
+    char * cp;
+
+    cp = *pawork;
+    *pawork = (char *) realloc(*pawork,*wl + i);
+    if (*wl == 0) work = *pawork;
+    else work = (work - cp) + *pawork;
+    *wl += i;
+    return *pawork + *wl;
+}
+
+void reset_work()
+{
+    if (work == NULL) return;
+    *wl = work - *pawork;
+    *pawork = realloc(*pawork,*wl);
+    work = *pawork + *wl;
+}
+
+/* Change size of stack */
+void sa_(int i)
+{
+    sa = realloc(sa,i * sizeof(s_item));
+}
+
+/* Create a new stack item in the input array */
+
+void add_item(operation_t operation,int buff,int type,short len)
+{
+    sa_(item + 1);
+    (sa + item)->operation = operation;
+    (sa + item)->buffer = buff;
+    (sa + item)->type = type;
+    (sa + item)->length = len;
+    (sa + item)->offset = work - *pawork;
+    (sa + item)->extra_1 = tstart - where;
+    (sa + item)->extra_2 = depth;
+    item++;
+}
+
+void delete_item(int i)
+{
+    memmove(sa + i,sa + i + 1, (item - i - 1) * sizeof(s_item));
+    item--;
+    sa_(item);
+    return;
+}
+
+void insert_item(int i,s_item * ip)
+{
+    sa_(item + 1);
+    memmove(sa + i + 2,sa + i + 1,(item - i - 1) * sizeof(s_item));
+    *(sa + i + 1) = *ip;
+    item++;
+}
+
+void move_item(int i, int j)
+{
+    s_item item;
+
+    if ((i == j) || (j == (i + 1))) return;
+
+    item = *(sa + j);
+    if (i < j)
+    {
+        memmove(sa + i + 2,sa + i + 1,(j - i - 1) * sizeof(s_item));
+        *(sa + i + 1) = item;
+    }
+    else
+    {
+        memmove(sa + j,sa + j + 1,(i - j) * sizeof(s_item));
+        *(sa + i) = item;
+    }
+}
+
+/* Check for operator */
+
+#define NAME 1
+#define OTHER 0
+
+int check_op(char * s,operation_t operation,int ttype)
+{
+    int i,j,k;
+
+    i = strlen(s);
+    for (j = 0,k = 0;j < i;j++,k++)
+    {
+        if (*(s + j) == ' ')
+        {
+            while (isspace(*(cp + k))) k++;
+            k--;
+        }
+        else if (*(s + j)  != toupper(*(cp + k))) return 0;
+    }
+    if ((ttype == NAME) && (isalnum(*(cp + k)) || (*(cp + k) == '_'))) return 0;
+    cp+= k;
+    add_item(operation,
+        WORK,
+        (optab[((int) operation) - ((int) FIRST_OPERATOR)]).
+        result,
+        0);
+    return 1;
+
+}
+
+int check_fn(char * s,operation_t operation)
+{
+    int i,j;
+
+    i = strlen(s);
+    for (j = 0;j < i;j++)
+        if (*(s + j)  != toupper(*(cp + j)))
+            return 0;
+    if (isalnum(*(cp + j)) || (*(cp + j) == '_'))
+        return 0;
+    while(isspace(*(cp+j)))
+        j++;
+    if (*(cp + j++) != '(')
+        return 0;
+    cp+= j;
+    ba[depth++] = cp - where;
+    add_item(operation,0,0,0);
+    return 1;
+
+}
+
+/* Token analysis functions */
+
+   /* Impose precedence on an operator by 'bracketing' with the operands either
+       side. This is done by incrementing the depth of the items involved.
+   */
+
+void promote(int x)
+{
+    int i;
+
+    if (opdepth(x) == opdepth(x + 1)) opdepth(x + 1)++;
+    else
+    {
+        i = x + 1;
+        while(opdepth(i) > opdepth(x)) opdepth(i++)++;
+    }
+    if (opdepth(x) == opdepth(x - 1)) opdepth(x - 1)++;
+    else
+    {
+        i = x - 1;
+        while(opdepth(i) > opdepth(x)) opdepth(i--)++;
+    }
+    opdepth(x)++;
+    return;
+}
+
+operation_t analyse_expression(int *);
+
+ /* Return individual elements of an expression */
+
+operation_t current(int * pi)
+{
+    if (opdepth(*pi) > depth)
+    {
+        int i = *pi;
+
+        depth++;
+        if (analyse_expression(&i) == COMMA)
+            record_error(opoffset(*pi),"Comma not permitted here.");
+        depth--;
+        while(opdepth(*pi) > depth) (*pi)++;
+        return FIELD;
+    }
+    if (opdepth(*pi) < depth) return DONE;
+    return op((*pi)++);
+}
+
+/* Check the shape of an expression, and sort out precedence */
+
+operation_t analyse_expression(int * pi)
+{
+    operation_t cop = FIELD;
+    int xa[50];         /* Location of operators */
+    int opcount = 0;
+    int x,y;
+    int error = 0; /* If we dont get a good shape, we dont sort
+                        out binary operator precedence */
+
+    while((cop != COMMA) && (cop != DONE))
+    {
+        if (item_type[(cop = current(pi))] == FUNCTION)
+        {
+            int argc = 1;
+            int min,max;
+            s_item deflt = {FIELD,WORK,ANY,-1,0,0,0};
+
+            deflt.extra_2 = depth;
+            min = functab[(sa + (*pi - 1))->operation - FIRST_FUNCTION].minargc;
+            max = functab[(sa + (*pi - 1))->operation - FIRST_FUNCTION].maxargc;
+            while (analyse_expression(pi) != DONE) argc++;
+            if (argc > max)
+                record_error(opoffset(*pi - 1),"Too many arguments for function.");
+            if (argc < min)
+                record_error(opoffset(*pi - 1),"Insufficient arguments for function.");
+            if ((argc >= min) && (argc < max))
+                do
+                {
+                    insert_item(*pi - 1,&deflt);
+                    argc++;
+                } while (argc < max);
+
+            return DONE;
+        }
+
+        if ((cop == COMMA) || (cop == DONE))
+        {
+            if (opcount > 0) break;
+            else
+            {
+                record_error(opoffset(*pi-1),"Empty expression not allowed.");
+                return cop;
+            }
+        }
+        if (item_type[cop] == OPERATOR)
+        {
+            if ((cop == IPLUS) || (cop == IMINUS) || (cop == NOT)) continue;
+            if ((cop != ADD) && (cop != SUB) && (cop !=  _NOT))
+            {
+                record_error(opoffset(*pi-1),"Misplaced operator ignored.");
+                error++;
+                continue;
+            }
+
+/* Whenever we locate a prefix op we bind immediately to the following data
+   item by 'bracketing' ie, increasing the nesting depth. There may validly
+   be further prefix ops between this one and the associated data item. The
+   recursive nature of this analysis ensures that these will be bound in turn
+   at an increasing precedence. The result of this is the required right to
+   left evaluation for prefix operators.
+
+   The presence of the ensuing data item is indicated either by a field at
+   the same depth, or an increase in depth indicating a bracketed
+   expression/function.
+*/
+
+            if (cop == ADD) op(*pi-1) = IPLUS;
+            if (cop == SUB) op(*pi-1) = IMINUS;
+            if (cop == _NOT) op(*pi-1) = NOT;
+            x = *pi - 1;
+            do opdepth(x++)++; while((op(x-1) != FIELD) || (opdepth(x-1) > (depth+1)));
+            if (opdepth(x-1) > (depth + 1)) /* A nested expression */
+                while (opdepth(x) > depth) opdepth(x++)++;
+            continue;
+        }
+
+        /* Have a data item */
+
+        /* Next should be a terminal or a non-prefix operator */
+
+        x = *pi;
+        cop = current(pi);
+        if (cop == COMMA)
+        {
+            (*pi)--;
+            delete_item(*pi);
+        }
+        if ((cop == COMMA) || (cop == DONE)) break;
+        if ((cop == FIELD) || (cop == _NOT))
+        {
+            record_error(opoffset(x),
+                "A binary operator is expected at this point.");
+            error++;
+            (*pi)--;
+            continue;
+        }
+        *(xa + opcount++) = x;
+    };
+    if ((error == 0) && (opcount > 1))
+    {
+        /* Have more than 1 binary operation in same expression.
+           Need to sort out precedence */
+
+        for (x = 0; x < (opcount-1);x++)
+        {
+            if (OP(xa[x]).precedence >= OP(xa[x+1]).precedence)
+            {
+
+                promote(xa[x]);
+                for (y = x+1;y < opcount;y++)
+                    xa[y-1] = xa[y];
+                opcount--;
+                x--;
+            }
+        }
+
+        /* If any remaining, they are now in ascending sequence */
+
+        for (x = opcount - 1;x > 0;x--)
+            promote(xa[x]);
+
+    }
+    return cop;
+}
+
+/* Set up result data in an item */
+
+void set_result(s_item * pi,datatype_t type,unsigned short length)
+{
+    pi->type = type;
+    switch(type)
+    {
+    case LOGICAL:
+        break;;
+    case LONG:
+        work = align(work,long);
+        reset_work();
+        pi->offset = work-*pawork;
+        pi->length = sizeof(long);
+        work = work_(sizeof(long));
+        break;
+    case DOUBLE:
+        work = align(work,double);
+        reset_work();
+        pi->offset = work-*pawork;
+        pi->length = sizeof(double);
+        work = work_(sizeof(double));
+        break;
+    case CHAR:
+        pi->offset = work-*pawork;
+        pi->length = length;
+        work = work_(length);
+        break;
+    case VARCHAR:
+        work = align(work,void *);
+        reset_work();
+        pi->offset = work-*pawork;
+        pi->length = 0;
+        work = work_(sizeof(void *));
+        break;
+    }
+    return;
+}
+
+
+/* Cross check operands and operators. allocate result fields */
+
+static int resolve(int i)
+{
+    int parms = 0;
+
+#undef base
+#define base aSTACK /* to point our macros to the right stack */
+
+    switch (op(i))
+    {
+        /* Arithmetic operators */
+    case ADD:
+    case SUB:
+    case MUL:
+    case DIV:
+    case EXP:
+        if (DATA_CLASS(i-2) != NUMERIC)
+            record_error(opoffset(i),
+            "Left hand argument of numeric operator must be numeric.");
+        if (DATA_CLASS(i-1) != NUMERIC)
+            record_error (opoffset(i),
+            "Right hand argument of numeric operator must be numeric.");
+        if (((optype(i-2) == SHORT) || (optype(i-2) == LONG)) &&
+            ((optype(i-1) == SHORT) || (optype(i-1) == LONG)))
+        {
+            set_result(aSTACK + i,LONG,0);
+            return 2;
+        }
+        set_result(aSTACK + i,DOUBLE,0);
+        return 2;
+    case IMINUS:
+    case IPLUS:
+        if (DATA_CLASS(i-1) != NUMERIC)
+            record_error (opoffset(i),
+            "Argument of numeric prefix operator must be numeric.");
+        if ((optype(i-1) == SHORT) || (optype(i-1) == LONG))
+        {
+            set_result(aSTACK + i,LONG,0);
+            return 1;
+        }
+        set_result(aSTACK + i,DOUBLE,0);
+        return 1;
+
+    /* Logical operators */
+    case NOT:
+        if (DATA_CLASS(i-1) != LOGICAL)
+        {
+            record_error (opoffset(i),
+                "Argument of NOT operator must be "
+                "comparison or logical expression.");
+            /* Propagate operand type to next check */
+            set_result(aSTACK + i,DATA_CLASS(i-1),0);
+        }
+        else set_result(aSTACK + i,LOGICAL,0);
+        set_result(aSTACK + i,LOGICAL,0);
+        return 1;
+    case OR:
+    case AND:
+        if (DATA_CLASS(i-2) != LOGICAL)
+            record_error (opoffset(i),
+                "Left hand argument of logical operator must be "
+                "comparison or logical expression.");
+        if (DATA_CLASS(i-1) != LOGICAL)
+            record_error (opoffset(i),
+                "Right hand argument of logical operator must be "
+                "comparison or logical expression.");
+        set_result(aSTACK + i,LOGICAL,0);
+        return 2;
+    /* Comparison operators */
+    case LT:
+    case GT:
+    case LE:
+    case GE:
+    case EQ:
+    case NE:
+        if ((DATA_CLASS(i-2) != NUMERIC) && (DATA_CLASS(i-2) != CHAR))
+            record_error (opoffset(i),
+                "Left hand argument of comparison operator "
+                "must be a data item.");
+        if ((DATA_CLASS(i-1) != NUMERIC) && (DATA_CLASS(i-1) != CHAR))
+            record_error (opoffset(i),
+                "Right hand argument of comparison operator "
+                "must be a data item.");
+         if (DATA_CLASS(i-2) != DATA_CLASS(i-1))
+            record_error (opoffset(i),
+                "Arguments of comparison operator must both be character "
+                "or both be numeric.");
+         set_result(aSTACK + i,LOGICAL,0);
+         return 2;
+    case CONCAT:
+        if (DATA_CLASS(i-2) != CHAR)
+            record_error (opoffset(i),
+                "Left hand argument of concatenation operator "
+                "must be a character type.");
+        if (DATA_CLASS(i-1) != CHAR)
+            record_error (opoffset(i),
+                "Right hand argument of concatenation operator "
+                "must be a character type.");
+        set_result(aSTACK + i,VARCHAR,0);
+        return 2;
+    case LIKE:
+        if (DATA_CLASS(i-2) != CHAR)
+            record_error (opoffset(i),
+                "Left hand argument of LIKE operator must be a "
+                "character type.");
+        if (DATA_CLASS(i-1) != CHAR)
+            record_error (opoffset(i),
+                "Right hand argument of LIKE operator must be a "
+                "character type.");
+        set_result(aSTACK + i,LOGICAL,0);
+        return 2;
+    case NOT_LIKE:
+        if (DATA_CLASS(i-2) != CHAR)
+            record_error (opoffset(i),"Left hand argument of NOT LIKE "
+                "must be a character type.");
+        if (DATA_CLASS(i-1) != CHAR)
+            record_error (opoffset(i),"Right hand argument of NOT LIKE "
+                "must be a character type.");
+        set_result(aSTACK + i,LOGICAL,0);
+        return 2;
+    /* Functions */
+    case SUBSTR:
+        if (DATA_CLASS(i-3) != CHAR)
+            record_error (opoffset(i),"First argument of SUBSTR function "
+                "must be of character type.");
+        if (DATA_CLASS(i-2) != NUMERIC)
+            record_error (opoffset(i),"Second argument of SUBSTR function "
+                "must be of numeric type.");
+        if ((DATA_CLASS(i-1) != NUMERIC) && ((aSTACK + i - 1)->length != -1))
+            record_error (opoffset(i),"Third argument of SUBSTR function "
+                "must be of numeric type.");
+        set_result(aSTACK + i,VARCHAR,0);
+        return 3;
+    case TRANSLATE:
+        if (DATA_CLASS(i-1) != CHAR)
+            record_error (opoffset(i),"TRANSLATE function requires "
+                "a character argument.");
+        set_result(aSTACK + i,VARCHAR,0);
+        return 1;
+    }
+#undef base
+#define base sa
+}
+
+/* Main compilation procedure */
+
+error_msg * compile (char * _where, s_item ** p_sa,int * pcount,
+              char ** p__work,int * wlen)
+{
+    int first_op = 0;
+
+    pawork = p__work;
+    *pawork = work =  NULL;
+    cp = tstart = where = _where;
+    sa = NULL;
+    item = 0;
+    depth = 1;
+    clear_errors();
+    wl = wlen;
+    *wl = 0;
+
+/* First pass - resolve into 'tokens' as an array of our s_item structures */
+
+    do
+    {
+        while (isspace(*cp)) cp++;
+        if (*cp == 0) break;
+        tstart = cp;
+
+        /* Character literal */
+
+        if (*cp == '\'')
+        {
+            int i = 0;
+            cp++;
+            do
+            {
+                while ((*cp != 0) && (*cp != '\''))
+                {
+                    work_(1);
+                    *(work + i++) = *(cp++);
+                }
+                if (*cp == 0)
+                {
+                    record_error(tstart-where,
+                        "Character string literal does not terminate.");
+                    return error_list;
+                }
+                if (*(++cp) == '\'')
+                {
+                    work_(1);
+                    *(work + i++) = *(cp++);
+                }
+                else break;
+            } while (1);
+            work_(i);
+            add_item(FIELD,WORK,CHAR,i);
+            work += i;
+            continue;
+        }
+
+        /* Numeric literal */
+
+        if (isdigit(*cp) || ((*cp == '.') && isdigit(*(cp + 1))))
+        {
+            int d1 = 0;
+            int d2 = 0;
+            int p = 0;
+            int isdouble = 0;
+            unsigned u;
+            double d;
+            int c;
+
+            while (isdigit(*cp))
+            {
+                d1++; /* Count digits up to decimal point */
+                cp++;
+            }
+            if (*cp == '.')
+            {
+                isdouble = 1; /* If a decimal point, then a double */
+                cp++;
+                while (isdigit(*cp))
+                {
+                    d2++; /* Count decimal fraction digits */
+                    cp++;
+                }
+            }
+            if (toupper(*cp) == 'E')
+            {
+                isdouble = 1; /* Definitely a double */
+                if ((*cp == '-') || (*cp == '+'))
+                    cp++; /* Skip any exponent sign */
+                while(isdigit(*cp))
+                {
+                    p++;
+                    cp++;
+                }
+            }
+            c = sscanf(tstart,"%le",&d); /* Assume a double */
+            if (c = 0)
+                record_error(tstart-where,"Constant is outside range.");
+            if (isdouble == 0)
+            {
+                /* Integer unless value is too large */
+                sscanf(tstart,"%u",&u); /* Assume not */
+                if (d > INT_MAX) isdouble = 1;
+            }
+            if (isdouble == 1)
+            {
+                work_(sizeof(double));
+                memcpy(work,&d,sizeof(double));
+                add_item(FIELD,WORK,DOUBLE,sizeof(double));
+                work += sizeof(double);
+            }
+            else
+            {
+                work_(sizeof(long));
+                memcpy(work,&u,sizeof(long));
+                add_item(FIELD,WORK,LONG,sizeof(long));
+                work += sizeof(long);
+            }
+
+            continue;
+        }
+
+        /* Brackets */
+
+        if (*cp == '(')
+        {
+            ba[depth++] = cp - where;
+            cp++;
+            continue;
+        }
+        if (*cp == ')')
+        {
+            if (depth == 1)
+                record_error(cp - where,"Extra right bracket dropped.");
+            else depth--;
+            cp++;
+            continue;
+        }
+
+        /* Operators */
+
+        if (check_op(",",COMMA,OTHER) == 1) continue;
+        if (check_op("<=",LE,OTHER) == 1) continue;
+        if (check_op(">=",GE,OTHER) == 1) continue;
+        if (check_op("<>",NE,OTHER) == 1) continue;
+        if (check_op("<",LT,OTHER) == 1) continue;
+        if (check_op(">",GT,OTHER) == 1) continue;
+        if (check_op("=",EQ,OTHER) == 1) continue;
+        if (check_op("||",CONCAT,OTHER) == 1) continue;
+        if (check_op("+",ADD,OTHER) == 1) continue; /* We sort out prefix + */
+        if (check_op("-",SUB,OTHER) == 1) continue; /* and - later */
+        if (check_op("/",DIV,OTHER) == 1) continue;
+        if (check_op("*",MUL,OTHER) == 1) continue;
+        if (check_op("NOT LIKE",NOT_LIKE,NAME) == 1) continue;
+        if (check_op("NOT",_NOT,NAME) == 1) continue;
+        if (check_op("OR",OR,NAME) == 1) continue;
+        if (check_op("AND",AND,NAME) == 1) continue;
+        if (check_op("CONCAT",CONCAT,NAME) == 1) continue;
+        if (check_op("LIKE",LIKE,NAME) == 1) continue;
+
+        /* Functions */
+
+        if (check_fn("SUBSTR",SUBSTR) == 1) continue;
+        if (check_fn("TRANSLATE",TRANSLATE) == 1) continue;
+
+        /* Field names */
+
+        if (isalpha(*cp) || (*cp == '_') || (*cp == '$') ||
+            (*cp == '#') || (*cp == '@') || (*cp == ':'))
+        {
+            char sym[65];
+            int i = 0;
+            s_item * titem;
+
+            *(sym + i++) = toupper(*(cp++));
+            while ((isalnum(*cp) || (*cp == '_') || (*cp == '$') ||
+                (*cp == '#') || (*cp == '@')) && (i < 64))
+            {
+                *(sym + i++) = toupper(*(cp++));
+            }
+            *(sym + i) = 0;
+            if (sym[0] == ':')
+            {
+                if ((titem = get_ext_item(sym)) != NULL)
+                {
+                    short buflen = 0;
+
+                    if (titem->type == PACKED)
+                    {
+                        buflen = ((titem->length/256) + 1)/2;
+                    }
+                    else if (titem->type == ZONED)
+                    {
+                        buflen = titem->length / 256;
+                    }
+                    else
+                    {
+                        buflen = titem->length;
+                    }
+                    work_(buflen + strlen(sym) + 1);
+                    strcpy(work + buflen, sym);
+                    titem->offset = work - *pawork;
+                    titem->buffer = EXT;
+                    work = work + buflen + strlen(sym) + 1;
+                    sa_(item + 1);
+                    *(sa + item) = *titem;
+                    (sa + item++)->extra_2 = depth;
+                    continue;
+                }
+                else
+                {
+                    record_error(tstart-where,"Unknown external field.");
+                    add_item (FIELD,ROW,CHAR,0);
+                    continue;
+                }
+            }
+            else if ((titem = get_item(sym)) != NULL)
+            {
+                sa_(item + 1);
+                *(sa + item) = *titem;
+                (sa + item++)->extra_2 = depth;
+                continue;
+            }
+            else
+            {
+                if (check_fn("",UNKNOWN) == 1)
+                {
+                    record_error(tstart-where,"Unknown function.");
+                    continue;
+                }
+                record_error(tstart-where,"Unknown field.");
+                add_item (FIELD,ROW,CHAR,0);
+                continue;
+            }
+        }
+        record_error(tstart-where,"Unexpected character ignored.");
+        cp++;
+    } while (*cp != 0);
+
+    /* Check for missing terminal brackets (They will be assumed to be
+       right at the end) */
+
+    for (;depth > 1;depth--)
+    {
+        record_error(ba[depth-1],"No matching right bracket.");
+    }
+
+    /* Place our terminal token at the end */
+
+    depth--;
+    add_item(DONE,WORK,LOGICAL,0);
+
+    /* Second pass - Check that the expression is well formed
+       (sorting out operator precedence as we go) */
+
+    i = 0;
+    depth = 1;
+    analyse_expression(&i);
+    if (error_count != 0) return error_list;
+
+    /* Third pass - move all operators to following operand(s). */
+
+    for (i = 0;i < (item -1);i++)
+    {
+        while (((ITEM_TYPE(i) == OPERATOR) || (ITEM_TYPE(i) == FUNCTION)) &&
+            (opdepth(i) <= opdepth(i + 1)))
+        {
+            int j = i + 1;
+
+            while(opdepth(j+1) >= opdepth(i)) j++;
+            move_item(j,i);
+        }
+    }
+
+/*  Chase the execution path making sure that operands and operators match and
+    allocating intermediate storage */
+
+    aSTACK = (s_item *) malloc(sizeof(s_item) * item);
+    memcpy(aSTACK,sa,sizeof(s_item) * item);
+    i = 0;
+
+    do
+    {
+        /* Look for first genuine operation */
+        while ((aSTACK + i)->operation <= MARKER)
+            i++;
+        /* If DONE then exit */
+        if ((aSTACK + i)->operation == DONE)
+            break;
+        /* Perform operation and get number of FIELDS/MARKERS consumed */
+        j = resolve(i);
+        /* The item will have been updated to reflect the result type  */
+        *(sa + i) = *(aSTACK + i);
+        (aSTACK + i)->operation = FIELD;
+        /* Close up the hole in the stack */
+        if ((j > 0) && ((i - j) > first_op))
+            memmove(aSTACK + first_op + j,
+                aSTACK + first_op,
+                sizeof(s_item) *(i - first_op - j));
+        first_op += j;
+    } while (1);
+    if (DATA_CLASS(i-1) != LOGICAL)
+        record_error(0,"Selection must reduce to a logical value.");
+    free(aSTACK);
+
+    *pcount = item;
+    *p_sa = sa;
+    return error_list;
+}

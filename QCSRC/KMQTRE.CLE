@@ -1,0 +1,876 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMQTRE - Queuing interface
+ *
+ *       (c) Misys International Banking Systems Ltd. 2001
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. 128748 Supportforce Date 13Sep06
+ *                      000820 (Bugzilla)  Date 28Mar06
+ *                      000798 (Bugzilla)  Date 10Mar06
+ *                      CRP026             Date 18Jul05
+ *                      CRP021             Date 13Mar03
+ *                      CRP013             Date 06Jun01
+ *                      177280             Date 03Apr00
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       128748 - Change write_to_queue() to treat queue full as a
+ *                recoverable error, with the recovery performed by
+ *                the caller.
+ *       000820 - When checking for default queue manager test should
+ *                be for blank or *DFT.
+ *       000798 - Suppress 2068 (SELECTOR_NOT_FOR_TYPE) message from
+ *                appearing in the X6PF log.
+ *                Also correct MQ Queue Manager name output.
+ *       CRP026 - User specified Queue Manager added.
+ *       CRP021 - Enable Commitment Control to be optional.
+ *       CRP013 - Added delay/retry processing for sending data,
+ *                to cater for eg MQ queues being full.
+ *       177280 - Ensure a unique message ID is generated for each
+ *                MQSeries message.
+ *
+ ********************************************************************
+ */
+/******************************************************************************
+
+******************************************************************************/
+
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <recio.h>
+#include <decimal.h>
+#include <xxdtaa.h>
+#include <cmqc.h>
+
+#include "kmdlgh.h"
+#include "kmdrfh.h"
+#include "kmdboh.h"
+#include "kmdcfh.h"
+#include "kmdtrh.h"
+#include "kmdfeh.h"                                                            /*CRP013*/
+
+#define MIN(a,b) (a < b) ? a : b
+
+/* Prototypes for wait/retry functions */                           /*CRP013*/ /*128748*/
+/* int GETWAITTIME(void);              **/                          /*CRP013*/ /*128748*/
+/* int GETTOTALTRIES(void);            **/                          /*CRP013*/ /*128748*/
+/* int GETTIMESTRIED(void);            **/                          /*CRP013*/ /*128748*/
+/* void SETTIMESTRIED(int timesTried); **/                          /*CRP013*/ /*128748*/
+
+/* Prototypes for called functions     */                                      /*128748*/
+/* Some calls were added under this change number, other calls are */          /*128748*/
+/* preexisting and the prototypes have been added to suppress      */          /*128748*/
+/* compiler warning errors                                         */          /*128748*/
+void RTVCMTFLG(char*);                                                         /*128748*/
+void RPBOIF96(int*);                                                           /*128748*/
+void RPBOIF97(int*);                                                           /*128748*/
+void RPBOIF98(char*);                                                          /*128748*/
+void RPBOIF99(char*, char*, int);                                              /*128748*/
+void RPDELAY(int*);                                                            /*128748*/
+#include "MQ_PR.h"                                                             /*128748*/
+char *trim_string(char*);                                                      /*128748*/
+
+char qman[MQ_Q_MGR_NAME_LENGTH];
+MQHCONN Hconn;                         /*  Queue manager connection handle  */
+
+typedef struct queue_tag {
+    struct queue_tag *next;
+    char  name[MQ_Q_NAME_LENGTH + 1];
+    short qcommit;
+    unsigned short max_size;
+    MQHOBJ hObj;
+} QUEUE;
+
+static short committed = 0;
+static long com_pend = 0;
+static QUEUE *read_queue = NULL;
+static QUEUE *first_queue = NULL;
+static char *read_buff = NULL;
+static int read_buff_len = 0;
+
+/********* Start of CRP021                                 */
+static char *CommitCtlFlag;
+/********* End   of CRP021                                 */
+/********* Start of 000820                                 */
+static char Blank4[4] = "    ";
+static char StarDefault[4] = "*DFT";
+/********* End   of 000820                                 */
+/********* Start of 128748                                 */
+static int QFullNumRepeats;
+static int QFullDelayTime;
+static char *MQ_QueueManager_Name;
+/********* End   of 128748                                 */
+
+int attach_to_queue_manager()
+{
+    MQLONG  CompCode;                       /* Completion code         */
+    MQLONG  Reason;                         /* Qualifying reason       */
+/********* Start of CRP026                                 */
+/* Move this declaration outside this procedure as the field is +
+   also used in another procedure.                                        */   /*128748*/
+/***static char *MQ_QueueManager_Name;****/                                    /*128748*/
+/********* End   of CRP026                                 */
+
+/********* Start of CRP021                                 */
+
+/* Access the Commitment Control Flag - this needs to be done
+   once only so this is a good place to put it.            */
+
+/* RTVCMTFLG is CL and so can only accept pointer parameters, hence
+   CommitCtlFlag is a pointer, so it has to be allocated space before
+   it is used in order to get actually get a value back.
+   It was set to 10 bytes and that worked in testing so it is left
+   at that length.                                                */
+    CommitCtlFlag = malloc(10);
+    RTVCMTFLG(CommitCtlFlag);
+    if (*CommitCtlFlag != 'Y')
+    {
+        ERROROUT("Committment Control not being used");
+    }
+/********* End   of CRP021                                 */
+
+/********* Start of 128748                                 */
+/* Access data about how many times to wait and how long
+   to wait each time when a queue full condition occurs.
+   This needs to be done once only so this is as good a
+   place as any to put it.                                 */
+
+    QFullDelayTime = 0;
+    QFullNumRepeats = 0;
+    RPBOIF97(&QFullDelayTime);
+    RPBOIF96(&QFullNumRepeats);
+/********* End   of 128748                                 */
+
+/********* Start of CRP026                                 */
+
+/* Access the MQSeries Queue Manager name                  */
+
+    MQ_QueueManager_Name = malloc(48);
+    RPBOIF98(MQ_QueueManager_Name);
+
+/********* Start of 000820                                 */
+/** if (*MQ_QueueManager_Name == ' ')                              */
+/** {                                                              */
+/**     ERROROUT("Default MQSeries Queue Manager is being used");  */
+/** }                                                              */
+    if (strncmp(MQ_QueueManager_Name, Blank4, 4) == 0||
+        strncmp(StarDefault, MQ_QueueManager_Name, 4) == 0)
+    {
+        ERROROUT("Default MQSeries Queue Manager is being used");
+        memset(MQ_QueueManager_Name, ' ', MQ_Q_MGR_NAME_LENGTH);
+    }
+/********* End   of 000820                                 */
+    else
+    {
+/********* Start of 000798                                 */
+/*******sprintf(log_buff, "MQSeries Queue Manager <%s> is being used"); */
+
+/* Trim blanks from RH end of Queue Manager name to make the message neater.
+   This should have been written as a callable function but I did not have
+   time to figure out how to do that.                             */
+        {
+           int idx = strlen(MQ_QueueManager_Name)-1;
+           while (idx >= 0)
+           {
+               if (MQ_QueueManager_Name[idx] != ' ')
+               {
+                   break;
+               }
+               idx=idx-1;
+           }
+           MQ_QueueManager_Name[idx+1] = '\0';
+           sprintf(log_buff, "MQSeries Queue Manager %s is being used",
+                                MQ_QueueManager_Name);
+        }
+/********* End   of 000798                                 */
+        ERROROUT(log_buff);
+    }
+
+    /***For*AS400*set*the*queue*manager*name to blanks  */
+    /*memset(qman, ' ', MQ_Q_MGR_NAME_LENGTH);          */
+
+    memcpy(qman, MQ_QueueManager_Name, MQ_Q_MGR_NAME_LENGTH);
+
+/********* End   of CRP026                                 */
+    MQCONN(qman, &Hconn, &CompCode, &Reason);
+
+    switch (CompCode)
+    {
+    case MQCC_FAILED:
+        LOGERROR
+        {
+            sprintf(log_buff, "Completion code %d, reason %d "
+                "received connecting to queue manager",  CompCode, Reason);
+            ERROROUT(log_buff);
+        }
+        return 0;
+    case MQCC_WARNING:
+        if (Reason == MQRC_ALREADY_CONNECTED)
+        {
+            LOGOUT(LOG_ENTRY, "Reconnecting to queue manager");
+            break;
+        }
+        LOGERROR
+        {
+            sprintf(log_buff, "Completion code %d, reason %d "
+                "received connecting to queue manager", CompCode, Reason);
+            ERROROUT(log_buff);
+        }
+        return 0;
+    }
+    return 1;
+}
+
+void commit_queue_manager()
+{
+    if (committed == 1 && com_pend > 0)
+    {
+        com_pend = 0;
+/********* Start of CRP021                                 */
+/*******system("COMMIT");                                  */
+/*******LOGOUT(LOG_TRACE, "Committing queue manager");     */
+        if (*CommitCtlFlag == 'Y')
+        {
+            system("COMMIT");
+            LOGOUT(LOG_TRACE, "Committing queue manager");
+        }
+        else
+        {
+            LOGOUT(LOG_TRACE, "Queue manager not committed "
+                    "- Committment Control not in use");
+        }
+/********* End   of CRP021                                 */
+    }
+}
+
+void rollback_queue_manager()
+{
+    if (committed == 1 && com_pend > 0)
+    {
+        com_pend = 0;
+/********* Start of CRP021                                 */
+/*******system("ROLLBACK");                                */
+/*******LOGOUT(LOG_TRACE,)"Rolling back queue manager");   */
+        if (*CommitCtlFlag == 'Y')
+        {
+            system("ROLLBACK");
+            LOGOUT(LOG_TRACE, "Rolling back queue manager");
+        }
+        else
+        {
+            LOGOUT(LOG_TRACE, "Queue manager not rolled back "
+                    "- Committment Control not in use");
+        }
+/********* End   of CRP021                                 */
+    }
+}
+
+/*************************                                     */   /*CRP013*/ /*128748*/
+/***Start*of*CRP013*block.                                     */   /*CRP013*/ /*128748*/
+/***This*procedure*rolls*back the MQSeries queue manager, but  */   /*CRP013*/ /*128748*/
+/***also*allows*the*job*to wait and retry a number of times.   */   /*CRP013*/ /*128748*/
+/***The*wait/retry*parameters are set with the BOIFCFG command.*/   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/**void*rollback_queue_manager_with_wait()                     */   /*CRP013*/ /*128748*/
+/**{*************************                                  */   /*CRP013*/ /*128748*/
+/******Retrieve*the*delay/retry parameters: */                      /*CRP013*/ /*128748*/
+/***int*timesTried*=*GETTIMESTRIED();    The number of times we have/tried1*/  /*128748*/
+/***int*waitTime*=*GETWAITTIME(); */  /* The time to wait for */    /*CRP013*/ /*128748*/
+/***int*totalTries*=*GETTOTALTRIES();*//*The total number of times to*retry3*/ /*128748*/
+/***char*errMsg[256];*****                                     */   /*CRP013*/ /*128748*/
+/***char*cmd[256];********                                     */   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/******Ensure*the*MQSeries transaction is rolled back */            /*CRP013*/ /*128748*/
+/***rollback_queue_manager();                                  */   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/******If*we*have*tried*the maximum number of times, we should end theCRP013*/ /*128748*/
+/******whole*process*with*a suitable error message */               /*CRP013*/ /*128748*/
+/***if*(*timesTried*>=*totalTries )                            */   /*CRP013*/ /*128748*/
+/***{*********************                                     */   /*CRP013*/ /*128748*/
+/*******sprintf(*errMsg,*"Error writing to queue: retried %d times, \*CRP013*/ /*128748*/
+/**waiting*%d*seconds*each time", timesTried, waitTime );      */   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/**********Write*to*X6PF*and end a CPF9898 *ESCAPE - this will end theCprogram   128748*/
+/*******FATAL(*errMsg*);**                                     */   /*CRP013*/ /*128748*/
+/***}*********************                                     */   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/******We*have*not*reached the maximum number of retries, so   */   /*CRP013*/ /*128748*/
+/******wait*the*specified*number of seconds */                      /*CRP013*/ /*128748*/
+/***sprintf(cmd,*"DLYJOB*DLY(%d)", waitTime);                  */   /*CRP013*/ /*128748*/
+/***system(*cmd*);********                                     */   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/******Incrememnt*the*number of times we have tried            */   /*CRP013*/ /*128748*/
+/******(held*in*a*static*variable in the RPG) */                    /*CRP013*/ /*128748*/
+/***SETTIMESTRIED(*++timesTried );                             */   /*CRP013*/ /*128748*/
+/***return;***************                                     */   /*CRP013*/ /*128748*/
+/*************************                                     */   /*CRP013*/ /*128748*/
+/**}****End*of*rollback_queue_manager_with_wait() */                /*CRP013*/ /*128748*/
+/****End*of*CRP013*bock**/                                          /*CRP013*/ /*128748*/
+
+
+int detach_from_queue_manager()
+{
+    MQLONG  CompCode;                       /* Completion code         */
+    MQLONG  Reason;                         /* Qualifying reason       */
+
+    MQDISC(&Hconn, &CompCode, &Reason);
+
+    if ((CompCode != MQCC_OK) || (Reason != MQRC_NONE))
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "Completion code %d, reason %d "
+                "received connecting to queue manager", CompCode, Reason);
+            ERROROUT(log_buff);
+        }
+        return 0;
+    }
+    return 1;
+}
+
+char *queue_name(char *product, char *server, char *env, short inv)
+{
+    static char qname[MQ_Q_NAME_LENGTH + 1];
+    char    *pchr;
+    X1PFR_t *pProduct = NULL;
+    int     rc = 0;
+
+    memset(qname, 0, MQ_Q_NAME_LENGTH + 1);
+    if ((rc = retrieve_cfg_data("pP", product, &pProduct)) > 0)
+    {
+        memcpy(qname, pProduct->X1CHNL, sizeof(pProduct->X1CHNL));
+        pchr = memchr(qname, ' ', sizeof(pProduct->X1CHNL));
+        if (pchr == NULL)
+        {
+            pchr = qname + strlen(qname) + 1;
+        }
+        *pchr = '\0';
+        if (env != NULL)
+        {
+            *pchr = '.';
+            pchr++;
+            memcpy(pchr, env, 3);
+            pchr += 3;
+            *pchr = '\0';
+        }
+        if (server != NULL)
+        {
+            *pchr = '.';
+            pchr++;
+            memcpy(pchr, server, 2);
+            pchr += 2;
+            *pchr = '\0';
+        }
+        pchr = qname;
+    }
+    else
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "Product %s has not been retrieved: code %d",
+                product, rc);
+            ERROROUT(log_buff);
+        }
+        pchr = NULL;
+    }
+    end_cfg_access();
+    return pchr;
+}
+
+unsigned short get_max_msg_length(qhandle queue)
+{
+    return ((QUEUE*) queue)->max_size;
+}
+
+long find_max_msg_length(QUEUE *pQueue)
+{
+    MQLONG selector = MQIA_MAX_MSG_LENGTH;
+    MQLONG attribute = 0;
+    MQLONG  CompCode;                       /* Completion code         */
+    MQLONG  Reason;                         /* Qualifying reason       */
+
+    MQINQ(Hconn, pQueue->hObj, 1, &selector, 1, &attribute, 0, NULL,
+        &CompCode, &Reason);
+
+/********* Start of 000798                                 */
+/***if ((CompCode != MQCC_OK) || (Reason != MQRC_NONE))*****/
+    if ((CompCode != MQCC_OK) && (Reason != MQRC_SELECTOR_NOT_FOR_TYPE)
+     || (Reason != MQRC_NONE) && (Reason != MQRC_SELECTOR_NOT_FOR_TYPE))
+/********* End   of 000798                                 */
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "Completion code %d, reason %d "
+                "received querying queue %s attributes", CompCode, Reason,
+                pQueue->name);
+            ERROROUT(log_buff);
+        }
+        return -1;
+    }
+    return attribute;
+}
+
+qhandle attach_to_queue(char *name, int flag)
+{
+    MQLONG  CompCode;                       /* Completion code         */
+    MQLONG  Reason;                         /* Qualifying reason       */
+    MQOD    obj_desc = { MQOD_DEFAULT };
+    MQLONG  open_opts;                      /* Options that control    */
+    MQHOBJ  hObj;
+    QUEUE   *pQueue = NULL;
+    int len = 0;
+
+    if (((flag == QUEUE_READ) || (flag == QUEUE_READ_AUTO)) &&
+        (read_queue != NULL))
+    {
+        LOGOUT(LOG_ERROR, "Tried to define multiple read queues");
+        return NULL;
+    }
+
+    strncpy(obj_desc.ObjectName, name, MQ_Q_NAME_LENGTH);
+    if ((flag == QUEUE_WRITE) || (flag == QUEUE_WRITE_AUTO))
+    {
+        open_opts = MQOO_OUTPUT + MQOO_INQUIRE;
+    }
+    else
+    {
+        open_opts = MQOO_INPUT_SHARED + MQOO_INQUIRE;
+    }
+
+    MQOPEN(Hconn, &obj_desc, open_opts, &hObj, &CompCode, &Reason);
+
+    if ((CompCode != MQCC_OK) || (Reason != MQRC_NONE))
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "Completion code %d, reason %d received "
+                "opening queue %s", CompCode, Reason, name);
+            ERROROUT(log_buff);
+        }
+        return NULL;
+    }
+    pQueue = (QUEUE *) malloc(sizeof(QUEUE));
+    strcpy(pQueue->name, name);
+    pQueue->hObj = hObj;
+    if ((flag == QUEUE_WRITE_AUTO) || (flag == QUEUE_READ_AUTO))
+    {
+        pQueue->qcommit = 0;
+    }
+    else
+    {
+        pQueue->qcommit = 1;
+        committed = 1;
+    }
+    len = find_max_msg_length(pQueue);
+    if (len > 32000)
+    {
+        len = 32000;
+    }
+    pQueue->max_size = (unsigned short) len;
+    if ((flag == QUEUE_READ) || (flag == QUEUE_READ_AUTO))
+    {
+
+        read_queue = pQueue;
+        read_buff = malloc(len);
+    }
+    else
+    {
+        pQueue->next = first_queue;
+        first_queue = pQueue;
+    }
+    return (qhandle) pQueue;
+}
+
+void remove_queue_from_list(QUEUE *pQ)
+{
+    QUEUE *pQueue;
+
+    if (first_queue == pQ)
+    {
+        first_queue = first_queue->next;
+    }
+    else
+    {
+        for (pQueue = first_queue; pQueue->next != NULL; pQueue = pQueue->next)
+        {
+            if (pQueue->next == pQ)
+            {
+                pQueue->next = pQ->next;
+                break;
+            }
+        }
+    }
+}
+
+int detach_from_queue(qhandle queue)
+{
+    QUEUE   *pQueue;
+    MQLONG  CompCode;                       /* Completion code         */
+    MQLONG  Reason;                         /* Qualifying reason       */
+    int     rc = 1;
+
+    if (queue != NULL)
+    {
+        pQueue = ((QUEUE *) queue);
+
+        if (pQueue != read_queue)
+        {
+            remove_queue_from_list(pQueue);
+        }
+
+        MQCLOSE(Hconn, &pQueue->hObj, MQCO_NONE, &CompCode, &Reason);
+
+        if ((CompCode != MQCC_OK) || (Reason != MQRC_NONE))
+        {
+            LOGERROR
+            {
+                sprintf(log_buff, "Completion code %d, reason %d received "
+                    "closing queue %s", CompCode, Reason, pQueue->name);
+                ERROROUT(log_buff);
+            }
+            rc = 0;
+        }
+        if (pQueue == read_queue)
+        {
+            free(read_buff);
+            read_buff = NULL;
+            read_queue = NULL;
+            read_buff_len = 0;
+        }
+        free(pQueue);
+    }
+    return rc;
+}
+
+int write_to_queue(qhandle queue,
+                   char*   buffer,
+                   int     length,
+                   unsigned short priority)
+{
+    QUEUE  *pQueue;
+    MQLONG  CompCode;                       /* Completion code         */
+    MQLONG  Reason;                         /* Qualifying reason       */
+    MQMD    msg_desc;
+    MQPMO   put_options;
+    int     rc = 0;
+
+    if (queue != NULL)
+    {
+        rc = 1;
+        pQueue = ((QUEUE *) queue);
+
+        /*  Set up PMO structure.        */
+
+        memset(&put_options, 0, sizeof(put_options));
+        memcpy(put_options.StrucId, MQPMO_STRUC_ID,
+            sizeof(put_options.StrucId));
+        put_options.Version = MQPMO_VERSION_1;
+        if (pQueue->qcommit == 1)
+        {
+/********* Start of CRP021                                 */
+/***********put_options.Options = MQPMO_SYNCPOINT;         */
+            if (*CommitCtlFlag == 'Y')
+            {
+                put_options.Options = MQPMO_SYNCPOINT;
+            }
+            else
+            {
+                put_options.Options = MQPMO_NO_SYNCPOINT;
+            }
+/********* End   of CRP021                                 */
+        }
+
+        /**** Start of 177280 ****/                                             /*177280*/
+        /* Ensure that messages have a unique key */                            /*177280*/
+        put_options.Options = put_options.Options + MQPMO_NEW_MSG_ID;           /*177280*/
+        /**** End of 177280 ****/                                               /*177280*/
+
+        /*  Set up MD structure.         */
+
+        memset(&msg_desc, 0, sizeof(msg_desc));
+        memcpy(msg_desc.StrucId, MQMD_STRUC_ID, sizeof(msg_desc.StrucId));
+        msg_desc.Version = MQMD_VERSION_1;
+        msg_desc.Expiry = MQEI_UNLIMITED;
+        memcpy(msg_desc.Format, MQFMT_STRING, sizeof(msg_desc.Format));
+        msg_desc.Report = MQRO_NONE;
+        msg_desc.MsgType = MQMT_DATAGRAM;
+        msg_desc.Priority = (long) priority;
+/********* Start of CRP021                                 */
+/*******msg_desc.Persistence = MQPER_PERSISTENT;           */
+        msg_desc.Persistence = MQPER_PERSISTENCE_AS_Q_DEF;
+/********* End   of CRP021                                 */
+        memset(msg_desc.ReplyToQ, 0, sizeof(msg_desc.ReplyToQ));
+
+
+        /*  Put the message.                                      */
+
+        MQPUT(Hconn, pQueue->hObj, &msg_desc, &put_options,
+            length, (void *)buffer, &CompCode, &Reason);
+
+        /*  Check completion and reason codes.                   */
+
+        switch (CompCode)
+        {
+        case MQCC_OK:
+            LOGTRACE
+            {
+                sprintf(log_buff, "Queue <%s> written to", pQueue->name);
+/********* Start of CRP021                                 */
+/***************TRACEOUT(log_buff);                        */
+                if (*CommitCtlFlag != 'Y')
+                {
+                    sprintf(log_buff, "%s %s", log_buff,
+                       "without Committment Control");
+                }
+/********* End   of CRP021                                 */
+                TRACEOUT(log_buff);
+            }
+            /* Return code must be set as it will now be tested (it
+               formerly was not) */                                            /*CRP013*/
+            rc = 0;                                                            /*CRP013*/
+            break;
+        case MQCC_FAILED:
+/********* Start of 128748                                 */
+           if (Reason == MQRC_Q_FULL)
+           {
+               rc = MQRC_Q_FULL;
+               break;
+            }
+/********* End   of 128748                                 */
+            LOGERROR
+            {
+                sprintf(log_buff, "Completion code %d, reason %d "
+                    "received writing to queue %s", CompCode, Reason,
+                    pQueue->name);
+                ERROROUT(log_buff);
+            }
+            /* Return code must be set as it will now be tested (it
+               formerly was not) */                                            /*CRP013*/
+            rc = 1;                                                            /*CRP013*/
+            break;
+        default:
+            break;                 /* Perform error processing.  */
+        }
+        com_pend += pQueue->qcommit;
+
+        /* Return code must be returned as it will now be tested (it
+           formerly was not) */                                                /*CRP013*/
+        return rc;                                                             /*CRP013*/
+    }
+}
+
+/********* Start of 128748                                 */
+/* This procedure is a wrapper around write_to_queue() and that
+   was used a base for this.                                   */
+int write_to_queue_with_wait(qhandle queue,
+                             char*   buffer,
+                             int     length,
+                             unsigned short priority)
+{
+    QUEUE  *pQueue;
+    BOOL   ContinueWriteLoop = TRUE;
+    BOOL   WriteQueueFullMsg = FALSE;
+    int    NumberTimesDelayed = 0;
+    int    rc = 0;
+    int    MQIMaxDepth = 0;
+    char   *MQIRetCode;
+
+    if (queue != NULL)
+    {
+       /* It is unclear if the queue handle could ever be null */
+       /* but keep this test in to be on the safe side         */
+
+       pQueue = ((QUEUE *) queue);
+
+       /* Perform queue write processing in a loop to cater for  */
+       /*  queue full condition with a delay and retry approach. */
+       /*  This is not necessary for other error conditions.     */
+
+       while (ContinueWriteLoop == TRUE)
+       {
+          rc = write_to_queue(queue, buffer, length, priority);
+
+          if (rc == MQRC_Q_FULL)
+          {
+             NumberTimesDelayed = NumberTimesDelayed + 1;
+             if (NumberTimesDelayed > QFullNumRepeats)
+             {
+                ContinueWriteLoop = FALSE;
+                WriteQueueFullMsg = TRUE;
+             }
+             else
+             {
+                LOGTRACE
+                {
+                    sprintf(log_buff, "About to delay time number %d because "
+                       "queue %s is full", NumberTimesDelayed, pQueue->name);
+                    TRACEOUT(log_buff);
+                }
+                RPDELAY( &QFullDelayTime);
+             }
+          }
+          else
+          {
+             ContinueWriteLoop = FALSE;
+          }
+       }
+
+       /* Error processing - when the problem is the queue was   */
+       /* full too many times in a row.                          */
+       /* Output a suitable message and a message with the       */
+       /* queue's max depth.                                     */
+       if (WriteQueueFullMsg == TRUE)
+       {
+           sprintf( log_buff, "Error writing to queue %s: retried "
+              "%d times, waiting %d seconds each time", pQueue->name,
+              QFullNumRepeats, QFullDelayTime);
+           ERROROUT( log_buff);
+
+       /* Output message with the queue's max depth. */
+           MQIRetCode = malloc(64);
+           RtvRmtQMaxDepth( NULL, MQ_QueueManager_Name,
+                     pQueue->name, &MQIMaxDepth, MQIRetCode);
+           if (MQIRetCode[0] == ' ')
+           {
+              sprintf( log_buff, "Queue %s has a maximum depth of %i"
+                 " messages", trim_string(pQueue->name), MQIMaxDepth);
+            }
+            else
+            {
+              sprintf( log_buff, "Cannot get maximum depth for queue %s, "
+                 "message received was: %s", trim_string(pQueue->name),
+                 MQIRetCode);
+            }
+              FATAL( log_buff);
+       }
+
+       /* Error processing - All other cases                     */
+       if (rc != 0)
+       {
+          sprintf( log_buff, "Error in called routine write_to_queue()");
+          ERROROUT( log_buff);
+       }
+       return rc;
+
+    } /* End of if (queue != NULL) */
+} /* End of write_to_queue_with_wait() */
+/********* End   of 128748                                 */
+
+char *read_from_queue(qhandle queue, int *msg_len, unsigned short *priority, int wait)
+{
+    MQHOBJ   Hobj_CheckQ;                    /* Object handle            */
+    MQLONG   CompCode;                       /* Completion code          */
+    MQLONG   Reason;                         /* Qualifying reason        */
+    MQOD     ObjDesc    = {MQOD_DEFAULT};    /* Object descriptor        */
+    MQMD     MsgDesc    = {MQMD_DEFAULT};    /* Message descriptor       */
+    MQLONG   OpenOptions;                    /* Control the MQOPEN call  */
+
+    MQGMO    GetMsgOpts = {MQGMO_DEFAULT};   /* Get Message Options      */
+    MQLONG   MsgBuffLen;                     /* Length of message buffer */
+    MQLONG   DataLen;                        /* Length of message        */
+    QUEUE    *pQueue;
+    char     *message;
+
+    pQueue = (QUEUE *) queue;
+
+    GetMsgOpts.Options = MQGMO_WAIT +
+        MQGMO_ACCEPT_TRUNCATED_MSG;
+    if (pQueue->qcommit == 1)
+    {
+/********* Start of CRP021                                 */
+/*******GetMsgOpts.Options += MQPMO_SYNCPOINT;             */
+            if (*CommitCtlFlag == 'Y')
+            {
+                GetMsgOpts.Options += MQGMO_SYNCPOINT;
+            }
+            else
+            {
+                GetMsgOpts.Options += MQGMO_NO_SYNCPOINT;
+            }
+/********* End   of CRP021                                 */
+    }
+    if (wait == -1)
+    {
+        GetMsgOpts.WaitInterval = MQWI_UNLIMITED;
+    }
+    else
+    {
+        GetMsgOpts.WaitInterval = wait * 1000;
+    }
+
+    memcpy(MsgDesc.MsgId, MQMI_NONE, sizeof(MsgDesc.MsgId));
+    memcpy(MsgDesc.CorrelId, MQCI_NONE, sizeof(MsgDesc.CorrelId));
+
+    MQGET(Hconn, pQueue->hObj, &MsgDesc, &GetMsgOpts, pQueue->max_size,
+          read_buff, &DataLen, &CompCode, &Reason);
+
+    switch (CompCode)
+    {
+    case MQCC_WARNING:
+        LOGENTRY
+        {
+            sprintf(log_buff, "Warning reason code %d received reading "
+                "from queue %s", Reason, pQueue->name);
+            ENTRYOUT(log_buff);
+        }
+        break;
+    case MQCC_FAILED:
+        if (Reason != MQRC_NO_MSG_AVAILABLE)
+        {
+            LOGERROR
+            {
+                sprintf(log_buff, "Completion code %d, reason %d received "
+                    "reading from queue %s", CompCode, Reason, pQueue->name);
+                ERROROUT(log_buff);
+            }
+            *msg_len = -1;
+        }
+        else
+        {
+            *msg_len = 0;
+            LOGERROR
+            {
+                sprintf(log_buff, "Timed out reading from queue %s",
+                        pQueue->name);
+                ERROROUT(log_buff);
+            }
+        }
+        return NULL;
+    }
+    com_pend += pQueue->qcommit;
+    message = malloc(DataLen);
+    *msg_len = DataLen;
+    *priority = (unsigned short) MsgDesc.Priority;
+    memcpy(message, read_buff, DataLen);
+    return message;
+}
+
+/********* Start of 128748                                 */
+char * trim_string(char *inString)
+{
+
+/* Trim blanks from RH end of received string.                    */
+        int idx = strlen(inString)-1;
+        while (idx >= 0)
+        {
+            if (inString[idx] != ' ')
+            {
+                break;
+            }
+            idx=idx-1;
+        }
+        inString[idx+1] = '\0';
+
+        return inString;
+}
+/********* End  of 128748                                 */

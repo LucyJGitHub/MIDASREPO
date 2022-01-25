@@ -1,0 +1,282 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPIFCGPOP - Set defaults used in Replication                */
+/*                   - Prompt Override Program                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP026             Date 18Jul05              */
+/*                      CRP021             Date 13Mar03              */
+/*                      CRP020             Date 20Feb02              */
+/*                      CRP019             Date 16Dec02              */
+/*                      CRP013             Date 06Jun01              */
+/*                      CRP012             Date 18Dec00              */
+/*                      CRP011 *CREATE     Date 17Oct00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP026 - Commitment control parameters changed as part of   */
+/*                new Feeder work.                                   */
+/*                User specified Queue Manager added.                */
+/*       CRP021 - Enable Commitment Control to be optional.          */
+/*       CRP020 - Change monitoring for end by receiver change to be */
+/*                inside Feeder jobs rather than in a separate job.  */
+/*       CRP019 - Introduce a Monitor of the Feeder job              */
+/*       CRP013 - Added delay time and number of repeats             */
+/*       CRP012 - Misc items of tidy up                              */
+/*                - Interface library is always the subsystem lib    */
+/*                  so remove the Interface library                  */
+/*       CRP011 - Enable Replication to interface to other           */
+/*                Back Office systems                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CMDNAME &REPSBS &RTNSTRING)
+
+/*  Parameters                                                      */
+             DCL        VAR(&CMDNAME) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&REPSBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNSTRING) TYPE(*CHAR) LEN(5700)
+
+/*  Values to be returned                                           */
+/************DCL        VAR(&IFLIB) TYPE(*CHAR) LEN(10)       *******/    /*CRP012*/
+             DCL        VAR(&MQMNAME) TYPE(*CHAR) LEN(48)                 /*CRP026*/
+             DCL        VAR(&DBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENTPGMLIB) TYPE(*CHAR) LEN(21)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&USRPRF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DLYTIME) TYPE(*CHAR) LEN(3)                  /*CRP013*/
+             DCL        VAR(&NOOFRPTS) TYPE(*CHAR) LEN(3)                 /*CRP013*/
+             DCL        VAR(&MONITORRQD) TYPE(*CHAR) LEN(4)               /*CRP019*/
+             DCL        VAR(&MNTRDELAY) TYPE(*CHAR) LEN(2)                /*CRP019*/
+             DCL        VAR(&MNTRTRIES) TYPE(*CHAR) LEN(3)                /*CRP019*/
+/************DCL        VAR(&CMTCTLRQD) TYPE(*CHAR) LEN(7)     /*CRP021*/ /*CRP026*/
+             DCL        VAR(&FEEDERPROC) TYPE(*CHAR) LEN(7)               /*CRP026*/
+             DCL        VAR(&SERVERCC) TYPE(*CHAR) LEN(4)                 /*CRP026*/
+
+/*  Intermediate values                                             */
+             DCL        VAR(&ENTPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMTENTPGML) TYPE(*CHAR) LEN(21)
+             DCL        VAR(&MNTRRQDRTV) TYPE(*CHAR) LEN(1)               /*CRP019*/
+
+/*  Constants                                                       */
+             DCL        VAR(&SLASH) TYPE(*CHAR) LEN(1) VALUE('/')
+             DCL        VAR(&CLOSEPAREN) TYPE(*CHAR) LEN(1) VALUE(')')
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+
+/************                                                 *******/    /*CRP012*/
+/************DCL        VAR(&KWDIFLIB) TYPE(*CHAR) LEN(6) +   *******/    /*CRP012*/
+/************             VALUE('IFLIB(')                     *******/    /*CRP012*/
+             DCL        VAR(&KWDMQMNAME) TYPE(*CHAR) LEN(9) +
+                          VALUE(' MQMNAME(')                              /*CRP026*/
+             DCL        VAR(&KWDDBLIB) TYPE(*CHAR) LEN(7) +
+                          VALUE(' DBLIB(')
+             DCL        VAR(&KWDJRNLIB) TYPE(*CHAR) LEN(8) +
+                          VALUE(' JRNLIB(')
+             DCL        VAR(&KWDBOENTPG) TYPE(*CHAR) LEN(10) +
+                          VALUE(' BOENTPGM(')
+             DCL        VAR(&KWDSYSID) TYPE(*CHAR) LEN(8) +
+                          VALUE(' SYSID(')
+             DCL        VAR(&KWDUSRPRF) TYPE(*CHAR) LEN(8) +
+                          VALUE(' USRPRF(')
+             DCL        VAR(&KWDPARMS) TYPE(*CHAR) LEN(12) +
+                          VALUE(' PARAMETERS(')
+             DCL        VAR(&KWDDLY) TYPE(*CHAR) LEN(9) +
+                          VALUE(' DLYTIME(')                              /*CRP013*/
+             DCL        VAR(&KWDRPTS) TYPE(*CHAR) LEN(10) +
+                          VALUE(' NOOFRPTS(')                             /*CRP013*/
+             DCL        VAR(&KWDMNTRRQD) TYPE(*CHAR) LEN(12) +
+                          VALUE(' MONITORRQD(')                           /*CRP019*/
+             DCL        VAR(&KWDMNTRDLY) TYPE(*CHAR) LEN(11) +
+                          VALUE(' MNTRDELAY(')                            /*CRP019*/
+             DCL        VAR(&KWDMNTRTRY) TYPE(*CHAR) LEN(11) +
+                          VALUE(' MNTRTRIES(')                            /*CRP019*/
+/************DCL        VAR(&KWDCMTRQD) TYPE(*CHAR) LEN(11) +             /*CRP026*/
+/************             VALUE(' CMTCTLRQD(')                 /*CRP021*/ /*CRP026*/
+             DCL        VAR(&KWDFDRPROC) TYPE(*CHAR) LEN(12) +
+                          VALUE(' FEEDERPROC(')                           /*CRP026*/
+             DCL        VAR(&KWDSVRCC) TYPE(*CHAR) LEN(10) +
+                          VALUE(' SERVERCC(')                             /*CRP026*/
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Extract the current values from the data area                    */
+/************RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (1 10)) RTNVAR(&IFLIB)    /*CRP012*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (11 10)) RTNVAR(&DBLIB)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (21 10)) +
+                          RTNVAR(&JRNLIB)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (31 10)) +
+                          RTNVAR(&ENTPGM)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (41 10)) +
+                          RTNVAR(&ENTLIB)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (51 3)) RTNVAR(&SYSID)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (61 10)) +
+                          RTNVAR(&USRPRF)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (71 50)) RTNVAR(&PARMS)
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (128 3)) +
+                          RTNVAR(&DLYTIME)                                /*CRP013*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (138 3)) +
+                          RTNVAR(&NOOFRPTS)                               /*CRP013*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (141 1)) +
+                          RTNVAR(&MNTRRQDRTV)                             /*CRP019*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (143 2)) +
+                          RTNVAR(&MNTRDELAY)                              /*CRP019*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (146 3)) +
+                          RTNVAR(&MNTRTRIES)                              /*CRP019*/
+/************RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (151 7)) +                /*CRP026*/
+/************             RTNVAR(&CMTCTLRQD)                              /*CRP026*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (171 7)) +
+                          RTNVAR(&FEEDERPROC)                             /*CRP026*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (181 4)) +
+                          RTNVAR(&SERVERCC)                               /*CRP026*/
+             RTVDTAARA  DTAARA(&REPSBS/RPBOIFDA (191 48)) +
+                          RTNVAR(&MQMNAME)                                /*CRP026*/
+
+/* Build the complete command string                              */
+
+        /* First two bytes are the returned length in hex           */
+/************CHGVAR     VAR(&RTNSTRING) VALUE(X'00B6') +        *****/    /*CRP012*/
+/************                   /* Decimal value is 182 */                /*CRP012*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(X'00A5') +
+/************                   /* Decimal value is 165 */     /*CRP012*/ /*CRP013*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(X'00C0') +
+/************                   /* Decimal value is 192 */     /*CRP013*/ /*CRP019*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(X'00EE') +
+/************                   /* Decimal value is 238 */     /*CRP019*/ /*CRP021*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(X'0101') +                  /*CRP026*/
+/************                   /* Decimal value is 257 */     /*CRP021*/ /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(X'0140') +
+                                /* Decimal value is 320 */                /*CRP026*/
+
+
+             IF         COND(&ENTLIB *NE ' ' *AND &ENTPGM *NE ' ') +
+                          THEN(DO)
+                CHGVAR     VAR(&FMTENTPGML) +
+                           VALUE(&ENTLIB *TCAT &SLASH *TCAT &ENTPGM)
+             ENDDO
+                                                                          /*CRP019*/
+        /* Reformat Monitor Required from Y/N to *YES/*NO           */    /*CRP019*/
+             CHGVAR     VAR(&MONITORRQD) VALUE('*NO ')                    /*CRP019*/
+             IF         COND(&MNTRRQDRTV *EQ 'Y') THEN(DO)                /*CRP019*/
+                CHGVAR     VAR(&MONITORRQD) VALUE('*YES')                 /*CRP019*/
+             ENDDO                                                        /*CRP019*/
+
+        /* Then add the data in format 'KEYWORD(' + 'VALUE' + ')'   */
+/************CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDIFLIB)/    /*CRP012*/
+/************CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &IFLIB)***/    /*CRP012*/
+/************CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)   /*CRP012*/
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDDBLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &DBLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDJRNLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &JRNLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDBOENTPG)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &FMTENTPGML)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDSYSID)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &SYSID)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDUSRPRF)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &USRPRF)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDPARMS)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &QUOTE)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &PARMS)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &QUOTE)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDDLY)   /*CRP013*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &DLYTIME)                                       /*CRP013*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &CLOSEPAREN)                                    /*CRP013*/
+
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &KWDRPTS)                                       /*CRP013*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &NOOFRPTS)                                      /*CRP013*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &CLOSEPAREN)                                    /*CRP013*/
+                                                                          /*CRP019*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &KWDMNTRRQD)                         /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &MONITORRQD)                         /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &CLOSEPAREN)                         /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &KWDMNTRDLY)                         /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &MNTRDELAY)                          /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &CLOSEPAREN)                         /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &KWDMNTRTRY)                         /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &MNTRTRIES)                          /*CRP019*/ /*CRP020*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP020*/
+/************             &CLOSEPAREN)                         /*CRP019*/ /*CRP020*/
+                                                                          /*CRP021*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP026*/
+/************             &KWDCMTRQD)                          /*CRP021*/ /*CRP026*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP026*/
+/************             &CMTCTLRQD)                          /*CRP021*/ /*CRP026*/
+/************CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +          /*CRP026*/
+/************             &CLOSEPAREN)                         /*CRP021*/ /*CRP026*/
+                                                                          /*CRP021*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &KWDFDRPROC)                                    /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &FEEDERPROC)                                    /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &CLOSEPAREN)                                    /*CRP026*/
+                                                                          /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &KWDSVRCC)                                      /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &SERVERCC)                                      /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &CLOSEPAREN)                                    /*CRP026*/
+
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &KWDMQMNAME)                                    /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &MQMNAME)                                       /*CRP026*/
+             CHGVAR     VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT +
+                          &CLOSEPAREN)                                    /*CRP026*/
+                                                                          /*CRP026*/
+             GOTO       CMDLBL(END)
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPIFCGPOP') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

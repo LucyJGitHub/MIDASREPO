@@ -1,0 +1,119 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPCHKMQEXC - RP Check for the existence of an MQ channel    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 000867 *CREATE                               */
+/*                             (Bugzilla)  Date 13Apr06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       000867 - New module to check for the existence of an        */
+/*                MQ channel                                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&QMGRNAME &OBJTOCHK &OBJEXIST &RETURNCODE)
+
+             DCL        VAR(&QMGRNAME) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&OBJTOCHK) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&OBJEXIST) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+
+             MONMSG     MSGID(CPF0000 MCH0000 AMQ0000) +
+                        EXEC(GOTO CMDLBL(ABNOR))
+
+/*  Try to ping the channel on the specified Queue Manager          */
+/*                                                                  */
+/*  If CPF0001 (Error found on command) is received, remove it and  */
+/*  look at the preceeding message.                                 */
+/*    If that the preceeding message is:                            */
+/*    - AMQ9514 (Channel is in use) then the channel exists         */
+/*    - AMQ9524 (Remote queue manager unavailable) or               */
+/*    - AMQ9202 (Remote host not available) then assume the         */
+/*    -         channel does not exist                              */
+/*    - AMQ9519 (Channel not found) then the channel does not exist */
+/*                                                                  */
+/*  If CPF0001 is not received, look at the last messages received  */
+/*  and is they are AMQ8020 (Ping MQ channel complete)              */
+/*  preceeded by AMQ8220 (The PNGMQMCHL command has completed)      */
+/*  then the channel exists                                         */
+/*                                                                  */
+/*  Treat any other scenario as an error.                           */
+
+             PNGMQMCHL  CHLNAME(&OBJTOCHK) MQMNAME(&QMGRNAME)
+
+/*  CPF0001 was received block                                      */
+             MONMSG     MSGID(CPF0001) EXEC(DO)
+             RCVMSG     PGMQ(*SAME) MSGTYPE(*LAST) RMV(*NO) +
+                          KEYVAR(&KEYVAR) MSGID(&MSGID)
+                IF         COND(&MSGID *NE 'CPF0001') THEN(DO)
+                   CHGVAR     VAR(&RETURNCODE) VALUE('NOTCPF0001')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+
+                RCVMSG     PGMQ(*SAME) MSGTYPE(*PRV) MSGKEY(&KEYVAR) +
+                             RMV(*NO) MSGID(&MSGID)
+                IF         COND(&MSGID = 'AMQ9514') THEN(DO)
+                   CHGVAR     VAR(&OBJEXIST) VALUE('*YES')
+                   RETURN
+                ENDDO
+
+                IF         COND(&MSGID = 'AMQ9519') THEN(DO)
+                   CHGVAR     VAR(&OBJEXIST) VALUE('*NO ')
+                   RETURN
+                ENDDO
+
+                IF         COND(&MSGID = 'AMQ9524') THEN(DO)
+                   CHGVAR     VAR(&OBJEXIST) VALUE('*NO ')
+                   RETURN
+                ENDDO
+
+                IF         COND(&MSGID = 'AMQ9202') THEN(DO)
+                   CHGVAR     VAR(&OBJEXIST) VALUE('*NO ')
+                   RETURN
+                ENDDO
+
+                CHGVAR     VAR(&RETURNCODE) VALUE('CPF0001BUT')
+                GOTO       CMDLBL(ABNOR)
+
+             ENDDO
+
+/*  CPF0001 was not received block                                   */
+             RCVMSG     PGMQ(*SAME) MSGTYPE(*LAST) RMV(*NO) +
+                          KEYVAR(&KEYVAR) MSGID(&MSGID)
+             IF         COND(&MSGID = 'AMQ8020') THEN(DO)
+                RCVMSG     PGMQ(*SAME) MSGTYPE(*PRV) MSGKEY(&KEYVAR) +
+                             RMV(*NO) MSGID(&MSGID)
+                IF         COND(&MSGID = 'AMQ8220') THEN(DO)
+                   CHGVAR     VAR(&OBJEXIST) VALUE('*YES')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&RETURNCODE) VALUE('UNKNOWNMSG')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             IF         COND(&RETURNCODE = ' ') THEN(CHGVAR +
+                          VAR(&RETURNCODE) VALUE('OTHER'))
+
+ END:
+
+             ENDPGM

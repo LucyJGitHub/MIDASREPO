@@ -1,0 +1,906 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#ifdef __ILEC400__
+#include <decimal.h>
+#include <xxcvt.h>
+#else
+#include "decimal.h"
+#endif
+#include "kmdslh.h"
+
+/********************************************************************************************/
+/*                                                                                          */
+/*            Principal buffer pointers                                                     */
+/*                                                                                          */
+/********************************************************************************************/
+
+static char * pROW; /* Points to database record */
+static char * pWORK; /* Contains fixed length literals and variables */
+static s_item * pSTACK; /* Points to the operand/operator stack */
+
+
+/* Data references for stack elements */
+
+#define Short(x) (*((short *) (((pSTACK + x)->buffer == EXT) ? \
+get_ext_item_data(pSTACK + x, pWORK + (pSTACK + x)->offset) : \
+((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset))))
+
+#define Long(x) (*((long *) (((pSTACK + x)->buffer == EXT) ? \
+get_ext_item_data(pSTACK + x, pWORK + (pSTACK + x)->offset) : \
+((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset))))
+
+
+#define Float(x) (*((float *) (((pSTACK + x)->buffer == EXT) ? \
+get_ext_item_data(pSTACK + x, pWORK + (pSTACK + x)->offset) : \
+((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset))))
+
+#define Double(x) (*((double *) (((pSTACK + x)->buffer == EXT) ? \
+get_ext_item_data(pSTACK + x, pWORK + (pSTACK + x)->offset) : \
+((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset))))
+
+#define Char(x) ((char *) (((pSTACK + x)->buffer == EXT) ? \
+get_ext_item_data(pSTACK + x, pWORK + (pSTACK + x)->offset) : \
+((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset)))
+
+#define Logical(x) ((pSTACK + x)->offset)
+#define Vchar(x) (*((char **) (pWORK + (pSTACK + x)->offset)))
+
+#define Dpacked(x) QXXPTOD(Char(x),(pSTACK + x)->length >> 8,(pSTACK + x)->length & 0x00FF)
+#define Dzoned(x) QXXZTOD(Char(x),(pSTACK + x)->length >> 8,(pSTACK + x)->length & 0x00FF)
+
+/*
+#define Short(x)
+        (*((short *) ((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset)))
+#define Long(x)
+        (*((long *) ((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset)))
+#define Float(x)
+        (*((float *) ((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset)))
+#define Double(x)
+        (*((double *) ((((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset)))
+#define Char(x) ((char *) (((pSTACK + x)->buffer == ROW) ? pROW : pWORK) + (pSTACK + x)->offset)
+#define Logical(x) ((pSTACK + x)->offset)
+#define Vchar(x) (*((char **) (pWORK + (pSTACK + x)->offset)))
+
+#define Dpacked(x) QXXPTOD(Char(x),(pSTACK + x)->length >> 8,(pSTACK + x)->length & 0x00FF)
+#define Dzoned(x) QXXZTOD(Char(x),(pSTACK + x)->length >> 8,(pSTACK + x)->length & 0x00FF)
+*/
+/********************************************************************************************/
+/*                                                                                          */
+/*            DEBUGGING                                                                     */
+/*                                                                                          */
+/********************************************************************************************/
+
+extern int s_deb; /* = 1 if debugging info required */
+char ** part;    /* Temporary string array for building up logic trace */
+
+char * extname(s_item* psitem, char *buffer)
+{
+    short buflen = 0;
+
+    if (psitem->type == PACKED)
+    {
+        buflen = ((psitem->length/256) + 1)/2;
+    }
+    else if (psitem->type == ZONED)
+    {
+        buflen = psitem->length / 256;
+    }
+    else
+    {
+        buflen = psitem->length;
+    }
+
+    return (buffer + buflen);
+}
+
+void dcheck1(int i)   /*  Output to MAPTRACE  */
+{
+    int j,k;
+
+    if ((s_deb == FALSE) || ((pSTACK + i)->operation != FIELD))
+    {
+        return;
+    }
+    if ((pSTACK + i)->length == -1) /* a default parameter for a function */
+    {
+        part[i] = (char *) malloc(1);
+        *part[i] = 0;
+    }
+    else
+    {
+
+        switch ((pSTACK + i)->type)
+        {
+
+        /* NOTE.. LOGICAL and VARCHAR are only used as intermediate types */
+        case SHORT:
+            part[i] = (char *) malloc(7);
+            sprintf(part[i],"%hi",Short(i));
+            break;
+        case LONG:
+            part[i] = (char *) malloc(12);
+            sprintf(part[i],"%i",Long(i));
+            break;
+        case FLOAT:
+            part[i] = (char *) malloc(25);
+            sprintf(part[i],"%f",(double) Float(i));
+            break;
+        case DOUBLE:
+            part[i] = (char *) malloc(25);
+            sprintf(part[i],"%f",Double(i));
+            break;
+        case ZONED:
+            part[i] = (char *) malloc(25);
+            sprintf(part[i],"%f",Dzoned(i));
+            break;
+        case PACKED:
+            part[i] = (char *) malloc(25);
+            sprintf(part[i],"%f",Dpacked(i));
+            break;
+        case CHAR:
+            for (j = 0,k = 2;j < (pSTACK + i)->length;j++)
+            {
+               if (*(Char(i) + j) == '\'')
+               {
+                   k++;
+               }
+            }
+            part[i] = (char *) malloc((pSTACK + i)->length + k + 1);
+            *part[i] = '\'';
+            for (j = 0,k = 1;j < (pSTACK + i)->length;j++,k++)
+            {
+               *(part[i] + k) = *(Char(i) + j);
+               if(*(Char(i) + j) == '\'')
+               {
+                  k++;
+                  *(part[i] + k) = '\'';
+               }
+            }
+            *(part[i] + k++) = '\'';
+            *(part[i] + k) = 0;
+            break;
+        }
+        if ((pSTACK + i)->buffer == ROW)
+        {
+            char * tp = part[i];
+
+            part[i] = (char *) malloc(strlen(tp) + 13);
+            sprintf(part[i],"%s<%s>",fname((pSTACK + i)->offset),tp);
+            free(tp);
+        }
+        if ((pSTACK + i)->buffer == EXT)
+        {
+            char * tp = part[i];
+
+            part[i] = (char *) malloc(strlen(tp) + 13);
+            sprintf(part[i],"%s<%s>",extname((pSTACK + i), pWORK + (pSTACK + i)->offset),tp);
+            free(tp);
+        }
+    }
+    return;
+}
+
+void dcheck2(int i)
+{
+    int j,k;
+    char * cp;
+    char * cp2;
+    char t_f[] = "FALSE";
+
+    if (s_deb == FALSE)
+    {
+        return;
+    }
+    cp = part[i];
+    switch ((pSTACK + i)->type)
+    {
+    case SHORT:
+        part[i] = (char *) malloc(7 + strlen(cp) + 2);
+        sprintf(part[i],"%s<%hi>",cp,Short(i));
+        break;
+    case LONG:
+        part[i] = (char *) malloc(12 + strlen(cp) + 2);
+        sprintf(part[i],"%s<%i>",cp,Long(i));
+        break;
+    case FLOAT:
+        part[i] = (char *) malloc(25 + strlen(cp) + 2);
+        sprintf(part[i],"%s<%f>",cp,(double) Float(i));
+        break;
+    case DOUBLE:
+        part[i] = (char *) malloc(25 + strlen(cp) + 2);
+        sprintf(part[i],"%s<%f>",cp,Double(i));
+        break;
+    case ZONED:
+        part[i] = (char *) malloc(25 + strlen(cp) + 2);
+        sprintf(part[i],"%s<%f>",cp,Dzoned(i));
+        break;
+    case PACKED:
+        part[i] = (char *) malloc(25 + strlen(cp) + 2);
+        sprintf(part[i],"%s<%f>",cp,Dpacked(i));
+        break;
+    case CHAR:
+        cp2 = Char(i);
+    case VARCHAR:
+        if ((pSTACK + i)->type == VARCHAR) cp2 = Vchar(i);
+        for (j = 0,k = 2;j < (pSTACK + i)->length;j++)
+        {
+            if (*(cp2 + j) == '\'') k++;
+        }
+        part[i] = (char *) malloc((pSTACK + i)->length + k + 1 + strlen(cp) + 2);
+        strcpy(part[i],cp);
+        strcat(part[i],"<'");
+        for (j = 0,k = strlen(part[i]);j < (pSTACK + i)->length;j++,k++)
+        {
+            *(part[i] + k) = *(cp2 + j);
+            if(*(cp2 + j) == '\'')
+            {
+                k++;
+                *(part[i] + k) = '\'';
+            }
+        }
+        *(part[i] + k) = 0;
+        strcat(part[i],"'>");
+        break;
+    case LOGICAL:
+        part[i] = (char *) malloc(6 + strlen(cp) + 2);
+        if (Logical(i) == TRUE)
+        {
+            strcpy(t_f,"TRUE");
+        }
+        sprintf(part[i],"%s<%s>",cp,t_f);
+        break;
+    }
+    free(cp);
+    return;
+}
+
+/* Format unary operation display */
+
+void mop(int op,char * opstr)
+{
+    if (s_deb == FALSE)
+    {
+        return;
+    }
+    part[op] = (char *) malloc(strlen(part[op - 1]) + strlen(opstr) + 3);
+    sprintf(part[op],"(%s%s)",opstr,part[op - 1]);
+    return;
+}
+
+/* Format binary operation display */
+
+void bop(int op,char * opstr)
+{
+    if (s_deb == FALSE)
+    {
+        return;
+    }
+    part[op] = (char *) malloc(strlen(part[op - 2])
+        + strlen(opstr) + strlen(part[op -1]) + 5);
+    sprintf(part[op],"(%s %s %s)",part[op - 2]
+        ,opstr,part[op -1]);
+    return;
+}
+
+/* Function to search a target string for the first occurrence of a wildcard string */
+
+char * wildscan(char * target,unsigned tlen,char * source,unsigned slen,char wildchar)
+{
+    unsigned i;
+    char * cp;
+
+    if (tlen < slen)
+    {
+        return NULL; /* target too small */
+    }
+
+    for (cp = target;cp <= (target + (tlen - slen));cp++)
+    {
+        for (i = 0; i < slen;i++)
+        {
+            if (*(source + i) != wildchar)
+            {
+                if (*(cp + i) != *(source + i))
+                {
+                    break;
+                }
+            }
+        }
+        if (i == slen)
+        {
+            return cp;
+        }
+    }
+    return NULL;
+}
+
+/* See if a target string matches a mask containing wild characters */
+
+/* Wildchar1 will match any one character */
+/* Wildchar2 will match any number of characters (including none) */
+
+int wildmatch(char * target,unsigned tlen,char * source,unsigned slen,char wildchar1,char wildchar2)
+{
+    enum {SLOPPY,EXACT} fit;
+    int i;
+    char * cp;
+    unsigned t = 0; /* chars consumed from target */
+    unsigned s = 0; /* chars consumed from source */
+
+    do
+    {
+        fit = EXACT; /* Assume no starting wildcard character in source */
+        while (*(source + s) == wildchar2)
+        {
+            s++ ; /* Get rid of leading wildcard characters */
+            fit = SLOPPY; /* set flag */
+            if (s == slen)
+            {
+                return 1; /* Wild characters at end will match anything */
+            }
+        }
+        if (t == tlen) /* No more data in target */
+        {
+            if (s == slen)
+            {
+                return 1; /* If source empty too, then have a match */
+            }
+            return 0; /* Unmatched characters remaining in source */
+        }
+        if (s == slen)
+        {
+            return 0; /* If source cannot consume all of target, then no match */
+        }
+        for (i = 0;(*(source + s + i) != wildchar2) && ((s + i) < slen);i++)
+            ; /* number of characters to match */
+        if ((cp = wildscan(target + t,(fit == EXACT) ? i : (tlen - t),
+            source + s,i,wildchar1)) == NULL)
+        {
+            return 0;
+        }
+        /* That chunk matched ok */
+        s += i;
+        t = (cp - target) + i;
+    } while (1);
+}
+
+
+
+/********************************************************************************************/
+/*                                                                                          */
+/*            EXECUTION OF OPERATORS AND FUNCTIONS                                          */
+/*                                                                                          */
+/********************************************************************************************/
+#define OPTP(x) (pSTACK + op + x)->type
+#define LENGTH(x) (pSTACK + op + x)->length
+
+#define S2OP(x) (OPTP(-2) == SHORT) ?\
+(OPTP(-1) == SHORT) ? (Short(op-2) x Short(op-1))\
+:(OPTP(-1) == LONG) ? (Short(op-2) x Long(op-1))\
+:(OPTP(-1) == FLOAT) ? (Short(op-2) x Float(op-1))\
+:(OPTP(-1) == DOUBLE) ? (Short(op-2) x Double(op-1))\
+:(OPTP(-1) == PACKED) ? (Short(op-2) x Dpacked(op-1))\
+:(OPTP(-1) == ZONED) ? (Short(op-2) x Dzoned(op-1))\
+:FALSE
+#define L2OP(x)   (OPTP(-2) == LONG) ?\
+(OPTP(-1) == SHORT) ? (Long(op-2) x Short(op-1))\
+:(OPTP(-1) == LONG) ? (Long(op-2) x Long(op-1))\
+:(OPTP(-1) == FLOAT) ? (Long(op-2) x Float(op-1))\
+:(OPTP(-1) == DOUBLE) ? (Long(op-2) x Double(op-1))\
+:(OPTP(-1) == PACKED) ? (Long(op-2) x Dpacked(op-1))\
+:(OPTP(-1) == ZONED) ? (Long(op-2) x Dzoned(op-1))\
+:FALSE
+#define   F2OP(x) (OPTP(-2) == FLOAT) ?\
+(OPTP(-1) == SHORT) ? (Float(op-2) x Short(op-1))\
+:(OPTP(-1) == LONG) ? (Float(op-2) x Long(op-1))\
+:(OPTP(-1) == FLOAT) ? (Float(op-2) x Float(op-1))\
+:(OPTP(-1) == DOUBLE) ? (Float(op-2) x Double(op-1))\
+:(OPTP(-1) == PACKED) ? (Float(op-2) x Dpacked(op-1))\
+:(OPTP(-1) == ZONED) ? (Float(op-2) x Dzoned(op-1))\
+:FALSE
+#define   D2OP(x) (OPTP(-2) == DOUBLE) ?\
+(OPTP(-1) == SHORT) ? (Double(op-2) x Short(op-1))\
+:(OPTP(-1) == LONG) ? (Double(op-2) x Long(op-1))\
+:(OPTP(-1) == FLOAT) ? (Double(op-2) x Float(op-1))\
+:(OPTP(-1) == DOUBLE) ? (Double(op-2) x Double(op-1))\
+:(OPTP(-1) == PACKED) ? (Double(op-2) x Dpacked(op-1))\
+:(OPTP(-1) == ZONED) ? (Double(op-2) x Dzoned(op-1))\
+:FALSE
+#define P2OP(x) (OPTP(-2) == PACKED) ?\
+(OPTP(-1) == SHORT) ? (Dpacked(op-2) x Short(op-1))\
+:(OPTP(-1) == LONG) ? (Dpacked(op-2) x Long(op-1))\
+:(OPTP(-1) == FLOAT) ? (Dpacked(op-2) x Float(op-1))\
+:(OPTP(-1) == DOUBLE) ? (Dpacked(op-2) x Double(op-1))\
+:(OPTP(-1) == PACKED) ? (Dpacked(op-2) x Dpacked(op-1))\
+:(OPTP(-1) == ZONED) ? (Dpacked(op-2) x Dzoned(op-1))\
+:FALSE
+#define Z2OP(x) (OPTP(-2) == ZONED) ?\
+(OPTP(-1) == SHORT) ? (Dzoned(op-2) x Short(op-1))\
+:(OPTP(-1) == LONG) ? (Dzoned(op-2) x Long(op-1))\
+:(OPTP(-1) == FLOAT) ? (Dzoned(op-2) x Float(op-1))\
+:(OPTP(-1) == DOUBLE) ? (Dzoned(op-2) x Double(op-1))\
+:(OPTP(-1) == PACKED) ? (Dzoned(op-2) x Dpacked(op-1))\
+:(OPTP(-1) == ZONED) ? (Dzoned(op-2) x Dzoned(op-1))\
+:FALSE
+#define C2OP(x) (OPTP(-2) == CHAR) ?\
+(OPTP(-1) == CHAR) ? ccmp(Char(op-2),LENGTH(-2),Char(op-1),LENGTH(-1),#x)\
+:(OPTP(-1) == VARCHAR) ? ccmp(Char(op-2),LENGTH(-2),Vchar(op-1),LENGTH(-1),#x)\
+:FALSE
+#define V2OP(x) (OPTP(-2) == VARCHAR) ?\
+(OPTP(-1) == CHAR) ? ccmp(Vchar(op-2),LENGTH(-2),Char(op-1),LENGTH(-1),#x)\
+:(OPTP(-1) == VARCHAR) ? ccmp(Vchar(op-2),LENGTH(-2),Vchar(op-1),LENGTH(-1),#x)\
+:FALSE
+
+
+short ccmp(char * s1,int l1,char * s2,int l2,char * op)
+{
+    char * cp1;
+    char * cp2;
+    int i;
+
+    cp1 = (char *) malloc(l1+1);
+    cp2 = (char *) malloc(l2+1);
+    memcpy(cp1,s1,l1);
+    *(cp1+l1) = 0;
+    memcpy(cp2,s2,l2);
+    *(cp2+l2) = 0;
+    i = strcmp(cp1,cp2);
+    free(cp1);
+    free(cp2);
+    return (!strcmp(op,"<"))  ? (i < 0)  ? TRUE : FALSE
+         : (!strcmp(op,">"))  ? (i > 0)  ? TRUE : FALSE
+         : (!strcmp(op,"==")) ? (i == 0) ? TRUE : FALSE
+         : (!strcmp(op,"!=")) ? (i != 0) ? TRUE : FALSE
+         : (!strcmp(op,">=")) ? (i >= 0) ? TRUE : FALSE
+         : (!strcmp(op,"<=")) ? (i <= 0) ? TRUE : FALSE
+         : FALSE;
+}
+
+static int execute(int op)
+{
+    int parms = 0;
+    char comma2[] = ",";
+    switch ((pSTACK + op)->operation)
+    {
+        int s,l;
+        char * cp1;
+        char * cp2;
+
+    case DONE:
+        Logical(op) = Logical(op - 1);
+        if (s_deb == FALSE)
+        {
+            return (1);
+        }
+        part[op] = (char *) malloc(strlen(part[op - 1]) + 1);
+        strcpy(part[op],part[op - 1]);
+        return (1);
+
+        /* Arithmetic operators */
+
+    case ADD:
+        bop(op,"+");
+        switch (OPTP(0))
+        {
+        case SHORT:
+            Short(op) = S2OP(+):L2OP(+):F2OP(+):D2OP(+):P2OP(+):Z2OP(+):0;
+            break;
+        case LONG:
+            Long(op) = S2OP(+):L2OP(+):F2OP(+):D2OP(+):P2OP(+):Z2OP(+):0;
+            break;
+        case FLOAT:
+            Float(op) = S2OP(+):L2OP(+):F2OP(+):D2OP(+):P2OP(+):Z2OP(+):0.0f;
+            break;
+        case DOUBLE:
+        case ZONED:
+        case PACKED:
+            Double(op) = S2OP(+):L2OP(+):F2OP(+):D2OP(+):P2OP(+):Z2OP(+):0;
+            break;
+        default:
+            return 0;
+        }
+        dcheck2(op);
+        return (2);
+    case SUB:
+        bop(op,"-");
+        switch (OPTP(0))
+        {
+        case SHORT:
+            Short(op) = S2OP(-):L2OP(-):F2OP(-):D2OP(-):P2OP(-):Z2OP(-):0;
+            break;
+        case LONG:
+            Long(op) = S2OP(-):L2OP(-):F2OP(-):D2OP(-):P2OP(-):Z2OP(-):0;
+            break;
+        case FLOAT:
+            Float(op) = (float) S2OP(-):L2OP(-):F2OP(-):D2OP(-):P2OP(-):Z2OP(-):0.0f;
+            break;
+        case DOUBLE:
+        case ZONED:
+        case PACKED:
+            Double(op) = S2OP(-):L2OP(-):F2OP(-):D2OP(-):P2OP(-):Z2OP(-):0;
+            break;
+        default:
+            return 0;
+        }
+        dcheck2(op);
+        return (2);
+    case MUL:
+        bop(op,"*");
+        switch (OPTP(0))
+        {
+        case SHORT:
+            Short(op) = S2OP(*):L2OP(*):F2OP(*):D2OP(*):P2OP(*):Z2OP(*):0;
+            break;
+        case LONG:
+            Long(op) = S2OP(*):L2OP(*):F2OP(*):D2OP(*):P2OP(*):Z2OP(*):0;
+            break;
+        case FLOAT:
+            Float(op) = (float) S2OP(*):L2OP(*):F2OP(*):D2OP(*):P2OP(*):Z2OP(*):0.0f;
+            break;
+        case DOUBLE:
+        case ZONED:
+        case PACKED:
+            Double(op) = S2OP(*):L2OP(*):F2OP(*):D2OP(*):P2OP(*):Z2OP(*):0;
+            break;
+        default:
+            return 0;
+        }
+        dcheck2(op);
+        return (2);
+    case DIV:
+        bop(op,"/");
+        switch (OPTP(0))
+        {
+        case SHORT:
+            Short(op) = S2OP(/):L2OP(/):F2OP(/):D2OP(/):P2OP(/):Z2OP(/):0;
+            break;
+        case LONG:
+            Long(op) = S2OP(/):L2OP(/):F2OP(/):D2OP(/):P2OP(/):Z2OP(/):0;
+            break;
+        case FLOAT:
+            Float(op) = (float) S2OP(/):L2OP(/):F2OP(/):D2OP(/):P2OP(/):Z2OP(/):0.0f;
+            break;
+        case DOUBLE:
+        case ZONED:
+        case PACKED:
+            Double(op) = S2OP(/):L2OP(/):F2OP(/):D2OP(/):P2OP(/):Z2OP(/):0;
+            break;
+        default:
+            return 0;
+        }
+        dcheck2(op);
+        return (2);
+    case EXP:
+        /* NOT SUPPORTED YET */
+        return 2;
+    case IMINUS:
+        /* Assumes source and target have same type */
+        mop(op,"-");
+        switch (OPTP(0))
+        {
+        case SHORT:
+            Short(op) = - Short(op-1);
+            break;
+        case LONG:
+            Long(op) = - Long(op-1);
+            break;
+        case FLOAT:
+            Float(op) = - Float (op-1);
+            break;
+        case DOUBLE:
+            Double(op) = - Double(op-1);
+            break;
+        case ZONED:
+            l = LENGTH(-1) >> 4;
+            memcpy(Char(op),Char(op-1),l);
+            *(Char(op) + l -1) &= 0x0F;
+            *(Char(op) + l -1) |= ((*(Char(op-1) + l -1) & 0xF0) == 0xF0) ?    0xD0 : 0xF0;
+            break;
+        case PACKED:
+            l = LENGTH(-1) >> 5 + 1;
+            memcpy(Char(op),Char(op-1),l);
+            *(Char(op) + l -1) &= 0xF0;
+            *(Char(op) + l -1) |= ((*(Char(op-1) + l -1) & 0x0F) == 0x0F) ?    0x0D : 0x0F;
+            break;
+        default:
+            return 0;
+        }
+        dcheck2(op);
+        return (1);
+    case IPLUS:
+        /* Assumes source and target have same type */
+        mop(op,"+");
+        switch (OPTP(0))
+        {
+        case SHORT:
+            Short(op) = Short(op-1);
+            break;
+        case LONG:
+            Long(op) = Long(op-1);
+            break;
+        case FLOAT:
+            Float(op) = Float (op-1);
+            break;
+        case DOUBLE:
+            Double(op) = Double(op-1);
+            break;
+        case ZONED:
+            l = LENGTH(-1) >> 4;
+            memcpy(Char(op),Char(op-1),l);
+            break;
+        case PACKED:
+            l = LENGTH(-1) >> 5 + 1;
+            memcpy(Char(op),Char(op-1),l);
+            break;
+        default:
+            return 0;
+        }
+        dcheck2(op);
+        return (1);
+
+        /* Logical operators */
+
+    case NOT:
+        mop(op,"NOT");
+        Logical(op) = (Logical(op - 1) == TRUE) ? FALSE : TRUE;
+        dcheck2(op);
+        return (1);
+    case OR:
+        bop(op,"OR");
+        Logical(op) = Logical(op-1) | Logical(op-2);
+        dcheck2(op);
+        return 2;
+    case AND:
+        bop(op,"AND");
+        Logical(op) = Logical(op-1) & Logical(op-2);
+        dcheck2(op);
+        return 2;
+        /* Comparison operators */
+    case LT:
+        bop(op,"<");
+        Logical(op) = S2OP(<):L2OP(<):F2OP(<):D2OP(<):P2OP(<):Z2OP(<):C2OP(<):V2OP(<):FALSE;
+        dcheck2(op);
+        return(2);
+    case GT:
+        bop(op,">");
+        Logical(op) = S2OP(>):L2OP(>):F2OP(>):D2OP(>):P2OP(>):Z2OP(>):C2OP(>):V2OP(>):FALSE;
+        dcheck2(op);
+        return(2);
+    case LE:
+        bop(op,"<=");
+        Logical(op) = S2OP(<=):L2OP(<=):F2OP(<=):D2OP(<=):P2OP(<=):Z2OP(<=):C2OP(<=):V2OP(<=):FALSE;
+        dcheck2(op);
+        return(2);
+    case GE:
+        bop(op,">=");
+        Logical(op) = S2OP(>=):L2OP(>=):F2OP(>=):D2OP(>=):P2OP(>=):Z2OP(>=):C2OP(>=):V2OP(>=):FALSE;
+        dcheck2(op);
+        return(2);
+    case EQ:
+        bop(op,"=");
+        Logical(op) = S2OP(==):L2OP(==):F2OP(==):D2OP(==):P2OP(==):Z2OP(==):C2OP(==):V2OP(==):FALSE;
+        dcheck2(op);
+        return(2);
+    case NE:
+        bop(op,"<>");
+        Logical(op) = S2OP(!=):L2OP(!=):F2OP(!=):D2OP(!=):P2OP(!=):Z2OP(!=):C2OP(!=):V2OP(!=):FALSE;
+        dcheck2(op);
+        return(2);
+    case CONCAT:
+        bop(op,"||");
+        cp1 = Char(op);
+        LENGTH(0) = LENGTH(-1) + LENGTH(-2);
+        if (OPTP(0) == VARCHAR) cp1 = Vchar(op) = (char *) malloc(LENGTH(0));
+        memcpy(cp1,(OPTP(-2) == CHAR) ? Char(op-2) : Vchar(op-2),LENGTH(-2));
+        memcpy(cp1 + LENGTH(-2),(OPTP(-1) == CHAR) ? Char(op-1) : Vchar(op-1),LENGTH(-1));
+        dcheck2(op);
+        return 2;
+    case    LIKE:
+        if (wildmatch((OPTP(-2) == CHAR) ? Char(op-2) : Vchar(op-2),LENGTH(-2),
+            (OPTP(-1) == CHAR) ? Char(op-1) : Vchar(op-1),LENGTH(-1),'_','%') == 1) Logical(op)
+                                                                                     = TRUE;
+        else Logical(op) = FALSE;
+        bop(op,"LIKE");
+        dcheck2(op);
+        return(2);
+    case    NOT_LIKE:
+        if (wildmatch((OPTP(-2) == CHAR) ? Char(op-2) : Vchar(op-2),LENGTH(-2),
+            (OPTP(-1) == CHAR) ? Char(op-1) : Vchar(op-1),LENGTH(-1),'_','%') == 0) Logical(op)
+                                                                                     = TRUE;
+        else Logical(op) = FALSE;
+        bop(op,"NOT LIKE");
+        dcheck2(op);
+        return(2);
+        /* Functions */
+    case SUBSTR:
+        if (s_deb == TRUE)
+        {
+            part[op] = (char *) malloc(strlen(part[op - 3])  + strlen(part[op - 2]) +
+                strlen(part[op - 1]) + 12);
+            if ((pSTACK + op - 1)->length == -1)
+                *comma2 = 0;
+            sprintf(part[op],"SUBSTR(%s,%s%s%s)",part[op - 3]
+                ,part[op - 2],comma2,part[op -1]);
+        }
+        switch (OPTP(-2))
+        {
+        case SHORT:
+            s = Short(op-2);
+            break;
+        case LONG:
+            s = Long(op-2);
+            break;
+        case FLOAT:
+            s = (int) Float (op-2);
+            break;
+        case DOUBLE:
+            s = (int) Double(op-2);
+            break;
+        case ZONED:
+            s = (int) Dzoned(op-2);
+            break;
+        case PACKED:
+            s = (int) Dpacked(op-2);
+            break;
+        }
+        if (LENGTH(-1) == -1)
+            LENGTH(0) = LENGTH(-3) - s + 1;
+        else
+        {
+            switch (OPTP(-1))
+            {
+            case SHORT:
+                l = Short(op-1);
+                break;
+            case LONG:
+                l = Long(op-1);
+                break;
+            case FLOAT:
+                l = (int) Float (op-1);
+                break;
+            case DOUBLE:
+                l = (int) Double(op-1);
+                break;
+            case ZONED:
+                l = (int) Dzoned(op-1);
+                break;
+            case PACKED:
+                l = (int) Dpacked(op-1);
+                break;
+            }
+            LENGTH(0) = l;
+        }
+        cp1 = Char(op-3);
+        cp2 = Char (op);
+        if (OPTP(-3) == VARCHAR) cp1 = Vchar(op-3);
+        if (OPTP(0) == VARCHAR) cp2 = Vchar(op) = (char *) malloc(l);
+        strncpy(cp2,cp1+s-1,l);
+        dcheck2(op);
+        return 3;
+    case TRANSLATE:
+        if (s_deb == TRUE)
+        {
+            part[op] = (char *) malloc(strlen(part[op - 1]) + 12);
+            sprintf(part[op],"TRANSLATE(%s)",part[op - 1]);
+        }
+        cp1 = Char(op - 1);
+        cp2 = Char(op);
+        if (OPTP(0) == VARCHAR) cp2 = Vchar(op) = (char *) malloc(LENGTH(-1));
+        if (OPTP(-1) == VARCHAR) cp1 = Vchar(op - 1);
+        LENGTH(0) = LENGTH(-1);
+        for (l = 0;l < LENGTH(0);l++)
+            *(cp2 + l) = toupper(*(cp1 + l));
+        ;
+        dcheck2(op);
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+/********************************************************************************************/
+/*                                                                                          */
+/*            MAIN STACK EVALUATION ENGINE                                                  */
+/*                                                                                          */
+/********************************************************************************************/
+
+int evaluate (char * row,char * work,s_item * stack)
+{
+    int current_op = 0;
+    int first_op = 0;
+    int parms;
+    int i;
+
+    if (stack == NULL)
+    {
+        return 1;
+    }
+    pROW = row;
+    pWORK = work;
+    pSTACK = stack;
+    if (s_deb == TRUE)  /*  MAPTRACE  */
+    {
+        /* Get a string array buffer */
+        for (i = 0;(pSTACK + i)->operation != DONE;i++)
+            ;
+        part = (char **) malloc((i + 1) * sizeof(char *));
+
+        /* Convert all fields to displayable strings */
+
+        for(i = 0;(pSTACK + i)->operation != DONE;i++)
+        {
+            dcheck1(i);
+        }
+    }
+
+    do
+    {
+        /* Look for first genuine operation */
+        while ((pSTACK + current_op)->operation <= MARKER)
+        {
+            current_op++;
+        }
+
+        /* Perform operation and get number of FIELDS/MARKERS consumed */
+        parms = execute(current_op);
+
+        /* The result will have been placed in the operation element. Now a FIELD */
+        if ((pSTACK + current_op)->operation != DONE)
+        {
+            (pSTACK + current_op)->operation = FIELD;
+        }
+
+        /* Free storage used by any consumed VARCHARS */
+        for (i = current_op - parms; i < current_op; i++)
+        {
+            if ((pSTACK + i)->type == VARCHAR)
+            {
+                free(Vchar(i));
+            }
+            if (s_deb == TRUE)
+            {
+                free(part[i]);
+            }
+        }
+
+        /* Close up the hole in the stack */
+        if ((parms > 0) && ((current_op - parms) > first_op))
+        {
+            memmove(pSTACK + first_op + parms,pSTACK + first_op,
+                sizeof(s_item) *(current_op - first_op - parms));
+            if (s_deb == TRUE)
+            {
+                memmove(part + first_op + parms,part + first_op,
+                    sizeof(char *) *(current_op - first_op - parms));
+            }
+        }
+        first_op += parms;
+    } while ((pSTACK + current_op)->operation != DONE);
+
+    if (s_deb == TRUE)
+    {
+        s_trace(part[current_op]);
+        free(part[current_op]);
+        free(part);
+    }
+    return Logical(current_op);
+}
+

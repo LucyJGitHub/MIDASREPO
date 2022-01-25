@@ -1,0 +1,143 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPDFNTRG  - Define trigger monitor                          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP026             Date 18Jul05              */
+/*                      CRP003             Date 12Oct99              */
+/*                      CRP002  *CREATE    Date 13Apr99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP026 - User specified Queue Manager added.                */
+/*       CRP003 - Include Adding new member to RPMSGFPD              */
+/*       CRP002 - New                                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&APPQNAME &CTLMBR &INITQNAME +
+                          &INITQEXIST &PRCNAME &PRCEXIST &APPNPGM +
+                          &RMTQNAME)
+
+/**  Parameters                                                     */
+             DCL        VAR(&APPQNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries trans. queue that is to be monitored   */
+             DCL        VAR(&INITQNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries initiation queue                       */
+             DCL        VAR(&INITQEXIST) TYPE(*CHAR) LEN(4) +
+                 /* Intiation queue already exists                  */
+             DCL        VAR(&PRCNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries process definition                    */
+             DCL        VAR(&PRCEXIST) TYPE(*CHAR) LEN(4) +
+                 /* Process definition already exists              */
+             DCL        VAR(&APPNPGM) TYPE(*CHAR) LEN(20)    +
+                 /* Application program to call                   */
+             DCL        VAR(&CTLMBR) TYPE(*CHAR) LEN(10) +
+                 /* Member of the control file to be overridden to */
+             DCL        VAR(&RMTQNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries remote queue that is to be written to   */
+
+             DCL        VAR(&TXT) TYPE(*CHAR) LEN(64)
+
+             DCL        VAR(&RTNDATA) TYPE(*CHAR) LEN(64) /* Data +
+                          returned by 'access object' from RPBOIFDA */    /*CRP026*/
+             DCL        VAR(&DATALEN) TYPE(*DEC) LEN(2 0) /* Length +
+                          of value in &RTNDATA */                         /*CRP026*/
+             DCL        VAR(&MQMNAME) TYPE(*CHAR) LEN(48)                 /*CRP026*/
+                                                                          /*CRP026*/
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Get Queue Manager name                                          */    /*CRP026*/
+             CALLPRC    PRC(RPBOIF99) PARM(('MQMNAME   ') (&RTNDATA) +
+                          (&DATALEN))                                     /*CRP026*/
+             CHGVAR     VAR(&MQMNAME) VALUE(%SST(&RTNDATA 1 &DATALEN))    /*CRP026*/
+
+/*  If it does not already exist, create initiation queue           */
+             IF         COND(&INITQEXIST *EQ '*NO') THEN(DO)
+                CHGVAR     VAR(&TXT) VALUE('Inition. Q for ' *CAT +
+                             &APPQNAME)
+/***************CPYMQMQ    FROMQ(SYSTEM.DEFAULT.INITIATION.QUEUE) +   */  /*CRP026*/
+/***************             TOQ(&INITQNAME) TEXT(&TXT) DFTPTY(1) +   */  /*CRP026*/
+/***************             DFTMSGPST(*YES)                          */  /*CRP026*/
+                CPYMQMQ    FROMQ(SYSTEM.DEFAULT.INITIATION.QUEUE) +
+                             TOQ(&INITQNAME) MQMNAME(&MQMNAME) +
+                             TEXT(&TXT) DFTPTY(1) DFTMSGPST(*YES)         /*CRP026*/
+                MONMSG     MSGID(AMQ8150)
+             ENDDO
+
+/*  If it does not already exist, create process               */
+             IF         COND(&PRCEXIST *EQ '*NO') THEN(DO)
+                CHGVAR     VAR(&TXT) VALUE('Process for ' *CAT +
+                             &APPQNAME)
+/***************CPYMQMPRC  FROMPRC(SYSTEM.DEFAULT.PROCESS) +          */  /*CRP026*/
+/***************             TOPRC(&PRCNAME) TEXT(&TXT) +             */  /*CRP026*/
+/***************             APPTYPE(*OS400) APPID(&APPNPGM) +        */  /*CRP026*/
+/***************             USRDATA(&CTLMBR *CAT &RMTQNAME)          */  /*CRP026*/
+                CPYMQMPRC  FROMPRC(SYSTEM.DEFAULT.PROCESS) +
+                             TOPRC(&PRCNAME) MQMNAME(&MQMNAME) +
+                             TEXT(&TXT) APPTYPE(*OS400) +
+                             APPID(&APPNPGM) USRDATA(&CTLMBR *CAT +
+                             &RMTQNAME)                                   /*CRP026*/
+             ENDDO
+/*  If it does already exist, update process for latest values  */
+             IF         COND(&PRCEXIST *EQ '*YES') THEN(DO)
+/***************CHGMQMPRC  PRCNAME(&PRCNAME) TEXT(*SAME) +            */  /*CRP026*/
+/***************             APPTYPE(*SAME) APPID(&APPNPGM) +         */  /*CRP026*/
+/***************             USRDATA(&CTLMBR *CAT &RMTQNAME)          */  /*CRP026*/
+                CHGMQMPRC  PRCNAME(&PRCNAME) MQMNAME(&MQMNAME) +
+                             TEXT(*SAME) APPTYPE(*SAME) +
+                             APPID(&APPNPGM) USRDATA(&CTLMBR *CAT +
+                             &RMTQNAME)                                   /*CRP026*/
+             ENDDO
+
+/*  Change transmission queue that is to be monitored to refer to +
+     the initiation queue and process                               */
+/************CHGMQMQ    QNAME(&APPQNAME) PRCNAME(&PRCNAME) +          */  /*CRP026*/
+/***************          TRGENBL(*YES) TRGTYPE(*FIRST) +             */  /*CRP026*/
+/***************          INITQNAME(&INITQNAME)                       */  /*CRP026*/
+             CHGMQMQ    QNAME(&APPQNAME) MQMNAME(&MQMNAME) +
+                          PRCNAME(&PRCNAME) TRGENBL(*YES) +
+                          TRGTYPE(*FIRST) INITQNAME(&INITQNAME)           /*CRP026*/
+
+/*  Add member to Control file (PF &LF) if not already there        */
+             CHKOBJ     OBJ(RPAPCIPD) OBJTYPE(*FILE) MBR(&CTLMBR)
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                ADDPFM     FILE(RPAPCIPD) MBR(&CTLMBR)
+             ENDDO
+
+             CHKOBJ     OBJ(RPAPCIL0) OBJTYPE(*FILE) MBR(&CTLMBR)
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                ADDLFM     FILE(RPAPCIL0) MBR(&CTLMBR) +
+                             DTAMBRS((RPAPCIPD (&CTLMBR)))
+             ENDDO
+
+/*  Add member to File Layout file if not already there             */ /*CRP003*/
+             CHKOBJ     OBJ(RPMSGFPD) OBJTYPE(*FILE) MBR(&CTLMBR)      /*CRP003*/
+             MONMSG     MSGID(CPF9815) EXEC(DO)                        /*CRP003*/
+                ADDPFM     FILE(RPMSGFPD) MBR(&CTLMBR)                 /*CRP003*/
+             ENDDO                                                     /*CRP003*/
+                                                                       /*CRP003*/
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Error in Define MQSeries Trigger +
+                          Monitor RPDFNTRG') TOPGMQ(*PRV) +
+                          MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+ END:
+
+             ENDPGM

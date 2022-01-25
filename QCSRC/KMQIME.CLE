@@ -1,0 +1,2073 @@
+/********************************************************************
+ *STD *  CM
+/**********************************************************************
+/**********************************************************************
+/*
+/*       Meridian DBA Replication
+/*
+/*       KMQIME   - MQ Initialise mapping - MQ
+/*
+/*       (C) Copyright Midas-Kapiti International Ltd.
+/*
+/*       Last Amend No. MD058809           Date 16Dec21
+/*       Prev Amend No. MD056024           Date 24Apr21
+/*                      169380    *CREATE  Date 18Oct99
+/*
+/**********************************************************************
+/*
+/*       MD058809 - After installation of MQ9 compatibility patch and
+/*                  restart of the Meridian Replication subsystem
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+/*       MD056024 - Replication MIDAS TOF is not working in UAT after
+/*                  installation for MQ v9 and Midas patch.
+/*                - Copied from KMQIMEE3A.
+/*                - Recompile this object in SRCMDBAA from SRCMDBA132
+/*                  for V1R4M0 release.
+/*       169380 - Call new procedure to determine what decimal
+/*                separator is required.
+/*
+/**********************************************************************
+/******************************************************************************
+ All rights reserved. No part of the program and data contained herein may be
+ transmitted, reproduced or stored in any retrieval system of any nature in any
+ form or by any means whether digital, electronic, mechanical or otherwise
+ without the prior written permission of Midas-Kapiti International Limited to
+ which application for such permission should be addressed.
+
+ Copyright Misys PLC 1997.
+*******************************************************************************
+
+   INPUT LAYOUT
+
+ <CHANNEL> _channelname
+    <QSEND> _queuename
+    <CONTROL> _controlname
+     [<FIELD> _fieldname
+         <TYPE> char
+         <LENGTH> integer£,integer]
+      </FIELD>]n
+    </CONTROL>
+   [<FILTER>  _filtername
+      <TYPE> char
+      <TABLE> _tablename
+        [<FIELD> _fieldname
+            <TYPE> char
+            <LENGTH> integer[,integer]
+         </FIELD>]n
+      </TABLE>
+      <AFTER> _messagename
+        [<FIELD> _fieldname
+            <TYPE> char
+            <LENGTH> integer[,integer]
+         </FIELD>]1-n
+      </AFTER>
+      <BEFORE> _messagename
+        [<FIELD> _fieldname
+            <TYPE> char
+            <LENGTH> integer[,integer]
+         </FIELD>]1-n
+      </BEFORE>
+     [<WHERE>
+        [<SERVER> _servername]
+        [<ENV> _environment]
+        [<CLAUSE>
+            _SQL where clause
+         </CLAUSE>]
+      </WHERE>]n
+    </FILTER>]1-n
+ </CHANNEL>
+
+******************************************************************************/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <limits.h>
+#include <decimal.h>
+
+#include "kmdfsh.h"
+#include "kmdffh.h"
+#include "kmqimh.h"
+#include "kmdlgh.h"
+#include "kmdifh.h"
+#include "kmdcfh.h"
+
+typedef char c10_t[10];
+
+extern FILE * output;
+typedef enum {
+    NONE,
+    CHANNEL,
+    QSEND,
+    CONTROL,
+    FILTER,
+    TABLE,
+    TYPE,
+    FIELD_,
+    LENGTH,
+    AFTER,
+    BEFORE,
+    WHERE,
+    SERVER,
+    ENV,
+    CLAUSE
+} tag_id;
+
+typedef enum {SIMPLE,COMPOUND} tag_type;
+
+/* Processing functions */
+
+typedef struct mode_block_t mode_block_t;
+typedef int (pfunct) (mode_block_t *); /*  function pointer for tag start */
+typedef int (efunct) (mode_block_t *); /*  function pointer for end start */
+pfunct channel_p;
+efunct channel_e;
+pfunct qsend_p;
+pfunct control_p;
+efunct control_e;
+pfunct filter_p;
+efunct filter_e;
+pfunct table_p;
+efunct table_e;
+pfunct after_p;
+efunct after_e;
+pfunct before_p;
+efunct before_e;
+pfunct field_p;
+efunct field_e;
+pfunct where_p;
+efunct where_e;
+pfunct clause_p;
+efunct clause_e;
+pfunct none_p;
+efunct none_e;
+
+pfunct type_p;
+pfunct length_p;
+pfunct env_p;
+pfunct server_p;
+
+typedef struct {
+    char     string[8];         /*  Name of tag                   */
+    tag_type type;              /*  Simple/compound tag           */
+    tag_id   id;                /*  Id of tag                     */
+    tag_id   allowed[8];        /*  List of embedded tags allowed */
+    int      min[8];            /*  Minimum of embedded tags      */
+    int      max[8];            /*  Maximum of embedded tags      */
+    pfunct*  process;           /*  Function to call for start    */
+    efunct*  end_process;       /*  Function to call at end       */
+} tag_details;
+
+tag_details valid_tags[] = {
+    {
+        "CHANNEL",                                    /*  Name    */
+         COMPOUND,                                    /*  Type    */
+         CHANNEL,                                     /*  Id      */
+        {QSEND, CONTROL, FILTER, NONE},               /*  Allowed */
+        {  0,      0,      1 },                       /*  Minimum */
+        {  1,      1,     -1 },                       /*  Maximum */
+        channel_p,                                    /*  Start   */
+        channel_e                                     /*  End     */
+    },
+
+    {
+        "QSEND",                                      /*  Name    */
+        SIMPLE,                                       /*  Type    */
+        QSEND,                                        /*  Id      */
+        {NONE},                                       /*  Allowed */
+        { 0  },                                       /*  Minimum */
+        { 0  },                                       /*  Maximum */
+        qsend_p,                                      /*  Start   */
+        NULL                                          /*  End     */
+    },
+
+    {
+        "CONTROL",                                    /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        CONTROL,                                      /*  Id      */
+        {FIELD_, NONE},                               /*  Allowed */
+        {  0  },                                      /*  Minimum */
+        { -1  },                                      /*  Maximum */
+        control_p,                                    /*  Start   */
+        control_e                                     /*  End     */
+    },
+
+    {
+        "FILTER",                                     /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        FILTER,                                       /*  Id      */
+        {TYPE, TABLE, AFTER, BEFORE, WHERE, NONE},    /*  Allowed */
+        {  1,    1,     1,      0,     0},            /*  Minimum */
+        {  1,    1,     1,      1,    -1},            /*  Maximum */
+        filter_p,                                     /*  Start   */
+        filter_e                                      /*  End     */
+    },
+
+    {
+        "TABLE",                                      /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        TABLE,                                        /*  Id      */
+        {FIELD_, NONE},                               /*  Allowed */
+        {  0  },                                      /*  Minimum */
+        { -1  },                                      /*  Maximum */
+        table_p,                                      /*  Start   */
+        table_e                                       /*  End     */
+    },
+
+    {
+        "TYPE",                                       /*  Name    */
+        SIMPLE,                                       /*  Type    */
+        TYPE,                                         /*  Id      */
+        {NONE},                                       /*  Allowed */
+        {0},                                          /*  Minimum */
+        {0},                                          /*  Maximum */
+        type_p,                                       /*  Start   */
+        NULL                                          /*  End     */
+    },
+
+    {
+        "FIELD",                                      /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        FIELD_,                                       /*  Id      */
+        {TYPE, LENGTH, NONE},                         /*  Allowed */
+        {  1,     0},                                 /*  Minimum */
+        {  1,     1},                                 /*  Maximum */
+        field_p,                                      /*  Start   */
+        field_e                                       /*  End     */
+    },
+
+    {
+        "LENGTH",                                     /*  Name    */
+        SIMPLE,                                       /*  Type    */
+        LENGTH,                                       /*  Id      */
+        {NONE},                                       /*  Allowed */
+        {0},                                          /*  Minimum */
+        {0},                                          /*  Maximum */
+        length_p,                                     /*  Start   */
+        NULL                                          /*  End     */
+    },
+
+    {
+        "AFTER",                                      /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        AFTER,                                        /*  Id      */
+        {FIELD_, NONE},                               /*  Allowed */
+        {  0  },                                      /*  Minimum */
+        { -1  },                                      /*  Maximum */
+        after_p,                                      /*  Start   */
+        after_e                                       /*  End     */
+    },
+
+    {
+        "BEFORE",                                     /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        BEFORE,                                       /*  Id      */
+        {FIELD_, NONE},                               /*  Allowed */
+        {  0  },                                      /*  Minimum */
+        { -1  },                                      /*  Maximum */
+        before_p,                                     /*  Start   */
+        before_e                                      /*  End     */
+    },
+
+    {
+        "WHERE",                                      /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        WHERE,                                        /*  Id      */
+        {SERVER, ENV, CLAUSE, NONE},                  /*  Allowed */
+        {   0,    0,     0},                          /*  Minimum */
+        {   1,    1,     1},                          /*  Maximum */
+        where_p,                                      /*  Start   */
+        where_e                                       /*  End     */
+    },
+
+    {
+        "SERVER",                                     /*  Name    */
+        SIMPLE,                                       /*  Type    */
+        SERVER,                                       /*  Id      */
+        {NONE},                                       /*  Allowed */
+        {0},                                          /*  Minimum */
+        {0},                                          /*  Maximum */
+        server_p,                                     /*  Start   */
+        NULL                                          /*  End     */
+    },
+
+    {
+        "ENV",                                        /*  Name    */
+        SIMPLE,                                       /*  Type    */
+        ENV,                                          /*  Id      */
+        {NONE},                                       /*  Allowed */
+        {0},                                          /*  Minimum */
+        {0},                                          /*  Maximum */
+        env_p,                                        /*  Start   */
+        NULL                                          /*  End     */
+    },
+
+    {
+        "CLAUSE",                                     /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        CLAUSE,                                       /*  Id      */
+        {NONE},                                       /*  Allowed */
+        {0},                                          /*  Minimum */
+        {0},                                          /*  Maximum */
+        clause_p,                                     /*  Start   */
+        clause_e                                      /*  End     */
+    },
+
+    {
+        "NONE",                                       /*  Name    */
+        COMPOUND,                                     /*  Type    */
+        NONE,                                         /*  Id      */
+        {CHANNEL, NONE},                              /*  Allowed */
+        {  1  },                                      /*  Minimum */
+        { -1  },                                      /*  Maximum */
+        none_p,                                       /*  Start   */
+        none_e                                        /*  End     */
+    }
+};
+
+/*                                                                */
+/*  Find tag array entry by tag name                              */
+/*                                                                */
+tag_details* find_details(char * s)
+{
+    int   i = 0;
+    char* s2;
+
+    s2 = s;
+    if (*s2 == '/')  /*  if end tag encountered, skip '/'         */
+    {
+        s2++;
+    }
+    do               /*  loop through array until tag name found  */
+    {
+        if (strcmp(s2, (*(valid_tags + i)).string) == 0)
+        {
+            return (valid_tags + i);
+        }
+        i++;
+    } while ((*(valid_tags + i - 1)).id != NONE);
+
+    return NULL;
+}
+
+/*                                                                */
+/*  Find tag array entry by tag id                                */
+/*                                                                */
+tag_details* id_details(tag_id id)
+{
+    int i = 0;
+
+    do
+    {
+        if ((*(valid_tags + i)).id == id)
+        {
+            return (valid_tags + i);
+        }
+        i++;
+    } while ((*(valid_tags + i - 1)).id != NONE);
+    return NULL;
+}
+
+/*                                                                */
+/*  Where clause details (environment level = program level)      */
+/*                                                                */
+typedef struct where_t {
+    struct where_t *next;
+    char* server;
+    char* clause;
+} where_t;
+
+/*                                                                */
+/*  Generic multi-purpose structures for each tag section         */
+/*                                                                */
+struct mode_block_t {
+    struct mode_block_t* prev;
+    tag_details*        details;
+    char*               data;
+    int                 pos;
+    int                 ccount[8];
+    char                init;
+    int                 map_offset;
+    union {
+        struct {
+            int         nfilters;
+            int         sid;
+        } channel_block;
+        struct {
+            sqlda*      psqlda;  /* MUST OVERLAY table_block.psqlda */
+        } control_block;
+        struct {
+            sqlda*      psqldat; /* Table sqlda (for empty AFTER) */
+            sqlda*      psqldad; /* Delete map sqlda */
+            where_t*    where;
+            int         cpos;
+            char        table_name[19];
+            int         sidA;
+            int         sidB;
+            int         sidD;
+            int         sidM;
+            int         sidU;
+            int         tidA;
+            int         tidAB;
+            int         tidB;
+        } filter_block;
+        struct {
+            sqlda*      psqlda;  /* MUST OVERLAY control_block.psqlda */
+        } table_block;
+        struct {
+            char        type;
+            int         prec;
+            int         scale;
+        } field_block;
+        struct {
+            char*       env;
+            char*       server;
+            char*       clause;
+        } where_block;
+    } u;
+};
+
+static mode_block_t * pmode = NULL;
+static int error_count = 0;
+static char filename[50];
+static int spos;
+static int sid = 100;
+static int p1 = 1;
+static int p2 = 2;
+static int p18 = 18;
+static int s0 = 0;
+static char * env;
+extern Struct * pcS1;
+static Field * pcF1;
+static Master * master;
+static selcb * psel;
+static int nfile = 0;
+
+static error(int lev,int pos,char * errm)
+{
+   if (lev >= 2)
+   {
+       error_count++;
+   }
+   sprintf(log_buff,"%s %u,%u: %s\n",filename,
+                  (pos != -1) ? Frow(pos) : 0,
+                  (pos != -1) ? Fcol(pos) : 0,
+                  errm);
+   if (lev == 0)
+   {
+       LOGOUT(LOG_TRACE, log_buff);
+   }
+   if (lev == 1)
+   {
+       LOGOUT(LOG_ENTRY,log_buff);
+   }
+   if (lev == 2)
+   {
+       LOGOUT(LOG_ERROR,log_buff);
+   }
+   return;
+}
+
+
+/*                                                                */
+/*  Convert character number string into an integer               */
+/*                                                                */
+static int OP_OK;
+
+int getint(char ** ps)
+{
+    int     i = 0;
+    int     j = 0;
+    char*   s;
+
+    int     sign = 1;
+
+    OP_OK = 1;              /*  Assume an int           */
+    while (**ps == ' ')     /*  Ignore leading blanks   */
+    {
+        (*ps)++;
+    }
+
+    s = *ps;
+    if (*s == '+')          /* leading + is OK          */
+    {
+        s++;
+    }
+    if (*s == '-')          /* So is leading -          */
+    {
+        s++;
+        sign *= -1;
+    }
+    while (*s == ' ')       /* Allow blanks after sign  */
+    {
+        s++;
+    }
+    while (isdigit(*s))
+    {
+        j++;                /* Number of digits               */
+        i *= 10;            /* Ready for next digit           */
+        i += (*s - '0');    /* Add it                         */
+        if (i < 0)          /* Overflow                       */
+            j = INT_MIN;    /* Set indication (but continue)  */
+        s++;                /* to next                        */
+    }
+    while (*s == ' ')       /* Drop trailing blanks           */
+    {
+        s++;
+    }
+    if (j == 0)
+    {
+        OP_OK = 0;          /* Not an int                     */
+        return 0;
+    }
+    *ps = s;                /* Point caller to failing char   */
+    if (j < 0)              /* Overflow                       */
+    {
+        return (INT_MAX);
+    }
+    return (i *= sign);
+}
+
+
+int process_tag(tag_details *,int,int);
+void process_data(char *);
+
+static char fldtype[] = "APZDFLSV";
+static c10_t tc10[] = {
+    "CHAR",
+    "PACKED",
+    "ZONED",
+    "DOUBLE",
+    "FLOAT",
+    "LONG",
+    "SHORT",
+    "VARCHAR"
+};
+static int fldlength [] = {0,-1,-1,8,4,4,2,0};
+static int maxprec[] = {SHRT_MAX,DEC_DIG,DEC_DIG,8,4,4,4,SHRT_MAX};
+static int maxscale[] = {0,DEC_DIG,DEC_DIG,0,0,0,0,0};
+
+/* Generate field descriptions from an sqlda */
+
+void gen_fields(sqlda * psqlda)
+{
+    int     i;
+    int     j;
+    int     prec;
+    int     scale;
+    char    type;
+
+    for (i = 0; i < psqlda->sqln; i++)
+    {
+        prec = psqlda->sqlvar[i].sqllen;
+        scale = 0;
+        switch (psqlda->sqlvar[i].sqltype & 0xFFFE) /*NULL bit off*/
+        {
+        case 448: /* varchar */
+        case 456: /* long varchar */
+            j = 7;
+            break;
+        case 452: /* character */
+            j = 0;
+            break;
+        case 480: /* floating point */
+            if (prec == 8) j = 3;
+            else j = 4;
+            break;
+        case 484: /* packed */
+            j = 1;
+            scale = prec % 256;
+            prec = prec / 256;
+            break;
+        case 488: /* zoned */
+            j = 2;
+            scale = prec % 256;
+            prec = prec / 256;
+            break;
+        case 496: /* long */
+            j = 5;
+            break;
+        case 500: /* short */
+            j = 6;
+            break;
+        }
+        struct_field_in(
+            tc10[j],                           /*  Name        */
+            &prec,                             /*  Precision   */
+            &scale,                            /*  Scal (dps)  */
+            psqlda->sqlvar[i].sqlname.data,    /*  Data type   */
+            NULL,                              /*  Attribute   */
+            NULL);                             /*  Description */
+   }
+}
+
+/* Generate character target fields */
+
+void gen_char_fields(sqlda * psqlda)
+{
+    int     j;
+    int     prec;
+    int     scale;
+    int     i;
+
+    /* Need to put operation and table name as first two fields */
+
+    struct_field_in("CHAR", &p2, &s0, "Operation", NULL, NULL);
+    struct_field_in("CHAR", &p18, &s0, "Table", NULL, NULL);
+
+    for (i = 0; i < psqlda->sqln; i++)
+    {
+        prec = psqlda->sqlvar[i].sqllen;
+        scale = 0;
+        j = 0; /* Force to character */
+
+        switch (psqlda->sqlvar[i].sqltype & 0xFFFE) /* NULL bit off */
+        {
+        case 448: /* varchar */
+        case 456: /* long varchar */
+            j = 7;
+            break;
+        case 480: /* floating point */
+            if (prec == 8)
+            {
+                prec = 24;
+            }
+            else
+            {
+                prec = 16;
+            }
+            break;
+        case 484: /* packed */
+        case 488: /* zoned */
+            scale = prec % 256;
+            prec = prec / 256 + 1;
+            if (scale != 0)
+            {
+                prec++;
+            }
+            break;
+        case 496: /* long */
+            prec = 11;
+            break;
+        case 500: /* short */
+            prec = 6;
+            break;
+        }
+        struct_field_in(
+            tc10[j],                           /*  Name        */
+            &prec,                             /*  Precision   */
+            &scale,                            /*  Scal (dps)  */
+            psqlda->sqlvar[i].sqlname.data,    /*  Data type   */
+            NULL,                              /*  Attribute   */
+            NULL);                             /*  Description */
+   }
+}
+
+/* Generate map links */
+
+void gen_links(sqlda * psqlda,char * op, int offset)
+{
+    vptr vp;
+    int i;
+
+    vp.pDLIT = op;            /*  Map operation  */
+    map_field_in(DLIT,vp);
+
+    vp.pDFLD = "__TNAME";     /*  Map table name */
+    map_field_in(DFLD,vp);
+
+    for (i = offset; i < psqlda->sqln; i++) /*  Map rest of fields */
+    {
+        vp.pDFLD = psqlda->sqlvar[i].sqlname.data;
+        map_field_in(DFLD,vp);
+    }
+}
+
+/* Entry and exit functions for tag processing */
+
+
+/*  <CHANNEL> tag  */
+int channel_p(mode_block_t * pcmode)
+{
+    process_in(pcmode->data);
+    pcmode->u.channel_block.sid = 0;
+    pcmode->u.channel_block.nfilters = 0;
+    return (1);
+}
+
+/*  </CHANNEL> tag  */
+int channel_e(mode_block_t * pcmode)
+{
+    end_process_in();
+    if (pcmode->u.channel_block.nfilters == 0)
+    {
+        error(2, pcmode->pos, "No filters defined for this channel.");
+    }
+    return (1);
+}
+
+/*  <QSEND> tag  */
+int qsend_p(mode_block_t * pcmode)
+{
+   return (1);
+}
+
+/*  <CONTROL> tag  */
+int control_p(mode_block_t * pcmode)
+{
+    pcmode->prev->u.channel_block.sid = sid++; /*  Allocate structure no */
+    struct_in(
+        pcmode->data,                      /*  Structure name  */
+        ' ',                               /*  Extension       */
+        pcmode->prev->u.channel_block.sid, /*  Structure no    */
+        "NONE",                            /*  Structure class */
+        NULL,                              /*  User data       */
+        NULL);                             /*  Description     */
+
+    /*  Allocate field list  */
+    pcmode->u.control_block.psqlda = (sqlda *) malloc(SQLDASIZE(0));
+    memcpy(pcmode->u.control_block.psqlda->sqldaid,"SQLDA    ",8);
+    pcmode->u.control_block.psqlda->sqldabc = SQLDASIZE(0);
+    pcmode->u.control_block.psqlda->sqln = 0; /* No of fields */
+    return (1);
+}
+
+/*  </CONTROL> tag  */
+int control_e(mode_block_t * pcmode)
+{
+    int xsid;
+    int prec = 10;
+    int scale = 0;
+    char buff[11] = "LS";
+    vptr vp = {(double *) &buff};
+
+    gen_fields(pcmode->u.control_block.psqlda);
+    end_struct_in();
+    if (pcmode->u.control_block.psqlda->sqln < 2)
+    {
+        error(2,pcmode->pos,"<CONTROL> Must have two fields defined.");
+        free(pcmode->u.control_block.psqlda);
+        return (1);
+    }
+    free(pcmode->u.control_block.psqlda);
+    xsid = sid++;
+    sid++;
+    sid++;
+    sid++;
+
+    /* Generate fixed structs and maps */
+    struct_in("LOADSTART", ' ', xsid, "NONE", NULL, NULL);
+    end_struct_in();
+
+    struct_in("LOADEND", ' ', xsid + 1, "NONE", NULL, NULL);
+    end_struct_in();
+
+    struct_in("TABLESTART", ' ', xsid + 2, "NONE", NULL, NULL);
+    struct_field_in("CHAR", &prec, &scale, "TNAME", NULL, NULL);
+    end_struct_in();
+
+    struct_in("TABLEEND", ' ', xsid + 3, "NONE", NULL, NULL);
+    struct_field_in("CHAR", &prec, &scale, "TNAME", NULL, NULL);
+    end_struct_in();
+
+    /*  Map to control message  */
+    map_in(REMOTE, "_C1_", pcmode->prev->u.channel_block.sid, xsid);
+    map_field_in(DLIT, vp);  /* "LS" */
+    map_field_in(DDFLT, vp); /* Default */
+    end_map_in();
+
+    map_in(REMOTE, "_C2_", pcmode->prev->u.channel_block.sid, xsid + 1);
+    strcpy(buff,"LE");
+    map_field_in(DLIT, vp);  /* "LE" */
+    map_field_in(DDFLT, vp); /* Default */
+    end_map_in();
+
+    map_in(REMOTE,"_C3_",pcmode->prev->u.channel_block.sid,xsid+2);
+    strcpy(buff,"TS");
+    map_field_in(DLIT,vp);   /* "TS" */
+    strcpy(buff,"TNAME");
+    map_field_in(DFLD,vp);   /*  Table name */
+    end_map_in();
+
+    map_in(REMOTE,"_C4_",pcmode->prev->u.channel_block.sid,xsid+3);
+    strcpy(buff,"TE");
+    map_field_in(DLIT,vp);   /* "TE" */
+    strcpy(buff,"TNAME");
+    map_field_in(DFLD,vp);   /*  Table name */
+    end_map_in();
+
+   return (1);
+}
+
+/*  <FILTER> tag  */
+int filter_p(mode_block_t * pcmode)
+{
+   pcmode->u.filter_block.sidA = sid++;
+   pcmode->u.filter_block.sidB = sid++;
+   pcmode->u.filter_block.sidD = sid++;
+   pcmode->u.filter_block.sidM = sid++;
+   pcmode->u.filter_block.sidU = sid++;
+   /***** Do not change the order of the following three   ******/
+   /***** as they determine the output order.              ******/
+   pcmode->u.filter_block.tidB = sid++;
+   pcmode->u.filter_block.tidAB = sid++;
+   pcmode->u.filter_block.tidA = sid++;
+   pcmode->u.filter_block.psqldat = NULL;
+   pcmode->u.filter_block.psqldad = NULL;
+   pcmode->u.filter_block.where = NULL;
+   pcmode->prev->u.channel_block.nfilters++;
+   pcmode->map_offset = 2;
+   return (1);
+}
+
+/*  </FILTER> tag  */
+int filter_e(mode_block_t * pcmode)
+{
+    where_t*    where;
+    where_t*    where2;
+    char*       clause;
+    char*       bigclause;
+    char*       server;
+    s_item*     pSTACK;
+    char*       pWORK;
+    int         scount;
+    int         wlen;
+    error_msg*  erm;
+
+    if (pcmode->u.filter_block.psqldad != NULL)
+    {
+        /* Delete map */
+        map_in(REMOTE,NULL,pcmode->u.filter_block.tidA,
+            pcmode->u.filter_block.sidD);
+        gen_links(pcmode->u.filter_block.psqldad,"D", pcmode->map_offset);
+        end_map_in();
+    }
+    free(pcmode->prev->u.filter_block.psqldad);
+    free(pcmode->prev->u.filter_block.psqldat);
+
+    /* Now sort out any where clauses.                  */
+    /* (Will not be any where clauses if no selections) */
+
+    while (pcmode->u.filter_block.where != NULL)
+    {
+        s_control_t * cctl = NULL;
+
+        where = pcmode->u.filter_block.where;
+        server = where->server;
+        clause = where->clause;
+
+        /* Find target control block */
+
+        if (server == NULL)
+        {
+            cctl = &psel->plist[nfile - 1];
+        }
+        else
+        {
+            dscb* cdscb;
+            int i;
+            for(i = 0; i < psel->nstream; i++)
+            {
+                cdscb = psel->pdscb + i; /* Department block */
+                if (strcmp(server,cdscb->dept) == 0) /* found */
+                {
+                    break;
+                }
+            }
+            if (i < psel->nstream)
+            {
+                cctl = &cdscb->plist[nfile - 1];
+            }
+        }
+
+        /* Gather up any other clauses for same server */
+
+
+        while (where->next != NULL)
+        {
+            if ((where->next->server == server) || /* Both NULL */
+                (strcmp(server,where->next->server) == 0))
+            {
+                /* Same server - combine the clauses */
+                bigclause = (char *) malloc(strlen(clause) +
+                    strlen(where->next->clause) + 10);
+                sprintf(bigclause,"(%s) AND (%s)",clause,
+                    where->next->clause);
+                free(clause);
+                clause = bigclause;
+                free(where->next->server);
+                free(where->next->clause);
+                where2 = where->next;
+                where->next = where->next->next;
+                free(where2);
+            }
+            where = where->next;
+        }
+
+        /* Now compile where clause */
+
+        erm = compile(clause,&pSTACK,&scount,&pWORK,&wlen);
+        free(clause);
+        free(server);
+
+        if (erm != NULL) /* Errors on compile */
+        {
+            error_msg * erm2;
+
+            while(erm != NULL)
+            {
+                erm2 = erm;
+                erm = erm->next;
+                free(erm2);
+            }
+        }
+        else
+        {
+            /* Clean compile */
+            if (cctl != NULL)
+            {
+                cctl->pSTACK = pSTACK;
+                cctl->pWORK = pWORK;
+                cctl->icount = scount;
+            }
+            else
+            {
+                free(pSTACK);
+                free(pWORK);
+            }
+        }
+        where = pcmode->u.filter_block.where;
+        pcmode->u.filter_block.where = where->next;
+        free(where);
+    }
+    return (1);
+}
+
+/*  <TABLE> tag  */
+int table_p(mode_block_t * pcmode)
+{
+    /* Name to filter level so available to BEFORE */
+    strcpy(pcmode->prev->u.filter_block.table_name,pcmode->data);
+    pcmode->u.table_block.psqlda =
+        (sqlda *) malloc(SQLDASIZE(0)); /* Empty SQLDA */
+    memcpy(pcmode->u.table_block.psqlda->sqldaid,"SQLDA    ",8);
+    pcmode->u.table_block.psqlda->sqldabc = SQLDASIZE(0);
+    pcmode->u.table_block.psqlda->sqln = 0; /* No of fields */
+    return (1);
+}
+
+/*  </TABLE> tag  */
+int table_e(mode_block_t * pcmode)
+{
+    s_control_t * tsc;
+
+    LOGENTRY
+    {
+        sprintf(log_buff, "Processing table %10.10s",
+            pcmode->prev->u.filter_block.table_name);
+        ENTRYOUT(log_buff);
+    }
+
+    if (pcmode->u.table_block.psqlda->sqln == 0) /* no fields - generate list */
+    {
+        sqlda * psqlda;
+
+        if ((psqlda = get_sqlda(pcmode->prev->u.filter_block.table_name))
+            == NULL)
+        {
+            char errm[100];
+
+            sprintf(errm,"Cannot find table %s.",
+                pcmode->prev->u.filter_block.table_name);
+            error(2,pcmode->pos,errm);
+            pcmode->prev->u.filter_block.psqldat =
+                pcmode->u.table_block.psqlda;
+            return (1);
+        }
+        free(pcmode->u.table_block.psqlda);
+        pcmode->u.table_block.psqlda = psqlda;
+    }
+
+    /* Create source structures (All the same) */
+
+    /* Add */
+    struct_in(
+        pcmode->data,
+        'A',
+        pcmode->prev->u.filter_block.sidA,
+        "PROP",
+        NULL,
+        NULL);
+    gen_fields(pcmode->u.table_block.psqlda);
+    pcS1 = end_struct_in();
+
+    if (psel->pdscb != NULL)
+    {
+        /* Caller doing selections - create required control blocks */
+        dscb * cdscb;
+        int i;
+
+        psel->plist = realloc(psel->plist,sizeof(s_control_t)* ++nfile);
+        psel->plist[nfile - 1].pSTRUCT = pcS1;
+        psel->plist[nfile - 1].pWORK = NULL;
+        psel->plist[nfile - 1].pSTACK = NULL;
+        psel->plist[nfile - 1].icount = 0;
+        for(i = 0;i < psel->nstream;i++)
+        {
+            cdscb = psel->pdscb + i;
+            cdscb->plist = realloc(cdscb->plist,
+                sizeof(s_control_t) * nfile);
+            cdscb->plist[nfile - 1].pSTRUCT = pcS1;
+            cdscb->plist[nfile - 1].pWORK = NULL;
+            cdscb->plist[nfile - 1].pSTACK = NULL;
+            cdscb->plist[nfile - 1].icount = 0;
+        }
+    }
+
+    /* Before */
+    struct_in(
+        pcmode->data,
+        'B',
+        pcmode->prev->u.filter_block.sidB,
+        "NONE",
+        NULL,
+        NULL);
+    end_struct_in();
+
+    /* Delete */
+    struct_in(
+        pcmode->data,
+        'D',
+        pcmode->prev->u.filter_block.sidD,
+        "NONE",
+        NULL,
+        NULL);
+    end_struct_in();
+
+    /* Multiple */
+    struct_in(
+        pcmode->data,
+        'M',
+        pcmode->prev->u.filter_block.sidM,
+        "NONE",
+        NULL,
+        NULL);
+    end_struct_in();
+
+    /* Update */
+    struct_in(
+        pcmode->data,
+        'U',
+        pcmode->prev->u.filter_block.sidU,
+        "NONE",
+        NULL,
+        NULL);
+    end_struct_in();
+
+    pcmode->prev->u.filter_block.psqldat = pcmode->u.table_block.psqlda;
+    return (1);
+}
+
+/*  <AFTER> tag  */
+int after_p(mode_block_t * pcmode)
+{
+    pcmode->u.table_block.psqlda =
+        (sqlda *) malloc(SQLDASIZE(0)); /* Empty SQLDA */
+    memcpy(pcmode->u.table_block.psqlda->sqldaid,"SQLDA    ",8);
+    pcmode->u.table_block.psqlda->sqldabc = SQLDASIZE(0);
+    pcmode->u.table_block.psqlda->sqln = 0; /* No of fields */
+    return (1);
+}
+
+/*  </AFTER> tag  */
+int after_e(mode_block_t * pcmode)
+{
+    vptr vp;
+    int i, j;
+    char char_fields = 'N';
+    char * cp;
+
+    sqlda * psqlda = pcmode->u.table_block.psqlda;
+    pcmode->map_offset = 2;
+    if (psqlda->sqln == 0)
+    {
+        /* No fields given - use details from original file */
+        free(pcmode->u.table_block.psqlda);
+        pcmode->u.table_block.psqlda = NULL;
+        psqlda = pcmode->prev->u.filter_block.psqldat;
+        pcmode->map_offset = 0;
+        pcmode->prev->map_offset = 0;
+        char_fields = 'Y';
+    }
+    pcmode->prev->u.filter_block.psqldad = psqlda;
+
+    /* General target structure */
+    struct_in(
+        pcmode->data,
+        ' ',
+        pcmode->prev->u.filter_block.tidA,
+        "REMOTE",
+        NULL,
+        NULL);
+
+    if(char_fields == 'Y')
+    {
+        gen_char_fields(psqlda);
+    }
+    else
+    {
+        gen_fields(psqlda);
+    }
+    end_struct_in();
+
+
+    /* Internal 'BEFORE' structure for comparisons */
+    cp = malloc(strlen(pcmode->data) + 2);
+    strcpy(cp, pcmode->data);
+    strcat(cp, "_");  /*  Name of message + '_'  */
+    struct_in(
+        cp,
+        ' ',
+        pcmode->prev->u.filter_block.tidAB,
+        "BEFORE_R",
+        NULL,
+        NULL);
+    free(cp);
+
+    if (char_fields == 'Y')
+    {
+        gen_char_fields(psqlda);
+    }
+    else
+    {
+        gen_fields(psqlda);
+    }
+    end_struct_in();
+
+    /* Now do main maps */
+
+    /* Add */
+    cp = malloc(strlen(pcmode->prev->u.filter_block.table_name) + 4);
+    strcpy(cp,pcmode->prev->u.filter_block.table_name);
+    map_in(REMOTE,cp,pcmode->prev->u.filter_block.tidA,
+        pcmode->prev->u.filter_block.sidA);
+    gen_links(psqlda,"I",pcmode->map_offset);
+    end_map_in();
+
+    /* Internal before */
+    strcat(cp,"_");
+    map_in(REMOTE,cp,pcmode->prev->u.filter_block.tidAB,
+        pcmode->prev->u.filter_block.sidB);
+    gen_links(psqlda,"A",pcmode->map_offset);
+    end_map_in();
+
+    /* Update */
+    map_in(REMOTE,cp,pcmode->prev->u.filter_block.tidA,
+        pcmode->prev->u.filter_block.sidU);
+    gen_links(psqlda,"A", pcmode->map_offset);
+    end_map_in();
+
+    /* Multiple */
+    strcat(cp,"_");
+    map_in(REMOTE,cp,pcmode->prev->u.filter_block.tidA,
+        pcmode->prev->u.filter_block.sidM);
+    gen_links(psqlda,"I", pcmode->map_offset);
+    end_map_in();
+
+    free(cp);
+    return (1);
+}
+
+/*  <BEFORE> tag  */
+int before_p(mode_block_t * pcmode)
+{
+    pcmode->u.table_block.psqlda =
+        (sqlda *) malloc(SQLDASIZE(0)); /* Empty SQLDA */
+    memcpy(pcmode->u.table_block.psqlda->sqldaid,"SQLDA    ",8);
+    pcmode->u.table_block.psqlda->sqldabc = SQLDASIZE(0);
+    pcmode->u.table_block.psqlda->sqln = 0; /* No of fields */
+    return (1);
+}
+
+/*  </BEFORE> tag  */
+int before_e(mode_block_t * pcmode)
+{
+    char char_fields = 'N';
+    char * cp;
+    int j;
+
+    sqlda * psqlda = pcmode->u.table_block.psqlda;
+
+    pcmode->map_offset = 2;
+    if (psqlda->sqln == 0)
+    {
+        /* No fields given - use details from original file */
+        free(pcmode->u.table_block.psqlda);
+        pcmode->u.table_block.psqlda = NULL;
+        psqlda = pcmode->prev->u.filter_block.psqldat;
+        char_fields = 'Y';
+        pcmode->map_offset = 0;
+    }
+    struct_in(
+        pcmode->data,
+        ' ',
+        pcmode->prev->u.filter_block.tidB,
+        "X_BEFORE",
+        NULL,
+        NULL);
+
+    if (char_fields == 'Y')
+    {
+        gen_char_fields(psqlda);
+    }
+    else
+    {
+        gen_fields(psqlda);
+    }
+    end_struct_in();
+
+    /* Now do map */
+    cp = malloc(strlen(pcmode->prev->u.filter_block.table_name) + 2);
+    strcpy(cp,pcmode->prev->u.filter_block.table_name);
+    strcat(cp,"_");
+    map_in(REMOTE,cp,pcmode->prev->u.filter_block.tidB,
+        pcmode->prev->u.filter_block.sidB);
+    free(cp);
+    gen_links(psqlda,"B", pcmode->map_offset);
+    end_map_in();
+    free(pcmode->u.table_block.psqlda);
+
+    /* Delete map */
+    map_in(REMOTE,NULL,pcmode->prev->u.filter_block.tidB,
+        pcmode->prev->u.filter_block.sidD);
+    gen_links(psqlda,"D",pcmode->map_offset);
+    end_map_in();
+    if (pcmode->prev->u.filter_block.psqldad ==
+        pcmode->prev->u.filter_block.psqldat)
+    {
+        pcmode->prev->u.filter_block.psqldat = NULL;
+    }
+    free(pcmode->prev->u.filter_block.psqldad);
+    pcmode->prev->u.filter_block.psqldad = NULL;
+    return (1);
+}
+
+/*  <FIELD> tag  */
+int field_p(mode_block_t * pcmode)
+{
+    pcmode->prev->u.table_block.psqlda->sqln++;
+    pcmode->u.field_block.type = ' ';
+    pcmode->u.field_block.prec = 0;
+    pcmode->u.field_block.scale = 0;
+    return (1);
+}
+
+/* </FIELD> tag  */
+static int fldno;
+int field_e(mode_block_t * pcmode)
+{
+    int i,j;
+
+    if (pcmode->u.field_block.type == ' ')
+    {
+        return 1;/* Have error */
+    }
+    if (pcmode->u.field_block.prec == 0) /* No length */
+    {
+        if (pcmode->u.field_block.type == 'C')
+        {
+            pcmode->u.field_block.prec = 1; /* Default to 1 */
+        }
+        else
+        {
+            if ((pcmode->u.field_block.type == 'P') ||
+                (pcmode->u.field_block.type == 'Z') ||
+                (pcmode->u.field_block.type == 'V'))
+            {
+                char errm[100];
+
+                sprintf(errm,"Length must be supplied with type %c.",
+                    pcmode->u.field_block.type);
+                error(2,pcmode->pos,errm);
+                return (1);
+            }
+        }
+    }
+
+    /* Extend 'sqlda' to include this field */
+
+/*  Macro to shorten following code  */
+#define SQLVAR pcmode->prev->u.table_block.psqlda->sqlvar[i - 1]
+
+    i = pcmode->prev->u.table_block.psqlda->sqln;
+    pcmode->prev->u.table_block.psqlda =
+        realloc(pcmode->prev->u.table_block.psqlda,SQLDASIZE(i));
+    SQLVAR.sqllen = pcmode->u.field_block.prec;
+    switch (fldno)
+    {
+    case 0: /* Character */
+        SQLVAR.sqltype = 452;
+        break;
+    case 1: /* Packed */
+        SQLVAR.sqltype = 484;
+        SQLVAR.sqllen = pcmode->u.field_block.prec * 256
+            + pcmode->u.field_block.scale;
+        break;
+    case 2: /* Zoned */
+        SQLVAR.sqltype = 488;
+        SQLVAR.sqllen = pcmode->u.field_block.prec * 256
+            + pcmode->u.field_block.scale;
+        break;
+    case 3: /* Double */
+    case 4: /* Float */
+        SQLVAR.sqltype = 480;
+        break;
+    case 5: /* Long */
+        SQLVAR.sqltype = 496;
+        break;
+    case 6: /* Short */
+        SQLVAR.sqltype = 500;
+        break;
+    case 7: /* Varchar */
+        if(SQLVAR.sqllen < 6000)
+            SQLVAR.sqltype = 448;
+        else SQLVAR.sqltype = 456;
+        break;
+   }
+    strcpy(SQLVAR.sqlname.data,pcmode->data);
+    SQLVAR.sqlname.length = strlen(pcmode->data);
+#undef SQLVAR
+   return (1);
+}
+
+/*  <WHERE> tag  */
+int where_p(mode_block_t * pcmode)
+{
+    pcmode->u.where_block.env = NULL;
+    pcmode->u.where_block.server = NULL;
+    pcmode->u.where_block.clause = NULL;
+    return (1);
+}
+
+/*  </WHERE> tag  */
+int where_e(mode_block_t * pcmode)
+{
+    where_t * where;
+
+    if (psel->pdscb == NULL)
+    {
+        return 1;
+    }
+
+    /* Issue warning if block empty */
+
+    if ((pcmode->u.where_block.server == NULL) &&
+        (pcmode->u.where_block.env == NULL) &&
+        (pcmode->u.where_block.clause == NULL))
+    {
+        error(1,pcmode->pos,"Empty where block ignored.");
+        return (1);
+    }
+
+    /* Error if no clause */
+
+    if (pcmode->u.where_block.clause == NULL)
+    {
+        error(2,pcmode->pos,"A clause is required in where block.");
+        free(pcmode->u.where_block.env);
+        free(pcmode->u.where_block.server);
+        return (1);
+    }
+
+    /* If environment given, ignore if not a match */
+
+    if (pcmode->u.where_block.env != NULL)
+    {
+        int i,j;
+
+        j = strlen(env);
+        for(i = 0;i < j;i++)
+        {
+            if (toupper(*(env + i)) !=
+                toupper(*(pcmode->u.where_block.env + i)))
+            {
+                /* Not for callers unit */
+                free(pcmode->u.where_block.env);
+                free(pcmode->u.where_block.server);
+                free(pcmode->u.where_block.clause);
+                return (1);
+            }
+        }
+    }
+    free(pcmode->u.where_block.env); /* No longer required */
+    /* Save all info until end of filter */
+
+    where = (where_t *) malloc(sizeof(where_t));
+    where->server = pcmode->u.where_block.server;
+    where->clause = pcmode->u.where_block.clause;
+    where->next = pcmode->prev->u.filter_block.where;
+    pcmode->prev->u.filter_block.where = where;
+    return (1);
+}
+
+/*  <CLAUSE>  tag  */
+int clause_p(mode_block_t * pcmode)
+{
+    s_item*     pSTACK;
+    char*       pWORK;
+    error_msg*  erm;
+    int         scount;
+    int         wlen;
+
+    if (psel->pdscb == NULL)
+    {
+        return (1);
+    }
+
+    if (pcmode->prev->u.where_block.clause != NULL)
+    {
+        error(2,pcmode->pos,"Cannot have more than one clause within"
+            " a <WHERE> block.");
+        return (1);
+    }
+
+    /* Error checking compile */
+    erm = compile(pcmode->data,&pSTACK,&scount,&pWORK,&wlen);
+    if (erm != NULL) /* Errors on compile */
+    {
+        error_msg * erm2;
+
+        while(erm != NULL)
+        {
+            error(2,pcmode->pos + erm->offset,erm->text);
+            erm2 = erm;
+            erm = erm->next;
+            free(erm2);
+        }
+    }
+    free(pSTACK);
+    free(pWORK);
+    pcmode->prev->u.where_block.clause = pcmode->data;
+    pcmode->data = NULL;
+    return (1);
+}
+
+/*  </CLAUSE>  tag  */
+int clause_e(mode_block_t * pcmode)
+{
+   return (1);
+}
+
+int none_p(mode_block_t * pcmode)
+{
+   return (1);
+}
+int none_e(mode_block_t * pcmode)
+{
+   return (1);
+}
+
+/*  <TYPE>  tag */
+int type_p(mode_block_t * pcmode)
+{
+    if (pcmode->prev->details->id == FIELD_)  /*  Either part of FIELD */
+    {
+        fldno = 0;
+        if ((*pcmode->data == 'A') ||
+            (*pcmode->data == 'P') ||
+            (*pcmode->data == 'Z') ||
+            (*pcmode->data == 'D') ||
+            (*pcmode->data == 'F') ||
+            (*pcmode->data == 'L') ||
+            (*pcmode->data == 'V'))
+        {
+            pcmode->prev->u.field_block.type = *pcmode->data;
+            while (*(fldtype + fldno) != pcmode->prev->u.field_block.type)
+                fldno++;
+        }
+        else
+        {
+            char errm[100];
+
+            sprintf(errm,"Field type %1.30s not known.",pcmode->data);
+            error(2,pcmode->pos,errm);
+        }
+    }
+    else                                    /*  Or part of FILTER */
+    {
+        if ((strcmp(pcmode->data,"C") != 0) &&
+            (strcmp(pcmode->data,"B") != 0))
+        {
+            char errm[100];
+
+            error(2,pcmode->pos,"Type must be C or B.");
+        }
+    }
+    return (1);
+}
+
+/*  <TYPE>  tag */
+int length_p(mode_block_t * pcmode)
+{
+    char * cp;
+
+    if (pcmode->prev->u.field_block.type == ' ')
+    {
+        return 1;
+    }
+
+    if (*(pcmode->data) == 0)
+    {
+        if (*(fldlength + fldno) > 0) return (1);/* Implicit length */
+        else
+        {
+            char errm[100];
+
+            sprintf(errm,"Type '%c' requires a length.",
+                pcmode->prev->u.field_block.type);
+            error(2,pcmode->pos,errm);
+            return (1);
+        }
+    }
+    cp = pcmode->data;
+    pcmode->prev->u.field_block.prec = getint(&cp);
+    if (OP_OK == 0)
+    {
+        char errm[100];
+
+        if (*cp == ',')
+            sprintf(errm,"Precision must be given in length.");
+        else sprintf(errm,"Unexpected character %c in length.",
+            *cp);
+        error(2,pcmode->pos,errm);
+        return (1);
+    }
+    if (*(fldlength + fldno) > 0)
+    {
+        /* Explicit length must be correct for type */
+
+        if (*(fldlength + fldno) != pcmode->prev->u.field_block.prec)
+        {
+            char errm[100];
+
+            sprintf(errm,"Length must be %u for type %c.",*(fldlength +
+                fldno),
+                pcmode->prev->u.field_block.type);
+            error(2,pcmode->pos,errm);
+        }
+    }
+    else
+    {
+        if (pcmode->prev->u.field_block.prec > *(maxprec + fldno))
+        {
+            error(2,pcmode->pos,"Length too large for type.");
+        }
+    }
+    if (*cp == 0) return (1);
+
+   /* Have scale as well */
+
+    if (*(fldlength + fldno) != -1) /* Not packed or zoned */
+    {
+        error(2,pcmode->pos,"Precision only valid with P and Z types.");
+        return (1);
+    }
+    cp++; /* Bypass ',' */
+    pcmode->prev->u.field_block.scale = getint(&cp);
+    if (OP_OK == 0)
+    {
+        char errm[100];
+
+        sprintf(errm,"Unexpected character %c in scale.",
+            *cp);
+        error(2,pcmode->pos,errm);
+        return (1);
+    }
+    if (pcmode->prev->u.field_block.scale > *(maxscale + fldno))
+    {
+        error(2,pcmode->pos,"Scale too large for type.");
+    }
+    if (*cp != 0)
+    {
+        char errm[100];
+
+        sprintf(errm,"Unexpected character %c following scale.",
+            *cp);
+        error(2,pcmode->pos,errm);
+        return (1);
+    }
+    return (1);
+}
+
+/*  <ENV> tag  */
+int env_p(mode_block_t * pcmode)
+{
+    if (psel->pdscb == NULL) return (1);
+
+    if (pcmode->prev->u.where_block.env != NULL)
+    {
+        error(2,pcmode->pos,"Cannot specify more than one environment"
+            " within a <WHERE> block.");
+        return (1);
+    }
+    pcmode->prev->u.where_block.env = pcmode->data;
+    pcmode->data = NULL;
+    return (1);
+}
+
+/*  <SERVER> tag  */
+int server_p(mode_block_t * pcmode)
+{
+    if (psel->pdscb == NULL) return (1);
+    if (pcmode->prev->u.where_block.server != NULL)
+    {
+        error(2,pcmode->pos,"Cannot specify more than one server"
+            " within a <WHERE> block.");
+        return (1);
+    }
+    pcmode->prev->u.where_block.server = pcmode->data;
+    pcmode->data = NULL;
+    return (1);
+}
+
+/* Look for a tag in the file */
+
+/* Format is <£' ']£/]symbol£' ']> */
+char * find_tag(int * ptag,int * pnext)
+{
+    static char tag[20];
+    int cpos,tpos;
+    char c;
+
+    cpos = *ptag;
+    do
+    {
+        int i = 0;
+
+        tpos = cpos = Fchr(cpos,'<');    /* Find < */
+        if (cpos == -1)
+        {
+            strcpy (tag,"/NONE");
+            *ptag = *pnext = Flen();
+            return tag;
+        }
+        do tpos++; while ((*tag = Fgetc(tpos)) == ' ');/* Skip blanks */
+        if (*tag == '/')
+        {
+            do tpos++; while ((*(tag + 1) = Fgetc(tpos)) == ' ');
+            i++;
+        }
+        if (!isalpha(*(tag + i)) && (*(tag + i) != '_'))
+        {
+            cpos++;
+            continue;
+        }
+        do
+        {
+            i++;
+            tpos++;
+            *(tag + i) = Fgetc(tpos);
+        }
+        /* While symbol character and not too long */
+        while ( ( isalnum(*(tag + i))
+            ||
+            (*(tag + i) == '_')
+            )
+            &&
+            (  (i < 18)
+            ||
+            (  (i == 18)
+            &&
+            (*tag == '/')
+            )
+            )
+            );
+        if (isalnum(*(tag + i)) || (*(tag + i) == '_'))
+        {
+            /* Overlength symbol */
+            cpos++;
+            continue;
+        }
+        c = *(tag + i);
+        *(tag + i) = 0; /* terminate string */
+        while (c == ' ')
+        {
+            tpos++;
+            c = Fgetc(tpos); /* Skip trailing blanks */
+        }
+        if (c != '>')
+        {
+            cpos++;
+            continue;
+        }
+
+        /* Have a validly formatted tag */
+        *ptag = cpos;
+        *pnext = tpos+1;
+        return tag;
+    } while (1);
+}
+
+int process_tag(tag_details * td,int end_tag,int tpos)
+{
+    int i,j;
+    mode_block_t * tm = NULL;
+
+
+    if (end_tag == 1)
+    {
+        tag_details * td2;
+
+        /* End of a group */
+
+        /* Ensure end tag within the right heirarchy */
+
+        if (pmode->details->type == SIMPLE) tm = pmode->prev;
+        else tm = pmode;
+        while ((tm != NULL) && (tm->details != td))
+            tm = tm->prev;
+        if (tm == NULL)
+        {
+            char errm[100];
+
+            sprintf(errm,"End tag </%s> not valid here.",td->string);
+            error(2,tpos,errm);
+            return (0);
+        }
+
+        /* Force any missing end processing */
+
+        if (pmode->details->type == SIMPLE)
+        {
+            tm = pmode;
+            pmode = tm->prev;
+            free(tm->data);
+            free(tm);
+        }
+        do
+        {
+            tm = pmode;
+            pmode = tm->prev;
+            (*tm->details->end_process) (tm);
+            td2 = tm->details;
+            if (td2 != td)
+            {
+                char errm[100];
+
+                sprintf(errm,"Missing </%s>.",td2->string);
+                error(1,tpos,errm);
+            }
+            free(tm->data);
+            free(tm);
+        } while (td2 != td);
+        return (0);
+    }
+
+    /* A normal tag */
+
+    /* Ensure this tag is allowed at this point */
+
+    tm = pmode;
+    if (tm->details->type == SIMPLE) tm = tm->prev;
+    i = 0;
+    while (*(tm->details->allowed + i) != NONE)
+    {
+        if (*(tm->details->allowed + i) == td->id) break;
+        i++;
+    }
+    if (*(tm->details->allowed + i) == NONE) /* Not in list */
+    {
+        char errm[100];
+
+        sprintf (errm,"Tag <%s> not allowed within <%s>.",
+            td->string,tm->details->string);
+        error(2,tpos,errm);
+        error(0,tpos,"Compilation aborted.");
+        return (error_count);
+    }
+
+    /* Ensure that sequence of tag is ok */
+
+    /* First make sure any previous required tags are there */
+
+    for (j = i-1;j >= 0;j--)
+    {
+        char errm[100];
+
+        if (*(tm->ccount + j) >= *(tm->details->min + j))
+        {
+            if (*(tm->ccount + j) > 0) break;
+            continue;
+        }
+        sprintf(errm,"<%s> missing before <%s>.",
+            id_details(*(tm->details->allowed + j))->string,
+            td->string);
+        error(2,tpos,errm);
+        break;
+    }
+
+    /* Too many of this type ? */
+
+    if ((*(tm->ccount + i) >= *(tm->details->max + i)) &&
+        (*(tm->details->max + i) != -1))
+    {
+        char errm[100];
+
+        sprintf(errm,"Too many <%s> tags.",td->string);
+        error(2,tpos,errm);
+    }
+
+    tm->ccount[i]++; /* Bump count regardless */
+
+    /* This one out of sequence ? */
+
+    i++;
+    while (*(tm->details->allowed + i) != NONE)
+    {
+        if (*(tm->ccount + i) > 0)
+        {
+            char errm[100];
+
+            sprintf(errm,"<%s> should appear before <%s>.",td->string,
+                id_details(*(tm->details->allowed + i))->string);
+            error(2,tpos,errm);
+            break;
+        }
+        i++;
+    }
+
+    if (pmode->details->type == COMPOUND)
+    {
+        /* Go up a level if previous mode was compound */
+
+        tm = (mode_block_t *) malloc(sizeof(mode_block_t));
+        tm->prev = pmode;
+        pmode = tm;
+    }
+    else
+    {
+        free(pmode->data);
+    }
+    pmode->details = td;
+    pmode->init = 'N';
+    pmode->data = NULL;
+    memset (pmode->ccount,0,sizeof(pmode->ccount));
+    return 0;
+}
+
+void process_data(char * cp)
+{
+    pmode->data = cp;
+    (*pmode->details->process) (pmode);
+}
+
+int _init_selection(char * product,  /* Mapping script file name */
+                    char * unit,           /* Unit */
+                    char * process,
+                    tinit_t ptinit,        /* Target initialisation fn */
+                    void * puser,          /* Source to target info */
+                    selcb * tsel
+                    )
+{
+    int cpos = 0;
+    int resume = 0;
+    int tpos1;
+    int tpos2;
+    int i;
+    char * cp;
+    int prec = 18;
+    int scale = 0;
+
+    psel = tsel;
+    sprintf(filename,"MDBASCRIPT(%s)",product);
+    master = psel->master = new_master(psel->nstream,process);
+    master->max_map_msg = 1024;
+    env = unit;
+
+    /* Open callers script file */
+
+    if (Fopen(filename) == NULL)
+    {
+        char errm[100];
+
+        sprintf(errm,"Could not open %s",filename);
+        error(2,-1,errm);
+    }
+    else
+    {
+
+/********* Start of 169380                                 */
+/*******master->dec = ','; /* Set decimal separator */
+        RTVDECSEP(&master->dec); /* Set decimal separator */
+/********* End   of 169380                                 */
+        script_in(master);
+        usertypes_in();
+        end_usertypes_in();
+        classes_in();
+        class_def_in(0,"NONE");
+        class_def_in(1,"SYSTEM");
+        class_def_in(2,"PROP");
+        class_def_in(3,"BEFORE");
+        class_def_in(4,"REMOTE");
+        class_def_in(5,"X_BEFORE");
+        class_def_in(6,"BEFORE_R");
+        end_classes_in();
+
+        struct_in("_RSYSTEM",' ',1,"SYSTEM",NULL,NULL);
+        struct_field_in("CHAR",&p18,&s0,"__TNAME",NULL,NULL);
+        end_struct_in();
+
+        /* Set up starting 'NONE' mode */
+
+        pmode = (mode_block_t *) malloc(sizeof(mode_block_t));
+        pmode->details = find_details("NONE");
+        pmode->data = NULL;
+        memset (pmode->ccount,0,sizeof(pmode->ccount));
+        pmode->prev = NULL;
+        pmode->init = 'Y';
+
+        /* Look for tag or end of script */
+
+        do
+        {
+            tag_details * td;
+            int i,j;
+            char end_tag = 0;
+
+            if (resume != 0) tpos1 = resume;
+            else tpos1 = cpos;
+            resume = 0;
+            cp = find_tag(&tpos1,&tpos2);
+            if ((td = find_details(cp)) == NULL)
+            {
+                char errm[100];
+                sprintf(errm,"Possible tag <%s> encountered in script.",cp);
+                error(0,tpos1,errm);
+                resume = tpos2;
+                continue;
+            }
+            if (*cp == '/') end_tag = 1;
+            if ((end_tag == 1) && (td->type == SIMPLE))
+            {
+                char errm[100];
+
+                if (pmode->details == td)
+                {
+                    sprintf(errm,"End tag <%s> not required and ignored.",
+                        cp);
+                    error(0,tpos1,errm);
+                }
+                else
+                {
+                    sprintf(errm,"End tag <%s> invalid and ignored.",
+                        cp);
+                    error(1,tpos1,errm);
+                }
+                td = NULL;
+            }
+
+            /* Get inter-tag data */
+
+            spos = cpos;
+            while (Fgetc(spos) == ' ') spos++; /* first non-blank */
+            i = tpos1 - 1;
+            while ((i >= 0) && (Fgetc(i) == ' ')) i--; /* last non-blank */
+            if (i < spos) i = 1;
+            else i = i - spos + 2;
+            cp = (char *) malloc(i);
+            Fncpy(cp,spos,i-1);
+            pmode->pos = spos;
+            *(cp + i - 1) = 0; /* Set end of string */
+
+            /* Call processing for current tag */
+
+            if (pmode->init == 'N') process_data(cp);
+            else if (i > 1)
+            {
+                char errm[100];
+
+                sprintf (errm,"Unexpected data \"%1.30s\" ignored.",cp);
+                error(1,spos,errm);
+                free(cp);
+            };
+            pmode->init = 'Y';
+            cpos = tpos2;
+
+            /* Now sort out next tag */
+
+            if (td != NULL)
+            {
+                if ((i = process_tag(td,end_tag,tpos1)) != 0) break;
+            }
+
+            /* Check for end */
+
+            if ((td != NULL) && (td->id == NONE))
+            {
+                end_script_in();
+                Fclose();
+                break;
+            }
+
+        } while (1);
+    }
+    if (error_count > 0) return(error_count);
+    master->sysbuff = malloc(STRUCT1(0).maxlen);
+    master->intbuff = malloc(STRUCT1(1).maxlen);
+    ncode(master,process);
+
+    if (ptinit != NULL)
+        (*ptinit)(master,psel->nstream,puser);
+    return(error_count);
+}
+
+Master * minit(char * product,    /* Mapping script file name */
+               char * env,
+               char * process,
+               tinit_t ptinit,        /* Target initialisation fn */
+               unsigned short streams,/* Streams to maintain */
+               void * puser           /* Source to target info */
+               )
+{
+    selcb tsel;
+
+    tsel.master = NULL;
+    tsel.nstream = streams;
+    tsel.pdscb = NULL;
+    tsel.plist = NULL;
+    _init_selection(product,env,process,ptinit,puser,&tsel);
+
+    return tsel.master;
+}
+
+void FillInHeader(Master *mast, char *struct_id, char *prod_id, char *data)
+{
+    char *pchr;
+    short nLength = (mast->dholen - 74) / 2;
+
+    memset(data, ' ', mast->dholen);
+    pchr = strchr(struct_id, '\\');
+    if (pchr != NULL)
+    {
+        memcpy(data, struct_id,
+            (pchr - struct_id) < nLength ? (pchr - struct_id) : nLength);
+        memcpy(data + mast->dholen - 30, pchr, strlen(pchr));
+    }
+    else
+    {
+        memcpy(data, struct_id, strlen(struct_id) < nLength ? strlen(struct_id) : nLength);
+    }
+    data[mast->dholen - 2] = 'A';
+    data[mast->dholen - 1] = 'A';
+    memcpy(data + 8 + (2 * nLength), prod_id, strlen(prod_id));
+    if (is_EQUATION() > 0)
+    {
+        memcpy(data + nLength, "EQUATION", 8);
+    }
+    else
+    {
+        memcpy(data + nLength, "MIDAS", 5);
+    }
+    memcpy(data + mast->dholen - 38, "MERIDIAN", 8);
+}

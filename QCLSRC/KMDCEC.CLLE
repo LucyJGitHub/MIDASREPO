@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDCEC                                       */
+/*          Program Title - Check environment linkage                    */
+/*          Creation Date - 22/08/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  Called to check the X7 library exists and contains an X7PF. Then     */
+/*  use this to X7 to check environment exists.                          */
+/*      Returns 'Y' if everything OK                                     */
+/*              'L' if library does not exist                            */
+/*              'X' if X7PF does not exist in library                    */
+/*              'E' if environment does not exist                        */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*  12Dec21         MD058809      MQ9 Compatibility Patch Fix            */
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+             PGM        PARM(&LIB &ENV &FLAG)
+
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENV) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&KEY) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PLB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUB) TYPE(*DEC) LEN(3 0)
+
+             CHGVAR     VAR(&FLAG) VALUE('L')
+             CHKOBJ     OBJ(&LIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(RETURN)
+
+             CHGVAR     VAR(&FLAG) VALUE('X')
+             CHKOBJ     OBJ(&LIB/X7PF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(RETURN)
+
+             CHGVAR     VAR(&FLAG) VALUE('E')
+
+             OVRDBF     FILE(X7PF) TOFILE(&LIB/X7PF) MBR(X7PF)
+             CHGVAR     VAR(&KEY) VALUE(3) /* program library */
+             CALL       PGM(KMDI2C) PARM(&KEY &PGM &PLB &SUB)
+             IF         COND(&PLB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&PLB) VALUE(&LIB))
+             IF         COND(&SUB *EQ 0) THEN(CALL PGM(&PLB/&PGM) +
+                          PARM(&ENV &PGMLIB))
+             ELSE       CMD(CALL PGM(&PLB/&PGM) PARM(&SUB &ENV +
+                          &PGMLIB))
+             IF         COND(&PGMLIB *EQ ' ') THEN(RETURN)
+
+             CHGVAR     VAR(&FLAG) VALUE('Y')
+             ENDPGM

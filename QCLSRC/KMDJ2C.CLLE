@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDJ2C                                       */
+/*          Program Title - Check files are journalled consistently      */
+/*          Creation Date - 22/10/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  Reads file created by KMDJ1C and checks all entries have the correct */
+/*  journal details                                                      */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*  12Dec21         MD058809      MQ9 Compatibility Patch Fix            */
+/*-----------------------------------------------------------------------*/
+             PGM        PARM(&JRNNAM)
+             DCL        VAR(&JRNNAM) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&FIRST) TYPE(*CHAR) LEN(1) VALUE('1')
+
+             DCL        VAR(&OLDFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDJRNL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OLDJRNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDJRLB) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(QAFDPHY)
+
+             OVRDBF     FILE(QAFDPHY) TOFILE(QTEMP/QAFDPHY)
+
+ LP:         RCVF
+             MONMSG     MSGID(CPF0000) EXEC(RETURN)
+             IF         COND(&PHJRNL *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&PHJRLB) VALUE(' ')
+                CHGVAR     VAR(&PHJRNM) VALUE(' ')
+                ENDDO
+             IF         COND(&FIRST *EQ '1') THEN(DO)
+                CHGVAR     VAR(&FIRST) VALUE('0')
+                ENDDO
+             ELSE       CMD(DO)
+                IF         COND((&PHJRNL *NE &OLDJRNL) *OR (&PHJRNM *NE +
+                             &OLDJRNM) *OR (&PHJRLB *NE &OLDJRLB)) +
+                             THEN(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                                MSGDTA('Journalling is inconsistent. ' +
+                                *CAT &OLDFILE *TCAT ',' *TCAT &OLDJRNL +
+                                *TCAT ',' *TCAT &OLDJRLB *TCAT '/' *TCAT +
+                                &OLDJRNM *BCAT '-' *BCAT &PHFILE *TCAT +
+                                ',' *TCAT &PHJRNL *TCAT ',' *TCAT &PHJRLB +
+                                *TCAT '/' *TCAT &PHJRNM) MSGTYPE(*ESCAPE)
+                   ENDDO
+                ENDDO
+
+             CHGVAR     VAR(&OLDFILE) VALUE(&PHFILE)
+             CHGVAR     VAR(&OLDJRNL) VALUE(&PHJRNL)
+             CHGVAR     VAR(&OLDJRNM) VALUE(&PHJRNM)
+             CHGVAR     VAR(&OLDJRLB) VALUE(&PHJRLB)
+             GOTO       CMDLBL(LP)
+
+             ENDPGM

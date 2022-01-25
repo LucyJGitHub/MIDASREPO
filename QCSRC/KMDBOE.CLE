@@ -1,0 +1,643 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+#include <decimal.h>
+#include <recio.h>
+#include <ctype.h>
+#include <xxdtaa.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "kmdarh.h"
+#include "kmdmph.h"
+#include "kmdboh.h"
+#include "kmduth.h"
+#include "kmdfeh.h"
+#include "kmdcfh.h"
+
+static initialised = 0;
+static char this_unit[3] = "   ";
+static char errbuf[132];
+
+/* Control entries for dynamic program calls */
+
+/* Program vector entry */
+
+typedef struct {
+    decimal(3,0) call_no;      /* Routine number */
+    char program[10];          /* Program to call */
+    char library[10];          /* Program library */
+    decimal(3,0) sub_call_no;  /* Sub call within program */
+} program_entry;
+
+/* Unit entry */
+
+typedef struct {
+    program_entry * plist;
+    char unit[3];
+    char library[10];
+} unit_entry;
+
+static program_entry program_entry_init_struct = {0,"","",0};
+ahSTRUCT(progent,program_entry);
+static program_entry ptemp;
+
+static unit_entry unit_entry_init_struct = {NULL,"",""};
+ahSTRUCT(uent,unit_entry);
+
+static cuent = 0;
+
+#define CALL (uent.u.pArray[cuent].plist[callno])
+void * KMDBOR(char *,decimal(3,0) *,void *,void *,void *,void *,
+                 void *,void *,void *,void *,void *,void *);
+static decimal (3,0) D0 = 0;
+static decimal (3,0) D1 = 1;
+static decimal (3,0) D2 = 2;
+static decimal (3,0) D3 = 3;
+static decimal (3,0) D4 = 4;
+static decimal (3,0) D5 = 5;
+static decimal (3,0) D6 = 6;
+static decimal (3,0) D7 = 7;
+static decimal (3,0) D8 = 8;
+static decimal (3,0) D9 = 9;
+static decimal (3,0) D10 = 10;
+#define N1 NULL
+#define N2 NULL,NULL
+#define N3 NULL,NULL,NULL
+#define N4 NULL,NULL,NULL,NULL
+#define N5 NULL,NULL,NULL,NULL,NULL
+#define N6 NULL,NULL,NULL,NULL,NULL,NULL
+#define N7 NULL,NULL,NULL,NULL,NULL,NULL,NULL
+#define N8 NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+#define N9 NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+#define N10 NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+
+/* Convert 10 char blank fill field to null terminated */
+
+static char * z10(char * c10)
+{
+    static char az[4][11];
+    static int x = 3;
+    static char none[] = "";
+    int i = 0;
+
+    if (c10 == NULL)
+    {
+        return none;
+    }
+    x = (x + 1) %4;
+    for (i = 0;(i < 10) && (*(c10 + i) != ' ');i++)
+    {
+        *(*(az + x) + i) = *(c10 + i);
+    }
+    *(*(az + x) + i) = 0;
+    return *(az + x);
+}
+
+/* Change a symbol 10 character blank padded                    */
+/* Rotates buffers to allow multiple calls in parameters.       */
+/* Also converts to upper case                                  */
+
+#define issymc(x) (isalnum(x) || (x=='$') || (x=='#') || (x=='_') || \
+                                 (x=='@'))
+
+static char * c10(char * data)
+{
+    static char ca[4][10];
+    static int x = 3;
+    int i = 0;
+
+    if (data == NULL)
+    {
+        return NULL;
+    }
+    x = (x + 1) % 4;
+    while ((issymc(*(data+i))) && (i < 10))
+    {
+        *(ca[x] + i) = toupper(*(data + i));
+        i++;
+    }
+    while (i < 10)
+    {
+        *(ca[x] + i++) = ' ';
+    }
+    return ca[x];
+}
+
+/* Set up qualifiled program name */
+
+static char *QualName(int callno)
+{
+    static char qname[22] = "                     ";
+
+    /* Re-initialise to blanks */
+    memset(qname, ' ', 21);
+
+    if (*CALL.program == ' ')
+    {
+        strcpy(qname,"*INSTLIB");
+    }
+    else
+    {
+        strcpy(qname,z10(CALL.library));
+    }
+    if (strcmp(qname,"*INSTLIB") == 0)
+    {
+        strcpy(qname,z10(uent.u.pArray[cuent].library));
+    }
+    strcat(qname,"/");
+    strcat(qname,z10(CALL.program));
+    *(qname + strlen(qname)) = ' ';
+    return qname;
+}
+
+/* Initialisation of X7PF*/
+
+static void Init_X7(char * unit,char * library)
+{
+    _RFILE * x7pf;
+    char fname[22];
+    int i;
+
+    ADD_TO(uent); /* A new unit entry */
+    memcpy(LAST(uent)->unit,unit,3);
+    memcpy(LAST(uent)->library,library,10);
+
+    /* If this X7 already loaded, point to existing plist */
+
+    for (i = 0;i < (uent.used - 1);i++)
+    {
+        if (memcmp(uent.u.pArray[i].library,library,10) == 0)
+        {
+            LAST(uent)->plist = uent.u.pArray[i].plist;
+            return;
+        }
+    }
+
+    /* Open vector file */
+
+    strcpy(fname,z10(library));
+    strcat(fname,"/X7PF");
+    if ((x7pf = _Ropen(fname,"rr")) == NULL)
+    {
+        sprintf(errbuf,"Cannot open %s\n.",fname);
+        FATAL(errbuf);
+    }
+
+    /* Load up program array */
+
+    INIT(progent);
+    do
+    {
+        if(_Rreadn(x7pf,(char *)&ptemp,sizeof(program_entry),__NO_LOCK)
+            ->num_bytes == EOF)
+        {
+            break;
+        }
+        memcpy(pprogent(ptemp.call_no),&ptemp,sizeof(program_entry));
+    } while(1);
+    _Rclose(x7pf);
+    LAST(uent)->plist = progent.u.pArray;
+}
+
+/*
+    External initialisation call used to load in X7PF information
+    for required units. May be called more than one time in case of
+    cross unit programs. If called with blank unit id, then required
+    X7PF must be in library list
+*/
+
+void Init_BO(char * unit)
+{
+    char library[10] = "*LIBL     "; /* Default X7PF location */
+
+    if ((*unit == ' ') && (*this_unit != ' '))
+    {
+        return;
+    }
+
+    /* If unit blank and already initialised just return */
+    if ((*unit == ' ') && (initialised == 1))
+    {
+        return;
+    }
+
+    initialised = 1;
+    if (*unit != ' ')
+    {
+        /* Need to find X7PF via the X3PF */
+
+        X3PFR_t * pX3PFR;
+        int i;
+
+        /* If unit info already loaded, then exit */
+
+        for (i = 1; i < uent.used; i++)
+        {
+            if (memcmp(unit,puent(i)->unit,3) == 0)
+            {
+                return;
+            }
+        }
+
+        if(retrieve_cfg_data("eE",unit,&pX3PFR) < 0)
+        {
+            sprintf(errbuf,"Cannot find entry for unit %3s in X3PF.\n",unit);
+            FATAL(errbuf);
+        }
+        memcpy(library,pX3PFR->X3X7L,10); /* Library containing X7PF */
+        end_cfg_access();
+    }
+    Init_X7(unit,library);
+    if (*unit == ' ')
+    {
+        GETUNIT(this_unit);
+        if (*this_unit == ' ')
+        {
+            FATAL("Cannot find processing unit.");
+        }
+        memcpy(LAST(uent)->unit,this_unit,3);
+    }
+    else if (*this_unit == ' ')
+    {
+        memcpy(this_unit,unit,3);
+    }
+}
+
+void init_unit(char * ent_unit)
+{
+    char unit[3];
+    cuent = 0;
+
+    if (initialised == 0)
+    {
+        Init_BO(ent_unit);
+    }
+    memcpy(unit,ent_unit,3);
+    if (*unit == ' ')
+    {
+        memcpy(unit,this_unit,3);
+    }
+
+    for(;cuent < uent.used;cuent++)
+    {
+        if (memcmp(puent(cuent)->unit,unit,3) == 0)
+        {
+            return;
+        }
+    }
+    sprintf(errbuf,
+        "Interface call for unintialised unit '%3.3s'.\n",unit);
+    FATAL(errbuf);
+}
+
+/**** 1 Is this EQUATION? */
+
+int is_EQUATION(void)
+{
+    if( memcmp(puent(0)->plist[1].program,"EQUATION",8) == 0)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+char *PRODUCT(void)
+{
+    return puent(0)->plist[1].program;
+}
+
+/**** 3  program library  */
+
+void PGMLIB(char * unit,char * cp)
+{
+    int callno = 3;
+
+    init_unit(unit);
+    {
+        if (CALL.sub_call_no == 0)
+        {
+            KMDBOR(QualName(callno),&D2,unit,cp,N8);
+        }
+        else
+        {
+            KMDBOR(QualName(callno), &D3, &CALL.sub_call_no,
+                unit, cp, N7);
+        }
+    }
+    return;
+}
+
+char * program_library(char * unit)
+{
+    char program_library_c10[10];
+
+    PGMLIB(unit,program_library_c10);
+    return (z10(program_library_c10));
+}
+
+/**** 4  File library */
+
+void FILLIB(char *unit,char *cp)
+{
+    int callno = 4;
+
+    init_unit(unit);
+    {
+        if (CALL.sub_call_no == 0)
+        {
+            KMDBOR(QualName(callno), &D2, unit, cp, N8);
+        }
+        else
+        {
+            KMDBOR(QualName(callno), &D3, &CALL.sub_call_no,
+                unit, cp, N7);
+        }
+   }
+   return;
+}
+
+char *file_library(char *unit)
+{
+    char file_library_c10[10];
+
+    FILLIB(unit,file_library_c10);
+    return(z10(file_library_c10));
+}
+
+/**** 5  input library */
+
+void INPLIB(char * unit,char * cp)
+{
+    int callno = 5;
+
+    init_unit(unit);
+    {
+        if (CALL.sub_call_no == 0)
+        {
+            KMDBOR(QualName(callno), &D2, unit, cp, N8);
+        }
+        else
+        {
+            KMDBOR(QualName(callno), &D3, &CALL.sub_call_no,
+                unit, cp, N7);
+        }
+    }
+    return;
+}
+
+char *input_library(char *unit)
+{
+    char input_library_c10[10];
+
+    INPLIB(unit,input_library_c10);
+    return(z10(input_library_c10));
+}
+
+/**** 6  Work library */
+
+void WRKLIB(char *unit,char *cp)
+{
+    int callno = 6;
+
+    init_unit(unit);
+    {
+        if (CALL.sub_call_no == 0)
+        {
+            KMDBOR(QualName(callno),&D2,unit,cp,N8);
+        }
+        else
+        {
+            KMDBOR(QualName(callno),&D3, &CALL.sub_call_no,
+                unit, cp, N7);
+        }
+    }
+    return;
+}
+
+char *work_library(char *unit)
+{
+    char work_library_c10[10];
+
+    WRKLIB(unit,work_library_c10);
+    return(z10(work_library_c10));
+}
+
+/**** 7 Initialise a unit */
+
+void INITUNIT(char *unit)
+{
+    int callno = 7;
+    init_unit(unit);
+    if (CALL.sub_call_no == 0)
+    {
+        KMDBOR(QualName(callno),&D1,unit,N9);
+    }
+    else
+    {
+        KMDBOR(QualName(callno), &D2, &CALL.sub_call_no,
+            unit, N8);
+    }
+}
+
+void initialise_unit(char *unit)
+{
+    INITUNIT(unit);
+}
+
+/**** 8 Return unit mnemonic */
+
+void GETUNIT(char *unit)
+{
+    int callno = 8;
+
+    if (CALL.sub_call_no == 0)
+    {
+        KMDBOR(QualName(callno), &D1, unit, N9);
+    }
+    else
+    {
+        KMDBOR(QualName(callno), &D2, &CALL.sub_call_no,
+            unit, N8);
+    }
+    return;
+}
+
+char *unit_mnemonic()
+{
+    static char unit[4] = "   ";
+
+    GETUNIT(unit);
+    return(unit);
+}
+
+/**** 10 Find unit owner */
+
+   /* C function only */
+char *unit_owner(char *unit)
+{
+    char owner_c10[10];
+    int callno = 10;
+
+    init_unit(unit);
+    if (CALL.sub_call_no == 0)
+    {
+        KMDBOR(QualName(callno),&D2,unit,owner_c10,N8);
+    }
+    else
+    {
+        KMDBOR(QualName(callno),&D3, &CALL.sub_call_no,
+            unit,owner_c10,N7);
+    }
+    return z10(owner_c10);
+}
+
+/**** 18 Get data type of external field */
+
+int get_ext_data_type(char * extname,
+                      short * exttype,
+                      short * extlen,
+                      short * extdps)
+{
+    char flag;
+    int callno = 18;
+
+    KMDBOR(QualName(callno), &D5, extname, exttype,
+        extlen, extdps, &flag, N5);
+
+    if (flag == 'E')
+    {
+        return 0;
+    }
+    return 1;
+}
+
+
+/**** 19 Get data of external field */
+
+int get_ext_data(char * extname,
+                 char * data)
+{
+    char flag;
+    int callno = 19;
+
+    KMDBOR(QualName(callno), &D2, extname, data, N8);
+
+    return 1;
+}
+
+
+
+/**** 30 Convert user data types */
+
+int convert_user_type_if(rStruct * fromstruct,
+                        rField * fromfield,
+                        char * fromdata,
+                        char source_extender,
+                        rStruct * tostruct,
+                        rField * tofield,
+                        char * todata)
+{
+    char flag;
+    char * ff = (char *) fromfield;
+    char * tf = (char *) tofield;
+    char * fs = (char *) fromstruct;
+    char * ts = (char *) tostruct;
+    int callno = 30;
+
+    if (ff != NULL)
+    {
+        ff = (char *) fromfield->name;
+    }
+    if (tf != NULL)
+    {
+        tf = (char *) tofield->name;
+    }
+    if (fs != NULL)
+    {
+        fs = (char *) &(fromstruct->id);
+    }
+    if (ts != NULL)
+    {
+        ts = (char *) &(tostruct->id);
+    }
+    KMDBOR(QualName(callno),&D8,
+        fs, ff, fromdata, &source_extender,
+        ts, tf, todata, &flag, N2);
+
+    if (flag == 'Y')
+    {
+        return -1;
+    }
+    if (flag == 'E')
+    {
+        return 0;
+    }
+    return 1;
+}
+
+
+/**** 31 Set user type to default */
+
+int set_default_if(rField *field, char *data)
+{
+    int callno = 31;
+
+    KMDBOR(QualName(callno),&D2, field->name,
+        data, N8);
+    return 1;
+}
+
+void status_message(char * unit,char * message)
+{
+    char msgf[11];
+    char lib[11];
+    char cmd[200];
+
+    init_unit(unit);
+    if ((*puent(cuent)->plist[18].program == ' ') ||
+        (*puent(cuent)->plist[18].library == 0))
+    {
+        return;
+    }
+    strcpy(msgf,z10(puent(cuent)->plist[18].program));
+    strcpy(lib,z10(puent(cuent)->plist[18].library));
+    if (*lib == '*')
+    {
+        /* dynamic library assignment */
+
+        if (memcmp(lib,"*PGMLIB",7) == 0)
+        {
+            strcpy(lib,program_library(unit));
+        }
+        if (memcmp(lib,"*FILLIB",7) == 0)
+        {
+            strcpy(lib,file_library(unit));
+        }
+        if (memcmp(lib,"*INPLIB",7) == 0)
+        {
+            strcpy(lib,input_library(unit));
+        }
+        if (memcmp(lib,"*WRKLIB",7) == 0)
+        {
+            strcpy(lib,work_library(unit));
+        }
+    }
+    sprintf(cmd,"SNDMSG MSG('%s') TOMSGQ(%s/%s)",
+        message,lib,msgf);
+    system(cmd);
+}

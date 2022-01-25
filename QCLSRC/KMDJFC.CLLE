@@ -1,0 +1,162 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       KMDJFC - Call stop jobs program                             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 177251    *CREATE  Date 06Apr00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       177251 - Prevent the program sending end messages if no     */
+/*                feeder job is active.                              */
+/*                This CL changed to an ILE CL module and a matching */
+/*                program source created, to allow for procedure     */
+/*                calls to be included here.                         */
+/*                Additionally added check for whether job is        */
+/*                running in batch or interactive mode, and          */
+/*                changed sending of error messages accordingly.     */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDJBC                                       */
+/*          Program Title - Call stop jobs program                       */
+/*          Creation Date - 21/10/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  Initiate a request to stop feeder jobs                               */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*-----------------------------------------------------------------------*/
+             PGM
+
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ADDED) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&BASEE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WORKSTN) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&ACTIVE) TYPE(*CHAR) LEN(2) /* Flag to +
+                          indicate whether the subsystem or a +
+                          feeder job is active; this value is +
+                          returned from an RPG procedure, so it has +
+                          to be declared as two bytes rather than +
+                          one, because of an aberration in such +
+                          functions. */                               /*177251*/
+
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10) /* The user +
+                          running the job */                          /*177251*/
+
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1) /* '0' = +
+                          batch, '1' = interactive */                 /*177251*/
+
+             DCL        VAR(&BATCH) TYPE(*CHAR) LEN(1) VALUE('0') /* +
+                          "Named constant" for job type of batch */   /*177251*/
+
+             DCL        VAR(&INTER) TYPE(*CHAR) LEN(1) VALUE('1') /* +
+                          "Named constant" for job type of interactive *177251*/
+
+             DCL        VAR(&SBSLIBADD) TYPE(*CHAR) LEN(1) +
+                          VALUE('Y') /* Flag to indicate whether or +
+                          not the subsystem library was added to +
+                          the library list. */                        /*188007*/
+
+/*********** RTVJOBA    JOB(&WORKSTN)  ***/                           /*177251*/
+             RTVJOBA    JOB(&WORKSTN) USER(&USER) TYPE(&JOBTYPE)      /*177251*/
+
+             RTVDTAARA  DTAARA(KMDBASE) RTNVAR(&BASEE)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&BASEE) POSITION(*LAST)
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ADDED) +
+                          VALUE('N'))
+             RTVDTAARA  DTAARA(KMDSBS) RTNVAR(&SBS)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&SBS)
+/*********** MONMSG     MSGID(CPF0000) ***********/                   /*188007*/
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&SBSLIBADD) +
+                          VALUE('N'))                                 /*188007*/
+
+/* +
+   ------------------------------------------------------------------ +
+   Check for the subsystem and feeder jobs being active. +
+   ------------------------------------------------------------------ +
+*/                                                                    /*177251*/
+
+/* +
+   &SBS contains the name of the Replication subsystem. +
+   Call a procedure to check whether the subsytem is active. +
+*/                                                                    /*177251*/
+             CALLPRC    PRC(IsSbsActive) PARM(&SBS) RTNVAL(&ACTIVE)   /*177251*/
+
+/* If it is not active, send a suitable message and end procesing */  /*177251*/
+             IF         COND(&ACTIVE = 'N') THEN(DO)                  /*177251*/
+                IF         COND(&JOBTYPE = &INTER) THEN(SNDBRKMSG +
+                             MSG('Subsystem is not active -- nothing +
+                             to end') TOMSGQ(&WORKSTN))               /*177251*/
+                ELSE       CMD(SNDMSG MSG('Subsystem is not active -- +
+                             nothing to end') TOMSGQ(&USER))          /*177251*/
+                GOTO       CMDLBL(ENDING)                             /*177251*/
+             ENDDO                                                    /*177251*/
+
+/* If it is active, check whether any feeder jobs are active */       /*177251*/
+             IF         COND(&ACTIVE = 'Y') THEN(CALLPRC +
+                          PRC(AreFeederJobsActive) PARM(&SBS) +
+                          RTNVAL(&ACTIVE))                            /*177251*/
+
+/* If none are active, send a suitable message and end procesing */   /*177251*/
+             IF         COND(&ACTIVE = 'N') THEN(DO)                  /*177251*/
+                IF         COND(&JOBTYPE = &INTER) THEN(SNDBRKMSG +
+                             MSG('No feeder jobs are active -- nothing +
+                             to end') TOMSGQ(&WORKSTN))               /*177251*/
+                ELSE       CMD(SNDMSG MSG('No feeder jobs are active -- +
+                            nothing to end') TOMSGQ(&USER))           /*177251*/
+                GOTO       CMDLBL(ENDING)                             /*177251*/
+             ENDDO                                                    /*177251*/
+
+
+             CALL       PGM(KMDJEC) PARM('MDBAFEED  ' &ERR)
+             IF         COND(&ERR *EQ 'B') THEN(DO)
+/***********    SNDBRKMSG  MSG('Launch process is busy') TOMSGQ(&WORKSTN) /*177251*/
+                IF         COND(&JOBTYPE = &INTER) THEN(SNDBRKMSG +
+                             MSG('Launch process is busy') +
+                             TOMSGQ(&WORKSTN))                        /*177251*/
+                ELSE       CMD(SNDMSG MSG('Launch process is busy') +
+                             TOMSGQ(&USER))                           /*177251*/
+             ENDDO
+             IF         COND(&ERR *EQ 'T') THEN(DO)
+/************** SNDBRKMSG  MSG('Timed out waiting for response from +
+                             launch process') TOMSGQ(&WORKSTN) ***/   /*177251*/
+                IF         COND(&JOBTYPE = &INTER) THEN(SNDBRKMSG +
+                             MSG('Timed out waiting for response from +
+                             launch process') TOMSGQ(&WORKSTN))       /*177251*/
+                ELSE       CMD(SNDMSG MSG('Timed out waiting for +
+                             response from launch process') +
+                             TOMSGQ(&USER))                           /*177251*/
+             ENDDO
+
+ENDING:
+/*********** RMVLIBLE   LIB(&SBS) ***********/                        /*188007*/
+/*********** MONMSG     MSGID(CPF0000) ******/                        /*188007*/
+             IF         COND(&SBSLIBADD = 'Y') THEN(RMVLIBLE +
+                          LIB(&SBS))                                  /*188007*/
+             IF         COND(&ADDED *EQ 'Y') THEN(DO)
+                RMVLIBLE   LIB(&BASEE)
+                MONMSG     MSGID(CPF0000)
+                ENDDO
+             RCLRSC
+             MONMSG     MSGID(CPF0000)
+ END:        ENDPGM

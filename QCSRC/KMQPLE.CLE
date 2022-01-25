@@ -1,0 +1,156 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+/*
+
+    This program reads the Mdba script to extract a list of
+    tables to be replicated
+
+*/
+
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+
+FILE * KMQRLST;
+
+
+char *find_group(char *buffer, char *group)
+{
+    char *pchr = NULL;
+
+    pchr = memchr(buffer, group[0], strlen(buffer));
+    if (pchr != NULL)
+    {
+        if (memcmp(pchr, group, strlen(group)) != 0)
+        {
+            pchr = NULL;
+        }
+    }
+    return pchr;
+}
+
+void get_journalled_tables(char * member, char * library)
+{
+    FILE *fpReplica;
+    char filename[50];
+    char buffer[150];
+    char table_name[19];
+    char table[19];
+    char type;
+    char *pchr;
+    char *list = NULL;
+    char *list_entry = NULL;
+    long table_count = 0;
+    short found_table = 0;
+    char *pchr2;
+
+    sprintf(filename, "%s/MDBASCRIPT(%s)", library, member);
+
+    if ((fpReplica = fopen(filename, "r")) == NULL)
+    {
+        return;
+    }
+
+    /*  Loop through script finding table declarations within filters */
+    while (fpReplica != NULL)
+    {
+        while (found_table == 0)
+        {
+            /* make sure buffer is cleared out before getting next table */
+            memset(buffer, 0, 150);
+            while ((pchr2 = find_group(buffer, "<FILTER>")) == NULL)
+            {
+                if (fgets(buffer, 150, fpReplica) == NULL)
+                {
+                    fclose(fpReplica);
+                    fpReplica = NULL;
+                    break;
+                }
+            }
+
+            if (fpReplica == NULL)
+            {
+                break;
+            }
+
+            /*  Type of filter must be 'C' for continuous  */
+            memset(buffer, 0, 150);
+            while ((pchr2 = find_group(buffer, "<TYPE>")) == NULL)
+            {
+                if (fgets(buffer, 150, fpReplica) == NULL)
+                {
+                    fclose(fpReplica);
+                    fpReplica = NULL;
+                    break;
+                }
+            }
+
+            if (fpReplica == NULL)
+            {
+                break;
+            }
+
+            sscanf(pchr2, "<TYPE>%c", &type);
+            if (type =='C')
+            {
+                memset(buffer, 0, 150);
+                while ((pchr2 = find_group(buffer, "<TABLE>")) == NULL)
+                {
+                    if (fgets(buffer, 150, fpReplica) == NULL)
+                    {
+                        fclose(fpReplica);
+                        fpReplica = NULL;
+                        break;
+                    }
+                }
+
+                if (fpReplica == NULL)
+                {
+                    break;
+                }
+                sscanf(pchr2, "<TABLE>%s", table_name);
+                found_table = 1;
+            }
+        }
+        /*  Continuous filter found - extract table name and write it out */
+        if (found_table == 1)
+        {
+            memset(table, ' ', 18);
+            memcpy(table, table_name, strlen(table_name));
+            fprintf(KMQRLST, "%18.18s\n", table);
+            found_table = 0;
+        }
+    }
+}
+
+main(int argc, char *argv[])
+{
+    /*  Parm 1 = Member name of script source file    */
+    /*  Parm 2 = Library name containing script       */
+
+
+    /*  Prepare output file  */
+    if ((KMQRLST = fopen("QTEMP/KMQRLST","w")) == NULL)
+    {
+        return;
+    }
+    get_journalled_tables(argv[1], argv[2]);
+    fclose(KMQRLST);
+    return 0;
+}

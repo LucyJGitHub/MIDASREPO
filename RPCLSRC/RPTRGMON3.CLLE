@@ -1,0 +1,80 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPTRGMON3 - Trigger monitor server                          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP003             Date 12Oct99              */
+/*                      CRP002  *CREATE    Date 13Apr99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP003 - Include override to member in RPMSGFPD             */
+/*       CRP002 - New                                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CTLMBR &APPNPGM &APPNPGMLIB &INQUEUE +
+                          &OUTQUEUE &COMMITCTL &RETURNCODE)
+
+/**  Parameters                                                     */
+             DCL        VAR(&CTLMBR) TYPE(*CHAR) LEN(10) +
+                 /* Member of the control file to be overridden to */
+             DCL        VAR(&APPNPGM) TYPE(*CHAR) LEN(10)    +
+                 /*       Application program to call              */
+             DCL        VAR(&APPNPGMLIB) TYPE(*CHAR) LEN(10)    +
+                 /*       Application program library                */
+             DCL        VAR(&INQUEUE) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries transmission queue that is to be read   */
+             DCL        VAR(&OUTQUEUE) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries remote queue that is to be written to   */
+             DCL        VAR(&COMMITCTL) TYPE(*CHAR) LEN(1) +
+                 /* Flag saying whether commitment control is used   */
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Override so that the standard read function uses the correct set +
+    of data                                                    */
+             OVRDBF     FILE(RPAPCIL0) MBR(&CTLMBR) +
+                          OVRSCOPE(*ACTGRPDFN)
+                                                                       /*CRP003*/
+             OVRDBF     FILE(RPMSGFPD) MBR(&CTLMBR) +
+                          OVRSCOPE(*ACTGRPDFN)                         /*CRP003*/
+
+/*  Call the the standard read function, passing in the names of the +
+    MQSeries queues to read from and write to.                      */
+             CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+             CALL       PGM(&APPNPGMLIB/&APPNPGM) PARM(&INQUEUE +
+                          &OUTQUEUE &COMMITCTL &RETURNCODE)
+
+/*  Delete the override                                          */
+             DLTOVR     FILE(RPAPCIL0) LVL(*ACTGRPDFN)
+             DLTOVR     FILE(RPMSGFPD) LVL(*ACTGRPDFN)                 /*CRP003*/
+
+             IF         COND(&RETURNCODE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

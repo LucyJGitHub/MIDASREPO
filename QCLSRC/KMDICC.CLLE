@@ -1,0 +1,209 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*----------------------------------------------------------------*/
+   /*              System Name - EQUATION                            */
+   /*              Module Name - Trade Innovation                    */
+   /*                                                                */
+   /*             Program Name - KCMICC                              */
+   /*            Program Title - K311 Interface routines             */
+   /*                                                                */
+   /*            Creation Date - 08/09/1997                          */
+   /*      Last Amendment Date -   /  /                              */
+   /*----------------------------------------------------------------*/
+   /*  Purpose                                                       */
+   /*  ~~~~~~~                                                       */
+   /*  To return configuration data for K311                         */
+   /*----------------------------------------------------------------*/
+   /*  Change Control                                                */
+   /*  ~~~~~~~~~~~~~~                                                */
+   /*  Date            Initials      Amendment                       */
+   /*  ~~~~            ~~~~~~~~      ~~~~~~~~~                       */
+   /*  12Dec21         MD058809      MQ9 Compatibility Patch Fix     */
+   /*  09/09/97        JRE           Created                         */
+   /*                                                                */
+   /*----------------------------------------------------------------*/
+   /*================================================================*/
+   /*  START OF PROGRAM                                              */
+   /*================================================================*/
+             /*                                                      */
+             PGM        PARM(&REQUEST &UNIT &REPLY)
+             DCL        VAR(&REQUEST) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UNIT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&REPLY) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&X7KEY) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&X7PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&X7LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&X7SUB) TYPE(*DEC) LEN(3 0)
+
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASELIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&INSTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WRK10) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(QADSPOBJ)
+             DCL        VAR(&RCV) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&LEN) TYPE(*CHAR) LEN(4) VALUE(X'00000030')
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(20) VALUE('MMENU')
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(100) +
+                          VALUE(X'00000064')
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PARM3) TYPE(*CHAR) LEN(10)
+
+             CHGVAR     VAR(&PARM3) VALUE(&REPLY) /* Sometimes used +
+                          for input */
+/* All requests require the base library name */
+
+             RTVOBJD    OBJ(KMDBASE) OBJTYPE(*DTAARA) RTNLIB(&BASELIB)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             DSPOBJD    OBJ(*ALLUSR/KMDBASE) OBJTYPE(*DTAARA) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/QADSPOBJ)
+             OVRDBF QADSPOBJ QTEMP/QADSPOBJ
+             RCVF
+             CHGVAR &BASELIB &ODLBNM
+             DLTOVR QADSPOBJ
+             ENDDO
+
+/* Base library required */
+
+             IF         COND(&REQUEST *EQ 'BASELIB') THEN(DO)
+             CHGVAR     VAR(&REPLY) VALUE(&BASELIB)
+             RETURN
+             ENDDO
+
+/* MDBA library */
+
+             IF         COND(&REQUEST *EQ 'MDBALIB') THEN(DO)
+             RTVDTAARA  DTAARA(&BASELIB/KMDBASE) RTNVAR(&REPLY)
+             RETURN
+             ENDDO
+
+/* Library containing X7 file */
+
+             CHGVAR     VAR(%SST(&CMD 11 10)) VALUE(&BASELIB)
+             CALL       PGM(QCDRCMDI) PARM(&RCV &LEN 'CMDI0100' &CMD +
+                          &ERR)
+             CHGVAR     VAR(&INSTLIB) VALUE(%SST(&RCV 39 10))
+
+             IF         COND((&REQUEST *EQ 'X7LIB') *AND (&UNIT *EQ +
+                          ' ')) THEN(DO)
+             CHGVAR     VAR(&REPLY) VALUE(&INSTLIB)
+             RETURN
+             ENDDO
+
+/* Calls requiring X7PF */
+
+/* The MMENU program must always reside in a library with a X7PF */
+/* file, but a unit may have a more recent X7PF somewhere. We    */
+/* therefore do a vectored call to find this.                    */
+
+             OVRDBF     FILE(X7PF) TOFILE(&INSTLIB/X7PF)
+             IF         COND(&UNIT *NE ' ') THEN(DO)
+                CALL       PGM(KMDX3C) PARM(&UNIT &REPLY)
+                IF         COND(&REPLY *NE ' ') THEN(CHGVAR +
+                             VAR(&INSTLIB) VALUE(&REPLY))
+                IF         COND(&REQUEST *EQ 'X7LIB') THEN(RETURN)
+                DLTOVR     FILE(X7PF)
+                OVRDBF     FILE(X7PF) TOFILE(&INSTLIB/X7PF)
+                ENDDO
+
+/* Get product id out of X7PF */
+
+             IF         COND(&REQUEST *EQ 'PRODUCT') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(1)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &REPLY &X7LIB &X7SUB)
+             RETURN
+             ENDDO
+
+/* Get Unit program library */
+
+             IF         COND(&REQUEST *EQ 'PGMLIB') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(3)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &X7PGM &X7LIB &X7SUB)
+             IF         COND(&X7LIB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&X7LIB) VALUE(&INSTLIB))
+
+             IF         COND(&X7SUB *EQ 0) THEN(CALL +
+                          PGM(&X7LIB/&X7PGM) PARM(&UNIT &REPLY))
+             ELSE       CMD(CALL PGM(&X7LIB/&X7PGM) PARM(&X7SUB +
+                          &UNIT &REPLY))
+             RETURN
+             ENDDO
+
+/* Get Unit file library */
+
+             IF         COND(&REQUEST *EQ 'FILLIB') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(4)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &X7PGM &X7LIB &X7SUB)
+             IF         COND(&X7LIB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&X7LIB) VALUE(&INSTLIB))
+             IF         COND(&X7SUB *EQ 0) THEN(CALL +
+                          PGM(&X7LIB/&X7PGM) PARM(&UNIT &REPLY))
+             ELSE       CMD(CALL PGM(&X7LIB/&X7PGM) PARM(&X7SUB +
+                          &UNIT &REPLY))
+             RETURN
+             ENDDO
+
+/* Get Unit work library */
+
+             IF         COND(&REQUEST *EQ 'WRKLIB') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(6)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &X7PGM &X7LIB &X7SUB)
+             IF         COND(&X7LIB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&X7LIB) VALUE(&INSTLIB))
+             IF         COND(&X7SUB *EQ 0) THEN(CALL +
+                          PGM(&X7LIB/&X7PGM) PARM(&UNIT &REPLY))
+             ELSE       CMD(CALL PGM(&X7LIB/&X7PGM) PARM(&X7SUB +
+                          &UNIT &REPLY))
+             RETURN
+             ENDDO
+
+/* Check if unit in state to interface to an MDBA release */
+
+             IF         COND(&REQUEST *EQ 'UCHECK') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(11)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &X7PGM &X7LIB &X7SUB)
+             IF         COND(&X7LIB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&X7LIB) VALUE(&INSTLIB))
+             IF         COND(&X7SUB *EQ 0) THEN(CALL +
+                          PGM(&X7LIB/&X7PGM) PARM(&UNIT &PARM3 &FLAG))
+             ELSE       CMD(CALL PGM(&X7LIB/&X7PGM) PARM(&X7SUB +
+                          &UNIT &REPLY &FLAG))
+             CHGVAR     VAR(&REPLY) VALUE(&FLAG)
+             RETURN
+             ENDDO
+
+/* Get unit owner                                      */
+
+             IF         COND(&REQUEST *EQ 'ENVOWNER') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(10)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &X7PGM &X7LIB &X7SUB)
+             IF         COND(&X7LIB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&X7LIB) VALUE(&INSTLIB))
+             IF         COND(&X7SUB *EQ 0) THEN(CALL +
+                          PGM(&X7LIB/&X7PGM) PARM(&UNIT &OWNER))
+             ELSE       CMD(CALL PGM(&X7LIB/&X7PGM) PARM(&X7SUB +
+                          &UNIT &REPLY &OWNER))
+             CHGVAR     VAR(&REPLY) VALUE(&OWNER)
+             RETURN
+             ENDDO
+
+/* Set unit/sbs xref                                   */
+
+             IF         COND(&REQUEST *EQ 'ENVSBS') THEN(DO)
+             CHGVAR     VAR(&X7KEY) VALUE(15)
+             CALL       PGM(KMDI2C) PARM(&X7KEY &X7PGM &X7LIB &X7SUB)
+             IF         COND(&X7LIB *EQ '*INSTLIB') THEN(CHGVAR +
+                          VAR(&X7LIB) VALUE(&INSTLIB))
+             IF         COND(&X7SUB *EQ 0) THEN(CALL +
+                          PGM(&X7LIB/&X7PGM) PARM(&UNIT &PARM3))
+             ELSE       CMD(CALL PGM(&X7LIB/&X7PGM) PARM(&X7SUB +
+                          &UNIT &PARM3))
+             RETURN
+             ENDDO
+
+             ENDPGM

@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RTVDECSEP - Retrieve Decimal Separator                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 088298 RoyalBlue   Date 17Jul02              */
+/*                      CRP007 *CREATE     Date 18Oct99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       088298 - If an unexpected error occurrs, send an Escape     */
+/*                message rather than a diagnostic one, to ensure    */
+/*                that the calling function halts.                   */
+/*       CRP007 - New module to enable decimal separator default     */
+/*                to be retrieved.                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DECSEP)
+
+/*  Parameters                                                      */
+             DCL        VAR(&DECSEP) TYPE(*CHAR) LEN(1)                /*CRP007*/
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Retrieve contents of RPDFTSDA data area.  If it is not found    */
+/*  default to a full stop                                         */
+             CHKOBJ     OBJ(*LIBL/RPDFTSDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&DECSEP) VALUE('.')
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             RTVDTAARA  DTAARA(*LIBL/RPDFTSDA (1 1)) RTNVAR(&DECSEP)
+
+             IF         COND(&DECSEP *NE ',' *AND &DECSEP *NE '.') +
+                          THEN(DO)
+                CHGVAR     VAR(&DECSEP) VALUE('.')
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+/**********  SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +                    /* 088298 */
+/**********               MSGDTA('0000Unexpected error occurred in +      /* 088298 */
+/**********               RTVDECSEP') TOPGMQ(*PRV) MSGTYPE(*DIAG)         /* 088298 */
+             SNDPGMMSG  MSGID(CPF0001) MSGF(QCPFMSG) +
+                          MSGDTA('RTVDECSEP') TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)                                    /* 088298 */
+
+ END:
+
+
+             ENDPGM

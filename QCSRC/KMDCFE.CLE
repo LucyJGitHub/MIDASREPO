@@ -1,0 +1,642 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMQTRE - Queuing interface
+ *
+ *       (c) Misys International Banking Systems Ltd. 2001
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. 194638    *CREATE  Date 20Jun01
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       194638 - A bug became apparent at V4R5M0 of OS/400, that
+ *                was tracked to a line in this module.  The symptom
+ *                was that the Feeder job failed with Space offset
+ *                outside current limit in procedure next_cfg_data().
+ *
+ ********************************************************************
+ */
+/******************************************************************************
+
+******************************************************************************/
+
+/******************************************************************************
+
+  Retrieve configuration records
+
+  The caller uses the retrieve_cfg_data function to specify a parameter mask,
+  and a number of pointers. The function returns the first of any qualifying
+  record sets. The next_cfg_data function is used to retrieve any further sets.
+
+  The parameter mask consists of zero or more of the characters p,d,e,i (in any
+  order, but no more than one of each), followed by one or more of the
+  characters P,D,E,I (also in any order but no more than one of each).
+
+  For each character in the mask, a pointer must be supplied in the function
+  parameter list.
+
+  The lower case characters correspond to output pointers:
+
+  p = (char *) pointer to a product name.
+  d = (char *) pointer to a department server mnemonic.
+  e = (char *) pointer to an environment identifier (unit mnemonic).
+  i = (short *) pointer to an invocation number.
+
+  The upper case characters correspond to input pointers:
+
+  P = (X1PFR_t **) pointer to an X1PF record pointer.
+  D = (X2PFR_t **) pointer to an X2PF record pointer.
+  E = (X3PFR_t **) pointer to an X3PF record pointer.
+  I = (X4PFR_t **) pointer to an X4PF record pointer.
+
+  The data returned depends on the shape of the function call.
+
+  If no output parameters and only one input parameter are given then the
+  corresponding file is returned in arrival sequence.
+
+  eg retrieve_cfg_data("D",X2PFR_t ** ppX2PFR) will start reading from the
+     X2PF file.
+
+  If one output parameter and one input parameter are given, and the mask
+  characters are lower and upper case instances of the same character, then
+  a single keyed access is made to the appropriate file.
+
+  eg retrieve_cfg_data("eE","TST",X3PFR_t ** ppX3PFR) will return the matching
+     record from the X3PF file.
+
+  All other cases operate via the X4PF file. Any output parameters are used as
+  X4PF file filters. Once an X4PF record has passed through the filter, then
+  the fields within this record are used as keys to access the other files.
+
+  eg retrieve_cfg_data("peD","TI","TST",X2PFR_t ** ppX2PFR) will return X2PF
+     records for all departmental servers used by product TI in unit TST.
+
+  Note that output records are presented in ascending key sequence and that
+  duplicate sets will be dropped.
+
+  Return codes.
+
+  0 is returned for end of file.
+
+  Positive values are returned with data. This gives the relative position
+  (starting at 1) of the leftmost input key which has changed.
+
+  eg retrieve_cfg_data("pED","TI",X3PFR_t ** ppX3PFR, X2PFR_t ** ppX2PFR)
+     will retrieve department servers within unit for all TI users. This
+     will return a 2 for a new server in the same unit, but a 1 when the
+     unit changes.
+
+  Negative values are returned for errors.
+  -1   Mask in error.
+  -2   next_cfg_data before retrieve_cfg_data.
+  -10  X1PF not found.
+  -11  X110LF not found.
+  -12  X1PF record not found for X4PRDN field.
+  -20  X2PF not found.
+  -21  X220LF not found.
+  -22  X2PF record not found for X4DSMN field.
+  -30  X3PF not found.
+  -31  X310LF not found.
+  -32  X3PF record not found for X4UNIT field.
+  -40  X4PF not found.
+  -41  X450LF not found.
+
+**********************************************************************/
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <recio.h>
+#include <ctype.h>
+
+#include "KMDCFH.H"
+#include "KMDIFH.H"
+
+#define TRUE 1
+#define FALSE 0
+
+static X1PFR_t X1PFR;
+static X2PFR_t X2PFR;
+static X3PFR_t X3PFR;
+static X4PFR_t X4PFR;
+static X4PFR_t * pX4PFR = NULL;
+static int nX4PFR = 0;
+static int next_X4 = 0;
+static int last_X4 = -1;
+
+static _RFILE * x1pf = NULL;
+static _RFILE * x2pf = NULL;
+static _RFILE * x3pf = NULL;
+static _RFILE * x4pf = NULL;
+static char access = ' ';
+
+static char prod[sizeof(X1PFR.X1PRDN)] = "";
+static char server[sizeof(X2PFR.X2DSMN)] = "";
+static char unit[sizeof(X3PFR.X3UMN)] = "";
+static char pinv[sizeof(X4PFR.X4FDNM)] = "";
+static X1PFR_t ** puX1PFR = NULL;
+static X2PFR_t ** puX2PFR = NULL;
+static X3PFR_t ** puX3PFR = NULL;
+static X4PFR_t ** puX4PFR = NULL;
+
+
+/*                                                                           */
+/*  Returns composite file name with the replication base library            */
+/*                                                                           */
+static char * f(char * file)
+{
+    static char basee[11] = "";
+    static char lfile[22];
+
+    if (*basee == 0)
+    {
+        strcpy(basee, MDBA_library());
+    }
+    sprintf(lfile, "%s/%s", basee, file);
+    return lfile;
+}
+
+/*                                                                           */
+/*  Compare composite keys in two records (up to four compostites)           */
+/*                                                                           */
+static struct{
+   int offset;
+   int len;
+} pkey[4];        /*  Holds offset and length of each field of the composite */
+static int nkey;  /*  Number of actual key fields in composite               */
+
+int keycmp(void * d,void * s)
+{
+    int i, j, k;
+
+    /* Returns
+                       -ve value if source < dest
+                               0 if source = dest
+       index of failing key part if source > destination.  */
+
+    for (j = 0,k = 0; (j < nkey) && (k == 0); j++)
+    {
+        for (i = 0;((k = *(((char *) s) + pkey[j].offset+ i)
+            - *(((char *) d) + pkey[j].offset + i)) == 0) &&
+            (i < pkey[j].len); i++)
+            ;
+    }
+    if (k > 0)
+    {
+        return i + 1;
+    }
+    return k;
+}
+
+static int nO, nI;
+
+/*                                                                           */
+/* Reset configuration fields for current access                             */
+/*                                                                           */
+void end_cfg_access()
+{
+    access = ' ';
+    *prod = *server = *unit = *pinv = 0;
+    puX1PFR = NULL;
+    puX2PFR = NULL;
+    puX3PFR = NULL;
+    puX4PFR = NULL;
+    free(pX4PFR);
+    pX4PFR = NULL;
+    nX4PFR = 0;
+    next_X4 = 0;
+    nkey = 0;
+    last_X4 = -1;
+    if (x1pf != NULL)
+    {
+        _Rclose(x1pf);
+        x1pf = NULL;
+    }
+    if (x2pf != NULL)
+    {
+        _Rclose(x2pf);
+        x2pf = NULL;
+    }
+    if (x3pf != NULL)
+    {
+        _Rclose(x3pf);
+        x3pf = NULL;
+    }
+    if (x4pf != NULL)
+    {
+        _Rclose(x4pf);
+        x4pf = NULL;
+    }
+}
+
+/*                                                                           */
+/*  Create blank filled string from null terminated                          */
+/*                                                                           */
+static void cb(char * d,  /*  target buffer (must be at least l bytes)       */
+               char * s,  /*  source null-terminated string                  */
+               int l)     /*  length of target buffer                        */
+{
+    int i;
+
+    for(i = 0;(i < l) && (*(s + i) != 0);*(d + i) = *(s + i++))
+        ;
+    memset(d + i,' ',l - i);
+}
+
+
+/*                                                                           */
+/*  Retrival routine - note variable number of parameters (...)              */
+/*                                                                           */
+int retrieve_cfg_data(char * mask,...)
+{
+    int i, j, n;
+    va_list arg_ptr;
+
+    if (access != ' ')
+    {
+        end_cfg_access();
+    }
+
+    /*  Check callers control mask                                           */
+
+    /*  Must be some characters                                              */
+    if ((n = strlen(mask)) == 0)
+    {
+        return -1;
+    }
+
+    /*  Will usually (but not always) have leading lower case                */
+    nO = strspn(mask,"pdei");
+
+    /*  The rest must be uppers                                              */
+    if ((nI = strspn(mask + nO,"PDEI")) != strlen(mask + nO))
+        return -1;
+
+    /*  NOTE. We dont actually test for multiple occurrences of the same
+              character, as these will do no harm (provided that the
+              requisite number of pointers are passed). If duplicate outputs
+              are specified, only the last will be used. If duplicate inputs
+              are specified the caller will simply get multiple copies of the
+              same pointer.                                                  */
+
+    /*  Mask OK, get pointers                                                */
+    va_start(arg_ptr,mask);
+    for (i = 0;i < n; i++)
+    {
+        switch (*(mask + i))
+        {
+        case 'p':
+            cb(prod, (char *) va_arg(arg_ptr,char *), sizeof(prod));
+            break;
+
+        case 'd':
+            cb(server, (char *) va_arg(arg_ptr,char *), sizeof(server));
+            break;
+
+        case 'e':
+            cb(unit, (char *) va_arg(arg_ptr,char *), sizeof(unit));
+            break;
+
+        case 'i':
+            cb(pinv, (char *) va_arg(arg_ptr,char *), sizeof(pinv));
+            break;
+
+        case 'P':
+            puX1PFR = va_arg(arg_ptr, X1PFR_t **);
+            *puX1PFR = &X1PFR;
+            pkey[nkey].offset = X4PFR.X4PRDN - (char *) &X4PFR;
+            pkey[nkey++].len = sizeof(X4PFR.X4PRDN);
+            break;
+
+        case 'D':
+            puX2PFR = va_arg(arg_ptr, X2PFR_t **);
+            *puX2PFR = &X2PFR;
+            pkey[nkey].offset = X4PFR.X4DSMN - (char *) &X4PFR;
+            pkey[nkey++].len = sizeof(X4PFR.X4DSMN);
+            break;
+
+        case 'E':
+            puX3PFR= va_arg(arg_ptr, X3PFR_t **);
+            *puX3PFR = &X3PFR;
+            pkey[nkey].offset = X4PFR.X4UNIT - (char *) &X4PFR;
+            pkey[nkey++].len = sizeof(X4PFR.X4UNIT);
+            break;
+
+        case 'I':
+            puX4PFR = va_arg(arg_ptr, X4PFR_t **);
+            *puX4PFR = &X4PFR;
+            pkey[nkey].offset = X4PFR.X4FDNM - (char *) &X4PFR;
+            pkey[nkey++].len = sizeof(X4PFR.X4FDNM);
+            break;
+        }
+    }
+    va_end(arg_ptr);
+
+    /*  Determine type of access                                             */
+    access = 'X'; /* Assume via X4PF                                         */
+    if ((nI == 1) && ((nO == 0) || ((nO == 1) &&
+        (*(mask + 1) == toupper(*mask)))))
+    {
+        if (nO == 0) /* Sequential access to a single file */
+        {
+            access = *mask;
+            switch(access)
+            {
+            case 'P':
+                if ((x1pf = _Ropen(f("X1PF"),"rr")) == NULL) return -10;
+                access = 'P';
+                break;
+
+            case 'D':
+                if ((x2pf = _Ropen(f("X2PF"),"rr")) == NULL) return -20;
+                access = 'D';
+                break;
+
+            case 'E':
+                if ((x3pf = _Ropen(f("X3PF"),"rr")) == NULL) return -30;
+                access = 'E';
+                break;
+
+            case 'I':
+                if ((x4pf = _Ropen(f("X4PF"),"rr")) == NULL) return -40;
+                access = 'I';
+                break;
+            }
+            return next_cfg_data();
+        }
+        else /*  Keyed access to a single file                               */
+        {
+            int bcnt;
+            access = ' ';
+            switch(*(mask + 1))
+            {
+            case 'P':
+                if ((x1pf = _Ropen(f("X110LF"),"rr")) == NULL)
+                {
+                    return -11;
+                }
+
+                bcnt = _Rreadk(x1pf,&X1PFR,sizeof(X1PFR),__KEY_EQ|__NO_LOCK,
+                    prod,sizeof(prod))->num_bytes;
+                _Rclose(x1pf);
+                x1pf = NULL;
+                if (bcnt == 0)
+                {
+                    return 0;
+                }
+                break;
+
+            case 'D':
+                if ((x2pf = _Ropen(f("X220LF"),"rr")) == NULL)
+                {
+                    return -21;
+                }
+
+                bcnt = _Rreadk(x2pf,&X2PFR,sizeof(X2PFR),__KEY_EQ|__NO_LOCK,
+                    server,sizeof(server))->num_bytes;
+                _Rclose(x2pf);
+                x2pf = NULL;
+                if (bcnt == 0)
+                {
+                    return 0;
+                }
+                break;
+
+            case 'E':
+                if ((x3pf = _Ropen(f("X310LF"),"rr")) == NULL)
+                {
+                    return -31;
+                }
+
+                bcnt = _Rreadk(x3pf,&X3PFR,sizeof(X3PFR),__KEY_EQ|__NO_LOCK,
+                    unit,sizeof(unit))->num_bytes;
+                _Rclose(x3pf);
+                x3pf = NULL;
+                if (bcnt == 0)
+                {
+                    return 0;
+                }
+                break;
+
+            case 'I':
+                if ((x4pf = _Ropen(f("X450LF"),"rr")) == NULL)
+                {
+                    return -41;
+                }
+
+                bcnt = _Rreadk(x4pf,&X4PFR,sizeof(X4PFR),__KEY_EQ|__NO_LOCK,
+                    pinv,sizeof(pinv))->num_bytes;
+                _Rclose(x4pf);
+                x4pf = NULL;
+                if (bcnt == 0)
+                {
+                    return 0;
+                }
+                break;
+            }
+            return 1;
+        }
+    }
+
+    /*  Access is via X4PF                                                   */
+
+    if (puX1PFR != NULL)
+    {
+        if ((x1pf = _Ropen(f("X110LF"),"rr")) == NULL)
+        {
+            return -11;
+        }
+    }
+    if (puX2PFR != NULL)
+    {
+        if ((x2pf = _Ropen(f("X220LF"),"rr")) == NULL)
+        {
+            return -21;
+        }
+    }
+    if (puX3PFR != NULL)
+    {
+        if ((x3pf = _Ropen(f("X310LF"),"rr")) == NULL)
+        {
+            return -31;
+        }
+    }
+
+    /* Read X4PF into memory                                                 */
+
+    if ((x4pf = _Ropen(f("X4PF"),"rr")) == NULL)
+    {
+        return -10;
+    }
+    while (_Rreadn(x4pf,&X4PFR,sizeof(X4PFR),__NO_LOCK)->num_bytes != EOF)
+    {
+        pX4PFR = realloc(pX4PFR,sizeof(X4PFR) * (nX4PFR + 1));
+
+        /*  Set last record to x'FF' to force keycmp to return low           */
+        memset(pX4PFR + nX4PFR,0xFF,sizeof(X4PFR));
+
+        /*  Now insert new record in ascending key sequence                  */
+        for (i = 0;i <= nX4PFR;i++)
+        {
+            if (keycmp(pX4PFR + i,&X4PFR) < 0)
+            {
+                break;
+            }
+        }
+        memmove(pX4PFR + i + 1,pX4PFR + i,sizeof(X4PFR) * (nX4PFR-i));
+        memmove(pX4PFR + i,&X4PFR,sizeof(X4PFR));
+        nX4PFR++;
+    }
+    _Rclose(x4pf);
+    last_X4 = -1;
+    return next_cfg_data();
+}
+
+int next_cfg_data()
+{
+    int i;
+
+    switch(access)
+    {
+    case ' ':
+        return -2;
+
+    case 'P':
+        if (_Rreadn(x1pf,&X1PFR,sizeof(X1PFR),__NO_LOCK)->num_bytes
+            != EOF)
+        {
+            return 1;
+        }
+        end_cfg_access();
+        return 0;
+
+    case 'D':
+        if (_Rreadn(x2pf,&X2PFR,sizeof(X2PFR),__NO_LOCK)->num_bytes
+            != EOF)
+        {
+            return 1;
+        }
+        end_cfg_access();
+        return 0;
+
+    case 'E':
+        if (_Rreadn(x3pf,&X3PFR,sizeof(X3PFR),__NO_LOCK)->num_bytes
+            != EOF)
+        {
+            return 1;
+        }
+        end_cfg_access();
+        return 0;
+
+    case 'I':
+        if (_Rreadn(x4pf,&X4PFR,sizeof(X4PFR),__NO_LOCK)->num_bytes
+            != EOF)
+        {
+            return 1;
+        }
+        end_cfg_access();
+        return 0;
+
+    case 'X':
+        do
+        {
+            _RIOFB_T * x;
+
+            /*  See if X4 record passes caller selections                    */
+            if (*prod != 0)
+            {
+                if(strncmp(prod,(pX4PFR + next_X4)->X4PRDN,
+                    sizeof(prod)) != 0)
+                {
+                    continue;
+                }
+            }
+            if (*server != 0)
+            {
+                if(strncmp(server,(pX4PFR + next_X4)->X4DSMN,
+                    sizeof(server)) != 0)
+                {
+                    continue;
+                }
+            }
+            if (*unit !=0)
+            {
+                if(strncmp(unit,(pX4PFR + next_X4)->X4UNIT,
+                    sizeof(unit)) != 0)
+                {
+                    continue;
+                }
+            }
+            if (*pinv != 0)
+            {
+                if(strncmp(pinv, (pX4PFR + next_X4)->X4FDNM,
+                    sizeof(pinv)) != 0)
+                {
+                    continue;
+                }
+            }
+
+            /*  This record passes the filter                                */
+
+            /*  Check for a duplicate set                                    */
+
+            i = 1;
+            if ((last_X4 != -1) && ((i = keycmp(pX4PFR + last_X4,
+                pX4PFR + next_X4)) == 0))
+            {
+                continue;
+            }
+
+            /*  All hunky dory - return data to caller                       */
+            if (puX1PFR != NULL)
+            {
+                x=_Rreadk(x1pf,&X1PFR,sizeof(X1PFR),__KEY_EQ|__NO_LOCK,
+                    (pX4PFR + next_X4)->X4PRDN,sizeof(prod));
+                if (x->num_bytes == 0)
+                {
+                    end_cfg_access();
+                    return -12;
+                }
+            }
+            if (puX2PFR != NULL)
+            {
+                x=_Rreadk(x2pf,&X2PFR,sizeof(X2PFR),__KEY_EQ|__NO_LOCK,
+                    (pX4PFR + next_X4)->X4DSMN,sizeof(server));
+                if (x->num_bytes == 0)
+                {
+                    end_cfg_access();
+                    return -22;
+                }
+            }
+            if (puX3PFR != NULL)
+            {
+                x=_Rreadk(x3pf,&X3PFR,sizeof(X3PFR),__KEY_EQ|__NO_LOCK,
+                    (pX4PFR + next_X4)->X4UNIT,sizeof(unit));
+                if (x->num_bytes == 0)
+                {
+                    end_cfg_access();
+                    return -32;
+                }
+            }
+            if (puX4PFR != NULL)
+                *puX4PFR = pX4PFR + next_X4;
+
+            /* It appears that this counter was being incremented
+               in the wrong place; at least we tracked the "V4R5" bug
+               to this line of code */                                         /*194638*/
+/********** last_X4 = next_X4++; ***************/                              /*194638*/
+            last_X4 = next_X4;                                                 /*194638*/
+            return i;
+        }
+        while(++next_X4 < nX4PFR);
+    }
+    end_cfg_access();
+    return 0;
+}
+

@@ -1,0 +1,139 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <recio.h>
+#include <time.h>
+
+#include "kmdlgh.h"
+
+#ifndef MIN
+#define MIN(a,b) (a < b) ? a : b
+#endif
+
+char *log_buff;
+int log_level;
+
+static _RFILE *fpX6PF = NULL;
+static _RIOFB_T *fb;
+
+static _Packed struct {
+    char  X6PROC[25];
+    int   X6TIME;
+    short X6DBGL;
+    char  X6DATA[1024];
+} x6pfr;
+
+static char xproc[26] = "                         "; /*  25 spaces */
+
+void *open_log(char *name, int level)
+{
+    int i = 0;
+
+    if (log_buff == NULL)
+    {
+        if ((log_buff = malloc(1024)) == NULL)
+        {
+            printf("Could not allocate logging buffer");
+        }
+    }
+
+    if ((level < LOG_ERROR) || (level > LOG_DEBUG))
+    {
+        level = LOG_ENTRY;
+    }
+    log_level = level;
+
+    /*  Store process name with trailing blanks  */
+    memset(xproc, ' ', sizeof(x6pfr.X6PROC));
+    for (i = 0; i < strlen(name); i++)
+    {
+        if (name[i] == '\0')
+        {
+            break;
+        }
+        xproc[i] = name[i];
+    }
+
+    if ((fpX6PF = _Ropen("X6PF","ar")) != NULL)
+    {
+        LOGOUT(LOG_ENTRY, "Starting");
+    }
+    return (void *) fpX6PF;
+}
+
+void logout(int now, char *process, int level, char *cptr)
+{
+    char *who;
+    int i = 0;
+
+    if (fpX6PF == NULL)
+    {
+        if (open_log(process, LOG_ENTRY) == NULL)
+        {
+            return;
+        }
+    }
+
+    if (now == 0)
+    {
+        now = time(NULL);
+    }
+    if (process == NULL)
+    {
+        who = xproc;
+    }
+    else
+    {
+        who = process;
+    }
+
+    memset(x6pfr.X6PROC,' ',sizeof(x6pfr.X6PROC));
+    strncpy(x6pfr.X6PROC, who, MIN(strlen(who), sizeof(x6pfr.X6PROC)));
+    if ((i = strlen(x6pfr.X6PROC)) < sizeof(x6pfr.X6PROC))
+    {
+        x6pfr.X6PROC[i] = ' ';
+    }
+
+    memset(x6pfr.X6DATA,' ',sizeof(x6pfr.X6DATA));
+    strncpy(x6pfr.X6DATA, cptr, MIN(strlen(cptr), sizeof(x6pfr.X6DATA)));
+    if ((i = strlen(x6pfr.X6DATA)) < sizeof(x6pfr.X6DATA))
+    {
+        x6pfr.X6DATA[i] = ' ';
+    }
+    x6pfr.X6TIME = now;
+    x6pfr.X6DBGL = level;
+    fb = _Rwrite(fpX6PF, &x6pfr, sizeof(x6pfr));
+}
+
+
+void close_log()
+{
+    if (fpX6PF != NULL)
+    {
+        LOGOUT(LOG_ENTRY, "Closing down");
+        _Rclose(fpX6PF);
+        fpX6PF = NULL;
+    }
+    if (log_buff != NULL)
+    {
+        free(log_buff);
+    }
+}
+

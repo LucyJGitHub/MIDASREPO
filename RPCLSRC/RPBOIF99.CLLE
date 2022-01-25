@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPBOIF99 - Back Office Interface - Program 9                */
+/*                                                                   */
+/*       This routine provides access to data area items that did    */
+/*       not exist in the original version of Replication.           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 128748  Supportforce Date 13Sep06            */
+/*                      CRP026  *CREATE    Date 18Jul05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       128748 - Add 'Delay time' & 'No of times to repeat' to the  */
+/*                items that can be requested.                       */
+/*       CRP026 - Created during new Feeder work to make isolate     */
+/*                code from future changes in data area layout.      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ID &DATA &LEN)
+
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(10) /* Name of the +
+                          data that is required */
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(64) /* Data to be +
+                          returned  */
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(2 0) /* Length of +
+                          data that is being returned */
+
+             COPYRIGHT +
+             TEXT('(c) Misys International Banking Systems Ltd. 2005')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Retreive the item of data requested and set the length so that the +
+    caller knows how much of the data field to use. */
+
+             IF         COND(&ID = 'MIDASTYPE ') THEN(DO)
+                RTVDTAARA  DTAARA(RPBOIFDA (161 10)) RTNVAR(&DATA)
+                CHGVAR     VAR(&LEN) VALUE(10)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         COND(&ID = 'FEEDERMODE') THEN(DO)
+                RTVDTAARA  DTAARA(RPBOIFDA (171 7)) RTNVAR(&DATA)
+                CHGVAR     VAR(&LEN) VALUE(7)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         COND(&ID = 'MQMNAME   ') THEN(DO)
+                RTVDTAARA  DTAARA(RPBOIFDA (191 48)) RTNVAR(&DATA)
+                CHGVAR     VAR(&LEN) VALUE(48)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         COND(&ID = 'DLYTIME') THEN(DO)                           /*128748*/
+                RTVDTAARA  DTAARA(RPBOIFDA (128 3)) RTNVAR(&DATA)                /*128748*/
+                CHGVAR     VAR(&LEN) VALUE(3)                                    /*128748*/
+                GOTO       CMDLBL(END)                                           /*128748*/
+             ENDDO                                                               /*128748*/
+             IF         COND(&ID = 'NOOFRPTS') THEN(DO)                          /*128748*/
+                RTVDTAARA  DTAARA(RPBOIFDA (138 3)) RTNVAR(&DATA)                /*128748*/
+                CHGVAR     VAR(&LEN) VALUE(3)                                    /*128748*/
+                GOTO       CMDLBL(END)                                           /*128748*/
+             ENDDO                                                               /*128748*/
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Error in Back Office Interface +
+                          RPBOIF99') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+ END:
+             RETURN
+
+             ENDPGM

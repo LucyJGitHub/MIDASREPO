@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+     /*                                                             */
+     /*              System Name - Foreign Exchange & Money Market  */
+     /*              Module Name - General Message Sender           */
+     /*                                                             */
+     /*             Program Name - KCMU0C                           */
+     /*            Program Title - General message sender           */
+     /*                  Release - TIDBA                            */
+     /*                                                             */
+     /*            Creation Date - 11/09/97 from UTM14C             */
+     /*      Last Amendment Date -                                  */
+     /*-------------------------------------------------------------*/
+     /*   Change Control                                            */
+     /*   ~~~~~~~~~~~~~~                                            */
+     /*   Date            Initials      Amendment                   */
+     /*   ~~~~            ~~~~~~~~      ~~~~~~~~~                   */
+     /*   12Dec21         MD058809      MQ9 Compatibility Patch Fix */
+     /*   DD/MM/YYYY        XXX                                     */
+     /*-------------------------------------------------------------*/
+     /*P  Purpose                                                   */
+     /*P  ~~~~~~~                                                   */
+     /*P  Send batches of twenty messages to the program message    */
+     /*P  queue                                                     */
+     /*-------------------------------------------------------------*/
+             /*                                                     */
+             PGM        PARM(&MSGQ &MSG &NUM &CLRQ)
+
+             DCL        &MSGQ   *CHAR 10      /*  Program msg queue */
+             DCL        &MSG    *CHAR 740     /*  Message array     */
+             DCL        &NUM    *DEC   3      /*  Nbr of messages   */
+             DCL        &CLRQ   *CHAR  1      /*  Clear queue flag  */
+
+             DCL        &MSGID  *CHAR   7     /*  Message id        */
+             DCL        &MSGDTA *CHAR  30     /*  Message parameters*/
+
+             DCL        &I      *DEC   3  0   /*  Index             */
+             DCL        &IM     *DEC   5  0   /*  Index             */
+             DCL        &ERRCNT *DEC   1 0    /*  Error count       */
+
+/*------------------------------------------------------------------*/
+/* Monitor for any errors                                           */
+/*------------------------------------------------------------------*/
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERROR)
+
+/*------------------------------------------------------------------*/
+/* Clear program message queue if requested                         */
+/*------------------------------------------------------------------*/
+
+             IF         COND(&CLRQ *EQ 'Y') THEN(DO)
+             RMVMSG     PGMQ(*SAME &MSGQ) CLEAR(*ALL)
+             CHGVAR     VAR(&CLRQ) VALUE('N')
+             ENDDO
+
+/*------------------------------------------------------------------*/
+/* Send next message to the program message queue                   */
+/*------------------------------------------------------------------*/
+
+ NEXT:       IF         COND(&NUM *LE &I) THEN(RETURN)
+
+             CHGVAR     &IM   ((&I * 37) + 1)
+             CHGVAR     &MSGID  (%SST(&MSG &IM 7))
+             CHGVAR     &IM   (&IM + 7)
+             CHGVAR     &MSGDTA (%SST(&MSG &IM 30))
+
+             SNDPGMMSG  MSGID(&MSGID) MSGF(*LIBL/KCMMSG) +
+                          MSGDTA(&MSGDTA) TOPGMQ(*SAME (&MSGQ))
+             MONMSG     MSGID(CPF0000) EXEC(KMDSNC PGM(UTM14C))
+/* CPF0790  Syntax errors detected. */
+
+             CHGVAR     VAR(&I) VALUE(&I +1)
+             GOTO       CMDLBL(NEXT)
+
+/*-------------------------------------------------------------------*/
+/* Error processing                                                  */
+/*-------------------------------------------------------------------*/
+
+ ERROR:      IF         COND(&ERRCNT *GT 0) THEN(RETURN)
+             CHGVAR     VAR(&ERRCNT) VALUE(&ERRCNT + 1)
+             /*                                                      */
+             RETURN
+
+             ENDPGM

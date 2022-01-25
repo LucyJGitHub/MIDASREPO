@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*----------------------------------------------------------------*/
+   /*              System Name - EQUATION                            */
+   /*              Module Name - Trade Innovation                    */
+   /*                                                                */
+   /*             Program Name - KCMXTC                              */
+   /*            Program Title - Load translate table                */
+   /*                                                                */
+   /*            Creation Date - 19/09/1997                          */
+   /*      Last Amendment Date -   /  /                              */
+   /*----------------------------------------------------------------*/
+   /*  Purpose                                                       */
+   /*  ~~~~~~~                                                       */
+   /*  Load ASCII-EBCDIC or EBCDIC-ASCII Translate table             */
+   /*----------------------------------------------------------------*/
+   /*  Change Control                                                */
+   /*  ~~~~~~~~~~~~~~                                                */
+   /*  Date            Initials      Amendment                       */
+   /*  ~~~~            ~~~~~~~~      ~~~~~~~~~                       */
+   /*  12Dec21         MD058809      Amend                           */
+   /*  12/09/97        JRE           Created                         */
+   /*                                                                */
+   /*----------------------------------------------------------------*/
+   /*================================================================*/
+   /*  START OF PROGRAM                                              */
+   /*================================================================*/
+             /*                                                      */
+             PGM (&TYPE &TAB)
+
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(2) /* 'AE' or +
+                          'EA' */
+             DCL        VAR(&TAB) TYPE(*CHAR) LEN(256) /* The +
+                          required table */
+
+             DCL        VAR(&EATAB) TYPE(*CHAR) LEN(10) +
+                          VALUE('Qxxx337437') /* EBCDIC - ASCII +
+                          Table name */
+             DCL        VAR(&AETAB) TYPE(*CHAR) LEN(10) +
+                          VALUE('Q437337xxx') /* ASCII - EBCDIC +
+                          Table name */
+             DCL        &CCSIDN *DEC (5 0)
+             DCL        &CCSIDC *CHAR 5
+             DCL        &CCSID *CHAR 3 '037'
+             DCL        &OFF *DEC (1 0) 2
+             DCL        &TABLE *CHAR 10
+
+             DCL        VAR(&RCV) TYPE(*CHAR) LEN(400)
+             DCL        VAR(&RLEN) TYPE(*CHAR) LEN(4) +
+                          VALUE(X'00000140')
+             DCL        VAR(&TBL_LIB) TYPE(*CHAR) LEN(20) +
+                          VALUE('          QUSRSYS   ')
+             DCL        VAR(&TBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAN) TYPE(*CHAR) LEN(10) +
+                          VALUE('          ')
+             DCL        VAR(&M65535) TYPE(*CHAR) LEN(4) +
+                          VALUE(X'0000FFFF')
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(8) VALUE('RSST0100')
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(104) +
+                          VALUE(X'00000064')
+
+/* Get job CCSID as character */
+
+             RTVJOBA    CCSID(&CCSIDN)
+             CHGVAR     VAR(&CCSIDC) VALUE(&CCSIDN)
+/* If not a 3 character ccsid, use the 037 default */
+             IF         COND(%SST(&CCSIDC 1 2) *EQ '00') THEN(CHGVAR +
+                          VAR(&CCSID) VALUE(%SST(&CCSIDC 3 3)))
+
+/* Set up according to translation direction */
+
+             IF         COND(&TYPE *EQ 'EA') THEN(CHGVAR VAR(&TBL) +
+                          VALUE(&EATAB))
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&OFF) VALUE(8)
+             CHGVAR     VAR(&TBL) VALUE(&AETAB)
+             ENDDO
+             CHGVAR     VAR(%SST(&TBL &OFF 3)) VALUE(&CCSID)
+
+/* Use default if not found */
+
+             CHKOBJ     OBJ(QUSRSYS/&TBL) OBJTYPE(*TBL)
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(%SST(&TBL +
+                          &OFF 3)) VALUE('037'))
+             CHGVAR     VAR(%SST(&TBL_LIB 1 10)) VALUE(&TBL)
+
+/* Load in data */
+
+             CALL       PGM(QLGRTVSS) PARM(&RCV &RLEN &TBL_LIB &LAN +
+                          &M65535 &FMT &ERR)
+             CHGVAR     VAR(&TAB) VALUE(%SST(&RCV 64 256))
+             ENDPGM

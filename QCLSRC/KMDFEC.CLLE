@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*START                                                      */
+   /*                                                           */
+   /*             System Name - Equation                        */
+   /*             Module Name - TIDBA                           */
+   /*                                                           */
+   /*            Program Name - KMDFEC                          */
+   /*           Program Title - Issue CPF9898 Escape message    */
+   /*           Creation Date - 22/08/1997                      */
+   /*     Last Amendment Date -   /  /                          */
+   /*-----------------------------------------------------------*/
+   /*  Change Control                                           */
+   /*  ~~~~~~~~~~~~~~                                           */
+   /*  Date            Initials      Amendment                  */
+   /*  ~~~~            ~~~~~~~~      ~~~~~~~~~                  */
+   /*  12Dec21         MD058809      MQ9 Compatibility Patch Fix*/
+   /*  22/08/1997      JRE           Created                    */
+   /*-----------------------------------------------------------*/
+   /*  Purpose                                                  */
+   /*  ~~~~~~~                                                  */
+   /*  Called from a C program on finding a fatal condition.    */
+   /*  This causes the module, function and line where the call */
+   /*  is issued to be logged in the message details            */
+   /*-----------------------------------------------------------*/
+/*=================================================================*/
+/*  START OF PROGRAM                                               */
+/*=================================================================*/
+             PGM        PARM(&MSG)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(133)
+             DCL        VAR(&MSG2) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&NULL) TYPE(*CHAR) LEN(1) VALUE(X'00')
+             DCL        VAR(&N) TYPE(*DEC) LEN(3 0) VALUE(0)
+
+             CHGVAR     VAR(&MSG2) VALUE(&MSG)
+ LP:         CHGVAR     VAR(&N) VALUE(&N + 1)
+             IF         COND(&N *LE 132) THEN(DO)
+             IF         COND(%SST(&MSG2 &N 1) *NE &NULL) THEN(GOTO +
+                          CMDLBL(LP))
+ LP2:        CHGVAR     VAR(%SST(&MSG2 &N 1)) VALUE(' ')
+             CHGVAR     VAR(&N) VALUE(&N + 1)
+             IF         COND(&N *LE 132) THEN(GOTO CMDLBL(LP2))
+             ENDDO
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&MSG2) +
+                          MSGTYPE(*ESCAPE)
+             ENDPGM

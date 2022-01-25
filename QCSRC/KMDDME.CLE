@@ -1,0 +1,352 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMDDME - Download files to departmental server
+ *
+ *       (c) Misys International Banking Systems Ltd. 2001
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. 176840    *CREATE  Date 05Apr00
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       176840 - Cater for downloading multimembered file by
+ *                changing the _Ropen function call so that it opens
+ *                all members of every file it opens.
+ *
+ ********************************************************************
+ */
+/******************************************************************************
+
+******************************************************************************/
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <recio.h>
+#include <xxfdbk.h>
+#include <leawi.h>
+#include <decimal.h>
+
+#include "kmdlgh.h"
+#include "kmddmh.h"
+#include "kmddih.h"
+#include "kmdifh.h"
+#include "kmdboh.h"
+#include "kmdtrh.h"
+#include "kmdrfh.h"
+
+#pragma linkage (KMDSMC,OS)
+void KMDSMC(char *);
+
+#define CHANNEL_NAME_LEN 40
+
+char process_name[25];
+char product[PRODUCT_NAME_LEN + 1];
+char short_name[PRODUCT_SHORT_NAME_LEN + 1];
+char channel[CHANNEL_NAME_LEN + 1];
+char *table_array = NULL;
+long num_tables = 0;
+qhandle product_queue = NULL;
+unsigned short max_buffer = 0;
+
+/*  Remove trailing blanks  */
+
+void rtrim(char *pchr, short len)
+{
+    short i = 0;
+
+    while (i < len)
+    {
+        if (pchr[i] == ' ')
+        {
+            pchr[i] = '\0';
+            return;
+        }
+        i++;
+    }
+}
+
+void initialise(int argc, char *argv[])
+{
+    static _RFILE * x1pf;
+    _Packed struct {
+        char X1PRNM[8];
+        char X1PRSN[5];
+        char X1DESC[35];
+        char X1RREQ[1];
+        char X1AREQ[1];
+        char X1CHNL[40];
+    } X1PFR;
+    char file_name[50];
+    char *pqname = NULL;
+
+    /*  Process name  */
+    Init_BO("   ");
+    memset(product, 0, PRODUCT_NAME_LEN + 1);
+    memset(short_name, 0, PRODUCT_SHORT_NAME_LEN + 1);
+
+    memcpy(product, argv[1], PRODUCT_NAME_LEN);
+    sprintf(process_name, "RP%s%s", unit_mnemonic(), product);
+
+    open_log(process_name, get_level());
+
+    if (argc < 5)
+    {
+        LOGOUT(LOG_ERROR, "At least 4 parameters must be specified");
+        exit(0);
+    }
+
+    sprintf(file_name, "%s/X110LF", MDBA_library());
+    if ((x1pf = _Ropen(file_name, "rr")) == NULL)
+    {
+        LOGOUT(LOG_ERROR, "Cannot open X110LF file");
+        exit(0);
+    }
+
+    if (_Rreadk(x1pf, (char *) &X1PFR, sizeof(X1PFR),
+        __KEY_EQ | __NO_LOCK, product,
+        PRODUCT_NAME_LEN)->num_bytes != 0)
+    {
+        rtrim(product, PRODUCT_NAME_LEN + 1);
+        memcpy(short_name, X1PFR.X1PRSN, sizeof(X1PFR.X1PRSN));
+        rtrim(short_name, PRODUCT_SHORT_NAME_LEN + 1);
+        memcpy(channel, X1PFR.X1CHNL, sizeof(X1PFR.X1CHNL));
+        rtrim(channel, CHANNEL_NAME_LEN + 1);
+    }
+    else
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "Product %s has not been defined", argv[1]);
+            ERROROUT(log_buff);
+        }
+        exit(0);
+    }
+    _Rclose(x1pf);
+
+    attach_to_queue_manager();
+
+    if ((pqname = queue_name(product, NULL, unit_mnemonic(), -1)) != NULL)
+    {
+        product_queue = attach_to_queue(pqname, QUEUE_WRITE_AUTO);
+        max_buffer = get_max_msg_length(product_queue);
+    }
+    else
+    {
+        exit(0);
+    }
+    table_array = load_table_list(argv[3], argv[4]);
+}
+
+void terminate(void)
+{
+    detach_from_queue(product_queue);
+    free(table_array);
+    detach_from_queue_manager();
+}
+
+void main(int argc,char * argv[])
+{
+    int i;
+    _RFILE * xxpf;
+    _XXOPFB_T * opfbk;
+    int p25, p50, p75;
+    int rcds, num_per_buffer, rcd_len, record_buffer_len, null_buffer_len;
+    short count;
+    char msg[80];
+    OUTREC control_record = {0, 1, "  ", "0000000000", "  ", "                  ", '0', ' '};
+    OUTREC *pRecord, *pNulls;
+
+/**** Start of 176840 ****                                                      *176840*/
+/*                                                                              *176840*
+   Change current_table to include the member name after the file name.)        *176840*
+   It is set to the size it is to allow ten bytes for the member name,          *176840*
+   two for the brackets, and one for the null-terminating character.            *176840*
+   Though in fact, as it is being used at present, the member name              *176840*
+   will always be "(*ALL)".                                                     *176840*
+*/                                                                             /*176840*/
+/***char current_table[TABLE_NAME_LEN + 1]; ***                                 *176840*/
+    char current_table[TABLE_NAME_LEN + 13];                                   /*176840*/
+/**** End of 176840 ****                                                        *176840*/
+    char *pcurtab;
+
+    _HEAP_SIZE = _NO_DEFAULT_HEAP;
+    initialise(argc, argv);
+
+    /*  Set up departmental server if specified  */
+    if (memcmp(argv[2], "*ALL", 4) != 0)
+    {
+        memcpy(control_record.ds_mnemonic, argv[2], 2);
+    }
+
+    /*  Send a start download   */
+    memcpy(control_record.type, "91", 2);
+    memset(control_record.table, ' ', TABLE_NAME_LEN);
+    write_to_queue(product_queue, (char *)&control_record, sizeof(OUTREC),
+        MID_QPRI);
+
+    /*  For each table, read all records, buffer them onto a message, */
+    /*  and then send them                                            */
+
+    for (i = 0; i < num_tables; i++)
+    {
+        pcurtab = table_array + (i * TABLE_NAME_LEN);
+/****** memset(current_table, 0, TABLE_NAME_LEN + 1); ****                       *176840*/
+        memset(current_table, 0, TABLE_NAME_LEN + 13);                          /*176840*/
+        memcpy(current_table, pcurtab, TABLE_NAME_LEN);
+        rtrim(current_table, 19);
+                                                                                /*176840*/
+        /* Append the member name *ALL to the file name, to ensure that          *176840*
+           all members are read. */                                             /*176840*/
+        strcat(current_table, "(*ALL)");                                        /*176840*/
+                                                                                /*176840*/
+        if ((xxpf = _Ropen(current_table, "rr, nullcap=Y")) == NULL)
+        {
+            LOGERROR
+            {
+                sprintf(log_buff,"Table %s could not be opened", current_table);
+                ERROROUT(log_buff);
+            }
+            continue;
+        }
+        opfbk = _Ropnfbk(xxpf);  /* Open feedback area pointer */
+        p25 = (opfbk->num_records) / 4 + 1;
+        p50 = (opfbk->num_records) / 2 + 1;
+        p75 = (opfbk->num_records * 3) / 4 + 1;
+        rcds = 0;
+        rcd_len = opfbk->pgm_record_len;
+        num_per_buffer = (max_buffer - (sizeof(OUTREC) + 1))/ rcd_len;
+
+        strcpy(msg, current_table);
+        strcat(msg, ":   0% complete");
+        KMDSMC(msg);
+
+        /*  Send a start download for table xxxxxxx  */
+
+        memcpy(control_record.type, "92", 2);
+        memcpy(control_record.table, pcurtab, TABLE_NAME_LEN);
+        write_to_queue(product_queue, (char *)&control_record, sizeof(OUTREC),
+            MID_QPRI);
+
+        /* Send BUFFERED ADD requests for all records */
+
+        record_buffer_len = sizeof(OUTREC) + num_per_buffer * rcd_len;
+        pRecord = (OUTREC *) malloc(record_buffer_len);
+        pRecord->length = rcd_len;
+        if (memcmp(argv[2], "*ALL", 4) != 0)
+        {
+            memcpy(pRecord->ds_mnemonic, argv[2], 2);
+        }
+        else
+        {
+            memcpy(pRecord->ds_mnemonic, "  ", 2);
+        }
+        memcpy(pRecord->cycle, "00000000000", 10);
+        memcpy(pRecord->type, "90", 2);
+        memcpy(pRecord->table, pcurtab, TABLE_NAME_LEN);
+        if (opfbk->null_capable == 0)
+        {
+            pRecord->null_flag = '0';
+            pNulls = NULL;
+        }
+        else
+        {
+            pRecord->null_flag = '1';
+            null_buffer_len = sizeof(OUTREC) + num_per_buffer *
+                xxpf->null_map_len;
+            pNulls = (OUTREC *) malloc(null_buffer_len);
+            memcpy(pNulls, pRecord, sizeof(OUTREC));
+            pNulls->length = xxpf->null_map_len;
+            pNulls->null_flag = '3';
+        }
+
+        /*  Read through the records on the current table */
+        count = 0;
+        while(_Rreadn(xxpf, pRecord->data + count * rcd_len, rcd_len,
+            __NO_LOCK)->num_bytes != EOF)
+        {
+            if (pNulls != NULL)
+            {
+                memcpy(pNulls->data + xxpf->null_map_len * count,
+                    xxpf->in_null_map, xxpf->null_map_len);
+            }
+            count++;
+            if (count == num_per_buffer)
+            {
+                pRecord->count = count;
+                write_to_queue(product_queue, (char *) pRecord,
+                    record_buffer_len, MID_QPRI);
+                if (pNulls != NULL)
+                {
+                    pNulls->count = count;
+                    write_to_queue(product_queue, (char *) pNulls,
+                        null_buffer_len, MID_QPRI);
+                }
+                count = 0;
+            }
+            rcds++;
+            if (rcds == p50)
+            {
+                strcpy(msg, current_table);
+                strcat(msg, ":  50% complete");
+                KMDSMC(msg);
+            }
+            else if (rcds == p75)
+            {
+                strcpy(msg, current_table);
+                strcat(msg, ":  75% complete");
+                KMDSMC(msg);
+            }
+            else if (rcds == p25)
+            {
+                strcpy(msg, current_table);
+                strcat(msg, ":  25% complete");
+                KMDSMC(msg);
+            }
+            commit_queue_manager();
+        }
+        if (count > 0)
+        {
+            pRecord->count = count;
+            write_to_queue(product_queue, (char *) pRecord, record_buffer_len, MID_QPRI);
+            if (pNulls != NULL)
+            {
+                pNulls->count = count;
+                write_to_queue(product_queue, (char *) pNulls, null_buffer_len, MID_QPRI);
+            }
+            count = 0;
+            commit_queue_manager();
+        }
+
+        strcpy(msg, current_table);
+        strcat(msg, ": 100% complete");
+        KMDSMC(msg);
+        _Rclose(xxpf);
+
+        free(pRecord);
+        if (pNulls != NULL)
+        {
+            free(pNulls);
+        }
+
+        /*  Send a finished download for table xxxxxxx  */
+        memcpy(control_record.type, "93", 2);
+        write_to_queue(product_queue, (char *)&control_record, sizeof(OUTREC), MID_QPRI);
+        commit_queue_manager();
+    }
+
+    /*  Send a finished download   */
+    memcpy(control_record.type, "94", 2);
+    memset(control_record.table, ' ', TABLE_NAME_LEN);
+    write_to_queue(product_queue, (char *)&control_record, sizeof(OUTREC), MID_QPRI);
+    commit_queue_manager();
+    terminate();
+    return;
+}

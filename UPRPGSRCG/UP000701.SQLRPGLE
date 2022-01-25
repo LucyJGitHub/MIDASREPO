@@ -28,7 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059264 - SP2021.B API: BSRT returns error for              *
-      *             “display only” fields                             *
+      *             display only fields                               *
       *  MD057288 - During migration, some XTD files are on top of    *
       *             LIBL causing incorrect update. Fix is to add      *
       *             correct library while updating XTD.               *

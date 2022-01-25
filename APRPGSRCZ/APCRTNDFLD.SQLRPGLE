@@ -30,7 +30,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059264 - SP2021.B API: BSRT returns error for              *
-      *             “display only” fields                             *
+      *             display only fields                               *
       *  MD056565 - Deliverable Data Split for APDFFLDPD              *
       *  MD056564 - Deliverable Data Split for No Display field cond  *
       *  MD055681 - Deliverable Data Split for SAR                    *

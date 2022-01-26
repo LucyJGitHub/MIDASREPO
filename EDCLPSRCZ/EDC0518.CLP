@@ -18,23 +18,25 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058071           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. CED006 *CREATE     DATE 23JUL97             */
+/*                      CED006 *CREATE     DATE 23JUL97             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD058071 - Deliverable Data Split for Export Data           */
 /*       MD046248 - Finastra Rebranding                             */
 /*       CED006 - Midas ED Enhancements                             */
 /*                                                                  */
 /********************************************************************/
              PGM        PARM(&CNAM &CSEQ &MBRN)
- 
+
 /* Copyright statement definition */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
@@ -44,27 +46,33 @@
              DCL        VAR(&MBRN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
- 
+
 /* Global error monitor */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Call AOBUTFR0 to check file EDLFEEPD selected for transfer to GM */
- 
+
              CALL       PGM(AOBUTFR0) PARM('EDSKEYPD' '          ' +
                           &RTCD &FMT)
- 
+
 /* EDSKEYPD is selected for transfer */
- 
+
              IF         COND(&RTCD *NE '*FAILED') THEN(DO)
- 
+
+/* copy the DDS file into QTEMP using the old name */                                   /*MD058071*/
+             DLTF       FILE(QTEMP/EDSKYRPD)                                            /*MD058071*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD058071*/
+             CPYF       FROMFILE(EDSKYCTD) TOFILE(QTEMP/EDSKYRPD) +
+                          CRTFILE(*YES)                                                 /*MD058071*/
+                                                                                        /*MD058071*/
 /* Select matching a/c key records */
 /* Member ACCRUAL on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD ACCRUAL) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -98,17 +106,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY01)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY01) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*REPLACE) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY01)
- 
+
 /* Select matching a/c key records */
 /* Member BKMATUR on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD BKMATUR) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -142,17 +150,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY02)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY02) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY02)
- 
+
 /* Select matching a/c key records */
 /* Member BKPOSN on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD BKPOSN) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -186,17 +194,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY03)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY03) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY03)
- 
+
 /* Select matching a/c key records */
 /* Member BKPOSNR on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD BKPOSNR) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -230,17 +238,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY04)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY04) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY04)
- 
+
 /* Select matching a/c key records */
 /* Member CONTLIAB on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD CONTLIAB) (EDSKYRPD) +
                           (SDBANKPD)) FORMAT(EDSKEYPD EDSKEYD0) +
                           JFLD((AKEYE4 AKEYR4 *EQ) (AKEYE9 AKEYR9) +
@@ -274,17 +282,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY05)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY05) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY05)
- 
+
 /* Select matching a/c key records */
 /* Member CPOSN1 on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD CPOSN1) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -318,17 +326,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY06)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY06) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY06)
- 
+
 /* Select matching a/c key records */
 /* Member CPOSN2 on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD CPOSN2) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -362,17 +370,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY07)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY07) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY07)
- 
+
 /* Select matching a/c key records */
 /* Member DEPOTMVT on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD DEPOTMVT) (EDSKYRPD) +
                           (SDBANKPD)) FORMAT(EDSKEYPD EDSKEYD0) +
                           JFLD((AKEYE4 AKEYR4 *EQ) (AKEYE9 AKEYR9) +
@@ -406,17 +414,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY08)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY08) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY08)
- 
+
 /* Select matching a/c key records */
 /* Member DPOSN1 on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD DPOSN1) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -450,17 +458,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY09)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY09) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY09)
- 
+
 /* Select matching a/c key records */
 /* Member DPOSN2 on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD DPOSN2) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -494,17 +502,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY10)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY10) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY10)
- 
+
 /* Select matching a/c key records */
 /* Member MMREVAL on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD MMREVAL) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -538,17 +546,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY11)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY11) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY11)
- 
+
 /* Select matching a/c key records */
 /* Member PSETTLE on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD PSETTLE) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -582,17 +590,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY12)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY12) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY12)
- 
+
 /* Select matching a/c key records */
 /* Member REDEMP on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD REDEMP) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -626,17 +634,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY13)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY13) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY13)
- 
+
 /* Select matching a/c key records */
 /* Member TRADE on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD TRADE) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -670,17 +678,17 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY14)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY14) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY14)
- 
+
 /* Select matching a/c key records */
 /* Member TSETTLE on file SEKEYD */
 /* Exclusion of C__bb_____DI and H__bb_____DI keys and inclusion of */
 /* C__BB_____DI and H__BB_____DI keys catered for in EDSKYRPD  */
- 
+
              OPNQRYF    FILE((SEKEYD TSETTLE) (EDSKYRPD) (SDBANKPD)) +
                           FORMAT(EDSKEYPD EDSKEYD0) JFLD((AKEYE4 +
                           AKEYR4 *EQ) (AKEYE9 AKEYR9) (AKEYE13 +
@@ -714,34 +722,34 @@
                           '%MIN(SEKEYD/PTFR)') (TNLU +
                           '%MIN(SEKEYD/TNLU)') (PEV1 +
                           '%MIN(SEKEYD/PEV1)')) OPNID(EDSKEY15)
- 
+
              CPYFRMQRYF FROMOPNID(EDSKEY15) TOFILE(EDSKEYPD) +
                           TOMBR(&MBRN) MBROPT(*ADD) FMTOPT(*NOCHK)
 /* Close */
              CLOF       OPNID(EDSKEY15)
              ENDDO
- 
+
 /* Normal termination */
              IF         COND(%SWITCH(XXXXXX00)) THEN(GOTO +
                           CMDLBL(ENDCLPGM))
- 
- 
+
+
 /* Abnormal termination */
 ABNOR:
- 
+
              SNDPGMMSG  MSG('EDC0518 - ED Copy of SEKEYD TERMINATED +
                           ABNORMALLY') TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 CHGJOB     SWS(XXXXXX11)
                 MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 ENDCLPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058071           Date 11May21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*                      CRE020             Date 20Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD058071 - Deliverable Data Split for Export Data           */
 /*       MD046248 - Finastra Rebranding                              */
 /*   CRE020 - Midas Plus Online Printing of Advices (GE7)            */
 /*   CPK009 - Packaging for DBA3 release. STRCMTCTL values set       */
@@ -160,14 +162,14 @@
              CALL       FF0473 PARM(&CODE &ACT &MSG)
              GOTO       CMDLBL(END)
          ENDDO
- 
+
 /* Perform ED extract of FF account keys, if required */              /*CED005*/
              CALL       PGM(AOBUTFR0) PARM('EDFKEYPD' '          ' +
                           &ED_RTCD &ED_FMT)                           /*CED005*/
              IF         COND(&ED_RTCD *NE '*FAILED') THEN(DO)         /*CED005*/
                                                                       /*CED005*/
 /* Select matching a/c key records */                          /* START CED005*/
-             OPNQRYF    FILE((FOKEYD &CODE) (EDFOKRPD) (SDBANKPD)) +
+/**********  OPNQRYF    FILE((FOKEYD &CODE) (EDFOKRPD) (SDBANKPD)) +
                           FORMAT(EDFKEYPD EDFKEYD0) JFLD((AKEYE1 +
                           AKEYR1 *EQ) (AKEYE11 AKEYR11)) +
                           GRPFLD(TNBR FFKY EDAT REVI) +
@@ -196,7 +198,37 @@
                           '%MIN(FOKEYD/STRP)') (ISTN +
                           '%MIN(FOKEYD/ISTN)') (PRFC +
                           '%MIN(FOKEYD/PRFC)') (PTFR +
-                          '%MIN(FOKEYD/PTFR)')) OPNID(FOKEYD)    /* END CED005*/
+                          '%MIN(FOKEYD/PTFR)')) OPNID(FOKEYD) */ /* END CED005*/        /*MD058071*/
+             OPNQRYF    FILE((FOKEYD &CODE) (EDFOKXTD) (SDBANKPD)) +
+                          FORMAT(EDFKEYPD EDFKEYD0) JFLD((AKEYE1 +
+                          AKEYR1 *EQ) (AKEYE11 AKEYR11)) +
+                          GRPFLD(TNBR FFKY EDAT REVI) +
+                          MAPFLD((AKEYE1 '%SST(FOKEYD/FFKY 1 3)') +
+                          (AKEYR1 '%SST(EDFOKXTD/FYFFKY 1 3)') +
+                          (AKEYE11 '%SST(FOKEYD/FFKY 11 4)') +
+                          (AKEYR11 '%SST(EDFOKXTD/FYFFKY 11 4)') +
+                          (AGRDNB '%MIN(SDBANKPD/BJRDNB)') (RECI +
+                          '%MIN(FOKEYD/RECI)') (CLON +
+                          '%MIN(FOKEYD/CLON)') (CBCD +
+                          '%MIN(FOKEYD/CBCD)') (BOKC +
+                          '%MIN(FOKEYD/BOKC)') (BRCA +
+                          '%MIN(FOKEYD/BRCA)') (OBKC +
+                          '%MIN(FOKEYD/OBKC)') (ASEQ +
+                          '%MIN(FOKEYD/ASEQ)') (EAMT +
+                          '%SUM(FOKEYD/EAMT)') (CCY +
+                          '%MIN(FOKEYD/CCY)') (VDAT +
+                          '%MIN(FOKEYD/VDAT)') (SETP +
+                          '%MIN(FOKEYD/SETP)') (SETA +
+                          '%MIN(FOKEYD/SETA)') (SEBR +
+                          '%MIN(FOKEYD/SEBR)') (ISTT +
+                          '%MIN(FOKEYD/ISTT)') (YRNO +
+                          '%MIN(FOKEYD/YRNO)') (MTHN +
+                          '%MIN(FOKEYD/MTHN)') (PCAL +
+                          '%MIN(FOKEYD/PCAL)') (STRP +
+                          '%MIN(FOKEYD/STRP)') (ISTN +
+                          '%MIN(FOKEYD/ISTN)') (PRFC +
+                          '%MIN(FOKEYD/PRFC)') (PTFR +
+                          '%MIN(FOKEYD/PTFR)')) OPNID(FOKEYD)    /* END CED005*/        /*MD058071*/
                                                                       /*CED005*/
 /* Copy to relevant member of ED extract file */                      /*CED005*/
              CPYFRMQRYF FROMOPNID(FOKEYD) TOFILE(EDSFKYPD) +

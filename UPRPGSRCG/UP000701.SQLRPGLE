@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058933             Date 28Sep21             *
-      *  Prev Amend No. MD058721             Date 28Aug21             *
+      *  Last Amend No. MD059264             Date 21Jan22             *
+      *  Prev Amend No. MD058933             Date 28Sep21             *
+      *                 MD058721             Date 28Aug21             *
       *                 MD058491             Date 28Jul21             *
       *                 MD057288             Date 01Dec20             *
       *                 MD057231             Date 18Nov20             *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059264 - SP2021.B API: BSRT returns error for              *
+      *             display only fields                               *
       *  MD058933 - For CBCMPCTD, field 'Execution parameters' needs  *
       *             update as field is in the XTD.                    *
       *  MD058721 - Consider bespoke API in WIP config.               *
@@ -109,6 +112,11 @@
      C                   exsr      SR_CBCMP                                                 MD058933
      C                   endif                                                              MD058933
                                                                                             MD058933
+      * Special process for APFLDCTD                                                        MD059264
+     C                   if        XINDEX = 'APDFLCTD'                                      MD059264
+     C                   exsr      SR_APDFL                                                 MD059264
+     C                   endif                                                              MD059264
+                                                                                            MD059264
      C                   Seton                                        LR
      C                   Return
 
@@ -559,6 +567,60 @@
      C                   Endif                                                              MD058933
      C                   ENDSR                                                              MD058933
       *                                                                                     MD058933
+      /EJECT                                                                                MD059264
+      *****************************************************************                     MD059264
+      *                                                               *                     MD059264
+      *    SR_APFLD - Special process to update APFLDXTD              *                     MD059264
+      *                                                               *                     MD059264
+      *****************************************************************                     MD059264
+                                                                                            MD059264
+     C     SR_APDFL      BEGSR                                                              MD059264
+                                                                                            MD059264
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD059264
+                                                                                            MD059264
+     C                   eval      SQLDynStmt = 'update '      +                            MD059264
+     C                             %trimr(KMSCHEMA) + '/APDFLXTD x '  +                     MD059264
+     C                             ' set  x.FILGDL   = ''N'' where '      +                 MD059264
+     C                             ' x.FILGDL =  '' '''                                     MD059264
+                                                                                            MD059264
+     C/EXEC SQL                                                                             MD059264
+     C+ prepare DynSQLStmnt                                                                 MD059264
+     C+ from :SQLDynStmt                                                                    MD059264
+     C/END-EXEC                                                                             MD059264
+                                                                                            MD059264
+     C/exec SQL                                                                             MD059264
+     C+ execute DynSQLStmnt                                                                 MD059264
+     C/end-exec                                                                             MD059264
+                                                                                            MD059264
+     C                   If        SQLCode <> 0                                             MD059264
+     C                             and SQLCode <> 100                                       MD059264
+     C                   eval      ERROR = '*Error'                                         MD059264
+     C                   Dump                                                               MD059264
+     C                   Endif                                                              MD059264
+                                                                                            MD059264
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD059264
+                                                                                            MD059264
+     C                   eval      SQLDynStmt = 'update '      +                            MD059264
+     C                             %trimr(KMSCHEMA) + '/APDFLBTD x '  +                     MD059264
+     C                             ' set  x.FILGDL   = ''N'' where '      +                 MD059264
+     C                             ' x.FILGDL =  '' '''                                     MD059264
+                                                                                            MD059264
+     C/EXEC SQL                                                                             MD059264
+     C+ prepare DynSQLStmnt                                                                 MD059264
+     C+ from :SQLDynStmt                                                                    MD059264
+     C/END-EXEC                                                                             MD059264
+                                                                                            MD059264
+     C/exec SQL                                                                             MD059264
+     C+ execute DynSQLStmnt                                                                 MD059264
+     C/end-exec                                                                             MD059264
+                                                                                            MD059264
+     C                   If        SQLCode <> 0                                             MD059264
+     C                             and SQLCode <> 100                                       MD059264
+     C                   eval      ERROR = '*Error'                                         MD059264
+     C                   Dump                                                               MD059264
+     C                   Endif                                                              MD059264
+     C                   ENDSR                                                              MD059264
+      *                                                                                     MD059264
       /EJECT
       *****************************************************************
       *                                                               *

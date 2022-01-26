@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034724   *CREATE   Date 03Jun15             *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD058089           Date 01Sep21               *
+      *  Prev Amend No. MD034724   *CREATE   Date 03Jun15             *
+      *                 xxxxxx             Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  MD034724 - New Bridge program to upgrade UDF tables.         *
       *                                                               *
       *****************************************************************
@@ -46,7 +48,8 @@
      C+ where exists
      C+ (
      C+ select b.NCOBJ
-     C+ from SMGNMGPD b
+     C**from*SMGNMGPD b                                                                     MD058089
+     C+ from SMGNMJW0 b                                                                     MD058089
      C+ where
      C+     a.AUMBNM = b.NCOBJ
      C+ and b.NCETBL = 'Y'

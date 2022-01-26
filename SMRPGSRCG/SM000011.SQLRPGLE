@@ -20,15 +20,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD058089           Date 01Sep21               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027  *CREATE    Date 01Nov05               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CSD027  *CREATE    Date 01Nov05               *
+      *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CSD027 - Change customer number from numeric to alpha.       *
       *                                                               *
       **********************************************************************
@@ -36,7 +38,7 @@
       **********************************************************************
       *
       * PF containing all CNUM Flds along with thier PF Names
-     FSMCNUMPD  IF   E           K DISK    INFSR(*PSSR)
+     F*SMCNUMPD* IF   E           K DISK    INFSR(*PSSR)                                    MD058089
       *
      FSM000011OFIF   E             DISK    USROPN
      F                                     INFSR(*PSSR)
@@ -65,6 +67,7 @@
      D WCRTFStr        S            100A
      D WCMDLen         S             15  5
      D WErrMsg         S             40A
+     D SMCNUM        E DS                  EXTNAME(SMCNUJW0)                                MD058089
       *
      C     *ENTRY        PLIST
      C                   PARM                    Mode              7
@@ -76,14 +79,19 @@
       * Set the value of Update Flag to 'N' so that records for the incorrect
       *  layer are not processed.
      C/Exec SQL
-     C+ UPDATE SMCNUMPD SET CNUPDF = 'N' WHERE
-     C+ CNLAYR <> :Mode
+     C**UPDATE*SMCNUMPD SET CNUPDF = 'N' WHERE                                              MD058089
+     C**CNLAYR*<>*:Mode                                                                     MD058089
+     C+ UPDATE SMCNUXTD a SET CNUPDF = 'N' WHERE                                            MD058089
+     C+ exists (select * from SMCNUJW0 j                                                    MD058089
+     C+ where j.cnfile=a.cnfile and j.CNTYPE=a.CNTYPE and j.CNFLD=a.CNFLD                   MD058089
+     C+ and j.cnlayr <> :Mode)                                                              MD058089
      C/End-Exec
       *
       * Declare Cursor on the Customer No. list file.
      C/Exec SQL
      C+ DECLARE C1 CURSOR FOR
-     C+ SELECT CNFILE, CNFLD, CNUPDF FROM SMCNUMPD WHERE
+     C**SELECT*CNFILE, CNFLD, CNUPDF FROM SMCNUMPD WHERE                                    MD058089
+     C+ SELECT CNFILE, CNFLD, CNUPDF FROM SMCNUJW0 WHERE                                    MD058089
      C+ TRIM(CNUPDF) = '' OR TRIM(CNUPDF) = 'E'
      C/End-Exec
       *
@@ -277,7 +285,8 @@
       * Update the CNUPDF field of SMCNUMPD to 'Y'.
      C                   IF        WFERR <> 'E'
      C/Exec SQL
-     C+ UPDATE SMCNUMPD SET CNUPDF = 'Y' WHERE
+     C**UPDATE*SMCNUMPD SET CNUPDF = 'Y' WHERE                                              MD058089
+     C+ UPDATE SMCNUXTD SET CNUPDF = 'Y' WHERE                                              MD058089
      C+ CNFILE = :WFILNAM1
      C/End-Exec
      C                   EVAL      ERROR_FLAG = 'N'
@@ -315,7 +324,8 @@
      C                   IF        ERROR_FLAG <> 'N'
       *
      C/Exec SQL
-     C+ UPDATE SMCNUMPD SET CNUPDF = 'E' WHERE
+     C**UPDATE*SMCNUMPD SET CNUPDF = 'E' WHERE                                              MD058089
+     C+ UPDATE SMCNUXTD SET CNUPDF = 'E' WHERE                                              MD058089
      C+ CNFILE = :WFILNAM1
      C/End-Exec
       *

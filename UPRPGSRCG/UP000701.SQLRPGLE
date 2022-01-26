@@ -14,10 +14,7 @@
       *  (c) Finastra International 2019                              *
       *                                                               *
       *  Last Amend No. MD059264             Date 21Jan22             *
-      *  Prev Amend No. MD058933             Date 28Sep21             *
-      *                 MD058721             Date 28Aug21             *
-      *                 MD058491             Date 28Jul21             *
-      *                 MD057288             Date 01Dec20             *
+      *  Prev Amend No. MD057288             Date 01Dec20             *
       *                 MD057231             Date 18Nov20             *
       *                 MD054733             Date 02Dec19             *
       *                 MD056020             Date 18Jun20             *
@@ -32,12 +29,6 @@
       *                                                               *
       *  MD059264 - SP2021.B API: BSRT returns error for              *
       *             display only fields                               *
-      *  MD058933 - For CBCMPCTD, field 'Execution parameters' needs  *
-      *             update as field is in the XTD.                    *
-      *  MD058721 - Consider bespoke API in WIP config.               *
-      *             Delete record in XTD if not found in CTD and BTD. *
-      *             Do not delete BTD record.                         *
-      *  MD058491 - Do allow update of WC_BOACAU for BITH only        *
       *  MD057288 - During migration, some XTD files are on top of    *
       *             LIBL causing incorrect update. Fix is to add      *
       *             correct library while updating XTD.               *
@@ -107,11 +98,6 @@
       * Add missing record in extension file if found in core file but not in the extension
      C                   exsr      SR_AddExt
 
-      * Special process for CBCMPCTD                                                        MD058933
-     C                   if        XINDEX = 'CBCMPCTD'                                      MD058933
-     C                   exsr      SR_CBCMP                                                 MD058933
-     C                   endif                                                              MD058933
-                                                                                            MD058933
       * Special process for APFLDCTD                                                        MD059264
      C                   if        XINDEX = 'APDFLCTD'                                      MD059264
      C                   exsr      SR_APDFL                                                 MD059264
@@ -236,19 +222,12 @@
      C                   ELSE
 
       * delete GPWIPXTD records not found in Core
-      * and not found in bespoke                                                            MD058721
-     C                   eval      BINDEX = %SUBST(XINDEX:1:5) + 'BTD'                      MD058721
-     C                   eval      BSCHEMA = %subst(XSCHEMA:1:3) + 'MLIB'                   MD058721
 
      C                   eval      SQLDynStmt = *BLANKS
      C                   eval      SQLDynStmt = 'delete from GPWIPXTD' +
      C                             ' A where not exists (select * from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX +
-     C**********                   ' B ' + ' where A.WC_API = B.WC_API)'                    MD058721
-     C                             ' B ' + ' where A.WC_API = B.WC_API)' +                  MD058721
-     C                             ' and  not exists (select * from ' +                     MD058721
-     C                             %trimr(BSCHEMA) + '/' + BINDEX +                         MD058721
-     C                             ' F ' + ' where A.WC_API = F.WC_API)'                    MD058721
+     C                             ' B ' + ' where A.WC_API = B.WC_API)'
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -266,8 +245,6 @@
      C                   Endif
 
       * Additional process for GPWIPBTD as the Bespoke records are the zonal WIP config
-      * consider now bespoke API in BTD                                                     MD058721
-     C                   leaveSR                                                            MD058721
 
      C                   eval      SQLDynStmt = *BLANKS
      C                   eval      SQLDynStmt = 'delete from GPWIPBTD' +
@@ -486,22 +463,6 @@
      C                   Dump                                                               MD057231
      C                   ENDIF
 
-     C/exec SQL                                                                             MD058491
-     C+ update GPWIPBTD b                                                                   MD058491
-     C+ set (b.WC_BOACAU) =                                                                 MD058491
-     C+ (select c.WC_BOACAU                                                                 MD058491
-     C+ from GPWIPCTD c where c.WC_API = b.WC_API                                           MD058491
-     C+ and c.WC_ZONE = '*REFZONE'and c.WC_API = 'BITH')                                    MD058491
-     C+ where exists (select * from GPWIPCTD c where c.WC_API = b.WC_API                    MD058491
-     C+ and c.WC_ZONE = '*REFZONE' and c.WC_API = 'BITH')                                   MD058491
-     C/end-exec                                                                             MD058491
-                                                                                            MD058491
-     C                   IF        SQLCODE <> 0                                             MD058491
-     C                             and SQLCode <> 100                                       MD058491
-     C                   EVAL      ERROR = '*Error'                                         MD058491
-     C                   Dump                                                               MD058491
-     C                   ENDIF                                                              MD058491
-                                                                                            MD058491
       * if CFT157 fields are left blank, then initialize them with values from CTD          MD054733
      C/exec SQL                                                                             MD054733
      C+ select WCBSTP into :xxBSTP from GPWIPBTD                                            MD054733
@@ -530,43 +491,6 @@
      C                   ENDIF
      C                   ENDSR
 
-      /EJECT                                                                                MD058933
-      *****************************************************************                     MD058933
-      *                                                               *                     MD058933
-      *    SR_CBCMP - Special process to update CBCMPXTD              *                     MD058933
-      *                                                               *                     MD058933
-      *****************************************************************                     MD058933
-                                                                                            MD058933
-     C     SR_CBCMP      BEGSR                                                              MD058933
-                                                                                            MD058933
-     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD058933
-                                                                                            MD058933
-     C                   eval      SQLDynStmt = 'update '      +                            MD058933
-     C                             %trimr(KMSCHEMA) + '/CBCMPXTD x '  +                     MD058933
-     C                             ' set (x.dhcprm ) = (select c.dhcprm ' +                 MD058933
-     C                             ' from CBCMPCTD c ' +                                    MD058933
-     C                             ' where x.dhcott = c.dhcott and x.dhcseq ' +             MD058933
-     C                             ' = c.dhcseq and c.dhcpca <> ''Y'') ' +                  MD058933
-     C                             ' where exists (select * from CBCMPCTD c' +              MD058933
-     C                             ' where x.dhcott = c.dhcott and x.dhcseq ' +             MD058933
-     C                             ' = c.dhcseq and c.dhcpca <> ''Y'')'                     MD058933
-                                                                                            MD058933
-     C/EXEC SQL                                                                             MD058933
-     C+ prepare DynSQLStmnt                                                                 MD058933
-     C+ from :SQLDynStmt                                                                    MD058933
-     C/END-EXEC                                                                             MD058933
-                                                                                            MD058933
-     C/exec SQL                                                                             MD058933
-     C+ execute DynSQLStmnt                                                                 MD058933
-     C/end-exec                                                                             MD058933
-                                                                                            MD058933
-     C                   If        SQLCode <> 0                                             MD058933
-     C                             and SQLCode <> 100                                       MD058933
-     C                   eval      ERROR = '*Error'                                         MD058933
-     C                   Dump                                                               MD058933
-     C                   Endif                                                              MD058933
-     C                   ENDSR                                                              MD058933
-      *                                                                                     MD058933
       /EJECT                                                                                MD059264
       *****************************************************************                     MD059264
       *                                                               *                     MD059264

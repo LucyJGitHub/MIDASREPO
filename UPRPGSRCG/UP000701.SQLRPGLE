@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD057288             Date 01Dec20             *
-      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *  Last Amend No. MD059264             Date 21Jan22             *
+      *  Prev Amend No. MD057288             Date 01Dec20             *
+      *                 MD057231             Date 18Nov20             *
       *                 MD054733             Date 02Dec19             *
       *                 MD056020             Date 18Jun20             *
       *                 MD054955             Date 16Dec19             *
@@ -26,9 +27,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059264 - SP2021.B API: BSRT returns error for              *
+      *             display only fields                               *
       *  MD057288 - During migration, some XTD files are on top of    *
       *             LIBL causing incorrect update. Fix is to add      *
-      *             correct library while updating XTD.               *      
+      *             correct library while updating XTD.               *
       *  MD057231 - Add dump in case of error                         *
       *             ACOF, BRCH and MLMTRAN are twice in GPWIPCTD and  *
       *             this causes missing record in XTD for the zones.  *
@@ -95,6 +98,11 @@
       * Add missing record in extension file if found in core file but not in the extension
      C                   exsr      SR_AddExt
 
+      * Special process for APFLDCTD                                                        MD059264
+     C                   if        XINDEX = 'APDFLCTD'                                      MD059264
+     C                   exsr      SR_APDFL                                                 MD059264
+     C                   endif                                                              MD059264
+                                                                                            MD059264
      C                   Seton                                        LR
      C                   Return
 
@@ -483,6 +491,60 @@
      C                   ENDIF
      C                   ENDSR
 
+      /EJECT                                                                                MD059264
+      *****************************************************************                     MD059264
+      *                                                               *                     MD059264
+      *    SR_APFLD - Special process to update APFLDXTD              *                     MD059264
+      *                                                               *                     MD059264
+      *****************************************************************                     MD059264
+                                                                                            MD059264
+     C     SR_APDFL      BEGSR                                                              MD059264
+                                                                                            MD059264
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD059264
+                                                                                            MD059264
+     C                   eval      SQLDynStmt = 'update '      +                            MD059264
+     C                             %trimr(KMSCHEMA) + '/APDFLXTD x '  +                     MD059264
+     C                             ' set  x.FILGDL   = ''N'' where '      +                 MD059264
+     C                             ' x.FILGDL =  '' '''                                     MD059264
+                                                                                            MD059264
+     C/EXEC SQL                                                                             MD059264
+     C+ prepare DynSQLStmnt                                                                 MD059264
+     C+ from :SQLDynStmt                                                                    MD059264
+     C/END-EXEC                                                                             MD059264
+                                                                                            MD059264
+     C/exec SQL                                                                             MD059264
+     C+ execute DynSQLStmnt                                                                 MD059264
+     C/end-exec                                                                             MD059264
+                                                                                            MD059264
+     C                   If        SQLCode <> 0                                             MD059264
+     C                             and SQLCode <> 100                                       MD059264
+     C                   eval      ERROR = '*Error'                                         MD059264
+     C                   Dump                                                               MD059264
+     C                   Endif                                                              MD059264
+                                                                                            MD059264
+     C                   eval      KMSCHEMA = %SUBST(XSCHEMA:1:3) + 'MLIB'                  MD059264
+                                                                                            MD059264
+     C                   eval      SQLDynStmt = 'update '      +                            MD059264
+     C                             %trimr(KMSCHEMA) + '/APDFLBTD x '  +                     MD059264
+     C                             ' set  x.FILGDL   = ''N'' where '      +                 MD059264
+     C                             ' x.FILGDL =  '' '''                                     MD059264
+                                                                                            MD059264
+     C/EXEC SQL                                                                             MD059264
+     C+ prepare DynSQLStmnt                                                                 MD059264
+     C+ from :SQLDynStmt                                                                    MD059264
+     C/END-EXEC                                                                             MD059264
+                                                                                            MD059264
+     C/exec SQL                                                                             MD059264
+     C+ execute DynSQLStmnt                                                                 MD059264
+     C/end-exec                                                                             MD059264
+                                                                                            MD059264
+     C                   If        SQLCode <> 0                                             MD059264
+     C                             and SQLCode <> 100                                       MD059264
+     C                   eval      ERROR = '*Error'                                         MD059264
+     C                   Dump                                                               MD059264
+     C                   Endif                                                              MD059264
+     C                   ENDSR                                                              MD059264
+      *                                                                                     MD059264
       /EJECT
       *****************************************************************
       *                                                               *
@@ -503,4 +565,3 @@
      C
       *
      C     BldOutFileE   ENDSR
-      *

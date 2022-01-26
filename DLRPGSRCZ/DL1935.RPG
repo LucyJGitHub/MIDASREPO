@@ -2,21 +2,22 @@
       *****************************************************************
 /*STD *  RPGBASE                                                      *
 /*EXI *  TEXT('Midas DL IR interest rate swap rates maintenance')     *
-     F****************************************************************
-     F*                                                              *
-     F*  Midas - FRA/IRS Module                                      *
-     F*                                                              *
-     F*  DL1935 - INTEREST RATE SWAP RATES MAINTENANCE               *
-     F*                                                              *
-     F*  Function: To enable maintenance of the Interest Rate Swap   *
-     F*   (I/C)    Rates.                                            *
-     F*                                                              *
-     F*  Called By: DLC1935 - Swap Rates Maintenance Control.        *
-     F*                                                              *
+      ****************************************************************
+      *                                                               *
+      *  Midas - FRA/IRS Module                                       *
+      *                                                               *
+      *  DL1935 - INTEREST RATE SWAP RATES MAINTENANCE                *
+      *                                                               *
+      *  Function: To enable maintenance of the Interest Rate Swap    *
+      *   (I/C)    Rates.                                             *
+      *                                                               *
+      *  Called By: DLC1935 - Swap Rates Maintenance Control.         *
+      *                                                               *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                              *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                                                               *
+      *  Last Amend No. 250570             Date 11Jan22               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 AR1058442          Date 02Jul15               *
@@ -48,11 +49,13 @@
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 163136             Date 08Jul99               *
       *                 100317             Date 04Mar96               *
-     F*                 100299             Date 04Mar96              *
-     F*                 CIR001             DATE 13JUN95              *
-     F*                                                              *
-     F*--------------------------------------------------------------*
-     F*                                                              *
+      *                 100299             Date 04Mar96               *
+      *                 CIR001             DATE 13JUN95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  250570 - Give user the ability to enter multiple YEAR/MONTH  *
+      *           rates for frequency 'Y' from 1 to 12 months.        *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -60,7 +63,7 @@
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  AR1058442 - Allow insertion/amendment of Swap Rates to be    *
       *              negative. (Child: AR1058443)                     *
       *  AR996895 - Incorrect acrrual interest calculation            *
@@ -233,7 +236,8 @@
      E                    @MA       150  7               MATURITY DATE                        194012
      E                    @RT       150 11 7             RATES                                194012
      E*
-     E                    @EM        10  1               ERROR MESSAGES
+     E**********          @EM        10  1               ERROR MESSAGES                       250570
+     E                    @EM        12  1               Error Messages                       250570
      E*
      E                    CPY@    1   1 80
      E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
@@ -1819,14 +1823,14 @@
      C                     MOVE 'X'       @EM,10
      C                     END
      C*
-     C** MONTH CAN ONLY BE '00' FOR YEARLY
-     C*
-     C           DDFREQ    IFEQ 'Y'
-     C           DDPDMN    ANDNE'00'
-     C                     MOVE '1'       *IN31
-     C                     MOVE '1'       *IN50
-     C                     MOVE 'X'       @EM,10
-     C                     END
+     C***MONTH*CAN*ONLY*BE*'00'*FOR*YEARLY*****************************                       250570
+     C**********                                                                              250570
+     C********** DDFREQ    IFEQ 'Y'                                                           250570
+     C********** DDPDMN    ANDNE'00'                                                          250570
+     C**********           MOVE '1'       *IN31                                               250570
+     C**********           MOVE '1'       *IN50                                               250570
+     C**********           MOVE 'X'       @EM,10                                              250570
+     C**********           END                                                                250570
      C*
      C** CHECK THAT CURRENT DATE IS NEXT DATE AFTER PREVIOUS DATE
      C** ACCORDING TO FREQUENCY CODE
@@ -1843,12 +1847,23 @@
      C           DDFREQ    IFEQ 'X'
      C           ##DIFF    ANDNE6                          * 6 MONTHS
      C           DDFREQ    OREQ 'Y'
-     C           ##DIFF    ANDNE1                          * 1 YEAR
+     C********** ##DIFF    ANDNE1                          * 1 YEAR                           250570
+     C           #IPDYR    ANDNE1                          * 1 YEAR                           250570
+     C           #IPDMN    ANDNE0                                                             250570
      C                     MOVE '1'       *IN30
      C                     MOVE '1'       *IN31
      C                     MOVE '1'       *IN50
      C                     MOVE 'X'       @EM,10
      C                     END
+      **********                                                                              250570
+     C           DDFREQ    IFEQ 'Y'                                                           250570
+     C           #IPDYR    ANDEQ1                          * 1 YEAR                           250570
+     C           #IPDMN    ANDGT11                         * 1 YEAR                           250570
+     C                     MOVE '1'       *IN30                                               250570
+     C                     MOVE '1'       *IN31                                               250570
+     C                     MOVE '1'       *IN50                                               250570
+     C                     MOVE 'X'       @EM,12                                              250570
+     C                     END                                                                250570
      C/COPY WNCPYSRC,DL1935C031
      C*
      C                     END
@@ -2035,6 +2050,17 @@
      C                     PARM           @MSGID
      C                     END
      C*
+     C           @EM,11    IFEQ 'X'                                                           250570
+     C                     MOVEL'FIS0060' @MSGID                                              250570
+     C                     CALL 'ZA0240'                                                      250570
+     C                     PARM           @MSGID                                              250570
+     C                     END                                                                250570
+      **********                                                                              250570
+     C           @EM,12    IFEQ 'X'                                                           250570
+     C                     MOVEL'FIS0115' @MSGID                                              250570
+     C                     CALL 'ZA0240'                                                      250570
+     C                     PARM           @MSGID                                              250570
+     C                     END                                                                250570
      C** SET OFF SUBFILE RECORD ERROR INDICATORS
      C*
      C                     MOVE '0'       *IN30

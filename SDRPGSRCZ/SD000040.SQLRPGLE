@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD056557           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058082           Date 21Jan21               *
+      *  Prev Amend No. MD056557           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058082 - Deliverable Data Split for FRS                    *
       *  MD056557 - Deliverable Data Split for Pulldown               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11157 - Add new field CPRTYRES US counterparty residence  *
@@ -47,12 +49,12 @@
      f                                     commit
      f                                     usropn
 
-     frncpytpd  if   e           k disk    infsr(*pssr)
-     frnecscpd  if   e           k disk    infsr(*pssr)
-     frnexcrpd  if   e           k disk    infsr(*pssr)
-     frnsectpd  if   e           k disk    infsr(*pssr)
-     frnicptpd  if   e           k disk    infsr(*pssr)
-     frnctyupd  if   e           k disk    infsr(*pssr)                                     BUG11157
+     f*rncpytpd* if   e           k disk    infsr(*pssr)                                    MD058082
+     f*rnecscpd* if   e           k disk    infsr(*pssr)                                    MD058082
+     f*rnexcrpd* if   e           k disk    infsr(*pssr)                                    MD058082
+     f*rnsectpd* if   e           k disk    infsr(*pssr)                                    MD058082
+     f*rnicptpd* if   e           k disk    infsr(*pssr)                                    MD058082
+     f*rnctyupd* if   e           k disk    infsr(*pssr)                           BUG11157 MD058082
 
      f*gppdwhl0* if   e           k disk    infsr(*pssr)                            BUG9233 MD056557
      f**********                           usropn                                   BUG9233 MD056557
@@ -188,6 +190,12 @@
      d QuestMarkPos    S              3  0                                                   BUG9233
      D GPPDWN        E DS                  EXTNAME(GPPWNJW0)                                MD056557
      D GPPDWH        E DS                  EXTNAME(GPPWHJW0)                                MD056557
+     D RNCPYT        E DS                  EXTNAME(RNCPYJW0)                                MD058082
+     D RNCTYU        E DS                  EXTNAME(RNCTYJW0)                                MD058082
+     D RNECSC        E DS                  EXTNAME(RNECSJW0)                                MD058082
+     D RNEXCR        E DS                  EXTNAME(RNEXCJW0)                                MD058082
+     D RNICPT        E DS                  EXTNAME(RNICPJW0)                                MD058082
+     D RNSECT        E DS                  EXTNAME(RNSECJW0)                                MD058082
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -410,8 +418,15 @@
      c                   eval      #1Econsect  = reFmt
 
      c                   eval      wKey10_0    = %dec(#1Econsect: 10: 0)
-     c     wKey10_0      chain     rnecscpd
-     c                   if        not %found
+     c*****wKey10_0      chain     rnecscpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNECSC                                                                        MD058082
+     C+ from RNECSJW0                                                                       MD058082
+     C+ where ECONSECT = :wKey10_0                                                          MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invEconsect = *on
      c                   eval      zamsid      = 'USR4055'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -512,8 +527,15 @@
      c                   eval      #1Striskrt  = reFmt
 
      c                   eval      wKey5_0     = %dec(#1Striskrt: 5: 0)
-     c     wKey5_0       chain     rnexcrpd
-     c                   if        not %found
+     c*****wKey5_0       chain     rnexcrpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNEXCR                                                                        MD058082
+     C+ from RNEXCJW0                                                                       MD058082
+     C+ where EXCRDRTG = :wKey5_0                                                           MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invStriskrt = *on
      c                   eval      zamsid      = 'USR4056'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -560,8 +582,15 @@
      c                   eval      #1Ltriskrt  = reFmt
 
      c                   eval      wKey5_0     = %dec(#1Ltriskrt: 5: 0)
-     c     wKey5_0       chain     rnexcrpd
-     c                   if        not %found
+     c*****wKey5_0       chain     rnexcrpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNEXCR                                                                        MD058082
+     C+ from RNEXCJW0                                                                       MD058082
+     C+ where EXCRDRTG = :wKey5_0                                                           MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invLtriskrt = *on
      c                   eval      zamsid      = 'USR4056'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -607,8 +636,15 @@
      c                   eval      #1Cptytype  = reFmt
 
      c                   eval      wKey5_0     = %dec(#1Cptytype: 5: 0)
-     c     wKey5_0       chain     rncpytpd
-     c                   if        not %found
+     c*****wKey5_0       chain     rncpytpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNCPYT                                                                        MD058082
+     C+ from RNCPYJW0                                                                       MD058082
+     C+ where CPTYTYPE = :wKey5_0                                                           MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invCptytype = *on
      c                   eval      zamsid      = 'USR4057'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -729,8 +765,15 @@
      c                   eval      #1Intctype  = reFmt
 
      c                   eval      wKey5_0     = %dec(#1Intctype: 5: 0)
-     c     wKey5_0       chain     rnicptpd
-     c                   if        not %found
+     c*****wKey5_0       chain     rnicptpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNICPT                                                                        MD058082
+     C+ from RNICPJW0                                                                       MD058082
+     C+ where ICTCODE = :wKey5_0                                                            MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invIntctype = *on
      c                   eval      zamsid      = 'USR4058'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -824,8 +867,15 @@
      c                   eval      #1CprtyRes  = 'ZZ'                                       BUG11157
      c                   endif                                                              BUG11157
                                                                                             BUG11157
-     c     #1CprtyRes    chain     rnctyupd                                                 BUG11157
-     c                   if        not %found                                               BUG11157
+     c*****#1CprtyRes    chain     rnctyupd                                        BUG11157 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNCTYU                                                                        MD058082
+     C+ from RNCTYJW0                                                                       MD058082
+     C+ where COUNTRY  = :#1CprtyRes                                                        MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invCprtyRes = *on                                        BUG11157
      c                   eval      zamsid      = 'USR4066'                                  BUG11157
      c                   call      'Y2SNMGC'     pY2snmgc                                   BUG11157
@@ -971,8 +1021,15 @@
      c                   eval      #1Hksectcl  = reFmt
 
      c                   eval      wKey10_0    = %dec(#1Hksectcl: 10: 0)
-     c     wKey10_0      chain     rnsectpd
-     c                   if        not %found
+     c*****wKey10_0      chain     rnsectpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNSECT                                                                        MD058082
+     C+ from RNSECJW0                                                                       MD058082
+     C+ where SECTCLAS = :wKey10_0                                                          MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invHksectcl = *on
      c                   eval      zamsid      = 'USR4064'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -1019,8 +1076,15 @@
      c                   eval      #1Cnsectcl  = reFmt
 
      c                   eval      wKey10_0    = %dec(#1Cnsectcl: 10: 0)
-     c     wKey10_0      chain     rnsectpd
-     c                   if        not %found
+     c*****wKey10_0      chain     rnsectpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNSECT                                                                        MD058082
+     C+ from RNSECJW0                                                                       MD058082
+     C+ where SECTCLAS = :wKey10_0                                                          MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invCnsectcl = *on
      c                   eval      zamsid      = 'USR4064'
      c                   call      'Y2SNMGC'     pY2snmgc
@@ -1123,8 +1187,15 @@
      c                   eval      #1Sgsectcl  = reFmt
 
      c                   eval      wKey10_0    = %dec(#1Sgsectcl: 10: 0)
-     c     wKey10_0      chain     rnsectpd
-     c                   if        not %found
+     c*****wKey10_0      chain     rnsectpd                                                 MD058082
+     C/EXEC SQL                                                                             MD058082
+     C+ SELECT *                                                                            MD058082
+     C+ into :RNSECT                                                                        MD058082
+     C+ from RNSECJW0                                                                       MD058082
+     C+ where SECTCLAS = :wKey10_0                                                          MD058082
+     C/END-EXEC                                                                             MD058082
+     c**********         if        not %found                                               MD058082
+     c                   if        SQLCODE <> 0                                             MD058082
      c                   eval      invSgsectcl = *on
      c                   eval      zamsid      = 'USR4064'
      c                   call      'Y2SNMGC'     pY2snmgc

@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD056888           Date 20Sep20               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD056888           Date 20Sep20               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055681           Date 31Jul20               *
@@ -156,6 +157,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD056888 - Deliverable Data Split for SDCODEPD               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
@@ -362,7 +364,7 @@
       *                                                               *
       *****************************************************************
       *
-     FLEDLLDPD  UF   E           K DISK    INFSR(*PSSR)
+     F*LEDLLDPD* UF   E           K DISK    INFSR(*PSSR)                                    MD058079
       *
      FPMPORTLL  IF   E             DISK    INFSR(*PSSR)
       *
@@ -717,6 +719,7 @@
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D  XLCD         E                     EXTFLD(LCD)                                      MD055681
      D SDCODE        E DS                  EXTNAME(SDCODJW0)                                MD056888
+     D LEDLLD        E DS                  EXTNAME(LEDLLJW0)                                MD058079
       **  Message Format
      D W#MFMT          S                   LIKE(P#MFMT)
       *
@@ -7707,8 +7710,15 @@
      C                   MOVEL     'MSGATR  '    STK(@Q)
       *
       *
-     C     X1MSGT        CHAIN     LEDLLDPD                           88
-     C     *IN88         IFEQ      *ON
+     C*****X1MSGT        CHAIN     LEDLLDPD                           88                    MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :LEDLLD                                                                        MD058079
+     C+ from LEDLLJW0                                                                       MD058079
+     C+ where BTMT = :X1MSGT                                                                MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN88         IFEQ      *ON                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
      C                   MOVEL     X1MSGT        DBKEY
      C                   MOVEL     'LEDLLDPD'    DBFILE
      C                   Z-ADD     75            DBASE
@@ -7965,8 +7975,15 @@
      C                   MOVEL     'PMQPUT  '    STK(@Q)
       *
       *
-     C     X1MSGT        CHAIN     LEDLLDPD                           88
-     C     *IN88         IFEQ      *ON
+     C*****X1MSGT        CHAIN     LEDLLDPD                           88                    MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :LEDLLD                                                                        MD058079
+     C+ from LEDLLJW0                                                                       MD058079
+     C+ where BTMT = :X1MSGT                                                                MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN88         IFEQ      *ON                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
      C                   MOVEL     X1MSGT        DBKEY
      C                   MOVEL     'LEDLLDPD'    DBFILE
      C                   Z-ADD     76            DBASE
@@ -8196,8 +8213,15 @@
       *
       * Set next available transaction reference and update
       *  Bulk Transfer Control file
-     C     '#BLK'        CHAIN     LEDLLDPD                           89
-     C     *IN89         IFEQ      *ON
+     C                   Z-ADD     W#BTTR        BTTR                                       MD058079
+     C*****'#BLK'        CHAIN     LEDLLDPD                           89                    MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ update LEDLLXTD                                                                     MD058079
+     C+ set BTTR = :BTTR                                                                    MD058079
+     C+ where BTMT = '#BLK'                                                                 MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN89         IFEQ      *ON                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
      C                   MOVEL     '#BLK'        DBKEY
      C                   MOVEL     'LEDLLDPD'    DBFILE
      C                   Z-ADD     65            DBASE
@@ -8205,7 +8229,7 @@
      C                   ENDIF
       *
      C                   Z-ADD     W#BTTR        BTTR
-     C                   UPDATE    LEDLLDD0
+     C**********         UPDATE    LEDLLDD0                                                 MD058079
       *
      C                   MOVE      *BLANKS       STK(@Q)
      C                   SUB       1             @Q
@@ -8782,8 +8806,15 @@
      C                   MOVEL     W#TIME        W#X1TRTS
       *
       * Get Bulk Transfer Control Details
-     C     '#BLK'        CHAIN     LEDLLDPD                           89
-     C     *IN89         IFEQ      *ON
+     C*****'#BLK'        CHAIN     LEDLLDPD                           89                    MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :LEDLLD                                                                        MD058079
+     C+ from LEDLLJW0                                                                       MD058079
+     C+ where BTMT = '#BLK'                                                                 MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN89         IFEQ      *ON                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
      C                   MOVEL     '#BLK'        DBKEY
      C                   MOVEL     'LEDLLDPD'    DBFILE
      C                   Z-ADD     7             DBASE
@@ -8914,8 +8945,15 @@
       *                                                                                       138354
       * Put Message                                                                           138354
       *                                                                                       138354
-     C     X1MSGT        CHAIN     LEDLLDPD                           88                      138354
-     C     *IN88         IFEQ      *ON                                                        138354
+     C*****X1MSGT        CHAIN     LEDLLDPD                           88             138354 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :LEDLLD                                                                        MD058079
+     C+ from LEDLLJW0                                                                       MD058079
+     C+ where BTMT = :X1MSGT                                                                MD058079
+     C/END-EXEC                                                                             MD058079
+     C******IN88         IFEQ      *ON                                                      MD058079
+     C     SQLCODE       IFNE      0                                                        MD058079
      C                   MOVEL     X1MSGT        DBKEY                                        138354
      C                   MOVEL     'LEDLLDPD'    DBFILE                                       138354
      C                   Z-ADD     81            DBASE                                        138354

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD058216           Date 06Jul21               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD058216           Date 06Jul21               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD058216 - Option labels are clickable as one link           *
       *  MD046248 - Finastra Rebranding                               *
@@ -202,7 +204,7 @@
      F                                     INFSR(*PSSR)
       ** RTV : Midas SE Transactions file
       *
-     FSECOND    IF   E           K DISK
+     F*SECOND*** IF   E           K DISK                                                    MD058079
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -293,6 +295,7 @@
       ** File information data structure
      D INFDS1        E DS                  EXTNAME(Y2I1DSP)
       *
+     D SECOND        E DS                  EXTNAME(SECONJW0)                                MD058079
       *****************************************************************
      D** Link enquiry data area
      DSESDS          E DS
@@ -1228,7 +1231,17 @@ E5   C                   ENDIF
 B5   C     D1SELC        IFEQ      'P'
      C                   MOVE      '01'          OPTN              2
      C                   MOVEL     'SE4400'      PGMNO             8
-     C     LKEY          CHAIN     SECONDF                            42
+     C*****LKEY          CHAIN     SECONDF                            42                    MD058079
+     C                   CALL      'AOSECOR0'                                               MD058079
+     C                   PARM      *BLANKS       @RTCD             7                        MD058079
+     C                   PARM      '*KEY'        @OPTN             7                        MD058079
+     C                   PARM      PGMNO         @XPGM             8                        MD058079
+     C                   PARM      OPTN          @XOPT             2                        MD058079
+     C     SECOND        PARM      SECOND        DSFDY                                      MD058079
+     C                   SETOFF                                       42                    MD058079
+     C     @RTCD         IFNE      *BLANKS                                                  MD058079
+     C                   SETON                                        42                    MD058079
+     C                   ENDIF                                                              MD058079
 B6   C     *IN42         IFNE      *ON
      C                   MOVE      D1SETY        RQSESN
      C                   OUT       SESDS
@@ -1257,7 +1270,17 @@ B5   C     D1SELC        IFEQ      'T'
      C     D1FILE        ANDEQ     'T'
      C                   MOVE      '02'          OPTN              2
      C                   MOVEL     'SE4400'      PGMNO             8
-     C     LKEY          CHAIN     SECONDF                            42
+     C*****LKEY          CHAIN     SECONDF                            42                    MD058079
+     C                   CALL      'AOSECOR0'                                               MD058079
+     C                   PARM      *BLANKS       @RTCD             7                        MD058079
+     C                   PARM      '*KEY'        @OPTN             7                        MD058079
+     C                   PARM      PGMNO         @XPGM             8                        MD058079
+     C                   PARM      OPTN          @XOPT             2                        MD058079
+     C     SECOND        PARM      SECOND        DSFDY                                      MD058079
+     C                   SETOFF                                       42                    MD058079
+     C     @RTCD         IFNE      *BLANKS                                                  MD058079
+     C                   SETON                                        42                    MD058079
+     C                   ENDIF                                                              MD058079
 B6   C     *IN42         IFNE      *ON
      C                   MOVE      D1TRNO        RQTDRF
      C                   OUT       SESDS
@@ -3185,7 +3208,7 @@ E1   C                   ENDIF
       *****************************************************************
 **CTDATA TXT
 F3=Exit
-F3=Exit  M=Msgs  T=Transactions  S=Mvmt Sts  P=Security  L=Linked trades                    MD058216
-F3=Exit  F12=Previous  M=Msgs  T=Transactions  S=Mvmt Sts  P=Security                       MD058216
+F3=Exit M=Messages T=Transaction S=Movement Status P=Security L=Linked trades
+F3=Exit F12=Previous M=Messages T=Transaction S=Movement Status P=Security
 **CTDATA CPY@
 (c) Finastra International Limited 2002

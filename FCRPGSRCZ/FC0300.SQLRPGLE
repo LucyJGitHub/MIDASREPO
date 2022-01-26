@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD057014           Date 16Oct20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD057014           Date 16Oct20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -51,6 +52,7 @@
      F*                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD057014 - FCC0304 job is looping. Correct SQLCODE.             *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
@@ -111,7 +113,7 @@
      F*FCREPTJ0* IF   E           K DISK                                         S01407     MD055265
      F*FCRCOMJ1* IF   E           K DISK                                         S01407     MD055265
      F*FCRSFXL1* IF   E           K DISK                                                    MD055265
-     FFCRPDSL0  UF   E           K DISK
+     F*FCRPDSL0* UF   E           K DISK                                                    MD058079
      FFC0300P1  O    E             PRINTER INFDS(SPOOL)
      FFC0300AU  O    E             PRINTER INFDS(SPOOLU)
      F                                     EXTIND(*INU1)
@@ -261,6 +263,7 @@
      D*NullInds2       s              5i 0 dim(19)                                 MD055265 MD055681
      D NullInds2       s              5i 0 dim(20)                                          MD055681
      D FCRSFX        E DS                  EXTNAME(FCRSFJW0)                                MD055265
+     D FCRPDA        E DS                  EXTNAME(FCRPAJW0)                                MD058079
       /EJECT
      C*
      C                   MOVEA     CPY@          BIS@             80
@@ -1189,11 +1192,17 @@
       *
      C     PROAUD        BEGSR
       *
-     C                   READ      FCRPDSL0                               90
+     C**********         READ      FCRPDSL0                               90                MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ SELECT *                                                                            MD058079
+     C+ into :FCRPDA                                                                        MD058079
+     C+ from FCRPAJW0                                                                       MD058079
+     C/END-EXEC                                                                             MD058079
       *
       ** IF NO RECORD FOUND THEN DATABASE ERROR
       *
-     C     *IN90         IFEQ      '1'
+     C******IN90         IFEQ      '1'                                                      MD058079
+     C     SQLCODE       IFEQ      100                                                      MD058079
      C     *LOCK         IN        LDA
      C                   MOVEL     'FC0300'      DBPGM
      C                   MOVEL     'FCRPDSL0'    DBFILE
@@ -1237,7 +1246,11 @@
      C                   Z-ADD     0             ADNOAM
      C                   Z-ADD     0             ADNODL
      C*
-     C                   UPDATE    @ADREBB
+     C**********         UPDATE    @ADREBB                                                  MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ update FCRPAXTD set                                                                 MD058079
+     C+   ADNOIN = 0, ADNOAM = 0, ADNODL = 0                                                MD058079
+     C/END-EXEC                                                                             MD058079
      C*
      C                   ENDSR
       *****************************************************************

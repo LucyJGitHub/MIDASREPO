@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MT940 Extract to External Destination')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - General Ledger Module                           */
+/*                                                                   */
+/*       GLC001433 - Outgoing MT940 with Destination CORONA          */
+/*                   extracted to an output file                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. CGL094  *CREATE    Date 02Nov21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL094 - MT940 Interface to Corona (External Network        */
+/*                Destination)                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CGL094)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SFMT)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) Copyright Finastra +
+                          International Ltd 2021')
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR ))
+             CHGJOB     SWS(00000000)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&LIB) VALUE(&PRE *CAT 'DPLIB')
+             CHGVAR     VAR(&LIB2) VALUE(&PRE *CAT 'DMLIB')
+
+/* Back-up of input master file for rerun                            */
+             DLTF       FILE(&LIB/XMGOREFPD)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CPYF       FROMFILE(MGOREFPD) TOFILE(&LIB/XMGOREFPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF0000)
+/**/
+/*Clear Extract File */
+             CLRPFM     FILE(MS940XPD)
+             MONMSG     MSGID(CPF0000)
+
+/* Call the Outgoing Message Compressor program                      */
+
+             CALL       PGM(MS0209)
+
+/* Notify Database errors to user                            */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                ROLLBACK
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+
+/* Report on success                                                 */
+
+             CHGVAR     VAR(&MESSAGE) VALUE('Midas MT940s to CORONA downloaded successfully')
+             SNDUSRMSG  MSG(&MESSAGE) MSGTYPE(*INFO) TOMSGQ(MOPERQ)
+
+             GOTO       ENDPGM
+
+ ERROR:      CHGVAR     VAR(&MESSAGE) VALUE('Unexpected error - check job log to identify +
+                          problem')
+             CHGDTAARA  DTAARA(MIDASMSG (251 80)) VALUE(&MESSAGE)
+             SNDUSRMSG  MSG(&MESSAGE) MSGTYPE(*INFO) TOMSGQ(MOPERQ)
+
+             CPYF       FROMFILE(&LIB/XMGOREFPD) TOFILE(MGOREFPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF0000)
+
+ ENDPGM:     DLTOVR     FILE(*ALL)
+
+             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Finastra International Ltd.')
+             ENDPGM

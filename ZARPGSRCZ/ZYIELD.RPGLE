@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054863           Date 18Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031386           Date 26Jan22               *
+      *  Prev Amend No. MD054863           Date 18Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031386 - Yield can be negative at least for method 'A '.   *
+      *             Yield can greater then 999.9   for method 'A '    *
+      *           - Applied fix for MD059045                          *
       *  MD054863 - Calculate negative yield.                         *
       *             Applied partial fix of 258499.                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -354,7 +358,8 @@
 
       ** Error: yield value out of range
 
-     C                   IF        PYield > 999.9
+     C*****              IF        PYield > 999.9                                           MD031386
+     C                   IF        PYield > 9999999.9                                       MD031386
      C                   EVAL      PErrInd = 'R'
      C                   EVAL      PYield = *ZERO
      C                   ENDIF
@@ -429,7 +434,8 @@
 
      C                   IF        Wk_Price <= WNumDP
      C                   EVAL      PPrice = *ZERO
-     C                   EVAL      PYield = 1000.0 * WNumDP
+     C**********         EVAL      PYield = 1000.0 * WNumDP                                 MD031386
+     C                   EVAL      PYield = 1000000.0 * WNumDP                              MD031386
 
      C                   ELSE
 
@@ -472,6 +478,12 @@
      C                   EVAL      POS = 5
      C                   EVAL      Wk_Yield = ((PCoupRate * 100) / Wk_Price) +
      C                             ((PRedPrice - Wk_Price) / PPayYears)
+      * System is limited in cqse of negative yield greater to 100 So never search above.
+      * If needed it requires a maqthematical review of the formula .
+     C     WK_Yield      IFLE      -100                                                     MD031386
+     C                   EVAL      POS = -5                                                 MD031386
+     C                   EVAL      WK_Yield = -(99.99999999)                                MD031386
+     C                   END                                                                MD031386
 
      C     1             DO        12            I
 
@@ -485,7 +497,13 @@
      C                   ENDIF
 
      C                   EVAL      MINYLD = MINVAL(I) * Wk_Yield
+     C     MINYLD        IFLE      -100                                                     MD031386
+     C                   EVAL      MINYLD = -(MINVAL(I) * 99.99999998)                      MD031386
+     C                   END                                                                MD031386
      C                   EVAL      MAXYLD = MAXVAL(I) * Wk_Yield
+     C     MAXYLD        IFLE      -100                                                     MD031386
+     C                   EVAL      MAXYLD  = -(99.99999999)                                 MD031386
+     C                   END                                                                MD031386
 
      C                   EVAL      Wk_Yield = MINYLD
      C                   EXSR      SrCalc
@@ -543,12 +561,18 @@
      C**********         IF        Wk_Yield < WNumDP                                        MD054863
      C**********         EVAL      PYield = *ZERO                                           MD054863
      C**********         ELSE                                                               MD054863
-     C                   IF        Wk_Yield > (1000.0 - WNumDP)
-     C                   EVAL      PYield =  1000.0 - WNumDP
+     C                   IF        Wk_Yield < WNumDP                                        MD031386
+     C                   EVAL      PYield = Wk_Yield                                        MD031386
+     C                   ELSE                                                               MD031386
+     ***********         IF        Wk_Yield > (1000.0 - WNumDP)                             MD031386
+     C**********         EVAL      PYield =  1000.0 - WNumDP                                MD031386
+     C                   IF        Wk_Yield > (1000000.0 - WNumDP)                          MD031386
+     C                   EVAL      PYield =  1000000.0 - WNumDP                             MD031386
      C                   ELSE
      C                   EVAL      PYield = Wk_Yield
      C                   ENDIF
      C**********         ENDIF                                                              MD054863
+     C                   ENDIF                                                              MD031386
 
      C                   ENDSL
 
@@ -639,10 +663,13 @@
       ** Where the LEAVE opcode (above) will transfer control
 
      C                   IF        Wk_Yield < WNumDP
-     C                   EVAL      PYield = *ZERO
+     C**********         EVAL      PYield = *ZERO                                           MD031386
+     C                   EVAL      PYield = Wk_Yield                                        MD031386
      C                   ELSE
-     C                   IF        Wk_Yield > (1000.0 - WNumDP)
-     C                   EVAL      PYield = 1000.0 - WNumDP
+     C**********         IF        Wk_Yield > (1000.0 - WNumDP)                             MD031386
+     C**********         EVAL      PYield = 1000.0 - WNumDP                                 MD031386
+     C                   IF        Wk_Yield > (10000000.0 - WNumDP)                         MD031386
+     C                   EVAL      PYield = 10000000.0 - WNumDP                             MD031386
      C                   ELSE
      C                   EVAL      PYield = Wk_Yield
      C                   ENDIF
@@ -703,7 +730,8 @@
      C     SrYMethDA     BEGSR
 
      C                   IF        PPrice = *ZERO
-     C                   EVAL      PYield = 1000.0 - WNumDP
+     C**********         EVAL      PYield = 1000.0 - WNumDP                                 MD031386
+     C                   EVAL      PYield = 1000000.0 - WNumDP                              MD031386
      C                   ELSE
 
      C                   IF        PPrice >= 100
@@ -716,8 +744,10 @@
      C                   EVAL      WResult4 = 100
      C                   EVAL      WResult4 = WResult4 / PPayYears
      C                   EVAL      WResult3 = WResult3 * WResult4
-     C                   IF        WResult3 > (1000.0 - WNumDP)
-     C                   EVAL      PYield = 1000.0 - WNumDP
+     C**********         IF        WResult3 > (1000.0 - WNumDP)                             MD031386
+     C**********         EVAL      PYield = 1000.0 - WNumDP                                 MD031386
+     C                   IF        WResult3 > (1000000.0 - WNumDP)                          MD031386
+     C                   EVAL      PYield = 1000000.0 - WNumDP                              MD031386
      C                   ELSE
      C                   EVAL      PYield = WResult3
      C                   ENDIF
@@ -883,10 +913,13 @@
 
      C                   EVAL      POS = 95
      C                   IF        Wk_Yield < WNumDP
-     C                   EVAL      PYield = *ZERO
+     C**********         EVAL      PYield = *ZERO                                           MD031386
+     C                   EVAL      PYield = Wk_Yield                                        MD031386
      C                   ELSE
-     C                   IF        Wk_Yield > (1000.0 - WNumDP)
-     C                   EVAL      PYield = 1000.0 - WNumDP
+     C**********         IF        Wk_Yield > (1000.0 - WNumDP)                             MD031386
+     C**********         EVAL      PYield = 1000.0 - WNumDP                                 MD031386
+     C                   IF        Wk_Yield > (1000000.0 - WNumDP)                          MD031386
+     C                   EVAL      PYield = 1000000.0 - WNumDP                              MD031386
      C                   ELSE
      C                   EVAL      PYield = Wk_Yield
      C                   ENDIF

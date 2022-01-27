@@ -20,8 +20,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD054947           Date 13Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059339           Date 20Jan22               *
+      *  Prev Amend No. MD054947           Date 13Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059339 - Error on Repo API.                                *
+      *           - Bypass validation of DDDPAD (Deal No) during      *
+      *             insert mode. Also, assign the value of DDDPAD to  *
+      *             DPAD. To be used to update DPTMVD.                *
       *  MD054947 - REPO Subsitution and Margin Call events Rejected  *
       *             in Midas.                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -150,6 +155,7 @@
      D DDSWRF          S              3A
      D DDRPIN          S              1A
      D DDDPRN          S              6A
+     D DDACTN          S              1A                                                    MD059339
 
       ** System Info and other inputs parms
 
@@ -279,6 +285,7 @@
       ** Reference is blank.
 
      C     DDDPAD        IFNE      *BLANKS
+     C     DDACTN        ANDNE     'I'                                                      MD059339
      C                   MOVE      DDDPAD        DPAD
      C                   MOVE      *BLANKS       DealCcy
      C     DPAD          CHAIN     MMDELDP0                           65
@@ -422,6 +429,11 @@
 
      C                   END
      C                   END
+     C     DDACTN        IFEQ      'I'                                                      MD059339
+     C     DDDPAD        ANDNE     *BLANKS                                                  MD059339
+     C     DPAD          ANDEQ     0                                                        MD059339
+     C                   MOVE      DDDPAD        DPAD                                       MD059339
+     C                   ENDIF                                                              MD059339
 
      C                   ENDSR
 
@@ -489,6 +501,7 @@
      C                   PARM                    DDDPADOk
      C                   PARM                    DPAD
      C                   PARM                    DealCcy
+     C                   PARM                    DDACTN                                     MD059339
 
      C     INVKey        KLIST
      C                   KFLD                    NomCcy

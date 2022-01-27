@@ -11,14 +11,18 @@
 /********(c)*Misys*International*Banking*Systems*Ltd.*2007************/         /*EML110*/
 /*       (c) Finastra International Limited 2018                     */         /*EML110*/
 /*                                                                   */
-/*       Last Amend No. EML110             Date 20Jan20              */
-/*       Prev Amend No. TFJ11A             Date 23Jan07              */
+/*       Last Amend No. 255799             Date 25Jan22              */
+/*       Prev Amend No. EML110             Date 20Jan20              */
+/*                      TFJ11A             Date 23Jan07              */
 /*                      TFJ011  (CHG141)   Date 31Aug05              */
 /*                      TFJ011  (CHG014)   Date 26Aug05              */
 /*                              *CREATE    Date 15Mar05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       255799 - Exclusive locking on GLJEIHPD. Change lock state of*/
+/*                GLJEIHPD and GLJEIPPD to *SHRUPD. Applied 251666.  */
+/*              - Applied for MD058790                               */
 /*       EML110 - Account Balance Pooling. Upgrade to FBM 2.1        */
 /*       TFJ11A - Account Transfer Service                           */
 /*       TFJ011 - (CHG141) Further Requirements by the Bank          */
@@ -120,14 +124,16 @@
 /* Call program to process the details received on incoming file */
              CHGVAR     VAR(&RETCOD) VALUE('       ')
    LOOP1:
-             ALCOBJ     OBJ((GLJEIPPD *FILE *EXCL))
+/**********  ALCOBJ     OBJ((GLJEIPPD *FILE *EXCL))                                    */ /*255799*/
+             ALCOBJ     OBJ((GLJEIPPD *FILE *SHRUPD))                                     /*255799*/
 /* Unable to allocate, DLY and keep trying */
              MONMSG     MSGID(CPF0000) EXEC(DO)
              DLYJOB     DLY(15)
              GOTO       LOOP1
              ENDDO
 
-             ALCOBJ     OBJ((GLJEIHPD *FILE *EXCL))                                       /*TFJ11A*/
+/**********  ALCOBJ     OBJ((GLJEIHPD *FILE *EXCL))                             */ /*TFJ11A 255799*/
+             ALCOBJ     OBJ((GLJEIHPD *FILE *SHRUPD))                                     /*255799*/
 /* Unable to allocate, DLY and keep trying */                                             /*TFJ11A*/
              MONMSG     MSGID(CPF0000) EXEC(DO)                                           /*TFJ11A*/
              DLYJOB     DLY(15)                                                           /*TFJ11A*/
@@ -151,10 +157,12 @@
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)
 
-             DLCOBJ     OBJ((GLJEIPPD *FILE *EXCL))
+/**********  DLCOBJ     OBJ((GLJEIPPD *FILE *EXCL))                                    */ /*255799*/
+             DLCOBJ     OBJ((GLJEIPPD *FILE *SHRUPD))                                     /*255799*/
              MONMSG     MSGID(CPF0000)
 
-             DLCOBJ     OBJ((GLJEIHPD *FILE *EXCL))                                       /*TFJ11A*/
+/**********  DLCOBJ     OBJ((GLJEIHPD *FILE *EXCL))                             */ /*TFJ11A 255799*/
+             DLCOBJ     OBJ((GLJEIHPD *FILE *SHRUPD))                                     /*255799*/
              MONMSG     MSGID(CPF0000)                                                    /*TFJ11A*/
                                                                                           /*TFJ11A*/
              IF         COND(&RETCOD = '*Error') THEN(DO)

@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE126             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD050817           Date 21Oct20               *
       *                 MD056223           Date 15Jul20               *
       *                 AR1079480          Date 20Mar20               *
@@ -212,6 +213,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE126 - Amend Narrative for Participation Purchased Loans   *
+      *           to use the Original Borrower of the loan instead    *
+      *           of the customer of the Part Sold Loan               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD050817 - ASOC defaulting for Participations Purchased      *
@@ -3414,6 +3418,37 @@
       *                                                                                       CLE035
      C                     ENDIF                                                              CLE035
       *                                                                                       CGL020
+      ** Read switchable features file SCSARDPD using access object                           CLE126
+      ** to determine if switchable feature (CLE126) is switched ON                           CLE126
+      *                                                                                       CLE126
+     C                     CALL 'AOSARDR0'                                                    CLE126
+     C                     PARM *BLANKS   W0RTCD                                              CLE126
+     C                     PARM '*VERIFY' W0OPTN                                              CLE126
+     C                     PARM 'CLE126'  W0SARD                                              CLE126
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE126
+     C                     MOVE 'N'       CLE126  1                                           CLE126
+      *                                                                                       CLE126
+      ** If feature is on, set up SAR work flag                                               CLE126
+      *                                                                                       CLE126
+     C           W0RTCD    IFEQ *BLANKS                                                       CLE126
+     C                     MOVE 'Y'       CLE126                                              CLE126
+     C                     ELSE                                                               CLE126
+      *                                                                                       CLE126
+      ** else, database error (return code other than *NRF)                                   CLE126
+      *                                                                                       CLE126
+     C           W0RTCD    IFNE '*NRF   '                                                     CLE126
+     C                     MOVEL'LE0470'  DBPGM                                               CLE126
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE126
+     C                     MOVEL'CLE126  'DBKEY                                               CLE126
+     C                     Z-ADD111       DBASE                                               CLE126
+     C                     MOVE '1'       *INU7                                               CLE126
+     C                     MOVE '1'       *INU8                                               CLE126
+     C                     MOVE '1'       *INLR                                               CLE126
+     C                     GOTO ERROR                                                         CLE126
+     C                     ENDIF                                                              CLE126
+      *                                                                                       CLE126
+     C                     ENDIF                                                              CLE126
+      *                                                                                       CLE126
       ** Access SAR Details to see if Compliance Watch is installed                           CGL020
       *                                                                                       CGL020
      C                     MOVEL'N'       CGL020  1                                           CGL020
@@ -6893,6 +6928,31 @@
      C                     MOVELCNUM      CKEY                            146015
      C                     END                                            146015
       *                                                                   146015
+      * If CLE126 is ON and Recourse Ind = 'N' and it is a Participation                      CLE126
+      * Purchase AND Posting Ref 1 and Narrative Code 1, output the                           CLE126
+      * OLNO (original Borrower) to narrative code.                                           CLE126
+      *                                                                                       CLE126
+     C           CLE126    IFEQ 'Y'                                                           CLE126
+     C           *IN02     ANDEQ'1'                                                           CLE126
+     C           AYLNPT    IFEQ 64                                                            CLE126
+     C           AYLNPT    OREQ 65                                                            CLE126
+     C           AYLNPT    OREQ 68                                                            CLE126
+     C           CLE005    ANDEQ'Y'                                                           CLE126
+     C           AYLNPT    OREQ 71                                                            CLE126
+     C           CLE005    ANDEQ'Y'                                                           CLE126
+     C           RCSI      IFEQ ' '                                                           CLE126
+     C           PREF,N    ANDEQ1                                                             CLE126
+     C           NCDN      ANDEQ'01'                                                          CLE126
+     C                     MOVELOLNO      CKEY                                                CLE126
+     C                     ENDIF                                                              CLE126
+     C                     ENDIF                                                              CLE126
+      *                                                                                       CLE126
+     C           OLNO      IFEQ *BLANKS                                                       CLE126
+     C           CKEY      ANDEQ*BLANKS                                                       CLE126
+     C                     MOVELCNUM      CKEY                                                CLE126
+     C                     ENDIF                                                              CLE126
+     C                     ENDIF                                                              CLE126
+      *                                                                                       CLE126
       * If the customer to be checked is the same as the last customer                        CSC042
       * checked (and this code can check the same customer MANY times for                     CSC042
       * each input record - I kid you not) then use the previous                              CSC042

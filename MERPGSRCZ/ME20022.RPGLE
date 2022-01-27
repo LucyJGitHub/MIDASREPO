@@ -89,7 +89,7 @@
      D WCRLFPos        S              3S 0
      D WCRpos          S              3S 0
      D WrkLF           S              1A
-     D WElement        S            180A
+     D WElement        S            220A
      D WEqPos          S              3S 0
      D WEName          S            100A
      D WEValue         S            120A
@@ -262,7 +262,7 @@
      C                   EVAL      MEEVAL = WEValue
      C                   WRITE     MEISODD0                             06
 
-      **  Error on write to PF/MGISODPD (Details of Elements)
+      **  Error on write to PF/MEISODPD (Details of Elements)
 
      C                   IF        *IN06 = *ON
      C     *LOCK         IN        LDA

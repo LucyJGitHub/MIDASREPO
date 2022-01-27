@@ -647,7 +647,7 @@
 
       ** Extract UETR
 
-     C                   when      mxTags(x) = 'PmtIdUETR'
+     C                   when      mxTags(x) = 'PmtId_UETR'
      C                   eval      UETR = tagVal
      C                   eval      IUETR = tagVal
 
@@ -664,7 +664,7 @@
 
       ** Extract Transaction Currency
 
-     C                   when      mxTags(x) = 'IntrBkSttlmAmtCcy'
+     C                   when      mxTags(x) = 'IntrBkSttlmAmt_Ccy'
 
       ** Extract Value Date
 
@@ -673,13 +673,13 @@
 
       ** Extract Message ID
 
-     C                   when      mxTags(x) = 'GrpHdrMsgId'
+     C                   when      mxTags(x) = 'GrpHdr_MsgId'
      C                   eval      MXID = tagVal
      C                   eval      IMXID = tagVal
 
       ** Extract Input Date
 
-     C                   when      mxTags(x) = 'GrpHdrCreDtTm'
+     C                   when      mxTags(x) = 'GrpHdr_CreDtTm'
      C                   eval      MXIDE = tagVal
 
       ** Extract MsgId for cancellation messages
@@ -1109,11 +1109,11 @@
 **CTDATA cpy@
 (c) Finastra International Limited 2021
 **CTDATA mxTags
-PmtIdUETR
+PmtId_UETR
 MsgDefIdr
 IntrBkSttlmAmt
-IntrBkSttlmAmtCcy
+IntrBkSttlmAmt_Ccy
 IntrBkSttlmDt
-GrpHdrMsgId
-GrpHdrCreDtTm
+GrpHdr_MsgId
+GrpHdr_CreDtTm
 BizMsgIdr

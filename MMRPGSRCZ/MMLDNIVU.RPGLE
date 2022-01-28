@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058540           Date 24Aug21               *
-      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *  Last Amend No. MD059321           Date 21Dec21               *
+      *  Prev Amend No. MD058540           Date 24Aug21               *
+      *                 MD057049           Date 03Nov20               *
       *                 MD056313           Date 21Sep20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -140,6 +141,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059321 - Changed Processing to RepoFlag before reaching    *
+      *             main validation module.                           *
       *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD057049 - Move value of IKRRAT to HKRRAT                    *
       *  MD056313 - Deal settlement not validated during authorize    *
@@ -2586,7 +2589,8 @@
      C                   PARM                    WIdx                                         CDL016
       * Valid Deals layout (DS) from/to caller                                                CDL016
      C                   PARM                    ValidDeal                                    CDL016
-     C                   PARM      'N'           RepoFlag          1                          CDL016
+     C*******************PARM      'N'           RepoFlag          1                 CDL016 MD059321
+     C                   PARM                    RepoFlag          1                        MD059321
      C                   PARM                    CDL016                                       CDL016
      C                   PARM                    CDL019                                       CDL019
      C                   PARM                    CDL020                                       CDL020
@@ -2658,7 +2662,9 @@
      C                   PARM                    WIdx                                        BUG3992
       * Valid Deals layout (DS) from/to caller                                               BUG3992
      C                   PARM                    ValidDeal                                   BUG3992
-     C                   PARM      'N'           RepoFlag          1                         BUG3992
+     C*******************PARM      'N'           RepoFlag          1                BUG3992 MD059321
+     C                   PARM                    RepoFlag          1                        MD059321
+     C
      C/COPY WNCPYSRC,MMLDNIXC07                                                              BUG3992
                                                                                              BUG3992
      C                   ENDSR                                                               BUG3992
@@ -2724,6 +2730,7 @@
      C     PayDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
      C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
+
      C                   MOVEL     'Y'           ##PPAY                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
@@ -2735,6 +2742,7 @@
      C     RecDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
      C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
+
      C                   MOVEL     'Y'           ##PREC                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A

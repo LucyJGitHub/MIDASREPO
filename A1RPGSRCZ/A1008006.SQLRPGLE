@@ -20,10 +20,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD059448           Date 18Jan22               *
+      *  Prev Amend No. BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059448 - Replication job RPTRGSRV01 dumps with DBASE 1 in  *
+      *             pgm A1008006.                                     *
       *  BA1008 - Replication of Trades to consolidated Branches      *
       *                                                               *
       *****************************************************************
@@ -191,9 +194,11 @@
       *                                                                                     AR989143
      C                   Eval      WSTRSQL = 'select UDFTRAD07, UDFTRAD09, ' +
      C                                       'UDFTRAD12, UDFTRAD14, ' +
-     C                                       'UDFTRAD15, UDFTRAD17, ' +
+     C**********                             'UDFTRAD15, UDFTRAD17, ' +                     MD059448
+     C                                       'UDFTRAD15, UDFTRAD17  ' +                     MD059448
      C                                        ' from T_GZTRADEX  ' +
-     C                                        ' where DDTRDF = ' + '''' +
+     C**********                              ' where DDTRDF = ' + '''' +                   MD059448
+     C                                        ' where DDTDRF = ' + '''' +                   MD059448
      C                                        %trim(TradeKey) + '''' +
      C                                        ' and ZONE = ' +  '''' +
      C                                        %trim(ZoneName) + ''''

@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPMSGTOQV - Send input message to input queue               */
+/*                     - validity checker                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 192680             Date 27Apr01              */
+/*                      173467             Date 24Jan00              */
+/*                      CRP002  *CREATE    Date 13Apr99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       192680 - Add parameter allowing the queue to be closed      */
+/*                after a message is sent.                           */
+/*       173467 - Check for QMQM being in library list; if it is not */
+/*                add it and remove it afterwards.                   */
+/*       CRP002 - New                                                */
+/*                                                                   */
+/*********************************************************************/
+/*********** PGM        PARM(&QUEUENAME &INMSG) *****/                /*192680*/
+             PGM        PARM(&QUEUENAME &INMSG &CLOSE)                /*192680*/
+
+/**  Parameters                                                     */
+             DCL        VAR(&QUEUENAME) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&INMSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CLOSE) TYPE(*CHAR) LEN(4)                /*192680*/
+
+/*  Variables to act like named constants on calls                  */
+             DCL        VAR(&QUEUE) TYPE(*CHAR) LEN(7) VALUE(QUEUE)
+
+/* Work fields            */
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE(N)
+
+             DCL        VAR(&EXIST) TYPE(*CHAR) LEN(4)
+
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&QMQMINLIBL) TYPE(*CHAR) LEN(1) +
+                          VALUE('N') /* Flag for whether QMQM was +
+                          in the library list or not */               /*173467*/
+
+             COPYRIGHT +
+             TEXT('(c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Attempt to add QMQM to library list; set flag if it was there   */ /*173467*/
+             ADDLIBLE   LIB(QMQM)                                     /*173467*/
+             MONMSG     MSGID(CPF2103) EXEC(CHGVAR VAR(&QMQMINLIBL) +
+                          VALUE('Y'))                                 /*173467*/
+
+/*  Call RPG routine to check whether the queue exists              */
+             CALLPRC    PRC(RPCHKMQEX) PARM(&QUEUENAME &QUEUE &EXIST +
+                          &RETURNCODE)
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             IF         COND(&EXIST = '*NO') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Queue ' *CAT &QUEUENAME  +
+                             *TCAT ' not found') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/*  Send message to cause OS/400 to pass earlier messages back      */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPMSGTOQV') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+/* Remove QMQM from the library list if it was added by this program  /*173467*/
+             IF         COND(&QMQMINLIBL = 'N') THEN(RMVLIBLE +
+                          LIB(QMQM))                                  /*173467*/
+
+             ENDPGM

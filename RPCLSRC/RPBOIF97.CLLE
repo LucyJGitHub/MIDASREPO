@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPBOIF97 - Back Office Interface - Queue full delay time    */
+/*                                                                   */
+/*       This routine provides access to just the Queue full delay   */
+/*       time and is intended to be called from C code.              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 128748  Supportforce                         */
+/*                              *CREATE    Date 13Sep06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       128748 - Created during adding Queue full loop to Feeder    */
+/*                (which necessitated changing similar loop in the   */
+/*                Server) to make the Queue full delay time          */
+/*                available to the C code.                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&QFULDLYTIM)
+
+             DCL        VAR(&QFULDLYTIM) TYPE(*INT) /* Queue full +
+                          delay time */
+
+             DCL        VAR(&DLYTIMALP) TYPE(*CHAR) LEN(10) /* Queue +
+                          full delay time - Alpha */
+
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(10) /* Name of the +
+                          data that is required */
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(64) /* Data to be +
+                          returned  */
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(2 0) /* Length of +
+                          data that is being returned */
+
+             DCL        VAR(&IDX) TYPE(*INT)
+
+             COPYRIGHT +
+             TEXT('(c) Misys International Banking Systems Ltd. 2006')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Get Queue full delay time                                       */
+             CALLPRC    PRC(RPBOIF99) PARM(('DLYTIME   ') (&DATA) +
+                          (&LEN))
+             CHGVAR     VAR(&DLYTIMALP) VALUE(%SST(&DATA 1 &LEN))
+
+             CHGVAR     VAR(&QFULDLYTIM) VALUE(&DLYTIMALP)
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Error in Back Office Interface +
+                          RPBOIF97') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+ END:
+             RETURN
+
+             ENDPGM

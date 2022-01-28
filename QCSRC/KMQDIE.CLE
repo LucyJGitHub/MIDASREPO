@@ -1,0 +1,191 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <recio.h>
+#include <decimal.h>
+#include <xxdtaa.h>
+#include <cmqc.h>
+
+#include "kmdlgh.h"
+#include "kmddmh.h"
+#include "kmddih.h"
+#include "kmdboh.h"
+
+char *find_group(char *buffer, char *group)
+{
+    char *pchr = NULL;
+
+    pchr = memchr(buffer, group[0], strlen(buffer));
+    if (pchr != NULL)
+    {
+        if (memcmp(pchr, group, strlen(group)) != 0)
+        {
+            pchr = NULL;
+        }
+    }
+    return pchr;
+}
+
+char *get_all_tables(char *types, long *num_tabs)
+{
+    FILE *fpReplica;
+    char filename[50];
+    char buffer[150];
+    char table_name[TABLE_NAME_LEN + 1];
+    char type;
+    char *pchr;
+    char *list = NULL;
+    char *list_entry = NULL;
+    long table_count = 0;
+    short found_table = 0;
+    char *pchr2;
+
+    sprintf(filename, "MDBASCRIPT(RP%s)", product);
+
+    if ((fpReplica = fopen(filename, "r")) == NULL)
+    {
+        return 0;
+    }
+
+    while (fpReplica != NULL)
+    {
+        while (found_table == 0)
+        {
+            /* make sure buffer is cleared out before getting next table */
+            memset(buffer, 0, 150);
+            while ((pchr2 = find_group(buffer, "<FILTER>")) == NULL)
+            {
+                if (fgets(buffer, 150, fpReplica) == NULL)
+                {
+                    fclose(fpReplica);
+                    fpReplica = NULL;
+                    break;
+                }
+            }
+
+            if (fpReplica == NULL)
+            {
+                break;
+            }
+
+            memset(buffer, 0, 150);
+            while ((pchr2 = find_group(buffer, "<TYPE>")) == NULL)
+            {
+                if (fgets(buffer, 150, fpReplica) == NULL)
+                {
+                    fclose(fpReplica);
+                    fpReplica = NULL;
+                    break;
+                }
+            }
+
+            if (fpReplica == NULL)
+            {
+                break;
+            }
+
+            sscanf(pchr2, "<TYPE>%c", &type);
+            if ((memcmp(types, "*BOTH", 5) == 0) ||
+                ((type == 'C') && (memcmp(types, "*CONT", 5) == 0)) ||
+                ((type == 'B') && (memcmp(types, "*BATCH", 6) == 0)))
+            {
+                memset(buffer, 0, 150);
+                while ((pchr2 = find_group(buffer, "<TABLE>")) == NULL)
+                {
+                    if (fgets(buffer, 150, fpReplica) == NULL)
+                    {
+                        fclose(fpReplica);
+                        fpReplica = NULL;
+                        break;
+                    }
+                }
+
+                if (fpReplica == NULL)
+                {
+                    break;
+                }
+                sscanf(pchr2, "<TABLE>%s", table_name);
+                found_table = 1;
+            }
+        }
+        if (found_table == 1)
+        {
+            table_count++;
+            list = realloc(list, table_count * 18);
+            list_entry = list + (table_count - 1) * 18;
+            memset(list_entry, ' ', 18);
+            memcpy(list_entry, table_name, strlen(table_name));
+            found_table = 0;
+        }
+    }
+    *num_tabs = table_count;
+    return list;
+}
+
+char *load_table_list(char *types, char *list)
+{
+    char *tablist;
+    char *tabarray;
+    long count = 0;
+    short list_count;
+    char *plist;
+    int i, j;
+
+    if (memcmp(types, "*LIST", 5) == 0)
+    {
+        tablist = get_all_tables("*BOTH ", &count);
+        list_count = *(short *)list;
+        plist = list + sizeof(short);
+        tabarray = malloc(list_count * 18);
+        memset(tabarray, ' ', list_count * 18);
+        for (i = 0; i < list_count; i++)
+        {
+            for (j = 0; j < count; j++)
+            {
+                if (memcmp(plist, tablist + j * 18, 18) == 0)
+                {
+                    break;
+                }
+            }
+            if (j == count)
+            {
+                LOGERROR
+                {
+                    sprintf(log_buff, "Table %18.18s not defined for this product", plist);
+                    ERROROUT(log_buff);
+                }
+            }
+            else
+            {
+                memcpy(tabarray + num_tables * 18, plist, 18);
+                num_tables++;
+            }
+            plist += 18;
+        }
+        free(tablist);
+    }
+    else
+    {
+        tablist = get_all_tables(types, &count);
+        tabarray = tablist;
+        num_tables = count;
+    }
+    return tabarray;
+}

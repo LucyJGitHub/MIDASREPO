@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       KMDJEC - Request jobs to be stopped                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 141034    *CREATE  Date 28Jan05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       141034 - Prevent subsystem from crashing if Feeder shutdown */
+/*                takes more than 5 minutes.                         */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDJEC                                       */
+/*          Program Title - Request jobs to be stopped                   */
+/*          Creation Date - 22/08/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  This routine is called to ask for jobs to be stopped                 */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*-----------------------------------------------------------------------*/
+             PGM        PARM(&JOBNAME &ERR)
+
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(113)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WORKSTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&QNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&QLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UNIT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(5 0) VALUE(57)
+             DCL        VAR(&WAIT) TYPE(*DEC) LEN(5 0) VALUE(300)
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(DONE))
+             RTVJOBA    NBR(&JOBNO)
+
+             CALL       PGM(KMDICI) PARM('INITBO' '   ')
+             CALL       PGM(KMDICI) PARM('GETUNIT' &UNIT)
+             CALL       PGM(KMDICI) PARM('SBSNAME ' &SBS)
+             CALL       PGM(KMDICI) PARM('WRKLIB  ' '   ' &QLIB)
+             CHGVAR     VAR(&QNAME) VALUE('RQ' *CAT &JOBNO)
+             DLTDTAQ    DTAQ(&QLIB/&QNAME)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAQ    DTAQ(&QLIB/&QNAME) MAXLEN(1024) +
+                          TEXT('MDBA Job reply data queue')
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR     VAR(&MSG) VALUE(&QNAME *CAT &QLIB *CAT +
+                          '                ' *CAT &UNIT *CAT +
+                          &JOBNAME *CAT 'SHUTDOWN')
+             CALL       PGM(QSNDDTAQ) PARM('MDBAJOBCTL' &SBS &LEN &MSG)
+
+             CHGVAR     VAR(&LEN) VALUE(64)
+             CALL       PGM(QRCVDTAQ) PARM(&QNAME &QLIB &LEN &DATA &WAIT)
+             IF         COND(&LEN *EQ 0) THEN(DO)
+                 CHGVAR     VAR(&ERR) VALUE('T')
+                 ENDDO
+             ELSE       CMD(DO)
+                 CHGVAR     VAR(&ERR) VALUE('Y')
+                 IF         COND(%SST(&DATA 1 &LEN) *EQ 'BUSY') THEN(DO)
+                    CHGVAR     VAR(&ERR) VALUE('B')
+                    ENDDO
+                 ENDDO
+
+/*  If the data queue is deleted and MDBALAUNCH has not replied    */ /*141034*/
+/*   then when MDBALAUNCH tries to reply it will get an            */ /*141034*/
+/*   unmonitored error and MDBALAUNCHH will then shut down the     */ /*141034*/
+/*   subsystem                                                     */ /*141034*/
+/************DLTDTAQ    DTAQ(&QLIB/&QNAME)                            /*141034*/
+/************MONMSG     MSGID(CPF0000)                                /*141034*/
+DONE:
+             IF         COND(&ERR *EQ '1') THEN(RETURN)
+             CHGVAR     VAR(&ERR) VALUE('1')
+             ENDPGM

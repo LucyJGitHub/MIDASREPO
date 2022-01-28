@@ -1,0 +1,3087 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMDMEE - "Manipulate arrays of structures"
+ *
+ *       (c) Misys International Banking Systems Ltd. 2001
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. 122789 (RoyalBlue) Date 27Nov02
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       122789 - At OS/400 V5R1 we were seeing a large number of
+ *                messages saying, "Pointer passed to free or realloc
+ *                invalid".  We tracked it down to excessive freeing
+ *                of structure elements in a function in this module.
+ *                removing the extra call to free() appears to cause
+ *                no problems.
+ *                Instead of freeing that element, we set it to null,
+ *                which may or may not have any effect.
+ *
+ ********************************************************************
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <locale.h>
+
+/******************* TEMPORARY ********************/
+#ifdef __ILEC400__
+#include <xxcvt.h>
+#else
+#define QXXPTOI(x,y,z) (long) QXXPTOD(x,y,z)
+#define QXXZTOI(x,y,z) (long) QXXZTOD(x,y,z)
+#endif
+/**************************************************/
+
+#include <netinet/in.h>
+#include "kmdmph.h"
+#include "decimal.h"
+
+/* #define trace_allocs  */
+
+#ifndef trace_allocs
+#define ALLOC(x) malloc(x)
+#define FREE(x) free(x)
+#else
+
+/* Non traced malloc for data being passed out of the engine */
+void * ALLOC(int i)
+{
+    return malloc(i);
+}
+
+
+void FREE(void * p)
+{
+    free(p);
+    return;
+}
+/*********************************************************************/
+/*  MEMORY TRACE UTILITIES - Not used with current compile settings  */
+
+typedef struct memblock {
+    struct memblock * next;
+    char * data;
+    int len;
+    int line;
+} memblock;
+
+static memblock * pm = NULL;
+static memblock * plm = NULL;
+static int cmb = 0;
+
+void * m_alloc(int len,int line)
+{
+    memblock * tp = plm;
+
+    if (len == 0)
+    {
+        return NULL;
+    }
+
+    plm = malloc(sizeof(memblock));
+    plm->next = NULL;
+    plm->data = malloc(len);
+    plm->len = len;
+    plm->line = line;
+    if (tp != NULL)
+    {
+        tp->next = plm;
+    }
+    else
+    {
+        pm = plm;
+    }
+    cmb++;
+    return plm->data;
+}
+
+void m_free(void * data)
+{
+    memblock * pmb = (memblock *) &pm;
+    memblock * tp;
+
+    if (data == NULL)
+    {
+        return;
+    }
+    free(data);
+
+    while ((pmb->next != NULL) && (pmb->next->data != data))
+    {
+        pmb = pmb->next;
+    }
+    if (pmb->next == NULL)
+    {
+        return;
+    }
+    cmb--;
+    tp = pmb->next;
+    pmb->next = pmb->next->next;
+    free(tp);
+    if (pmb->next == NULL)
+    {
+        plm = pmb;
+    }
+    if (pm == NULL)
+    {
+        plm = NULL;
+    }
+    return;
+}
+
+#define malloc(x) m_alloc(x,__LINE__)
+#define free(x) m_free(x)
+
+/******************************************************************/
+#endif
+
+
+/*******************************************************************/
+/*         General tracing facilities                              */
+/*                                                                 */
+#define __trace__
+
+#ifdef __trace__
+int s_deb = 1;
+void check_trace(void);
+#define TRACE(x) {check_trace();if(x<=trace_val)fprintf(trace_file,"%s\n",tbuff);}
+int trace_val = 4;
+static char tbuff[1000];
+static FILE * trace_file = NULL;
+
+void check_trace()
+{
+    if (s_deb == 0)
+    {
+        return;
+    }
+    if (trace_file == NULL)
+    {
+        if ((trace_file = fopen("MAPTRACE","r")) == NULL)
+        {
+            s_deb = 0;
+            trace_val = -1;
+            return;
+        }
+        fclose(trace_file);
+        if ((trace_file = fopen("MAPTRACE","w")) == NULL)
+        {
+            s_deb = 0;
+            trace_val = -1;
+            return;
+        }
+    }
+}
+
+void DUMP(int x,unsigned char * data,int len)
+{
+    int i;
+    char t[] = "0123456789ABCDEF";
+    unsigned char * cp = data;
+    int rem = len;
+    int l;
+
+    if (x > trace_val)
+    {
+        return;
+    }
+    if (cp == NULL)
+    {
+        return;
+    }
+
+    fprintf(trace_file,"\n");
+
+    while (rem > 0)
+    {
+        l = (rem < 80) ? rem : 80;
+        memcpy(tbuff,cp,l);
+        for(i=0;i < l;i++)
+        {
+            if (!isprint(*(tbuff + i)))
+            {
+                *(tbuff + i) = ' ';
+            }
+        }
+        *(tbuff + l) = '\n';
+        *(tbuff + l + 1) = 0;
+        fprintf(trace_file,tbuff);
+        for(i=0;i < l;i++)
+        {
+            *(tbuff + i) = t[*(cp + i) >> 4];
+        }
+        *(tbuff + l) = '\n';
+        *(tbuff + l + 1) = 0;
+        fprintf(trace_file,tbuff);
+        for(i=0;i < l;i++)
+        {
+            *(tbuff + i) = t[*(cp + i) & 0x0F];
+        }
+        *(tbuff + l) = '\n';
+        *(tbuff + l + 1) = '\n';
+        *(tbuff + l + 2) = 0;
+        fprintf(trace_file,tbuff);
+        rem -= l;
+        cp += l;
+    }
+}
+
+int s_trace(char * s)
+{
+    check_trace();
+    if (s_deb == 0)
+    {
+        return 1;
+    }
+    fprintf(trace_file,"%s\n",s);
+    return 1;
+}
+
+#else
+int s_deb = 0;
+int s_trace(char * s)
+{
+    return 1;
+}
+#endif
+/*******************************************************************/
+
+/* ASCII - EBCDIC translate tables */
+
+static char e2a[256];
+static char a2e[256];
+static int xlateok = 0;
+
+char * AtoE(char * s,int i)
+{
+    int j,k;
+    if (s == NULL)
+    {
+        return NULL;
+    }
+    k = (i>0) ? i : strlen(s);
+    for (j=0;j<k;*(s+j) = *(a2e  + *(s+j)),j++)
+        ;
+    return s;
+}
+char * EtoA(char * s,int i)
+{
+    int j,k;
+    if (s == NULL)
+    {
+        return NULL;
+    }
+    k = (i>0) ? i : strlen(s);
+    for (j=0;j<k;*(s+j) = *(e2a  + *(s+j)),j++)
+        ;
+    return s;
+}
+
+#pragma linkage (KMDXTC,OS)
+int KMDXTC(char *,char *);
+
+/* Network conversions (EX socketif) */
+
+unsigned short HTONS(unsigned short host_short)
+{
+    return htons(host_short);
+}
+unsigned short NTOHS(unsigned short net_short)
+{
+    return ntohs(net_short);
+}
+unsigned long HTONL(unsigned long host_long)
+{
+    return htonl(host_long);
+}
+unsigned long NTOHL(unsigned long net_long)
+{
+    return ntohl(net_long);
+}
+float HTONF(float host_float)
+{
+    long l;
+
+    l = HTONL(*((long *) &host_float));
+    return *((float *) &l);
+}
+float NTOHF(float net_float)
+{
+    long l;
+
+    l = NTOHL(*((long *) &net_float));
+    return *((float *) &l);
+}
+double HTOND(double host_double)
+{
+#ifndef __ILEC400__
+    union {
+        double d2;
+        char da[8];
+    } u;
+    int i;
+    for (i = 0 ; i < 8 ; u.da[i] = *(((char *) &host_double)+7-i++))
+        ;
+    return u.d2;
+#else
+    return host_double;
+#endif
+}
+double NTOHD(double net_double)
+{
+#ifndef __ILEC400__
+    union {
+        double d2;
+        char da[8];
+    } u;
+    int i;
+    for (i = 0 ; i < 8 ; u.da[i] = *(((char *) &net_double)+7-i++))
+        ;
+    return u.d2;
+#else
+    return net_double;
+#endif
+}
+char * HTONC(char * host_char,int len)
+{
+#ifdef __ILEC400__
+    EtoA(host_char,len);
+#endif
+    return host_char;
+}
+char * NTOHC(char * net_char,int len)
+{
+#ifdef __ILEC400__
+    AtoE(net_char,len);
+#endif
+    return net_char;
+}
+
+static Master * master;
+
+/* Dummy functions which are called if user exits are not supplied */
+
+int _rc(Master * pmast,unsigned short stream,unsigned long tranid,
+        char * data,unsigned short len,Struct * pstruct)
+{
+   free(data);
+   return 0;
+}
+int _rrc(Master * pmast,unsigned long tranid,char * data,
+         unsigned short len,Struct * pstruct)
+{
+   free(data);
+   return 0;
+}
+void rS(rStruct * r,Struct * s)
+{
+    int i;
+
+    r->id = s->id;
+    memmove(r->name,N_(s->name),10);
+    for (i = 0;(i < 10) && (r->name[i] != 0);i++)
+        ;
+    for (;i < 10;r->name[i++] = ' ')
+        ;
+}
+void rF(rField * r,Field * f)
+{
+    int i;
+
+    r->type = f->type;
+    memmove(r->name,N_(f->name),10);
+    for (i = 0;(i < 10) && (r->name[i] != 0);i++)
+        ;
+    for (;i < 10;r->name[i++] = ' ')
+        ;
+    r->prec = f->prec;
+    f->scale = f->scale;
+}
+int rconvert_user_type(Struct * fromstruct,
+                      Field * fromfield,
+                      char * fromdata,
+                      char extender,
+                      Struct * tostruct,
+                      Field * tofield,
+                      char * todata)
+{
+    rStruct rstruct1;
+    rStruct rstruct2;
+    rField rfield1;
+    rField rfield2;
+
+    rS(&rstruct1,fromstruct);
+    rS(&rstruct2,tostruct);
+    rF(&rfield1,fromfield);
+    rF(&rfield2,tofield);
+
+    return (master->convert_user_type)(&rstruct1,&rfield1,
+        fromdata,extender,&rstruct2,&rfield2,todata);
+}
+
+int rset_default(Field * field,char * data)
+{
+    rField rfield;
+
+    rF(&rfield,field);
+    return (master->set_default) (&rfield,data);
+}
+int _convert_user_type(rStruct * fromstruct,
+                      rField * fromfield,
+                      char * fromdata,
+                      char extender,
+                      rStruct * tostruct,
+                      rField * tofield,
+                      char * todata)
+{
+    return 0;
+}
+
+int _set_default(rField * field,char * data)
+{
+    return 0;
+}
+
+static Struct * _pcS1;
+static Struct * _pcS2;
+static Field * _pcF1;
+static Field * _pcF2;
+static Map * _pcM;
+static Link * _pcL;
+static Dgroup * _pcD;
+
+static Struct * psS;
+static Field * psF;
+
+#define pcS1 _pcS1
+#define pcS2 _pcS2
+#define pcF1 _pcF1
+#define pcF2 _pcF2
+#define pcM _pcM
+#define pcL _pcL
+#define pcD _pcD
+
+char ErrorText[120];
+int ERROR2(char * msg,char * cp1,char * cp2)
+{
+    sprintf(ErrorText,msg,cp1,cp2);
+    printf("%s\n",ErrorText);
+    return 0;
+}
+
+/*********************************************************************
+
+         Control block layout for mapping engine.
+
+  (Master *)       master
+                _____|
+               |
+  (Master)     >{...,pstream,...}
+                ________|
+               |
+  (streamhdr[] > [...,{transactions},...]
+                ____________|
+               |
+  (tranhdr)    >{next,groups,...,targets,...}
+               |__|     |          |_______
+                        |                  |
+                        |      (targethdr) >{next,...,data,...}
+                ________|                  |__|
+               |
+  (grouphdr)   >{next,...(entry[])[...,{source,sid},...]}
+               |__|                       |
+                __________________________|
+               |
+  (sourcehdr)  >{...,data,...}
+                ______|
+               |
+               >{XXXXXXXXXXX  Input data XXXXXXXXXXX}
+
+  The number of streams is fixed at initialisation. Stream 0 is for
+  reverse traffic. The remainder are for positive traffic.
+
+  Senddata specifies a stream and a transaction. If the stream is specified
+  as 0, the data is sent to all positive streams. If the transaction number
+  is 0, then the data is pushed through immediately (Meaning that mapping
+  cannot be many to one or many to many) except in the special case of
+  'counted' targets. If a transaction ID is specified then the targets are
+  retained until a call with a matching transaction ID and a source struct
+  number of 2 or 3 is received. 2 causes the targets to be flushed (COMMIT)
+  3 causes the targets to be aborted (ROLLBACK).
+
+  Multiple transactions may be active at the same time.
+
+  Each source struct belongs to a dependency group which defines the maps
+  required to fully define one-to-one,one-to-many,many-to-one and
+  many-to-many relationships between source and target structures. A
+  (numbered) transaction may include source structs from more than one group.
+
+  If there are multiple calls with the same source type during a transaction
+  then each will cause a new group to be opened. In a many to one or
+  many to many situation, group selection will be done in one of two
+  different ways.
+
+  If no keys are specified (non zero key no in attribute field) then matching
+  is done in a presentation sequence order.
+
+  If keys are specified, then the same key fields must be defined in all of
+  the inputs, and group selection is performed on a key value basis.
+
+  Data buffering (structs with a COUNT type):
+
+  On input, the buffer is processed Count times. Between each cycle, the new
+  sub-record is moved down beside the count field and passed on.
+
+  On output, the target is retained until there in insufficent room for an extra
+  record at which time it is queued for output (If a numbered transaction) or
+  passed out to the target process.
+
+******************************************************************************/
+
+
+/* typedefs only used by the mapping engine */
+
+/* Forward declarations */
+
+#ifndef __ILEC400__
+#pragma pack(1)
+#endif
+
+typedef _Packed struct tranhdr tranhdr;
+typedef _Packed struct grouphdr grouphdr;
+typedef _Packed struct sourcehdr sourcehdr;
+typedef _Packed struct targethdr targethdr;
+
+
+
+/* Stream header */
+
+typedef _Packed struct streamhdr {
+    tranhdr * transactions;   /* Transactions chain */
+};
+
+void allocstreamhdrs(int nstream);
+
+/* Transaction header */
+
+typedef _Packed struct tranhdr {
+    tranhdr * next;           /* Next transaction in chain */
+    grouphdr * groups;        /* Groups waiting to be filled */
+    grouphdr * lastgroup;     /* Last waiting group */
+    targethdr * targets;      /* First prepared target */
+    targethdr * lasttarget;   /* Last prepared target */
+    unsigned long tranid;     /* Transaction id */
+    unsigned short stream;    /* Throughput stream */
+};
+
+tranhdr * alloctranhdr(unsigned long tranid,int stream);
+tranhdr * freetranhdr(tranhdr * th);
+
+/* Dependency group header */
+
+typedef _Packed struct grouphdr{
+    grouphdr * next;          /* Next group in transaction */
+    tranhdr * owner;          /* Owning tranhdr */
+    char * key;               /* string containing instance key */
+    unsigned short groupid;   /* group number */
+    BOOL satisfied;           /* Group is ready to go */
+    unsigned short nsource;   /* sources we require */
+    unsigned short available; /* Sources we have */
+    _Packed struct {
+        sourcehdr * source;    /* Source we want */
+        unsigned short sid;    /* Source id */
+    } entry[1];
+};
+
+grouphdr * allocgrouphdr(unsigned short groupid,tranhdr *transaction);
+grouphdr * freegrouphdr(grouphdr * gh);
+
+
+/* Source struct header */
+/*    One per source    */
+
+typedef _Packed struct sourcehdr{
+    sourcehdr * next;         /* Despatch chain */
+    char * data;              /* Callers data address */
+    unsigned short * foffset; /* Field offset array */
+    unsigned short sid;       /* Source struct id */
+    unsigned short offset;    /* First byte of data in block */
+    unsigned short dlen;      /* Bytes of data */
+    unsigned short users;     /* Attached link header count */
+};
+
+sourcehdr * allocsourcehdr(char * data,short sid,short offset,
+                           short dlen);
+sourcehdr * freesourcehdr(sourcehdr *);
+
+/* Target control block */
+
+typedef _Packed struct targethdr {
+    _Packed struct targethdr * next;/*next target header for instance*/
+    char * data;             /* Output message address */
+    unsigned short tid;      /* Target struct id */
+    unsigned short offset;   /* Start offset of data in block */
+    unsigned short maxlen;   /* Size of allocated buffer */
+    unsigned short usedlen;  /* Bytes actually used */
+    BOOL cancelled;          /* Cancelled by user */
+    ltype checkoff[1];        /* Field checkoff array */
+};
+
+#ifndef __ILEC400__
+#pragma pack()
+#endif
+
+/* structure allocation and initialisation */
+
+/* Allocate a Transaction header */
+
+tranhdr * alloctranhdr(unsigned long tranid,int stream)
+{
+    tranhdr * th;
+
+    th = MALLOC(tranhdr);
+    th->next = NULL;
+    th->groups = NULL;
+    th->lastgroup = NULL;
+    th->targets = NULL;
+    th->lasttarget = NULL;
+    th->tranid = tranid;
+    th->stream = stream;
+    return th;
+}
+
+/* Free a transaction header */
+
+tranhdr * freetranhdr(tranhdr * th)
+{
+    tranhdr * th2 = th->next;
+
+    while (th->groups != NULL)
+    {
+        th->groups = freegrouphdr(th->groups);
+    }
+    free(th);
+    return th2;
+}
+
+/* Allocate a group header */
+
+grouphdr * allocgrouphdr(unsigned short groupid,tranhdr * transaction)
+{
+    grouphdr * gh;
+    int i,j;
+
+    DGROUP(groupid); /* Set global pointer */
+
+    gh = (grouphdr *) malloc(sizeof(grouphdr));
+    gh->next = NULL;
+    gh->owner = transaction;
+    gh->groupid = groupid;
+    gh->satisfied = FALSE;
+    gh->available = 0;
+    gh->nsource = 0;
+
+    /* Add source control elements */
+
+    for (i = 0; i < cDGROUP.nmap;i++)
+    {
+        for (j = 0;j <= gh->nsource;j++)
+        {
+            if (j == gh->nsource)
+            {
+                /* Source not yet in group header */
+
+                gh->nsource++;
+                if (gh->nsource != 1)
+                {
+                    gh = realloc(gh,sizeof(*gh) +
+                        sizeof(gh->entry) * gh->nsource);
+                }
+                gh->entry[gh->nsource-1].source = NULL;
+                gh->entry[gh->nsource-1].sid = MAP(cDGROUP.map[i]).from;
+                break;
+
+            }
+            else
+            {
+                if (gh->entry[j].sid == MAP(cDGROUP.map[i]).from)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    if (gh->nsource == 1)
+    {
+        gh->key = NULL;
+    }
+    else
+    {
+        /* Set up for key match */
+        /*
+               Not yet implemented
+        */
+    }
+
+    return gh;
+}
+
+/* Free a group header */
+
+grouphdr * freegrouphdr(grouphdr * gh)
+{
+    int i;
+
+    grouphdr * gh2 = gh->next;
+    for (i = 0;i < gh->nsource;i++)
+    {
+        if (gh->entry[i].source != NULL)
+        {
+            freesourcehdr(gh->entry[i].source);
+        }
+    }
+    free(gh);
+
+    return gh2;
+}
+
+/* Allocate a source header */
+
+sourcehdr * allocsourcehdr(char * data,short sid,short offset,
+                           short dlen)
+{
+#define MESSAGE_SIZE dlen
+    sourcehdr * ts;
+    int i,j;
+    char * cp;
+
+    ts = MALLOC(sourcehdr);
+    ts->next = NULL;
+    ts->data = data;
+    ts->sid = sid;
+    ts->offset = offset;
+    ts->dlen = dlen;
+    ts->users = 1;
+    ts->foffset = (unsigned short *) malloc(STRUCT1(sid).nField *
+        sizeof(unsigned short));
+    j = offset;
+    for (i = 0;i < cSTRUCT1.nField;i++)
+    {
+        ts->foffset[i] = j;
+        if (dlen > 0)
+        {
+            cp = data + j;
+            j += USED_SIZE(pFIELD1(i),cp);
+        }
+        else
+        {
+            /* If no data, just use allocated sizes. */
+            j += ALLOC_SIZE(pFIELD1(i));
+        }
+    }
+
+    return ts;
+#undef MESSAGE_SIZE
+}
+
+/* Free a source header */
+
+sourcehdr * freesourcehdr(sourcehdr * ts)
+{
+    if ((--(ts->users)) == 0)
+    {
+        free(ts->foffset);
+        free(ts->data);
+        free(ts);
+    }
+    return NULL;
+}
+
+
+/* Allocate a target header */
+
+targethdr * alloctargethdr(short tid,unsigned short hdr,
+                           unsigned short trlr)
+{
+    targethdr * th;
+    int i;
+
+    pcS2 = *(master->apStruct + tid);
+    th = (targethdr *) malloc(sizeof(targethdr) +
+        (STRUCT2(tid).nField - 1) * sizeof(BOOL));
+    th->tid = tid;
+    for (i = 0;i < cSTRUCT2.nField;i++)
+    {
+        th->checkoff[i] = LNONE;
+    }
+    th->next = NULL;
+    th->cancelled = FALSE;
+    th->offset = hdr;
+
+    /* Allocate output message buffer */
+
+    th->maxlen = cSTRUCT2.maxlen;
+    if (cSTRUCT2.repeatsize != 0)
+    {
+        th->maxlen = master->max_map_msg;
+    }
+    th->data = (char *) ALLOC(th->maxlen + hdr + trlr);
+    memset(th->data, 0, th->maxlen + hdr + trlr);
+    if (cSTRUCT2.nField != 0)
+    {
+        if ((FIELD2(cSTRUCT2.nField-1).type == eBLOB) ||
+            (cFIELD2.type == eTEXT))
+        {
+            th->usedlen = cFIELD2.offset;
+        }
+        else
+        {
+            th->usedlen = cSTRUCT2.maxlen;
+        }
+    }
+    else
+    {
+        th->usedlen = 0;
+    }
+
+    return th;
+}
+
+/* Free a target header */
+
+targethdr * freetargethdr(targethdr * th)
+{
+    targethdr * th2 = th->next;
+
+    /*** FREE(th->data); ***/                                                  /*122789*/
+    th->data = NULL;                                                           /*122789*/
+    free(th);
+    return th2;
+}
+
+/* Unpack a packed decimal number */
+
+char * unpack(void * p,int i)
+{
+    int j,k;
+    char c;
+    char * pp = p;
+    static char z[32];
+    char * pz = z;
+
+    k = (i - 1) | 1;       /* (k = i if i odd else i-1) */
+
+    /* If even number of digits, deal with first one then use common
+       processing for rest */
+
+    if (i != k)
+    {
+        *pz++ = *pp++ | 0xf0;
+    }
+
+    /* Unpack single char from packed into unpacked pair */
+
+    for (j = 0;j < (k/2); j++)
+    {
+        *(pz+j*2) = (*(pp+j) >>4) | 0xf0;
+        *(pz+j*2+1) = *(pp+j) | 0xf0;
+    }
+
+    /* Flip final byte */
+
+    *(pz+j*2) = (*(pp+j) << 4) | (*(pp+j) >> 4);
+    return z;
+}
+
+/* Convert zoned decimal to character string */
+
+ztoc(char * tdata,int tlen,char * sdata,int prec,int scale)
+{
+    int i = prec - 1,j = tlen - 1;
+
+    *tdata = ' ';
+    if (scale > 0)
+    {
+        while ((i >= 0) && (j >= 0) && (i >= (prec - scale)))
+            *(tdata + j--) = *(sdata + i--);
+        if (j >= 0) *(tdata + j--) = master->dec;
+    }
+    if (prec > scale)
+    {
+        while ((i >= 0) && (j >= 0)) /*&& (i >= (prec - scale))) */
+        {
+            *(tdata + j--) = *(sdata + i--);
+        }
+    }
+    while (j > 0)
+    {
+        *(tdata + j--) = '0';
+    }
+    if ((*(tdata + tlen - 1) & 0xf0) != 0xf0)
+    {
+        *(tdata + tlen - 1) |= 0xf0;
+        *tdata = '-';
+    }
+}
+
+/* Flush data out to target process */
+
+#define CONDITIONAL 0
+#define UNCONDITIONAL 1
+
+void flush(tranhdr * transaction,char condition)
+{
+
+    tranhdr * ptran =
+       (tranhdr *) &(master->pstream[transaction->stream].transactions);
+    targethdr * ctarget = transaction->targets;
+    targethdr * ttarget;
+    Master * tmast = master;
+
+    transaction->targets = NULL;
+    transaction->lasttarget = NULL;
+
+    while (ctarget != NULL)
+    {
+    /* If a conditional flush, and room for more in a blocking record,
+        dont send on yet */
+
+        if ((STRUCT2(ctarget->tid).repeatsize > 0) &&
+            (condition == CONDITIONAL) &&
+            ((ctarget->usedlen + cSTRUCT2.repeatsize) <= ctarget->maxlen))
+        {
+            if (transaction->targets == NULL)
+            {
+                transaction->targets = transaction->lasttarget = ctarget;
+            }
+            else
+            {
+                transaction->targets->next = ctarget;
+                transaction->lasttarget = ctarget;
+            }
+            ctarget = ctarget->next;
+            continue;
+        }
+
+        /* If any variable fields, may need to compress the record */
+
+        if (cSTRUCT2.firstvar != 0)
+        {
+#define MESSAGE_SIZE ctarget->usedlen /* Required by USER_SIZE */
+            int i = cSTRUCT2.firstvar - 1;
+            int j,k;
+            char * fdata = ctarget->data + ctarget->offset +
+                FIELD2(i).offset;
+            char * fdata2 = fdata;
+            short repeats = 1;
+
+            if (cSTRUCT2.firstrepeat != 0)
+            {
+                FIELD2(cSTRUCT2.firstrepeat - 1);
+            }
+            repeats = *((short *) pcF2);
+            for (;i < cSTRUCT2.nField;i++)
+            {
+                FIELD2(i);
+                if ((j = ALLOC_SIZE(pcF2) -
+                    (k = USED_SIZE(pcF2,fdata))) != 0)
+                {
+                    memmove(fdata + k,fdata + k + j,ctarget->usedlen -
+                        ((fdata + j + k) -
+                        (ctarget->data + ctarget->offset)));
+                    fdata += j;
+                    ctarget->offset -+ k;
+                }
+                fdata += j;
+                if ((i + 1) == cSTRUCT2.nField)
+                {
+                    if (--repeats > 0)
+                    {
+                        i = cSTRUCT2.firstrepeat - 1;
+                    }
+                }
+            }
+        }
+
+        /* If a network message, translate from host to network formats */
+
+        if ((strcmp(N_(CLASS(STRUCT2(ctarget->tid).classno).name),
+            "NET") == 0) ||
+            (strcmp(N_(CLASS(cSTRUCT2.classno).name),"RNET") == 0) ||
+            (strcmp(N_(CLASS(cSTRUCT2.classno).name),"BEFORE") == 0))
+        {
+            char * fdata = ctarget->data + ctarget->offset;
+            int i;
+            short repeats = 1;
+
+            for (i = 0;i < cSTRUCT2.nField;i++)
+            {
+                FIELD2(i);
+                switch(btype(pcF2))
+                {
+                case eSHORT:
+                case eVARBIN:
+                    HTON_SHORT(fdata);
+                    break;
+                case eCOUNT:
+                    repeats = *((short *) fdata);
+                    HTON_SHORT(fdata);
+                    break;
+                case eLONG:
+                    HTON_LONG(fdata);
+                    break;
+                case eFLOAT:
+                    HTON_FLOAT(fdata);
+                    break;
+                case eDOUBLE:
+                    HTON_DOUBLE(fdata);
+                    break;
+                case eCHAR:
+                case eZCHAR:
+                    HTON_CHAR(fdata,pcF2->prec);
+                    break;
+                case eVARCHAR:
+                    HTON_CHAR(fdata + sizeof(short),*((short *) fdata));
+                    HTON_SHORT(fdata);
+                    break;
+                case eTEXT:
+                    HTON_CHAR(fdata,MESSAGE_SIZE -
+                        (fdata - (ctarget->data + ctarget->offset)));
+                    break;
+                case eZONED:
+                    HTON_CHAR(fdata,pcF2->prec);
+                    break;
+                case ePACKED:
+                case eTAG:
+                case eBIN:
+                case eSTRUCT:
+                case eBLOB:
+                default:
+                    break;
+                }
+                fdata += USED_SIZE(pcF2,fdata);
+                if ((i + 1) == cSTRUCT2.nField)
+                    if (--repeats > 0) i = cSTRUCT2.firstrepeat - 1;
+            }
+        }
+
+        /* Can now dechain the transaction and send the data on */
+
+        ttarget = ctarget;
+        ctarget = ctarget->next;
+        if (transaction->stream == 0)
+        {
+#ifdef __trace__
+            sprintf (tbuff,"rReceivedata from %s,trans %u,struct %s,len %hi",
+                N_(master->name),transaction->tranid,N_(pcS2->name),ttarget->usedlen +
+                                                                     ttarget->offset);
+            TRACE(1);
+            DUMP(2,ttarget->data,ttarget->usedlen + ttarget->offset);
+#endif
+            (*master->prreceivedata) (master,transaction->tranid,
+                ttarget->data,ttarget->usedlen + ttarget->offset,pcS2);
+        }
+        else
+        {
+#ifdef __trace__
+            sprintf (tbuff,"Receivedata from %s,stream %hu,trans %u,struct %s,len %hi",
+                N_(master->name),transaction->stream,transaction->tranid,N_(pcS2->name),
+                                                                         ttarget->usedlen);
+            TRACE(1);
+            DUMP(2,ttarget->data,ttarget->usedlen + ttarget->offset);
+#endif
+            (*master->preceivedata) (master,transaction->stream,
+                transaction->tranid,ttarget->data,ttarget->usedlen + ttarget->offset,pcS2);
+        }
+        master = tmast;
+/*        ttarget->data = NULL; */
+        freetargethdr(ttarget);
+    }
+
+    /* If not transaction 0, free the transaction */
+
+    if(transaction->tranid != 0)
+    {
+        while (ptran->next != transaction)
+        {
+            ptran = ptran->next;
+        }
+        ptran->next = freetranhdr(ptran->next);
+    }
+    return;
+#undef MESSAGE_SIZE
+}
+
+/* Map source into target */
+
+void map_data(sourcehdr * source,targethdr * target,Map * pcM)
+{
+    int i;
+    Struct * pcS0 = *(master->apStruct + 0);
+    Struct * pcSInt = *(master->apStruct + 1);
+
+    STRUCT1(source->sid);
+    STRUCT2(target->tid);
+#define MESSAGE_SIZE target->maxlen
+#define pxtnd *(master->aExt+psS->id)
+
+   /* Set up internal variables for access from struct 1 */
+
+    *((unsigned short *) master->intbuff) = target->tid; /* __ID */
+    memmove(master->intbuff+2,N_(cSTRUCT2.name),10);
+    for (i = 0;(i < 10) && (*(master->intbuff + i + 2) != 0);i++)
+        ;
+    if (i != 10)
+    {
+        memset(master->intbuff + i+ 2,' ',10-i);
+    }
+
+    for (i = 0;i < pcM->nLink;i++)
+    {
+        char * sdata;
+        char * tdata;
+        double d;
+        int slen;
+        int tlen;
+
+        FIELD2(i);
+        tdata = target->data + target->offset + pcF2->offset;
+        if (pcF2->type == eCOUNT)
+        {
+            target->checkoff[i] = LPARM;
+            *((short *) tdata) = 1;
+            continue;
+        }
+        if (target->checkoff[i] < LINK(i).type)
+        {
+            target->checkoff[i] = cLINK.type;
+        }
+
+        /*** Process field according to conversion type required ***/
+
+        switch(cLINK.type)
+        {
+        case LNONE: /* No contribution from this map */
+            break;
+        case LPARM: /* Data will appear by magic */
+            break;
+        case LDFLT:
+            switch(cFIELD2.type)
+            {
+            case eSHORT:
+            case eVARCHAR:
+            case eVARBIN:
+                *((short *) tdata) = 0;
+                break;
+            case eLONG:
+                *((long *) tdata) = 0;
+                break;
+            case eFLOAT:
+                *((float *) tdata) = 0.0F;
+                break;
+            case eDOUBLE:
+                *((double *) tdata) = 0.0L;
+                break;
+            case eCHAR:
+                memset(tdata,' ',cFIELD2.prec);
+                break;
+            case eZCHAR:
+                memset(tdata,' ',cFIELD2.prec);
+                *(tdata + cFIELD2.prec) = 0;
+                break;
+            case eBIN:
+                memset(tdata,0,cFIELD2.prec);
+                break;
+            case eZONED:
+                QXXDTOZ(tdata,cFIELD2.prec,cFIELD2.scale,0);
+                break;
+            case ePACKED:
+                QXXDTOP(tdata,cFIELD2.prec,cFIELD2.scale,0);
+                break;
+            case eTAG:
+                break;
+            case eSTRUCT:
+                break;
+            case eTEXT:
+            case eBLOB:
+                target->usedlen = cFIELD2.offset;
+                break;
+            default:
+                break;
+            }
+            /* If a user type, let him have a shot too */
+            if (cFIELD2.type >= 20)
+            {
+                (rset_default)(pcF2,tdata);
+            }
+            break;
+        case LLIT:  /* Literal data - grab out of buffer */
+            memcpy(tdata,pcM->lit + pcL->index,ALLOC_SIZE(pcF2));
+            break;
+        case LSYS:
+        case LINT:
+        case LFIELD:
+
+        /* If source or target of user is special type, call the
+            user conversion */
+
+            psS = (cLINK.type == LFIELD) ? pcS1:
+                (cLINK.type == LSYS) ? *(master->apStruct + 0) :
+                *(master->apStruct + 1);
+            psF = psS->aField + pcL->index;
+            sdata = (cLINK.type == LFIELD) ?
+                source->data + source->foffset[pcL->index] :
+                (cLINK.type == LSYS) ? master->sysbuff + psF->offset :
+                (cLINK.type == LINT) ? master->intbuff + psF->offset : NULL;
+
+            if (pcF2->type == eSTRUCT)
+            {
+                if ((rconvert_user_type)(psS,psF,sdata,
+                    pxtnd,pcS2,pcF2,tdata) == -1)
+                {
+                    target->cancelled = TRUE;
+                    return;
+                };
+                break;
+            };
+
+            if (pcF2->type == eTAG)
+            {
+                if ((rconvert_user_type)(psS,psF,sdata,
+                    pxtnd,pcS2,pcF2,tdata) == -1)
+                {
+                    target->cancelled = TRUE;
+                    return;
+                };
+                break;
+            };
+
+            if ((pcF2->type >= 20) || (psF->type >= 20))
+            {
+                if ((rconvert_user_type)(psS,psF,sdata,
+                    pxtnd,pcS2,pcF2,tdata) == -1)
+                {
+                    target->cancelled = TRUE;
+                    return;
+                };
+                break;
+            };
+
+            /* Field lengths */
+
+            tlen = pcF2->prec;   /* Usually */
+
+            switch (psF->type)
+            {
+            case eBLOB:
+            case eTEXT:
+                slen = source->dlen + source->offset - source->foffset[i];
+                break;
+            case eVARBIN:
+            case eVARCHAR:
+                slen = *((short *) sdata);
+                break;
+            case eZCHAR:
+                slen = strlen(sdata);
+                break;
+            case ePACKED:
+                slen = psF->prec/2 + 1;
+                break;
+            default:
+                slen = psF->prec;    /* Usually */
+                break;
+            }
+
+            /* Standard conversions */
+
+            switch(cFIELD2.type)
+            {
+            case eSHORT:
+                switch(psF->type)
+                {
+                    int i;
+                case eSHORT:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        *((unsigned short *) sdata);
+                    break;
+                case eLONG:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        *((unsigned long *) sdata);
+                    break;
+                case eFLOAT:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        *((float *) sdata);
+                    break;
+                case eDOUBLE:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        *((double *) sdata);
+                    break;
+                case eZONED:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        (i = QXXZTOI(sdata,psF->prec,psF->scale));
+                    break;
+                case ePACKED:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        (i = QXXPTOI(sdata,psF->prec,psF->scale));
+                    break;
+                case eCOUNT:
+                    *((unsigned short *) tdata) = (unsigned short)
+                        *((unsigned short *) sdata);
+                    break;
+                case eBIN:
+                    if (slen >= sizeof(unsigned short))
+                        memcpy(tdata,sdata,sizeof(unsigned short));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(unsigned short) - slen);
+                    }
+                    break;
+                case eVARBIN:
+                    if (slen >= sizeof(unsigned short))
+                        memcpy(tdata,sdata,sizeof(unsigned short));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(unsigned short) - slen);
+                    }
+                    break;
+                case eBLOB:
+                /* BLOBS may only be defined in user structs so must be
+                    LFIELD type */
+                    if (slen >= sizeof(unsigned short))
+                        memcpy(tdata,sdata,sizeof(unsigned short));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(unsigned short) - slen);
+                    }
+                    break;
+                case eCHAR:
+                    break;
+                case eZCHAR:
+                    break;
+                case eVARCHAR:
+                    break;
+                case eTEXT:
+                    break;
+                case eTAG:
+                    break;
+                case eSTRUCT:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eLONG:
+                switch(psF->type)
+                {
+                    int i;
+                case eSHORT:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        *((unsigned short *) sdata);
+                    break;
+                case eLONG:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        *((unsigned long *) sdata);
+                    break;
+                case eFLOAT:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        *((float *) sdata);
+                    break;
+                case eDOUBLE:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        *((double *) sdata);
+                    break;
+                case eZONED:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        (i = QXXZTOI(sdata,psF->prec,psF->scale));
+                    break;
+                case ePACKED:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        (i = QXXPTOI(sdata,psF->prec,psF->scale));
+                    break;
+                case eCOUNT:
+                    *((unsigned long *) tdata) = (unsigned long)
+                        *((unsigned short *) sdata);
+                    break;
+                case eBIN:
+                    if (slen >= sizeof(unsigned long))
+                        memcpy(tdata,sdata,sizeof(unsigned long));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(unsigned long) - slen);
+                    }
+                    break;
+                case eVARBIN:
+                    if (slen >= sizeof(unsigned long))
+                        memcpy(tdata,sdata,sizeof(unsigned long));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(unsigned long) - slen);
+                    }
+                    break;
+                case eBLOB:
+                /* BLOBS may only be defined in user structs so must be
+                    LFIELD type */
+                    if (slen >= sizeof(unsigned long))
+                        memcpy(tdata,sdata,sizeof(unsigned long));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(unsigned long) - slen);
+                    }
+                    break;
+                case eCHAR:
+                    break;
+                case eZCHAR:
+                    break;
+                case eVARCHAR:
+                    break;
+                case eTEXT:
+                    break;
+                case eTAG:
+                    break;
+                case eSTRUCT:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eFLOAT:
+                switch(psF->type)
+                {
+                case eSHORT:
+                    *((float *) tdata) = (float)
+                        *((unsigned short *) sdata);
+                    break;
+                case eLONG:
+                    *((float *) tdata) = (float)
+                        *((unsigned long *) sdata);
+                    break;
+                case eFLOAT:
+                    *((float *) tdata) = (float)
+                        *((float *) sdata);
+                    break;
+                case eDOUBLE:
+                    *((float *) tdata) = (float)
+                        *((double *) sdata);
+                    break;
+                case eZONED:
+                    *((float *) tdata) = (float)
+                        (d = QXXZTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case ePACKED:
+                    *((float *) tdata) = (float)
+                        (d = QXXPTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case eCOUNT:
+                    *((float *) tdata) = (float)
+                        *((unsigned short *) sdata);
+                    break;
+                case eBIN:
+                    if (slen >= sizeof(float))
+                        memcpy(tdata,sdata,sizeof(float));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(float) - slen);
+                    }
+                    break;
+                case eVARBIN:
+                    if (slen >= sizeof(float))
+                        memcpy(tdata,sdata,sizeof(float));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(float) - slen);
+                    }
+                    break;
+                case eBLOB:
+                /* BLOBS may only be defined in user structs so must be
+                    LFIELD type */
+                    if (slen >= sizeof(float))
+                        memcpy(tdata,sdata,sizeof(float));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(float) - slen);
+                    }
+                    break;
+                case eCHAR:
+                    break;
+                case eZCHAR:
+                    break;
+                case eVARCHAR:
+                    break;
+                case eTEXT:
+                    break;
+                case eTAG:
+                    break;
+                case eSTRUCT:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eDOUBLE:
+                switch(psF->type)
+                {
+                case eSHORT:
+                    *((double *) tdata) = (double)
+                        *((unsigned short *) sdata);
+                    break;
+                case eLONG:
+                    *((double *) tdata) = (double)
+                        *((unsigned long *) sdata);
+                    break;
+                case eFLOAT:
+                    *((double *) tdata) = (double)
+                        *((float *) sdata);
+                    break;
+                case eDOUBLE:
+                    *((double *) tdata) = (double)
+                        *((double *) sdata);
+                    break;
+                case eZONED:
+                    *((double *) tdata) =
+                        (d = QXXZTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case ePACKED:
+                    *((double *) tdata) = (double)
+                        (d = QXXPTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case eCOUNT:
+                    *((double *) tdata) = (double)
+                        *((unsigned short *) sdata);
+                    break;
+                case eBIN:
+                    if (slen >= sizeof(double))
+                        memcpy(tdata,sdata,sizeof(double));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(double) - slen);
+                    }
+                    break;
+                case eVARBIN:
+                    if (slen >= sizeof(double))
+                        memcpy(tdata,sdata,sizeof(double));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(double) - slen);
+                    }
+                    break;
+                case eBLOB:
+                /* BLOBS may only be defined in user structs so must be
+                    LFIELD type */
+                    if (slen >= sizeof(double))
+                        memcpy(tdata,sdata,sizeof(double));
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,sizeof(double) - slen);
+                    }
+                    break;
+                case eCHAR:
+                    break;
+                case eZCHAR:
+                    break;
+                case eVARCHAR:
+                    break;
+                case eTEXT:
+                    break;
+                case eTAG:
+                    break;
+                case eSTRUCT:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eZONED:
+                switch(psF->type)
+                {
+                case eSHORT:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((unsigned short *) sdata));
+                    break;
+                case eLONG:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((unsigned long *) sdata));
+                    break;
+                case eFLOAT:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((float *) sdata));
+                    break;
+                case eDOUBLE:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((double *) sdata));
+                    break;
+                case eZONED:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        QXXZTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case ePACKED:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        QXXPTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case eCOUNT:
+                    QXXDTOZ(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((unsigned short *) sdata));
+                    break;
+                case eBIN:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eVARBIN:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eBLOB:
+                /* BLOBS may only be defined in user structs so must be
+                    LFIELD type */
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eCHAR:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,'0',tlen - slen);
+                    }
+                    break;
+                case eZCHAR:
+                    break;
+                case eVARCHAR:
+                    break;
+                case eTEXT:
+                    break;
+                case eTAG:
+                    break;
+                case eSTRUCT:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case ePACKED:
+                tlen =  pcF2->prec / 2 + 1;
+                switch(psF->type)
+                {
+                case eSHORT:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((unsigned short *) sdata));
+                    break;
+                case eLONG:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((unsigned long *) sdata));
+                    break;
+                case eFLOAT:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((float *) sdata));
+                    break;
+                case eDOUBLE:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((double *) sdata));
+                    break;
+                case eZONED:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        QXXZTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case ePACKED:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        QXXPTOD(sdata,psF->prec,psF->scale));
+                    break;
+                case eCOUNT:
+                    QXXDTOP(tdata,pcF2->prec,pcF2->scale, (double)
+                        *((unsigned short *) sdata));
+                    break;
+                case eBIN:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eVARBIN:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eBLOB:
+                /* BLOBS may only be defined in user structs so must be
+                    LFIELD type */
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eCHAR:
+                    break;
+                case eZCHAR:
+                    break;
+                case eVARCHAR:
+                    break;
+                case eTEXT:
+                    break;
+                case eTAG:
+                    break;
+                case eSTRUCT:
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eBIN:
+                switch(psF->type)
+                {
+                case eSHORT:
+                case eLONG:
+                case eFLOAT:
+                case eDOUBLE:
+                case eZONED:
+                case eCOUNT:
+                case eBIN:
+                case eCHAR:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eZCHAR:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case ePACKED:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    slen += sizeof(short);
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata,sdata,tlen);
+                        *((short *) tdata) = slen - 2;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eVARBIN:
+                switch(psF->type)
+                {
+                case eSHORT:
+                case eLONG:
+                case eFLOAT:
+                case eDOUBLE:
+                case eZONED:
+                case eCOUNT:
+                case eBIN:
+                case eCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen);
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                case eZCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen);
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                case ePACKED:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen);
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata,sdata,tlen + sizeof(short));
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata,slen + sizeof(short));
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen );
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen );
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eBLOB:
+                tlen = (target->maxlen - pcF2->offset);
+                switch(psF->type)
+                {
+                case eSHORT:
+                case eLONG:
+                case eFLOAT:
+                case eDOUBLE:
+                case eZONED:
+                case eCOUNT:
+                case eBIN:
+                case eCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case eZCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case ePACKED:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata + sizeof(short),tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata + sizeof(short),slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                }
+                break;
+            case eCHAR:
+                switch(psF->type)
+                {
+                    int i;
+                    char buff[50];
+
+                case eSHORT:
+                    QXXITOZ(buff,10,0,(int) *((short *) sdata));
+                    ztoc(tdata,tlen,buff + 5,5,0);
+                    break;
+                case eLONG:
+                    QXXITOZ(buff,10,0,*((int *) sdata));
+                    ztoc(buff,tlen,buff,10,0);
+                    break;
+                case eFLOAT:
+                    sprintf(buff,"%.0E",(double) *((float *) sdata));
+                    if (tlen > (strlen(buff) + 1))
+                    {
+                        sprintf(buff,"%.*E",tlen - strlen(buff) - 1,
+                            (double) *((float *) sdata));
+                        if (master->dec != *localeconv()->decimal_point)
+                            *(strchr(buff,*localeconv()->decimal_point)) =
+                            master->dec;
+                    }
+                    memcpy(tdata,buff,tlen);
+                    break;
+                case eDOUBLE:
+                    sprintf(buff,"%.0E",(double) *((double *) sdata));
+                    if (tlen > (strlen(buff) + 1))
+                    {
+                        sprintf(buff,"%.*E",tlen - strlen(buff) - 1,
+                            *((double *) sdata));
+                        if (master->dec != *localeconv()->decimal_point)
+                            *(strchr(buff,*localeconv()->decimal_point)) =
+                            master->dec;
+                    }
+                    memcpy(tdata,buff,tlen);
+                    break;
+                case eCOUNT:
+                    break;
+                case ePACKED:
+                    ztoc(tdata,tlen,unpack(sdata,psF->prec),psF->prec,
+                        psF->scale);
+                    break;
+                case eZONED:
+                    ztoc(tdata,tlen,sdata,psF->prec,psF->scale);
+                    break;
+                case eBIN:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eCHAR:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,' ',tlen - slen);
+                    }
+                    break;
+                case eZCHAR:
+                    i = 0;
+                    while ((i < slen) && (*(sdata + i) != 0)) i++;
+                    memcpy(tdata,sdata,(i < tlen) ? i : tlen);
+                    if (i < tlen)
+                        memset(tdata + i,' ',tlen - i);
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    slen += sizeof(short);
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata,sdata,tlen);
+                        *((short *) tdata) = slen - 2;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,' ',tlen - slen);
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,' ',tlen - slen);
+                    }
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eZCHAR:
+                *(tdata + tlen) = 0;
+                switch(psF->type)
+                {
+                case eSHORT:
+                case eLONG:
+                case eFLOAT:
+                case eDOUBLE:
+                case eZONED:
+                case eCOUNT:
+                case ePACKED:
+                    break;
+                case eBIN:
+                case eCHAR:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eZCHAR:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,0,tlen - slen);
+                    }
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    slen += sizeof(short);
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata,sdata,tlen);
+                        *((short *) tdata) = slen - 2;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,' ',tlen - slen);
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                        memcpy(tdata,sdata,tlen);
+                    else
+                    {
+                        memcpy(tdata,sdata,slen);
+                        memset(tdata + slen,' ',tlen - slen);
+                    }
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eVARCHAR:
+                switch(psF->type)
+                {
+                case eSHORT:
+                case eLONG:
+                case eFLOAT:
+                case eDOUBLE:
+                case eZONED:
+                case eCOUNT:
+                case ePACKED:
+                    break;
+                case eBIN:
+                case eCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen);
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                case eZCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen);
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata,sdata,tlen + sizeof(short));
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata,slen + sizeof(short));
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata + sizeof(short),sdata,tlen );
+                        *((short *) tdata) = tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen );
+                        *((short *) tdata) = slen;
+                    }
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case eTEXT:
+                tlen = target->maxlen - pcF2->offset;
+                switch(psF->type)
+                {
+                case eSHORT:
+                case eLONG:
+                case eFLOAT:
+                case eDOUBLE:
+                case eZONED:
+                case eCOUNT:
+                case ePACKED:
+                    break;
+                case eBIN:
+                case eCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case eZCHAR:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case eVARCHAR:
+                case eVARBIN:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata + sizeof(short),tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata,sdata + sizeof(short),slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                case eTEXT:
+                case eBLOB:
+                    if (slen >= tlen)
+                    {
+                        memcpy(tdata ,sdata,tlen);
+                        target->usedlen += tlen;
+                    }
+                    else
+                    {
+                        memcpy(tdata + sizeof(short),sdata,slen);
+                        target->usedlen += slen;
+                    }
+                    break;
+                default:
+                    break;
+                }
+                break;
+            }
+        }
+    }
+#undef MESSAGE_SIZE
+#undef psSTRUCT
+#undef psF
+#undef pxtnd
+}
+
+/* On end of transaction, convert sources to targets */
+
+void create_targets(tranhdr * transaction)
+{
+#define TARGET ptarget->next
+    int i,j;
+    targethdr * targets;
+    targethdr * lasttarget;
+    targethdr * ptarget;
+    targethdr * ttarget;
+
+    /* Process each group in the transaction */
+
+    while (transaction->groups != NULL)
+    {
+        grouphdr * group = transaction->groups;
+
+        /* Look at each map in turn */
+
+        targets = NULL;
+
+        for (i = 0;i < DGROUP(group->groupid).nmap;i++)
+        {
+            /* Locate the source control block */
+
+            for (j = 0;group->entry[j].sid != MAP(cDGROUP.map[i]).from; j++)
+                ;
+            /* Not necessarily an error if any missing sources, the fields
+               may have been filled from elsewhere */
+            if (group->entry[j].source != NULL)
+            {
+                /* Locate (or create) target control block */
+
+                ptarget = (targethdr *) &targets;
+                while ((TARGET != NULL) && (TARGET->tid < cMAP.to))
+                    ptarget = TARGET;
+                if ((TARGET == NULL) || (TARGET->tid > cMAP.to))
+                {
+                /* No matching target id - create a new block (and chain
+                    in ascending id order) */
+                    unsigned short h,t;
+
+                    if (group->owner->stream == 0)
+                    {
+                        h = master->rdholen;
+                        t = master->rdtolen;
+                    }
+                    else
+                    {
+                        h = master->dholen;
+                        t = master->dtolen;
+                    }
+                    ttarget = alloctargethdr(cMAP.to,h,t);
+                    ttarget->next = TARGET; /* Higher tid, or NULL */
+                    TARGET = ttarget;       /* Complete chaining */
+                    /* If end of chain, save pointer */
+                    if (TARGET->next == NULL) lasttarget = TARGET;
+                }
+
+                /* Perform the required mapping */
+
+                map_data(group->entry[j].source,ttarget,pcM);
+            }
+        }
+
+        /* When group completed, need to drop any targets which the user
+           has cancelled during usertype callout, then verify that all
+           fields have been filled in. */
+
+        ptarget = (targethdr *) &targets;
+        while (TARGET != NULL)
+        {
+            BOOL target_dropped = FALSE;
+
+            if (TARGET->cancelled == TRUE)
+            {
+                ttarget = TARGET;
+                TARGET = TARGET->next;
+                freetargethdr(ttarget);
+                continue;
+            }
+            for (j = 0;j < STRUCT2(TARGET->tid).nField;j++)
+            {
+                if (TARGET->checkoff[j] == LNONE)
+                    ERROR2("Field %s in target %s not filled in.",
+                    N_(FIELD2(j).name),N_(cSTRUCT2.name));
+            }
+
+             /* Now need to see if target contains a count field, and if
+                so try to append the data to any previous instance of
+                this target type */
+
+            if (STRUCT2(TARGET->tid).repeatsize != 0)
+            {
+                targethdr * ptarget2 = (targethdr *) &transaction->targets;
+                while (ptarget2->next != NULL)
+                {
+                    if (ptarget2->next->tid == TARGET->tid)
+                    {
+                        /* Have an id match */
+
+                        if((ptarget2->next->usedlen + cSTRUCT2.repeatsize) <=
+                            ptarget2->next->maxlen)
+                        {
+                            /* Not full yet, append this data */
+
+                            memcpy(ptarget2->next->data +
+                                ptarget2->next->offset +
+                                ptarget2->next->usedlen,
+                                TARGET->data + TARGET->offset +
+                                TARGET->usedlen -
+                                cSTRUCT2.repeatsize,
+                                cSTRUCT2.repeatsize);
+                            *((short *) (ptarget2->next->data +
+                                ptarget2->next->offset +
+                                FIELD2(cSTRUCT2.firstrepeat - 1).offset)) += 1;
+                            ptarget2->next->usedlen += cSTRUCT2.repeatsize;
+
+                            /* Free up appended block */
+
+                            ttarget = TARGET;
+                            TARGET = TARGET->next;
+                            freetargethdr(ttarget);
+                            target_dropped = TRUE;
+
+                            break;
+                        }
+                    }
+                    ptarget2->next = ptarget2->next->next;
+                }
+                if (target_dropped) continue;
+            }
+            ptarget = ptarget->next;
+        }
+
+        /* Add new targets to the transaction list */
+
+        if (group->owner->targets == NULL)
+        {
+            group->owner->targets = targets;
+            group->owner->lasttarget = lasttarget;
+        }
+        else
+            group->owner->lasttarget->next = targets;
+        group->owner->lasttarget = lasttarget;
+        transaction->groups = transaction->groups->next;
+        freegrouphdr(group);
+    }
+    transaction->lastgroup = NULL;
+
+    /* If transaction 0 (No commitment control) flush data immediately */
+
+    if (transaction->tranid == 0)
+    {
+        flush(transaction,CONDITIONAL);
+    }
+    return;
+}
+
+/* COMMIT received, flush all targets */
+
+void commit(tranhdr * transaction)
+{
+    create_targets(transaction);
+    flush(transaction,UNCONDITIONAL);
+    return;
+}
+
+/* Check that a source has a matching key for a group */
+
+BOOL keymatch(sourcehdr * source,grouphdr * group)
+{
+    if (group->key == NULL) return TRUE;
+
+    /* KEY MATCH CODE TO GO HERE */
+
+    return TRUE;
+}
+
+/* Offer source to existing groups                           */
+/* NOTE: This function determines if a group is filled       */
+/* and if so:                                                */
+/* 1. Ungroup_X_chain required sources from any other bidders chains.*/
+/* 2. Enqueues the group for mapping.                        */
+
+
+BOOL offer_source(sourcehdr * source,grouphdr * group)
+{
+    grouphdr * group2;
+    int i,j;
+
+    STRUCT1(source->sid);              /* Initialise global pointer */
+
+    /* Just exit if source not in this group */
+
+    for (j = 0;cSTRUCT1.entry[j].groupid != group->groupid;j++)
+    {
+        if (j == (cSTRUCT1.ngroup - 1))
+        {
+            return FALSE;
+        }
+    }
+
+    /* Find source entry in group header array */
+
+    for (i = 0;group->entry[i].sid != source->sid;i++)
+        ;
+
+    /* Exit if already have one, or key missmatch */
+
+    if ((group->entry[i].source != NULL) || (keymatch(source,group) ==
+        FALSE))
+    {
+        return FALSE;
+    }
+
+    /* This group required one of these sources */
+
+    group->entry[i].source = source;  /* Tick off this source */
+    group->available++;
+
+    /* Flag this group in the source struct */
+
+    cSTRUCT1.entry[j].check = TRUE;
+
+    if (group->available != group->nsource)
+    {
+        return FALSE; /* More wanted */
+    }
+
+    /* WE HAVE A COMPLETE GROUP */
+
+    group->satisfied = TRUE;
+
+    /* Must remove sources from all other bidders */
+
+    group2 = group->owner->groups; /* Group chain */
+    while (group2 != NULL)
+    {
+        if (group2->satisfied == FALSE)
+        {
+            for (i = 0;i < group->nsource;i++)
+            {
+                for (j = 0;j < group2->nsource;j++)
+                {
+                    if (group->entry[i].source == group2->entry[j].source)
+                    {
+                        group2->entry[j].source = NULL;
+                        group2->available--;
+                    }
+                }
+            }
+
+            /* If group now empty, drop it */
+
+            if (group2->available == 0)
+            {
+                if (group->owner->groups == group2)
+                    group->owner->groups = group->owner->groups->next;
+                else
+                {
+                    grouphdr * pgroup = group->owner->groups;
+                    while (pgroup->next != group2)
+                    {
+                        pgroup = pgroup->next;
+                    }
+                    pgroup->next = pgroup->next->next;
+                    if (pgroup->next == NULL)
+                    {
+                        group->owner->lastgroup = pgroup;
+                    }
+                    freegrouphdr(group2);
+                }
+            }
+        }
+        group2 = group2->next;
+    }
+    /* If transaction 0, then process immediately */
+
+    if (group->owner->tranid == 0)
+    {
+        create_targets(group->owner);
+    }
+
+    return TRUE; /* The source has gone */
+}
+
+void allocstreamhdrs(int nstream)
+{
+    int i;
+
+    master->pstream =
+        (streamhdr *) malloc (sizeof(streamhdr) * nstream);
+    for (i = 0;i < nstream;i++)
+    {
+        (master->pstream + i)->transactions = NULL;
+    }
+    return;
+}
+short get_struct_id_by_name(Master * master,char * sname)
+{
+    int i = 0;
+    char * N10;
+    char * cp;
+
+    cp = strchr(sname,'.');
+    if (cp != NULL)
+    {
+        cp++;
+    }
+    while ((i < master->nStruct) &&
+        ((master->apStruct[i] == NULL) ||
+        (strcmp(sname,N_(master->apStruct[i]->name)) != 0) ||
+        ((cp != NULL) && (toupper(*cp) != master->aExt[i]))))
+    {
+        i++;
+    }
+    if (i == master->nStruct)
+    {
+        return -1;
+    }
+    return master->apStruct[i]->id;
+}
+
+short get_field_offset_by_name(Master * master,short sid,
+                               char * fname)
+{
+    int i;
+    char * N10;
+
+    if ((sid < 0) || (sid >= master->nStruct))
+    {
+        return -1;
+    }
+    if (master->apStruct[sid] == NULL)
+    {
+        return -1;
+    }
+    for (i = 0;i < master->apStruct[sid]->nField;i++)
+    {
+        if (strcmp(fname,N_(master->apStruct[sid]->aField[i].name))== 0)
+        {
+            return master->apStruct[sid]->aField[i].offset;
+        }
+    }
+    return -1;
+}
+
+/* Combined send data function */
+
+int _senddata(short stream,unsigned long tranid,char * udata,short sid,
+              char * sname,short dlen)
+#define MESSAGE_SIZE dlen
+{
+    short tsid;
+    int i,fromstream,tostream,cstream;
+    sourcehdr * firstsource = NULL;
+    sourcehdr * tsource;
+    char num[10];
+    char * data;
+    short offset;
+
+    /* Resolve source id */
+
+    if (sid != -1)
+    {
+        tsid = sid; /* Supplied directly */
+    }
+    else
+    {
+        if (sname != NULL) /* Named source */
+        {
+            int i = 0;
+            char * N10;
+
+            while ((i < master->nStruct) && ((master->apStruct[i] == NULL)
+                || (strcmp(sname,N_(master->apStruct[i]->name))!= 0)))
+            {
+                i++;
+            }
+            if (i == master->nStruct)
+            {
+                return ERROR2("Source %s not known.",sname,"");
+            }
+            tsid = master->apStruct[i]->id;
+        }
+        else
+        {
+            tsid = NTOHS(*((short *) udata + master->dhilen));/* First 2 bytes */
+        }
+    }
+
+    /* Set up stream control */
+
+    switch (stream)
+    {
+    case -1:
+        fromstream = tostream = 0; /* reverse stream */
+        break;
+    case 0:
+        fromstream = 1;
+        tostream = master->nstream-1;
+        break;
+    default:
+        fromstream = stream;
+        tostream = stream;
+    }
+
+    /* Source ids of < 10 must be 2 for COMMIT or 3 for ROLLBACK */
+
+    if (tsid < 10)
+    {
+        switch (tsid)
+        {
+        case 2:
+        case 3:
+            {
+                /* COMMIT and ROLLBACK */
+
+                /* Process on a 'by stream' basis */
+
+                for (cstream = fromstream;cstream <= tostream;cstream++)
+                {
+                    tranhdr * pt =
+                        (tranhdr *) &master->pstream[cstream].transactions;
+                    while (pt->next != NULL)
+                    {
+                        if (pt->next->tranid == tranid)
+                        {
+                            if (tsid == 2) commit(pt->next);
+                            else pt->next = freetranhdr(pt->next);
+                            break;
+                        }
+                        pt = pt->next;
+                    }
+                }
+                break;
+            }
+        default:
+            {
+                sprintf(num,"%hu",tsid);
+                return ERROR2("Source id of %s not allowed.",num,"");
+            }
+        }
+
+        /* Free callers buffer if required*/
+
+        if (((stream == -1) && (master->return_rinput == FALSE)) ||
+            ((stream != -1) && (master->return_input == FALSE)))
+            free(udata);
+        return 1;
+    }
+
+    /* Take copy of data if required*/
+
+    if (stream == -1)
+    {
+        if (master->return_rinput)
+        {
+            data = malloc(dlen);
+            if (dlen > 0) memcpy(data,udata + master->rdhilen,dlen);
+            offset = 0;
+        }
+        else
+        {
+            offset = master->rdhilen;
+            data = udata + offset;
+        }
+    }
+    else
+    {
+        if (master->return_input)
+        {
+            data = malloc(dlen);
+            if (dlen > 0) memcpy(data,udata + master->dhilen,dlen);
+            offset = 0;
+        }
+        else
+        {
+            offset = master->dhilen;
+            data = udata + offset;
+        }
+    }
+
+    /* If a network message, translate from network to host formats */
+
+    if ((strcmp(N_(CLASS(STRUCT1(tsid).classno).name),"NET") == 0) ||
+        (strcmp(N_(CLASS(cSTRUCT1.classno).name),"RNET") == 0))
+    {
+        char * fdata = data;
+        int i;
+        short repeats = 1;
+
+        for (i = 0;i < cSTRUCT1.nField;i++)
+        {
+            FIELD1(i);
+            switch(btype(pcF1))
+            {
+            case eSHORT:
+            case eVARBIN:
+                NTOH_SHORT(fdata);
+                break;
+            case eCOUNT:
+                NTOH_SHORT(fdata);
+                repeats = *((short *) fdata);
+                break;
+            case eLONG:
+                NTOH_LONG(fdata);
+                break;
+            case eFLOAT:
+                NTOH_FLOAT(fdata);
+                break;
+            case eDOUBLE:
+                NTOH_DOUBLE(fdata);
+                break;
+            case eCHAR:
+            case eZCHAR:
+                NTOH_CHAR(fdata,pcF1->prec);
+                break;
+            case eVARCHAR:
+                NTOH_SHORT(fdata);
+                NTOH_CHAR(fdata + sizeof(short),*((short *) fdata));
+                break;
+            case eTEXT:
+                NTOH_CHAR(fdata,(data + offset + dlen) - fdata);
+                break;
+            case eZONED:
+                NTOH_CHAR(fdata,pcF1->prec);
+                break;
+            case ePACKED:
+            case eTAG:
+            case eBIN:
+            case eSTRUCT:
+            case eBLOB:
+            default:
+                break;
+            }
+            fdata += USED_SIZE(pcF1,fdata);
+            if ((i + 1) == cSTRUCT1.nField)
+                if (--repeats > 0) i = cSTRUCT1.firstrepeat - 1;
+        }
+    }
+
+    /* If Source contains a repeating group, then need to break it down
+    into individual messages */
+    if (cSTRUCT1.repeatsize == 0)
+        firstsource = allocsourcehdr(data,tsid,offset,dlen);
+    else
+    {
+        short baselen = 0; /* Bytes of not repeating data */
+        int cpart,npart;
+        char * tdata = data + offset; /* Field data pointer */
+        int dl;
+
+        /* First find the length of data upto and including the count */
+
+        if ((cSTRUCT1.firstvar == 0) ||
+            (cSTRUCT1.firstvar >= cSTRUCT1.firstrepeat))
+        {
+            baselen = FIELD1(cSTRUCT1.firstrepeat).offset;
+            tdata += baselen;
+        }
+        else
+        {
+        /* Base part contains variable data, need to do things
+            the hard way */
+            int i = 0;
+
+            for(;i < (cSTRUCT1.firstrepeat);i++)
+            {
+                baselen += dl = USED_SIZE(pFIELD1(i),tdata);
+                tdata += dl;
+            }
+        }
+        /* number of repeats */
+
+        pFIELD1(cSTRUCT1.firstrepeat - 1);
+        npart = *((unsigned short*) (data + cFIELD1.offset));
+        *((unsigned short*) (data + cFIELD1.offset)) = 1;
+
+        if (npart == 1) /* If only one part, no special handling */
+            firstsource = allocsourcehdr(data,tsid,offset,dlen);
+        else
+        {
+            int j = cSTRUCT1.firstrepeat;
+            sourcehdr * sourcelist = (sourcehdr *) &firstsource;
+
+            /* Now chop input up */
+
+            for (cpart = 1; cpart <= npart;cpart++)
+            {
+                short rlen = 0;
+                int i;
+                char * idata; /* Intermediate data block */
+
+                if (cSTRUCT1.firstvar != 0)
+                {
+                    for(i = 0;i < (cSTRUCT1.nField - cSTRUCT1.firstrepeat); i++)
+                    {
+                        rlen += USED_SIZE(pFIELD1(j++),tdata + rlen);
+                    }
+                }
+                else
+                {
+                    rlen = cSTRUCT1.maxlen - baselen;
+                }
+
+                idata = malloc(rlen + baselen); /* Data buffer */
+                memcpy(idata,data,baselen); /* Common to all */
+                memcpy(idata + baselen,tdata,rlen);
+                tdata += rlen;
+                sourcelist->next =
+                    allocsourcehdr(idata,tsid,0,(short) (rlen + baselen));
+                sourcelist = sourcelist->next;
+            }
+            free(data);
+        }
+    }
+
+    /* Process all sources on the queue */
+
+    while (firstsource != NULL)
+    {
+        /* Process on a 'by stream' basis */
+
+        for (cstream = fromstream;cstream <= tostream;cstream++)
+        {
+            tranhdr * transaction;
+            grouphdr * group;
+
+            /* Find transaction header */
+
+            transaction = master->pstream[cstream].transactions;
+            while ((transaction != NULL) && (transaction->tranid != tranid))
+                transaction = transaction->next;
+            if (transaction == NULL)
+            {
+                transaction = alloctranhdr(tranid,cstream);
+                transaction->next = master->pstream[stream].transactions;
+                master->pstream[cstream].transactions = transaction;
+            }
+
+            firstsource->users += 1;
+            STRUCT1(tsid) ; /* Sets up global pointer */
+
+            /* If source is only in single group with single map, then
+            that group is immediately satisfied */
+
+            if ((cSTRUCT1.ngroup == 1) &&
+                (DGROUP(cSTRUCT1.entry[0].groupid).nmap == 1))
+            {
+                group = allocgrouphdr(cSTRUCT1.entry[0].groupid,
+                    transaction);
+                if (transaction->groups == NULL)
+                    transaction->groups = transaction->lastgroup = group;
+                else
+                {
+                    transaction->lastgroup->next = group;
+                    transaction->lastgroup = group;
+                }
+                group->satisfied = TRUE;
+                group->available = 1;
+                group->entry[0].source = firstsource;
+
+                /* If transaction 0, then process immediately */
+                if (group->owner->tranid == 0)
+                    create_targets(group->owner);
+            }
+            else
+            {
+
+                /* Set up group list in source struct */
+
+                for (i = 0; i < cSTRUCT1.ngroup;i++)
+                    cSTRUCT1.entry[i].check = FALSE; /* Group not in chain */
+
+                /* See if existing groups want this block */
+
+                group = transaction->groups;
+                while (group != NULL)
+                {
+                    if (offer_source(firstsource,group) == TRUE)
+                        break;
+                    else group = group->next;
+                }
+                if (group != NULL) continue; /* Exited via break */
+
+                /* Need to open groups which have not yet been met */
+
+                STRUCT1(tsid) ; /* Sets up global pointer */
+                for (i = 0; i < cSTRUCT1.ngroup;i++)
+                {
+                    if(cSTRUCT1.entry[i].check == FALSE)
+                    {
+                        group = allocgrouphdr(cSTRUCT1.entry[i].groupid,
+                            transaction);
+                        if (transaction->groups == NULL)
+                            transaction->groups = transaction->lastgroup =
+                            group;
+                        else
+                        {
+                            transaction->lastgroup->next = group;
+                            transaction->lastgroup = group;
+                        }
+                        if (offer_source(firstsource,group) == TRUE)
+                            break;
+                    }
+                }
+            }
+        }
+        tsource = firstsource;
+        firstsource = firstsource->next;
+        freesourcehdr(tsource);
+    }
+    return 1;
+}
+
+
+int senddata(Master * pmast,unsigned short stream,unsigned long tid,
+             char * data,short sid,char * sname,short dlen)
+{
+    master = pmast;
+#ifdef __trace__
+    sprintf (tbuff,"Senddata to %s,stream %hu,trans %u,sid %hi,name %s,len %hi",
+        N_(master->name),stream,tid,sid,(sname == NULL)? "NULL":sname,dlen);
+    TRACE(1);
+    DUMP(2,data,dlen);
+#endif
+    return _senddata(stream,tid,data,sid,sname,dlen); /* Normal*/
+}
+
+int rsenddata(Master * pmast,unsigned long tid,char * data,short sid,
+              char * sname,short dlen)
+{
+    master = pmast;
+#ifdef __trace__
+    sprintf (tbuff,"rSenddata to %s,trans %u,sid %hi,name %s,len %hi",
+        N_(master->name),tid,sid,(sname == NULL)? "NULL":sname,dlen);
+    TRACE(1);
+    DUMP(2,data,dlen);
+#endif
+    return _senddata(-1,tid,data,sid,sname,dlen); /* Reverse */
+}
+
+
+Master * new_master(int streams,char * script_name)
+{
+    Master * tmaster;
+#ifdef __trace__
+    sprintf (tbuff,"Initialising %s.",script_name);
+    TRACE(1);
+#endif
+
+    if (xlateok == 0)
+    {
+        KMDXTC("AE",a2e);
+        KMDXTC("EA",e2a);
+        xlateok = 1;
+    }
+    tmaster = master = MALLOC(Master);
+    memset(tmaster, 0, sizeof(Master));
+    master->return_input = FALSE;
+    master->return_rinput = FALSE;
+    master->dhilen = 0;
+    master->dholen = 0;
+    master->dtolen = 0;
+    master->rdhilen = 0;
+    master->rdholen = 0;
+    master->rdtolen = 0;
+    master->nstream = streams + 1;
+    master->preceivedata = &_rc;
+    master->prreceivedata = &_rrc;
+    master->convert_user_type = &_convert_user_type;
+    master->set_default = &_set_default;
+    allocstreamhdrs(master->nstream);
+
+    return tmaster;
+}
+
+/* Access functions */
+
+char * system_field_address(Master * master,char * name)
+{
+    int i;
+
+    for (i = 0;i < master->apStruct[0]->nField;i++)
+    {
+        if (strcmp(N_(master->apStruct[0]->aField[i].name),
+            name) == 0)
+        {
+            return master->sysbuff +
+                master->apStruct[0]->aField[i].offset;
+        }
+    }
+    return NULL;
+}
+

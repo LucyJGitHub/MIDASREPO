@@ -1,0 +1,263 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPCRTENV - Create Envirornment objects.                     */
+/*                                                                   */
+/*       Most of this code was originally in KMDFDC and KMQSIC.      */
+/*       This function is called from all relevant places with a     */
+/*       flag to indicate which block of processing is required.     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 000867 (Bugzilla)  Date 13Apr06              */
+/*                      000807 (Bugzilla)  Date 17Mar06              */
+/*                      CRP026             Date 18Jul05              */
+/*                      CRP018 *CREATE     Date 19Jul02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       000867 - Only try and create MQ object(s) if they don't     */
+/*                exist                                              */
+/*       000807 - Specify a THRESHOLD value (lower than the default) */
+/*                on the CRTJRNRCV command to prevent the receivers  */
+/*                from getting too big.                              */
+/*       CRP026 - Change data area names and create journal for      */
+/*                new Last Journal Sequence Number file as           */
+/*                part of new Feeder work.                           */
+/*       CRP018 - Move Data Area / Journal creation to Subsystem     */
+/*                creation time.                                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &SEQNO &BASELIB &SBSLIB)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SEQNO) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BASELIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBSLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&USRPRF) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&JRNDA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNNAM) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
+
+/************DCL        VAR(&ENDDA) TYPE(*CHAR) LEN(10)                   /*CRP026*/
+             DCL        VAR(&SEQDA) TYPE(*CHAR) LEN(10)
+/************DCL        VAR(&OSCDA) TYPE(*CHAR) LEN(10)                   /*CRP026*/
+             DCL        VAR(&STRSEQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('0000000001')
+/************DCL        VAR(&ENDSEQ) TYPE(*CHAR) LEN(10) +                /*CRP026*/
+/***************          VALUE('0000000000')                             /*CRP026*/
+/************DCL        VAR(&OLDSC) TYPE(*CHAR) LEN(10) +                 /*CRP026*/
+/***************          VALUE('0000000000')                             /*CRP026*/
+                                                                          /*CRP026*/
+             DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(10)                 /*CRP026*/
+
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(64) /* Data to be +
+                          returned  */                                    /*CRP026*/
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(2 0) /* Length of +
+                          data that is being returned */                  /*CRP026*/
+             DCL        VAR(&MQMNAME) TYPE(*CHAR) LEN(48) /* +
+                          MQSeries Queue Manager name */
+             DCL        VAR(&BUFFERQ) TYPE(*CHAR) LEN(48) /* Buffer +
+                          MQSeries queue name */                          /*CRP026*/
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                    /*CRP026*/
+                                                                          /*CRP026*/
+/*  Variables to act like named constants on calls                  */    /*000867*/
+             DCL        VAR(&QUEUE) TYPE(*CHAR) LEN(7) VALUE(QUEUE)       /*000867*/
+/* Work fields            */                                              /*000867*/
+             DCL        VAR(&EXIST) TYPE(*CHAR) LEN(4)                    /*000867*/
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)              /*000867*/
+                                                                          /*000867*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/*  Get System Identifier and Profile that Batch jobs run under     */
+/*  directly from the data area - cannot use the RPBOIFnn           */
+/*  functions because at system setup time they will not be loaded  */
+/*  and the data area will not be in the library list.              */
+             RTVDTAARA  DTAARA(&SBSLIB/RPBOIFDA (51 3)) RTNVAR(&SYSID)
+
+             RTVDTAARA  DTAARA(&SBSLIB/RPBOIFDA (61 10)) +
+                          RTNVAR(&USRPRF)
+
+         /*  Work out journal name data area */
+             CHGVAR     VAR(&JRNDA) VALUE('JD' *CAT &SYSID *CAT 'NAM')
+
+             IF         COND(&MODE = 'D') THEN(DO)
+
+         /*  Retrieve journal name data area and extract components */
+                RTVDTAARA  DTAARA(&BASELIB/&JRNDA) RTNVAR(&JRNNAM)
+                CHGVAR     VAR(&JRN) VALUE(%SST(&JRNNAM 1 10))
+                CHGVAR     VAR(&JLIB) VALUE(%SST(&JRNNAM 11 10))
+
+ /*  If the library name is blank, default it to the work library */
+                IF         COND(&JLIB *EQ ' ') THEN(DO)
+                   RTVDTAARA  DTAARA(&SBSLIB/RPBOIFDA (21 10)) +
+                              RTNVAR(&JLIB)
+                ENDDO
+
+/**If*last*closedown sequence data area does not exists create it  */     /*CRP026*/
+/***************CHGVAR     VAR(&ENDDA) VALUE('JD' *CAT &SYSID *CAT +      /*CRP026*/
+/**************'END' *CAT &SEQNO)                                         /*CRP026*/
+/***************CHKOBJ     OBJ(&BASELIB/&ENDDA) OBJTYPE(*DTAARA)          /*CRP026*/
+/***************MONMSG     MSGID(CPF9801) EXEC(DO)                        /*CRP026*/
+/***************           CRTDTAARA DTAARA(&BASELIB/&ENDDA) TYPE(*CHAR) +/*CRP026*/
+/***************           LEN(10) VALUE(&ENDSEQ)                         /*CRP026*/
+/***************           CHGOBJOWN OBJ(&BASELIB/&ENDDA) +               /*CRP026*/
+/***************              OBJTYPE(*DTAARA) NEWOWN(&USRPRF)            /*CRP026*/
+/***************ENDDO                                                     /*CRP026*/
+/***************                                                          /*CRP026*/
+/***Create*restart sequence number if present  */                         /*CRP026*/
+/***************CHGVAR     VAR(&SEQDA) VALUE('JD' *CAT &SYSID *CAT +      /*CRP026*/
+/***************'SEQ' *CAT &SEQNO)                                        /*CRP026*/
+/***************CHKOBJ     OBJ(&BASELIB/&SEQDA) OBJTYPE(*DTAARA)          /*CRP026*/
+/***************MONMSG     MSGID(CPF9801) EXEC(DO)                        /*CRP026*/
+/***************   CRTDTAARA  DTAARA(&BASELIB/&SEQDA) TYPE(*CHAR) +       /*CRP026*/
+/***************                LEN(10) VALUE(&STRSEQ)                    /*CRP026*/
+/***************   CHGOBJOWN OBJ(&BASELIB/&SEQDA) +                       /*CRP026*/
+/***************      OBJTYPE(*DTAARA) NEWOWN(&USRPRF)                    /*CRP026*/
+/***************ENDDO                                                     /*CRP026*/
+/***************                                                          /*CRP026*/
+/*  Create oldest incomplete commit cycle */                              /*CRP026*/
+/***************CHGVAR     VAR(&OSCDA) VALUE('JD' *CAT &SYSID *CAT +      /*CRP026*/
+/***************'OSC' *CAT &SEQNO)                                        /*CRP026*/
+/***************CHKOBJ     OBJ(&BASELIB/&OSCDA) OBJTYPE(*DTAARA)          /*CRP026*/
+/***************MONMSG     MSGID(CPF9801) EXEC(DO)                        /*CRP026*/
+/***************   CRTDTAARA  DTAARA(&BASELIB/&OSCDA) TYPE(*CHAR) +       /*CRP026*/
+/***************                LEN(10) VALUE(&OLDSC)                     /*CRP026*/
+/***************   CHGOBJOWN  OBJ(&BASELIB/&OSCDA) OBJTYPE(*DTAARA)    +  /*CRP026*/
+/***************                NEWOWN(&USRPRF)                           /*CRP026*/
+/***************ENDDO                                                     /*CRP026*/
+                                                                          /*CRP026*/
+/* If Feeder sequence data area does not exist create it  */              /*CRP026*/
+                CHGVAR     VAR(&SEQDA) VALUE('JDFDR' *CAT &SYSID *CAT +
+                             &SEQNO)                                      /*CRP026*/
+
+                CHKOBJ     OBJ(&BASELIB/&SEQDA) OBJTYPE(*DTAARA)          /*CRP026*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                        /*CRP026*/
+                   CRTDTAARA  DTAARA(&BASELIB/&SEQDA) TYPE(*CHAR) LEN(10) +
+                             VALUE(&STRSEQ)                               /*CRP026*/
+                   CHGOBJOWN  OBJ(&BASELIB/&SEQDA) OBJTYPE(*DTAARA) +
+                             NEWOWN(&USRPRF)                              /*CRP026*/
+                ENDDO                                                     /*CRP026*/
+                                                                          /*CRP026*/
+/* Call routine to check that Feeder sequence control record exists */    /*CRP026*/
+/*   and if not to create it.                                       */    /*CRP026*/
+                CALLPRC    PRC('checkAddFdrCtlRec') PARM((&SEQNO)) +
+                             RTNVAL(&RETCODE)                             /*CRP026*/
+                                                                          /*CRP026*/
+             ENDDO
+
+             IF         COND(&MODE = 'J') THEN(DO)
+
+/*  If the journal name data area does not already exist create it +
+    with default values, having created the journalling objects +
+    themselves.                       */
+                RTVDTAARA  DTAARA(&SBSLIB/RPBOIFDA (21 10)) +
+                           RTNVAR(&JLIB)
+
+                CHKOBJ     OBJ(&BASELIB/&JRNDA) OBJTYPE(*DTAARA)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+
+                   CHKOBJ     OBJ(&JLIB/MDJRN) OBJTYPE(*JRN)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CRTJRNRCV  JRNRCV(&JLIB/MDRCV0001)
+                      MONMSG     MSGID(CPF7010)
+                      CHGOBJOWN  OBJ(&JLIB/MDRCV0001) OBJTYPE(*JRNRCV) +
+                                   NEWOWN(&USRPRF)
+
+                      CRTJRN     JRN(&JLIB/MDJRN) JRNRCV(&JLIB/MDRCV0001)
+                      CHGOBJOWN  OBJ(&JLIB/MDJRN) OBJTYPE(*JRN) NEWOWN(&USRPRF)
+                   ENDDO
+
+                   CRTDTAARA  DTAARA(&BASELIB/&JRNDA) TYPE(*CHAR) +
+                                LEN(20) VALUE('MDJRN')
+                   CHGDTAARA  DTAARA(&BASELIB/&JRNDA (11 10)) VALUE(&JLIB)
+                   GRTOBJAUT  OBJ(&BASELIB/&JRNDA) OBJTYPE(*DTAARA)    +
+                                USER(*PUBLIC) AUT(*ALL)
+                ENDDO
+                                                                          /*CRP026*/
+/*  Create the journalling objects for the new +
+    Last Journal Sequence Number file if they do not exist. */            /*CRP026*/
+                CHKOBJ     OBJ(&BASELIB/CTLJRN) OBJTYPE(*JRN)             /*CRP026*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                        /*CRP026*/
+/**************    CRTJRNRCV  JRNRCV(&BASELIB/CTL0000001) TEXT('For Last +/*000807*/
+/**************                 Journal Sequence Number file') /*CRP026*/ /*000807*/
+                   CRTJRNRCV  JRNRCV(&BASELIB/CTL0000001) +
+                          THRESHOLD(100000) TEXT('For Last Journal +
+                          Sequence Number file')                          /*000807*/
+                   MONMSG     MSGID(CPF7010)                              /*CRP026*/
+                   CHGOBJOWN  OBJ(&BASELIB/CTL0000001) OBJTYPE(*JRNRCV) +
+                                NEWOWN(&USRPRF)                           /*CRP026*/
+                                                                          /*CRP026*/
+                   CRTJRN     JRN(&BASELIB/CTLJRN) +
+                                JRNRCV(&BASELIB/CTL0000001) +
+                                MNGRCV(*SYSTEM) DLTRCV(*YES) TEXT('For +
+                                Last Journal Sequence Number file')       /*CRP026*/
+                   CHGOBJOWN  OBJ(&BASELIB/CTLJRN) OBJTYPE(*JRN) +
+                                NEWOWN(&USRPRF)                           /*CRP026*/
+                ENDDO                                                     /*CRP026*/
+                                                                          /*CRP026*/
+                STRJRNPF   FILE(RPFEEDSQNO) JRN(CTLJRN) IMAGES(*BOTH) +
+                             OMTJRNE(*OPNCLO)                             /*CRP026*/
+                MONMSG     MSGID(CPF7030)                                 /*CRP026*/
+                                                                          /*CRP026*/
+             ENDDO
+
+             IF         COND(&MODE = 'M') THEN(DO)                        /*CRP026*/
+/*  Get Queue Manager name                                          */
+                CALLPRC    PRC(RPBOIF99) PARM(('MQMNAME   ') (&DATA) +
+                             (&LEN))                                      /*CRP026*/
+                CHGVAR     VAR(&MQMNAME) VALUE(%SST(&DATA 1 &LEN))        /*CRP026*/
+                                                                          /*CRP026*/
+/*  Try to create the MQ queue as a buffer for this Feeder,  +
+    monitoring for it already existing (AMQ8150) */                       /*CRP026*/
+                CHGVAR     VAR(&BUFFERQ) VALUE('FDRBUF' *CAT &SYSID +
+                             *CAT &SEQNO)                                 /*CRP026*/
+                                                                          /*CRP026*/
+/*  Bypass processing if queue already exists                       */    /*000867*/
+                CALLPRC    PRC(RPCHKMQEX) PARM(&BUFFERQ &QUEUE &EXIST +
+                             &RETURNCODE)                                 /*000867*/
+                IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                             CMDLBL(ABNOR))                               /*000867*/
+                IF         COND(&EXIST = '*YES') THEN(GOTO CMDLBL(END))   /*000867*/
+                                                                          /*000867*/
+                CRTMQMQ    QNAME(&BUFFERQ) QTYPE(*LCL) +
+                             MQMNAME(&MQMNAME) TEXT('Replication +
+                             buffer queue for Feeder running in +
+                             *SECURE mode') PUTENBL(*YES) +
+                             DFTMSGPST(*YES) GETENBL(*YES) +
+                             MSGDLYSEQ(*FIFO) MAXDEPTH(640000) +
+                             USAGE(*NORMAL)                               /*CRP026*/
+                MONMSG     MSGID(CPF0001) EXEC(DO)                        /*CRP026*/
+                   RCVMSG     PGMQ(*SAME) RMV(*NO) MSGID(&MSGID)          /*CRP026*/
+                   DOWHILE    COND(&MSGID *NE 'AMQ8150' +
+                                   *AND &MSGID *NE ' ')                   /*CRP026*/
+                      RCVMSG     PGMQ(*SAME) RMV(*NO) MSGID(&MSGID)       /*CRP026*/
+                   ENDDO                                                  /*CRP026*/
+                   IF         COND(&MSGID *NE 'AMQ8150') THEN(DO)         /*CRP026*/
+                      GOTO       CMDLBL(ABNOR)                            /*CRP026*/
+                   ENDDO                                                  /*CRP026*/
+                ENDDO                                                     /*CRP026*/
+             ENDDO                                                        /*CRP026*/
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPF0001) MSGF(QCPFMSG) +
+                          MSGDTA('RPCRTENV') TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

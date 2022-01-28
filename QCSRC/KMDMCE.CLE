@@ -1,0 +1,924 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*  Header file includes                                                     */
+/*                                                                           */
+#include <stdlib.h>
+#include <string.h>
+#ifdef __ILEC400__
+#include <xxcvt.h>
+#endif
+
+#include "kmdmph.h"
+#include "kmdarh.h"
+#include "decimal.h"
+
+/*---------------------------------------------------------------------------*/
+
+/*******************TEMPORARY*************************************************/
+/*  This field is used to limit data types with no declared length           */
+short max_message_len = 1024;
+/*****************************************************************************/
+
+/*                                                                           */
+/*  The static master structure pointer is used as a 'current master'        */
+/*  and is used in macros which are designed to work on the 'current master' */
+/*                                                                           */
+static Master* master;
+
+static BOOL first_struct;
+
+
+/*                                                                           */
+/*  Headers for dynamic structure arrays                                     */
+/*                                                                           */
+
+/*                                                                           */
+/*  User defined classes                                                     */
+/*                                                                           */
+Class Class_init_struct = {-1};
+ahSTRUCT(cl, Class);
+#define icl Class_init_struct
+
+/*                                                                           */
+/*  Types - 0-19 fixed, 20+ user types                                       */
+/*                                                                           */
+Datatype Datatype_init_struct = {-1, -1, eBIN};
+ahSTRUCT(dt, Datatype);
+#define idt Datatype_init_struct
+
+static char fixed_types[20][10] = {
+    "SHORT",
+    "LONG",
+    "FLOAT",
+    "DOUBLE",
+    "CHAR",
+    "ZCHAR",
+    "VARCHAR",
+    "BIN",
+    "VARBIN",
+    "PACKED",
+    "ZONED",
+    "TEXT",
+    "COUNT",
+    "TAG",
+    "STRUCT",
+    "BLOB",
+    "",
+    "",
+    "",
+    ""
+};
+
+/*                                                                           */
+/*  'struct's                                                                */
+/*                                                                           */
+Struct Struct_init_struct =
+        {NULL, 0, 0, -1, NULL, 0, 0, 0, 0, 0, "                    ",
+        0, {0, FALSE}};
+ahSTRUCT(st, Struct);
+#define ist Struct_init_struct
+
+char char_init_struct = ' ';
+ahSTRUCT(ex,char);
+
+/*                                                                           */
+/*  Maps                                                                     */
+/*                                                                           */
+Map Map_init_struct = {NULL, NULL, NET, 0, 0, 0, 0};
+ahSTRUCT(mp, Map);
+#define imp Map init struct
+
+/*                                                                           */
+/*  Fields within a struct                                                   */
+/*                                                                           */
+Field Field_init_struct = {NULL, -1, 0, 0, 0, 0, -1};
+ahSTRUCT(fl, Field);
+ahSTRUCT(sfl, Field);
+#define ifl Field_init_struct
+#define isfl ifl
+
+/*                                                                           */
+/*  Map entries                                                              */
+/*                                                                           */
+Link Link_init_struct = {0, 0};
+ahSTRUCT(ln, Link);
+#define iln Link_init_struct
+
+
+/*                                                                           */
+/*  Literal array for Maps                                                   */
+/*                                                                           */
+typedef char char2;
+char2 char2_init_struct = 0;
+ahSTRUCT(lt, char2);
+
+
+/*                                                                           */
+/*  Dependency group                                                         */
+/*                                                                           */
+Dgroup Dgroup_init_struct = {-1, 0, {0} };
+ahSTRUCT(dg, Dgroup);
+#define idg Dgroup_init_struct
+
+/******************************************************************************
+
+  NAME MANAGEMENT
+
+  All names are 'coded' by stacking them end to end with zero terminators
+  in a character array hanging off the master control block. No duplicates
+  are allowed so each symbol can be uniquely referred to (and tested for
+  equality) by its stack offset.
+
+******************************************************************************/
+
+/*                                                                           */
+/*  Function ncode returns a permanent integer code for a name               */
+/*                                                                           */
+int ncode(Master* master, /*  Master structure to use                        */
+          char* name)     /*  Name to store/return                           */
+{
+    int i = 0,j = 0,k = 0;
+
+    /*                                                                       */
+    /*  Make sure a name is passed, and does not contain leading blanks      */
+    /*                                                                       */
+    if (name == NULL)
+    {
+        return -1;
+    }
+    if (*name == ' ')
+    {
+        return -1;
+    }
+
+    /*                                                                       */
+    /*  Look through existing list of names                                  */
+    /*                                                                       */
+    while (i < master->nn)
+    {
+        j = 0;
+        k = i;
+        do
+        {
+            /*                                                               */
+            /*  End of current name                                          */
+            /*                                                               */
+            if (*(master->names + i) == 0)
+            {
+                while (*(name + j) == ' ') /*  Allow blank trail             */
+                {
+                    j++;
+                }
+                if (*(name + j) == 0) /*  Name matches                       */
+                {
+                    return k;
+                }
+
+                /*  Required name is longer than this stored name            */
+                i++;     /*  Next stacked name                               */
+                break;   /*  To outer loop                                   */
+            }
+            if (*(master->names + i) == *(name + j)) /*  Matching character  */
+            {
+                i++;
+                j++;
+                continue;  /*  While characters continue to match            */
+            }
+
+            /*                                                               */
+            /*  List name is not the same, skip index forward to next name   */
+            /*                                                               */
+
+            do
+            {
+                i++;
+            } while(*(master->names + i) != 0); /*  End of name              */
+            i++;     /*  Next name                                           */
+            break;   /*  To check against next stacked name                  */
+        } while (1);
+    }
+
+    /*                                                                       */
+    /*  Name not in list, so add it                                          */
+    /*                                                                       */
+
+    /*                                                                       */
+    /*  Work out number of bytes to extend list by and extend it             */
+    /*                                                                       */
+    while (*(name + j) != 0)
+    {
+        j++;
+    }
+    j++;
+    master->names = realloc(master->names,master->nn + j);
+
+    /*                                                                       */
+    /*  Copy in name, and return offset for it                               */
+    /*                                                                       */
+    j = 0;
+    while ((*(name + j) != 0) && (*(name + j) != ' '))
+    {
+        *(master->names + master->nn++) = *(name + j++);
+    }
+    *(master->names + master->nn++) = 0;
+    return i;
+}
+
+/*                                                                           */
+/*  The following macro shortens the use of ncode by referencing the         */
+/*  Master structure currently being used                                    */
+/*                                                                           */
+#define NCODE(x) ncode(master,x)
+
+/******************************************************************************
+
+  SCRIPT HANDLING
+
+  The following functions are called during the reading of the script.
+  They create the classes, types, structures, maps etc.
+
+  The entire reading of the script will be bracketted by a call to script_in
+  and finally to end_script_in
+
+  For user types:
+    usertypes_in
+    usertype_def_in  (repeated)
+    end_usertypes_in
+
+  For class definitions:
+    classes_in
+    class_def_in (repeated)
+    end_classes_in
+
+  For each structure:
+    struct_in
+    struct_field_in (repeated)
+    end_struct_in
+
+  For each mapping:
+    map_in
+    map_field_in (repeated)
+    end_map_in
+
+******************************************************************************/
+
+void script_in(Master * _mast)
+{
+    master = _mast;      /*  Set current master                              */
+    INIT(dt);            /*  Initialise data types array                     */
+    INIT(st);            /*  Initialise structures array                     */
+    st.indirect = TRUE;  /*  The structures array is an array of pointers    */
+    INIT(mp);            /*  Initialise map array                            */
+    INIT(fl);            /*  Initialise field array                          */
+    INIT(sfl);           /*  Initialise system fields array                  */
+    INIT(ln);            /*  Initialise mappings array                       */
+    INIT(lt);            /*  Initialise literal array                        */
+    INIT(dg);            /*  Initialise dependency groups array              */
+    dg.indirect = TRUE;
+    INIT(cl);            /*  Initialise class array                          */
+
+    first_struct = TRUE; /*  New set of structures flag                      */
+    return;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void usertypes_in(void)
+{
+    int i;
+
+    /*                                                                       */
+    /*  Initialise types array with fixed entries                            */
+    /*                                                                       */
+    for(i = 0; i < 20; i++)
+    {
+        ADD_TO(dt);
+        LAST(dt)->name = NCODE(fixed_types[i]);
+
+        /*                                                                   */
+        /*  User types are defined referencing their fixed data type, so     */
+        /*  set the fixed types to be based on themselves                    */
+        /*                                                                   */
+        LAST(dt)->base = NCODE(fixed_types[i]);
+        LAST(dt)->eBASE = i;
+    }
+    return;
+}
+
+
+void usertype_def_in(int id,      /*  Type number                            */
+                     char* type,  /*  Name of type                           */
+                     char* base)  /*  Name of basing type                    */
+{
+    /*                                                                       */
+    /*  Set up user type name and base type (use BIN as default)             */
+    /*                                                                       */
+    pdt(id)->name = NCODE(type);
+    if (base != NULL)
+    {
+        pdt(id)->base = NCODE(base);
+    }
+    else
+    {
+        pdt(id)->base = NCODE("BIN");
+    }
+    pdt(id)->eBASE = INDEX_OF(dt,pdt(id)->base);
+    return;
+}
+
+
+void end_usertypes_in(void)
+{
+    /*                                                                       */
+    /*  Trim off array, and assign as master list                            */
+    /*                                                                       */
+    TRIM(dt);
+    master->aDatatype = dt.u.pArray;
+    master->nDatatype = dt.used;
+    return;
+}
+
+/*---------------------------------------------------------------------------*/
+
+/*                                                                           */
+/*  classes_in                                                               */
+/*                                                                           */
+void classes_in(void)
+{
+   return;
+}
+
+/*                                                                           */
+/*  class_def_in                                                             */
+/*                                                                           */
+void class_def_in(int id,        /*  Class number                            */
+                  char* sclass)  /*  Class name                              */
+{
+    pcl(id)->name  = NCODE(sclass);
+    return;
+}
+
+void end_classes_in(void)
+{
+    TRIM(cl);
+    master->aClass = cl.u.pArray;
+    master->nClass = cl.used;
+    return;
+}
+
+/*---------------------------------------------------------------------------*/
+
+/*  The following functions are left in for compatability reasons only       */
+
+void process_in(char * name)
+{
+    return;
+}
+
+
+void procparm_in(char * zstring)
+{
+    return;
+}
+
+
+void end_process_in(void)
+{
+    return;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int cstid;
+static int prev_id;
+
+void struct_in(char* name,   /*  Structure name                              */
+               char  ext,    /*  Structure name extension (ie 'A' for NAME.A)*/
+               int   id,     /*  Structure number                            */
+               char* sclass, /*  Class name                                  */
+               char* ufld,   /*  User field (part of script)                 */
+               char* desc)   /*  Description                                 */
+{
+
+    /*                                                                       */
+    /*  If this is the first structure, define the fixed structures before   */
+    /*                                                                       */
+    if (first_struct == TRUE)
+    {
+        int p10 = 10;
+        first_struct = FALSE;
+
+        /*                                                                   */
+        /*  SYSTEM structure                                                 */
+        /*                                                                   */
+        struct_in("SYSTEM",' ',0,"SYSTEM",NULL,NULL);
+        end_struct_in();
+
+        /*                                                                   */
+        /*  __INTERNAL structure used to signify current structure name and  */
+        /*  number                                                           */
+        /*                                                                   */
+        struct_in("__INTERNAL",' ',1,"NONE",NULL,NULL);
+        struct_field_in("SHORT",NULL,NULL,"__ID",NULL,NULL);
+        struct_field_in("CHAR",&p10,NULL,"__NAME",NULL,NULL);
+        end_struct_in();
+
+        /*                                                                   */
+        /*  COMMIT structure                                                 */
+        /*                                                                   */
+        struct_in("COMMIT",' ',2,"NONE",NULL,NULL);
+        end_struct_in();
+
+        /*                                                                   */
+        /*  ROLLBACK structure                                               */
+        /*                                                                   */
+        struct_in("ROLLBACK",' ',3,"NONE",NULL,NULL);
+        end_struct_in();
+    }
+
+
+    /*                                                                       */
+    /*  If this is the SYSTEM class, force current structure number to zero  */
+    /*                                                                       */
+    if ((sclass != NULL) && (strcmp(sclass,"SYSTEM") == 0))
+    {
+        cstid = 0;
+    }
+    else
+    {
+        cstid = id;
+    }
+
+    /*                                                                       */
+    /*  Store extension character                                            */
+    /*                                                                       */
+    *pex(cstid) = ext;
+
+    /*                                                                       */
+    /*  Re-link field array - structures are extensible                      */
+    /*                                                                       */
+    fl.u.pArray = pst(cstid)->aField;
+    fl.used = fl.allocated = pst(cstid)->nField;
+
+    prev_id = INDEX_OF(st,NCODE(name));
+    if (prev_id == -1)
+    {
+        pst(cstid)->name = NCODE(name);
+        if (ufld != NULL)
+        {
+            memcpy(pst(cstid)->ufld, ufld, sizeof(pst(cstid)->ufld));
+        }
+    }
+    else
+    {
+        /*                                                                   */
+        /*  Re-link field array - structures are extensible                  */
+        /*                                                                   */
+        memcpy(pst(cstid), st.u.ppObj[prev_id], sizeof(Struct));
+    }
+    pst(cstid)->classno = INDEX_OF(cl,NCODE(sclass));
+    pst(cstid)->id = cstid;
+    pst(cstid)->ngroup = 0;
+    return;
+}
+
+
+void struct_field_in(char* type,     /*  Field data type                     */
+                     int*  pprec,    /*  Precision (length)                  */
+                     int*  pscale,   /*  Scale (number of dps)               */
+                     char* name,     /*  Field name                          */
+                     int*  pattr,    /*  Field attribute                     */
+                     char* desc)     /*  Description                         */
+{
+    int havecount = 0; /*  Is a COUNT field defined in this structure?       */
+
+    /*                                                                       */
+    /*  Set up array entry                                                   */
+    /*                                                                       */
+    ADD_TO(fl);
+    LAST(fl)->type = INDEX_OF(dt,NCODE(type));
+    if (pprec == NULL)
+    {
+        LAST(fl)->prec = 0;
+    }
+    else
+    {
+        LAST(fl)->prec = *pprec;
+    }
+
+    if (pscale == NULL)
+    {
+        LAST(fl)->scale = 0;
+    }
+    else
+    {
+        LAST(fl)->scale = *pscale;
+    }
+
+    if (pattr == NULL)
+    {
+        LAST(fl)->attr = 0;
+    }
+    else
+    {
+        LAST(fl)->attr = *pattr;
+    }
+    LAST(fl)->name = NCODE(name);
+
+    /*                                                                       */
+    /*  If the data type has a natural fixed length, override the specified  */
+    /*  length                                                               */
+    /*                                                                       */
+    switch (INDEX_OF(dt,pdt(LAST(fl)->type)->base))
+    {
+    case eSHORT:
+        LAST(fl)->prec = sizeof(short);
+        break;
+    case eLONG:
+        LAST(fl)->prec = sizeof(long);
+        break;
+    case eFLOAT:
+        LAST(fl)->prec = sizeof(float);
+        break;
+    case eDOUBLE:
+        LAST(fl)->prec = sizeof(double);
+        break;
+    case eVARCHAR:
+        if (pst(cstid)->firstvar == 0)
+        {
+            pst(cstid)->firstvar = fl.used;
+        }
+        break;
+    case eVARBIN:
+        if (pst(cstid)->firstvar == 0)
+        {
+            pst(cstid)->firstvar = fl.used;
+        }
+        break;
+    case eTEXT:
+        LAST(fl)->prec = 0;
+        break;
+    case eCOUNT:
+        LAST(fl)->prec = sizeof(short);
+        havecount = 1;
+        break;
+    case eBLOB:
+        LAST(fl)->prec = 0;
+        break;
+    }
+
+    /*                                                                       */
+    /*  Sort out field offset within structure                               */
+    /*  This is simply the offset of the previous field plus its length      */
+    /*                                                                       */
+
+/*  Macro required for ALLOC_SIZE - only needed for varbin/varchar usage     */
+#define MESSAGE_SIZE max_message_len
+
+    LAST(fl)->offset = (fl.used == 1) ? 0 :  /*  First field                 */
+        pfl(fl.used-2)->offset + ALLOC_SIZE(pfl(fl.used-2)); /*  Previous    */
+
+    /*  Adjust structure maximum length                                      */
+    pst(cstid)->maxlen += ALLOC_SIZE(LAST(fl));
+
+    /*                                                                       */
+    /*  If a COUNT field is contained in the structure, we need to record    */
+    /*  the length of the repeatable section                                 */
+    /*                                                                       */
+    if (pst(cstid)->firstrepeat != 0)  /*  Set when COUNT field detected     */
+    {
+        pst(cstid)->repeatsize += ALLOC_SIZE(LAST(fl));
+    }
+    if (havecount != 0) /*  COUNT field detected                             */
+    {
+        pst(cstid)->firstrepeat = fl.used;
+    }
+    return;
+}
+
+
+Struct* end_struct_in(void)
+{
+    if (prev_id == -1)
+    {
+        /*                                                                   */
+        /*  Trim and transfer array of fields to entry in structures array   */
+        /*  the length of the repeatable section                             */
+        /*                                                                   */
+        TRIM(fl);
+        pst(cstid)->aField = fl.u.pArray;
+        pst(cstid)->nField = fl.used;
+
+
+        /*                                                                   */
+        /*  Reset field array for next structure                             */
+        /*                                                                   */
+        INIT(fl);
+    }
+    return LAST(st);
+}
+
+/*---------------------------------------------------------------------------*/
+
+static int ctid; /*  Current target structure id                             */
+static int csid; /*  Current source structure id                             */
+static int cfno; /*  Current field number                                    */
+
+
+/*                                                                           */
+/*  The following macros are user for quick reference to the required        */
+/*  structure and field array entries                                        */
+/*                                                                           */
+#define pSST pst(csid)
+#define pTST pst(ctid)
+#define pTFL (pTST->aField + cfno)
+
+void map_in(mtype type,      /*  Type of mapping (REMOTE/NET/RNET/LOCAL)     */
+            char * groupid,  /*  Current target structure id                 */
+            int tid,
+            int sid)
+{
+    int grp;
+    int i,j;
+
+    /*                                                                       */
+    /*  Set up array entry                                                   */
+    /*                                                                       */
+    ADD_TO(mp);
+    csid = LAST(mp)->from = sid;
+    ctid = LAST(mp)->to = tid;
+    LAST(mp)->type = type;
+    cfno = 0;
+
+    /*                                                                       */
+    /*  Sort out dependency (map) group                                      */
+    /*                                                                       */
+    if (groupid != NULL)
+    {
+        grp = NCODE(groupid); /*  Supplied name                              */
+    }
+    else
+    {
+        grp = pst(tid)->name; /*  Or target name                             */
+    }
+
+    if ((i = INDEX_OF(dg,grp)) == -1)
+    {
+        /*  New group                                                        */
+        pdg(dg.used)->name = grp;       /*  Set name                         */
+        LAST(dg)->nmap = 1;             /*  Maps in group                    */
+        LAST(dg)->map[0] = mp.used - 1; /*  Set map number                   */
+        i = dg.used - 1;                /*  Group number                     */
+    }
+    else
+    {
+        /*  Extend by 1 map id                                               */
+        dg.u.ppObj[i] = realloc(dg.u.ppObj[i], sizeof(Dgroup) +
+            sizeof(unsigned short) * (pdg(i)->nmap + 1));
+        pdg(i)->map[pdg(i)->nmap] = mp.used - 1;
+        pdg(i)->nmap++;
+    }
+    LAST(mp)->groupid = i;              /*  Group id to map                  */
+
+
+    /*                                                                       */
+    /*  Add group id to source struct list                                   */
+    /*                                                                       */
+    /*  First extend struct size if necessary                                */
+    /*                                                                       */
+    if (pst(sid)->ngroup > 0)
+    {
+        /*  Source may already appear in this group                          */
+        for (j = 0; j < pst(sid)->ngroup;j++)
+        {
+            if (pst(sid)->entry[j].groupid == i)
+            {
+                return;
+            }
+        }
+        /*  Reallocate memeory to store new group id                         */
+        st.u.ppObj[sid] = realloc(st.u.ppObj[sid],sizeof(Struct) +
+            sizeof(unsigned short) * (pst(sid)->ngroup + 1));
+    }
+    pst(sid)->entry[pst(sid)->ngroup].groupid = i;
+    pst(sid)->ngroup++;
+
+    return;
+}
+
+
+void map_field_in(dtype type, vptr pdata)
+{
+    ADD_TO(ln);
+    switch(type)
+    {
+    case DNUM: /*  Numeric literal (always passed as a double)               */
+        LAST(ln)->type = LLIT;
+        LAST(ln)->index = lt.used;           /* Offset to literal            */
+        plt(lt.used + ALLOC_SIZE(pTFL) - 1); /* Make room                    */
+
+        /*                                                                   */
+        /*  Store literal in the target data type format                     */
+        /*                                                                   */
+        switch (pTFL->type)
+        {
+        case eSHORT:
+            *((short *) lt.u.pArray + LAST(ln)->index) = (short) *pdata.pDNUM;
+            break;
+        case eLONG:
+            *((long *) lt.u.pArray + LAST(ln)->index) = (long) *pdata.pDNUM;
+            break;
+        case eFLOAT:
+            *((float *) lt.u.pArray + LAST(ln)->index) = (float) *pdata.pDNUM;
+            break;
+        case eDOUBLE:
+            *((double *) lt.u.pArray + LAST(ln)->index) = *pdata.pDNUM;
+            break;
+        case ePACKED:
+            QXXDTOP(lt.u.pArray + LAST(ln)->index,pTFL->prec, pTFL->scale,
+                *pdata.pDNUM);
+            break;
+        case eZONED:
+            QXXDTOZ(lt.u.pArray + LAST(ln)->index,pTFL->prec, pTFL->scale,
+                *pdata.pDNUM);
+            break;
+        default:
+            break;
+        }
+        break;
+
+    case DLIT: /*  Character literal                                         */
+        LAST(ln)->type = LLIT;
+        LAST(ln)->index = lt.used;           /*  Offset to literal           */
+        plt(lt.used + ALLOC_SIZE(pTFL) - 1); /*  Make room                   */
+
+        /*                                                                   */
+        /*  Store literal in the target data type format                     */
+        /*                                                                   */
+        switch (pTFL->type)
+        {
+        case eCHAR:
+            memcpy(lt.u.pArray + LAST(ln)->index, pdata.pDLIT, pTFL->prec);
+            if (pTFL->prec > strlen(pdata.pDLIT)) /*  Blank-fill if necess   */
+            {
+                memset(lt.u.pArray+LAST(ln)->index + strlen(pdata.pDLIT), ' ',
+                    pTFL->prec - strlen(pdata.pDLIT));
+            }
+            break;
+        case eZCHAR:
+            memcpy(lt.u.pArray + LAST(ln)->index, pdata.pDLIT, pTFL->prec);
+            if (pTFL->prec > strlen(pdata.pDLIT)) /*  Blank-fill if necess   */
+            {
+                memset(lt.u.pArray+LAST(ln)->index + strlen(pdata.pDLIT), ' ',
+                    pTFL->prec - strlen(pdata.pDLIT));
+            }
+            *(lt.u.pArray + LAST(ln)->index + pTFL->prec) = 0; /*  Null-term */
+            break;
+        case eVARCHAR:
+            *((short *) (lt.u.pArray + LAST(ln)->index)) = strlen(pdata.pDLIT);
+            memcpy(lt.u.pArray + LAST(ln)->index+2, pdata.pDLIT, pTFL->prec);
+            break;
+        default:
+            break;
+        }
+        break;
+
+    case DFLD: /* Field name. Check in source structure and system structures*/
+        {
+            int i, j;
+
+
+            /*                                                               */
+            /*  Search source structure field list                           */
+            /*                                                               */
+            j = NCODE(pdata.pDFLD);
+            sfl.u.pArray = pSST->aField;
+            sfl.used = sfl.allocated = pSST->nField;
+            if ((i = INDEX_OF(sfl,j)) != -1)
+            {
+                LAST(ln)->type = LFIELD;
+                LAST(ln)->index = i;
+                break;
+            }
+            /*                                                               */
+            /*  Search __INTERNAL structure (1) field list                   */
+            /*                                                               */
+            sfl.u.pArray = pst(1)->aField;
+            sfl.used = sfl.allocated = pst(1)->nField;
+            if ((i = INDEX_OF(sfl,j)) != -1)
+            {
+                LAST(ln)->type = LINT;
+                LAST(ln)->index = i;
+                break;
+            }
+            /*                                                               */
+            /*  Search SYSTEM structure (0) field list                       */
+            /*                                                               */
+            sfl.u.pArray = pst(0)->aField;
+            sfl.used = sfl.allocated = pst(0)->nField;
+            if ((i = INDEX_OF(sfl,j)) != -1)
+            {
+                LAST(ln)->type = LSYS;
+                LAST(ln)->index = i;
+                break;
+            }
+        }
+        break;
+
+    case DDFLT: /*  Default for type required                                */
+        LAST(ln)->type = LDFLT;
+        LAST(ln)->index = 0;
+        break;
+
+    case DHEX: /* Hex literal. Data comes in as a VARBIN.                    */
+        LAST(ln)->type = LLIT;
+        LAST(ln)->index = lt.used;           /* Offset to literal            */
+        plt(lt.used + ALLOC_SIZE(pTFL) - 1); /* Make room                    */
+        switch (pTFL->type)
+        {
+        /*  If target field is VARCHAR or VARBIN, then include length when   */
+        /*  storing the literal in the array                                 */
+        case eVARCHAR:
+        case eVARBIN:
+            memcpy(lt.u.pArray + LAST(ln)->index, pdata.pDLIT,
+                ALLOC_SIZE(pTFL));
+            break;
+        default:
+            memcpy(lt.u.pArray + LAST(ln)->index, pdata.pDHEX->data,
+                ALLOC_SIZE(pTFL));
+            if (pTFL->prec > pdata.pDHEX->len)  /*  Pad with blanks if necess*/
+            {
+                memset(lt.u.pArray + LAST(ln)->index + pdata.pDHEX->len, ' ',
+                    pTFL->prec - pdata.pDHEX->len);
+            }
+            break;
+        }
+        break;
+
+    case DNONE:
+        /*  No mapping for this field from this source                       */
+        LAST(ln)->type = LNONE;
+        LAST(ln)->index = 0;
+        break;
+
+    case DPARM:
+        /*  None required, will be filled in response to a STRUCT type       */
+        LAST(ln)->type = LPARM;
+        LAST(ln)->index = 0;
+        break;
+    }
+    cfno++;   /*  Next field                                                 */
+    return;
+}
+
+
+void end_map_in(void)
+{
+    /*                                                                       */
+    /*  Trim and store map field array                                       */
+    /*                                                                       */
+    TRIM(ln);
+    LAST(mp)->aLink = ln.u.pArray;
+    LAST(mp)->nLink = ln.used;
+    INIT(ln);                          /*  Reset link array                  */
+    TRIM(lt);
+    LAST(mp)->lit = lt.u.pArray;
+    INIT(lt);                          /*  Reset literal array               */
+    return;
+}
+
+/*---------------------------------------------------------------------------*/
+
+void end_script_in(void)
+{
+    TRIM(st);
+    master->apStruct = st.u.ppObj;
+    master->nStruct = st.used;
+    TRIM(ex);
+    master->aExt = ex.u.pArray;
+    TRIM(mp);
+    master->aMap = mp.u.pArray;
+    master->nMap = mp.used;
+    TRIM(dg);
+    master->apDgroup = dg.u.ppObj;
+    master->nDgroup = dg.used;
+
+    return;
+}

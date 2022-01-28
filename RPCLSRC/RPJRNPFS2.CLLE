@@ -1,0 +1,126 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPJRNPF   - Journal Back Office files                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP014  *CREATE    Date 11Jun01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP014 - Add function to journal files to specified journal */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JRN &JRNLIB &MSGID)
+
+/*  Parameters                                                      */
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+
+             DCL        VAR(&READCNT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&NOTJRNCNT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&DIFFERCNT) TYPE(*DEC) LEN(3 0)
+
+             DCL        VAR(&OLDPRTTXT) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&NEWPRTTXT) TYPE(*CHAR) LEN(30)
+
+             DCLF       FILE(QAFDPHY)
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Read the file of DSPFD o/p, counting the number of records,   +
+     the number that are not journalled and the number that are   +
+     journalled where the journal does not match the input values.  */
+             OVRDBF     FILE(QAFDPHY) TOFILE(QTEMP/QAFDPHY)
+
+LOOP01:      RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXITLOOP01))
+
+             CHGVAR     VAR(&READCNT) VALUE(&READCNT + 1)
+
+             IF         COND(&PHJRNL = 'N') THEN(DO)
+                CHGVAR     VAR(&NOTJRNCNT) VALUE(&NOTJRNCNT + 1)
+             ENDDO
+
+             IF         COND((&PHJRNL = 'Y') *AND                +
+                             (&PHJRNM *NE &JRN *OR         +
+                              &PHJRLB *NE &JRNLIB)) THEN(DO)
+                CHGVAR     VAR(&DIFFERCNT) VALUE(&DIFFERCNT + 1)
+             ENDDO
+
+             GOTO       CMDLBL(LOOP01)
+EXITLOOP01:
+
+/*  All okay                                                        */
+             IF         COND(&NOTJRNCNT = 0 *AND &DIFFERCNT = 0) +
+                          THEN(DO)
+                CHGVAR     VAR(&MSGID) VALUE('KCM6500')
+                GOTO       CMDLBL(ENDTESTS)
+             ENDDO
+
+/*  If all files not journalled                                     */
+             IF         COND(&READCNT = &NOTJRNCNT) THEN(DO)
+                CHGVAR     VAR(&MSGID) VALUE('KCM6501')
+                GOTO       CMDLBL(ENDTESTS)
+             ENDDO
+
+/*  If some files not journalled and no inconsistencies             */
+             IF         COND((&NOTJRNCNT *GT 0) *AND (&DIFFERCNT = +
+                          0)) THEN(DO)
+                CHGVAR     VAR(&MSGID) VALUE('KCM6502')
+                GOTO       CMDLBL(ENDTESTS)
+             ENDDO
+
+/*  If inconsistent journalling and . . .                           */
+             IF         COND(&DIFFERCNT *NE 0) THEN(DO)
+
+/*   . . . no files not journalled                                  */
+                IF         COND(&NOTJRNCNT = 0) THEN(DO)
+                   CHGVAR     VAR(&MSGID) VALUE('KCM6503')
+                ENDDO
+
+/*   . . . some files are not journalled                            */
+                IF         COND(&NOTJRNCNT *NE 0) THEN(DO)
+                   CHGVAR     VAR(&MSGID) VALUE('KCM6504')
+                ENDDO
+
+/*  Some sort of inconsistent journalling at all - produce report   */
+                RTVJOBA    PRTTXT(&OLDPRTTXT)
+                CHGVAR     VAR(&NEWPRTTXT) +
+                            VALUE(&JRNLIB *TCAT '/' *TCAT &JRN)
+                CHGJOB     PRTTXT(&NEWPRTTXT)
+                RUNQRY     QRY(RPJRNPFS) QRYFILE((QTEMP/QAFDPHY))
+                CHGJOB     PRTTXT(&OLDPRTTXT)
+
+                GOTO       CMDLBL(ENDTESTS)
+
+             ENDDO
+
+ ENDTESTS:
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPJRNPFS2') TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

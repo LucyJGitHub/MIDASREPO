@@ -1,0 +1,202 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPIFCFG   - Back Office interface configuration             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP026             Date 18Jul05              */
+/*                      CRP021             Date 13Mar03              */
+/*                      CRP020             Date 20Feb02              */
+/*                      CRP019             Date 16Dec02              */
+/*                      CRP013             Date 06Jun01              */
+/*                      CRP012             Date 18Dec00              */
+/*                      CRP011  *CREATE    Date 17Oct00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP026 - Commitment control parameters changed as part of   */
+/*                new Feeder work.                                   */
+/*                User specified Queue Manager added.                */
+/*       CRP021 - Enable Commitment Control to be optional.          */
+/*       CRP020 - Change monitoring for end by receiver change to be */
+/*                inside Feeder jobs rather than in a separate job.  */
+/*       CRP019 - Introduce a Monitor of the Feeder job              */
+/*       CRP013 - Added delay time and number of repeats             */
+/*       CRP012 - Misc items of tidy up                              */
+/*                - Interface library is always the subsystem lib    */
+/*                  so remove the Interface library                  */
+/*                - Grant MDBA authority to submit jobs under the    */
+/*                  System owning profile                            */
+/*       CRP011 - Enable Replication to interface to other           */
+/*                Back Office systems                                */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&REPSBS &IFLIB &DBLIB &JRNLIB +  *******/    /*CRP012*/
+/************             &ENTPGMLIB &PREFIX &USRPRF &PARMS)  *******/    /*CRP012*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB +
+/************             &ENTPGMLIB &PREFIX &USRPRF &PARMS)  *******/    /*CRP013*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +
+/************      FIX &USRPRF &PARMS &DLYTIME &NOOFRPTS)      /*CRP013*/ /*CRP019*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +          /*CRP020*/
+/************             &PREFIX &USRPRF &PARMS &DLYTIME &NOOFRPTS +     /*CRP020*/
+/************             &MONITORRQD &MNTRDELAY &MNTRTRIES)   /*CRP019*/ /*CRP020*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +          /*CRP021*/
+/************       &PREFIX &USRPRF &PARMS &DLYTIME &NOOFRPTS) /*CRP020*/ /*CRP021*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +          /*CRP026*/
+/************             &PREFIX &USRPRF &PARMS &DLYTIME &NOOFRPTS +     /*CRP026*/
+/************             &CMTCTLRQD)                          /*CRP021*/ /*CRP026*/
+             PGM        PARM(&REPSBS &MQMNAME &DBLIB &JRNLIB +
+                          &ENTPGMLIB &PREFIX &USRPRF &PARMS +
+                          &DLYTIME &NOOFRPTS &FEEDERPROC &SERVERCC)       /*CRP026*/
+/*  Parameters                                                      */
+             DCL        VAR(&REPSBS) TYPE(*CHAR) LEN(10)
+/************DCL        VAR(&IFLIB) TYPE(*CHAR) LEN(10)       *******/    /*CRP012*/
+             DCL        VAR(&MQMNAME) TYPE(*CHAR) LEN(48)                 /*CRP026*/
+             DCL        VAR(&DBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENTPGMLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&USRPRF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DLYTIME) TYPE(*CHAR) LEN(3)                  /*CRP013*/
+             DCL        VAR(&NOOFRPTS) TYPE(*CHAR) LEN(3)                 /*CRP013*/
+             DCL        VAR(&MONITORRQD) TYPE(*CHAR) LEN(4)               /*CRP019*/
+             DCL        VAR(&MNTRDELAY) TYPE(*CHAR) LEN(2)                /*CRP019*/
+             DCL        VAR(&MNTRTRIES) TYPE(*CHAR) LEN(3)                /*CRP019*/
+/************DCL        VAR(&CMTCTLRQD) TYPE(*CHAR) LEN(7)     /*CRP021*/ /*CRP026*/
+             DCL        VAR(&FEEDERPROC) TYPE(*CHAR) LEN(7)               /*CRP026*/
+             DCL        VAR(&SERVERCC) TYPE(*CHAR) LEN(4)                 /*CRP026*/
+
+/* 10-character versions of delay time and number of repeats */           /*CRP013*/
+             DCL        VAR(&DLYTIME_A) TYPE(*CHAR) LEN(10)               /*CRP013*/
+             DCL        VAR(&NOOFRPTS_A) TYPE(*CHAR) LEN(10)              /*CRP013*/
+
+/* Right-aligned versions of delay time and number of repeats */          /*CRP013*/
+             DCL        VAR(&DLYTIME_R) TYPE(*CHAR) LEN(10)               /*CRP013*/
+             DCL        VAR(&NOOFRPTS_R) TYPE(*CHAR) LEN(10)              /*CRP013*/
+
+             DCL        VAR(&ENTPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENTLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&DTAARALIB) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGVAR VAR(&DTAARALIB) VALUE(&REPSBS)
+
+/*  Put the supplied data into the specified data area.            */
+/*    The Interface library value will be the subsystem library     */    /*CRP012*/
+/************CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (1 10)) VALUE(&IFLIB)  /*CRP012*/
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (1 10)) VALUE(&REPSBS)
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (11 10)) VALUE(&DBLIB)
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (21 10)) VALUE(&JRNLIB)
+
+/*  The BO System entry program needs to be split up first         */
+             CHGVAR     VAR(&ENTPGM) VALUE(%SST(&ENTPGMLIB 1 10))
+             CHGVAR     VAR(&ENTLIB) VALUE(%SST(&ENTPGMLIB 11 10))
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (31 10)) VALUE(&ENTPGM)
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (41 10)) VALUE(&ENTLIB)
+
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (71 50)) VALUE(&PARMS)
+
+/*  Ensure the prefix fills all three bytes                        */
+             IF COND(%SST(&PREFIX 2 1) *EQ ' ') THEN(DO)
+                CHGVAR    VAR(%SST(&PREFIX 2 1) ) VALUE('1')
+             ENDDO
+             IF COND(%SST(&PREFIX 3 1) *EQ ' ') THEN(DO)
+                CHGVAR    VAR(%SST(&PREFIX 3 1) ) VALUE('1')
+             ENDDO
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (51 3)) VALUE(&PREFIX)
+
+/* The delay time and number of retries values need to be +
+   right-aligned in their (10-byte) spaces in the data area, or +
+   later RPG procedures will get decimal-data errors. */                  /*CRP013*/
+             CHGVAR     VAR(&DLYTIME_A) VALUE(&DLYTIME)                   /*CRP013*/
+             CHGVAR     VAR(&NOOFRPTS_A) VALUE(&NOOFRPTS)                 /*CRP013*/
+             CALLPRC    PRC(RIGHTALIGNFIXED10) PARM(&DLYTIME_A) +
+                          RTNVAL(&DLYTIME_R)                              /*CRP013*/
+             CALLPRC    PRC(RIGHTALIGNFIXED10) PARM(&NOOFRPTS_A) +
+                          RTNVAL(&NOOFRPTS_R)                             /*CRP013*/
+
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (121 10)) +
+                          VALUE(&DLYTIME_R)                               /*CRP013*/
+
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (131 10)) +
+                          VALUE(&NOOFRPTS_R)                              /*CRP013*/
+
+/*    Grant MDBA authority to submit jobs under the System owning   */    /*CRP012*/
+/*     profile                                                      */    /*CRP012*/
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (61 10)) VALUE(&USRPRF)
+                                                                          /*CRP012*/
+             GRTOBJAUT  OBJ(&USRPRF) OBJTYPE(*USRPRF) USER(MDBA) +
+                          AUT(*OBJOPR *READ *EXECUTE)                     /*CRP012*/
+
+/**If*entered, the Monitor delay and number of restarts need to be +      /*CRP020*/
+/**right-aligned and zero padded before being put in the data area  */    /*CRP020*/
+/************IF         COND(&MONITORRQD *EQ '*NO') THEN(DO)   /*CRP019*/ /*CRP020*/
+/************   CHGVAR     VAR(&MNTRDELAY) VALUE('  ')         /*CRP019*/ /*CRP020*/
+/************   CHGVAR     VAR(&MNTRTRIES) VALUE('   ')        /*CRP019*/ /*CRP020*/
+/************   GOTO       CMDLBL(MNTRFLDSOK)                  /*CRP019*/ /*CRP020*/
+/************ENDDO                                             /*CRP019*/ /*CRP020*/
+/************IF         COND(%SST(&MNTRDELAY 2 1) *EQ ' ') THEN(DO)       /*CRP020*/
+/************   CHGVAR     VAR(%SST(&MNTRDELAY 2 1)) +                    /*CRP020*/
+/************                VALUE(%SST(&MNTRDELAY 1 1))       /*CRP019*/ /*CRP020*/
+/************   CHGVAR     VAR(%SST(&MNTRDELAY 1 1)) VALUE('0')/*CRP019*/ /*CRP020*/
+/************ENDDO                                             /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+/************IF         COND(%SST(&MNTRTRIES 3 1) *EQ ' ') THEN(DO)       /*CRP020*/
+/************   CHGVAR     VAR(%SST(&MNTRTRIES 2 2)) +                    /*CRP020*/
+/************                VALUE(%SST(&MNTRTRIES 1 2))       /*CRP019*/ /*CRP020*/
+/************   CHGVAR     VAR(%SST(&MNTRTRIES 1 1)) VALUE('0')/*CRP019*/ /*CRP020*/
+/************ENDDO                                             /*CRP019*/ /*CRP020*/
+/************IF         COND(%SST(&MNTRTRIES 3 1) *EQ ' ') THEN(DO)       /*CRP020*/
+/************   CHGVAR     VAR(%SST(&MNTRTRIES 2 2)) +                    /*CRP020*/
+/************                VALUE(%SST(&MNTRTRIES 1 2))       /*CRP019*/ /*CRP020*/
+/************   CHGVAR     VAR(%SST(&MNTRTRIES 1 1)) VALUE('0')/*CRP019*/ /*CRP020*/
+/************ENDDO                                                        /*CRP020*/
+/*MNTRFLDSOK:**                                                /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+/************CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (141 1)) +             /*CRP020*/
+/************             VALUE(%SST(&MONITORRQD 2 1))         /*CRP019*/ /*CRP020*/
+/************CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (143 2)) +             /*CRP020*/
+/************             VALUE(&MNTRDELAY)                    /*CRP019*/ /*CRP020*/
+/************CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (146 3)) +             /*CRP020*/
+/************             VALUE(&MNTRTRIES)                    /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+                                                                          /*CRP021*/
+/************CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (151 7)) +             /*CRP026*/
+/************             VALUE(&CMTCTLRQD)                    /*CRP021*/ /*CRP026*/
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (151 7)) +
+                          VALUE(' ')                                      /*CRP026*/
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (171 7)) +
+                          VALUE(&FEEDERPROC)                              /*CRP026*/
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (181 4)) +
+                          VALUE(&SERVERCC)                                /*CRP026*/
+             CHGDTAARA  DTAARA(&DTAARALIB/RPBOIFDA (191 48)) +
+                          VALUE(&MQMNAME)                                 /*CRP026*/
+                                                                          /*CRP021*/
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPIFCFG') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

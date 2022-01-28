@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDRGC                                       */
+/*          Program Title - Send message to MDBAJOBCTL                   */
+/*          Creation Date - 22/08/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  This routine is called for registration/completion messages to be    */
+/*  sent to the MDBAJOBCTL data queue                                    */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*  12Dec21         MD058809      MQ9 Compatibility Patch Fix            */
+/*-----------------------------------------------------------------------*/
+             PGM        PARM(&DATA)
+
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ADDED) TYPE(*CHAR) LEN(1) VALUE(Y)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(113)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASEE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&UNIT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(5 0) VALUE(113)
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(DONE))
+             RTVJOBA    JOB(&JOB) NBR(&JOBNO)
+             RTVDTAARA  DTAARA(KMDBASE) RTNVAR(&BASEE)
+             MONMSG     CPF0000
+             ADDLIBLE   LIB(&BASEE) POSITION(*LAST)
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ADDED) +
+                          VALUE('N'))
+
+             CALL       PGM(KMDICI) PARM('INITBO' '   ')
+             CALL       PGM(KMDICI) PARM('GETUNIT' &UNIT)
+             CALL       PGM(KMDICI) PARM('SBSNAME ' &SBS)
+
+             CHGVAR     VAR(&MSG) VALUE('                    ' *CAT +
+                          &JOB *CAT &JOBNO *CAT &UNIT *CAT +
+                          '          ' *CAT &DATA)
+             CALL       PGM(QSNDDTAQ) PARM('MDBAJOBCTL' &SBS &LEN &MSG)
+             IF         COND(&ADDED *EQ 'Y') THEN(DO)
+                RMVLIBLE &BASEE
+                MONMSG     MSGID(CPF0000)
+                ENDDO
+DONE:
+             IF         COND(&ERR *EQ '1') THEN(RETURN)
+             CHGVAR     VAR(&ERR) VALUE('1')
+
+             ENDPGM

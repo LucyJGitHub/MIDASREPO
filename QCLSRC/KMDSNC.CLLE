@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDSNC                                       */
+/*          Program Title - Send messages back to previous program       */
+/*          Creation Date - 21/10/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  Allow messages on program message queues to pass up the stack        */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*  12Dec21         MD058809      MQ9 Compatibility Patch Fix            */
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+             PGM        PARM(&PGM &TOPGMQ &MSGTYPE &RMV)
+
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOPGMQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MSGTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RMV) TYPE(*CHAR) LEN(4)
+/*                                                                  */
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
+/*                                                                  */
+/*   Global error message monitor                                   */
+/*                                                                  */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC( +
+               GOTO       CMDLBL(ERROR))
+/*                                                                  */
+/*   Top of processing loop ...                                     */
+/*                                                                  */
+/*   Retrieve a message from the message queue, quit when no        */
+/*   messages available                                             */
+/*                                                                  */
+ A10:        RCVMSG     PGMQ(*SAME &PGM) RMV(&RMV) MSG(&MSG) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID) MSGF(&MSGF) +
+                          MSGFLIB(&MSGFLIB)
+             IF         COND(&MSG *EQ ' ') THEN( +
+               RETURN)
+
+/*                                                                  */
+/*   If the message file parameter is blank then the retrieved      */
+/*   message is not a stored message.   All that can be done is to  */
+/*   send the message back in its current form                      */
+/*                                                                  */
+             IF         COND(&MSGF *EQ ' ') THEN( +
+               SNDPGMMSG  MSG(&MSG) TOPGMQ(&TOPGMQ &PGM) +
+                          MSGTYPE(&MSGTYPE))
+             ELSE SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+MSGDTA(&MSGDTA) TOPGMQ(&TOPGMQ &PGM) MSGTYPE(&MSGTYPE)
+/*                                                                  */
+/*   Go and get the next message                                    */
+/*                                                                  */
+             GOTO       CMDLBL(A10)
+/*                                                                  */
+/*   Error section                                                  */
+/*                                                                  */
+ ERROR:      RCVMSG     MSG(&MSG)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(&MSG *NE ' ') THEN( +
+               DO)
+               SNDPGMMSG  MSG(&MSG)
+               MONMSG     MSGID(CPF0000)
+               GOTO       CMDLBL(ERROR)
+               ENDDO
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA( +
+                        'Errors occured during execution of +
+                         KMDSNC command') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+/*                                                                  */
+/*   End                                                            */
+/*                                                                  */
+             ENDPGM

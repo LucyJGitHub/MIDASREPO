@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*----------------------------------------------------------------*/
+   /*              System Name - EQUATION                            */
+   /*              Module Name - Trade Innovation                    */
+   /*                                                                */
+   /*             Program Name - KCMSRC                              */
+   /*            Program Title - TI Subsystem level check            */
+   /*                                                                */
+   /*            Creation Date - 15/09/1997                          */
+   /*      Last Amendment Date -   /  /                              */
+   /*----------------------------------------------------------------*/
+   /*  Purpose                                                       */
+   /*  ~~~~~~~                                                       */
+   /*  Validate TI subsystem and return level of installed software  */
+   /*                                                                */
+   /*  Subsystem description must exist (QGPL). Library 'subsystem'  */
+   /*  must exist and contain:                                       */
+   /*                                                                */
+   /*  1. Dataarea KMDSBS containing 'subsystem'                     */
+   /*  2. Datatara KMDREL containing name of most recently installed */
+   /*     software release.                                          */
+   /*                                                                */
+   /*  Returns release name and 'Y' flag if all ok.                  */
+   /*          'N' if no subsystem description.                      */
+   /*          '?' if 'subsystem' library missing or incomplete.     */
+   /*----------------------------------------------------------------*/
+   /*  Change Control                                                */
+   /*  ~~~~~~~~~~~~~~                                                */
+   /*  Date            Initials      Amendment                       */
+   /*  ~~~~            ~~~~~~~~      ~~~~~~~~~                       */
+   /*  12Dec21         MD058809      MQ9 Compatibility Patch Fix     */
+   /*  15/09/97        JRE           Created                         */
+   /*                                                                */
+   /*----------------------------------------------------------------*/
+   /*================================================================*/
+   /*  START OF PROGRAM                                              */
+   /*================================================================*/
+             /*                                                      */
+             PGM        PARM(&SBS &REL &FLAG)
+
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&C10) TYPE(*CHAR) LEN(10)
+
+             CHGVAR     VAR(&FLAG) VALUE('N')
+             CHKOBJ     OBJ(&SBS) OBJTYPE(*SBSD)
+             MONMSG     MSGID(CPF0000) EXEC(RETURN)
+
+             CHGVAR     VAR(&FLAG) VALUE('?')
+             CHKOBJ     OBJ(QSYS/&SBS) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF0000) EXEC(RETURN)
+             RTVDTAARA  DTAARA(&SBS/KMDSBS) RTNVAR(&C10)
+             MONMSG     MSGID(CPF0000) EXEC(RETURN)
+             IF         COND(&C10 *NE &SBS) THEN(RETURN)
+             RTVDTAARA  DTAARA(&SBS/KMDREL) RTNVAR(&REL)
+             MONMSG     MSGID(CPF0000) EXEC(RETURN)
+
+             CHGVAR     VAR(&FLAG) VALUE('Y')
+             RETURN
+             ENDPGM

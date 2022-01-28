@@ -1,0 +1,144 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*START                                                      */
+   /*                                                           */
+   /*             System Name - Meridian                        */
+   /*             Module Name - Access utility for ENIGMA       */
+   /*                                                           */
+   /*            Program Name - KMDUTC                          */
+   /*           Program Title -                                 */
+   /*           Creation Date - 28/12/94                        */
+   /*     Last Amendment Date - 15/08/97                        */
+   /*-----------------------------------------------------------*/
+   /*  Change Control                                           */
+   /*  ~~~~~~~~~~~~~~                                           */
+   /*  Date     Initials      Amendment                         */
+   /*  ~~~~     ~~~~~~~~      ~~~~~~~~~                         */
+   /*  12Dec21  MD058809      MQ9 Compatibility Patch Fix       */
+   /*  010396   JRE           Extend 'SBS' option               */
+   /*  020896   JRE           CPF msg extract support           */
+   /*  100397   JRE           Multiple subsystem support        */
+   /*  270597   JRE           Back office independence          */
+   /*-----------------------------------------------------------*/
+   /*  Purpose                                                  */
+   /*  ~~~~~~~                                                  */
+   /*  Return Back Office information to 'C' programs           */
+   /*-----------------------------------------------------------*/
+/*=================================================================*/
+/*  START OF PROGRAM                                               */
+/*=================================================================*/
+
+/* P1 identifies the request                                       */
+/* P2 usually carries data to this clp                     */
+/* P3 usually carries data from the clp                    */
+
+             PGM        PARM(&P1 &P2 &P3)
+             DCL        VAR(&P1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&P2) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&P3) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&P4) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&N) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&OFFS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(112)
+             DCL        VAR(&INTER) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPF) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&NULL) TYPE(*CHAR) LEN(1) VALUE(X'00')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&D5) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&C5) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&DTAARA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UMNM) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(100)
+
+/* Return the name of the subsystem in which the job is running */
+             IF         COND(&P1 *EQ 'SBS       ') THEN(DO)
+                  RTVDTAARA  DTAARA(KMDSBS) RTNVAR(&P4) /* If interactive */
+                  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(NODA))
+                  CHGVAR     VAR(%SST(&P3 1 10)) VALUE(&P4)
+                  RETURN
+NODA:
+                  RTVJOBA    TYPE(&INTER)
+                  IF         COND(&INTER *EQ '0') THEN(DO)
+                       CALL       PGM(QUSRJOBI) PARM(&DATA X'00000070' +
+                                    'JOBI0200' '*                         ' +
+                                    '                ')
+                       CHGVAR     VAR(%SST(&P3 1 10)) VALUE(%SST(&DATA 63 10))
+                       RETURN
+                       ENDDO
+                  ENDDO
+
+/* Retrieve job number */
+             IF         COND(&P1 *EQ 'JOBN      ') THEN(DO)
+                  RTVJOBA    NBR(&P4)
+                  CHGVAR     VAR(%SST(&P3 1 6)) VALUE(%SST(&P4 1 6))
+                  RETURN
+                  ENDDO
+
+/* Find Base library*/
+             IF         COND(&P1 *EQ 'BASE      ') THEN(DO)
+                  RTVOBJD    OBJ(KMDBASE) OBJTYPE(*DTAARA) RTNLIB(&P4)
+                  CHGVAR     VAR(%SST(&P3 1 10)) VALUE(&P4)
+                  RETURN
+                  ENDDO
+
+/* Find MDBA Base library*/
+             IF         COND(&P1 *EQ 'MDBA      ') THEN(DO)
+                  RTVDTAARA  DTAARA(KMDBASE) RTNVAR(&P4)
+                  CHGVAR     VAR(%SST(&P3 1 10)) VALUE(&P4)
+                  RETURN
+                  ENDDO
+
+/* Retrieve CPF message text */
+
+             IF         COND(&P1 *EQ 'CPF') THEN(DO)
+                  CHGVAR     VAR(&MSGID) VALUE(%SST(&P3 1 7))
+                  CHGVAR     VAR(%SST(&P3 8 1)) VALUE(' ')
+                  RTVMSG     MSGID(&MSGID) MSGF(QCPFMSG) MSGDTA(&P2) +
+                               MSG(&CPF) MSGLEN(&MSGLEN)
+                  MONMSG     MSGID(CPF0000) EXEC(DO)
+                       CHGVAR     VAR(&CPF) VALUE('Message text not found.')
+                       CHGVAR     VAR(&MSGLEN) VALUE(23)
+                       ENDDO
+
+                  CHGVAR     VAR(%SST(&P3 9 &MSGLEN)) VALUE(%SST(&CPF 1 +
+                               &MSGLEN))
+                  CHGVAR     VAR(&MSGLEN) VALUE(&MSGLEN + 8)
+                  CHGVAR     VAR(%SST(&P3 &MSGLEN 1)) VALUE(&NULL)
+                  RETURN
+                  ENDDO
+
+/* Retrieve job name */
+             IF         COND(&P1 *EQ 'JOB       ') THEN(DO)
+                  RTVDTAARA  DTAARA(QTEMP/JOBNAME) RTNVAR(&P4)
+                  MONMSG     MSGID(CPF0000) EXEC(RTVJOBA JOB(&P4))
+                  CHGVAR     VAR(%SST(&P3 1 10)) VALUE(&P4)
+                  RETURN
+                  ENDDO
+
+/* Retrieve debug level */
+             IF         COND(&P1 *EQ 'LEVEL     ') THEN(DO)
+                  CHGVAR     VAR(&DTAARA) VALUE('KMDLEV')
+                  GOTO       CMDLBL(GETDA)
+                  ENDDO
+
+/* Error if we get here */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Parameter 1 (' *TCAT ') not +
+                          recognised by KMDUTC.') MSGTYPE(*ESCAPE)
+             RETURN
+
+GETDA:
+             RTVDTAARA  DTAARA(&DTAARA) RTNVAR(&D5)
+             MONMSG     MSGID(CPF0000)
+             CHGVAR     VAR(%BIN(&P3 1 2)) VALUE(&D5)
+
+             ENDPGM

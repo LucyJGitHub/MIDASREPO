@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPJRNPF   - Journal Back Office files                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP014  *CREATE    Date 11Jun01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP014 - Add function to journal files to specified journal */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JRN &JRNLIB)
+
+/*  Parameters                                                      */
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(QAFDPHY)
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Read the file of DSPFD o/p, and journal any files that are not +
+     already journalled.                                            */
+             OVRDBF     FILE(QAFDPHY) TOFILE(QTEMP/QAFDPHY)
+
+LOOP01:      RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXITLOOP01))
+
+             IF         COND(&PHJRNL = 'N') THEN(DO)
+                STRJRNPF   FILE(&PHLIB/&PHFILE) JRN(&JRNLIB/&JRN) +
+                             IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             ENDDO
+
+             GOTO       CMDLBL(LOOP01)
+EXITLOOP01:
+
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPJRNPFS3') TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

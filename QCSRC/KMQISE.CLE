@@ -1,0 +1,53 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "kmqimh.h"
+#include "kmdboh.h"
+#include "kmdenh.h"
+
+int init_selection(char*   product,    /* Product to be mapped     */
+                   char*   env,        /* Unit                     */
+                   char*   process,    /* process name             */
+                   tinit_t ptinit,     /* Target initialisation fn */
+                   void*   puser,      /* Source to target info    */
+                   selcb*  psel)       /* Selection control block  */
+{
+    int errors;
+
+    if ((errors = _init_selection(product,env,process,ptinit,puser,psel)) == 0)
+    {
+        /*  Work out message header based on message name */
+        char *pLength = GETENV("KMDLEN");
+        short nLength = 32;
+
+        if (pLength != NULL)
+        {
+            nLength = (short) atoi(pLength);
+            if (nLength == 0)
+            {
+                nLength = 32;
+            }
+            free(pLength);
+        }
+
+        psel->master->dholen = 74 + 2 * nLength;
+   }
+   return errors;
+}

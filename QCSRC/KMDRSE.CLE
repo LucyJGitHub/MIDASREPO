@@ -1,0 +1,965 @@
+/********************************************************************
+ *STD *  CM_REPN
+ **********************************************************************
+ **********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMDRSE   - Product replicator
+ *
+ *       (c) Misys International Banking Systems Ltd. 2001
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. 128748 Supportforce Date 13Sep06
+ *                      155526 (Touchpaper) Date 05Jan05
+ *                      CRP013             Date 06Jun01
+ *                      166901             Date 02Sep99
+ *
+ **********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       128748 - Change the processing of the 'wait and retry' function,
+ *                when a queue full condition happens, to store the message
+ *                in memory.  The old processing relied upon the queue
+ *                being journalled which was a reasonable assumption when
+ *                the code was written but is not so now.  If the queue
+ *                is not journalled the old processing would lose messages.
+ *       155526 - During investigation of 155526, all of the C code was
+ *                compiled and it was noticed that more code than was
+ *                correct had been commented out by 166901, as the
+ *                comments were not termintaed correctly.
+ *                Fix is simply to terminate each comment line added by 166901.
+ *       CRP013 - Added delay/retry processing for sending data,
+ *                to cater for eg MQ queues being full.
+ *       166901 - Correct processing for Deletes when a Before image
+ *                is present.
+ *
+ **********************************************************************
+ ******************************************************************************
+
+******************************************************************************/
+
+
+/*                                                                           */
+/*                                                                           */
+/*  Replication Server main() function implementation                        */
+/*                                                                           */
+/*                                                                           */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <xxcvt.h>
+
+#include "kmdslh.h"
+#include "kmdlgh.h"
+#include "kmdfeh.h"
+#include "kmdifh.h"
+#include "kmdboh.h"
+#include "kmdcfh.h"
+#include "kmdrfh.h"
+#include "kmdenh.h"
+#include "MQ_PR.H"                                                             /*128748*/
+
+/* Protoypes */                                                     /*CRP013*/ /*128748*/
+/*void*rollback_queue_manager_with_wait(void);    */                /*CRP013*/ /*128748*/
+/*void*SETTIMESTRIED(int*timesTried);             */                /*CRP013*/ /*128748*/
+
+/* Main control block */
+
+selcb sel = {NULL,NULL,NULL,NULL,0};
+
+/* Globals */
+
+static char product[9] = "        ";
+static char unit[4] = "   ";
+static unsigned short BEFORE;
+static unsigned short BEFOREX = -1;
+static unsigned short BEFORER = -1;
+static unsigned short PROP;
+static int file_count;
+Struct * pcS1 = NULL;
+static Field * pcF1;
+static Sids * cSids = NULL;
+static qhandle inq = NULL;
+static unsigned short quit = '00';
+int current_file;
+static short cstream = 0;   /* Current department (starts at 1) */
+static short ustream = 0;   /* User selected stream */
+#define CDSCB (sel.pdscb[cstream - 1]) /* Current department control blk */
+static s_item * pSTACK;     /* Instruction stack for current select */
+static char * saved_before = NULL;
+static char * __TNAME;
+
+/*static*BOOL*rollbackReq*= FALSE; *//* Rollback requested. */      /*CRP013*/ /*128748*/
+
+
+
+/* Mapped records come here for transmission */
+
+static int receivedata(Master * master,
+                       unsigned short cstream,
+                       unsigned long tid,
+                       char * data,
+                       unsigned short len,
+                       Struct * pstruct)
+#define N__(x) (sel.master->names + x)
+{
+
+    int retCode = 0;                                                           /*CRP013*/
+
+    /* If a before image, just save for later comparison */
+
+    if ((pstruct->classno == BEFORE) ||
+        (pstruct->classno == BEFORER))
+    {
+        CDSCB.before = data;
+        return;
+    }
+/********* Start of 166901                                                             */
+/***if*(pstruct->classno*==*BEFOREX)                                                   */
+    if ((pstruct->classno == BEFOREX) && (*(data + master->dholen) != 'D'))
+/********* End   of 166901                                                             */
+    {
+        CDSCB.beforex = data;
+        CDSCB.bxlen = len;
+        FillInHeader(master,N__(pstruct->name), product, data);
+        return;
+    }
+
+    /* If a before image saved, need to see if this message
+    is different */
+
+    if (CDSCB.before != NULL)
+    {
+        /* NOTE first 2 bytes are struct ids so always different */
+        if (memcmp(CDSCB.before + 2 + master->dholen,
+            data + 2 + master->dholen ,len - 2 - master->dholen) == 0)
+        {
+            /* Data is the same, drop everything and run */
+
+            free(data);
+            free(CDSCB.before);
+            free(CDSCB.beforex);
+            CDSCB.before = NULL;
+            CDSCB.beforex = NULL;
+            return;
+        }
+        else
+        {
+            free(CDSCB.before);
+            CDSCB.before = NULL;
+            if (CDSCB.beforex != NULL)
+            {
+/************** write_to_queue(CDSCB.queue,CDSCB.beforex, */                   /*CRP013*/
+/**************     CDSCB.bxlen,MID_QPRI); ***/                                /*CRP013*/
+/***************retCode*=* write_to_queue(CDSCB.queue,CDSCB.beforex,  CRP013*/ /*128748*/
+/*******************CDSCB.bxlen,MID_QPRI);        */                /*CRP013*/ /*128748*/
+
+/*************** **If*the*write failed, request a rollback; this is a *CRP013*   128748*/
+/******************kludge, but seems the only sane way to communicate *CRP013*   128748*/
+/******************within*this spaghetti.                             *CRP013*   128748*/
+/**************** ********      */                                   /*CRP013*//*128748*/
+/***************if*(retCode != 0)*/                                  /*CRP013*//*128748*/
+/***************{*********      */                                   /*CRP013*//*128748*/
+/*******************rollbackReq = TRUE; */                           /*CRP013*//*128748*/
+/***************}*********      */                                   /*CRP013*//*128748*/
+/*************************      */                                             /*128748*/
+/***************else******      */                                   /*CRP013*//*128748*/
+/***************{*********      */                                   /*CRP013*//*128748*/
+/*******************rollbackReq = FALSE; */                          /*CRP013*//*128748*/
+/***************}*********      */                                   /*CRP013*//*128748*/
+
+                write_to_queue_with_wait(CDSCB.queue,CDSCB.beforex,            /*128748*/
+                    CDSCB.bxlen,MID_QPRI);                                     /*128748*/
+
+                free(CDSCB.beforex);
+                CDSCB.beforex = NULL;
+            }
+        }
+    }
+
+    /* Send the data to the queue */
+
+    LOGTRACE
+    {
+        sprintf(log_buff, "Message: %s Product %s Length %d", N__(pstruct->name), product, len);
+        TRACEOUT(log_buff);
+    }
+
+    FillInHeader(master, N__(pstruct->name), product, data);
+/** write_to_queue(CDSCB.queue,data,len,MID_QPRI); ***/                        /*CRP013*/
+/***retCode*=*write_to_queue(CDSCB.queue,data,len,MID_QPRI); */     /*CRP013*/ /*128748*/
+
+/*** **If*the*write*failed, request a rollback */                   /*CRP013*/ /*128748*/
+/***if*(retCode*!=*0)*****      */                                  /*CRP013*/ /*128748*/
+/***{*********************      */                                  /*CRP013*/ /*128748*/
+/******* *****************      */                                             /*128748*/
+/**********This*is*a*kludge, but*seems the only sane way */                    /*128748*/
+/**********to*communicate*within*this spaghetti. */                            /*128748*/
+/******** ****************      */                                  /*CRP013*/ /*128748*/
+/*******rollbackReq*=*TRUE;     */                                             /*128748*/
+/*************************      */                                             /*128748*/
+/***}*********************      */                                             /*128748*/
+/*************************      */                                             /*128748*/
+/*** *********************      */                                             /*128748*/
+/******If*the*write*was*successful, set the number of times */                 /*128748*/
+/******tried*to*0,*so*it*will start out correctly for subsequent calls */      /*128748*/
+/**** ********************      */                                  /*CRP013*/ /*128748*/
+/***else******************      */                                  /*CRP013*/ /*128748*/
+/***{*********************      */                                  /*CRP013*/ /*128748*/
+/*******rollbackReq*=*FALSE;    */                                  /*CRP013*/ /*128748*/
+/***}*********************      */                                             /*128748*/
+    write_to_queue_with_wait(CDSCB.queue,data,len,MID_QPRI);                   /*128748*/
+
+    free(data);
+}
+
+/* Locate name of field starting at a particular offset (for
+   debugging) */
+
+char * fname(short offset)
+{
+    int i = 0;
+
+    if (pcS1 == NULL)
+    {
+        return NULL;
+    }
+    while(pcS1->aField[i].offset < offset)
+    {
+        i++;
+    }
+    if (pcS1->aField[i].offset != offset)
+    {
+        return NULL;
+    }
+    return N__(pcS1->aField[i].name);
+}
+
+Sids * find_family(char * file)
+{
+
+    if (cSids != NULL)
+    {
+        if (strcmp(N__(cSids->pStruct->name),file) == 0)
+        {
+            return (cSids);
+        }
+    }
+
+    for (current_file = 0;current_file < file_count;current_file++)
+    {
+        if (strcmp(N__(sel.pSids[current_file].pStruct->name),file) == 0)
+        {
+            cSids = sel.pSids + current_file;
+            pcS1 = cSids->pStruct;
+            return cSids;
+        }
+    }
+    cSids = NULL;
+    return NULL;
+}
+
+/*******************************************************************/
+/*  Call back routine from CLAUSE compiler to find field           */
+/*******************************************************************/
+s_item * get_item(char *name)
+{
+    unsigned i;
+    static s_item titem = {0,0,0,0,0,0,0};
+    Master * master;
+    master = sel.master;
+    if (strlen(name) > 10)
+    {
+        return NULL;
+    }
+    if (pcS1 == NULL)
+    {
+        return NULL;
+    }
+    for (i = 0; i < pcS1->nField;i++)
+    {
+        if (strcmp(name,master->names + FIELD1(i).name) == 0)
+        {
+            titem.length = pcF1->prec;
+            titem.offset = pcF1->offset;
+            switch(btype(pcF1))
+            {
+            case eCHAR:
+                titem.type = CHAR;
+                break;
+            case eSHORT:
+                titem.type = SHORT;
+                break;
+            case eLONG:
+                titem.type = LONG;
+                break;
+            case eFLOAT:
+                titem.type = FLOAT;
+                break;
+            case eDOUBLE:
+                titem.type = DOUBLE;
+                break;
+            case ePACKED:
+                titem.type = PACKED;
+                titem.length = (unsigned short)
+                    (pcF1->prec * 256 + pcF1->scale);
+                break;
+            case eZONED:
+                titem.type = ZONED;
+                titem.length = (unsigned short)
+                    (pcF1->prec * 256 + pcF1->scale);
+                break;
+            default:
+                return NULL;
+            }
+            return &titem;
+        }
+    }
+    return NULL;
+}
+
+/*******************************************************************/
+/*  Call back routine from CLAUSE compiler to find ext field type  */
+/*******************************************************************/
+s_item * get_ext_item(char *name)
+{
+    unsigned i;
+    static s_item titem = {0,0,0,0,0,0,0};
+    short exttype = 0;
+    short extlen = 0;
+    short extdps = 0;
+    char field[11];
+
+    if (strlen(name) > 11)
+    {
+        return NULL;
+    }
+    memset(field, ' ', 10);
+    memcpy(field, name, strlen(name));
+    if (get_ext_data_type(field, &exttype, &extlen, &extdps) == 1)
+    {
+        switch(exttype)
+        {
+        case 0:
+            titem.type = CHAR;
+            titem.length = extlen;
+            break;
+        case 1:
+            titem.type = SHORT;
+            titem.length = sizeof(short);
+            break;
+        case 2:
+            titem.type = LONG;
+            titem.length = sizeof(long);
+            break;
+        case 3:
+            titem.type = FLOAT;
+            titem.length = sizeof(float);
+            break;
+        case 4:
+            titem.type = DOUBLE;
+            titem.length = sizeof(double);
+            break;
+        case 5:
+            titem.type = PACKED;
+            titem.length = (unsigned short)
+                (extlen * 256 + extdps);
+            break;
+        case 6:
+            titem.type = ZONED;
+            titem.length = (unsigned short)
+                (extlen * 256 + extdps);
+            break;
+        default:
+            return NULL;
+        }
+        return &titem;
+    }
+    return NULL;
+}
+
+/*******************************************************************/
+/*  Call back routine from selection runtime to get ext field data */
+/*******************************************************************/
+char *get_ext_item_data(s_item * psitem, char *buffer)
+{
+    char data[256];
+    char field[11];
+    short buflen = 0;
+    char *name;
+
+    if (psitem->type == PACKED)
+    {
+        buflen = ((psitem->length/256) + 1)/2;
+    }
+    else if (psitem->type == ZONED)
+    {
+        buflen = psitem->length / 256;
+    }
+    else
+    {
+        buflen = psitem->length;
+    }
+
+    name = buffer + buflen;
+    memset(field, ' ', 10);
+    memcpy(field, name, strlen(name));
+
+    if (get_ext_data(field, data) == 1)
+    {
+        memcpy(buffer, data, buflen);
+    }
+    return buffer;
+}
+
+/* Function to see if record required */
+
+BOOL record_required(dscb * d,char * data)
+{
+    s_control_t * p;
+    int i;
+
+    if (d == NULL)   /* If no dscb then using overall selections */
+    {
+        p = sel.plist;
+    }
+    else
+    {
+        p = d->plist;
+    }
+
+    /* If no selections for current file, then accept unconditionally */
+
+    if (p[current_file].pSTACK == NULL)
+    {
+        return TRUE;
+    }
+
+    /* Must use copy of instruction stack as this gets 'eaten' each
+    time */
+
+    pSTACK = (s_item *) malloc(sizeof(s_item) *
+        p[current_file].icount);
+    memmove(pSTACK,p[current_file].pSTACK,sizeof(s_item) *
+        p[current_file].icount);
+    i = evaluate(data,p[current_file].pWORK,pSTACK);
+    free(pSTACK);
+    return i;
+}
+
+void send_to_dept(char * data,int dlen,unsigned short type,
+                   unsigned long tranid)
+{
+    int sstream = 0;
+    static char * pBEFORE;
+    BOOL Bstat;
+    int slo = 1;
+    int shi;
+
+    shi = sel.nstream;
+
+    /* If user selected stream, then set limits */
+
+    cstream = 0;
+   if (ustream != 0)
+   {
+       slo = shi = ustream;
+   }
+   switch (type)
+   {
+   case S_ADD:
+   case S_BUFFERED_ADD:
+   case S_DELETE:
+       /* If default selection fails, then return immediately */
+
+       if (record_required(NULL,data) == FALSE)
+       {
+           return;
+       }
+
+       /* Check individual stream selection */
+
+       for (cstream = slo;cstream <= shi;cstream++)
+       {
+           if (CDSCB.send = record_required(&CDSCB,data) == TRUE)
+               sstream++;
+       }
+
+       /* If required for all streams, use 'send-to-all' option */
+
+       if (sstream == sel.nstream)
+       {
+           senddata(sel.master,0,tranid,data,
+               cSids->sid[type],NULL,dlen);
+       }
+       else
+       {
+           /* Otherwise, send to selected streams individually */
+           for (cstream = slo;cstream <= shi;cstream++)
+           {
+               if (CDSCB.send == TRUE)
+               {
+                   senddata(sel.master,cstream,tranid,data,cSids->sid[type],
+                       NULL,dlen);
+               }
+           }
+       }
+       return;
+
+       /* BEFORE and UPDATE pairs occur for each update.
+          if neither are selected for a stream, they are
+          both ignored. If both are selected, then send
+          both through. If the BEFORE selects, but the
+          UPDATE fails, then use the BEFORE to generate
+          a DELETE. If the BEFORE fails, but the UPDATE
+          selects, use the UPDATE to generate an ADD. */
+
+    case S_BEFORE:
+
+        /* Create copy of before image */
+
+        pBEFORE = (char *) malloc(dlen);
+        memcpy(pBEFORE,data,dlen);
+
+        /* Get overall selection */
+
+        Bstat = record_required(NULL,data);
+
+        /* Set stream level selection */
+
+        for (cstream = slo;cstream <= shi;cstream++)
+        {
+            if (Bstat == FALSE)
+            {
+                CDSCB.send = FALSE;
+            }
+            else
+            {
+                CDSCB.send = record_required(&CDSCB,pBEFORE);
+            }
+        }
+        return;
+
+    case S_UPDATE:
+
+        /* Get overall selection */
+
+        Bstat = record_required(NULL,data);
+
+        /* Perform stream level processing */
+
+        for (cstream = slo;cstream <= shi;cstream++)
+        {
+            if (((Bstat == FALSE) ?  FALSE :
+                record_required(&CDSCB,data)) == FALSE)
+            {
+                    /* After image not wanted */
+
+                    if (CDSCB.send == TRUE)
+                    {
+                        /* Before image wanted, so send delete */
+
+                        senddata(sel.master,cstream,tranid,pBEFORE,
+                            cSids->sid[S_DELETE],NULL,dlen);
+                    }
+                    else
+                    {
+                        continue; /* Neither wanted */
+                    }
+                }
+                else
+                {
+                    /* After image wanted */
+
+                    if (CDSCB.send == TRUE)
+                    {
+                        /* So is before image, so genuine update */
+
+                        senddata(sel.master,cstream,tranid,pBEFORE,
+                            cSids->sid[S_BEFORE],NULL,dlen);
+                        senddata(sel.master,cstream,tranid,data,
+                            cSids->sid[S_UPDATE],NULL,dlen);
+                    }
+                    else
+                    {
+                        /* Before image not required, so add */
+                        senddata(sel.master,cstream,tranid,data,
+                            cSids->sid[S_ADD],NULL,dlen);
+                    }
+                }
+        }
+        free(pBEFORE);
+        return;
+    }
+}
+
+int main(int argc,char * argv[])
+{
+    int rc;                /* Return code */
+    int i,j;
+    X2PFR_t * pX2PFR;
+    OUTREC * inrec;
+    int inlen;
+    unsigned short inpri;
+    char * cp;
+    char worka[50];
+    unsigned int tranid;
+    int dlen;
+    unsigned short stype;
+    char tablez[TABLE_NAME_LEN + 1];
+    char rpname[11];
+
+    /* Initialisation */
+
+    _HEAP_SIZE = _NO_DEFAULT_HEAP;
+    if (argc < 3) FATAL("Insufficient replication server arguments.");
+    memmove(unit,argv[1],3);
+    memmove(product,argv[2],8);
+    for(i = 7;*(product + i) == ' ';*(product + i--) = 0)
+        ;
+    open_log(job_name(),get_level());
+    LOGOUT(LOG_TRACE, "Attaching to queue manager");
+    attach_to_queue_manager();
+    LOGOUT(LOG_TRACE, "Attached to queue manager");
+
+    /* Get department server information */
+
+    rc = retrieve_cfg_data("peD",product,unit,&pX2PFR);
+    while(rc > 0)
+    {
+        dscb * pdscb;
+
+        /* Set up department server block */
+
+        sel.pdscb = realloc(sel.pdscb,sizeof(dscb) * (sel.nstream + 1));
+        sel.pdscb[sel.nstream].plist = NULL;
+        sel.pdscb[sel.nstream].before = NULL;
+        sel.pdscb[sel.nstream].beforex = NULL;
+        *(sel.pdscb[sel.nstream].dept + 2) = 0;
+        memmove(sel.pdscb[sel.nstream].dept,pX2PFR->X2DSMN,2);
+        sel.pdscb[sel.nstream].send = FALSE;
+        sel.nstream++;
+        rc = next_cfg_data();
+    }
+    if (rc != 0) FATAL("Could not read departmental information.");
+    if (sel.nstream == 0) FATAL("No departmental servers defined");
+    end_cfg_access();
+
+    for(i = 0; i < sel.nstream;i++)
+    {
+        LOGTRACE
+        {
+            sprintf(log_buff, "Attaching to queue %s",
+                queue_name(product, sel.pdscb[i].dept, unit, -1));
+            TRACEOUT(log_buff);
+        }
+        sel.pdscb[i].queue =
+            attach_to_queue(queue_name(product,sel.pdscb[i].dept,
+                unit,-1),QUEUE_WRITE);
+    }
+    /* Fire up selection and mapping services */
+
+    strcpy(rpname,"RP");
+    strcat(rpname,product);
+    if(init_selection(rpname,unit,rpname,NULL,NULL,&sel) != 0)
+        FATAL("Errors in mapping/selection script. - see log.");
+
+    /* Set up exit functions */
+
+    __TNAME = system_field_address(sel.master,"__TNAME");
+    sel.master->preceivedata = &receivedata;
+    sel.master->convert_user_type = convert_user_type_if;
+    sel.master->set_default = set_default_if;
+    sel.master->return_input = TRUE;       /* Dont try to free input*/
+
+    /* Find 'class' for before images */
+
+    for (BEFORE = 0;BEFORE < sel.master->nClass;BEFORE++)
+    {
+        if (strcmp(N__(sel.master->aClass[BEFORE].name),"BEFORE") == 0)
+        {
+            break;
+        }
+    }
+
+    if (BEFORE == sel.master->nClass)
+    {
+        FATAL("No BEFORE class defined");
+    }
+
+    for (BEFOREX = 0;BEFOREX < sel.master->nClass;BEFOREX++)
+    {
+        if(strcmp(N__(sel.master->aClass[BEFOREX].name),"X_BEFORE") == 0)
+        {
+            break;
+        }
+    }
+    if (BEFOREX == sel.master->nClass) BEFOREX = -1;
+
+    for (BEFORER = 0;BEFORER < sel.master->nClass;BEFORER++)
+    {
+        if(strcmp(N__(sel.master->aClass[BEFORER].name),"BEFORE_R") == 0)
+        {
+            break;
+        }
+    }
+    if (BEFORER == sel.master->nClass) BEFORER = -1;
+
+    for (PROP = 0;PROP < sel.master->nClass;PROP++)
+    {
+        if (strcmp(N__(sel.master->aClass[PROP].name),"PROP") == 0)
+        {
+            break;
+        }
+    }
+    if (PROP == sel.master->nClass)
+    {
+        FATAL("No PROP class defined");
+    }
+
+    /* Build Struct id array for fast location of source Structs */
+
+    for (i = 0;i < sel.master->nStruct;i++)
+    {
+        /* Wanted in non-blank extension */
+        if (sel.master->aExt[i] != ' ')
+        {
+            /* See if already an entry in the array */
+            for (j = 0;j <= file_count;j++)
+            {
+                if(j == file_count)
+                    /* Need a new entry */
+                {
+                    if (sel.master->apStruct[i]->classno != PROP) continue;
+                    sel.pSids = realloc(sel.pSids,(j + 1) * sizeof(Sids));
+                    memset(sel.pSids + j,0,sizeof(Sids));
+                    sel.pSids[j].pStruct = sel.master->apStruct[i];
+                    file_count++;
+                }
+                if (strcmp(N__(sel.pSids[j].pStruct->name),
+                    N__(sel.master->apStruct[i]->name)) == 0)
+                {
+                    int k;
+
+                    /* Have an entry - insert id */
+                    switch(sel.master->aExt[i])
+                    {
+                    case 'A':
+                        k = S_ADD;
+                        break;
+                    case 'M':
+                        k = S_BUFFERED_ADD;
+                        break;
+                    case 'D':
+                        k = S_DELETE;
+                        break;
+                    case 'C':
+                        k = S_CLEAR;
+                        break;
+                    case 'B':
+                        k = S_BEFORE;
+                        break;
+                    case 'U':
+                        k = S_UPDATE;
+                        break;
+                    }
+                    sel.pSids[j].sid[k] = sel.master->apStruct[i]->id;
+                    break;
+                }
+            }
+        }
+    }
+    sprintf(worka,"%s/JDCOD",MDBA_library());
+    if ((cp = GETENV(worka)) != NULL)
+    {
+        memmove(&quit,cp,2);
+        free(cp);
+    }
+
+    inq = attach_to_queue(queue_name(product,NULL,unit,-1),QUEUE_READ);
+
+    LOGTRACE
+    {
+        sprintf(log_buff, "Initialisation complete - dropping into read loop");
+        TRACEOUT(log_buff);
+    }
+
+/*******************************************************************/
+/*                                                                 */
+/*        Main processing loop                                     */
+/*                                                                 */
+/*******************************************************************/
+
+    while (inrec = (OUTREC *) read_from_queue(inq,&inlen,&inpri,-1))
+    {
+        int crec;
+
+        memmove(&stype,inrec->type,2);
+
+        /* Set up transaction id */
+        tranid = 0; /* Always zero since transaction control done by feeder job */
+
+        /* Record length */
+
+        dlen = inrec->length;
+
+        /* Check for for unsupported files */
+
+        if (*inrec->table != ' ')
+        {
+            memmove(tablez,inrec->table,TABLE_NAME_LEN);
+            *(tablez + TABLE_NAME_LEN) = 0;
+            for(i = TABLE_NAME_LEN - 1;*(tablez + i) == ' '; *(tablez + i--) = 0)
+                ;
+            if (find_family(tablez) == NULL)
+            {
+                sprintf(log_buff,"Not trapping %s - ignored", tablez);
+                LOGOUT(LOG_TRACE,log_buff);
+                free(inrec);
+                commit_queue_manager();
+                continue;
+            }
+        }
+
+        /* See if a user selected stream */
+
+        if (strncmp(inrec->ds_mnemonic,"  ",2) == 0)
+            ustream = 0;
+        else
+        {
+            /* Only one stream in it */
+
+            for(ustream = 1;(ustream <= sel.nstream) &&
+                (strncmp(inrec->ds_mnemonic,sel.pdscb[ustream-1].dept,2)
+                != 0);ustream++)
+                ;
+            if (ustream > sel.nstream)
+            {
+                sprintf(log_buff,"Department %2.2s not supported.",
+                    inrec->ds_mnemonic);
+                FATAL(log_buff);
+            }
+        }
+
+        /* If not an update after a before image, then must have
+        a higher priority message getting in the way. Just
+        roll back both reads and try again.                  */
+
+        if ((saved_before != NULL) && (stype != 'UP'))
+        {
+            free(saved_before);
+            saved_before = NULL;
+            free(inrec);
+            rollback_queue_manager();
+            continue;
+        }
+        if (stype ==  quit) /* Closedown request */
+        {
+            LOGOUT(LOG_ENTRY,"Data propagator closing down.\n");
+            free(inrec);
+            commit_queue_manager();
+            detach_from_queue_manager();
+            return;
+        }
+        if (__TNAME != NULL) strncpy(__TNAME,inrec->table,18);
+
+        switch(stype)
+        {
+
+        case 'DL': /* Delete */
+            send_to_dept(inrec->data,dlen,S_DELETE,tranid);
+            break;
+
+        case 'PT': /* Add */
+        case 'PX':
+            send_to_dept(inrec->data,dlen,S_ADD,tranid);
+            break;
+
+        case '90': /* Multiple Insert */
+            for (crec = 0;crec < inrec->count;crec++)
+                send_to_dept(inrec->data + crec * dlen,dlen,
+                S_BUFFERED_ADD,tranid);
+            break;
+
+        case 'UP': /* Update after image */
+            if (saved_before == NULL)
+            {
+                sprintf(log_buff,"Unmatched update for %s discarded",
+                    tablez);
+                LOGOUT(LOG_ERROR,log_buff);
+                break;
+            }
+            send_to_dept(saved_before,dlen,S_BEFORE,tranid);
+            free(saved_before);
+            saved_before = NULL;
+            send_to_dept(inrec->data,dlen,S_UPDATE,tranid);
+            break;
+
+        case 'UB': /* Update after image */
+            saved_before = (char *) malloc(dlen);
+            memmove(saved_before,inrec->data,dlen);
+            continue; /* At top of while */
+
+        case '91': /* Download starting */
+            senddata(sel.master,ustream,tranid,NULL,-1,"LOADSTART",0);
+            break;
+
+        case '92': /* Table start */
+            /* If a file level clear, send that */
+            if (cSids->sid[S_CLEAR] != 0)
+                senddata(sel.master,ustream,tranid,NULL,cSids->sid[S_CLEAR],
+                NULL,0);
+            /* Otherwise use generic clear */
+            else
+                senddata(sel.master,ustream,tranid,inrec->table,-1,
+                "TABLESTART",TABLE_NAME_LEN);
+            break;
+
+        case '93': /* Table end */
+            senddata(sel.master,ustream,tranid,NULL,2,NULL,0);
+            senddata(sel.master,ustream,tranid,inrec->table,-1,"TABLEEND",
+                TABLE_NAME_LEN);
+            break;
+
+        case '94': /* Download end */
+            senddata(sel.master,ustream,tranid,NULL,-1,"LOADEND",0);
+            break;
+
+        default:
+            break;
+        }
+
+        free(inrec);
+
+/******* **commit*or*rollback according to request */               /*CRP013*/ /*128748*/
+/*******if*(rollbackReq)**      */                                  /*CRP013*/ /*128748*/
+/*******{*****************      */                                             /*128748*/
+/*********** *************      */                                             /*128748*/
+/*************Delaying*and forcing retries are handled */                      /*128748*/
+/*************in*rollback_queue_manager_with_wait() */                         /*128748*/
+/************ ************      */                                  /*CRP013*/ /*128748*/
+/***********rollback_queue_manager_with_wait(); */                  /*CRP013*/ /*128748*/
+/*******}*****************      */                                             /*128748*/
+/*******else**************      */                                  /*CRP013*/ /*128748*/
+/*******{*****************      */                                             /*128748*/
+/***********commit_queue_manager(); */                                         /*128748*/
+/*************************      */                                             /*128748*/
+/*********** *************      */                                             /*128748*/
+/**************Reset*the*number of times we have */                            /*128748*/
+/**************delayed*and retried, so that */                                 /*128748*/
+/**************any*subsequent occasions will */                                /*128748*/
+/**************start*at*the beginning. */                                      /*128748*/
+/************ ************      */                                  /*CRP013*/ /*128748*/
+/***********SETTIMESTRIED(0);   */                                  /*CRP013*/ /*128748*/
+/*******}*****************      */                                  /*CRP013*/ /*128748*/
+/* Any necessary waiting will have been done in a loop around */               /*128748*/
+/*  the MQPUT.  If there was an error the rollback will have  */               /*128748*/
+/*  been done there so we can simply commit.                  */               /*128748*/
+        commit_queue_manager();                                                /*128748*/
+   }
+}
+

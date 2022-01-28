@@ -1,0 +1,154 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+#include <string.h>
+#include <stdlib.h>
+
+#include "kmdmph.h"
+#include "kmdarh.h"
+#include "kmdfeh.h"
+
+/* Extend an array out to a required index. Initialise all new elements      */
+void* _array_element(gen_header* pgh,    /*  Array header                    */
+                      int elen,          /*  Element length                  */
+                      int incr,          /*  Increment                       */
+                      int index,         /*  Index required                  */
+                      void* initialiser) /*  Initialiser value               */
+                                         /*  Return value at index           */
+{
+    int plus;  /* Number we will add                                         */
+    int i;
+
+    if (index >= pgh->allocated)
+    {
+        /*  Need to allocate more room                                       */
+        /*  keep length to a multiple of the base increment                  */
+        plus = (index < (pgh->allocated + incr)) ?
+            incr :
+            (index - pgh->allocated + incr) / incr * incr;
+
+        /*  Elements in prime array                                          */
+        if (pgh->indirect == FALSE)
+        {
+            pgh->u.pArray = (char *) realloc(pgh->u.pArray,
+                (pgh->allocated + plus) * elen);
+
+            if (pgh->u.pArray == NULL)
+            {
+                FATAL("Out of memory");
+            }
+
+            /*  Initialise new elements                                      */
+            for (i = pgh->used;i < (pgh->allocated + plus);i++)
+            {
+                memcpy(pgh->u.pArray + elen * i,initialiser,elen);
+            }
+        }
+        else
+        {
+            /*  Prime array is pointer array                                 */
+            pgh->u.pArray = (char *) realloc(pgh->u.pArray,
+                (pgh->allocated + plus) * sizeof(void *));
+
+            if (pgh->u.pArray == NULL)
+            {
+                FATAL("Out of memory");
+            }
+
+            /*  Initialise pointers to NULL                                  */
+            for (i = pgh->used;i < (pgh->allocated + plus);i++)
+            {
+                *(pgh->u.ppObj + i) = NULL;
+            }
+        }
+
+        /*  Update control variables                                         */
+        pgh->allocated += plus;
+    }
+
+    if (index >= pgh->used)
+    {
+        pgh->used = index + 1;
+    }
+    if((pgh->indirect == TRUE) && (pgh->u.ppObj[index] == NULL))
+    {
+        /* Need to initialise indirect block                                 */
+        pgh->u.ppObj[index] = malloc(elen);
+        memcpy(*(pgh->u.ppObj + index), initialiser, elen);
+    }
+
+    return ((pgh->indirect == FALSE) ?
+        pgh->u.pArray + index * elen :
+        *(pgh->u.ppObj + index));
+}
+
+
+/*  Returns the index number of a named element (encoded)                    */
+int _index_of(gen_header* pgh, /*  Array header                              */
+              int size,        /*  Array element size                        */
+              int offset,      /*  Offset within element where name is stored*/
+              int name)        /*  Name to search for                        */
+{
+    int i;
+
+    if (name == -1)
+    {
+        return 0;
+    }
+    for (i = 0;i < pgh->used;i++)
+    {
+        if (pgh->indirect == FALSE)
+        {
+            if (*((int *)(pgh->u.pArray + i * size + offset)) == name)
+            {
+                return i;
+            }
+        }
+        else
+        {
+            if ((*(pgh->u.ppObj + i) != NULL) &&
+                (*((int*)(*(pgh->u.ppObj + i) + offset)) == name))
+            {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+/*  Resets number of elements in an array once complete                      */
+
+void trim(gen_header* x,  /*  Array header                                   */
+          int i)          /*  Last index                                     */
+{
+    if ((x->used > 0) && (x->used < x->allocated))
+    {
+        if(x->indirect == TRUE)
+        {
+            int i;
+            for (i = x->used; i < x->allocated; i++)
+            {
+                free (*(x->u.ppObj + i));
+            }
+            return;
+        }
+        x->u.pArray = realloc(x->u.pArray, (x->allocated = x->used) * i);
+    }
+}
+
+gen_header gen_header_init_struct = ahINIT;
+

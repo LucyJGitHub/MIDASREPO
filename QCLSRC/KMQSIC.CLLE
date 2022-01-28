@@ -1,0 +1,203 @@
+/*********************************************************************/
+/*XBI    CRTSRCPF   FILE(QTEMP/KMQRLST) RCDLEN(30)                   */
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       KMQSIC - Product/environment rep script import              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 105109 (Supportforce) Date 02Feb06           */
+/*                      CRP026             Date 18Jul05              */
+/*                      093167 (RoyalBlue) Date 12Apr02              */
+/*                      CRP014             Date 25Jun01              */
+/*                      173472             Date 11Jan00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       105109 - Program attempts to journal RPFEEDSQNO in the      */
+/*                subsystem library when the file is actually in the */
+/*                the base library.  However immediately before this */
+/*                RPCRTENV has been called and that has done the     */
+/*                journalling correctly.                             */
+/*       CRP026 - Ensure new Last Journal Sequence Number file is    */
+/*                journalled, as part of new Feeder work.            */
+/*       CRP018 - Move Data Area / Journal creation to Subsystem     */
+/*                creation time.                                     */
+/*       093167 - Prevented RPJRNPFS2 being called if no list of     */
+/*                files was created, as this would cause it to fail. */
+/*       CRP014 - Change journalling consistency check to allow for  */
+/*                some files not journalled.  May well happen for    */
+/*                Equation systems not using MDJRN.                  */
+/*       173472 - Correct the extract of products from X4PF.         */
+/*                Program currently extracts using CPYF, which       */
+/*                will cause a partial match to be treated as a      */
+/*                match (eg PLAT or PL would be equal to PLATO).     */
+/*                Solution is to replace the CPYF with OPNQRYF and   */
+/*                CPYFRMQRYF.                                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRODUCT &ENV &FILE &DELETE)
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ENV) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&DELETE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KFIL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KWRK) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASEE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RPNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENVOWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNDA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TABLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WORKSTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NUM) TYPE(*DEC) LEN(10 0)
+
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(10)               /* CRP014 */
+
+             DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(512) /* Query +
+                          selection parameter for OPNQRYF */          /* 173472 */
+
+             DCL        VAR(&NO_OF_RECS) TYPE(*DEC) LEN(10 0) /* +
+                          Number of records on outfile */
+
+             DCLF       FILE(KMQRLST)
+
+             /*  Target source member name */
+             CHGVAR     VAR(&RPNAME) VALUE('RP' *CAT &PRODUCT)
+             CHGVAR     VAR(&JRNDA) VALUE('JD' *CAT &ENV *CAT 'NAM')
+             RTVJOBA    JOB(&WORKSTN)
+
+             CALL       PGM(KMDICC) PARM('MDBALIB' '   ' &BASEE)
+
+/*                                                                */  /* 173472 */
+/* Use OPNQRYF to extract the data from X4PF, because it handles  */  /* 173472 */
+/* *EQ correctly, unlike CPYF, which treats it as LIKE            */  /* 173472 */
+                                                                      /* 173472 */
+/************CPYF*******FROMFILE(&BASEE/X4PF) TOFILE(QTEMP/X4PF) +*/  /* 173472 */
+/***********************  MBROPT(*REPLACE) CRTFILE(*YES) +        */  /* 173472 */
+/***********************  INCREL((*IF X4PRDN *EQ &PRODUCT) (*AND +*/  /* 173472 */
+/***********************  X4UNIT *EQ &ENV))                       */  /* 173472 */
+                                                                      /* 173472 */
+             OVRDBF     FILE(X4PF) SHARE(*YES)                        /* 173472 */
+                                                                      /* 173472 */
+             CHGVAR     VAR(&QRYSLT) VALUE(X4PRDN *BCAT '*EQ' *BCAT +
+                          '"' *CAT &PRODUCT *CAT '"' *BCAT '*AND' +
+                          *BCAT X4UNIT *BCAT '*EQ' *BCAT '"' *CAT +
+                          &ENV *CAT '"')                              /* 173472 */
+                                                                      /* 173472 */
+             OPNQRYF    FILE((&BASEE/X4PF)) QRYSLT(&QRYSLT)           /* 173472 */
+                                                                      /* 173472 */
+             CPYFRMQRYF FROMOPNID(X4PF) TOFILE(QTEMP/X4PF) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)              /* 173472 */
+                                                                      /* 173472 */
+             DLTOVR     FILE(X4PF)                                    /* 173472 */
+             CLOF       OPNID(X4PF)                                   /* 173472 */
+
+             RTVMBRD    FILE(QTEMP/X4PF) NBRCURRCD(&NUM)
+             IF         COND(&NUM *EQ 0) THEN(DO)
+
+                SNDBRKMSG  MSG('Product not defined for this +
+                             environment') TOMSGQ(&WORKSTN)
+                GOTO       CMDLBL(END)
+                ENDDO
+
+             CALL       PGM(KMDICC) PARM('PGMLIB' &ENV &PGMLIB)
+             CALL       PGM(KMDICC) PARM('FILLIB' &ENV &KFIL)
+             CALL       PGM(KMDICC) PARM('WRKLIB' &ENV &KWRK)
+             CALL       PGM(KMDICC) PARM('ENVOWNER' &ENV &ENVOWN)
+
+             CHKOBJ     OBJ(QGPL/&FILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+
+                SNDBRKMSG  MSG('Script file not found in QGPL') +
+                             TOMSGQ(&WORKSTN)
+                GOTO       CMDLBL(END)
+                ENDDO
+
+             CPYF       FROMFILE(QGPL/&FILE) +
+                          TOFILE(&PGMLIB/MDBASCRIPT) TOMBR(&RPNAME) +
+                          MBROPT(*REPLACE) FMTOPT(*CVTSRC)
+             IF         COND(&DELETE *EQ 'Y') THEN(DLTF +
+                          FILE(QGPL/&FILE))
+
+/************                                                             /*CRP018*/
+/************CHKOBJ     OBJ(&BASEE/&JRNDA) OBJTYPE(*DTAARA)               /*CRP018*/
+/************MONMSG     MSGID(CPF9801) EXEC(DO)                           /*CRP018*/
+/************   CHKOBJ     OBJ(&KWRK/MDJRN) OBJTYPE(*JRN)                 /*CRP018*/
+/************   MONMSG     MSGID(CPF9801) EXEC(DO)                        /*CRP018*/
+/************      CRTJRNRCV  JRNRCV(&KWRK/MDRCV0001)                     /*CRP018*/
+/************      CHGOBJOWN  OBJ(&KWRK/MDRCV0001) OBJTYPE(*JRNRCV) +     /*CRP018*/
+/************                   NEWOWN(&ENVOWN)                           /*CRP018*/
+/************      CRTJRN     JRN(&KWRK/MDJRN) JRNRCV(&KWRK/MDRCV0001)    /*CRP018*/
+/************      CHGOBJOWN  OBJ(&KWRK/MDJRN) OBJTYPE(*JRN) NEWOWN(&ENVOWN)CRP018*/
+/************      ENDDO                                                  /*CRP018*/
+/************   CRTDTAARA  DTAARA(&BASEE/&JRNDA) TYPE(*CHAR) LEN(20) +    /*CRP018*/
+/************                VALUE('MDJRN')                               /*CRP018*/
+/************   CHGDTAARA  DTAARA(&BASEE/&JRNDA (11 10)) VALUE(&KWRK)     /*CRP018*/
+/************   GRTOBJAUT  OBJ(&BASEE/&JRNDA) OBJTYPE(*DTAARA) +          /*CRP018*/
+/************                USER(*PUBLIC) AUT(*ALL)                      /*CRP018*/
+/************   ENDDO                                                     /*CRP018*/
+                                                                          /*CRP018*/
+/*  Call function to create journalling objects                           /*CRP018*/
+             CALLPRC    RPCRTENV PARM('J' ' ' &BASEE &PGMLIB)             /*CRP018*/
+                                                                          /*CRP018*/
+/***Make*sure that Last Journal Sequence Number file is journalled. */    /*105109*/
+/************STRJRNPF   FILE(&PGMLIB/RPFEEDSQNO) +                        /*105109*/
+/************             JRN(&BASEE/CTLJRN) IMAGES(*BOTH) +              /*105109*/
+/************             OMTJRNE(*OPNCLO)                     /*CRP026*/ /*105109*/
+/************MONMSG     MSGID(CPF7030)                         /*CRP026*/ /*105109*/
+/************                                                  /*CRP026*/ /*105109*/
+             RTVDTAARA  DTAARA(&BASEE/&JRNDA (1 10)) RTNVAR(&JRN)
+             RTVDTAARA  DTAARA(&BASEE/&JRNDA (11 10)) RTNVAR(&JLIB)
+
+             /*  Extract list of tables from script */
+             CALL       PGM(KMQPLC) PARM(&RPNAME &PGMLIB)
+
+             /*  If journal name not controlled by replication check */
+             /*  that all files are journalled to same journal       */
+             IF         COND(&JRN *NE 'MDJRN') THEN(DO)
+                CALL       PGM(KMDJ1C)
+/***************CALL       PGM(KMDJ2C) PARM(&JRN)                ***/
+
+             /* If the outfile produced by KMDJ1C is empty, +
+                or if it doesn't exist, don't call +
+                RPJRNPFS2, as the latter will fail.  Monitoring for +
+                the file not existing should be sufficient to control +
+                the flow of processing when the file doesn't exist, +
+                as, if the MONMSG is triggered, the &NO_OF_RECS +
+                variable will be zero. */                             /*093167*/
+                RTVMBRD    FILE(QTEMP/QAFDPHY) NBRCURRCD(&NO_OF_RECS) /*093167*/
+                MONMSG     MSGID(CPF9812)                             /*093167*/
+
+                IF         COND(&NO_OF_RECS *NE 0) THEN(DO)           /*093167*/
+
+                   CALLPRC    PRC(RPJRNPFS2) PARM(&JRN &JLIB &MSGID)
+                   IF         COND(&MSGID *NE 'KCM6500') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(KCMMSG) TOPGMQ(*PRV)
+                   ENDDO
+                   GOTO       CMDLBL(END)
+
+                ENDDO                                                 /*093167*/
+
+             ENDDO
+
+             /*  For each file, start journalling  */
+             OVRDBF     FILE(KMQRLST) TOFILE(QTEMP/KMQRLST)
+ LP:         RCVF
+             MONMSG CPF0000 EXEC(RETURN)
+             CHGVAR     VAR(&TABLE) VALUE(%SST(&SRCDTA 1 10))
+             STRJRNPF   FILE(&KFIL/&TABLE) JRN(&JLIB/&JRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(LP)
+
+ END:        ENDPGM

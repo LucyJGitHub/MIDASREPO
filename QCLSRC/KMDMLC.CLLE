@@ -1,0 +1,178 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       KMDMLC - MDBA launch process                                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 141034             Date 28Jan05              */
+/*                      CRP023             Date 12May03              */
+/*                      CRP020             Date 20Feb02              */
+/*                      CRP019             Date 16Dec02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       141034 - Prevent subsystem from crashing if Feeder shutdown */
+/*                takes more than 5 minutes.                         */
+/*       CRP023 - Ensure that release level is shown in joblog, and  */
+/*                in the Replication log file, X6PF.                 */
+/*                Program converted to a module as part of this.     */
+/*       CRP020 - Change monitoring for end by receiver change to be */
+/*                inside Feeder jobs rather than in a separate job.  */
+/*       CRP019 - Introduce a Monitor of the Feeder job              */
+/*                Also change format of previous X6PF member name    */
+/*                so that  it copes with REPMIDASxx.                 */
+/*                                                                   */
+/*********************************************************************/
+   /*START                                                      */
+   /*                                                           */
+   /*             System Name - Equation                        */
+   /*             Module Name - Main TI DBA program             */
+   /*                                                           */
+   /*            Program Name - KMDMLC                          */
+   /*           Program Title - MDBA Controller                 */
+   /*           Creation Date - 23/08/1996                      */
+   /*     Last Amendment Date - 05/02/1998                      */
+   /*-----------------------------------------------------------*/
+   /*  Change Control                                           */
+   /*  ~~~~~~~~~~~~~~                                           */
+   /*  Date            Initials      Amendment                  */
+   /*  ~~~~            ~~~~~~~~      ~~~~~~~~~                  */
+   /*-----------------------------------------------------------*/
+   /*  Purpose                                                  */
+   /*  ~~~~~~~                                                  */
+   /* Autostarted CL to fire up the MDBA Launch program         */
+   /*-----------------------------------------------------------*/
+/*=================================================================*/
+/*  START OF PROGRAM                                               */
+/*=================================================================*/
+             PGM
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10) VALUE(MDBA) /* +
+                          Subsystem we are running in */
+             DCL        VAR(&SBS2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASEE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&N) TYPE(*DEC) LEN(3 0) VALUE(9)
+             DCL        VAR(&PLIBL) TYPE(*CHAR) LEN(110)
+                                                                          /*CRP019*/
+             DCL        VAR(&SBMMONITOR) TYPE(*CHAR) LEN(1) /* Is +
+                          Feeder Monitor job required? */                 /*CRP019*/
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10) /* User for +
+                          Replication jobs */                             /*CRP019*/
+                                                                          /*CRP023*/
+             DCL        VAR(&RELLVL) TYPE(*CHAR) LEN(35) /* Release +
+                          level */                                        /*CRP023*/
+             DCL        VAR(&RELLVLMSG) TYPE(*CHAR) LEN(100) +
+                          /* Release level MSG */                         /*CRP023*/
+             DCL        VAR(&PROCESS) TYPE(*CHAR) LEN(25) +
+                          VALUE(MDBALAUNCH) /* Process name to be +
+                          written to X6PF */                              /*CRP023*/
+                                                                          /*CRP023*/
+             DCL        VAR(&QLIB) TYPE(*CHAR) LEN(10) /* Library +
+                          containing data queues to be deleted */         /*141034*/
+                                                                          /*141034*/
+/* Retrieve Replication Release level and output to joblog       */       /*CRP023*/
+             RTVDTAARA  DTAARA(REPN (67 34)) RTNVAR(&RELLVL)              /*CRP023*/
+             CHGVAR     VAR(&RELLVLMSG) VALUE('Current Replication +
+                          level is' *BCAT &RELLVL)                        /*CRP023*/
+             SNDPGMMSG  MSG(&RELLVLMSG) TOPGMQ(*PRV) MSGTYPE(*INFO)       /*CRP023*/
+
+/* CHECK FOR DUMMY STARTUP (JUST TO GET THE EMPTY SUBSYSTEM) */
+             CHKOBJ     OBJ(QGPL/KILLMDBA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(OK))
+             DLTDTAARA  DTAARA(QGPL/KILLMDBA)
+             RETURN
+OK:
+
+/* Find base library */
+             CALL       PGM(KMDICI) PARM('MDBALIB' &BASEE)
+/* Get subsystem name */
+             CALL       PGM(KMDICI) PARM('SBSNAME' &SBS)
+/************CHGVAR     VAR(&SBS2) VALUE(&SBS *TCAT '#')                  /*CRP019*/
+             CHGVAR     VAR(&SBS2) VALUE('PRV' *TCAT %SST(&SBS 4 7))      /*CRP019*/
+
+/* set up log file */
+
+             CHKOBJ     OBJ(&BASEE/X6PF) OBJTYPE(*FILE)
+/* Bad error if not present */
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDMSG     MSG('Log file X6PF does not exist.') +
+                          TOUSR(*REQUESTER)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/* Add physical & logical members for this subsystem if needed */
+
+             CHKOBJ     OBJ(&BASEE/X6PF) OBJTYPE(*FILE) MBR(&SBS)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             ADDPFM     FILE(&BASEE/X6PF) MBR(&SBS)
+             ADDLFM     FILE(&BASEE/X610LF) MBR(&SBS) +
+                          DTAMBRS((&BASEE/X6PF (&SBS)))
+             ADDLFM     FILE(&BASEE/X620LF) MBR(&SBS) +
+                          DTAMBRS((&BASEE/X6PF (&SBS)))
+             GOTO       CMDLBL(NEWSBS)
+             ENDDO
+
+/* Create save members if required (and not a 10 char name) */
+
+             IF         COND(&SBS *NE &SBS2) THEN(DO)
+             CHKOBJ     OBJ(&BASEE/X6PF) OBJTYPE(*FILE) MBR(&SBS2)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             ADDPFM     FILE(&BASEE/X6PF) MBR(&SBS2)
+             ADDLFM     FILE(&BASEE/X610LF) MBR(&SBS2) +
+                          DTAMBRS((&BASEE/X6PF (&SBS2)))
+             ADDLFM     FILE(&BASEE/X620LF) MBR(&SBS2) +
+                          DTAMBRS((&BASEE/X6PF (&SBS2)))
+             ENDDO
+/* Save old log */
+             CPYF       FROMFILE(&BASEE/X6PF) TOFILE(&BASEE/X6PF) +
+                          FROMMBR(&SBS) TOMBR(&SBS2) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+/* Clear main log member */
+             CLRPFM     FILE(&BASEE/X6PF) MBR(&SBS)
+             MONMSG     MSGID(CPF3130)
+                                                                          /*CRP023*/
+/* Output Replication Release level to X6PF                         */    /*CRP023*/
+             CHGVAR     VAR(&RELLVLMSG) VALUE('Replication -' +
+                            *BCAT &RELLVL)                                /*CRP023*/
+             CALLPRC    PRC(ERROROUT) PARM(&PROCESS &RELLVLMSG)
+                                                                          /*CRP023*/
+NEWSBS:
+             CALL       PGM(KMDLOC) PARM(&BASEE)
+                                                                          /*CRP019*/
+/* Suppress monitor job as checking now takes place in Feeders      */    /*CRP020*/
+/* If required submit a Monitor to keep tabs on the Feeder job(s)   */    /*CRP019*/
+/******RTVDTAARA  DTAARA(RPBOIFDA (141 1)) RTNVAR(&SBMMONITOR) /*CRP019*/ /*CRP020*/
+             IF         COND(&SBMMONITOR *EQ 'Y') THEN(DO)                /*CRP019*/
+                                                                          /*CRP019*/
+/* Get the the name of the user for Replication jobs                */    /*CRP019*/
+                CALL       PGM(RPBOIF03) PARM(' ' &USER)                  /*CRP019*/
+/* N.B. The JOBD & JOBQ have the same name as the Replication       */    /*CRP019*/
+/* Subsystem library that was obtained earlier                      */    /*CRP019*/
+                                                                          /*CRP019*/
+                SBMJOB     CMD(CALL PGM(RPFEEDMNTR)) JOB(MONITOR) +
+                             JOBD(&SBS/&SBS) JOBQ(&SBS) +
+                             OUTQ(*JOBD) USER(&USER) INLLIBL(*JOBD)       /*CRP019*/
+             ENDDO                                                        /*CRP019*/
+
+             CLRMSGQ    MSGQ(&SBS/&SBS)
+                                                                          /*141034*/
+/* Get the name of the relevant library and remove any RQ* data queues */ /*141034*/
+/*  from there, that are left over from previous runs.                 */ /*141034*/
+             CALL       PGM(KMDICI) PARM('WRKLIB  ' '   ' &QLIB)          /*141034*/
+             DLTDTAQ DTAQ(&QLIB/RQ*)                                      /*141034*/
+             MONMSG     MSGID(CPF2125)                                    /*141034*/
+                                                                          /*141034*/
+             CALL       PGM(KMDMLI)
+             MONMSG     MSGID(CPF0000)
+             DSPJOBLOG  OUTPUT(*PRINT)
+             ENDSBS     SBS(&SBS) OPTION(*IMMED)
+             MONMSG     MSGID(CPF0000)
+ END:        ENDPGM

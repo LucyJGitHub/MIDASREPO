@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+/*-----------------------------------------------------------------*/
+/*START                                                            */
+/*              System Name - TIDBA                                */
+/*              Module Name - Utilities                            */
+/*                                                                 */
+/*             Program Name - KCMU2C                               */
+/*            Program Title - Retrieve message severity            */
+/*            Creation Date - 10/09/97                             */
+/*      Last Amendment Date -                                      */
+/*-----------------------------------------------------------------*/
+/*  Change Control                                                 */
+/*  ~~~~~~~~~~~~~~                                                 */
+/*  Date            Initials      Amendment                        */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                        */
+/*  12Dec21         MD058809      MQ9 Compatibility Patch          */
+/*  10/09/1997      JRE           Created from UTM02C              */
+/*-----------------------------------------------------------------*/
+
+             PGM        PARM(&MSGID &MSGDA &MSGDT &MSGSV)
+
+/* This program retrieves a message id and returns the  */
+/* first level message and its severity to the calling  */
+/* program.                                             */
+
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDA) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&MSGDT) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&MSGSV) TYPE(*DEC) LEN(2 0)
+
+             MONMSG     MSGID(CPF0000 RPG0000) EXEC(GOTO CMDLBL(END))
+
+RTVMSG     MSGID(&MSGID) MSGF(*LIBL/KCMMSG) MSGDTA(&MSGDA) +
+             MSG(&MSGDT) SEV(&MSGSV)
+
+/* If message is not found or message id is not valid   */
+/* return message to say not found and severity of 20.  */
+             MONMSG     MSGID(CPF2419 CPF2499) EXEC(DO)
+             CHGVAR     VAR(&MSGDA) VALUE('Message ID' *BCAT &MSGID)
+RTVMSG     MSGID(KCM2096) MSGF(*LIBL/KCMMSG) MSGDTA(&MSGDA) +
+             MSG(&MSGDT) SEV(&MSGSV)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/* If any other error send default message and severity */
+/* of 20.                                               */
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             CHGVAR     VAR(&MSGDT) VALUE('Error on retrieving +
+                          Message' *BCAT &MSGID)
+             CHGVAR     VAR(&MSGSV) VALUE(20)
+             ENDDO
+
+ END:        RETURN
+             ENDPGM

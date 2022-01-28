@@ -1,0 +1,125 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPSTRRCV  - Get starting receiver name                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 000813 (Bugzilla)  Date 21Mar06              */
+/*                      CRP025             Date 10Jan05              */
+/*                      194865 *CREATE     Date 26Jun01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       000813 - Processing in Midas command SCRTVJEVT has changed  */
+/*                so that both of journal receiver and journal       */
+/*                sequence must be specified.                        */
+/*       CRP025 - Make system type replicating from a user input     */
+/*                parameter, to differentiate between types of       */
+/*                Midas systems & between MidasPlus Global & Zone.   */
+/*       194865 - Determine the correct Starting journal receiver    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BOSYS &JRN &JRNLIB &STARTRCVR)
+
+/*  Parameters                                                      */
+             DCL        VAR(&BOSYS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STARTRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                 /*000813*/
+
+             DCL        VAR(&RCVNUMNUM) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&RCVNUMALP) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RCVNAME) TYPE(*CHAR) LEN(10)
+
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Specific processing for the Back Office system specified        */
+
+/*****                                                                **/ /*CRP025*/
+/***For Midas, look for ICRCV001, if that is not found, then try  +   **/ /*CRP025*/
+/****ICRCV002 and so forth, up to ICRCV999                          ****/ /*CRP025*/
+/*****                                                                **/ /*CRP025*/
+/***** IF         COND(&BOSYS = 'MIDAS') THEN(DO)                     **/ /*CRP025*/
+                                                                          /*CRP025*/
+       IF         COND(&BOSYS = '*MIDASR4') THEN(DO)                      /*CRP025*/
+/*  For Midas Release 4, and below, look for ICRCV001, if that is +
+     not found, then try ICRCV002 and so forth, up to ICRCV999        */  /*CRP025*/
+
+LOOP01:
+             CHGVAR     VAR(&RCVNUMALP) VALUE(&RCVNUMNUM)
+             CHGVAR     VAR(&RCVNAME) VALUE('ICRCV' *CAT &RCVNUMALP)
+
+             CHKOBJ     OBJ(&JRNLIB/&RCVNAME) OBJTYPE(*JRNRCV)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+
+/* Receiver not found - go on to the next one  */
+                CHGVAR     VAR(&RCVNUMNUM) VALUE(&RCVNUMNUM + 1)
+
+                IF         COND(&RCVNUMNUM = 999) THEN(DO)
+/* Limit reached */
+                   CHGVAR     VAR(&STARTRCVR) VALUE('*ERROR')
+                   RETURN
+                ENDDO
+
+                GOTO       CMDLBL(LOOP01)
+             ENDDO
+
+/* Receiver found */
+             CHGVAR     VAR(&STARTRCVR) VALUE(&RCVNAME)
+             RETURN
+
+       ENDDO
+                                                                          /*CRP025*/
+       IF         COND(&BOSYS = '*MIDSPLUSZ') THEN(DO)                    /*CRP025*/
+/*  For MidasPlus Zone, determine journal sequence number of  +
+     next day set up.  Equivalent to beginning at ICRCV001 in +
+     previous releases                                                 */ /*CRP025*/
+                                                                          /*CRP025*/
+/************SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&STARTRCVR)     /*CRP025*/ /*000813*/
+             SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&STARTRCVR) SEQ(&STRSEQ)   /*000813*/
+                                                                          /*CRP025*/
+/*  If no value returned, then set sequence to first available.        */ /*CRP025*/
+             IF         COND(&STARTRCVR *EQ '          ') THEN(DO)        /*CRP025*/
+                RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) TOENT(*FIRST) +
+                             RTNRCV(&STARTRCVR)                           /*CRP025*/
+             ENDDO                                                        /*CRP025*/
+                                                                          /*CRP025*/
+             RETURN                                                       /*CRP025*/
+       ENDDO                                                              /*CRP025*/
+                                                                          /*CRP025*/
+       IF         COND(&BOSYS = '*MIDSPLUSG') THEN(DO)                    /*CRP025*/
+/*  For MidasPlus Global layer, journal receivers names are +
+     not reused, so simply start at the beginning and rely on +
+     the stored sequence number to restart from the right point.       */ /*CRP025*/
+                                                                          /*CRP025*/
+             CHGVAR     VAR(&STARTRCVR) VALUE('*CURCHAIN')                /*CRP025*/
+             RETURN                                                       /*CRP025*/
+       ENDDO                                                              /*CRP025*/
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPSTRRCV') TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

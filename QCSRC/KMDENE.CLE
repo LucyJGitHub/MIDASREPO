@@ -1,0 +1,73 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+
+/*  GETENV implementation                                                    */
+/*                                                                           */
+/*  This implementation equates environment variables to data areas          */
+/*  The variable name may be qualified by a library name                     */
+
+
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+#include "AS400API.H"
+#include "KMDENH.H"
+
+dataarea_t da;
+api_error_t er = {100,0,""};
+
+char * GETENV(const char *cp)
+{
+    int   i;
+    char* envvar;
+    char  daname[20] = "          *LIBL     ";
+    char* cp2;
+
+    cp2 = strchr(cp, '/');
+    if (cp2 == NULL)   /*  Name is not qualified, use default of *LIBL       */
+    {
+        strncpy(daname, cp, (strlen(cp) < 10) ? strlen(cp) : 10);
+    }
+    else               /*  Name is qualified                                 */
+    {
+        cp2++;
+        strncpy(daname, cp2, (strlen(cp2) < 10) ? strlen(cp2) : 10);
+        strncpy(daname + 10, "          ", 10);
+        strncpy(daname + 10, cp, ((cp2 - cp - 1) < 10) ? cp2 - cp - 1 : 10);
+    }
+    for (i = 0; i < 20; i++) /*  Convert to upper case                       */
+    {
+        daname[i] = toupper(daname[i]);
+    }
+
+    QWCRDTAA((char*) &da, sizeof(da), daname, -1, 1, &er);
+
+    if (er.err_data_back != 0)
+    {
+        return NULL;
+    }
+    /*  Remove trailing blanks from data                                     */
+    for(i = da.length; (i > 0) && (*(da.data + i - 1) == ' '); i--)
+        ;
+
+    envvar = (char *) malloc(i + 1);
+    strncpy(envvar, da.data, i);
+    *(envvar + i) = 0;
+    return envvar;
+}

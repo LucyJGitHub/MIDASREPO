@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       SETDFTPOP - Set defaults used in Replication                */
+/*                   - Prompt Override Program                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP011   *CREATE   Date 27Oct00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP011 - Prevent spurious error message when data area is   */
+/*                blank.                                             */
+/*                N.B.  CRP011 is actually nothing to do with this,  */
+/*                but it does have a prompt override program and     */
+/*                this problem was fixed whilst looking at that.     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CMDNAME &DFTDTAARA &RTNSTRING)
+
+/*  Parameters                                                      */
+             DCL        VAR(&CMDNAME) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&DFTDTAARA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RTNSTRING) TYPE(*CHAR) LEN(5700)
+
+             DCL        VAR(&DTAARA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAARALIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&CLOSEPAREN) TYPE(*CHAR) LEN(1) VALUE(')')
+
+             DCL        VAR(&KWDDECSEP) TYPE(*CHAR) LEN(7) +
+                          VALUE('DECSEP(')
+             DCL        VAR(&KWDZEROFLD) TYPE(*CHAR) LEN(12) +
+                          VALUE(' ZEROFLDLEN(')
+
+             DCL        VAR(&DECSEP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZEROFLDLEN) TYPE(*CHAR) LEN(2)
+                                                                          /*CRP011*/
+             DCL        VAR(&FMTDECSEP) TYPE(*CHAR) LEN(3)                /*CRP011*/
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGVAR     VAR(&DTAARA) VALUE(%SST(&DFTDTAARA 1 10))
+             CHGVAR     VAR(&DTAARALIB) VALUE(%SST(&DFTDTAARA 11 10))
+
+             RTVDTAARA  DTAARA(&DTAARALIB/&DTAARA (1 1)) +
+                          RTNVAR(&DECSEP)
+             RTVDTAARA  DTAARA(&DTAARALIB/&DTAARA (2 2)) +
+                          RTNVAR(&ZEROFLDLEN)
+
+             IF         COND(&DECSEP = ' ') THEN(DO)                      /*CRP011*/
+                CHGVAR     VAR(&FMTDECSEP) VALUE(' ')                     /*CRP011*/
+             ENDDO                                                        /*CRP011*/
+             ELSE       CMD(DO)                                           /*CRP011*/
+                CHGVAR     VAR(&FMTDECSEP) VALUE(&QUOTE *TCAT &DECSEP +
+                             *TCAT &QUOTE)                                /*CRP011*/
+             ENDDO                                                        /*CRP011*/
+
+             CHGVAR     VAR(&RTNSTRING) VALUE(X'001A') /* Decimal +
+                          value is 26 */
+
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDDECSEP)
+/*********** CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &QUOTE)     */ /*CRP011*/
+/*********** CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &DECSEP)    */ /*CRP011*/
+/*********** CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &QUOTE)     */ /*CRP011*/
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &FMTDECSEP)    /*CRP011*/
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDZEROFLD)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &ZEROFLDLEN)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+
+             GOTO       CMDLBL(END)
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          SETDFTPOP') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

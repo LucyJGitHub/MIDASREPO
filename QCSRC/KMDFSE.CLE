@@ -1,0 +1,177 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+#include <stdlib.h>
+#include <string.h>
+#include <xxfdbk.h>
+
+#include "kmdfsh.h"
+
+fcb * FDEFAULT = NULL;
+
+/*  Open a file                                                              */
+fcb * Ffopen(char * name)
+{
+    fcb * f;
+
+    f = (fcb *) malloc(sizeof(fcb));
+    if ((f->file = _Ropen(name,"rr")) == NULL)
+    {
+        free(f);
+        return NULL;
+    }
+    f->opfb = _Ropnfbk(f->file);
+    if (f->opfb->num_records == 0)
+    {
+        free(f);
+        return NULL;
+    }
+    f->buffer = (char *) malloc(f->opfb->pgm_record_len);
+    f->crec = 0;
+    _Rreadd(f->file,f->buffer,f->opfb->pgm_record_len,__NO_LOCK,1);
+    return f;
+}
+
+fcb * Fopen(char * name)
+{
+    if (FDEFAULT != NULL)
+    {
+        Fclose();
+    }
+    return FDEFAULT = Ffopen(name);
+}
+
+/*  Close a file                                                             */
+void Ffclose(fcb * file)
+{
+    _Rclose(file->file);
+    free(file->buffer);
+    free(file);
+    if (FDEFAULT == file)
+    {
+        FDEFAULT = NULL;
+    }
+}
+
+#define RLEN file->opfb->pgm_record_len
+#define DLEN (RLEN - 12)
+
+/*  Read a character                                                         */
+unsigned char Ffgetc(fcb * file,int pos)
+{
+    int rec,off;
+
+    rec = pos / DLEN;
+    off = (pos % DLEN) + 12;
+    if (rec >= file->opfb->num_records)
+    {
+        return 0;
+    }
+    if (rec != file->crec)
+    {
+        _Rreadd(file->file,file->buffer,
+            file->opfb->pgm_record_len,__NO_LOCK,rec+1);
+    }
+    file->crec = rec;
+    return file->buffer[off];
+}
+
+/*  Find first occurrence of a character                                     */
+int Ffchr(fcb * file,int pos,char c)
+{
+    int cpos;
+
+    cpos = pos;
+    do
+    {
+        char tc;
+
+        tc = Ffgetc(file,cpos);
+        if (tc == 0)
+        {
+            return -1;
+        }
+        if (tc == c)
+        {
+            return cpos;
+        }
+        cpos++;
+    } while (1);
+}
+
+/*  Find first occurrence of a string                                        */
+int Ffstr(fcb *file,int pos,char * s)
+{
+    int cpos;
+    int l;
+
+    cpos = pos;
+    l = strlen(s);
+    while ((cpos = Ffchr(file, cpos, *s)) != -1)
+    {
+        int i = 1;
+
+        while ((i < l) && (*(s + i) == Ffgetc(file, cpos + i)))
+        {
+            i++;
+        }
+        if (i == l)
+        {
+            return cpos;
+        }
+        cpos++;
+    }
+    return -1;
+}
+
+/*  Compare strings                                                          */
+int Ffncmp(fcb *file,int pos,char * s,int n)
+{
+    int i,rc;
+
+    for(i = 0;(i < n) && ((rc = Ffgetc(file, pos + i) - *(s + i)) == 0)
+        ;i++)
+        ;
+    return rc;
+}
+
+/*  Copy string                                                              */
+char * Ffncpy(fcb *file,char * s,int pos,int n)
+{
+    int i;
+
+    for(i = 0;i < n;*(s + i) = Ffgetc(file,pos + i),i++)
+        ;
+    return s;
+}
+
+/*  Return size of file                                                      */
+int Fflen(fcb * file)
+{
+    return (file->opfb->num_records) * DLEN;
+}
+
+/* Return row                                                                */
+int Ffrow(fcb * file,int pos)
+{
+    return(pos / DLEN + 1);
+}
+
+/* Return column                                                             */
+int Ffcol(fcb * file,int pos)
+{
+    return(pos % DLEN + 1);
+}

@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*                                                           */
+   /*             System Name - Equation                        */
+   /*             Module Name - Create temporary KCMPLST        */
+   /*                                                           */
+   /*            Program Name - KCMKZC                          */
+   /*           Program Title - Create temporary KCMPLST        */
+   /*           Creation Date - 07/07/1997                      */
+   /*     Last Amendment Date -   /  /                          */
+   /*-----------------------------------------------------------*/
+   /*  Change Control                                           */
+   /*  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                           */
+   /*  Date            Initials      Amendment                  */
+   /*  ¯¯¯¯            ¯¯¯¯¯¯¯¯      ¯¯¯¯¯¯¯¯¯                  */
+   /*  12Dec21         MD058809      Amend                      */
+   /*  07/17/1997      JRE           Created                    */
+   /*-----------------------------------------------------------*/
+   /*  Purpose                                                  */
+   /*  ¯¯¯¯¯¯¯                                                  */
+   /*  - After installation of MQ9 compatibility patch and      */
+   /*  restart of the Meridian Replication subsystem            */
+   /*  REPMIDASPT, the job MPT1PBSIN ended in MSGW.             */
+   /*  - Creates temporary QTEMP/KCMPLST source physical file   */
+   /*  containing names of files to be propagated               */
+   /*-----------------------------------------------------------*/
+/*=================================================================*/
+/*  START OF PROGRAM                                               */
+/*=================================================================*/
+             PGM        PARM(&PROD &PGMLIB)
+             DCL        VAR(&PROD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PROD1) TYPE(*CHAR) LEN(11)
+             DCL        VAR(&PGMLIB1) TYPE(*CHAR) LEN(11)
+             DCL        VAR(&NULL) TYPE(*CHAR) LEN(1) VALUE(X'00')
+             CHGVAR     VAR(&PROD1) VALUE(&PROD *TCAT &NULL)
+             CHGVAR     VAR(&PGMLIB1) VALUE(&PGMLIB *TCAT &NULL)
+
+             DLTF       FILE(QTEMP/KMQRLST)
+             MONMSG     MSGID(CPF0000)
+NEWPL:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Creating master file list') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+             CRTSRCPF   FILE(QTEMP/KMQRLST) RCDLEN(30)
+             OVRDBF     FILE(KMQRLST) TOFILE(QTEMP/KMQRLST)
+             CALL       PGM(KMQPLI) PARM(&PROD1 &PGMLIB1)
+             ENDPGM

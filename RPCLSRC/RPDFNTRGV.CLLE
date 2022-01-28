@@ -1,0 +1,232 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPDFNTRGV - Define trigger monitor - Validity Checker       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 000765 Bugzilla    Date 23Jan06              */
+/*                      093147 RoyalBlue   Date 20May02              */
+/*                      173467             Date 19Dec99              */
+/*                      CRP002  *CREATE    Date 13Apr99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       000765 - Correct message if an error is found on the        */
+/*                value entered for 'Remote queue'                   */
+/*       093147 - Add a dump for ABNOR processing.                   */
+/*       173467 - Check for QMQM being in library list               */
+/*       CRP002 - New                                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&APPQNAME &CTLMBR &INITQNAME +
+                          &INITQEXIST &PRCNAME &PRCEXIST &APPNPGM +
+                          &RMTQNAME)
+
+/**  Parameters                                                     */
+             DCL        VAR(&APPQNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries trans. queue that is to be monitored   */
+             DCL        VAR(&INITQNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries initiation queue                     */
+             DCL        VAR(&INITQEXIST) TYPE(*CHAR) LEN(4) +
+                 /* Intiation queue already exists                  */
+             DCL        VAR(&PRCNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries process                               */
+             DCL        VAR(&PRCEXIST) TYPE(*CHAR) LEN(4) +
+                 /* Process definition already exists              */
+             DCL        VAR(&APPNPGM) TYPE(*CHAR) LEN(20)    +
+                 /* Application program to call                   */
+             DCL        VAR(&CTLMBR) TYPE(*CHAR) LEN(10) +
+                 /* Member of the control file to be overridden to */
+             DCL        VAR(&RMTQNAME) TYPE(*CHAR) LEN(48) +
+                 /* MQSeries remote queue that is to be written to   */
+
+/*  Variables to act like named constants on calls                  */
+             DCL        VAR(&QUEUE) TYPE(*CHAR) LEN(7) VALUE(QUEUE)
+             DCL        VAR(&PROCESS) TYPE(*CHAR) LEN(7) VALUE(PROCESS)
+             DCL        VAR(&FALSE) TYPE(*CHAR) LEN(1) VALUE('0')       /*173467*/
+
+/* Work fields            */
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE(N)
+
+             DCL        VAR(&EXIST) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&APPNPGMNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&APPNPGMLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&INLIBL) TYPE(*CHAR) LEN(16)                /*173467*/
+             /* Boolean for whether or not library is in list.       */ /*173467*/
+             /* Note, what is needed is a pointer to a 1 byte field, */ /*173467*/
+             /* however errors resulted when a 1 byte field was used.*/ /*173467*/
+             /* A sixteen byte field was found to work correctly so  */ /*173467*/
+             /* this is used.                                        */ /*173467*/
+             /* It is reported that any length greater that 1 byte   */ /*173467*/
+             /* would work correctly.  This has not been tested.     */ /*173467*/
+                                                                        /*173467*/
+             DCL        VAR(&QMQMLIBNAM) TYPE(*CHAR) LEN(10) +
+                          VALUE('QMQM')                                 /*173467*/
+                 /* The name of the QMQM library */                     /*173467*/
+
+             COPYRIGHT +
+             TEXT('(c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+                                                                     /*173467*/
+/* Check whether the library QMQM exists in the user's library  */   /*173467*/
+/* list; do not continue if it is not.                               /*173467*/
+                                                                     /*173467*/
+             CALLPRC    PRC(ISINLIBL) PARM(&QMQMLIBNAM) +
+                          RTNVAL(&INLIBL)                            /*173467*/
+             IF         COND(%SST(&INLIBL 1 1) = &FALSE) THEN(DO) +
+                                                                     /*173467*/
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             library QMQM is not in the library list') +
+                             MSGTYPE(*DIAG)                          /*173467*/
+                CHGVAR     VAR(&ERROR) VALUE('Y')                    /*173467*/
+                GOTO       CMDLBL(INVALID)                           /*173467*/
+                                                                     /*173467*/
+             ENDDO                                                   /*173467*/
+                                                                     /*173467*/
+/*  Call RPG routine to check whether the Application queue (the    +
+     queue to be monitored), the Initiation queue, the Process and  +
+     the Remote queue exist.                                        */
+
+/* Error if Application queue does not exist                        */
+             CALLPRC    PRC(RPCHKMQEX) PARM(&APPQNAME &QUEUE &EXIST +
+                          &RETURNCODE)
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             IF         COND(&EXIST = '*NO') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Queue ' *CAT &APPQNAME  +
+                             *TCAT ' not found') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/* Error if existence of Initiation queue does not match user flag */
+             CALLPRC    PRC(RPCHKMQEX) PARM(&INITQNAME &QUEUE &EXIST +
+                          &RETURNCODE)
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             IF         COND(&EXIST = '*YES' & &INITQEXIST = '*NO') +
+                          THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Initiation queue ' *CAT +
+                             &INITQNAME *TCAT ' already exists') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             IF         COND(&EXIST = '*NO' & &INITQEXIST *EQ +
+                          '*YES') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Initiation queue ' *CAT +
+                             &INITQNAME *TCAT ' not found') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/* Error if existence of Process does not match user flag */
+             CALLPRC    PRC(RPCHKMQEX) PARM(&PRCNAME &PROCESS &EXIST +
+                          &RETURNCODE)
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             IF         COND(&EXIST = '*YES' *AND &PRCEXIST = '*NO') +
+                          THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Process ' *CAT &PRCNAME  +
+                             *TCAT ' already exists') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             IF         COND(&EXIST = '*NO' *AND &PRCEXIST = '*YES') +
+                          THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Process ' *CAT &PRCNAME  +
+                             *TCAT ' not found') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/* Error if Remote queue is entered and does not exist              */
+             IF         COND(&RMTQNAME *NE ' ') THEN(DO)
+                CALLPRC    PRC(RPCHKMQEX) PARM(&RMTQNAME &QUEUE &EXIST +
+                             &RETURNCODE)
+                IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                             CMDLBL(ABNOR))
+                IF         COND(&EXIST = '*NO') THEN(DO)
+/************      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +         /*000765*/
+/************                   MSGDTA('0000Remote queue ' *CAT &APPQNAME +
+/************                   *TCAT ' not found') MSGTYPE(*DIAG)   /*000765*/
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Remote queue ' *CAT &RMTQNAME +
+                                *TCAT ' not found') MSGTYPE(*DIAG)   /*000765*/
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+             ENDDO
+
+/* Error if Control file (PF & LF) does not exist in library list */
+             CHKOBJ     OBJ(RPAPCIL0) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9815) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Control file RPAPCIL0 not +   +
+                              found in library list') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             CHKOBJ     OBJ(RPAPCIPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9815) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Control file RPAPCIPD not +   +
+                              found in library list') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/* Error if Application program does not exist in specified library */
+             CHGVAR     VAR(&APPNPGMNAM) VALUE(%SST(&APPNPGM 1 10))
+             CHGVAR     VAR(&APPNPGMLIB) VALUE(%SST(&APPNPGM 11 10))
+
+             CHKOBJ     OBJ(&APPNPGMLIB/&APPNPGMNAM) OBJTYPE(*PGM)
+             MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Application program ' *CAT +
+                             &APPNPGMNAM *TCAT ' or library ' *CAT +
+                             &APPNPGMLIB *TCAT ' not found.')       +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+Invalid:                                                     /*173467*/
+
+/*  Send message to cause OS/400 to pass earlier messages back      */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             DMPCLPGM                                        /*093147*/
+             MONMSG     MSGID(CPF0000)                       /*093147*/
+
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPDFNTRGV') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) TOPGMQ(*PRV) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+             MONMSG     MSGID(CPF0000)
+
+
+             ENDPGM

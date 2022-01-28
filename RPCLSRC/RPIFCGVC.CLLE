@@ -1,0 +1,283 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPIFCGVC  - Back Office interface configuration             */
+/*                    - Validity Checker                             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 000820 (Bugzilla)  Date 28Mar06              */
+/*                      CRP026             Date 18Jul05              */
+/*                      CRP021             Date 13Mar03              */
+/*                      CRP020             Date 20Feb02              */
+/*                      CRP019             Date 16Dec02              */
+/*                      CRP013             Date 06Jun01              */
+/*                      CRP012             Date 18Dec00              */
+/*                      CRP011  *CREATE    Date 17Oct00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       000820 - Add check that specified queue manager exists.     */
+/*       CRP026 - Commitment control parameters changed as part of   */
+/*                new Feeder work.                                   */
+/*                User specified Queue Manager added.                */
+/*       CRP021 - Enable Commitment Control to be optional.          */
+/*       CRP020 - Change monitoring for end by receiver change to be */
+/*                inside Feeder jobs rather than in a separate job.  */
+/*       CRP019 - Introduce a Monitor of the Feeder job              */
+/*       CRP013 - Added delay time and number of repeats             */
+/*       CRP012 - Misc items of tidy up                              */
+/*                - Interface library is always the subsystem lib    */
+/*                  so remove the Interface library                  */
+/*       CRP011 - Enable Replication to interface to other           */
+/*                Back Office systems                                */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&REPSBS &IFLIB &DBLIB &JRNLIB +  *******/    /*CRP012*/
+/************             &ENTPGMLIB &PREFIX &USRPRF &PARMS)  *******/    /*CRP012*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB +
+/************             &ENTPGMLIB &PREFIX &USRPRF &PARMS)  *******/    /*CRP013*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +
+/************      FIX &USRPRF &PARMS &DLYTIME &NOOFRPTS)      /*CRP013*/ /*CRP019*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +          /*CRP020*/
+/************             &PREFIX &USRPRF &PARMS &DLYTIME &NOOFRPTS +     /*CRP020*/
+/************             &MONITORRQD &MNTRDELAY &MNTRTRIES)   /*CRP019*/ /*CRP020*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +          /*CRP021*/
+/************       &PREFIX &USRPRF &PARMS &DLYTIME &NOOFRPTS) /*CRP020*/ /*CRP021*/
+/************PGM        PARM(&REPSBS &DBLIB &JRNLIB &ENTPGMLIB +          /*CRP026*/
+/************             &PREFIX &USRPRF &PARMS &DLYTIME &NOOFRPTS +     /*CRP026*/
+/************             &CMTCTLRQD)                          /*CRP021*/ /*CRP026*/
+             PGM        PARM(&REPSBS &MQMNAME &DBLIB &JRNLIB +
+                          &ENTPGMLIB &PREFIX &USRPRF &PARMS +
+                          &DLYTIME &NOOFRPTS &FEEDERPROC &SERVERCC)       /*CRP026*/
+
+/*  Parameters                                                      */
+             DCL        VAR(&REPSBS) TYPE(*CHAR) LEN(10)
+/************DCL        VAR(&IFLIB) TYPE(*CHAR) LEN(10)       *******/    /*CRP012*/
+             DCL        VAR(&MQMNAME) TYPE(*CHAR) LEN(48)                 /*CRP026*/
+             DCL        VAR(&DBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENTPGMLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&USRPRF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DLYTIME) TYPE(*CHAR) LEN(3)                  /*CRP013*/
+             DCL        VAR(&NOOFRPTS) TYPE(*CHAR) LEN(3)                 /*CRP013*/
+             DCL        VAR(&MONITORRQD) TYPE(*CHAR) LEN(4)               /*CRP019*/
+             DCL        VAR(&MNTRDELAY) TYPE(*CHAR) LEN(2)                /*CRP019*/
+             DCL        VAR(&MNTRTRIES) TYPE(*CHAR) LEN(3)                /*CRP019*/
+/************DCL        VAR(&CMTCTLRQD) TYPE(*CHAR) LEN(7)     /*CRP021*/ /*CRP026*/
+             DCL        VAR(&FEEDERPROC) TYPE(*CHAR) LEN(7)               /*CRP026*/
+             DCL        VAR(&SERVERCC) TYPE(*CHAR) LEN(4)                 /*CRP026*/
+
+             DCL        VAR(&DTAARALIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&ENTPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ENTLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ERRPARM) TYPE(*CHAR) LEN(1) VALUE('N')
+                                                                          /*000820*/
+             DCL        VAR(&QMDEFINED) TYPE(*CHAR) LEN(1)                /*000820*/
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGVAR     VAR(&DTAARALIB) VALUE(&REPSBS)
+
+/*  Check that the configuration data area exists and the user is   */
+/*   authorised to update it                                        */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+
+             IF         COND(&DTAARALIB *NE '*LIBL') THEN(DO)
+                CHKOBJ     OBJ(QSYS/&DTAARALIB) OBJTYPE(*LIB) +
+                               AUT(*CHANGE)
+                MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &DTAARALIB *TCAT ' ' *CAT +
+                                'does not exist or you are not +
+                                authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+                ENDDO
+             ENDDO
+
+             IF         COND(&ERRPARM *NE 'Y') THEN(DO)
+                CHKOBJ     OBJ(&DTAARALIB/RPBOIFDA) OBJTYPE(*DTAARA) +
+                             AUT(*CHANGE)
+                MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Data area does not exist or you +
+                                are not authorised') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+                ENDDO
+             ENDDO
+
+/************                                                 *******/    /*CRP012*/
+/***Check*that the Interface library exists and the user is   *******/    /*CRP012*/
+/****authorised to update it                                  *******/    /*CRP012*/
+/************                                                 *******/    /*CRP012*/
+/************CHGVAR     VAR(&ERRPARM)  VALUE('N')             *******/    /*CRP012*/
+/************CHKOBJ     OBJ(QSYS/&IFLIB) OBJTYPE(*LIB) +      *******/    /*CRP012*/
+/************               AUT(*CHANGE)                      *******/    /*CRP012*/
+/************MONMSG     MSGID(CPF9800) EXEC(DO)               *******/    /*CRP012*/
+/************      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 + /*CRP012*/
+/************                   Library' *BCAT &IFLIB *TCAT ' '**CAT*+    /*CRP012*/
+/************                   'does not exist or you are not*+*****/    /*CRP012*/
+/************                   authorised to it') +          *******/    /*CRP012*/
+/************                   MSGTYPE(*DIAG)                *******/    /*CRP012*/
+/************      CHGVAR     VAR(&ERRPARM)  VALUE('Y')       *******/    /*CRP012*/
+/************      CHGVAR     VAR(&ERROR)  VALUE('Y')         *******/    /*CRP012*/
+/************ENDDO                                            *******/    /*CRP012*/
+
+/*  Check that the Database library exists and the user is          */
+/*   authorised to update it                                        */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+             CHKOBJ     OBJ(QSYS/&DBLIB) OBJTYPE(*LIB) +
+                            AUT(*CHANGE)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &DBLIB *TCAT ' ' *CAT +
+                                'does not exist or you are not +
+                                authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+             ENDDO
+
+/*  Check that the Journalling library exists and the user is       */
+/*   authorised to update it                                        */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+             CHKOBJ     OBJ(QSYS/&JRNLIB) OBJTYPE(*LIB) +
+                            AUT(*CHANGE)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &JRNLIB *TCAT ' ' *CAT +
+                                'does not exist or you are not +
+                                authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+             ENDDO
+
+/*  Check that the BO System entry program exists and the user is   */
+/*   authorised to use it                                           */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+
+             CHGVAR     VAR(&ENTPGM) VALUE(%SST(&ENTPGMLIB 1 10))
+             CHGVAR     VAR(&ENTLIB) VALUE(%SST(&ENTPGMLIB 11 10))
+
+             IF         COND(&ENTLIB *EQ '*LIBL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Entry program library may not be *LIBL') +
+                                MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                CHGVAR     VAR(&ERROR)  VALUE('Y')
+             ENDDO
+
+             IF         COND(&ERRPARM *NE 'Y') THEN(DO)
+                CHKOBJ     OBJ(&ENTLIB/&ENTPGM) OBJTYPE(*PGM) +
+                             AUT(*USE)
+                MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Entry program does not exist or you +
+                                are not authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+                ENDDO
+             ENDDO
+
+/*  Check that the owning user profile exists and the user is       */
+/*   authorised to update it                                        */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+             CHKOBJ     OBJ(&USRPRF) OBJTYPE(*USRPRF) +
+                            AUT(*CHANGE)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                User profile' *BCAT &USRPRF *TCAT ' ' *CAT +
+                                'does not exist or you are not +
+                                authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+             ENDDO
+
+/***If*the*Feeder Monitor Required flag is *YES, then the two       */    /*CRP020*/
+/****associated numerical parameters are mandatory       */    /*CRP019*/ /*CRP020*/
+/***If*it*is**NO, any entered values will simply be wiped out by    */    /*CRP020*/
+/****the*CPP.                                                       */    /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+/************IF         COND(&MONITORRQD *EQ '*YES') THEN(DO)  /*CRP019*/ /*CRP020*/
+/************   IF         COND(&MNTRDELAY *EQ ' ') THEN(DO)   /*CRP019*/ /*CRP020*/
+/************      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 + /*CRP020*/
+/************                   Monitor - delay between checks is +       /*CRP020*/
+/************                   mandatory if Feeder Monitor +             /*CRP020*/
+/************                   required is *YES.') MSGTYPE(*DIAG)        /*CRP020*/
+/************      CHGVAR     VAR(&ERROR) VALUE('Y')           /*CRP019*/ /*CRP020*/
+/************   ENDDO                                          /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+/************   IF         COND(&MNTRTRIES *EQ ' ') THEN(DO)   /*CRP019*/ /*CRP020*/
+/************      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 + /*CRP020*/
+/************                   Monitor - contiguous restarts is +        /*CRP020*/
+/************                   mandatory if Feeder Monitor +             /*CRP020*/
+/************                   required is *YES.') MSGTYPE(*DIAG)        /*CRP020*/
+/************      CHGVAR     VAR(&ERROR)  VALUE('Y')          /*CRP019*/ /*CRP020*/
+/************   ENDDO                                          /*CRP019*/ /*CRP020*/
+/************ENDDO                                             /*CRP019*/ /*CRP020*/
+/************                                                  /*CRP019*/ /*CRP020*/
+                                                                          /*CRP026*/
+/*  Check that any queue manager specified exists                   */    /*000820*/
+             IF         COND(&MQMNAME *NE '*DFT') THEN(DO)                /*000820*/
+                CHGVAR     VAR(&QMDEFINED)  VALUE('N')                    /*000820*/
+             CALLPRC    PRC(ISMANAGERDEFINED) PARM((&MQMNAME) +
+                          (&QMDEFINED))                                   /*000820*/
+             ENDDO                                                        /*000820*/
+                                                                          /*000820*/
+             IF         COND(&QMDEFINED = 'N') THEN(DO)                   /*000820*/
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *CAT &MQMNAME *BCAT 'has not been defined +
+                             as a Queue Manager') +
+                             MSGTYPE(*DIAG)                               /*000820*/
+                CHGVAR     VAR(&ERROR)  VALUE('Y')                        /*000820*/
+             ENDDO                                                        /*000820*/
+                                                                          /*000820*/
+/*  Send message to cause OS/400 to pass earlier messages back      */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+/*********** SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +               **/  /*000820*/
+/***********              MSGDTA('0000Unexpected error occurred in + **/  /*000820*/
+/***********              RPIFCGVC') TOPGMQ(*PRV) MSGTYPE(*DIAG)     **/  /*000820*/
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPIFCGVC') TOPGMQ(*PRV) MSGTYPE(*ESCAPE)        /*000820*/
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

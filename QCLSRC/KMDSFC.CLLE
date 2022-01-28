@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*********************************************************************/
+   /*-----------------------------------------------------------*/
+   /*             System Name - EQUATION                        */
+   /*             Module Name - Master Procedure                */
+   /*                                                           */
+   /*            Program Name - KCMSFC                         */
+   /*           Program Title - Stop feeder jobs                */
+   /*                                                           */
+   /*                                                           */
+   /*           Creation Date - 23/02/96                        */
+   /*     Last Amendment Date -                                 */
+   /*-----------------------------------------------------------*/
+   /*  Change Control                                           */
+   /*  ~~~~~~~~~~~~~~                                           */
+   /*  Date     Initials   Amendment                            */
+   /*  ~~~~     ~~~~~~~~   ~~~~~~~~~                            */
+   /*  12Dec21  MD058809   MQ9 Compatibility Patch Fix          */
+   /*------------------------------------------------------------*/
+             PGM        PARM(&UNIT &PROD)
+             DCL        VAR(&UNIT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PROD) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JTOKEN) TYPE(*CHAR) LEN(2) VALUE('01')
+             DCL        VAR(&JNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNDA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASEE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+
+             RTVDTAARA  DTAARA(KMDBASE) RTNVAR(&BASEE)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&BASEE)
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR     VAR(&JRNDA) VALUE('JD' *CAT &UNIT *CAT 'NAM')
+             CHKOBJ     OBJ(JDSTOP) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SKIPSTOP))
+             RTVDTAARA  DTAARA(JDSTOP) RTNVAR(&JTOKEN)
+ SKIPSTOP:   RTVDTAARA  DTAARA(&JRNDA (1 10)) RTNVAR(&JNAME)
+             RTVDTAARA  DTAARA(&JRNDA (11 10)) RTNVAR(&JLIB)
+             RTVDTAARA  DTAARA(KMDSBS) RTNVAR(&SBS)
+
+             SNDJRNE    JRN(&JLIB/&JNAME) TYPE(&JTOKEN) ENTDTA(&SBS)
+
+ END:        ENDPGM

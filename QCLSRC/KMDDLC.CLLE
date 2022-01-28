@@ -1,0 +1,134 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       KMDDLC - Call MDBA download program                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. 001079 Bugzilla    Date 22Aug06              */
+/*                      078664 (SF)        Date 18Aug05              */
+/*                      CRP023             Date 12May03              */
+/*                      CRP021             Date 13Mar03              */
+/*                      195756             Date 23Jul02              */
+/*                      173467             Date 24Jan00              */
+/*                      173472             Date 11Jan00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       001079 - When the new Feeder was intoduced (under CRP026)   */
+/*                SETCMMTFLG should have been changed to use the new */
+/*                flags but was not.  This is corrected now.         */
+/*       078664 - Add an override to make sure that the correct      */
+/*                X7PF as one had been added to the Equation d/b.    */
+/*       CRP023 - Ensure that release level is shown in joblog.      */
+/*       CRP021 - Enable Commitment Control to be optional.          */
+/*                This source converted from a program to a module.  */
+/*       195756 - If running in batch, do not send error messages to */
+/*                a workstation message queue.                       */
+/*       173467 - Check for QMQM being in library list; if it is not */
+/*                add it and remove it afterwards.                   */
+/*       173472 - Correct the extract of products from X1PF.         */
+/*                As an aside to this, corrected the unconditional   */
+/*                remove of the subsystem library from the library   */
+/*                list.                                              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                       */
+/*-----------------------------------------------------------------------*/
+/*          Program Name  - KMDDLC                                       */
+/*          Program Title - Download Files                               */
+/*          Creation Date - 21/10/1998                                   */
+/*    Last Amendment Date -   /  /                                       */
+/*-----------------------------------------------------------------------*/
+/*  Purpose                                                              */
+/*  ~~~~~~~                                                              */
+/*  Initiate download for a particular product                           */
+/*-----------------------------------------------------------------------*/
+/*  Change Control                                                       */
+/*  ~~~~~~~~~~~~~~                                                       */
+/*  Date            Initials      Amendment                              */
+/*  ~~~~            ~~~~~~~~      ~~~~~~~~~                              */
+/*-----------------------------------------------------------------------*/
+             PGM        PARM(&PRODUCT &DEPT &TYPE &TABLES)
+
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DEPT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&TABLES) TYPE(*CHAR) LEN(542)
+
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&SBSINLIBL) TYPE(*CHAR) LEN(1) +
+                          VALUE('N') /* Flag to indicate whether +
+                          the subsystem library was already in +
+                          the library list */                         /* 173472 */
+
+             DCL        VAR(&QMQMINLIBL) TYPE(*CHAR) LEN(1) +
+                          VALUE('N') /* Flag for whether QMQM was +
+                          already in the library list or not */       /*173467*/
+
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                /*195756*/
+                                                                      /*195756*/
+             DCL        VAR(&RELLVL) TYPE(*CHAR) LEN(100) /* Release +
+                          level */                                        /*CRP023*/
+                                                                          /*CRP023*/
+/* Retrieve Replication Release level and output to joblog       */       /*CRP023*/
+             RTVDTAARA  DTAARA(REPN (67 34)) RTNVAR(&RELLVL)              /*CRP023*/
+             CHGVAR     VAR(&RELLVL) VALUE('Current Replication +
+                          level is' *BCAT &RELLVL)                        /*CRP023*/
+             SNDPGMMSG  MSG(&RELLVL) TOPGMQ(*SAME) MSGTYPE(*INFO)         /*CRP023*/
+                                                                          /*CRP023*/
+/**Call*routine*to*convert*system wide YES / NO / FEEDER / SERVER/    /*CRP021*/ /*001079*/
+/***Committemnt*Control*required flag into a YES / NO flag that is    /*CRP021*/ /*001079*/
+/***specific*to*this*job*-*stored in a temprary data area in QTEMP    /*CRP021*/ /*001079*/
+/* Call routine to set up a YES / NO Committment Control required                /*001079*/
+/*  flag that is specific to this job.                                           /*001079*/
+             CALLPRC    PRC(SETCMTFLG) PARM('DOWNLOAD')               /*CRP021*/
+                                                                      /*CRP021*/
+/* Attempt to add QMQM to library list; set flag if it was there      /*173467*/
+             ADDLIBLE   LIB(QMQM)                                     /*173467*/
+             MONMSG     MSGID(CPF2103) EXEC(CHGVAR VAR(&QMQMINLIBL) +
+                          VALUE('Y'))                                 /*173467*/
+
+             RTVDTAARA  DTAARA(KMDSBS) RTNVAR(&SBS)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&SBS)
+             MONMSG     MSGID(CPF2103) EXEC(CHGVAR VAR(&SBSINLIBL) +
+                          VALUE('Y'))                                 /* 173472 */
+             MONMSG     MSGID(CPF0000)
+                                                                      /*078664*/
+             OVRDBF     FILE(X7PF) TOFILE(&SBS/X7PF)                  /*078664*/
+
+             CALL       PGM(KMDDMC) PARM(&PRODUCT &DEPT &TYPE &TABLES)
+             MONMSG     MSGID(KCM6600 KCM6601) EXEC(DO)               /*195756*/
+                RCVMSG     MSGTYPE(*EXCP) RMV(*NO) MSGID(&MSGID)      /*195756*/
+                IF         COND(&MSGID *NE ' ') THEN(DO)              /*195756*/
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(KCMMSG) +
+                              TOPGMQ(*PRV) MSGTYPE(*ESCAPE)           /*195756*/
+                ENDDO                                                 /*195756*/
+             ENDDO                                                    /*195756*/
+                                                                      /*078664*/
+             DLTOVR     FILE(X7PF)                                    /*078664*/
+
+             IF         COND(&SBSINLIBL = 'N') THEN(DO)               /* 173472 */
+                RMVLIBLE   LIB(&SBS)
+                MONMSG     MSGID(CPF0000)
+             ENDDO                                                    /* 173472 */
+
+             RCLRSC
+             MONMSG     MSGID(CPF0000)
+
+ END:                                                                 /*173467*/
+/* Remove QMQM from the library list if it was added by this program  /*173467*/
+             IF         COND(&QMQMINLIBL = 'N') THEN(RMVLIBLE +
+                          LIB(QMQM))                                  /*173467*/
+
+/*END:********ENDPGM                                                  /*173467*/
+             ENDPGM                                                   /*173467*/

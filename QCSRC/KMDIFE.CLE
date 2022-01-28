@@ -1,0 +1,314 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       (c) Finastra International Limited 2021
+ *
+ *       Last Amend No. MD058809  *CREATE  Date 16Dec21
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *
+ ********************************************************************
+ */
+
+#include <recio.h>
+#include <decimal.h>
+#include <xxdtaa.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "kmdarh.h"
+#include "kmdifh.h"
+#include "kmdboh.h"
+#include "kmduth.h"
+#include "kmdfeh.h"
+
+/* Convert 10 char blank fill field to null terminated */
+
+static char *z10(char *c10)
+{
+    static char az[4][11];
+    static int x = 3;
+    static char none[] = "";
+    int i = 0;
+
+    if (c10 == NULL)
+    {
+        return none;
+    }
+    x = (x + 1) %4;
+    for (i = 0;(i < 10) && (*(c10 + i) != ' ');i++)
+    {
+        *(*(az + x) + i) = *(c10 + i);
+    }
+    *(*(az + x) + i) = 0;
+    return *(az + x);
+}
+
+/* Change a symbol 10 character blank padded                    */
+/* Rotates buffers to allow multiple calls in parameters.       */
+/* Also converts to upper case                                  */
+
+#define issymc(x) (isalnum(x) || (x=='$') || (x=='#') || (x=='_') || \
+                                 (x=='@'))
+
+static char * c10(char * data)
+{
+    static char ca[4][10];
+    static int x = 3;
+    int i = 0;
+
+    if (data == NULL)
+    {
+        return NULL;
+    }
+    x = (x + 1) % 4;
+    while ((issymc(*(data+i))) && (i < 10))
+    {
+        *(ca[x] + i) = toupper(*(data + i));
+        i++;
+    }
+    while (i < 10)
+    {
+        *(ca[x] + i++) = ' ';
+    }
+    return ca[x];
+}
+
+/*********************************************************************/
+/* Calls supported by KMDUTC                                         */
+/*********************************************************************/
+
+/**** Base library */
+
+static char base_library_c10[10] = " ";
+static char base_library_z10[11];
+
+void BASELIB(char * cp)
+{
+    if (*base_library_c10 == ' ')
+    {
+        KMDUTC("BASE      ","",base_library_c10);
+        strcpy(base_library_z10,z10(base_library_c10));
+    }
+    strncpy(cp,base_library_c10,10);
+    return;
+}
+char * base_library(void)
+{
+    BASELIB(base_library_c10);
+    return(base_library_z10);
+}
+
+/**** MDBA Base library */
+
+static char MDBA_library_c10[10] = " ";
+static char MDBA_library_z10[11];
+void MDBALIB(char * cp)
+{
+    if (*MDBA_library_c10 == ' ')
+    {
+        KMDUTC("MDBA      ","",MDBA_library_c10);
+        strcpy(MDBA_library_z10,z10(MDBA_library_c10));
+    }
+    strncpy(cp,MDBA_library_c10,10);
+    return;
+}
+
+char * MDBA_library(void)
+{
+    MDBALIB(MDBA_library_c10);
+    return(MDBA_library_z10);
+}
+
+/**** Get subsystem name) */
+
+static char sbs_name_c10[10] = " ";
+static char sbs_name_z10[11];
+
+void SBSNAME(char * cp)
+{
+    if (*sbs_name_c10 == ' ')
+    {
+        KMDUTC("SBS       ","",sbs_name_c10);
+        strcpy(sbs_name_z10,z10(sbs_name_c10));
+    }
+    strncpy(cp,sbs_name_c10,10);
+    return;
+}
+
+char *Subsystem(void)
+{
+    SBSNAME(sbs_name_c10);
+    return(sbs_name_z10);
+}
+
+/**** Get job number) */
+
+static char job_no[6] = "      ";
+
+void JOBNO(char * cp)
+{
+    if (*job_no == ' ')
+    {
+        KMDUTC("JOBN      ","",job_no);
+    }
+    strncpy(cp,job_no,6);
+    return;
+}
+
+char *Job_number(void)
+{
+    JOBNO(job_no);
+    return(job_no);
+}
+
+/**** Get job name */
+
+static char job_name_c10[10] = " ";
+static char job_name_z10[11];
+
+void JOBNAME(char * cp)
+{
+    if (*job_name_c10 == ' ')
+    {
+        KMDUTC("JOB       ","",job_name_c10);
+        strcpy(job_name_z10,z10(job_name_c10));
+    }
+    strncpy(cp,job_name_c10,10);
+    return;
+}
+
+char * job_name(void)
+{
+    JOBNAME(job_name_c10);
+    return(job_name_z10);
+}
+
+void CPF_message(char * msgdata,char * msg)
+{
+    KMDUTC("CPF       ",msgdata,msg);
+}
+
+/*
+  Global variables
+*/
+
+int cleanup()
+{
+   return 1;
+}
+
+static int strcmpx(char * s1,char * s2)
+{
+   int j = 0;
+   for( ; toupper(s1[j]) == toupper(s2[j]) ; j++) {
+        if (s1[j] == 0) return 0;
+   }
+   return 1;
+}
+int get_process_id(void)
+{
+   return atoi(Job_number());
+}
+
+int submit_job(char * job_name, char *user_id, char *pgm, char *parms)
+{
+    int i;
+
+    char prg[22];
+    char PRG[27];
+    char xs[500];
+    char PARM[450];
+    char CMD[460];
+
+    /* Define SBMJOB parameters with standard defaults */
+    char job[11] = "*JOBD";
+    char JOB[16];
+    char jobd[22] = "*USRPRF";
+    char JOBD[28];
+    char jobq[22] = "*JOBD";
+    char JOBQ[28];
+    char outq[22] = "*CURRENT";
+    char OUTQ[28];
+    char user[22] = "*CURRENT";
+    char USER[28];
+    char inllibl[9] = "*CURRENT";
+    char INLLIBL[20];
+    char msgq[22] = "*USRPRF";
+    char MSGQ[28];
+    char temp[11];
+    char cmdline[201];
+    char * tp;
+    char libl[11] = "QGPL      ";
+    decimal (5,0) dlen;
+
+    /* Set our defaults */
+
+    strcpy(jobq,Subsystem()); /* Job queue name = subsystem name */
+    strcpy(jobd,Subsystem()); /* Job queue name = subsystem name */
+    if (job_name != NULL)
+    {
+        strcpy(job,job_name);
+    }
+    if (user_id != NULL)
+    {
+        strcpy(user,user_id);
+    }
+
+    /* Set up variable data */
+    strcpy(msgq,jobq);
+    strcat(msgq,"/");
+    strcat(msgq,jobq);
+
+    /* Format out final string */
+
+    sprintf(PRG,"PGM(%s)",pgm);
+    if (parms != NULL)
+    {
+        sprintf(PARM,"PARM(%s)",parms);
+    }
+    else
+    {
+        PARM[0] = 0;
+    }
+    sprintf(CMD,"CMD(CALL %s %s)",PRG,PARM);
+    sprintf(JOB,"JOB(%s)",job);
+    sprintf(JOBD,"JOBD(%s)",jobd);
+    sprintf(JOBQ,"JOBQ(%s)",jobq);
+    sprintf(OUTQ,"OUTQ(%s)",outq);
+    sprintf(USER,"USER(%s)",user);
+    sprintf(INLLIBL,"INLLIBL(%s)",inllibl);
+    sprintf(MSGQ,"MSGQ(%s)",msgq);
+    sprintf(xs,"SBMJOB %s %s %s %s %s %s %s %s ",
+                       CMD,
+                          JOB,
+                             JOBD,
+                                JOBQ,
+                                   OUTQ,
+                                      USER,
+                                         INLLIBL,
+                                            MSGQ);
+
+    return (!system (xs));
+
+}
+
+int get_level()
+{
+   char p2[1] = "";
+   short rv;
+
+   KMDUTC("LEVEL     ",p2,(char *) &rv);
+   return rv;
+}
+
+char * control_name()
+{
+    return(Subsystem()); /* File name = Subsystem name */
+}

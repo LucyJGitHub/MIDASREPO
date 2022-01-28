@@ -1,0 +1,912 @@
+/********************************************************************
+ *STD *  CM_REPN
+ ********************************************************************
+ *
+ *       Meridian Replication
+ *
+ *       KMDMLE - Control Replication jobs
+ *
+ *       (c) Misys International Banking Systems Ltd. 2005
+ *
+ *       Last Amend No. MD058809           Date 16Dec21
+ *       Prev Amend No. CRP026    *CREATE  Date 18Jul05
+ *
+ ********************************************************************
+ *
+ *       MD058809 - After installation of MQ9 compatibility patch and
+ *                  restart of the Meridian Replication subsystem
+ *                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.
+ *       CRP026 - As part of the Feeder rewrite the job name has
+ *                increased to 10 long and the existing code can
+ *                not cope with that.
+ *
+ ********************************************************************
+ */
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <recio.h>
+#include <decimal.h>
+#include <xxdtaa.h>
+
+#include "kmdcfh.h"
+#include "kmdifh.h"
+#include "kmdlgh.h"
+#include "kmdboh.h"
+
+
+/* Destructive read of data from a data queue */
+
+#pragma linkage (QRCVDTAQ,OS)
+extern void QRCVDTAQ(char *,char *,decimal(5,0) *,char *,
+   decimal(5,0));
+
+/* Send data to a data queue */
+
+#pragma linkage (QSNDDTAQ,OS)
+extern void QSNDDTAQ(char *,char *,decimal (5,0),char *);
+
+typedef _Packed struct X8pf_tag {
+    short X8CFGN;
+    char X8PRDN[8];
+    char X8PDSN[5];
+    char X8RREQ;
+    char X8AREQ;
+    char X8DSMN[2];
+    char X8UNIT[3];
+    char X8FDNM;
+} X8PF;
+
+X8PF *masks = NULL;
+X8PF *records = NULL;
+X8PF *results = NULL;
+int num_masks = 0;
+int num_records = 0;
+int num_results = 0;
+
+typedef _Packed struct X9pf_tag {
+    char X9JBID[10];
+    char X9DESC[35];
+    short X9CFGN;
+    char X9JOBN[10];
+    char X9DEPJ[10];
+    char X9PGM[10];
+    char X9STOP[10];
+    char X9PARM[100];
+    char X9USR;
+    char X9STAL;
+} X9PF;
+
+#define JS_SUBMIT_PENDING 0
+#define JS_SUBMITTED 1
+#define JS_REGISTERED 2
+#define JS_STOP_PENDING 3
+#define JS_STOPPING 4
+#define JS_STOPPED 5
+
+typedef _Packed struct job_tag {
+    char job_id[11];
+    char job_nm[11];
+    char pgm_id[11];
+    char stop_id[11];
+    char user_id[11];
+    char dep_id[11];
+    char parms[400];
+    short status;
+    char job_no[7];
+    char stop_all;
+    char env[4];
+} JOB;
+
+JOB *jobs = NULL;
+int num_jobs = 0;
+
+#define ST_SUBMIT_PENDING 0
+#define ST_SUBMITTING 1
+#define ST_SUBMITTED 2
+#define ST_STOP_PENDING 3
+#define ST_STOPPING 4
+#define ST_STOPPED 5
+
+/*  Structure of data queue message */
+typedef _Packed struct job_data {
+    char replyq[10];
+    char replyl[10];
+    char job_nm[10];
+    char job_no[6];
+    char env[3];
+    char job_id[10];
+    char data[64];
+} DQ_MSG;
+
+/*  Global reply pending  */
+DQ_MSG * reply = NULL;
+
+/*  Copy from one buffer to another until a blank or null is hit */
+
+char *copy_to_blank(char *buff, char *item, short max)
+{
+    int i = 0;
+    char *pbuff = buff, *pitem = item;
+    for (i = 0; i < max; i++, pbuff++, pitem++)
+    {
+        if ((*pitem == '\0') || (*pitem == ' '))
+        {
+            break;
+        }
+        *pbuff = *pitem;
+    }
+    return pbuff;
+}
+
+/*  Substitue command line parameters */
+
+void substitute(char *name, short max_len, X8PF *config)
+{
+    char *pname, *pbuff;
+    char buffer[50];
+
+    /*  Start CRP026 */
+    int i = 0;
+    /*  End   CRP026 */
+
+    memset(buffer, 0, sizeof(buffer));
+    for (pname = name, pbuff = buffer; *pname != '\0'; pname++)
+    {
+        if (*pname == '&')
+        {
+            pname++;
+            switch (*pname)
+            {
+            case 'P':
+                pbuff = copy_to_blank(pbuff, config->X8PRDN, 8);
+                break;
+            case 'S':
+                pbuff = copy_to_blank(pbuff, config->X8PDSN, 5);
+                break;
+            case 'U':
+                pbuff = copy_to_blank(pbuff, config->X8UNIT, 3);
+                break;
+            case 'D':
+                pbuff = copy_to_blank(pbuff, config->X8DSMN, 2);
+                break;
+            case 'N':
+                *pbuff = config->X8FDNM;
+                pbuff++;
+                break;
+            case '\0':
+                pname--;
+                break;
+            }
+        }
+        else
+        {
+            *pbuff = *pname;
+            pbuff++;
+        }
+    }
+
+    /*  Start CRP026 */
+    /*  The above code works by stepping through the input string byte
+        by byte looking for a '&' in byte N and replacing it with the
+        data indicated by the letter in byte N+1.  Effectively two bytes
+        are read when a '&' is found.
+        So, &N is replaced by the Feeder sequence number and &U by the
+        three byte BO ID (Unit Mnemonic or System ID).
+        The loop ends when a null is found.  However if the 9th & 10th
+        bytes are &N then the cursor is moved on to the 11th byte, which
+        is null, and the loop ends, without placing a value in the 10th
+        byte of the target field.
+        This means that 'RPFEEDER&N' is changed to 'RPFEEDER1#', where
+        '#' means null.
+        Subsequently, when an ENDING message is received, a flag on the
+        apropriate job entry is updated to show this.  However the job
+        name received is 'RPFEEDER1 ', with blank at the end not null.
+        So a match is not found, the flag is not set and with the flag
+        not set, all subsequent restart requests are ignored as the code
+        thinks no jobs are inactive.
+        This is fixed by changing any nulls to blank - this is a hack
+        but a proper fix (e.g. making the name field 11 long rather
+        than 10) would be too time consuming.                           */
+
+    for (i = 0; i < max_len; i=i+1)
+    {
+        if (buffer[i] == '\0')
+        {
+            buffer[i] = ' ';
+        }
+    }
+    /*  End   CRP026 */
+
+    strncpy(name, buffer, max_len);
+    return;
+}
+
+/*  Load in masks from X8PF */
+
+int get_masks(void)
+{
+    _RFILE *X8pf = NULL;
+    char filename[21];
+    int count = 0;
+    X8PF X8pfr;
+
+    sprintf(filename, "%s/X8PF", MDBA_library());
+    if ((X8pf = _Ropen(filename,"rr")) == NULL)
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "Could not open file %s", filename);
+            ERROROUT(log_buff);
+        }
+        return -1;
+    }
+    while (_Rreadn(X8pf,&X8pfr,sizeof(X8pfr),__NO_LOCK)->num_bytes != EOF)
+    {
+        masks = (X8PF *) realloc((void *)masks, (count + 1) * sizeof(X8pfr));
+        LOGDEBUG
+        {
+            sprintf(log_buff, "Count is %hd , sizeof(X8pfr) is %hd",
+                count, sizeof(X8pfr));
+            DEBUGOUT(log_buff);
+        }
+        memcpy((char *) &masks[count], (char *) &X8pfr, sizeof(X8pfr));
+        count++;
+        LOGTRACE
+        {
+            sprintf(log_buff, "Mask {%hd}: product {%8.8s}, short_name {%5.5s}",
+                X8pfr.X8CFGN, X8pfr.X8PRDN, X8pfr.X8PDSN);
+            TRACEOUT(log_buff);
+            sprintf(log_buff, "          Rep reqd {%c}, APIs reqd {%c}",
+                X8pfr.X8RREQ, X8pfr.X8AREQ);
+            TRACEOUT(log_buff);
+            sprintf(log_buff, "          Unit {%3.3s}, server {%2.2s}, feeder {%c}",
+                X8pfr.X8UNIT, X8pfr.X8DSMN, X8pfr.X8FDNM);
+            TRACEOUT(log_buff);
+        }
+    }
+    _Rclose(X8pf);
+    return count;
+}
+
+
+/*  Load current configuration from X4PF/X3PF/etc into X8PF equivalent record structures */
+
+int get_records(void)
+{
+    X1PFR_t *px1pfr;
+    X2PFR_t *px2pfr;
+    X3PFR_t *px3pfr;
+    X4PFR_t *px4pfr;
+    X8PF X8pfr;
+    int count = 0;
+    int rc = 0;
+    char name[11];
+
+    rc = retrieve_cfg_data("PDEI", &px1pfr, &px2pfr, &px3pfr, &px4pfr);
+    if (rc < 0)
+    {
+        LOGERROR
+        {
+            sprintf(log_buff, "No config records read return code %d", rc);
+            ERROROUT(log_buff);
+        }
+    }
+    while (rc > 0)
+    {
+        memset(name, 0, 11);
+        copy_to_blank(name, px3pfr->X3SBS, 10);
+        if (strcmp(name, Subsystem()) == 0)
+        {
+            /*  Fill in X8PF structure               */
+            memcpy(X8pfr.X8PRDN, px1pfr->X1PRDN, 8);
+            memcpy(X8pfr.X8PDSN, px1pfr->X1PRDS, 5);
+            X8pfr.X8RREQ = px1pfr->X1RREQ[0];
+            X8pfr.X8AREQ = px1pfr->X1AREQ[0];
+            memcpy(X8pfr.X8DSMN, px2pfr->X2DSMN, 2);
+            memcpy(X8pfr.X8UNIT, px3pfr->X3UMN, 3);
+            X8pfr.X8FDNM = px4pfr->X4FDNM[0];
+
+            /*  Add it to the array  */
+            records = (X8PF *) realloc((void *)records,
+                (count + 1) * sizeof(X8PF));
+            memcpy((char *) &records[count], (char *) &X8pfr, sizeof(X8PF));
+            count++;
+            LOGTRACE
+            {
+                sprintf(log_buff, "Rcd     : product {%8.8s}, short_name "
+                    "{%5.5s}", X8pfr.X8PRDN, X8pfr.X8PDSN);
+                TRACEOUT(log_buff);
+                sprintf(log_buff, "          Rep reqd {%c}, APIs reqd {%c}",
+                    X8pfr.X8RREQ, X8pfr.X8AREQ);
+                TRACEOUT(log_buff);
+                sprintf(log_buff, "          Unit {%3.3s}, server {%2.2s}, "
+                    "feeder {%c}", X8pfr.X8UNIT, X8pfr.X8DSMN, X8pfr.X8FDNM);
+                TRACEOUT(log_buff);
+            }
+        }
+        rc = next_cfg_data();
+    }
+    end_cfg_access();
+    return count;
+}
+
+/* Compare configuration record against mask  */
+
+int match(X8PF *mask, X8PF *record, X8PF *result)
+{
+    int i, len, rc = 1;
+    char *pmask, *precord, *presult;
+
+    pmask = (char *) mask->X8PRDN;
+    precord = (char *) record->X8PRDN;
+    presult = (char *) result->X8PRDN;
+    len = (sizeof(X8PF) - sizeof(result->X8CFGN));
+    result->X8CFGN = mask->X8CFGN;
+    LOGTRACE
+    {
+        sprintf(log_buff, "%22.22s", pmask);
+        TRACEOUT(log_buff);
+    }
+    for (i = 0; i < len; i++)
+    {
+        if (pmask[i] == '*')
+        {
+            presult[i] = precord[i];
+        }
+        else
+        {
+            if ((pmask[i] != ' ') && (pmask[i] != precord[i]))
+            {
+                LOGTRACE
+                {
+                    sprintf(log_buff, "Index {%d} Length {%d} Mask {%x} Record {%x}", i, len,
+                                                                       pmask[i], precord[i]);
+                    TRACEOUT(log_buff);
+                }
+                rc = 0;
+                break;
+            }
+            presult[i] = pmask[i];
+        }
+    }
+    return rc;
+}
+
+/*  Match all cofiguration records against masks */
+
+int get_results(void)
+{
+    int i, j, k, count = 0;
+    X8PF result;
+
+    for (i = 0; i < num_records; i++)
+    {
+        for (j = 0; j < num_masks; j++)
+        {
+            if (match(&masks[j], &records[i], &result) == 1)
+            {
+                for (k = 0; k < count; k++)
+                {
+                    if (memcmp((char *) &result, (char *) &results[k],
+                        sizeof(result)) == 0)
+                    {
+                        break;
+                    }
+                }
+                if (k == count)
+                {
+                    results = (X8PF *) realloc((void *) results,
+                        (count + 1) * sizeof(X8PF));
+                    memcpy((char *) &results[count], (char *) &result,
+                        sizeof(X8PF));
+                    count++;
+                }
+            }
+        }
+    }
+    return count;
+}
+
+/*  From the results of matching, each configuration record */
+/*  should result in a job definition  */
+
+int define_jobs(void)
+{
+    _RFILE *X9pf = NULL;
+    char filename[21];
+    char unit_name[4] = "";
+    JOB new_job;
+    X9PF job_def;
+    int i, rc;
+    int count = 0;
+    char last_unit_name[4]= "";
+
+    for (i = 0; i < num_results; i++)
+    {
+        if (X9pf == NULL) /*  One-off file initialisation processing */
+        {
+            sprintf(filename, "%s/X920LF", MDBA_library());
+            if ((X9pf = _Ropen(filename,"rr")) == NULL)
+            {
+                LOGERROR
+                {
+                    sprintf(log_buff, "Unable to open file %s", filename);
+                    ERROROUT(log_buff);
+                }
+                return -1;
+            }
+        }
+        /*  for each result, retrieve all job definitions, and create jobs  */
+        rc = _Rreadk(X9pf, (char *) &job_def, sizeof(X9PF),
+            __KEY_EQ | __NO_LOCK, &results[i].X8CFGN,
+            sizeof(short))->num_bytes;
+        while (rc != 0)
+        {
+            /*  set up new job id  */
+            memset((char *) &new_job, 0, sizeof(new_job));
+
+            LOGTRACE
+            {
+                sprintf(log_buff, "Job {%10.10s}, Name {%10.10s}, Program "
+                    "{%10.10s}, Dependency {%10.10s}", job_def.X9JBID,
+                    job_def.X9JOBN, job_def.X9PGM, job_def.X9DEPJ);
+                TRACEOUT(log_buff);
+            }
+            copy_to_blank(new_job.job_id, job_def.X9JBID, sizeof(job_def.X9JBID));
+            copy_to_blank(new_job.pgm_id, job_def.X9PGM,
+                sizeof(job_def.X9PGM));
+            memcpy(new_job.dep_id, job_def.X9DEPJ, sizeof(job_def.X9DEPJ));
+            substitute(new_job.dep_id, 10, &results[i]);
+            memcpy(new_job.job_nm, job_def.X9JOBN, sizeof(job_def.X9JOBN));
+            substitute(new_job.job_nm, 10, &results[i]);
+            memcpy(new_job.parms, job_def.X9PARM, sizeof(job_def.X9PARM));
+            substitute(new_job.parms, 100, &results[i]);
+            copy_to_blank(new_job.stop_id, job_def.X9STOP,
+                sizeof(job_def.X9STOP));
+            new_job.status = JS_SUBMIT_PENDING;
+            if ((job_def.X9USR == 'U') && (results[i].X8UNIT[0] != ' '))
+            {
+                memcpy(unit_name, results[i].X8UNIT,
+                    sizeof(results[i].X8UNIT));
+                if (memcmp(last_unit_name, unit_name, 3) != 0)
+                {
+                    Init_BO(unit_name);
+                    memcpy(last_unit_name, unit_name, 3);
+                }
+                strcpy(new_job.user_id, unit_owner(unit_name));
+            }
+            new_job.stop_all = job_def.X9STAL;
+            memcpy(new_job.env, results[i].X8UNIT, 3);
+            LOGTRACE
+            {
+                sprintf(log_buff, "Job {%s}, Name {%s}, Program {%s}, "
+                    "Dependency {%s}, Parameters {%s}", new_job.job_id,
+                    new_job.job_nm, new_job.pgm_id, new_job.dep_id,
+                    new_job.parms);
+                TRACEOUT(log_buff);
+            }
+
+            jobs = (JOB *) realloc((char *) jobs, (count + 1) * sizeof(JOB));
+            memcpy((char *) &jobs[count], (char *) &new_job, sizeof(JOB));
+            count++;
+
+            rc = _Rreadk(X9pf, (char *) &job_def, sizeof(X9PF),
+                __KEY_NEXTEQ | __NO_LOCK, &results[i].X8CFGN,
+                sizeof(short))->num_bytes;
+        }
+    }
+    return count;
+}
+
+short check_submit_status(void)
+{
+    int i;
+    short status = ST_SUBMITTED;
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        if (jobs[i].status  == JS_SUBMITTED)
+        {
+            status = ST_SUBMITTING;
+        }
+        else if (jobs[i].status == JS_SUBMIT_PENDING)
+        {
+            status = ST_SUBMIT_PENDING;
+            break;
+        }
+    }
+    return status;
+}
+
+short check_stop_status(void)
+{
+    int i;
+    short status = ST_STOPPED;
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        if (jobs[i].status  == JS_STOPPING)
+        {
+            status = ST_STOPPING;
+        }
+        else if (jobs[i].status == JS_STOP_PENDING)
+        {
+            status = ST_STOP_PENDING;
+            break;
+        }
+    }
+    return status;
+}
+
+short get_job_status(char *job_nm)
+{
+    int i;
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        if (strcmp(job_nm, jobs[i].job_nm) == 0)
+        {
+            return jobs[i].status;
+        }
+    }
+    return -1;
+}
+
+void submit_jobs(void)
+{
+    int i;
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        if (jobs[i].status == JS_SUBMIT_PENDING)
+        {
+            if ((memcmp(jobs[i].dep_id, "          ", 10) == 0) ||
+                (get_job_status(jobs[i].dep_id) == JS_REGISTERED))
+            {
+                if (jobs[i].user_id[0] == '\0')
+                {
+                    submit_job(jobs[i].job_nm, NULL, jobs[i].pgm_id,
+                        jobs[i].parms);
+                }
+                else
+                {
+                    submit_job(jobs[i].job_nm, jobs[i].user_id,
+                        jobs[i].pgm_id, jobs[i].parms);
+                }
+                LOGENTRY
+                {
+                    sprintf(log_buff, "Submitted job %s/%s", jobs[i].job_id,
+                        jobs[i].job_nm);
+                    ENTRYOUT(log_buff);
+                }
+                jobs[i].status = JS_SUBMITTED;
+            }
+        }
+    }
+}
+
+void set_job_status(char *job_nm, char *job_no, short job_status)
+{
+    int i;
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        if (memcmp(job_nm, jobs[i].job_nm, 10) == 0)
+        {
+            if (job_status == JS_REGISTERED)
+            {
+                memcpy(jobs[i].job_no, job_no, 6);
+            }
+            jobs[i].status = job_status;
+        }
+    }
+}
+
+short flag_jobs_to_start(char *env, char *jobid)
+{
+    int i;
+    char job_id[11];
+    short num = 0;
+
+    memset(job_id, 0, 11);
+    copy_to_blank(job_id, jobid, 10);
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        LOGTRACE
+        {
+            sprintf(log_buff, "Checking {%3.3s/%s} against comparitors {%3.3s/%s}",
+                jobs[i].env, jobs[i].job_id,
+                env, job_id);
+            TRACEOUT(log_buff);
+        }
+        if ((memcmp(jobs[i].env, env, 3) == 0) &&
+            (strcmp(jobs[i].job_id, job_id) == 0))
+        {
+            if (jobs[i].status == JS_STOPPED)
+            {
+                num++;
+                jobs[i].status = JS_SUBMIT_PENDING;
+            }
+        }
+    }
+    return num;
+}
+
+static char first_job_stopping;
+
+short flag_jobs_to_stop(char *env, char *jobid)
+{
+    int i;
+    char job_id[11];
+    short num = 0;
+
+    memset(job_id, 0, 11);
+    copy_to_blank(job_id, jobid, 10);
+    first_job_stopping = 'Y';
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        LOGTRACE
+        {
+            sprintf(log_buff, "Checking {%3.3s/%s} against comparitors {%3.3s/%s}",
+                jobs[i].env, jobs[i].job_id,
+                env, job_id);
+            TRACEOUT(log_buff);
+        }
+        if ((memcmp(jobs[i].env, env, 3) == 0) &&
+            (strcmp(jobs[i].job_id, job_id) == 0))
+        {
+            num++;
+            jobs[i].status = JS_STOP_PENDING;
+        }
+    }
+    return num;
+}
+
+void stop_jobs(void)
+{
+    int i;
+
+    for (i = 0; i < num_jobs; i++)
+    {
+        if (jobs[i].status == JS_STOP_PENDING)
+        {
+            if ((memcmp(jobs[i].dep_id, "          ", 10) == 0) ||
+                (get_job_status(jobs[i].dep_id) == JS_STOPPED))
+            {
+                if ((jobs[i].stop_all != 'Y') || (first_job_stopping == 'Y'))
+                {
+                    if (jobs[i].user_id[0] == '\0')
+                    {
+                        submit_job(jobs[i].job_nm, NULL, jobs[i].stop_id,
+                            jobs[i].parms);
+                    }
+                    else
+                    {
+                        submit_job(jobs[i].job_nm, jobs[i].user_id,
+                            jobs[i].stop_id, jobs[i].parms);
+                    }
+                    LOGENTRY
+                    {
+                        sprintf(log_buff, "Stopping job %s/%s", jobs[i].job_id,
+                            jobs[i].job_nm);
+                        ENTRYOUT(log_buff);
+                    }
+                    if (jobs[i].stop_all == 'Y')
+                    {
+                        first_job_stopping = 'N';
+                    }
+                }
+                jobs[i].status = JS_STOPPING;
+            }
+        }
+    }
+}
+
+/*  Prepare shutdown reply */
+
+void prepare_shutdown_reply(DQ_MSG* request)
+{
+    reply = (DQ_MSG *) malloc(sizeof(DQ_MSG));
+    memcpy((char*) reply, (char*) request, sizeof(DQ_MSG));
+}
+
+/*  Prepare restart reply */
+
+void prepare_restart_reply(DQ_MSG* request)
+{
+    reply = (DQ_MSG *) malloc(sizeof(DQ_MSG));
+    memcpy((char*) reply, (char*) request, sizeof(DQ_MSG));
+}
+
+/*  Send reply  */
+void send_reply()
+{
+    decimal(5, 0) dlen;
+    if (reply == NULL)
+    {
+        return;
+    }
+    dlen = strlen(reply->data);
+    QSNDDTAQ(reply->replyq, reply->replyl, dlen, reply->data);
+    free(reply);
+    reply = NULL;
+}
+
+/*  Reply Busy  */
+void return_busy(DQ_MSG * request)
+{
+    decimal(5, 0) dlen;
+    dlen = 4;
+    QSNDDTAQ(reply->replyq, reply->replyl, dlen, "BUSY");
+}
+
+/*  Launch task waits on data queue */
+
+void listen(void)
+{
+    DQ_MSG JOB_DATA;
+    decimal(5,0) dlen = sizeof(JOB_DATA);
+    decimal(5,0) wait = -1;
+    char lib[10];
+    char qname[10];
+    short shutdown = 0;
+
+    memcpy(qname, "MDBAJOBCTL", 10);
+    memset(lib, ' ', 10);
+    memcpy(lib, Subsystem(), strlen(Subsystem()));
+
+    while (shutdown == 0)
+    {
+        memset(&JOB_DATA, 0, sizeof(DQ_MSG));
+        QRCVDTAQ(qname, lib, &dlen , (char*) &JOB_DATA, wait);
+
+        if (memcmp(JOB_DATA.data, "REGISTER", 8) == 0)
+        {
+            short submit_status;
+            LOGTRACE
+            {
+                sprintf(log_buff, "Received %s from %10.10s/%6.6s",
+                    JOB_DATA.data, JOB_DATA.job_nm, JOB_DATA.job_no);
+                TRACEOUT(log_buff);
+            }
+
+            set_job_status(JOB_DATA.job_nm, JOB_DATA.job_no, JS_REGISTERED);
+            submit_status = check_submit_status();
+            if (submit_status == ST_SUBMIT_PENDING)
+            {
+                submit_jobs();
+            }
+            else if (submit_status == ST_SUBMITTED)
+            {
+                if (reply != NULL)
+                {
+                    send_reply();
+                }
+            }
+        }
+        else if (memcmp(JOB_DATA.data, "ENDING", 6) == 0)
+        {
+            short stop_status;
+            LOGTRACE
+            {
+                sprintf(log_buff, "Received %s from %10.10s/%6.6s",
+                    JOB_DATA.data, JOB_DATA.job_nm, JOB_DATA.job_no);
+                TRACEOUT(log_buff);
+            }
+
+            set_job_status(JOB_DATA.job_nm, JOB_DATA.job_no, JS_STOPPED);
+            stop_status = check_stop_status();
+            if (stop_status == ST_STOP_PENDING)
+            {
+                stop_jobs();
+            }
+            else if (stop_status == ST_STOPPED)
+            {
+                if (reply != NULL)
+                {
+                    send_reply();
+                }
+            }
+        }
+        else if (memcmp(JOB_DATA.data, "SHUTDOWN", 8) == 0)
+        {
+            LOGTRACE
+            {
+                sprintf(log_buff, "Received %s for %10.10s/%3.3s",
+                    JOB_DATA.data, JOB_DATA.job_id, JOB_DATA.env);
+                TRACEOUT(log_buff);
+            }
+            if (reply != NULL)
+            {
+                return_busy(&JOB_DATA);
+            }
+            else
+            {
+                prepare_shutdown_reply(&JOB_DATA);
+                if (flag_jobs_to_stop(JOB_DATA.env, JOB_DATA.job_id) > 0)
+                {
+                    stop_jobs();
+                }
+                else
+                {
+                    send_reply();
+                }
+            }
+        }
+        else if (memcmp(JOB_DATA.data, "RESTART", 8) == 0)
+        {
+            LOGTRACE
+            {
+                sprintf(log_buff, "Received %s for %10.10s/%3.3s",
+                    JOB_DATA.data, JOB_DATA.job_id, JOB_DATA.env);
+                TRACEOUT(log_buff);
+            }
+            if (reply != NULL)
+            {
+                return_busy(&JOB_DATA);
+            }
+            else
+            {
+                prepare_restart_reply(&JOB_DATA);
+                if (flag_jobs_to_start(JOB_DATA.env, JOB_DATA.job_id) > 0)
+                {
+                    submit_jobs();
+                }
+                else
+                {
+                    send_reply();
+                }
+            }
+        }
+        else
+        {
+            LOGTRACE
+            {
+                sprintf(log_buff, "Received %s from %10.10s/%6.6s",
+                    JOB_DATA.data, JOB_DATA.job_nm, JOB_DATA.job_no);
+                TRACEOUT(log_buff);
+            }
+        }
+    }
+}
+
+/*  Work out which jobs to submit and submit them */
+
+void main(int argc, char *argv[])
+{
+    open_log(job_name(), get_level());
+    if ((num_masks = get_masks()) > 0)
+    {
+        if ((num_records = get_records()) > 0)
+        {
+            if ((num_results = get_results()) > 0)
+            {
+                if ((num_jobs = define_jobs()) > 0)
+                {
+                    submit_jobs();
+                    listen();
+                }
+                else
+                {
+                    LOGOUT(LOG_ENTRY, "No jobs");
+                }
+            }
+            else
+            {
+                LOGOUT(LOG_ENTRY, "No results");
+            }
+        }
+        else
+        {
+            LOGOUT(LOG_ENTRY, "No configuraton records");
+        }
+    }
+    else
+    {
+        LOGOUT(LOG_ENTRY, "No configuraton details");
+    }
+    close_log();
+}

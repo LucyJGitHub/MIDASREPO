@@ -1,0 +1,457 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPFDRCTL - Journal Feeder controlling CL                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809                      Date 16Dec21   */
+/*       Prev Amend No. EQ-26439     Melvin Chan      Date 25Jul17   */
+/*                      SFDC01721865 Jermaine Domingo Date 17Sep16   */
+/*                      SFDC00601435                  Date 22Feb12   */
+/*                      001157 Bugzilla               Date 05Dec06   */
+/*                      CRP026 *CREATE                Date 18Jul05   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*     MD058809 - After installation of MQ9 compatibility patch and  */
+/*                restart of the Meridian Replication subsystem      */
+/*                REPMIDASPT, the job MPT1PBSIN ended in MSGW.       */
+/*     EQ-26439 - Amended the program so that it catches the error   */
+/*                when RCVJRNE command encounter invalid sequence    */
+/*                number. It will restore the first sequence number  */
+/*                of the current receiver as replacement to          */
+/*                missing sequence number                            */
+/*                                                                   */
+/* SFDC00601435 - Midas systems that keep Replication running        */
+/*                24/7 can confuse it by the way they juggle         */
+/*                journal receivers and sequence numbers.            */
+/*                This change switches to using                      */
+/*                RCVRNG(*CURCHAIN), which seems to fix the problem. */
+/*                Note that the only change in this member is a      */
+/*                comment to note that we've thought of this.        */
+/*                                                                   */
+/*       001157 - Rollback should be conditioned on being in *SECURE */
+/*                mode.                                              */
+/*       CRP026 - Rewritten from KMDFDC (in QCLSRC) as part of       */
+/*                new Feeder work.                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEM &SEQNO)
+
+/* Parameters */
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&SEQNO) TYPE(*CHAR) LEN(1)
+
+/* Others     */
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10) /* +
+                          Replication Base library name */
+             DCL        VAR(&BASELIB) TYPE(*CHAR) LEN(10) /* +
+                          Replication Base library name */
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10) /* Replication +
+                          Subsystem (library) name */
+
+             DCL        VAR(&INITBOSYS) TYPE(*DEC) LEN(3 0) VALUE(7) +
+                          /* A symbolic 'constant' that tells the +
+                          called program to initialise the +
+                          environment for the BO system. */
+
+             DCL        VAR(&JRNDA) TYPE(*CHAR) LEN(10) /* Data area +
+                          containing journal name*/
+             DCL        VAR(&SEQDA) TYPE(*CHAR) LEN(10) /* Data area +
+                          containing last sequence number used */
+
+             DCL        VAR(&JRNNAM) TYPE(*CHAR) LEN(20) /* Journal +
+                          library & name */
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10) /* Journal +
+                          library        */
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10) /* Journal +
+                          name           */
+
+             DCL        VAR(&LASTSEQ) TYPE(*CHAR) LEN(10) /* Last +
+                          sequence nbr. used - alpha */
+             DCL        VAR(&LASTSEQNUM) TYPE(*DEC) LEN(10 0) /* +
+                          Last sequence nbr. used - numeric*/
+             DCL        VAR(&JRNSEQNUM) TYPE(*DEC) LEN(10 0) /* Last +
+                          sequence nbr. used - from file */
+             DCL        VAR(&STRSEQNUM) TYPE(*DEC) LEN(10 0) /* +
+                          Sequence number to start RCVJRNE at */
+             DCL        VAR(&STRSEQ) TYPE(*CHAR) LEN(10) /* Sequence +
+                          number to start RCVJRNE at */
+             DCL        VAR(&STARTRCVR) TYPE(*CHAR) LEN(10) /* +
+                          Starting journal receiver for RCVJRNE */
+             DCL        VAR(&TEMPENTYP) TYPE(*CHAR) LEN(2) /* Temp +
+                          field for RTVJRNE          */
+
+             DCL        VAR(&FDRMODE) TYPE(*CHAR) LEN(7) /* Feeder +
+                          mode (*SERURE/*FAST) from control data +
+                          area */
+
+             DCL        VAR(&QUIT) TYPE(*CHAR) LEN(2) VALUE('01') /* +
+                          Journal entry used to tell Feeder to stop*/
+
+             DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(10) /* Return +
+                          Code */
+             DCL        VAR(&CMDSTRING) TYPE(*CHAR) LEN(5600) /* +
+                          Command String from RTVLSTF     */
+
+             DCL        VAR(&GOONRCVJRN) TYPE(*CHAR) LEN(1) VALUE(Y) /* +
+                          Control flag for RCVJRNE loop */
+             DCL        VAR(&CURRRCV) TYPE(*CHAR) LEN(10) /* Current +
+                          receiver before RCVJRNE */
+             DCL        VAR(&STOPLOOP) TYPE(*CHAR) LEN(1) VALUE('0') +
+                          /* Used in ABNOR processing to prevent +
+                          infinite loop */
+
+             DCL        VAR(&RestartCnt) TYPE(*DEC) LEN(2 0) +
+                          VALUE(0) /* Number of times in a row the +
+                          Feeder job has restarted */
+             DCL        VAR(&ALPHA) TYPE(*CHAR) LEN(2) /* +
+                          Character version of Numeric field */
+
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10) /* Name of +
+                          this job, to be used in the Message */
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(1024) /* +
+                          Message to be written to X6PF */
+             DCL        VAR(&PROCESS) TYPE(*CHAR) LEN(25) +
+                          /* Process name to be written to X6PF */
+
+             DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(100) /* Message +
+                          to put in joblog */
+
+             DCL        VAR(&RTNDATA) TYPE(*CHAR) LEN(64) /* Data +
+                          returned by 'access object' from RPBOIFDA */
+             DCL        VAR(&DATALEN) TYPE(*DEC) LEN(2 0) /* Length +
+                          of value in &RTNDATA */
+
+             DCL        VAR(&SYSTYP) TYPE(*CHAR) LEN(10) /* Midas +
+                          system type - R4 / M+Zone / M+ Global */
+
+             DCL        VAR(&ERRORINRPG) TYPE(*CHAR) LEN(1) +
+                          VALUE('N') /* An error occurred in called RPG */
+             DCL        VAR(&RPFDRERR) TYPE(*CHAR) LEN(256) /* Error +
+                          details from called RPG */
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/* Check that Replication Base library is in library list ... */
+             RTVOBJD    OBJ(KMDBASE) OBJTYPE(*DTAARA) RTNLIB(&RTNLIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/* ... if it isn't try to get the name from the BO data area and add it.  */
+                RTVDTAARA  DTAARA(RPLIBNAMES (11 10)) RTNVAR(&RTNLIB)
+                MONMSG     MSGID(CPF1015) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Replication Base library +
+                                is not in library list and cannot be added')
+                   SNDPGMMSG  MSG(&MSGTXT) TOPGMQ(*PRV) MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                ADDLIBLE   LIB(&RTNLIB)
+             ENDDO
+             CHGVAR     VAR(&BASELIB) VALUE(&RTNLIB)
+
+/* Check that Replication Subsystem library is in library list ... */
+             RTVOBJD    OBJ(KMDSBS) OBJTYPE(*DTAARA) RTNLIB(&RTNLIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/* ... if it isn't try to get the name from the BO data arae and add it.  */
+                RTVDTAARA  DTAARA(RPLIBNAMES (01 10)) RTNVAR(&RTNLIB)
+                MONMSG     MSGID(CPF1015) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Replication Subsystem library +
+                                is not in library list and cannot be added')
+                   SNDPGMMSG  MSG(&MSGTXT) TOPGMQ(*PRV) MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                ADDLIBLE   LIB(&RTNLIB)
+             ENDDO
+             CHGVAR     VAR(&SBS) VALUE(&RTNLIB)
+
+/* Retrieve Replication Release level and output to joblog       */
+             RTVDTAARA  DTAARA(REPN (67 34)) RTNVAR(&MSGTXT)
+             CHGVAR     VAR(&MSGTXT) VALUE('Current Replication +
+                          level is' *BCAT &MSGTXT)
+             SNDPGMMSG  MSG(&MSGTXT) TOPGMQ(*PRV) MSGTYPE(*INFO)
+
+/* Force Invocation number to be numeric */
+             IF         COND(&SEQNO *EQ ' ') THEN(CHGVAR VAR(&SEQNO) +
+                          VALUE('0'))
+
+/*  Create data area that will be used to store data to be passed to RPG           */
+             DLTDTAARA  DTAARA(QTEMP/FEEDERINF)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/FEEDERINF) TYPE(*CHAR) LEN(64)
+
+/* Create data are in which RPG will pass back error info */
+             CRTDTAARA  DTAARA(QTEMP/RPFDRERR) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023) EXEC(DO)
+                CHGDTAARA  DTAARA(QTEMP/RPFDRERR) VALUE(' ')
+             ENDDO
+
+/*  Call a BO specific routine to set up the environment */
+             CALL       PGM(RPBOIF02) PARM(&INITBOSYS ' ')
+
+/*  Set up log file override */
+             OVRDBF     FILE(X6PF) TOFILE(X6PF) MBR(&SBS) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+             CLOF       OPNID(X6PF)
+             MONMSG     MSGID(CPF4520)
+             OPNDBF     FILE(X6PF) OPTION(*OUT) MBR(&SBS) +
+                          OPNSCOPE(*JOB)
+
+/*  Work out journal name data area */
+             CHGVAR     VAR(&JRNDA) VALUE('JD' *CAT &SYSTEM *CAT 'NAM')
+
+/*  Retrieve journal name data area and extract components */
+             RTVDTAARA  DTAARA(&JRNDA) RTNVAR(&JRNNAM)
+             CHGVAR     VAR(&JRN) VALUE(%SST(&JRNNAM 1 10))
+             CHGVAR     VAR(&JLIB) VALUE(%SST(&JRNNAM 11 10))
+
+/*  If the library name is blank, default it to the work library */
+             IF         COND(&JLIB *EQ ' ') THEN(DO)
+                CALL       PGM(KMDICI) PARM('WRKLIB' &SYSTEM &JLIB)
+             ENDDO
+
+/* Get the correct Starting journal receiver - default = *CURCHAIN */
+             CHGVAR     VAR(&STARTRCVR) VALUE('*CURCHAIN')
+
+/* Do Midas processing if Midas journal. +
+   Note that we do nothing special for the "*MIDASR424" value, as +
+   we want to use *CURCHAIN in that case. */
+             CALLPRC    PRC(RPBOIF99) PARM(('MIDASTYPE ') (&RTNDATA) +
+                          (&DATALEN))
+             CHGVAR     VAR(&SYSTYP) VALUE(%SST(&RTNDATA 1 &DATALEN))
+             IF         COND(&SYSTYP = '*MIDASR4' *OR  +
+                             &SYSTYP = '*MIDSPLUSZ' *OR +
+                             &SYSTYP = '*MIDSPLUSG') +
+                          THEN(DO)
+                CALLPRC    PRC(RPSTRRCV) PARM(&SYSTYP &JRN &JLIB +
+                             &STARTRCVR)
+                IF         COND(&STARTRCVR = '*ERROR') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Unable to find starting +
+                                journal receiver') TOPGMQ(*PRV) +
+                                MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+
+/* Check data area exists and if not create it in a common function */
+             CALLPRC    PRC(RPCRTENV) PARM('D' &SEQNO &BASELIB &SBS)
+
+/* Check MQ buffer queue exists and if not create it in a common function */
+             CALLPRC    PRC(RPCRTENV) PARM('M' &SEQNO &BASELIB &SBS)
+
+/* Retreive last sequence number used from data area +
+     - pre-existing or newly created     */
+             CHGVAR     VAR(&SEQDA) VALUE('JDFDR' *CAT &SYSTEM *CAT +
+                          &SEQNO)
+             RTVDTAARA  DTAARA(&SEQDA) RTNVAR(&LASTSEQ)
+             CHGVAR     VAR(&LASTSEQNUM) VALUE(&LASTSEQ)
+
+/* Retreive last sequence number used from file */
+             CALLPRC    PRC('getFdrCtlRec') PARM((&SEQNO) +
+                          (&RETCODE) (&JRNSEQNUM))
+             IF         COND(&RETCODE *NE ' ') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             on call to procedure getFdrCtlRec') +
+                             TOPGMQ(*SAME) MSGTYPE(*INFO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Use the higher of the file and data area values */
+             IF         COND(&JRNSEQNUM > &LASTSEQNUM) THEN(DO)
+                CHGVAR     VAR(&LASTSEQNUM) VALUE(&JRNSEQNUM)
+             ENDDO
+
+/* Ensure the restart info is valid by looking for that entry in the journal */
+             IF         COND(&LASTSEQNUM *NE 0) THEN(DO)
+
+                RTVJRNE    JRN(&JLIB/&JRN) RCVRNG(&STARTRCVR) +
+                             FROMENT(&LASTSEQNUM) TOENT(&LASTSEQNUM) +
+                             RTNENTTYP(&TEMPENTYP)
+                MONMSG     MSGID(CPF7054) EXEC(DO)
+
+/* Entry not found in journal, probably means that receiver chain has been rebuilt +
+     so set to restart at first entry */
+                   RTVJRNE    JRN(&JLIB/&JRN) RCVRNG(&STARTRCVR) +
+                              FROMENT(*FIRST) TOENT(*FIRST) +
+                              RTNSEQNBR(&LASTSEQNUM)
+                   CHGVAR     VAR(&LASTSEQ) VALUE(&LASTSEQNUM)
+                   CHGDTAARA  DTAARA(&SEQDA) VALUE(&LASTSEQ)
+                ENDDO
+             ENDDO
+
+/*  Inform MDBALaunch that we are starting  */
+             CALL       PGM(KMDRGC) PARM(REGISTER)
+
+/* Set start point for journal  */
+             CHGVAR     VAR(&STRSEQNUM) VALUE(&LASTSEQNUM + 1)
+
+/* If that entry does not exist add a dummy one so that later RCVJRNE +
+      can start and wait for entries to arrive   */
+             RTVJRNE    JRN(&JLIB/&JRN) RCVRNG(&STARTRCVR) +
+                          FROMENT(&STRSEQNUM) TOENT(&STRSEQNUM)
+             MONMSG     MSGID(CPF7054 CPF7073) EXEC(DO)
+                SNDJRNE    JRN(&JLIB/&JRN) TYPE('XX')
+             ENDDO
+
+/* Get the Feeder mode so that we know whether commitment control is needed */
+             CALLPRC    PRC(RPBOIF99) PARM(('FEEDERMODE') (&RTNDATA) +
+                          (&DATALEN))
+             CHGVAR     VAR(&FDRMODE) VALUE(%SST(&RTNDATA 1 &DATALEN))
+
+             IF         COND(&FDRMODE = '*SECURE') THEN(DO)
+                STRCMTCTL  LCKLVL(*CS) CMTSCOPE(*JOB)
+             ENDDO
+
+/*  Loop to make Feeder automatically restart if the journal receiver is changed */
+             DOWHILE    COND(&GOONRCVJRN = 'Y')
+
+EXE:
+
+/*  Use an RPG routine to generate the RCVJRNE including just the   */
+/*    files needed by this Feeder job and then execute the command  */
+                CHGVAR     VAR(&STRSEQ) VALUE(&STRSEQNUM)
+                CALLPRC    PRC(RTVLSTF) PARM(&SEQNO &SYSTEM &JLIB &JRN +
+                             &STARTRCVR &STRSEQ &QUIT &RETCODE +
+                             &CMDSTRING)
+                IF         COND(&CMDSTRING *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&RETCODE) VALUE('*BLANK')
+                ENDDO
+                IF         COND(&RETCODE *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             on call to module RTVLSTF') TOPGMQ(*SAME) +
+                             MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+
+/* Get the Current Receiver name - for use after the RCVJRNE        */
+                RTVJRNE    JRN(&JLIB/&JRN) RTNRCV(&CURRRCV)
+
+/*  Store data to be passed to RPG                                               */
+                CHGDTAARA  DTAARA(QTEMP/FEEDERINF) +
+                      VALUE(&SEQNO *CAT &SYSTEM *CAT &STRSEQ)
+
+/* Put the RCVJRNE command into the joblog to make support easier and +
+    then execute the command */
+                SNDPGMMSG  MSG(&CMDSTRING) TOPGMQ(*SAME) MSGTYPE(*INFO)
+                CALL       PGM(QCMDEXC) PARM(&CMDSTRING 5600)
+
+/* Ignore if no journal entries have been processed                 */
+                MONMSG     MSGID(CPF7062)
+
+/* Retrieve start sequence number of the current receiver if the current +
+     start sequence number is not in Range */
+                MONMSG     MSGID(CPF7054) EXEC(DO)
+
+                   RTVJRNE    JRN(&JLIB/&JRN) RCVRNG(&STARTRCVR) +
+                              FROMENT(*FIRST) TOENT(*FIRST) +
+                              RTNSEQNBR(&STRSEQNUM)
+                   GOTO       CMDLBL(EXE)
+                ENDDO
+
+/* Error if any other unplanned way of ending */
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   CHGVAR     VAR(&ERRORINRPG) VALUE('Y')
+                ENDDO
+
+/* Error if one reported by RPG               */
+                RTVDTAARA  DTAARA(QTEMP/RPFDRERR (1 10)) RTNVAR(&RPFDRERR)
+                IF         COND(&RPFDRERR *NE ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRORINRPG) VALUE('Y')
+                ENDDO
+
+/* If error occurred then report it                        */
+                IF         COND(&ERRORINRPG = 'Y') THEN(DO)
+/******************ROLLBACK************************/                             /*001157*/
+                   IF         COND(&FDRMODE = '*SECURE') THEN(DO)
+                      ROLLBACK                                                   /*001157*/
+                      ENDCMTCTL
+                      MONMSG     MSGID(CPF83E4 CPF835A CPF835B CPF835C +
+                                   CPF8350 CPF8355 CPF8356 CPF8367)
+                   ENDDO
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+
+/* Look for a Next Receiver (NR) entry in the Current Receiver when */
+/*  the RCVJRNE was issued.                                         */
+/* If not found, carry on and exit                                  */
+/* If found, loop back and reissue the RCVJRNE command to carry on  */
+/*  processing entries                                              */
+                RTVJRNE    JRN(&JLIB/&JRN) RCVRNG(&CURRRCV) ENTTYP(NR)
+                MONMSG     MSGID(CPF7073) EXEC(DO)
+                   CHGVAR     VAR(&GOONRCVJRN) VALUE('N')
+                ENDDO
+
+                IF         COND(&GOONRCVJRN = 'Y') THEN(DO)
+   /* Retreive last sequence number used from data area */
+                   RTVDTAARA  DTAARA(&SEQDA) RTNVAR(&LASTSEQ)
+                   CHGVAR     VAR(&LASTSEQNUM) VALUE(&LASTSEQ)
+
+   /* Retreive last sequence number used from file */
+                   CALLPRC    PRC('getFdrCtlRec') PARM((&SEQNO) +
+                                (&RETCODE) (&JRNSEQNUM))
+                   IF         COND(&RETCODE *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                                   on call to procedure getFdrCtlRec') +
+                                   TOPGMQ(*SAME) MSGTYPE(*INFO)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+
+   /* Use the higher of the file and data area values */
+                   IF         COND(&JRNSEQNUM > &LASTSEQNUM) THEN(DO)
+                      CHGVAR     VAR(&LASTSEQNUM) VALUE(&JRNSEQNUM)
+                   ENDDO
+
+   /* Set start point for journal  */
+                   CHGVAR     VAR(&STRSEQNUM) VALUE(&LASTSEQNUM + 1)
+
+   /* Set start point for journal  */
+                   CHGVAR     VAR(&RESTARTCNT) VALUE(&RESTARTCNT + 1)
+                   CHGVAR     VAR(&ALPHA) VALUE(&RESTARTCNT)
+                   RTVJOBA    JOB(&JOBNAME)
+                   CHGVAR     VAR(&MESSAGE) VALUE('Feeder job ' *CAT +
+                                &JOBNAME *TCAT ' ' *CAT +
+                                'is restarting time number ' *CAT &ALPHA)
+                   CHGVAR     VAR(&PROCESS) VALUE(&JOBNAME)
+                   CALLPRC    PRC(ENTRYOUT) PARM(&PROCESS &MESSAGE)
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA(&MESSAGE) TOPGMQ(*PRV)
+
+                ENDDO /* End of "IF COND(&GOONRCVJRN = 'Y') THEN(DO)" */
+             ENDDO      /* End of "DOWHILE COND(&GOONRCVJRN = 'Y')" */
+
+             /*  Clean up environment  */
+             IF         COND(&FDRMODE = '*SECURE') THEN(DO)
+                ROLLBACK
+                ENDCMTCTL
+                MONMSG     MSGID(CPF83E4 CPF835A CPF835B CPF835C +
+                             CPF8350 CPF8355 CPF8356 CPF8367)
+             ENDDO
+             DLTDTAARA  DTAARA(QTEMP/FEEDERINF)
+             MONMSG     MSGID(CPF0000)
+             CLOF       OPNID(X6PF)
+             DLTOVR     FILE(X6PF) LVL(*JOB)
+
+             GOTO       CMDLBL(END)
+ABNOR:
+             /*  Prevent infinite loop */
+             IF         COND(&STOPLOOP *EQ '1') THEN(DO)
+                RETURN
+             ENDDO
+             CHGVAR     VAR(&STOPLOOP) VALUE('1')
+             MONMSG     MSGID(CPF0000)
+             IF         COND(&FDRMODE = '*SECURE') THEN(DO)
+                ROLLBACK
+                ENDCMTCTL
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+
+             /*  Inform MDBALaunch that we are ending  */
+END:
+             CALL       PGM(KMDRGC) PARM(ENDING)
+
+             ENDPGM

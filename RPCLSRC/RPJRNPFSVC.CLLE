@@ -1,0 +1,132 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Meridian Replication                                        */
+/*                                                                   */
+/*       RPJRNPFVC - Journal Back Office files                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD058809           Date 16Dec21              */
+/*       Prev Amend No. CRP014  *CREATE    Date 11Jun01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058809 - After installation of MQ9 compatibility patch and*/
+/*                  restart of the Meridian Replication subsystem    */
+/*                  REPMIDASPT, the job MPT1PBSIN ended in MSGW.     */
+/*       CRP014 - Add function to journal files to specified journal */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRODUCT &JRN &JRNLIB &CHECK &JOURNAL)
+
+/*  Parameters                                                      */
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CHECK) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&JOURNAL) TYPE(*CHAR) LEN(4)
+
+             DCL        VAR(&RPPRODUCT) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ERRPARM) TYPE(*CHAR) LEN(1) VALUE('N')
+
+             COPYRIGHT  TEXT('+
+             (c) Misys International Banking Systems Ltd. 2001')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Check that the journal exists and the user is authorised to +
+     authorised to update it                                        */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+
+             IF         COND(&JRNLIB  *NE '*LIBL') THEN(DO)
+                CHKOBJ     OBJ(QSYS/&JRNLIB) OBJTYPE(*LIB) +
+                               AUT(*CHANGE)
+                MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &JRNLIB *TCAT ' ' *CAT +
+                                'does not exist or you are not +
+                                authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+                ENDDO
+             ENDDO
+
+             IF         COND(&ERRPARM *NE 'Y') THEN(DO)
+                CHKOBJ     OBJ(&JRNLIB/&JRN) OBJTYPE(*JRN) +
+                             AUT(*CHANGE)
+                MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Journal' *BCAT &JRNLIB *TCAT '/' *CAT  +
+                                &JRN *TCAT ' ' *CAT 'does not exist +
+                                or you are not authorised to it') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+                ENDDO
+             ENDDO
+
+/*  Check that MDBASCRIPT and the relevant member exist             */
+
+             CHGVAR     VAR(&ERRPARM)  VALUE('N')
+
+             CHKOBJ     OBJ(*LIBL/MDBASCRIPT) OBJTYPE(*FILE) AUT(*USE)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             MDBASCRIPT file does not exist or you are +
+                             not authorised to it') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                CHGVAR     VAR(&ERROR)  VALUE('Y')
+             ENDDO
+
+             CHGVAR     VAR(&RPPRODUCT) VALUE('RP' *CAT &PRODUCT)
+
+             IF         COND(&ERRPARM *NE 'Y') THEN(DO)
+                CHKOBJ     OBJ(*LIBL/MDBASCRIPT) OBJTYPE(*FILE) +
+                             MBR(&RPPRODUCT) AUT(*USE)
+                MONMSG     MSGID(CPF9800) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                MDBASCRIPT file member for' *BCAT +
+                                &PRODUCT *TCAT ' ' *CAT 'does not +
+                                exist or you are not authorised to +
+                                it') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERRPARM)  VALUE('Y')
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+                ENDDO
+             ENDDO
+
+/*  Prevent both CHECK(*YES) and JOURNAL(*YES) bering specified     */
+
+             IF         COND(&CHECK = '*YES' *AND &JOURNAL = '*YES') +
+                          THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             CHECK and JOURNAL cannot both be *YES.') +
+                             MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR)  VALUE('Y')
+             ENDDO
+
+/*  Send message to cause OS/400 to pass earlier messages back      */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Unexpected error occurred in +
+                          RPJRNPFSVC') TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ END:
+
+             ENDPGM

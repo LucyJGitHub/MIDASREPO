@@ -698,7 +698,7 @@ E1   C                   ENDIF                                                  
      C                   MOVE      'N'           DDACOFOK                                     CLE123
      C                   ADD       1             Idx                                          CLE123
      C                   MOVEL     'DDACOF'      FldNamXAr(Idx)                               CLE123
-     C                   MOVEL     '5049530'     MsgIDXAr(Idx)                                CLE123
+     C                   MOVEL     '5049531'     MsgIDXAr(Idx)                                CLE123
      C                   ENDIF                                                                CLE123
       *
       ***  Validate industry (for loans and parts purchased)

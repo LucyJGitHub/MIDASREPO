@@ -2049,10 +2049,10 @@
      C     K#KY08        READE     LEREF                                  80     (*ON = EOF)  CLE123
       *                                                                                       CLE123
      C                   IF        *IN80 = '0'                                       found    CLE123
-     C                   Move      'N'           DDACOFOK                                     CLE123
-     C                   Add       1             Idx                                          CLE123
-     C                   Movel     'DDACOF'      FldNamXAr(Idx)                               CLE123
-     C                   Movel     '5049529'     MsgIDXAr(Idx)                                CLE123
+     C                   MOVE      'N'           DDACOFOK                                     CLE123
+     C                   ADD       1             Idx                                          CLE123
+     C                   MOVEL     'DDACOF'      FldNamXAr(Idx)                               CLE123
+     C                   MOVEL     '5049532'     MsgIDXAr(Idx)                                CLE123
      C                   ENDIF                                                                CLE123
       *                                                                                       CLE123
      C                   ENDIF                                                                CLE123

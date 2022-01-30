@@ -142,7 +142,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059321 - Changed Processing to RepoFlag before reaching    *
-      *             main validation module.                           *
+      *             main validation module                            *
       *  MD058540 - Added missing parameters when calling MMLDNIVAL   *
       *  MD057049 - Move value of IKRRAT to HKRRAT                    *
       *  MD056313 - Deal settlement not validated during authorize    *

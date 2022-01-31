@@ -1,4 +1,5 @@
      H DEBUG
+     H DFTACTGRP(*NO) ACTGRP(*CALLER)                                                       MD059343
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /**** *  RPGBASEBNC                                                   *                     MD055682
@@ -18,6 +19,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD059343           Date 31Jan22               *
       *  Last Amend No. MD055682           Date 31Jul20               *
       *  Prev Amend No. MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
@@ -29,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059343 - add DFTACTGRP(*NO) ACTGRP(*CALLER) in parameter   *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *

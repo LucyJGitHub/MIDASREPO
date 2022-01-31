@@ -26,7 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059448 - Replication job RPTRGSRV01 dumps with DBASE 1 in  *
-      *             pgm A1008006.                                     *
+      *             pgm A1008006                                      *
       *  BA1008 - Replication of Trades to consolidated Branches      *
       *                                                               *
       *****************************************************************

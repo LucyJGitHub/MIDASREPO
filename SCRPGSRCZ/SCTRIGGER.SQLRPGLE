@@ -31,7 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059343 - add DFTACTGRP(*NO) ACTGRP(*CALLER) in parameter   *
+      *  MD059343 - Add DFTACTGRP(*NO) ACTGRP(*CALLER) in parameter   *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *

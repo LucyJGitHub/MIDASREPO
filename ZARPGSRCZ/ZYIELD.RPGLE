@@ -35,7 +35,7 @@
       *                                                               *
       *  MD031386 - Yield can be negative at least for method 'A '.   *
       *             Yield can greater then 999.9   for method 'A '    *
-      *           - Applied fix for MD059045                          *
+      *           - Applied fix for MD059045.                         *
       *  MD054863 - Calculate negative yield.                         *
       *             Applied partial fix of 258499.                    *
       *  MD046248 - Finastra Rebranding                               *

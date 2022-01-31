@@ -17,8 +17,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057051           Date 28Oct20               *
+      *  Last Amend No. MD059369           Date 24Dec21               *
+      *  Prev Amend No. MD059367           Date 24Dec21               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD057051           Date 28Oct20               *
       *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -169,6 +171,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
+      *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057051 - DLC0400 00001 fails during COB.                   *
       *           - Do not execute SR/CGSTAX when WSTAT is blanks as  *
@@ -538,8 +542,10 @@
      D**********          ##GRP   1 466 10   ##RDEA 22                               MD026764 CDL094
      D**********          ##GRP   1 478 10   ##RDEA 22                               CDL094 MD030644
      D**********          ##GRP   1 481 10   ##RDEA 22                               MD030644 CER050
-     D ##GRP           S             10    DIM(482) CTDATA PERRCD(1)                          CER050
-     D ##RDEA          S             22    DIM(482) ALT(##GRP)                                CER050
+     D*##GRP****       S             10    DIM(482) CTDATA PERRCD(1)                 CER050 MD059369
+     D*##RDEA***       S             22    DIM(482) ALT(##GRP)                       CER050 MD059369
+     D ##GRP           S             10    DIM(492) CTDATA PERRCD(1)                        MD059369
+     D ##RDEA          S             22    DIM(492) ALT(##GRP)                              MD059369
      D*                                                                                       S01408
      D/COPY WNCPYSRC,CG4010EEP1                                                               S01408
      D*                                                                                       S01408
@@ -2517,7 +2523,7 @@
      C                   END
       *
       ** Their Rate Change Details
-     C*****TBRTT         IFNE      *ZERO                                                      CSD103 
+     C*****TBRTT         IFNE      *ZERO                                                      CSD103
      C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      D@RCHT
      C                   END
@@ -4616,7 +4622,7 @@
      C/COPY WNCPYSRC,CG4010C074
       *
       ** Our Base Rate Type
-     C*****UBRTT         IFNE      *ZERO                                                      CSD103 
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
      C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     UBRTT         ##D(3)
      C                   END
@@ -4736,7 +4742,7 @@
       *
       ** Their Base Rate Type
      C*****TBRTT         IFNE      *ZERO                                                      CSD103
-     C     TBRTT         IFNE      *BLANKS                                                    CSD103      
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     TBRTT         ##D(3)
      C                   END
       *
@@ -4769,7 +4775,7 @@
      C                   MOVEL     BABSRN        ##D(4)
       *
       ** Their Fixed Rate
-     C*****TBRTT         IFEQ      *ZERO                                                      CSD103     
+     C*****TBRTT         IFEQ      *ZERO                                                      CSD103
      C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     TEINR         ##D(5)
      C                   END
@@ -8157,6 +8163,124 @@
      C                   ENDIF                                                                CDL019
      C                   ENDIF                                                                CDL019
       *                                                                                       CDL019
+      ** Extract LIBOR static fields for IRS                                                MD059369
+     C     CIR020        IFEQ      'Y'                                                      MD059369
+     C     DTYP          IFEQ      'RS'                                                     MD059369
+     C     DTYP          OREQ      'RX'                                                     MD059369
+     C     DTYP          OREQ      'RP'                                                     MD059369
+     C     DTYP          OREQ      'RF'                                                     MD059369
+     C     DTYP          OREQ      'RR'                                                     MD059369
+     C     OURTHR        IFEQ      'OUR'                                                    MD059369
+      **  Benchmark Adjustment                                                              MD059369
+     C                   MOVEL     UBADJ         ##D(9)                                     MD059369
+      *                                                                                     MD059369
+      **  Day Basis for Average                                                             MD059369
+     C                   MOVEL     UDBAV         ##D(10)                                    MD059369
+      *                                                                                     MD059369
+      **  Floor                                                                             MD059369
+     C                   MOVEL     UFLOR         ##D(11)                                    MD059369
+      *                                                                                     MD059369
+      **  Lockout days                                                                      MD059369
+     C                   MOVEL     ULODY         ##D(12)                                    MD059369
+                                                                                            MD059369
+      **  Lookback days                                                                     MD059369
+     C                   MOVEL     ULBDY         ##D(13)                                    MD059369
+      *                                                                                     MD059369
+      **  Observation Period Shift                                                          MD059369
+     C                   MOVEL     UOPSH         ##D(14)                                    MD059369
+      *                                                                                     MD059369
+      **  Risk Free Rate                                                                    MD059369
+     C                   MOVEL     URFRR         ##D(15)                                    MD059369
+      *                                                                                     MD059369
+      **  Rates Known Indicator                                                             MD059369
+     C                   MOVEL     URTKN         ##D(16)                                    MD059369
+      *                                                                                     MD059369
+      **  Rate rounding decimals                                                            MD059369
+     C                   MOVEL     URRDP         ##D(17)                                    MD059369
+      *                                                                                     MD059369
+      **  Calculation Method                                                                MD059369
+     C                   MOVEL     UCALM         ##D(18)                                    MD059369
+      *                                                                                     MD059369
+     C                   else                                                               MD059369
+      **  Benchmark Adjustment                                                              MD059369
+     C                   MOVEL     TBADJ         ##D(9)                                     MD059369
+      *                                                                                     MD059369
+      **  Day Basis for Average                                                             MD059369
+     C                   MOVEL     TDBAV         ##D(10)                                    MD059369
+      *                                                                                     MD059369
+      **  Floor                                                                             MD059369
+     C                   MOVEL     TFLOR         ##D(11)                                    MD059369
+      *                                                                                     MD059369
+      **  Lockout days                                                                      MD059369
+     C                   MOVEL     TLODY         ##D(12)                                    MD059369
+                                                                                            MD059369
+      **  Lookback days                                                                     MD059369
+     C                   MOVEL     TLBDY         ##D(13)                                    MD059369
+      *                                                                                     MD059369
+      **  Observation Period Shift                                                          MD059369
+     C                   MOVEL     TOPSH         ##D(14)                                    MD059369
+      *                                                                                     MD059369
+      **  Risk Free Rate                                                                    MD059369
+     C                   MOVEL     TRFRR         ##D(15)                                    MD059369
+      *                                                                                     MD059369
+      **  Rates Known Indicator                                                             MD059369
+     C                   MOVEL     TRTKN         ##D(16)                                    MD059369
+      *                                                                                     MD059369
+      **  Rate rounding decimals                                                            MD059369
+     C                   MOVEL     TRRDP         ##D(17)                                    MD059369
+      *                                                                                     MD059369
+      **  Calculation Method                                                                MD059369
+     C                   MOVEL     TCALM         ##D(18)                                    MD059369
+      *                                                                                     MD059369
+     C                   Endif                                                              MD059369
+     C                   ENDIF                                                              MD059369
+     C                   ENDIF                                                              MD059369
+                                                                                            MD059369
+      ** Extract LIBOR static fields for DL                                                 MD059369
+     C     CDL102        IFEQ      'Y'                                                      MD059367
+     C     DTYP          IFEQ      'CD'                                                     MD059367
+     C     DTYP          OREQ      'CI'                                                     MD059367
+     C     DTYP          OREQ      'CL'                                                     MD059367
+     C     DTYP          OREQ      'DL'                                                     MD059367
+     C     DTYP          OREQ      'IP'                                                     MD059367
+     C     DTYP          OREQ      'IT'                                                     MD059367
+     C     DTYP          OREQ      'TD'                                                     MD059367
+     C     DTYP          OREQ      'TI'                                                     MD059367
+     C     DTYP          OREQ      'IL'                                                     MD059367
+     C     DTYP          OREQ      'ID'                                                     MD059367
+      **  Benchmark Adjustment                                                              MD059367
+     C                   MOVEL     BADJ          ##D(9)                                     MD059367
+      *                                                                                     MD059367
+      **  Day Basis for Average                                                             MD059367
+     C                   MOVEL     DBAV          ##D(10)                                    MD059367
+      *                                                                                     MD059367
+      **  Floor                                                                             MD059367
+     C                   MOVEL     FLOR          ##D(11)                                    MD059367
+      *                                                                                     MD059367
+      **  Lockout days                                                                      MD059367
+     C                   MOVEL     LODY          ##D(12)                                    MD059367
+                                                                                            MD059367
+      **  Lookback days                                                                     MD059367
+     C                   MOVEL     LBDY          ##D(13)                                    MD059367
+      *                                                                                     MD059367
+      **  Observation Period Shift                                                          MD059367
+     C                   MOVEL     OPSH          ##D(14)                                    MD059367
+      *                                                                                     MD059367
+      **  Risk Free Rate                                                                    MD059367
+     C                   MOVEL     RFRR          ##D(15)                                    MD059367
+      *                                                                                     MD059367
+      **  Rates Known Indicator                                                             MD059367
+     C                   MOVEL     RTKN          ##D(16)                                    MD059367
+      *                                                                                     MD059367
+      **  Rate rounding decimals                                                            MD059367
+     C                   MOVEL     RRDP          ##D(17)                                    MD059367
+      *                                                                                     MD059367
+      **  Calculation Method                                                                MD059367
+     C                   MOVEL     CALM          ##D(18)                                    MD059367
+      *                                                                                     MD059367
+     C                   ENDIF                                                              MD059367
+     C                   ENDIF                                                              MD059367
+                                                                                            MD059367
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
      C                   EXSR      SRADTA
@@ -13290,6 +13414,32 @@
      C                   ELSE                                                                 CER050
      C                   MOVEL     'N'           CER050                                       CER050
      C                   END                                                                  CER050
+      *                                                                                     MD059369
+      ** Access SAR details file to determine if CIR020 is installed.                       MD059369
+      *                                                                                     MD059369
+     C                   CALL      'AOSARDR0'                                               MD059369
+     C                   PARM      '       '     ##RTCD                                     MD059369
+     C                   PARM      '*VERIFY'     ##OPTN                                     MD059369
+     C                   PARM      'CIR020'      ##SARD                                     MD059369
+      *                                                                                     MD059369
+     C     ##RTCD        IFEQ      *BLANK                                                   MD059369
+     C                   MOVEL     'Y'           CIR020            1                        MD059369
+     C                   ELSE                                                               MD059369
+     C                   MOVEL     'N'           CIR020                                     MD059369
+     C                   END                                                                MD059369
+      *                                                                                     MD059369
+      ** Access SAR details file to determine if CDL102 is installed.                       MD059367
+      *                                                                                     MD059367
+     C                   CALL      'AOSARDR0'                                               MD059367
+     C                   PARM      '       '     ##RTCD                                     MD059367
+     C                   PARM      '*VERIFY'     ##OPTN                                     MD059367
+     C                   PARM      'CDL102'      ##SARD                                     MD059367
+      *                                                                                     MD059367
+     C     ##RTCD        IFEQ      *BLANK                                                   MD059367
+     C                   MOVEL     'Y'           CDL102            1                        MD059367
+     C                   ELSE                                                               MD059367
+     C                   MOVEL     'N'           CDL102                                     MD059367
+     C                   END                                                                MD059367
       *
       *................................................................
       *
@@ -15549,6 +15699,16 @@ D_OTH10005 DEALSUBTYP
 D_OTH10006 TOTAL1     AmountL                                                                 158372
 D_OTH10007 BLOCK_FLAG                                                                         CDL016
 D_OTH10008 FIX_BSRT                                                                           CDL019
+D_OTH10009 BENCH ADJ  Rate  L7                                                              MD059369
+D_OTH10010 DAYS B AVG                                                                       MD059369
+D_OTH10011 FLOOR                                                                            MD059369
+D_OTH10012 LOCK OUT D                                                                       MD059369
+D_OTH10013 LOOK BACK                                                                        MD059369
+D_OTH10014 OBS PER SH                                                                       MD059369
+D_OTH10015 RSK FREERT                                                                       MD059369
+D_OTH10016 RT KNW IND                                                                       MD059369
+D_OTH10017 RT RDNG DC                                                                       MD059369
+D_OTH10018 CALC METHD                                                                       MD059369
 CGSTAX0001 SEC_TAXA   AmountL                                                                 CER048
 CGSTAX0002 SEC_TAXB                                                                           CER048
 CGSTAX0003 SEC_TXAC                                                                           CER048

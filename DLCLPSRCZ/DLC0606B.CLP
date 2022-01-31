@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058708           Date 31Aug21              */
-/*       Prev Amend No. MD058555           Date 12Aug21              */
+/*       Last Amend No. MD059369           Date 24Dec21              */
+/*       Prev Amend No. MD058708           Date 31Aug21              */
+/*                      MD058555           Date 12Aug21              */
 /*                      CER050             Date 16Jun19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD046248           Date 27Oct17              */
@@ -89,6 +90,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059369 - CIR020 - LIBOR IRS - Correspondence Manager      */
 /*       MD058708 - Remove clearing of extract file DLLIBEPD such    */
 /*                  that the rate not processed during 1st run will  */
 /*                  still be applied to the deal. This is applicable */
@@ -261,6 +263,7 @@
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL045*/
              DCL        VAR(&CDL034) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD027681*/
              DCL        VAR(&CDL102) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD058555*/
+             DCL        VAR(&CIR020) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD059369*/
                                                                                           /*CDL045*/
 /* Define parameters used in AOSVALR0 to retrieve system value                            /*CDL045*/
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CDL045*/
@@ -411,6 +414,15 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CDL102) VALUE('Y'))                                      /*MD058555*/
 /**/                                                                                    /*MD058555*/
+/**/                                                                                    /*MD059369*/
+/** Check for Switchable feature CIR020                            */                   /*MD059369*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD059369*/
+             CHGVAR     VAR(&SARD) VALUE('CIR020')                                      /*MD059369*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                                           &FMT)                                        /*MD059369*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CIR020) VALUE('Y'))                                      /*MD059369*/
+/**/                                                                                    /*MD059369*/
 /** Check for Switchable feature CER069                            */                     /*CER069*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER069*/
              CHGVAR     VAR(&SARD) VALUE('CER069')                                        /*CER069*/
@@ -1455,6 +1467,27 @@
              MONMSG     (CPF2817) CMPDTA(CPF2869) +
                           EXEC(CLRPFM DLACKRPD)                                          /*BUG2494*/
                                                                                          /*BUG2494*/
+                                                                                          /*211652*/
+/* Create a reference copy of PF/DKEYSDP, if Correspondence Manager for */              /*MD059369*/
+/* LIBOR is installed as extract component retrieves interest amount from DKEYSDP */    /*MD059369*/
+                                                                                        /*MD059369*/
+          IF         COND(&CDL102 *EQ 'Y' *OR &CIR020 = 'Y') THEN(DO)                   /*MD059369*/
+                                                                                        /*MD059369*/
+             IF         COND(&CSEQ = 00001) THEN(DO)                                    /*MD059369*/
+             CPYF       FROMFILE(DKEYSDP) TOFILE(DLKYLBPD) +
+                          MBROPT(*REPLACE)                                              /*MD059369*/
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                          EXEC(CLRPFM DLKYLBPD)                                         /*MD059369*/
+             ENDDO                                                                      /*MD059369*/
+                                                                                        /*MD059369*/
+             ELSE       CMD(DO)                                                         /*MD059369*/
+             CPYF       FROMFILE(DKEYSDP) TOFILE(DLKYLBPD) +
+                          MBROPT(*ADD)                                                  /*MD059369*/
+             MONMSG     (CPF2817) CMPDTA(CPF2869)                                       /*MD059369*/
+             ENDDO                                                                      /*MD059369*/
+                                                                                        /*MD059369*/
+          ENDDO                                                                         /*MD059369*/
+                                                                                        /*MD059369*/
              DLTOVR     FILE(*ALL)
 /*/COPY WNCPYSRC,DLC0606B24                                          */
 /**/

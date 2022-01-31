@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD051218           Date 06Jun18               *
+      *  Last Amend No. MD043338           Date 28Jan22               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD051218           Date 06Jun18               *
       *                 MD051051           Date 28May18               *
       *                 CGL177             Date 11Jan16               *
       *                 CGL157             Date 15Jan16               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043338 - GLC000620 fails due to decimal data error.        *
+      *             Initialise fields in SDACRVPD.                    *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD051218 - US Indicia Tool not running properly              *
       *  MD051051 - Could not find record where DBfield Field name is *
@@ -1992,6 +1995,14 @@
       ** Initialize fields
 
      C                   EVAL      CBCUST = *BLANKS
+     C                   Z-ADD     *ZEROS        ARACDT                                     MD043338
+     C                   Z-ADD     *ZEROS        ARCDAC                                     MD043338
+     C                   MOVE      *BLANKS       ARCUSC                                     MD043338
+     C                   Z-ADD     *ZEROS        ARSCDT                                     MD043338
+     C                   Z-ADD     *ZEROS        ARNSDT                                     MD043338
+     C                   Z-ADD     *ZEROS        ARCDAT                                     MD043338
+     C                   Z-ADD     *ZEROS        ARLCDT                                     MD043338
+     C                   Z-ADD     *ZEROS        ARINDT                                     MD043338
      C                   EVAL      RRCUST = *ZEROS
      C                   EVAL      RRNAHO = *ZEROS
      C                   EVAL      R2CUST = *ZEROS                                            CGL157

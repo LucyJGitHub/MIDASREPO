@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1019919          Date 30Oct15               *
+      *  Last Amend No. MD059273           Date 13Jan22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1019919          Date 30Oct15               *
       *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059273 - IRS does not allow 0 Spread Rate to be input      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1019919 - Negative Base Rate input. (Child: AR1019920)     *
       *              Applied for MD034478                             *
@@ -244,8 +246,16 @@
      C     PDealType     ANDNE     'RR'                                                       CAP055
      C     SRNUMB        OREQ      *ZERO                                                      CAP055
      C     PDealType     ANDNE     'RF'                                                       CAP055
+      *                                                                                     MD059273
+      ** Allow a 0 rate unless it is a Cap, Collar or Floor.                                MD059273
+     C     PDealType     IFEQ      'RP'                                                     MD059273
+     C     PDealType     OREQ      'RR'                                                     MD059273
+     C     PDealType     OREQ      'RF'                                                     MD059273
      C                   MOVE      'MMA0021'     Msgid1
      C                   MOVE      'Y'           ErrorFound
+     C                   ELSE                                                               MD059273
+     C                   MOVE      @@AMT         URTSPX                                     MD059273
+     C                   ENDIF                                                              MD059273
      C                   ELSE
      C**********         MOVE      ZFIELD        URTSPX                                       245692
      C                   MOVE      @@AMT         URTSPX                                       245692

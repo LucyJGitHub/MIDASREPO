@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CGL118             Date 02Nov21               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 MD046910           Date 25Jul17               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -900,6 +902,13 @@
      C                   EVAL      B1AUTH =  IF_AUTH                                          CAP086
      C                   ENDIF                                                                CAP086
                                                                                               CAP086
+      ** Use user field from APHEADPD (APMIDUSR)                                              CGL118
+      *                                                                                       CGL118
+     C     CGL118        IFEQ      'Y'                                                        CGL118
+     C                   EVAL      B1USRI = APMIDUSR                                          CGL118
+     C                   EVAL      B1USRA = APMIDUSR                                          CGL118
+     C                   END                                                                  CGL118
+      *                                                                                       CGL118
      C                   ENDSR
       *
       *****************************************************************
@@ -1192,6 +1201,30 @@
      C                   MOVE      'Y'           CGL182                                       CGL182
      C                   ENDIF                                                                CGL182
       *                                                                                       CGL182
+      ** Access SAR details forfile to see if CGL118 is installed.                            CGL118
+      *                                                                                       CGL118
+     C                   MOVEL     'N'           CGL118            1                          CGL118
+     C                   CALLB     'AOSARDR0'                                                 CGL118
+     C                   PARM      *BLANKS       @RTCD                                        CGL118
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL118
+     C                   PARM      'CGL118'      @SARD                                        CGL118
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL118
+      *                                                                                       CGL118
+     C                   IF        PRTCD <> *BLANKS AND                                       CGL118
+     C                             PRTCD <> '*NRF'                                            CGL118
+     C     *LOCK         IN        LDA                                                        CGL118
+     C                   EVAL      DBPGM = 'GLAMADVU'                                         CGL118
+     C                   EVAL      DBKEY = 'CGL118'                                           CGL118
+     C                   EVAL      DBFILE ='SCSARDPD'                                         CGL118
+     C                   EVAL      DBASE  = 5                                                 CGL118
+     C                   OUT       LDA                                                        CGL118
+     C                   EXSR      *PSSR                                                      CGL118
+     C                   ENDIF                                                                CGL118
+      *                                                                                       CGL118
+     C     @RTCD         IFEQ      *BLANK                                                     CGL118
+     C                   MOVEL     'Y'           CGL118                                       CGL118
+     C                   ENDIF                                                                CGL118
+      *                                                                                       CGL118
      C                   MOVE      *BLANKS       PRTCD                                       BUG9713
                                                                                              BUG9713
      C/COPY WNCPYSRC,GLBITH05                                                                 GOC001

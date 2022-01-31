@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059183A          Date 21Dec21               *
-      *  Prev Amend No. MD059100           Date 28Oct21               *
+      *  Last Amend No. MD059304           Date 11Nov21               *
+      *  Prev Amend No. MD059183A          Date 21Dec21               *
+      *                 MD059100           Date 28Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058492           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -121,6 +122,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059304 - Changing the Pay settlement method in from        *
+      *             00 to 01 (indicating a valid Nostro Number on     *
+      *             Pay-our account) now validates and requires       *
+      *             the Beneficiary.                                  *
       *  MD059183A- Values entered in Our/Their Int Payment           *
       *             Schedule tab were not saved after authorisation   *
       *  MD059100 - Incorrect deal status on pre-confirmation         *
@@ -277,6 +282,11 @@
      F                                     COMMIT                               BUG4646
                                                                                               244254
      FSDEXSTL1  IF   E           K DISK                                                       244254
+      *                                                                                     MD059304
+     FDLSIRSL0  IF   E           K DISK    INFSR(*PSSR)                                     MD059304
+     F                                     RENAME(DEALSDGF:DEALSDIR)                        MD059304
+     F                                     PREFIX(IR_)                                      MD059304
+      *                                                                                     MD059304
 
       *****************************************************************
       ** +--------------------------------------+
@@ -2378,6 +2388,10 @@ RGC                                                                             
      C                   EVAL      PayDat = BJRDNB
      C                   EVAL      RecDat = BJRDNB
 
+     C                   IF        SACCD = 'A'                                              MD059304
+     C                   EXSR      CHECKSSI                                                 MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
       ** Return Code
@@ -6891,6 +6905,53 @@ RGC                                                                             
 
      C                   ENDSR
       *****************************************************************
+      *                                                               *                     MD059304
+      * CHECKSSI - Routine to check the SSI of the transaction        *                     MD059304
+      *                                                               *                     MD059304
+      *****************************************************************                     MD059304
+                                                                                            MD059304
+     C     CHECKSSI      BEGSR                                                              MD059304
+                                                                                            MD059304
+     C     EXSTK         KLIST                                                              MD059304
+     C                   KFLD                    BYCYCD                                     MD059304
+     C                   KFLD                    BYCUST                                     MD059304
+     C                   KFLD                    BYTRTY                                     MD059304
+     C                   KFLD                    BYBRCA                                     MD059304
+     C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     IRSIRSK       KLIST                                                              MD059304
+     C                   KFLD                    K_DLNO            6 0                      MD059304
+                                                                                            MD059304
+     C                   MOVE      SDLNO         K_DLNO                                     MD059304
+                                                                                            MD059304
+     C     IRSIRSK       CHAIN     DLSIRSL0                           51                    MD059304
+     C                   IF        *IN51 = *OFF                                             MD059304
+                                                                                            MD059304
+     C                   IF        IR_PSETM = 0 AND                                         MD059304
+     C                             (DDPSTM = '01' OR DDPSTM = '07'                          MD059304
+     C                              OR DDPSTM = '08')                                       MD059304
+                                                                                            MD059304
+     C                   MOVEL     SDTYP         BYTRTY                                     MD059304
+     C                   MOVEL     SUCUCY        BYCYCD                                     MD059304
+     C                   MOVEL     SCNUM         BYCUST                                     MD059304
+     C                   MOVEL     SBRCA         BYBRCA                                     MD059304
+     C                   MOVEL     SDLST         BYSTYP                                     MD059304
+                                                                                            MD059304
+     C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
+     C                   IF        *IN52 = *ON                                              MD059304
+     C                   MOVEL     SCNUM         DDBENN                                     MD059304
+     C                   IF        DDPSTM = '08'                                            MD059304
+     C                   MOVEL     SCNUM         DDPOCN                                     MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD059304
+                                                                                            MD059304
+     C                   ENDSR                                                              MD059304
+      *****************************************************************                     MD059304
+      /EJECT                                                                                MD059304
+      *****************************************************************                     MD059304
 **  CPY@
 (c) Finastra International Limited 2003
 ** LETT - LETTERS FOR DAYS TO VALIDATE DATE FORMULAS

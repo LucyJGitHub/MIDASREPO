@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD059104           Date 02Dec21               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD058182           Date 25May21               *
       *                 MD058040A          Date 25May21               *
       *                 MD058040           Date 11May21               *
@@ -22,6 +23,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059104 - Connection error encountered in SDC000114 when    *
+      *             using SSL port in ARR Adapter Service.            *
+      *             Use https if ARRadapterURLSSL is configured.      *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing.                       *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
@@ -234,6 +238,7 @@
 
      D AMP             c                   const('&')
      D HTTP_HEAD       c                   const('http://')
+     D HTTPS_HEAD      c                   const('https://')                                MD059104
      D INSERT          c                   const(0)
      D LELIBEPD        c                   const(1)
      D NO_ERROR        c                   const(0)
@@ -505,6 +510,7 @@
                    AuditLogDS.SJMDAY = BJRDNB;
                    pOP01 = 'ARRAdapterURL';
                    pOP02 = 'ARRCalculatorTrace';
+                   pOP03 = 'ARRAdapterURLSSL';                                            //MD059104
 
                    CallP ACCESS_SVAL(
                                        pRetCode
@@ -539,6 +545,9 @@
                         exsr errorHandler;
                    Endif;
 
+                   If pVL03 <> *Blanks;                                                   //MD059104
+                         CalcMetURL     = HTTPS_HEAD  + %trim(pVL03);                     //MD059104
+                   Else;                                                                  //MD059104
                    If pVL01 <> *Blanks;
                          CalcMetURL     = HTTP_HEAD  + %trim(pVL01);
                    Else;
@@ -549,7 +558,7 @@
                         isError = True;
                         exsr errorHandler;
                    Endif;
-
+                   Endif;                                                                 //MD059104
                    writeLogs = pVL02;
 
                    select;

@@ -11,17 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR926961A          Date 28Mar12               *
-      *  Prev Amend No. CUP021  *CREATE    Date 20Jan11               *
+      *  Last Amend No. MD059289           Date 11Nov21               *
+      *  Prev Amend No. AR926961A          Date 28Mar12               *
+      *                 CUP021  *CREATE    Date 20Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059289 - Do not generate empty report                      *
       *  AR926961A - Menu item does not appear even if user already   *
       *             has permission and menu item                      *
       *  CUP021 - Rewrite of Action File processing                   *
       *                                                               *
       *****************************************************************
      FUP009006P1O    E             PRINTER INFDS(SPOOL)
+     F                                     USROPN                                           MD059289
      FUPAFCPL0  O  A E           K DISK
      FUPAFFDL1  IF   E           K DISK
      FUPAFFDL2  IF   E           K DISK    RENAME(UPAFFDD0:C_UPAFFDD0)
@@ -116,6 +119,7 @@
      D ActionFile      S              1
      D FieldOffs       S              3  0
      D Recursive       S              1
+     D RPT             S              1                                                     MD059289
       *
      DFmtInp           DS
      D FmtInp30A               1     30A
@@ -284,9 +288,13 @@
      C                   WRITE     KEYERR                               70
      C                   ENDIF
       *
+     C                   if        %open(UP009006P1)                                        MD059289
      C                   EXSR      Overflow
      C                   WRITE     TRAILP                               70
       *
+     C                   close     UP009006P1                                               MD059289
+     C                   ENDIF                                                              MD059289
+                                                                                            MD059289
      C                   SETON                                        LR
       /EJECT
       *****************************************************************
@@ -400,6 +408,10 @@
      C+  fetch C1 into :FData
      C/END-EXEC
       *
+     C                   if        not%open(UP009006P1)                                     MD059289
+     C                   OPEN      UP009006P1                                               MD059289
+     C                   eval      RPT = 'Y'                                                MD059289
+     C                   endif                                                              MD059289
      C                   EVAL      Nrfd  = 'N'
      C     NRECF         TAG
      C/EXEC SQL
@@ -891,6 +903,7 @@
      C                   PARM                    PrintAtnF
      C                   PARM                    BefLib
      C                   PARM                    AftLib
+     C                   PARM                    RPT                                        MD059289
       *
       * Set up program run condition.
      C                   IF        PrintAtnF = 'Y'

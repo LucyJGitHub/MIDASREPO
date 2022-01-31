@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054698           Date 02Nov19               *
+      *  Last Amend No. MD059339           Date 20Jan22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054698           Date 02Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
@@ -87,6 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059339 - Error on Repo API.                                *
+      *           - Add DDACTN as parameter for SEVDPMVAD module.     *
+      *             To be used as additional validation for DDDPAD.   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD054689 - System allows to REPO more than the actual        *
@@ -2524,6 +2528,7 @@
      C                   PARM                    DDDPADOK                                     CAP087
      C                   PARM                    DPAD                                         CAP087
      C                   PARM                    DealCcy                                      CAP087
+     C                   PARM                    DDACTN                                     MD059339
                                                                                               CAP087
       * Update error message array                                                            CAP087
      C                   EXSR      SRUpdate                                                   CAP087

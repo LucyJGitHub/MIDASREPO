@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054922           Date 04Feb20               *
-      *  Prev Amend No. MD055218           Date 11Mar20               *
+      *  Last Amend No. MD059392           Date 18Jan22               *
+      *  Prev Amend No. MD054922           Date 04Feb20               *
+      *                 MD055218           Date 11Mar20               *
       *                 MD054662           Date 30Oct19               *
       *                 MD051746           Date 03May19               *
       *                 AR589183           Date 03May19               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059392 - Preformance issues. Duplcate messages is now      *
+      *             processed here instead of GL001415                *
       *  MD054922 - MT942 messages are not generated.                 *
       *  MD055218 - Dump generated in GLC001400 job with update or    *
       *             delete without prior input. Amended program to    *
@@ -111,6 +114,11 @@
 
      FGLPRMOPD  IF   E             DISK    INFSR(*PSSR)
       ** Midas GL Production Monitor File.
+
+     FGLMR94L2  IF   E           K DISK    INFSR(*PSSR) PREFIX(Sp)                          MD059392
+     F                                     RENAME(GLMR94D0:GLMR94D2)                        MD059392
+      ** Midas GL MT941/942 Messages Requests - "SUBMITTED"                                 MD059392
+
 
      F***CBTRACPD  IF   E             DISK    INFSR(*PSSR)                           217556 AR740400
       ***Midas*CB*COB*trace.*******************************************              217556 AR740400
@@ -193,6 +201,7 @@
      D PRetCode        S              7                                         Return code
      D PWaitTime       S              5  0                                      Wait Time
      D PSubmit         S              1                                         Submit Y/N
+     D PDupli          S              1                                                     MD059392
      D WUpdate         S              1                                                     MD055218
 
      D P@RTCD          S              7A                                        Return Code
@@ -376,6 +385,13 @@
       **                                          MTM942, MTR941, MTR942),
       **   Set the status to SUBMITTED.
 
+     C     kSUBM         CHAIN     GLMR94L2                                                MD059392
+     C                   EVAL      PDupli = 'N'                                            MD059392
+     C                   IF        %FOUND(GLMR94L2)                                        MD059392
+     C                   EVAL      PDupli = 'Y'                                            MD059392
+     C                   ENDIF                                                             MD059392
+
+
      C                   SELECT
      C                   WHEN      MRMTPY = '941'                               Message type request
      C                             AND MRSORQ = 'MANUAL'                        Source of Request
@@ -392,15 +408,31 @@
      C                   WHEN      MRMTPY = '941'                               Message type request
      C                             AND MRSORQ = 'SCHEDULE'                      Source of Request
      C                             AND MTS941 = 'Y'                             MT941 Request Sched.
+     C                             AND PDupli = 'N'                                         MD059392
      C                   EVAL      MRSTAT = 'SUBMITTED'                         Change Status
      C                   EVAL      PSubmit   = 'Y'                              Submit Generation
 
      C                   WHEN      MRMTPY = '942'                               Message type request
      C                             AND MRSORQ = 'SCHEDULE'                      Source of Request
      C                             AND MTS942 = 'Y'                             MT942 Request Sched.
+     C                             AND PDupli = 'N'                                         MD059392
      C                   EVAL      MRSTAT = 'SUBMITTED'                         Change Status
      C                   EVAL      PSubmit   = 'Y'                              Submit Generation
-
+                                                                                            MD059392
+     C                   WHEN      MRMTPY = '941'                                           MD059392
+     C                             AND MRSORQ = 'SCHEDULE'                                  MD059392
+     C                             AND MTS941 = 'Y'                                         MD059392
+     C                             AND PDupli = 'Y'                                         MD059392
+     C                   EVAL      MRSTAT = 'DUPLICATE'                                     MD059392
+     C                   EVAL      PSubmit   = 'Y'                                          MD059392
+                                                                                            MD059392
+     C                   WHEN      MRMTPY = '942'                                           MD059392
+     C                             AND MRSORQ = 'SCHEDULE'                                  MD059392
+     C                             AND MTS942 = 'Y'                                         MD059392
+     C                             AND PDupli = 'Y'                                         MD059392
+     C                   EVAL      MRSTAT = 'DUPLICATE'                                     MD059392
+     C                   EVAL      PSubmit   = 'Y'                                          MD059392
+                                                                                            MD059392
      C                   WHEN      MRMTPY = '941'                               Message type request
      C                             AND MRSORQ = 'MT920'                         Source of Request
      C                             AND MTR941 = 'Y'                             MT941 on MT920 Req.
@@ -503,6 +535,20 @@
      C     KeySelReq     KLIST                                                               217556
      C                   KFLD                    BJRDNB                                      217556
      C                   KFLD                    WkStartTime                                 217556
+
+     C     kSUBM         KLIST                                                              MD059392
+     C                   KFLD                    MRNWRK                                     MD059392
+     C                   KFLD                    MRBRCA                                     MD059392
+     C                   KFLD                    MRCNUM                                     MD059392
+     C                   KFLD                    MRCCY                                      MD059392
+     C                   KFLD                    MRACCD                                     MD059392
+     C                   KFLD                    MRACSQ                                     MD059392
+     C                   KFLD                    MRNATY                                     MD059392
+     C                   KFLD                    MRDSTN                                     MD059392
+     C                   KFLD                    MRMTPY                                     MD059392
+     C                   KFLD                    MRSORQ                                     MD059392
+     C                   KFLD                    MRSDTE                                     MD059392
+     C                   KFLD                    MRSTIM                                     MD059392
 
      C                   ENDSR
 

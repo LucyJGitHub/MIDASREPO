@@ -16,11 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056751           Date 20Sep20               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD048427           Date 20Jan22               *
+      *  Prev Amend No. MD056751           Date 20Sep20               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048427 - CGL177 Incorrect amounts in CRS XML file          *
       *  MD056751 - Deliverable Data Split for GLFXMLPD and GLGXMLPD  *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
@@ -386,10 +388,24 @@
      DStart            S              3  0
      DAmtErr           S              3  0
 
+     DZAfld            S              1    DIM(15)                                     MD048427
+     DIdZA             S              2P 0                                             MD048427
+      *                                                                                MD048427
       ** Amount must be numeric
      C                   EVAL      AmtErr = %CHECK(DIGITS:Amount)
      C                   IF        AmtErr = 0
-     C                   MOVE      Amount        Zfield
+      ** Replace Blanks with zeroes.                                                   MD048427
+     C                   MOVEA     '  '          ZAfld                                 MD048427
+     C                   MOVEA     Amount        ZAfld                                 MD048427
+     C                   Z-ADD     1             IdZA                                  MD048427
+     C     ZAfld(IdZA)   DOWEQ     '  '                                                MD048427
+     C     IdZA          ANDLE     15                                                  MD048427
+     C                   MOVE      '0'           ZAfld(IdZA)                           MD048427
+     C                   ADD       1             IdZA                                  MD048427
+     C                   ENDDO                                                         MD048427
+     C                   MOVEA     ZAfld         Amount                                MD048427
+     C**********         MOVE      Amount        Zfield                                MD048427
+     C                   MOVE      Amount        Zfield                                MD048427
      C                   CALLB     'ZEDIT'
      C                   PARM                    Zfield
      C                   PARM      DecPos        ZaDec

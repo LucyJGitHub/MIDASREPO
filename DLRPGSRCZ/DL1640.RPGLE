@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250595             Date 25Jan22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250595 - No need to open file DL1640P1.                      *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -84,7 +86,8 @@
      F                                     IGNORE(DEALSDFF)
      FDL1640AU  O    E             PRINTER
      F                                     INFDS(SPOOLU)
-     FDL1640P1  O    E             PRINTER USROPN
+     F*DL1640P1*O*   E             PRINTER USROPN                                             250595
+     FDL1640P1  O    E             PRINTER                                                    250595
      F                                     INFDS(SPOOL1)
       *****************************************************************
       *                                                               *
@@ -540,10 +543,10 @@
      C     AGMBIN        ANDEQ     'Y'
      C     WOPNP1        IFEQ      'Y'
      C                   EXSR      SRTRL1
-     C                   CLOSE     DL1640P1
+     C**********         CLOSE     DL1640P1                                                   250595
      C                   MOVE      'N'           WOPNP1
      C                   ENDIF
-     C                   OPEN      DL1640P1
+     C**********         OPEN      DL1640P1                                                   250595
      C                   MOVE      'Y'           WOPNP1
       ** RCF Processing for P1 printer file
      C                   EXSR      SRRCF1
@@ -628,7 +631,7 @@
       ** If DL1640P1 is not yet open then open it.                                           BUG2493
       *                                                                                      BUG2493
      C     WOPNP1        IFNE      'Y'                                                       BUG2493
-     C                   OPEN      DL1640P1                                                  BUG2493
+     C**********         OPEN      DL1640P1                                           BUG2493 250595
      C                   ENDIF                                                               BUG2493
       *
       ** Check that sufficient lines remain for the Format. If not,
@@ -816,7 +819,7 @@
       *
       ** RCF Processing for P1 file
      C     AGMBIN        IFEQ      'N'
-     C                   OPEN      DL1640P1
+     C**********         OPEN      DL1640P1                                                   250595
      C                   MOVE      'Y'           WOPNP1
      C                   EXSR      SRRCF1
      C                   ENDIF

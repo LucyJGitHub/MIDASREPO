@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058307           Date 06Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE123             Date 02Nov21               *
+      *  Prev Amend No. MD058307           Date 06Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD027065           Date 22Sep20               *
       *                 MD053093           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
@@ -85,13 +86,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to add validation when overline % will      *
       *             cause overdrawn amount to exceed 13digits.        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD027065 - Expiry date of CA facility cannot be earlier than *
-      *             TR facility attached to it. Pattern after 239194. *      
+      *             TR facility attached to it. Pattern after 239194. *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM. .                                 *
       *           - Applied for MD052591.                             *
@@ -2024,6 +2026,37 @@
       *
      C                   ENDIF
       *
+      **  The following validation added to ensure valid                                      CLE123
+      **  a/c officers for output to the LE0723 report.                                       CLE123
+      **  This extra validation will be a separate switchable feature.                        CLE123
+      *                                                                                       CLE123
+      **  The a/c officer of Loan MUST be the same as a/c officer                             CLE123
+      **  of the loan's facility.                                                             CLE123
+      **  Therefore the account officer of the facility CANNOT be                             CLE123
+      **  amendable if there are outstanding loans against it.                                CLE123
+      *                                                                                       CLE123
+     C                   IF        CLE123 = 'Y'                                               CLE123
+     C                             and DDACTN <> 'I'                                          CLE123
+     C                             and DDACOF <> @@ACOF                                       CLE123
+      *                                                                                       CLE123
+      ** Check for outstanding loans.                                                         CLE123
+      *                                                                                       CLE123
+     C                   EVAL      K8CNUM = @@CNUM                                            CLE123
+     C                   Z-ADD     @@FACT        K8FACT                                       CLE123
+     C                   Z-ADD     @@FCNO        K8FCNO                                       CLE123
+      *                                                                                       CLE123
+     C     K#KY08        SETLL     LEREF                                                      CLE123
+     C     K#KY08        READE     LEREF                                  80     (*ON = EOF)  CLE123
+      *                                                                                       CLE123
+     C                   IF        *IN80 = '0'                                       found    CLE123
+     C                   MOVE      'N'           DDACOFOK                                     CLE123
+     C                   ADD       1             Idx                                          CLE123
+     C                   MOVEL     'DDACOF'      FldNamXAr(Idx)                               CLE123
+     C                   MOVEL     '5049532'     MsgIDXAr(Idx)                                CLE123
+     C                   ENDIF                                                                CLE123
+      *                                                                                       CLE123
+     C                   ENDIF                                                                CLE123
+      *                                                                                       CLE123
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3328,7 +3361,7 @@ E4   C                   ENDIF
       *                                                                                     MD039655
       ** Reject Action                                                                      MD039655
       *                                                                                     MD039655
-     C                   PARM                    @ACTRV            1                        MD039655 
+     C                   PARM                    @ACTRV            1                        MD039655
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -3466,6 +3499,19 @@ E4   C                   ENDIF
      C                   ELSE                                                                 CLE106
      C                   MOVE      'N'           CLE106                                       CLE106
      C                   ENDIF                                                                CLE106
+      *                                                                                       CLE123
+      ** Access Switchable SAR details for the existence of CLE123                            CLE123
+      *                                                                                       CLE123
+     C                   CALLB     'AOSARDR0'                                                 CLE123
+     C                   PARM      *BLANK        @RTCD                                        CLE123
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE123
+     C                   PARM      'CLE123'      @SARD                                        CLE123
+      *                                                                                       CLE123
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE123
+     C                   MOVE      'Y'           CLE123            1                          CLE123
+     C                   ELSE                                                                 CLE123
+     C                   MOVE      'N'           CLE123                                       CLE123
+     C                   ENDIF                                                                CLE123
       *                                                                                       CER020
       ** Access Switchable SAR details for the existence of CER020                            CER020
       *                                                                                       CER020

@@ -1,7 +1,7 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas Leo LE Facility Availability Update')
+/*EXI *  TEXT('Midas Leo LE Facility Availability Update')            *
       *****************************************************************
       *                                                               *
       *  Midas - LEO/Midas Lending Integration                        *
@@ -19,12 +19,13 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE123             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CLE042             Date 06Sep05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *     CLE042 - Extended Loan Sub Type                           *
@@ -63,8 +65,15 @@
      E                    CPY@    1   1 80               COPYRIGHT
       *
      I/EJECT
+     I*                                                                                       CLE123
+     ISCSARD    E DSSCSARDPD                                                                  CLE123
+      **  Switchable Features File                                                            CLE123
+     IDSFDY     E DSDSFDY                                                                     CLE123
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                    CLE123
+     I*                                                                                       CLE123
      I*DETL********DS*****************************80                                          CLE042
-     IDETL        DS                             84                                           CLE042
+     I*DETL********DS*****************************84                                   CLE042 CLE123
+     IDETL        DS                            206                                           CLE123
       ** DS for parameters DETL passed to program
      I                                        1   1 @RECI
      I                                        2   4 @BRCA
@@ -86,6 +95,14 @@
      I                                       67  68 @SUTP
      I                                       69  80 @LCREF
      I                                       81  84 @CLAS                                     CLE042
+     I                                       85  99 @PCRF                                     244459
+     I                                      100 100 @LPFI                                     244459
+     I                                      101 101 @INOI                                     244459
+     I                                      102 103 @ANACC                                    CLE123
+     I                                      104 133 @ANACN                                    CLE123
+     I                                      134 136 @ANDPD                                    CLE123
+     I                                      137 166 @ANDPM                                    CLE123
+     I                                      167 186 @ANCRM                                    CLE123
      I*
      ILDA       E DSLDA
       ** Database error Data Structure
@@ -133,6 +150,19 @@
      C** Define LDA
      C*
      C           *NAMVAR   DEFN           LDA
+      *                                                                                       CLE123
+      ** Check if CLE123 is switched *ON                                                      CLE123
+      *                                                                                       CLE123
+     C                     MOVE 'N'       CLE123  1                                           CLE123
+     C                     CALL 'AOSARDR0'                                                    CLE123
+     C                     PARM *BLANKS   WRTCD   7                                           CLE123
+     C                     PARM '*VERIFY' WOPTN   7                                           CLE123
+     C                     PARM 'CLE123'  WSARD   6                                           CLE123
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE123
+      *                                                                                       CLE123
+     C           WRTCD     IFEQ *BLANKS                                                       CLE123
+     C                     MOVE 'Y'       CLE123                                              CLE123
+     C                     ENDIF                                                              CLE123
      C*
      C** Initialise update fields
      C*
@@ -156,6 +186,17 @@
      C                     MOVE *BLANKS   SUTP
      C                     MOVE *BLANKS   CLAS                                                CLE042
      C                     MOVE *BLANKS   LCREF
+     C                     MOVE *BLANKS   PCRF                                                244459
+     C                     MOVE *BLANKS   LPFI                                                244459
+     C                     MOVE *BLANKS   INOI                                                244459
+      *                                                                                       CLE123
+     C           CLE123    IFEQ 'Y'                                                           CLE123
+     C                     MOVE *BLANKS   ANACOC                                              CLE123
+     C                     MOVE *BLANKS   ANACON                                              CLE123
+     C                     MOVE *BLANKS   ANDPCD                                              CLE123
+     C                     MOVE *BLANKS   ANDPNM                                              CLE123
+     C                     MOVE *BLANKS   ANCRNM                                              CLE123
+     C                     ENDIF                                                              CLE123
      C*
      C                     ENDSR
      C*
@@ -195,6 +236,16 @@
      C                     MOVE @SUTP     SUTP
      C                     MOVE @CLAS     CLAS                                                CLE042
      C                     MOVE @LCREF    LCREF
+     C                     MOVE @PCRF     PCRF                                                244459
+     C                     MOVE @LPFI     LPFI                                                244459
+     C                     MOVE @INOI     INOI                                                244459
+     C           CLE123    IFEQ 'Y'                                                           CLE123
+     C                     MOVE @ANACC    ANACOC                                              CLE123
+     C                     MOVE @ANACN    ANACON                                              CLE123
+     C                     MOVE @ANDPD    ANDPCD                                              CLE123
+     C                     MOVE @ANDPM    ANDPNM                                              CLE123
+     C                     MOVE @ANCRM    ANCRNM                                              CLE123
+     C                     ENDIF                                                              CLE123
      C*
      C** Update file FACEXLC
      C*

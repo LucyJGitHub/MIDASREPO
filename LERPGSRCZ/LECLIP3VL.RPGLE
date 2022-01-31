@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE123             Date 02Nov21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
@@ -172,6 +174,11 @@
       *    =====
       *
      FPMPORTPD  IF   E           K DISK    INFSR(*PSSR)
+     FFCLTY     IF   E           K DISK                                                       CLE123
+     F                                     PREFIX(FC)                                         CLE123
+     F                                     IGNORE(FCLTYHHF)                                   CLE123
+     F                                     IGNORE(FCLTYFNF)                                   CLE123
+     F                                     IGNORE(FCLTYZZF)                                   CLE123
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LECLIP3V01
       *
@@ -579,6 +586,10 @@
                                                                                               CLE106
      D CLE106          S              1                                                       CLE106
      D CLE036          S              1                                                    BUG10391R
+      * Work Fields                                                                           CLE123
+     D KFCUS           S                   LIKE(FCCNUM)                                       CLE123
+     D KFACT           S                   LIKE(FCFACT)                                       CLE123
+     D KFCNO           S                   LIKE(FCFCNO)                                       CLE123
                                                                                               CLE106
      D PERCD           S              1P 0                                                  MD034915
      D PAMT            S             15P 0                                                  MD034915
@@ -641,8 +652,6 @@
       ***  Reset variables updated by each module
       *
      C                   EXSR      RESETERRS
-      *
-      /COPY WNCPYSRC,LECLIP3V04
       *                                                                                     AR804863
       ** Skip validation process if action is reject.                                       AR804863
       *                                                                                     AR804863
@@ -650,12 +659,47 @@
      C                   EXSR      SRRSFD                                                   AR804863
      C                   RETURN                                                             AR804863
      C                   ENDIF                                                              AR804863
+      *                                                                                       CLE123
+      ***  Make sure ACOFF holds the account officer of the facility                          CLE123
+      *                                                                                       CLE123
+     C     *IN83         IFEQ      '1'                                                        CLE123
+     C     CLE123        ANDEQ     'Y'                                                        CLE123
+     C                   EXSR      LEFCLTY                                                    CLE123
+     C                   ENDIF                                                                CLE123
+      *
+      /COPY WNCPYSRC,LECLIP3V04
+      *                                                                                       CLE123
+      *   The following processing added for to ensure valid                                  CLE123
+      *   a/c officers for output to the LE0723 report.                                       CLE123
+      *                                                                                       CLE123
+      **  If the a/c officer is blank, default it to a/c officer                              CLE123
+      **  of the loan's facility.                                                             CLE123
+      *                                                                                       CLE123
+B1   C                   IF        CLE123 = 'Y'                                               CLE123
+     C                             AND DDACOF = *BLANKS                                       CLE123
+     C                   MOVE      ACOFF         DDACOF                                       CLE123
+E1   C                   ENDIF                                                                CLE123
+      *                                                                                       CLE123
       *
       ***  Validate account officer
       *
      C                   EXSR      SRACOF
       *
       /COPY WNCPYSRC,LECLIP3V05
+      *                                                                                       CLE123
+      **  The following validation added for to ensure valid                                  CLE123
+      **  a/c officers for output to the LE0723 report.                                       CLE123
+      *                                                                                       CLE123
+      **  The a/c officer of Loan MUST be the same as a/c officer                             CLE123
+      **  of the loan's facility.                                                             CLE123
+      *                                                                                       CLE123
+     C                   IF        CLE123 = 'Y'                                               CLE123
+     C                             AND DDACOF <> ACOFF                                        CLE123
+     C                   MOVE      'N'           DDACOFOK                                     CLE123
+     C                   ADD       1             Idx                                          CLE123
+     C                   MOVEL     'DDACOF'      FldNamXAr(Idx)                               CLE123
+     C                   MOVEL     '5049531'     MsgIDXAr(Idx)                                CLE123
+     C                   ENDIF                                                                CLE123
       *
       ***  Validate industry (for loans and parts purchased)
       *
@@ -3142,6 +3186,19 @@ E004 C                   ENDIF
      C                   IF        @RTCD = *Blanks                                         BUG10391R
      C                   EVAL      CLE036 = 'Y'                                            BUG10391R
      C                   ENDIF                                                             BUG10391R
+      *                                                                                       CLE123
+      ***  Determine if CLE123 is installed                                                   CLE123
+      *                                                                                       CLE123
+     C                   MOVE      'N'           CLE123            1                          CLE123
+     C                   CALLB     'AOSARDR0'                                                 CLE123
+     C                   PARM      *BLANKS       @RTCD                                        CLE123
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE123
+     C                   PARM      'CLE123'      @SARD                                        CLE123
+      *                                                                                       CLE123
+     C                   IF        @RTCD = *BLANKS                                            CLE123
+     C                   MOVE      'Y'           CLE123                                       CLE123
+     C                   ENDIF                                                                CLE123
+      *                                                                                       CLE123
      C/COPY WNCPYSRC,LEH01455
       **********                                                                   MD034915 MD057191
       ***Access*Dealing*Details****************************************            MD034915 MD057191
@@ -3188,6 +3245,23 @@ E004 C                   ENDIF
       ***  an external data area
       *
      C                   ENDSR
+      *****************************************************************                       CLE123
+      * LEFCLTY - Retrieve Facility details                            *                      CLE123
+      *****************************************************************                       CLE123
+     C     LEFCLTY       BEGSR                                                                CLE123
+      ** Key Fields for Facility File                                                         CLE123
+     C     CHKFAC        KLIST                                                                CLE123
+     C                   KFLD                    KFCUS                                        CLE123
+     C                   KFLD                    KFACT                                        CLE123
+     C                   KFLD                    KFCNO                                        CLE123
+      ** Move values to key fields                                                            CLE123
+     C                   MOVEL     FCUSM         KFCUS                                        CLE123
+     C                   MOVEL     FTYPM         KFACT                                        CLE123
+     C                   MOVEL     FSEQM         KFCNO                                        CLE123
+      ** Get facility account officer                                                         CLE123
+     C     CHKFAC        CHAIN     FCLTY                                                      CLE123
+     C                   EVAL      ACOFF = FCACOF                                             CLE123
+     C                   ENDSR                                                                CLE123
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG19322           Date 11Jan22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035561           Date 24Aug15               *
       *                 MD034368           Date 08May15               *
       *                 MD034339           Date 06May15               *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG19322 - Extended Customer Details not reflected on the    *
+      *             field 50F of MT101 and MT102                      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -150,6 +153,7 @@
      FFT101HL8  IF   E           K DISK    INFSR(*PSSR)
      FFT101HL9  UF   E           K DISK    RENAME(FT101HD0:RFT9)
      FFT101DL2  IF   E           K DISK    INFSR(*PSSR)
+     FMGOEXTPD  O    E           K DISK    COMMIT                                           BUG19322
      FMGOREFPD  O    E           K DISK    COMMIT
      FMGOMSGPD  O    E           K DISK    COMMIT
      F***SDBRCHL5  IF   E           K DISK                                                  BUG13217
@@ -220,6 +224,20 @@
      D RUNDAT          DS            13
      D* DATA STRUCTURE TO RETRIEVE MULTIBRANCH INDICATOR
      D  MBIN                  13     13
+      *                                                                                     BUG19322
+      ** Multiple occurrence data structure for extension file                              BUG19322
+      *                                                                                     BUG19322
+     D EXTN            DS                  OCCURS(45)                                       BUG19322
+     D  MPSN                   1      2  0                                                  BUG19322
+     D  MTG                    3      7                                                     BUG19322
+     D  MCSI                   8     15                                                     BUG19322
+      *                                                                                     BUG19322
+      **  Field tag data structure                                                          BUG19322
+      *                                                                                     BUG19322
+     D                 DS                                                                   BUG19322
+     D  @MTG                   1      5                                                     BUG19322
+     D  FLDTYP                 2      2                                                     BUG19322
+     D  FLDTAG                 4      4                                                     BUG19322
      D*
       ***************************************************************
       *  NOTE:                                                      *
@@ -432,6 +450,7 @@
      D IVTAG2          S              1
      D IVTAG3          S              1
      D CFT004          S              1    INZ(' ')
+     D SAVMTG          S              5                                                     BUG19322
      D WRKTAG          S              5                                                     MD034339
       *                                                                                       CSW201
       ** Work Variables for CSW201                                                            CSW201
@@ -3460,6 +3479,27 @@
      C     X             Occur     MULT
      C                   Enddo
       *
+      ** Write multiple occurrence data structure to MGOEXTPD                               BUG19322
+      *                                                                                     BUG19322
+     C                   Z-ADD     1             V                 2 0                      BUG19322
+     C     V             OCCUR     EXTN                                                     BUG19322
+     C                   DOW       V <= 20  And                                             BUG19322
+     C                             MCSI <> *BLANKS                                          BUG19322
+     C                   WRITE     MGOEXTD0                             43                  BUG19322
+      *                                                                                     BUG19322
+      **  Error on write to PF/MGOEXTPD (message data extension file)                       BUG19322
+      *                                                                                     BUG19322
+     C                   IF        *IN43 = *ON                                              BUG19322
+     C                   MOVE      '043'         DBASE                       * * * * * * * *BUG19322
+     C                   MOVEL     '   '         DBKEY                       *  DBERR 043  *BUG19322
+     C                   MOVEL     'MGOEXTPD'    DBFILE                      * * * * * * * *BUG19322
+     C                   EXSR      *PSSR                                                    BUG19322
+     C                   ENDIF                                                              BUG19322
+      *                                                                                     BUG19322
+     C                   EVAL      V = V + 1                                                BUG19322
+     C     V             OCCUR     EXTN                                                     BUG19322
+     C                   ENDDO                                                              BUG19322
+      *                                                                                     BUG19322
      C                   Endsr
       *
      C/EJECT
@@ -3719,6 +3759,20 @@
      C                   Eval      X = X + 1
      C                   Enddo
      C
+      *                                                                                     BUG19322
+      ** Clear multiple occurrence DS for the extension file.                               BUG19322
+      *                                                                                     BUG19322
+     C                   Eval      V = 1                                                    BUG19322
+     C     V             Occur     EXTN                                                     BUG19322
+     C                   Dow       V <= 20                                                  BUG19322
+     C                             And MCSI <> *Blanks                                      BUG19322
+     C                   Eval      MPSN = *Zeros                                            BUG19322
+     C                   Eval      MTG = *Blanks                                            BUG19322
+     C                   Eval      MCSI = *Blanks                                           BUG19322
+     C                   Eval      V = V + 1                                                BUG19322
+     C     V             Occur     EXTN                                                     BUG19322
+     C                   Enddo                                                              BUG19322
+     C                   Eval      V = *Zeros                                               BUG19322
      C                   Endsr
      C/EJECT
       *****************************************************************
@@ -4156,6 +4210,7 @@
      C                   EVAL      Q = Q + 1                                                  CSW207
      C     Q             OCCUR     MULT                                                       CSW207
      C                   EVAL      MTAG = ':50F:'                                             CSW207
+     C                   EVAL      SAVMTG = MTAG                                            BUG19322
      C                   MOVEL     POUT1         MFLD                                         CSW207
       * Message 2                                                                             CSW207
      C                   IF        POUT2 <> *BLANKS                                           CSW207
@@ -4182,6 +4237,7 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
      C**********         EVAL      MTAG = ':50F:'                                     CSW207 CSW207A
+     C                   EXSR      GetEXTN                                                  BUG19322
      C                   ENDIF                                                                CSW207
       *                                                                                       CSW207
      C                   ENDIF                                                                CSW207
@@ -4233,6 +4289,32 @@
      C                   ENDSR                                                             BUG15010A
       *****************************************************************                       CSW215
      C/EJECT                                                                                  CSW215
+      *****************************************************************                     BUG19322
+      *                                                               *                     BUG19322
+      *  GetEXTN - Store customer with SWIFT address to data structure*                     BUG19322
+      *                                                               *                     BUG19322
+      *****************************************************************                     BUG19322
+     C     GetEXTN       BEGSR                                                              BUG19322
+      *                                                                                     BUG19322
+     C                   IF        SAVMTG <> *Blanks                                        BUG19322
+     C                   EVAL      @MTG = SAVMTG                                            BUG19322
+     C                   ELSE                                                               BUG19322
+     C                   EVAL      @MTG = MTAG                                              BUG19322
+     C                   ENDIF                                                              BUG19322
+     C                   IF        FLDTYP = '5' And                                         BUG19322
+     C                             FLDTAG = 'A' Or                                          BUG19322
+     C                             FLDTYP = '5' And                                         BUG19322
+     C                             FLDTAG = 'F'                                             BUG19322
+     C                   EVAL      V = V + 1                                                BUG19322
+     C     V             OCCUR     EXTN                                                     BUG19322
+     C                   EVAL      MPSN = Q                                                 BUG19322
+     C                   EVAL      MTG = @MTG                                               BUG19322
+     C                   EVAL      MCSI = PCNUM                                             BUG19322
+     C                   ENDIF                                                              BUG19322
+      *                                                                                     BUG19322
+     C                   ENDSR                                                              BUG19322
+      *****************************************************************                     BUG19322
+      /EJECT                                                                                BUG19322
       *****************************************************************                       CSW215
       *                                                               *                       CSW215
       * SRFormat59F - Format :59F: for Beneficiary Customer           *                       CSW215

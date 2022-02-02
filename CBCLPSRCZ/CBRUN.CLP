@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055891           Date 01Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD058079           Date 11May21              */
+/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD023005           Date 23Oct13              */
 /*                      MD022112           Date 05Sep13              */
 /*                      CCB021             Date 06Aug12              */
@@ -55,6 +56,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058079 - Deliverable Data Split for sundry files          */
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD023005 - Change of LF access path during reopen IC proc   */
@@ -590,8 +592,10 @@ TAGUSC1:                                                                        
              CPYF       FROMFILE(CBCMPJW0) TOFILE(CBCOMSPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD055891*/
                                                                                         /*MD022112*/
-             CPYF       FROMFILE(SFAPIMDD) TOFILE(SFAPIMTD) +
-                          MBROPT(*REPLACE)                                              /*MD022112*/
+/**********  CPYF       FROMFILE(SFAPIMDD) TOFILE(SFAPIMTD) +
+                          MBROPT(*REPLACE) */                                /*MD022112* *MD058079*/
+             CPYF       FROMFILE(SFAPIJW0) TOFILE(SFAPIMTD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*MD058079*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                           EXEC(CLRPFM FILE(SFAPIMTD))                                   /*MD022112*/
 /**/

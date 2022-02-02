@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR864564           Date 15Nov11               *
+      *  Last Amend No. MD058079           Date 11May21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR864564           Date 15Nov11               *
       *                 AR863616           Date 11Nov11               *
       *                 AR828013 *CREATE   Date 30Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR864564 - Primary key violation AU_BAL.                     *
       *  AR863616 - Incorrect incremental record for DEALSDB.         *
@@ -30,7 +32,7 @@
 
       ** Midas MR MBI Extract Key Details File
 
-     FMRKEYDPD  IF A E           K DISK
+     F*MRKEYDPD* IF A E           K DISK                                                    MD058079
 
 
       ** Entry Type *TYPE1
@@ -78,6 +80,7 @@
      D PFile           S             10A
      D PAction         S              1A
      D PCLeared        S             10A   DIM(300) INZ(*BLANKS)
+     D MRKEYD        E DS                  EXTNAME(MRKEYJW0)                                MD058079
 
      C     *ENTRY        PLIST
      C                   PARM                    JournalEnt
@@ -416,10 +419,25 @@
       ** Get the Key fields from the Key File
 
      C                   EVAL      WHERECL = *BLANKS
-     C     PFile         SETLL     MRKEYDPD
-     C     PFile         READE     MRKEYDPD
+     C*****PFile         SETLL     MRKEYDPD                                                 MD058079
+     C*****PFile         READE     MRKEYDPD                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ declare ACursor insensitive scroll cursor for                                       MD058079
+     C+ select * from MRKEYJW0                                                              MD058079
+     C+ where MKFNAM = :PFile                                                               MD058079
+     C+ order by MKFNAM, MKFLDN                                                             MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ open ACursor                                                                        MD058079
+     C/END-EXEC                                                                             MD058079
+                                                                                            MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ fetch next from ACursor into :MRKEYD                                                MD058079
+     C/END-EXEC                                                                             MD058079
 
-     C                   DOW       NOT %EOF()
+     C**********         DOW       NOT %EOF()                                               MD058079
+     C                   DOW       SQLCODE = 0                                              MD058079
      C                   EVAL      WPStr = %SUBST(Entry:MKFLDP:MKFLDL)                      AR864564
      C                   IF        MKFLDL < 33                                              AR864564
                                                                                             AR864564
@@ -439,8 +457,12 @@
      C                                %TRIMR(MKFLDN) + '=''' +
      C**********                      %SUBST(Entry:MKFLDP:MKFLDL)+''''                      AR864564
      C                                %TRIM(WPStr) + ''''                                   AR864564
-     C     PFile         READE     MRKEYDPD
-     C                   IF        NOT %EOF()
+     C*****PFile         READE     MRKEYDPD                                                 MD058079
+     C/EXEC SQL                                                                             MD058079
+     C+ fetch next from ACursor into :MRKEYD                                                MD058079
+     C/END-EXEC                                                                             MD058079
+     C**********         IF        NOT %EOF()                                               MD058079
+     C                   IF        SQLCODE = 0                                              MD058079
      C                   EVAL      WHERECL = %TRIMR(WHERECL) + ' AND'
      C                   ENDIF
      C                   ENDDO

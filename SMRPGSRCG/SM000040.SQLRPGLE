@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CUP003             Date 02Aug10               *
-      *  Prev Amend No. BUG27793           Date 07Jun10               *
+      *  Last Amend No. MD058089           Date 01Sep21               *
+      *  Prev Amend No. CUP003             Date 02Aug10               *
+      *                 BUG27793           Date 07Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BG18582            Date 06Jul06               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CUP003 - Handle unique key problems better.                  *
       *  B27793 - Make migration multi-streamed.                      *
       *  BG18582 - Initialise return code.                            *
@@ -35,7 +37,7 @@
       *****************************************************************
       *
       * Files with customer name fields
-     FSMCNUMPD  UF   E           K DISK
+     F*SMCNUMPD* UF   E           K DISK                                                    MD058089
       *
       * DSPFFD outfile
      F*UPFFDSTPDIF***E             DISK    USROPN                                           BUG27793
@@ -146,6 +148,7 @@
       * DS for call to QCMDEXC for DSPFD
      DCmdDSPFD         DS           150
      D QualName2              12     32
+     D SMCNUM        E DS                  EXTNAME(SMCNUJW0)                                MD058089
       *
       *****************************************************************
       *                                                               *
@@ -178,7 +181,8 @@
       * If ReRun is '*NO ', set all update flags to blank.
      C                   IF        ReRun  = '*NO '
      C/Exec SQL
-     C+ Update SMCNUMPD set CNUPDF = ' '
+     C**Update*SMCNUMPD set CNUPDF = ' '                                                    MD058089
+     C+ Update SMCNUXTD set CNUPDF = ' '                                                    MD058089
      C/End-Exec
      C                   ENDIF
       *
@@ -194,20 +198,42 @@
       * Read in the files to be migrated (or single file,
       * if in single mode)
      C                   IF        SingleMode = 'Y'
-     C     Key02         CHAIN     SMCNUMPD
-     C                   IF        NOT %FOUND
+     C*****Key02         CHAIN     SMCNUMPD                                                 MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ SELECT *                                                                            MD058089
+     C+ into :SMCNUM                                                                        MD058089
+     C+ from SMCNUJW0                                                                       MD058089
+     C+ where CNFILE = :ObjName and CNTYPE = :ObjType                                       MD058089
+     C/END-EXEC                                                                             MD058089
+     C**********         IF        NOT %FOUND                                               MD058089
+     C                   IF        SQLCODE = 100                                            MD058089
      C                   EVAL      ReturnCode = '*NOTONCNUM'
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
       *
      C                   ELSE
-     C                   READ      SMCNUMPD
+     C**********         READ      SMCNUMPD                                                 MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ declare ACursor insensitive scroll cursor for                                       MD058089
+     C+ select * from SMCNUJW0                                                              MD058089
+     C+ order by CNFILE, CNTYPE, CNFLD                                                      MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ open ACursor                                                                        MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ fetch next from ACursor into :SMCNUM                                                MD058089
+     C/END-EXEC                                                                             MD058089
+                                                                                            MD058089
      C                   ENDIF
      C                   EVAL      ObjName = CNFILE
      C                   EVAL      SQLFail = ' '
 
-     C                   DOU       %EOF or SingleMode = 'Y'
+     C*********          DOU       %EOF or SingleMode = 'Y'                                 MD058089
+     C                   DOU       SQLCODE = 100 or SingleMode = 'Y'                        MD058089
       *
       * Only process file if it hasn't already been processed.
      C                   IF        CNUPDF <> 'Y'
@@ -266,8 +292,16 @@
       * Check if a customer field - if so then convert 0 to blanks
       * and pad any numbers with leading zeros
      C                   EVAL      FieldName = WHFLDI
-     C     Key01         CHAIN     SMCNUMPD
-     C                   IF        %FOUND
+     C*****Key01         CHAIN     SMCNUMPD                                                 MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ SELECT *                                                                            MD058089
+     C+ into :SMCNUM                                                                        MD058089
+     C+ from SMCNUJW0                                                                       MD058089
+     C+ where CNFILE = :ObjName and CNTYPE = :ObjType                                       MD058089
+     C+ and CNFLD = :FieldName                                                              MD058089
+     C/END-EXEC                                                                             MD058089
+     C**********         IF        %FOUND                                                   MD058089
+     C                   IF        SQLCODE = 0                                              MD058089
      C                   EVAL      FromList = %Trim(FromList) + ', case when ' +
      C                             WHFLDI + ' = 0 then '' '' else digits(' +
      C                             %Trim(WHFLDI) + ') end'
@@ -387,13 +421,17 @@
      C     UpdateF       TAG
      C                   IF        SQLFail = ' '
      C                             or SQLFail = 'U'                                           CUP003
-     C     Key02         SETLL     SMCNUMPD
-     C     Key02         READE     SMCNUMPD                               91
-     C                   DOW       *IN91 = *OFF
-     C                   EVAL      CNUPDF = 'Y'
-     C                   UPDATE    CNCNUMD0
-     C     Key02         READE     SMCNUMPD                               91
-     C                   ENDDO
+     C*****Key02         SETLL     SMCNUMPD                                                 MD058089
+     C*****Key02         READE     SMCNUMPD                               91                MD058089
+     C**********         DOW       *IN91 = *OFF                                             MD058089
+     C**********         EVAL      CNUPDF = 'Y'                                             MD058089
+     C**********         UPDATE    CNCNUMD0                                                 MD058089
+     C*****Key02         READE     SMCNUMPD                               91                MD058089
+     C***********        ENDDO                                                              MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ Update SMCNUXTD set CNUPDF = 'Y'                                                    MD058089
+     C+ where CNFILE = :ObjName and CNTYPE = :ObjType                                       MD058089
+     C/END-EXEC                                                                             MD058089
      C                   ENDIF                                                                CUP003
       *
      C**********         ELSE                                                                 CUP003
@@ -406,8 +444,15 @@
      C                   ENDIF
       *
       * Get next file to be migrated
-     C     Key02         SETGT     SMCNUMPD
-     C                   READ      SMCNUMPD
+     C*****Key02         SETGT     SMCNUMPD                                                 MD058089
+     C**********         READ      SMCNUMPD                                                 MD058089
+     C/EXEC SQL                                                                             MD058089
+     C+ SELECT *                                                                            MD058089
+     C+ into :SMCNUM                                                                        MD058089
+     C+ from SMCNUJW0                                                                       MD058089
+     C+ where CNFILE > :ObjName                                                             MD058089
+     C+ order by CNFILE, CNTYPE, CNFLD                                                      MD058089
+     C/END-EXEC                                                                             MD058089
      C                   EVAL      ObjName = CNFILE
      C                   EVAL      SQLFail = ' '
      C                   ENDDO

@@ -9,50 +9,70 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2011                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP023  *CREATE    Date 20Apr11              */
+/*       Last Amend No. MD058089           Date 01Sep21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP023  *CREATE    Date 20Apr11              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP023 - Add TABLETN record to SMZNMGPD.                    */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                             2011')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                             CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Try to remove record first. */
-             CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
-                          where ZNOBJ = ''TABLETN''')
+/**********  CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
+                          where ZNOBJ = ''TABLETN''') */                                /*MD058089*/
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMCTD +
+                          where ZNOBJ = ''TABLETN''')                                   /*MD058089*/
              CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMXTD +
+                          where ZNOBJ = ''TABLETN''')                                   /*MD058089*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD058089*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD058089*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD058089*/
+
 /* Now try to add record. */
-             CHGVAR     VAR(&STM_STR) VALUE('insert into SMZNMGPD +
+/**********  CHGVAR     VAR(&STM_STR) VALUE('insert into SMZNMGPD +
                           (ZNOBJ, ZNTYPE) values(''TABLETN'', +
-                          ''*FILE'')')
+                          ''*FILE'')') */                                               /*MD058089*/
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SMZNMCTD +
+                          (ZNOBJ, ZNTYPE, ZNMODE) values(''TABLETN'', +
+                          ''*FILE'',''C'')')                                            /*MD058089*/
              CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+             CHGVAR     VAR(&STM_STR) VALUE('insert into SMZNMXTD +
+                          (ZNOBJ, ZNTYPE, ZNMODE) values(''TABLETN'', +
+                          ''*FILE'', ''C'')')                                           /*MD058089*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD058089*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD058089*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD058089*/
+
              GOTO       CMDLBL(ENDPGM)
- 
+
  ERROR:
              CHGJOB     SWS(XXXXXX11)
- 
+
  ENDPGM:
              ENDPGM

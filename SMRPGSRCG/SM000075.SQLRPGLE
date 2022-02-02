@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034724 *CREATE   Date 03Jun15               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD058089           Date 01Sep21               *
+      *  Prev Amend No. MD034724 *CREATE   Date 03Jun15               *
+      *                 xxxxxx             Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058089 - Deliverable Data Split for SM and UP              *
       *  MD034724 - New Bridge program to upgrade UDF tables.         *
       *                                                               *
       *****************************************************************
@@ -121,7 +123,8 @@
      C+ declare MIG cursor for
      C+ select
      C+   NCOBJ
-     C+ from SMGNMGPD
+     C**from*SMGNMGPD                                                                       MD058089
+     C+ from SMGNMJW0                                                                       MD058089
      C+ where
      C+     NCETBL = 'Y'
      C/end-exec

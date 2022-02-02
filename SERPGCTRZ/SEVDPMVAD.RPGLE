@@ -429,6 +429,7 @@
 
      C                   END
      C                   END
+      ** Assign the value of DDDPAD to DPAD (if zero)                                       MD059339
      C     DDACTN        IFEQ      'I'                                                      MD059339
      C     DDDPAD        ANDNE     *BLANKS                                                  MD059339
      C     DPAD          ANDEQ     0                                                        MD059339

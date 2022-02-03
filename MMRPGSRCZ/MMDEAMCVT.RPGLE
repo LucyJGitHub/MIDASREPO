@@ -14,9 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. 256226             Date 11Jan22               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD027637           Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  256226 - Authorise a zero interest rate on Deal Amendment.   *
+      *           Apply fix 255576. Reverse fix of MD027637           *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
@@ -286,14 +289,18 @@
       *                                                                                       CDL017
      C     HNINTR        IFEQ      0                                                          CDL017
      C                   MOVE      *BLANKS       DDINTR                                       CDL017
-      *                                                                                     MD027637
-     C                   IF        HNMTYP = 'SC'                                            MD027637
-     C                   EVAL      @@AMTW = 0                                               MD027637
-     C                   EVAL      @@QECN = 7                                               MD027637
-     C                   EXSR      FMTAMT                                                   MD027637
-     C                   EVAL      DDINTR = @@AMTD                                          MD027637
-     C                   ENDIF                                                              MD027637
-      *                                                                                     MD027637
+     C     HNINTR        MULT      10000000      @@AMTW                                       256226
+     C                   Z-ADD     7             @@QECN                                       256226
+     C                   EXSR      FMTAMT                                                     256226
+     C                   MOVE      @@AMTD        DDINTR                                       256226
+      **********                                                                     MD027637 256226
+     C**********         IF        HNMTYP = 'SC'                                     MD027637 256226
+     C**********         EVAL      @@AMTW = 0                                        MD027637 256226
+     C**********         EVAL      @@QECN = 7                                        MD027637 256226
+     C**********         EXSR      FMTAMT                                            MD027637 256226
+     C**********         EVAL      DDINTR = @@AMTD                                   MD027637 256226
+     C**********         ENDIF                                                       MD027637 256226
+      **********                                                                     MD027637 256226
      C                   ELSE                                                                 CDL017
       *                                                                                       CDL017
      C     HNINTR        MULT      10000000      @@AMTW

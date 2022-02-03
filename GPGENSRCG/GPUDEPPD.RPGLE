@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD058440           Date 31Jan22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058440 - Dumps are generated after inserting a Full Trade  *
+      *             Settlement.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
@@ -89,6 +92,7 @@ O    C                   WRITE     W_UDEPPDF
 O    C                   ENDIF
 O    C                   ENDIF
 
+     C                   SETON                                        LR                    MD058440
      C                   RETURN
 
      C/SPACE 5

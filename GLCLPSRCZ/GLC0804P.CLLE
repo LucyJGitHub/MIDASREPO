@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('Events by Currency Report Prompt')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0804P - Events by Currency with Running Totals Report    */
+/*                  Prompt                                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD059526           Date 02Feb22              */
+/*       Prev Amend No. CGL091 *Create     Date 02Nov21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD059526 - Error on GL0557 report request when forward days */
+/*                   is amended from valid numeric value to blank    */
+/*       CLG091 - Events by Currency with Running Totals Report      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM &RACT &RCMD)
+/**/
+             DCL        VAR(&BISCPY) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+                          Limited 2021 ')
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&RCMD) TYPE(*CHAR) LEN(1)
+/**/
+             DCLF       FILE(GLC0804DF) RCDFMT(*ALL)
+
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&SRUNA)
+             RTVJOBA    JOB(&SWSID) USER(&SUSER)
+             IF         COND(&RACT *EQ 'E') THEN(CHGVAR VAR(&IN05) VALUE('1'))
+             IF         COND(&RACT *EQ 'D') THEN(CHGVAR VAR(&IN03) VALUE('1'))
+/**/
+             CHGVAR     VAR(&DAYS) VALUE(%SST(&RPARM 1 3))
+             SNDRCVF
+/* IF F3, Return to RCF with Action Code = End  */
+             IF         COND(&IN01 *EQ '1') THEN(DO)
+                CHGVAR     VAR(&RCMD) VALUE('E')
+                GOTO       CMDLBL(ENDLBL)
+             ENDDO
+/* IF F12, Return to RCF with Action Code = First Screen */
+             IF         COND(&IN02 *EQ '1') THEN(DO)
+                CHGVAR     VAR(&RCMD) VALUE('F')
+                GOTO       CMDLBL(ENDLBL)
+             ENDDO
+/* IF F10, Return to RCF with Action Code = Delete */
+             IF         COND(*IN04 *EQ '1') THEN(DO)
+                CHGVAR     VAR(&RCMD) VALUE('D')
+                GOTO       CMDLBL(ENDLBL)
+             ENDDO
+/**/                                                                                    /*MD059526*/
+/* If entry is *Blanks, Set DAYS to 000, to avoid deletion of record in FCPARPPD  */    /*MD059526*/
+             IF         COND((&DAYS *EQ '   ') ) THEN(DO)                               /*MD056526*/
+             CHGVAR     VAR(&DAYS) VALUE('000')                                         /*MD059526*/
+             ENDDO                                                                      /*MD059526*/
+                                                                                        /*MD059526*/
+             CHGVAR     VAR(&RPARM) VALUE(&DAYS)
+/**/
+             CHGVAR     &BISCPY '(c) Finastra International Limited 2021'
+ ENDLBL:     ENDPGM

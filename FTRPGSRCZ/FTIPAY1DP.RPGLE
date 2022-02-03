@@ -237,7 +237,7 @@
       ** Cursor position
      D  PRowCol        S              4B 0
       *                                                                                       CSW122
-     D  INMSGR         S              8S 0                                                    CSW122
+     D  WPMsgR         S              8S 0                                                    CSW122
      D/COPY WNCPYSRC,FTIPA1XD02
       *
       ** +--------------------------------------+
@@ -479,7 +479,7 @@
      C     SrMXElement   BEGSR                                                                CSW122
       *                                                                                       CSW122
      C                   CALL      'FT020023DP'                                               CSW122
-     C                   PARM                    INMSGR                                       CSW122
+     C                   PARM                    WPMsgR                                       CSW122
      C                   PARM                    DDPREF                                       CSW122
      C                   PARM      *BLANKS       PINKC                                        CSW122
      C                   PARM      *BLANKS       PINKL                                        CSW122
@@ -557,7 +557,7 @@
      C                   PARM                    PEDTFLD           1
       *
       ** Message Unique Ref to be used in MX Element display                                  CSW122
-     C                   PARM                    INMSGR                                       CSW122
+     C                   PARM                    WPMsgR                                       CSW122
       *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt

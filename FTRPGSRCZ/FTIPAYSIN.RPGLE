@@ -907,6 +907,7 @@
      D IA              S              2  0                                                    CER001
      D WAlloc          S              1                                                       CER001
      D WAllPref        S              1                                                       CER001
+     D WPMsgR          S              8S 0                                                    CSW122
                                                                                               CGL014
      D PRtty           S              5A                                                      CER030
      D PTtcd           S             10A                                                      CER030
@@ -2732,11 +2733,29 @@
      C                   EVAL      PEINKQ = 'N'
      C                   ENDIF
       *                                                                                       CSW122
-      ** If feature CSW122 is ON and action is Enquire,                                       CSW122
-      ** Enable F22=MX Element                                                                CSW122
+      ** If feature CSW122 is ON, check whether F22=MX Element should be displayed            CSW122
       *                                                                                       CSW122
-     C                   IF        CSW122 = 'Y' AND DDACTN = 'E'                              CSW122
+     C                   Z-ADD     *ZERO         WPMsgR                                       CSW122
+     C                   IF        CSW122 = 'Y'                                               CSW122
+      *                                                                                       CSW122
+      ** PParmLink = 'Y' - created from FTMG transaction                                      CSW122
+      ** PMSGR <> Zero - IPAY transaction is already created                                  CSW122
+      *                                                                                       CSW122
+     C                   IF        PParmLink = 'Y'                                            CSW122
+     C                   EVAL      WPMsgR = IPINMSGR                                          CSW122
+     C                   ELSEIF    INMSGR <> *ZERO AND DDACTN <> 'D'                          CSW122
+     C                   Z-ADD     INMSGR        WPMsgR                                       CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+      ** Enable F22=MX Element when action is Enquire, Amend and with                         CSW122
+      ** message Reference                                                                    CSW122
+      *                                                                                       CSW122
+     C                   IF        DDACTN = 'E' OR                                            CSW122
+     C                             DDACTN = 'A' OR                                            CSW122
+     C                             WPMsgr <> *ZERO                                            CSW122
      C                   EVAL      PEINKW = 'Y'                                               CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
      C                   ELSE                                                                 CSW122
      C                   EVAL      PEINKW = 'N'                                               CSW122
      C                   ENDIF                                                                CSW122
@@ -2787,7 +2806,7 @@
      C                   PARM                    PEDTFLD           1
       *
       ** Message Unique Ref to be used in MX Element display                                  CSW122
-     C                   PARM                    INMSGR                                       CSW122
+     C                   PARM                    WPMsgR                                       CSW122
       *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
@@ -3088,6 +3107,7 @@
       ** linked maintenance/enquiry, terminate program.
       *
      C     PParmLink     IFEQ      'Y'
+     C     PINKW         ANDNE     'Y'                                                        CSW122
       *
      C                   MOVEL     '5'           PParmRtcd
      C                   MOVEL     'T'           WScrn
@@ -3096,7 +3116,7 @@
       *                                                                                       CSW122
       ** F12 is pressed from MX Element                                                       CSW122
       *                                                                                       CSW122
-     C                   IF        CSW122 = 'Y' AND PINKW = 'Y'                               CSW122
+     C                   IF        PINKW = 'Y'                                                CSW122
      C                   MOVEL     'P'           WScrn                                        CSW122
      C                   ELSE                                                                 CSW122
       *
@@ -6306,7 +6326,7 @@
      C                   PARM                    PEDTFLD
       *
       ** Message Unique Ref to be used in MX Element display                                  CSW122
-     C                   PARM                    INMSGR                                       CSW122
+     C                   PARM                    WPMsgR                                       CSW122
       *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
@@ -6769,7 +6789,7 @@
      C                   PARM      'N'           PEDTFLD
       *
       ** Message Unique Ref to be used in MX Element display                                  CSW122
-     C                   PARM                    INMSGR                                       CSW122
+     C                   PARM                    WPMsgr                                       CSW122
       *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
@@ -7076,7 +7096,7 @@
      C                   PARM                    PEDTFLD
       *
       ** Message Unique Ref to be used in MX Element display                                  CSW122
-     C                   PARM                    INMSGR                                       CSW122
+     C                   PARM                    WPMsgr                                       CSW122
       *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt

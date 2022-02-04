@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD059175           Date 29Oct21               *
+      *  Prev Amend No. 228011             Date 24Jun04               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +43,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059175 - ADEFIX - Add missing output report information    *
+      *           = Low and High limit.  and today effectivenss %     *
+      *  228011 - Error on percentage reported by AS001003P1          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -224,6 +229,10 @@
       ** Program Status Data Structure
 
      D TP              S              2    DIM(3) CTDATA PERRCD(1)
+                                                                                              228011
+      ** Narratives for AS001003Px                                                            228011
+     D Narrative       S             35    DIM(4) CTDATA PERRCD(1)                            228011
+                                                                                              228011
      D A22             S              1    DIM(22)
 
       ** Arrays for Unrealised P/L (General Work)
@@ -258,6 +267,33 @@
      D HDG3I           S             13  0 DIM(3)
      D TOT3I           S             13  0 DIM(3)
 
+      ** Arrays for Unrealised P/L (Effective)                                                228011
+     D D0              S             13  0 DIM(3)                                             228011
+     D H0              S             13  0 DIM(3)                                             228011
+     D T0              S             13  0 DIM(3)                                             228011
+     D D1              S             13  0 DIM(3)                                             228011
+     D H1              S             13  0 DIM(3)                                             228011
+     D T1              S             13  0 DIM(3)                                             228011
+     D D2              S             13  0 DIM(3)                                             228011
+     D H2              S             13  0 DIM(3)                                             228011
+     D T2              S             13  0 DIM(3)                                             228011
+     D D3              S             13  0 DIM(3)                                             228011
+     D H3              S             13  0 DIM(3)                                             228011
+     D T3              S             13  0 DIM(3)                                             228011
+                                                                                              228011
+      ** Arrays for Unrealised P/L (Ineffective)                                              228011
+     D D0@             S             13  0 DIM(3)                                             228011
+     D H0@             S             13  0 DIM(3)                                             228011
+     D T0@             S             13  0 DIM(3)                                             228011
+     D D1@             S             13  0 DIM(3)                                             228011
+     D H1@             S             13  0 DIM(3)                                             228011
+     D T1@             S             13  0 DIM(3)                                             228011
+     D D2@             S             13  0 DIM(3)                                             228011
+     D H2@             S             13  0 DIM(3)                                             228011
+     D T2@             S             13  0 DIM(3)                                             228011
+     D D3@             S             13  0 DIM(3)                                             228011
+     D H3@             S             13  0 DIM(3)                                             228011
+     D T3@             S             13  0 DIM(3)                                             228011
 
       ** Record Format
      D INFDS           DS           528
@@ -310,6 +346,9 @@
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
 
 
+      ** External Data Structures for Hedge Details                                           228011
+     D SDHEDG        E DS                  EXTNAME(SDHEDGPD)                                  228011
+                                                                                              228011
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -456,6 +495,31 @@
      D KAShed          S              6S 0                                                    225293
      D KASdhi          S              1A                                                      225293
       *
+     D HedgeToday      S              1    INZ(*BLANKS)                                     MD059175
+      *                                                                                     MD059175
+      ** Calling parameters for AOSVALR0                                                    MD059175
+      *                                                                                     MD059175
+     D pRtnCd          S              7    INZ(*BLANKS)                                     MD059175
+     D pSysVal01       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS01   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal02       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS02   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal03       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS03   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal04       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS04   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal05       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS05   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal06       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS06   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal07       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS07   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal08       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS08   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal09       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS09   S            200    INZ(*BLANKS)                                     MD059175
+     D pSysVal10       S             20    INZ(*BLANKS)                                     MD059175
+     D pSysValCurS10   S            200    INZ(*BLANKS)                                     MD059175
 
       *****************************************************************
       /EJECT
@@ -1790,6 +1854,7 @@
       ** Derivative
 
      C                   EVAL      AR = DER0E
+     C                   EVAL      Wpert = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      ODURPL = AMT(1)
      C                   EVAL      ODYUPL = AMT(2)
@@ -1840,6 +1905,7 @@
       ** Derivative
 
      C                   EVAL      AR = DER0I
+     C                   EVAL      Wpert = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      ODURPL = AMT(1)
      C                   EVAL      ODYUPL = AMT(2)
@@ -1890,6 +1956,7 @@
       ** Hedged
 
      C                   EVAL      AR = HDG0E
+     C                   EVAL      Wperh = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      OHURPL = AMT(1)
      C                   EVAL      OHYUPL = AMT(2)
@@ -1940,6 +2007,7 @@
       ** Hedged
 
      C                   EVAL      AR = HDG0I
+     C                   EVAL      Wperh = AR(1)                                            MD059175
      C                   EXSR      SRAMT
      C                   EVAL      OHURPL = AMT(1)
      C                   EVAL      OHYUPL = AMT(2)
@@ -1987,6 +2055,7 @@
 
      C                   CLEAR                   LINKTOT1
      C                   CLEAR                   PERCENT1
+     C                   CLEAR                   PERCENT3                                   MD059175
 
       ** Total
 
@@ -2056,6 +2125,7 @@
      C                   IF        FSLASD = 0                                                 225293
      C                   EVAL      OLASDT = *BLANKS                                           225293
      C                   EVAL      OCHGPC = *BLANKS                                           225293
+     C                   EVAL      OPNARR = *BLANKS                                           228011
       *                                                                                       229468
       ** Print "NEW" instead of 0.00% as Hedge Effectiveness to inform                        229468
       ** the user that the linkage has not been assessed yet.                                 229468
@@ -2067,7 +2137,23 @@
      C                   EVAL      *IN24 = *ON                                                225293
      C                   ENDIF                                                                225293
                                                                                               225293
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   If        Wperh = 0                                                MD059175
+     C                   EVAL      WPERC4 =  0                                              MD059175
+     C                   else                                                               MD059175
+     C                   EVAL      WPERC4 =   Wpert/Wperh                                   MD059175
+     C                   endif                                                              MD059175
+     C                   If        WPERC4 > 0                                               MD059175
+     C                   EVAL      WPERC4 =   0                                             MD059175
+     C                   endif                                                              MD059175
+     C                   EVAL      WPERC =  -WPERC4*100                                     MD059175
+     C                   EVAL      WPERLO = H1EFLO                                          MD059175
+     C                   EVAL      WPERUP = H1EFUP                                          MD059175
+     C                   Endif                                                              MD059175
      C                   WRITE     PERCENT1
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   WRITE     PERCENT3                                                 MD059175
+     C                   Endif                                                              MD059175
 
       ** Print dotted line
 
@@ -2099,6 +2185,7 @@
 
      C                   CLEAR                   LINKTOT2
      C                   CLEAR                   PERCENT2
+     C                   CLEAR                   PERCENT4                                   MD059175
 
       ** Total
 
@@ -2151,7 +2238,23 @@
      C                   EVAL      *IN44 = *OFF
      C                   ENDIF
      C                   EVAL      OLASDT = WLASDT                                            229219
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   If        Wperh = 0                                                MD059175
+     C                   EVAL      WPERC4 =  0                                              MD059175
+     C                   else                                                               MD059175
+     C                   EVAL      WPERC4 =   Wpert/Wperh                                   MD059175
+     C                   endif                                                              MD059175
+     C                   If        WPERC4 > 0                                               MD059175
+     C                   EVAL      WPERC4 =  0                                              MD059175
+     C                   endif                                                              MD059175
+     C                   EVAL      WPERC =  -WPERC4*100                                     MD059175
+     C                   EVAL      WPERLO = H1EFLO                                          MD059175
+     C                   EVAL      WPERUP = H1EFUP                                          MD059175
+     C                   Endif                                                              MD059175
      C                   WRITE     PERCENT2
+     C                   If        HedgeToday = 'Y'                                         MD059175
+     C                   WRITE     PERCENT4                                                 MD059175
+     C                   Endif                                                              MD059175
 
       ** Print dotted line
 
@@ -2211,6 +2314,18 @@
      C                   ENDDO
 
      C                   EVALR     OCHGPC = %TRIMR(OCHGPC)
+                                                                                              228011
+     C                   SELECT                                                               228011
+     C                   WHEN      FSHEFP = FSOPCT AND FSRECI = 'D'                           228011
+     C                   EVAL      OPNARR = Narrative(1)                                      228011
+     C                   WHEN      FSHEFP = 0 AND ODTYP = 'FH'                                228011
+     C                   EVAL      OPNARR = Narrative(2)                                      228011
+     C                   WHEN      FSHEFP < H1EFLO AND FSHEFP <> 0                            228011
+     C                   EVAL      OPNARR = Narrative(3)                                      228011
+     C                   WHEN      FSHEFP > H1EFUP                                            228011
+     C                   EVAL      OPNARR = Narrative(4)                                      228011
+     C                   ENDSL                                                                228011
+                                                                                              228011
 
       ** Last assessment date
 
@@ -2920,6 +3035,49 @@
 
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                  228011
+      *****************************************************************                       228011
+      *                                                               *                       228011
+      *  SRInitArray - Initialize UP/UL arrays                        *                       228011
+      *                                                               *                       228011
+      *  Called By: *INZSR                                            *                       228011
+      *  Calls: None.                                                 *                       228011
+      *                                                               *                       228011
+      *****************************************************************                       228011
+     C     SRInitArray   BEGSR                                                                228011
+     C                   Z-ADD     0             WPERC                                      MD059175
+     C                   Z-ADD     0             Wpert            18 4                      MD059175
+     C                   Z-ADD     0             Wperh            18 4                      MD059175
+     C                   Z-ADD     0             Wperc4            8 4                      MD059175
+                                                                                              228011
+     C                   Z-ADD     0             D0                                           228011
+     C                   Z-ADD     0             D1                                           228011
+     C                   Z-ADD     0             D2                                           228011
+     C                   Z-ADD     0             D3                                           228011
+     C                   Z-ADD     0             H0                                           228011
+     C                   Z-ADD     0             H1                                           228011
+     C                   Z-ADD     0             H2                                           228011
+     C                   Z-ADD     0             H3                                           228011
+     C                   Z-ADD     0             T0                                           228011
+     C                   Z-ADD     0             T1                                           228011
+     C                   Z-ADD     0             T2                                           228011
+     C                   Z-ADD     0             T3                                           228011
+     C                   Z-ADD     0             D0@                                          228011
+     C                   Z-ADD     0             D1@                                          228011
+     C                   Z-ADD     0             D2@                                          228011
+     C                   Z-ADD     0             D3@                                          228011
+     C                   Z-ADD     0             H0@                                          228011
+     C                   Z-ADD     0             H1@                                          228011
+     C                   Z-ADD     0             H2@                                          228011
+     C                   Z-ADD     0             H3@                                          228011
+     C                   Z-ADD     0             T0@                                          228011
+     C                   Z-ADD     0             T1@                                          228011
+     C                   Z-ADD     0             T2@                                          228011
+     C                   Z-ADD     0             T3@                                          228011
+                                                                                              228011
+     C                   ENDSR                                                                228011
+                                                                                              228011
+      *****************************************************************                       228011
       /EJECT
       *****************************************************************
       *                                                               *
@@ -2975,6 +3133,22 @@
      C                   EVAL      OEVCD1 = PZADATE
      C                   EVAL      OEVCD2 = PZADATE
      C                   EVAL      OEVCD3 = PZADATE
+                                                                                              228011
+     C                   CALL      'AOHEDGR0'                                                 228011
+     C                   PARM      *BLANKS       PRTCD                                        228011
+     C                   PARM      '*FIRST '     POPTN                                        228011
+     C     SDHEDG        PARM      SDHEDG        DSFDY                                        228011
+                                                                                              228011
+      ** Database Error                                                                       228011
+                                                                                              228011
+     C                   IF        PRTCD <> *BLANKS                                           228011
+     C                   EVAL      DBFILE = 'SDHEDGPD'                                        228011
+     C                   EVAL      DBASE = 10                                                 228011
+     C                   EVAL      DBKEY = '*FIRST'                                           228011
+     C                   EVAL      DBPGM = 'AOHEDGR0'                                         228011
+     C                   EXSR      *PSSR                                                      228011
+     C                   ENDIF                                                                228011
+                                                                                              228011
 
       ** Product Type Key List
 
@@ -3060,7 +3234,60 @@
      C                   EVAL      WOPEN = 'N'                                                224985
      C                   EVAL      WOPEN2 = 'N'                                               224985
 
+                                                                                              228011
+     C                   EXSR      SRInitArray                                                228011
 
+      *                                                                                     MD059175
+      ** Get Hedge High Low Effectiveness Today                                             MD059175
+      *                                                                                     MD059175
+     C                   EVAL      pRtnCd = *BLANKS                                         MD059175
+     C                   EVAL      pSysVal01     = 'HedgeLoHiEffctveness'                   MD059175
+     C                   EVAL      pSysValCurS01 = *BLANKS                                  MD059175
+                                                                                            MD059175
+     C                   CALL      'AOSVALR0'                                               MD059175
+     C                   PARM                    pRtnCd                                     MD059175
+     C                   PARM                    pSysVal01                                  MD059175
+     C                   PARM                    pSysValCurS01                              MD059175
+     C                   PARM                    pSysVal02                                  MD059175
+     C                   PARM                    pSysValCurS02                              MD059175
+     C                   PARM                    pSysVal03                                  MD059175
+     C                   PARM                    pSysValCurS03                              MD059175
+     C                   PARM                    pSysVal04                                  MD059175
+     C                   PARM                    pSysValCurS04                              MD059175
+     C                   PARM                    pSysVal05                                  MD059175
+     C                   PARM                    pSysValCurS05                              MD059175
+     C                   PARM                    pSysVal06                                  MD059175
+     C                   PARM                    pSysValCurS06                              MD059175
+     C                   PARM                    pSysVal07                                  MD059175
+     C                   PARM                    pSysValCurS07                              MD059175
+     C                   PARM                    pSysVal08                                  MD059175
+     C                   PARM                    pSysValCurS08                              MD059175
+     C                   PARM                    pSysVal09                                  MD059175
+     C                   PARM                    pSysValCurS09                              MD059175
+     C                   PARM                    pSysVal10                                  MD059175
+     C                   PARM                    pSysValCurS10                              MD059175
+                                                                                            MD059175
+     C                   If        PRtnCd = *Blanks                                         MD059175
+     C                   Eval      HedgeToday = pSysValCurS01                               MD059175
+     C                   Endif                                                              MD059175
+      *                                                                                     MD059175
+      ** Error routine - Retrieval of SysVal failed                                         MD059175
+      *                                                                                     MD059175
+     C                   IF        PRtnCd = '*NRF    '                                      MD059175
+     C                             or pRtnCd = '*ERROR '                                    MD059175
+      *                                                                                     MD059175
+      ** Data base error in file AOSVALPD                                                   MD059175
+      *                                                                                     MD059175
+     C     *LOCK         IN        LDA                                                      MD059175
+     C                   EVAL      DBFILE     =  'AOSVALPD'                                 MD059175
+     C                   EVAL      DBKEY      =  pSysVal01                                  MD059175
+     C                   EVAL      DBPGM      =  'AS001004'                                 MD059175
+     C                   EVAL      DBASE = 11                                               MD059175
+     C                   OUT       LDA                                                      MD059175
+                                                                                            MD059175
+     C                   EXSR      *PSSR                                                    MD059175
+                                                                                            MD059175
+     C                   ENDIF                                                              MD059175
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3098,3 +3325,8 @@
 FV
 FX
 CF
+** Narratives for Printer Files                                                               228011
+- De minimis Percentage                                                                       228011
+- Critical terms do not match                                                                 228011
+- Less than Lower Percentage                                                                  228011
+- Greater Than Upper Percentage                                                               228011

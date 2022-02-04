@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2003           */
 /*                                                                   */
-/*       Last Amend No. AR1049762          Date 29Oct12              */
+/*       Last Amend No. MD053478           Date 13May19              */
+/*       Prev Amend No. AR1049762          Date 29Oct12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD053478 - Add extracts for Start and End dates.            */
 /*       AR1049762 - Avoid I/O operation was applied to closed file. */
 /*                   (Child:AR1049763)                               */
 /*       BUG4844 - Errors in on-line statements                      */
@@ -30,12 +32,12 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&ACCKEY &SDAT &EDAT)
- 
+
 /*           DCL        VAR(&ACCKEY) TYPE(*CHAR) LEN(18)                                 /*BUG1989*/
              DCL        VAR(&ACCKEY) TYPE(*CHAR) LEN(24)                                 /*BUG1989*/
              DCL        VAR(&SDAT) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&EDAT) TYPE(*DEC) LEN(5 0)
- 
+
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
@@ -47,18 +49,18 @@
              DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')
 /*/COPY WNCPYSRC,GLH00345                                            */
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Reset LDA & Job switches */
              CHGJOB     SWS(XXXXXX00)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              MONMSG     MSGID(CPF1015) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' '))
- 
+
 /* Access Midas Modules File */
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*FIRST ')
@@ -69,7 +71,7 @@
                           TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* If Correspondence Manager is installed */
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
                 STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
@@ -79,12 +81,12 @@
                 OVRDBF     FILE(EXUDCRPD) TOFILE(CGUDCRPD) SECURE(*YES) +
                              SHARE(*NO)
              ENDDO
- 
+
 /* Clear extract file       */
              CLRPFM     FILE(STMTAH)
              CLRPFM     FILE(STMTHH)
              CLRPFM     FILE(STMTZX)
- 
+
 /* Call extract program     */
              CALL       PGM(GL0064) PARM(&ACCKEY &SDAT &EDAT)
 /* Database error processing */
@@ -102,7 +104,7 @@
 /* Override the A/c Posting Ext. for group accounts file.                                /*BUG2387*/
              OVRDBF FILE(GLAPSGL0) TOFILE(GLAPSGAL0)                                     /*BUG2387*/
              OVRDBF FILE(APOST) TOFILE(GLWKPSPD)                                         /*BUG4844*/
- 
+
 /* Call report program      */
              CALL       PGM(GL0065)
 /* Database error processing */
@@ -112,21 +114,21 @@
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* If Correspondence Manager is installed */
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
 /*/COPY WNCPYSRC,GLH00346                                            */
 /** Call Extract File Instance Management */
              CHGVAR     VAR(&ACTION) VALUE('*PREPARE')
              CALL       PGM(CGC3605) PARM(&ACTION)
- 
+
 /** Call Extract Program                  */
              RCLRSC     LVL(*CALLER)                                                   /*AR1049762*/
-             CALL       PGM(CG4520) PARM(&W0RTN &W0CMT)
- 
+/*           CALL       PGM(CG4520) PARM(&W0RTN &W0CMT) */                             /*MD053478*/
+             CALL       PGM(CG4520) PARM(&W0RTN &W0CMT &SDAT &EDAT) /*MD053478*/
 /** Reclaim resource                      */
              RCLRSC
- 
+
 /** Error in extract program              */
              IF         COND(&W0RTN *NE '       ') THEN(DO)
                 SNDPGMMSG  MSG('User Defined Correspondence Extract +
@@ -135,7 +137,7 @@
                 ROLLBACK
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /** Call Custom Defined Data Extract pgm */
              CALL       PGM(CGC3604)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
@@ -144,30 +146,30 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* Prompt for immediate print */
              CALL       PGM(CGC5217) PARM(' ')
              MONMSG     MSGID(CPF0000)
- 
+
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
 /* UDC module must be on in order to call a Correspondence Manager program */
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')
                 CALL       PGM(CGC3605) PARM(&ACTION)
              ENDDO
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC0064 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')

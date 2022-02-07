@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058409           Date 26Jul21               *
-      *  Prev Amend No. MD057244           Date 18Dec20               *
+      *  Last Amend No. MD058409A          Date 27Jan22               *
+      *  Prev Amend No. MD058409           Date 26Jul21               *
+      *                 MD057244           Date 18Dec20               *
       *                 MD037479           Date 20Sep17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058409A - Incorrect field use for Cap.to an A/C in diff ccy*
+      *              in Retail ICD                                    *
       *  MD058409 - Add validation to allow currency of Alternate     *
       *             interest account to be different with main, only  *
       *             if Cap.to an A/C in diff ccy in Retail ICD is Y   *
@@ -373,7 +376,8 @@
       ** If Cap In An Acc In Diff CCY in Retail ICD is N,                                   MD058409
       ** alternate account and main account's ccy must be the same                          MD058409
                                                                                             MD058409
-     C                   IF        R_ICDFC = 'N' AND                                        MD058409
+     C**********         IF        R_ICDFC = 'N' AND                              MD058409 MD058409A
+     C                   IF        R_CDFC = 'N' AND                                        MD058409A
      C                             DDCCY <> WWCCYK                                          MD058409
      C                   MOVE      'N'           DDDACPOk                                   MD058409
      C                   ADD       1             Idx                                        MD058409

@@ -258,7 +258,8 @@
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)                     CFT007
       * Display file information data structure                                 CFT007
                                                                                 CFT007
-     D  FuncText       DS           105                                         CFT007
+     D**FuncText       DS           105                                                CFT007 CSW122
+     D  FuncText       DS           120                                                       CSW122
      D  F3F12text              1     19                                         CFT007
      D  F7text                20     27                                         CFT007
      D  F8text                28     35                                         CFT007
@@ -268,7 +269,7 @@
      D  F21text               71     84                                         CFT007
      D  F4text                85     94                                         CFT007
      D  F16text               95    105                                         CFT007
-     D  F22text               85     98                                                       CSW122
+     D  F22text              105    120                                                       CSW122
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -433,14 +434,35 @@
      C                   Eval      %SUBST(SCCMDTXT:61:11) = F10text             CFT007
      C                   Endif                                                  CFT007
      C                   If        @EINKD = 'Y'                                 CFT007
+     C                             AND (@EINKW <> 'Y')                                        CSW122
      C                   Eval      %SUBST(SCCMDTXT:61:9) = F4text               CFT007
      C                   Endif                                                  CFT007
      C                   If        @EINKQ = 'Y'                                 CFT007
+     C                             AND @EINKW <> 'Y'                                          CSW122
      C                   Eval      %SUBST(SCCMDTXT:70:11) = F16text             CFT007
      C                   Endif                                                  CFT007
       *                                                                         CFT007
+      ** If CSW122 is ON and either one of the folliwing is true, display F22=MX Element      CSW122
+      ** - Action Code is ENQUIRE                                                             CSW122
+      ** - Action Code is AMEND                                                               CSW122
+      ** - OPAY is link from FTMG menu                                                        CSW122
+      *                                                                                       CSW122
      C                   IF        @EINKW = 'Y'                                               CSW122
-     C                   EVAL      %SUBST(SCCMDTXT:61:14) = F22text                           CSW122
+                                                                                              CSW122
+     C                   IF        SACTION = 'E'                                              CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:61:15) = F22text                           CSW122
+                                                                                              CSW122
+     C                   ELSEIF    SACTION = 'A'                                              CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:47:14) = F22text                           CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:62:9) = F4text                             CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:71:10) = F16text                           CSW122
+                                                                                              CSW122
+     C                   ELSEIF    @EINKG = 'N'                                               CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:32:15) = F22text                           CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:61:9) = F4text                             CSW122
+     C                   Eval      %SUBST(SCCMDTXT:70:10) = F16text                           CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
      C                   ENDIF                                                                CSW122
       *
       * If action code 'I' and called from swift enquiry
@@ -542,7 +564,6 @@
      C                   MOVE      *INKQ         @INKQ                          CFT007
      C                   MOVE      *INKS         @INKS
      C                   MOVE      *INKV         @INKV
-     C                   MOVE      *INKW         @INKW                                        CSW122
       *
      C                   ENDSR
       *****************************************************************
@@ -655,10 +676,12 @@
      C                   PARM      *BLANKS       PEXIT             1                          CSW122
      C                   PARM      *BLANKS       PCANC             1                          CSW122
       *                                                                                       CSW122
+     C                   EVAL      @INKW = *BLANKS                                            CSW122
      C                   IF        PEXIT = 'Y'                                                CSW122
      C                   MOVE      '1'           *INKC                                        CSW122
      C                   ELSEIF    PCANC = 'Y'                                                CSW122
      C                   MOVE      '1'           *INKL                                        CSW122
+     C                   MOVE      '1'           @INKW                                        CSW122
      C                   ENDIF                                                                CSW122
      C                   ENDSR                                                                CSW122
       *********************************************************************                   CSW122
@@ -1004,7 +1027,7 @@
       ** Note that: F4 and F16 will only be displayed when action is not D and not E          CSW122
       *                                                                                       CSW122
      C                   IF        @EINKW = 'Y'                                               CSW122
-     C                   EVAL      #MSGID = 'FTM7137'                                         CSW122
+     C                   EVAL      #MSGID = 'FTM7139'                                         CSW122
      C                   ELSE                                                                 CSW122
      C                   EVAL      #MSGID = 'FTM2616'                                         CSW122
      C                   ENDIF                                                                CSW122

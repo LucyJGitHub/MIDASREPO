@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD059042           Date 28Oct21               *
-      *  Prev Amend No. MD058791A          Date 23Sep21               *
+      *  Last Amend No. MD059313           Date 07Feb22               *
+      *  Prev Amend No. MD059042           Date 28Oct21               *
+      *                 MD058791A          Date 23Sep21               *
       *                 MD058791           Date 15Sep21               *
       *                 MD058751           Date 03Sep21               *
       *                 AR1068690          Date 14Dec12               *
@@ -175,6 +176,10 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD059313 - Ensure XXAPOSV1 definition includes all formats to*
+      *             avoid undefined type error when UUC102 is OFF.    *
+      *             Replace hooks GL0420IP11 and GL0420IIP2 with      *
+      *             UUC102_012.                                       *
       *  MD059042 - 'AVAILABLE BALANCE' line is printed on the same   *
       *             line as 'C/F' line.                               *
       *  MD058791A - Lack of space between '/' and STPG, results in   *
@@ -1180,7 +1185,7 @@
       *                                                                   S01408
 0166 IAPOST     NS  06    1 CP                                                  S01091
       *                                                                   S01408
-     I/COPY WNCPYSRC,GL0420IP11                                           S01408
+     I*/COPY*WNCPYSRC,GL0420IP11                                                     S01408 MD059313
       *                                                                   S01408
 0167 I                                  1    1  RECI
      I/COPY WNCPYSRC,GL0420I005                                           S01408
@@ -1218,7 +1223,7 @@
 0186 I**********                              1 160 LOTP                                      CGL029
      I                                  1  170  LOTP                                          CGL029
      I*                                                                   S01408
-     I/COPY WNCPYSRC,GL0420IIP2                                           S01408
+     I*/COPY*WNCPYSRC,GL0420IIP2                                                     S01408 MD059313
      I                                317  319  XRFI                            CEU013
      I                                320  329 0XRFN                            CEU013
      I                                590  599 0ACOD                                          CGL029
@@ -1286,6 +1291,7 @@
      I*                                                                   S01091
 0213 I*ODPOZZ*NS*                                               S01091    S01161
 0214 I***********                             2   60NORE        S01091    S01161
+     I/COPY WNCPYSRC,UUC102_012                                                             MD059313
      I*
 0226 I*    ACCOUNT MASTER DETAIL RECORD
 0227 I**

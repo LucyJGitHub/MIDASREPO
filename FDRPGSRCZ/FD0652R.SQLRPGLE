@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD056747           Date 23Sep20               *
+      *  Last Amend No. 259451A            Date 07Feb22               *
+      *  Prev Amend No. 259451             Date 07Feb22               *
+      *                 MD056555           Date 31Aug20               *
+      *                 MD056747           Date 23Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037467           Date 25May16               *
       *                 CGL165             Date 17Feb15               *
@@ -52,6 +54,11 @@
       *                 184471             Date 02Oct00               *
       *---------------------------------------------------------------
       *                                                               *
+      *  259451A - Make sure that 'N' or Blank input on Type Amort is *
+      *            allowed for all DTST combination and only MM and   *
+      *            NA DTST combination will allow input of 'Y'.       *
+      *  259451 - Amort-type feild should not be amended once it was  *
+      *           set-up it cannot be changed.                        *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD056747 - Instrument Type is not being displayed on screen  *
       *  MD046248 - Finastra Rebranding                               *
@@ -123,8 +130,8 @@
       *                                                                                       CSD031
       **RTV: Deal subtypes             Retrieval index                                        CSD031
       *                                                                                       CSD031
-     FDEALSL10  IF   E           K DISK                                                           BU
-      ** Midas DL DEALSDB/DEALSDC by Deal Type/Sub Type                                     BUG10769
+     F***DEALSL10  IF   E           K DISK                                           BUG10769 259451
+      ***Midas*DL*DEALSDB/DEALSDC*by*Deal*Type/Sub*Type****************              BUG10769 259451
       *                                                                                     BUG10769
      FGPPRDXL0  UF A E           K DISK    USROPN                                                 BU
      F                                     INFSR(*PSSR)                                           BU
@@ -1421,7 +1428,7 @@
      C                   ELSE
       *                                                                                     BUG10769
      C     #1ACAI        IFEQ      'Y'
-     C     #1ACAI        OREQ      'N'
+     C*****#1ACAI        OREQ      'N'                                                       259451A
       *                                                                                     BUG10769
      C     #1DTPE        LOOKUP    @DL                                    85
       *                                                                                     BUG10769
@@ -1465,16 +1472,17 @@
       *                                                                                     BUG10769
      C     #1ACAI        IFNE      FSACAI
       *                                                                                     BUG10769
-      ** Check If Deal Type/Sub Type is attached to a Live Deal.                            BUG10769
-      ** If it is, do not allow changing of ACAI                                            BUG10769
-     C     KDTST#        CHAIN     DEALSL10                           70
-     C     *IN70         IFEQ      *OFF
-     C                   MOVEL     'USR9652'     ZAMSID
+      ***Check*If*Deal*Type/Sub*Type*is*attached*to*a*Live*Deal.******               BUG10769 259451
+      ***If*it*is,*do*not*allow*changing*of*ACAI**********************               BUG10769 259451
+     C*****KDTST#        CHAIN     DEALSL10                           70                      259451
+     C******IN70         IFEQ      *OFF                                                       259451
+     C**********         MOVEL     'USR9652'     ZAMSID                                       259451
+     C                   MOVEL     'USR9701'     ZAMSID                                       259451
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
      C                   MOVE      *ON           *IN44
      C                   MOVE      *ON           *IN99
-     C                   ENDIF
+     C**********         ENDIF                                                                259451
       *                                                                                     BUG10769
      C                   ENDIF
       *                                                                                     BUG10769

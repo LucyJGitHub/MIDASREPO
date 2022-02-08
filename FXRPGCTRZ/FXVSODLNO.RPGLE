@@ -17,8 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *      
+      *  Last Amend No. 254696             Date 03Feb22               *
+      *  Prev Amend No. 254278             Date 03Feb22               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -47,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254696 - Apply fix 254278.                                   *
+      *  254278 - Use ZDATE10 instead of SR/ZA0680 in converting      *
+      *           value dates to midas day number.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
@@ -197,12 +202,12 @@
      D  @@DD                   7      8  0
  
      D  @DTIDS         DS                                                                   BUG13284
-      ** Data structure for SR ZA0680 - date input to subroutine                            BUG13284
-     D  @@DTIN                 1      8  0                                                  BUG13284
-     D  @@YYYY                 1      4  0                                                  BUG13284
-     D  @@CC                   1      2  0                                                  BUG13284
-     D  @@MTH                  5      6  0                                                  BUG13284
-     D  @@DAY                  7      8  0                                                  BUG13284
+      ***Data*structure*for*SR*ZA0680*-*date*input*to*subroutine******               BUG13284 254278
+     D**@@DTIN**               1      8  0                                           BUG13284 254278
+     D**@@YYYY**               1      4  0                                           BUG13284 254278
+     D**@@CC****               1      2  0                                           BUG13284 254278
+     D**@@MTH***               5      6  0                                           BUG13284 254278
+     D**@@DAY***               7      8  0                                           BUG13284 254278
  
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -218,10 +223,10 @@
      D Idx             S              3P 0
                                                                                             BUG13284
       ** Array for SR ZA0680 - cumulative days in year for 4 year period                    BUG13284
-     D @YD             S              5  0 DIM(4) CTDATA PERRCD(4) ASCEND                   BUG13284
+     D*@YD******       S              5  0 DIM(4) CTDATA PERRCD(4) ASCEND            BUG13284 254278
                                                                                             BUG13284
       ** Array for SR ZA0680 - cumulative days in year per month                            BUG13284
-     D @MD             S              5  0 DIM(13) CTDATA PERRCD(13) ASCEND                 BUG13284
+     D*@MD******       S              5  0 DIM(13) CTDATA PERRCD(13) ASCEND          BUG13284 254278
      D ValueDte1       S              5  0                                                  BUG13284
      D ValueDte2       S              5  0                                                  BUG13284
  
@@ -308,19 +313,31 @@
      C                   MOVE      DDDLNO        @DLKEY            6 0                      BUG13284
      C     @DLKEY        CHAIN     FXDEALLL                           99                    BUG13284
      C     *IN99         IFEQ      '0'                                                      BUG13284
-     C                   MOVEL     FHVDYY        @@YYYY                                     BUG13284
-     C                   MOVEL     FHVDMM        @@MTH                                      BUG13284
-     C                   MOVEL     FHVDDD        @@DAY                                      BUG13284
-     C                   EXSR      ZA0680                                                   BUG13284
+     C**********         MOVEL     FHVDYY        @@YYYY                              BUG13284 254278
+     C**********         MOVEL     FHVDMM        @@MTH                               BUG13284 254278
+     C**********         MOVEL     FHVDDD        @@DAY                               BUG13284 254278
+     C**********         EXSR      ZA0680                                            BUG13284 254278
+     C                   Z-ADD     FHVDYY        @@YY                                         254278
+     C                   Z-ADD     FHVDMM        @@MM                                         254278
+     C                   Z-ADD     FHVDDD        @@DD                                         254278
+     C                   CALLB     'ZDATE10'                                                  254278
+     C                   PARM                    DateIn                                       254278
+     C                   PARM      *ZERO         @@MDNO            5 0                        254278
      C                   MOVEL     @@MDNO        ValueDte1                                  BUG13284
      C                   ENDIF                                                              BUG13284
      C                   MOVE      DDSDNO        @DLKEY            6 0
      C     @DLKEY        CHAIN     FXDEALLL                           99
      C     *IN99         IFEQ      '0'                                                      BUG13284
-     C                   MOVEL     FHVDYY        @@YYYY                                     BUG13284
-     C                   MOVEL     FHVDMM        @@MTH                                      BUG13284
-     C                   MOVEL     FHVDDD        @@DAY                                      BUG13284
-     C                   EXSR      ZA0680                                                   BUG13284
+     C**********         MOVEL     FHVDYY        @@YYYY                              BUG13284 254728
+     C**********         MOVEL     FHVDMM        @@MTH                               BUG13284 254728
+     C**********         MOVEL     FHVDDD        @@DAY                               BUG13284 254728
+     C**********         EXSR      ZA0680                                            BUG13284 254728
+     C                   Z-ADD     FHVDYY        @@YY                                         254278
+     C                   Z-ADD     FHVDMM        @@MM                                         254278
+     C                   Z-ADD     FHVDDD        @@DD                                         254278
+     C                   CALLB     'ZDATE10'                                                  254278
+     C                   PARM                    DateIn                                       254278
+     C                   PARM      *ZERO         @@MDNO            5 0                        254278
      C                   MOVE      @@MDNO        ValueDte2                                  BUG13284
      C                   ENDIF                                                              BUG13284
      C                   END
@@ -526,77 +543,77 @@
       /EJECT                                                                                BUG13284
      C*****************************************************************                     BUG13284
      C*                                                               *                     BUG13284
-     C* ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO     *                     BUG13284
-     C*          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)     *                     BUG13284
-     C*                                                               *                     BUG13284
-     C* CALLED BY : SDNOV                                             *                     BUG13284
-     C*                                                               *                     BUG13284
-     C* INPUT : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE: 8N) *                     BUG13284
-     C*                                                               *                     BUG13284
-     C* OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)                 *                     BUG13284
-     C*                                                               *                     BUG13284
-     C* USES :   @@CC   NUMBER OF CENTURIES IN DATE                   *                     BUG13284
-     C*          @@DAY  DAY NUMBER                                    *                     BUG13284
-     C*          @@REM  REMAINDER FROM DIVIDE                         *                     BUG13284
-     C*          @@MTH  MONTH NUMBER                                  *                     BUG13284
-     C*          @MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN *                     BUG13284
-     C*                 MONTH                                         *                     BUG13284
-     C*          @@WK2  WORK FIELD (2,0)                              *                     BUG13284
-     C*          @@WK5  WORK FIELD (5,0)                              *                     BUG13284
-     C*          @@YYYY YEAR (4 CHARACTER)                            *                     BUG13284
-     C*          @YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN *                     BUG13284
-     C*                 A FOUR YEAR PERIOD                            *                     BUG13284
-     C*                                                               *                     BUG13284
-     C*****************************************************************                     BUG13284
-     C*                                                                                     BUG13284
-     C     ZA0680        BEGSR                                                              BUG13284
-     C*                                                                                     BUG13284
-     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD                                                 BUG13284
-     C                   Z-ADD     0             @@MDNO            5 0                      BUG13284
-     C*                                                                                     BUG13284
-     C     @@DTIN        CABEQ     0             ZA0689                                     BUG13284
-     C*                                                                                     BUG13284
-     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING                            BUG13284
-     C**   WORK OUT THE NUMBER OF CENTURIES PASSED SINCE 1971,                              BUG13284
-     C**   BY SUBTRACTING 1972 FROM THE YEAR FIELD.                                         BUG13284
-     C     @@YYYY        IFGE      2072                                         B1          BUG13284
-     C     @@YYYY        SUB       1972          @@YYYY                         *1          BUG13284
-     C*                                                                                     BUG13284
-     C**   MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)                               BUG13284
-     C**   THEN RESTORE THE YEAR WHICH WAS INPUT BACK TO THE                                BUG13284
-     C**   ORIGINAL VALUE BEFORE CONTINUING WITH NORMAL CALCULATIONS.                       BUG13284
-     C**                                                                                    BUG13284
-     C     @@CC          MULT      36524         @@MDNO                         *1          BUG13284
-     C     @@YYYY        ADD       1972          @@YYYY                         *1          BUG13284
-     C                   END                                                    E1          BUG13284
-     C*                                                                                     BUG13284
-     C     @@YYYY        ADD       28            @@WK2             2 0                      BUG13284
-     C*                                                                                     BUG13284
-     C     @@WK2         DIV       4             @@WK2                                      BUG13284
-     C                   MVR                     @@REM             1 0                      BUG13284
-     C*                                                                                     BUG13284
-     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD                                  BUG13284
-     C     @@WK2         MULT      1461          @@WK5             5 0                      BUG13284
-     C                   ADD       @@WK5         @@MDNO                                     BUG13284
-     C*                                                                                     BUG13284
-     C**  CHECK REMAINDER AND MONTH NUMBER                                                  BUG13284
-     C     @@REM         IFEQ      0                                            B1          BUG13284
-     C     @@MTH         ANDGT     2                                            B1          BUG13284
-     C                   ADD       1             @@MDNO                         *1          BUG13284
-     C                   END                                                    E1          BUG13284
-     C*                                                                                     BUG13284
-     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR                                 BUG13284
-     C     @@REM         IFNE      0                                            B1          BUG13284
-     C                   ADD       @YD(@@REM)    @@MDNO                         *1          BUG13284
-     C                   END                                                    E1          BUG13284
-     C*                                                                                     BUG13284
-     C**  ADD MONTHS THIS YEAR                                                              BUG13284
-     C                   ADD       @MD(@@MTH)    @@MDNO                                     BUG13284
-     C*                                                                                     BUG13284
-     C**  ADD DAYS THIS MONTH                                                               BUG13284
-     C                   ADD       @@DAY         @@MDNO                                     BUG13284
-     C*                                                                                     BUG13284
-     C     ZA0689        ENDSR                                                **ZA0689 TAG**BUG13284
+     C**ZA0680*-*THIS*SUBROUTINE*CONVERTS*YYYYMMDD*FORMAT*DATE*TO******              BUG13284 254278
+     C***********MIDAS*DAY*NUMBER*FORMAT*(NO.*DAYS*FROM*31/12/71)******              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C**CALLED*BY*:*SDNOV**********************************************              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C**INPUT*:*@@DTIN*DATE*(YYYYMMDD)*-*IN*DATA*STRUCTURE*(SIZE:*8N)**              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C**OUTPUT*:*@@MDNO*MIDAS*DAY*NUMBER**(SIZE*:*5N)******************              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C**USES*:***@@CC***NUMBER*OF*CENTURIES*IN*DATE********************              BUG13284 254278
+     C***********@@DAY**DAY*NUMBER*************************************              BUG13284 254278
+     C***********@@REM**REMAINDER*FROM*DIVIDE**************************              BUG13284 254278
+     C***********@@MTH**MONTH*NUMBER***********************************              BUG13284 254278
+     C***********@MD****COMPILATION*TIME*ARRAY*FOR*CUMULATIVE*DAYS*IN**              BUG13284 254278
+     C******************MONTH******************************************              BUG13284 254278
+     C***********@@WK2**WORK*FIELD*(2,0)*******************************              BUG13284 254278
+     C***********@@WK5**WORK*FIELD*(5,0)*******************************              BUG13284 254278
+     C***********@@YYYY*YEAR*(4*CHARACTER)*****************************              BUG13284 254278
+     C***********@YD****COMPILATION*TIME*ARRAY*FOR*CUMULATIVE*DAYS*IN**              BUG13284 254278
+     C******************A*FOUR*YEAR*PERIOD*****************************              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C*****************************************************************              BUG13284 254278
+     C*****ZA0680        BEGSR                                                       BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C****CLEAR OUT ANY 'OLD' DATA IN FIELD                                          BUG13284 254278
+     C**********         Z-ADD     0             @@MDNO            5 0               BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****@@DTIN        CABEQ     0             ZA0689                              BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING                     BUG13284 254278
+     C*****WORK OUT THE NUMBER OF CENTURIES PASSED SINCE 1971,                       BUG13284 254278
+     C*****BY SUBTRACTING 1972 FROM THE YEAR FIELD.                                  BUG13284 254278
+     C*****@@YYYY        IFGE      2072                                         B1   BUG13284 254278
+     C*****@@YYYY        SUB       1972          @@YYYY                         *1   BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)                        BUG13284 254278
+     C*****THEN RESTORE THE YEAR WHICH WAS INPUT BACK TO THE                         BUG13284 254278
+     C*****ORIGINAL VALUE BEFORE CONTINUING WITH NORMAL CALCULATIONS.                BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****@@CC*         MULT      36524         @@MDNO                         *1   BUG13284 254278
+     C*****@@YYYY        ADD       1972          @@YYYY                         *1   BUG13284 254278
+     C**********         END                                                    E1   BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****@@YYYY        ADD       28            @@WK2             2 0               BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****@@WK2         DIV       4             @@WK2                               BUG13284 254278
+     C**********         MVR                     @@REM             1 0               BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C******MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD                           BUG13284 254278
+     C*****@@WK2         MULT      1461          @@WK5             5 0               BUG13284 254278
+     C**********         ADD       @@WK5         @@MDNO                              BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C****CHECK*REMAINDER AND MONTH NUMBER                                           BUG13284 254278
+     C*****@@REM         IFEQ      0                                            B1   BUG13284 254278
+     C*****@@MTH         ANDGT     2                                            B1   BUG13284 254278
+     C**********         ADD       1             @@MDNO                         *1   BUG13284 254278
+     C**********         END                                                    E1   BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C****YEAR*NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR                          BUG13284 254278
+     C*****@@REM         IFNE      0                                            B1   BUG13284 254278
+     C**********         ADD       @YD(@@REM)    @@MDNO                         *1   BUG13284 254278
+     C**********         END                                                    E1   BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C****ADD*MONTHS THIS YEAR                                                       BUG13284 254278
+     C**********         ADD       @MD(@@MTH)    @@MDNO                              BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C****ADD*DAYS THIS MONTH                                                        BUG13284 254278
+     C**********         ADD       @@DAY         @@MDNO                              BUG13284 254278
+     C**********                                                                     BUG13284 254278
+     C*****ZA0689        ENDSR                                         **ZA0689 TAG**BUG13284 254278
       *****************************************************************
       /EJECT
       *****************************************************************

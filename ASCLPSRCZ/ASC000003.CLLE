@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD059175           Date 29Oct21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,49 +21,79 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059175 - ADEFIX - Add missing output report information   */
+/*                = Low and High limit.  and today effectivenss %    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CAS002 - Hedge Strategy/Linkage                             */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
- 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*MD059175*/
+             DCL        VAR(&SVAL1)  TYPE(*CHAR) LEN(200)                               /*MD059175*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                /*MD059175*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                /*MD059175*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                               /*MD059175*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('ASC000003 - Hedge Effectiveness +
                           Assessment Control') TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(00000000)
- 
+/**/                                                                                    /*MD059175*/
+/** Retrieve system value*/                                                             /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE 'HedgeLoHiEffctveness' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                        /*MD059175*/
+
 /* Create data area LDA */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
 /* Setup system prefix variable from SDSTAT data area. */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
- 
+
 /* Call program CB0160 to get value of restart indicator. */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If it is NOT a restart. */
- 
+
              IF         COND(&STAT *NE 'Y') THEN(DO)
                 DLTF       FILE(XASHGLKPD)
                 MONMSG     MSGID(CPF2105)
@@ -70,56 +101,94 @@
                              TOFILE(&DPLIB/XASHGLKPD) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+/**/                                                                                    /*MD059175*/
+/** Call Hedge Effectiveness Today if system value is 'Y' */                            /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+                DLTF       FILE(XASHGLKPH)                                              /*MD059175*/
+                MONMSG     MSGID(CPF2105)                                               /*MD059175*/
+                CPYF       FROMFILE(ASHGLKPH) +
+                             TOFILE(&DPLIB/XASHGLKPH) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD059175*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              ENDDO
- 
+
 /* If it is a restart. */
- 
+
              IF         COND(&STAT *EQ 'Y') THEN(DO)
                 CPYF       FROMFILE(XASHGLKPD) TOFILE(ASHGLKPD) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                              EXEC(CLRPFM FILE(ASHGLKPD))
+/**/                                                                                    /*MD059175*/
+/** Process Hedge Effectiveness Today if system value is 'Y' */                         /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+                CPYF       FROMFILE(XASHGLKPH) TOFILE(ASHGLKPH) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                             /*MD059175*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(ASHGLKPH))                                /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              ENDDO
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Call Hedge Effectiveness Assessment Program */
- 
+
+/**/                                                                                    /*MD059175*/
+/** Process Hedge Effectiveness Today if system value is 'Y' */                         /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+             CALL       PGM(AS000003P)                                                  /*MD059175*/
+             CHGJOB     SWS(XXXXXX00)                                                   /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              CALL       PGM(AS000003)
- 
+
 /* If no error occured in the program */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /* Call CB0150 to update restart indicator. */
- 
+
                 CHGVAR     VAR(&STAT) VALUE('N')
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                 DLTF       FILE(XASHGLKPD)
                 MONMSG     MSGID(CPF2105)
+/**/                                                                                    /*MD059175*/
+/** Process Hedge Effectiveness Today if system value is 'Y' */                         /*MD059175*/
+/**/                                                                                    /*MD059175*/
+             IF         COND((&RTNCDE *EQ '       ') *AND +
+                          (&SVAL1 *EQ 'Y')) THEN(DO)                                    /*MD059175*/
+                DLTF       FILE(XASHGLKPH)                                              /*MD059175*/
+                MONMSG     MSGID(CPF2105)                                               /*MD059175*/
+             ENDDO                                                                      /*MD059175*/
              ENDDO
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSG('ASC000003 Hedge Effectiveness +
                           Assessment Control Program Ended +
                           Abnormally') TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
 END:
              ENDPGM

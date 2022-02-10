@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058933A            Date 20Oct21             *
-      *  Prev Amend No. MD056891             Date 21Aug21             *
+      *  Last Amend No. MD059554             Date 09Feb22             *
+      *  Prev Amend No. MD058933A            Date 20Oct21             *
+      *                 MD056891             Date 21Aug21             *
       *                 MD058593             Date 20Aug21             *
       *                 MD054346             Date 18Jul21             *
       *                 MD055891             Date 01Sep20             *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059554 - Need to remove old core deliverable that were     *
+      *             'migrated' to the bespoke table.                  *
       *  MD058933A - Same logic as in UP000701 needs to be applied    *
       *  MD056891 - Deliverable Data Split for T_WIPACT               *
       *  MD058593 - GZSCSAREPD was made redundant. Remove it from BTD *
@@ -535,6 +538,30 @@
      C/END-EXEC                                                                             MD058443
      C                   Endif                                                              MD058443
                                                                                             MD057670
+     C                   If        XINDEX = 'SCSRVCTD'                                      MD059554
+     C/EXEC SQL                                                                             MD059554
+     C+ delete from SCSRVBTD  WHERE GSSVAL = 'KYCPassword'                                  MD059554
+     C+ or GSSVAL = 'PEASystemPassword'                                                     MD059554
+     C/END-EXEC                                                                             MD059554
+     C/EXEC SQL                                                                             MD059554
+     C+ delete from SCSRVXTD  WHERE GSSVAL = 'KYCPassword'                                  MD059554
+     C+ or GSSVAL = 'PEASystemPassword'                                                     MD059554
+     C/END-EXEC                                                                             MD059554
+     C                   Endif                                                              MD059554
+                                                                                            MD059554
+     C                   If        XINDEX = 'SCTRGCTD'                                      MD059554
+     C/EXEC SQL                                                                             MD059554
+     C+ delete from SCTRGBTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059554
+     C+ 'SCSARWPD' or TRFILE = 'SDPDWHPD' or TRFILE = 'SDPDWNPD'                            MD059554
+     C+ or TRFILE = 'SDSVALPD'                                                              MD059554
+     C/END-EXEC                                                                             MD059554
+     C/EXEC SQL                                                                             MD059554
+     C+ delete from SCTRGXTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059554
+     C+ 'SCSARWPD' or TRFILE = 'SDPDWHPD' or TRFILE = 'SDPDWNPD'                            MD059554
+     C+ or TRFILE = 'SDSVALPD'                                                              MD059554
+     C/END-EXEC                                                                             MD059554
+     C                   Endif                                                              MD059554
+                                                                                            MD059554
      C                   ENDSR
 
       /EJECT

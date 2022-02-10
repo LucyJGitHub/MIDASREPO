@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059320 *CREATE   Date 06Dec2021             *
+      *  Last Amend No. MD059552           Date 08Feb22               *
+      *  Prev Amend No. MD059320 *CREATE   Date 06Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059552 - Adding extract for All-in-rate                    *
       *  MD059320 - CLE172 - LIBOR Lending - Correspondence Manager   *
       *             Applied for MD059386                              *
       *                                                               *
@@ -229,8 +231,10 @@
      D W#PS13          C                   CONST('RISK P SL2')
      D W#PS14          C                   CONST('GUAR ISSUE')
 
-     D XINTA           S             13  7
+     D*XINTA***        S             13  7                                                  MD059552
+     D XINTA           S             13  0                                                  MD059552
      D XCINPDT         S              5  0
+     D XALLINR         S             17p12                                                  MD059552
 
      D ##UDCR        E DS                  EXTNAME(CGUDCRPD)
       **  External DS for incomplete reference
@@ -1232,13 +1236,15 @@
      C/EXEC SQL
      C+ SELECT INTA into :XINTA
      C+ from HISTSHP
-     C+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :XCINPDT + 1
+     C**where*AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :XCINPDT + 1                        MD059552
+     C+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :BJRDNB                             MD059552
      C/END-EXEC
      C                   else
      C/EXEC SQL
      C+ SELECT INTA into :XINTA
      C+ from HISTSHP
-     C+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :XCINPDT + 1
+     C**where*AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :XCINPDT + 1                        MD059552
+     C+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :BJRDNB                             MD059552
      C/END-EXEC
      C                   endif
      C                   endif
@@ -1649,6 +1655,39 @@
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
+      **  All-in-rate                                                                       MD059552
+      * If Floor rate is greater than Risk free rate, use Floor, else Risk Free rate        MD059552
+     C                   eval      XALLINR = 0                                              MD059552
+     C                   if        Flor > Dbrfr                                             MD059552
+     C                   eval      XALLINR = Flor                                           MD059552
+     C                   else                                                               MD059552
+     C                   eval      XALLINR = Dbrfr                                          MD059552
+     C                   endif                                                              MD059552
+                                                                                            MD059552
+      * then add the Spread                                                                 MD059552
+     C     ##SPIN        IFEQ      'A'                                                      MD059552
+     C                   eval      XALLINR = XALLINR + ##RTSP                               MD059552
+     C                   ELSE                                                               MD059552
+     C                   eval      XALLINR = XALLINR - ##RTSP                               MD059552
+     C                   END                                                                MD059552
+                                                                                            MD059552
+      * and finally add Benchmark                                                           MD059552
+     C                   eval      XALLINR = XALLINR + BADJ                                 MD059552
+                                                                                            MD059552
+     C                   ADD       1             R1                                         MD059552
+     C                   CLEAR                   R#DATA                                     MD059552
+     C                   CLEAR                   R#DEFN                                     MD059552
+     C                   CLEAR                   #@RDE                                      MD059552
+     C                   MOVEL     'ALLINRAT'    #@RDE                                      MD059552
+     C                   MOVE      'E '          #@RDE                                      MD059552
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059552
+     C                   MOVEL     XALLINR       ##DATA                                     MD059552
+     C                   MOVEL     'Rate  '      ##RDEC                                     MD059552
+     C                   MOVEL     'L'           ##RDET                                     MD059552
+     C                   MOVEL     '9'           ##DCPA                                     MD059552
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059552
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059552
+                                                                                            MD059552
       **  Accumulate RDEs and associated data and output to PF/CGUDTPD.
 
      C                   EXSR      SRADTA
@@ -2594,7 +2633,8 @@
      C                   CLEAR                   R#DATA
      C                   CLEAR                   R#DEFN
      C                   CLEAR                   #@RDE
-     C                   MOVEL     'RSK FRE '    #@RDE
+     C**********         MOVEL     'RSK FRE '    #@RDE                                      MD059552
+     C                   MOVEL     'RSK FREE'    #@RDE                                      MD059552
      C                   MOVE      'RT'          #@RDE
      C     ##RDE         CAT       #@RDE:1       ##RDE
      C                   MOVEL     RFRR          ##DATA
@@ -2713,6 +2753,19 @@
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
+      **  Calculation Method                                                                MD059552
+                                                                                            MD059552
+     C                   ADD       1             R1                                         MD059552
+     C                   CLEAR                   R#DATA                                     MD059552
+     C                   CLEAR                   R#DEFN                                     MD059552
+     C                   CLEAR                   #@RDE                                      MD059552
+     C                   MOVEL     'CALC MET'    #@RDE                                      MD059552
+     C                   MOVE      'HD'          #@RDE                                      MD059552
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059552
+     C                   MOVEL     CALM          R#DATA                                     MD059552
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059552
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059552
+                                                                                            MD059552
      C     KLOAM         KLIST
      C                   KFLD                    WPLON
      C                   KFLD                    WSDAT

@@ -553,10 +553,12 @@
      C/EXEC SQL                                                                             MD059554
      C+ delete from SCTRGBTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059554
      C+ 'SCSARWPD' or TRFILE = 'SDPDWHPD' or TRFILE = 'SDPDWNPD'                            MD059554
+     C+ or TRFILE = 'SDSVALPD'                                                              MD059554
      C/END-EXEC                                                                             MD059554
      C/EXEC SQL                                                                             MD059554
-     C+ delete from SCTRGBTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059554
+     C+ delete from SCTRGXTD  WHERE TRFILE = 'SCSARIPD' or TRFILE =                         MD059554
      C+ 'SCSARWPD' or TRFILE = 'SDPDWHPD' or TRFILE = 'SDPDWNPD'                            MD059554
+     C+ or TRFILE = 'SDSVALPD'                                                              MD059554
      C/END-EXEC                                                                             MD059554
      C                   Endif                                                              MD059554
                                                                                             MD059554

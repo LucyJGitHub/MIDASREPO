@@ -1471,6 +1471,7 @@
      C                   ENDIF
       *                                                                                     BUG10769
      C     #1ACAI        IFNE      FSACAI
+     C     *IN70         ANDEQ     *OFF                                                      259451A
       *                                                                                     BUG10769
       ***Check*If*Deal*Type/Sub*Type*is*attached*to*a*Live*Deal.******               BUG10769 259451
       ***If*it*is,*do*not*allow*changing*of*ACAI**********************               BUG10769 259451

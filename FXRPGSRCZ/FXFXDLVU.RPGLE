@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. MD057285           Date 17Feb21               *
+      *  Last Amend No. 252024             Date 03Feb22               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 MD057285           Date 17Feb21               *
       *                 AR818539           Date 12Mar20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
@@ -119,6 +120,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252024 - Ensure std settle instructions are defaulted.       *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -1104,10 +1106,16 @@
      C                             AND (DDPSTM = *blank)                                    MD027337
      C                             AND (InFRASttmt = *blank)                                MD021962
      C                             AND DDACTN = 'I'                                        MD027337A
+     C                             AND DDCustOK = 'Y'                                         252024
+     C                             AND DDBccyOK = 'Y'                                         252024
+     C                             AND DDSccyOK = 'Y'                                         252024
      C                             OR  DDACTN = 'A'                                        MD027337A
      C                             AND InFRASttmt = *BLANK                                 MD027337A
      C                             AND (DDRSTM = *BLANK                                    MD027337A
      C                             OR  DDPSTM = *BLANK)                                    MD027337A
+     C                             AND DDCustOK = 'Y'                                         252024
+     C                             AND DDBccyOK = 'Y'                                         252024
+     C                             AND DDSccyOK = 'Y'                                         252024
 
       ** CL Transaction type for CLS                                                         BUG6555
                                                                                              BUG6555

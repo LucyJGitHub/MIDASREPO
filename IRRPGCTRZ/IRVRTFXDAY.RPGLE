@@ -69,7 +69,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,82 +88,82 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **Decimal data length passed as a parameter to ZALIGN
      D   ZADEC         S              1  0
- 
+
       **Digital data length passed as a parameter to ZALIGN
      D   ZADIG         S              2  0
- 
+
       **Field Passed to ZALIGN on which the work is done
      D   ZFIELD        S             16A
- 
+
       **Indicator to show whether or not ZALIGN was successful
      D   ZALIGNok      S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **Error message passed back to calling programme
      D Msgid1          S                   LIKE(#msgid)
- 
+
       **Our/Their base rate code passed as a parameter from calling program
      D  STBRTT         S              2A
- 
+
       **Our/Their Rate Fix days passed as a parameter from calling p   rogramme
      D  STFRFD         S              2A
- 
+
       **Currency passed as a parameter from calling programme
      D   SUCUCY        S              3A
- 
+
       **Currency code passed as a parameter from calling programme
      D   BLCYCD        S              3A
- 
+
       **Local currency code passed as a parameter from calling programme
      D   BJLCCY        S              3A
- 
+
       **Entry validated through ZALIGN passed back to calling programme
      DRatFixDays       S              2S 0
- 
+
       ** Rate Change Frequency Code                                                           CIR007
      DPRAtChgFq        S              1A                                                      CIR007
                                                                                               CIR007
@@ -197,7 +197,7 @@
                                                                                               CIR011
       ** Deal is cap, collar or floor                                                         CAP055
      D PDealCACF       S              1A                                                      CAP055
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -205,7 +205,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -213,7 +213,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   Z-ADD     0             RatFixDays
@@ -254,7 +254,7 @@
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
      C                   ELSE                                                                 CIR007
- 
+
      C     STFRFD        IFNE      *BLANKS
      C     STBRTT        IFEQ      *BLANKS
      C     PDealCACF     ANDEQ     'N'                                                        CAP055
@@ -277,7 +277,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        RatFixDays
                                                                                               247210
@@ -344,15 +344,15 @@
      C                   END                                                                  CIR011
                                                                                               CIR011
      C                   END                                                                  CIR011
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
- 
- 
+
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -364,9 +364,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -428,13 +428,37 @@
      C                   ELSE                                                                 CIR018
      C                   MOVEL     'N'           CIR018            1                          CIR018
      C                   ENDIF                                                                CIR018
- 
+      *                                                                                     MD059325
+      **  Access SAR details file to determine if CSD103 is on.                             MD059325
+      *                                                                                     MD059325
+     C                   CALL      'AOSARDR0'                                               MD059325
+     C                   PARM      *BLANKS       @RTCD                                      MD059325
+     C                   PARM      '*VERIFY'     @OPTN                                      MD059325
+     C                   PARM      'CSD103'      @SARD                                      MD059325
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059325
+      *                                                                                     MD059325
+     C     @RTCD         IFNE      *BLANKS                                                  MD059325
+     C     @RTCD         ANDNE     '*NRF   '                                                MD059325
+     C     *LOCK         IN        LDA                                                      MD059325
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD059325
+     C                   Z-ADD     903           DBASE                                      MD059325
+     C                   MOVEL     'CSD103'      DBKEY                                      MD059325
+     C                   OUT       LDA                                                      MD059325
+     C                   EXSR      *PSSR                                                    MD059325
+     C                   ENDIF                                                              MD059325
+      *                                                                                     MD059325
+     C     @RTCD         IFEQ      *BLANKS                                                  MD059325
+     C                   MOVEL     'Y'           CSD103                                     MD059325
+     C                   ELSE                                                               MD059325
+     C                   MOVEL     'N'           CSD103            1                        MD059325
+     C                   ENDIF                                                              MD059325
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *                                                                                     BUG13857
       *****************************************************************                     BUG13857
@@ -466,7 +490,7 @@
      C                   ENDIF                                                              BUG13857
                                                                                             BUG13857
      C                   ENDSR                                                              BUG13857
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

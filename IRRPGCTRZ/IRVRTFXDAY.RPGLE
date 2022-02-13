@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CIR018             Date 06Aug14               *
+      *  Last Amend No. MD059325           Date 11Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CIR018             Date 06Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059325 - IRS defaults Rate Fix Days to 2 even if RFR.      *
+      *           - Default Rate fix days to zero, if CSD103 and      *
+      *             Backward Looking Rate are ON.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR018 - Daily Rate Change Frequency for SIRS                *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -190,6 +194,9 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CIR011
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                   CIR011
       *                                                                                       CIR011
+     D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                                MD059325
+      ** EXTERNAL DS FOR BASE RATE DETAILS                                                  MD059325
+      *                                                                                     MD059325
      D CIR011          S              1A                                                      CIR011
      D PAJCD           S              3A                                                      CIR011
      D PNDADJ          S              1  0                                                    CIR011
@@ -197,6 +204,12 @@
                                                                                               CIR011
       ** Deal is cap, collar or floor                                                         CAP055
      D PDealCACF       S              1A                                                      CAP055
+      ** PROGRAM VARIABLES FOR AOBSRTR0                                                     MD059325
+     D PRTCD           S              7A                                                    MD059325
+     D POPTN           S              7A                                                    MD059325
+     D PCCY            S              3A                                                    MD059325
+     D PBSRT           S              2A                                                    MD059325
+     D PBLRT           S              1A                                                    MD059325
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -217,6 +230,25 @@
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   Z-ADD     0             RatFixDays
+      ** Get Backward Looking Rate indicator                                                MD059325
+     C                   EVAL      PBLRT = *BLANKS                                          MD059325
+     C                   CALLB     'AOBSRTR0'                                               MD059325
+     C                   PARM      *BLANKS       PRTCD                                      MD059325
+     C                   PARM      '*KEY   '     POPTN                                      MD059325
+     C                   PARM      SUCUCY        PCCY                                       MD059325
+     C                   PARM      STBRTT        PBSRT                                      MD059325
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                      MD059325
+      *                                                                                     MD059325
+     C                   IF        PRTCD <> *BLANK                                          MD059325
+     C     *LOCK         IN        LDA                                                      MD059325
+     C                   EVAL      DBFILE = 'SDBSRTPD'                                      MD059325
+     C                   EVAL      DBASE  = 904                                             MD059325
+     C                   EVAL      DBKEY = PCCY + PBSRT                                     MD059325
+     C                   OUT       LDA                                                      MD059325
+     C                   EXSR      *PSSR                                                    MD059325
+     C                   ELSE                                                               MD059325
+     C                   EVAL      PBLRT = BABLRT                                           MD059325
+     C                   ENDIF                                                              MD059325
                                                                                               CAP055
       ** Check if deal is cap, collar or floor                                                CAP055
                                                                                               CAP055
@@ -307,7 +339,13 @@
      C                   MOVE      RatFixDays    STFRFD                                      BUG6283
       *                                                                                      BUG6283
      C                   ELSE
+      ** Override Rate Fix Days to 0                                                        MD059325
+     C                   IF        CSD103 ='Y'                                              MD059325
+     C                             AND PBLRT = 'Y'                                          MD059325
+     C                   EVAL      RatFixDays = 0                                           MD059325
+     C                   ELSE                                                               MD059325
      C                   Z-ADD     2             RatFixDays
+     C                   ENDIF                                                              MD059325
       *                                                                        163378
       * Move defaulted value to the screen field as well .                     163378
      C                   MOVE      RatFixDays    STFRFD                         163378
@@ -440,9 +478,9 @@
      C     @RTCD         IFNE      *BLANKS                                                  MD059325
      C     @RTCD         ANDNE     '*NRF   '                                                MD059325
      C     *LOCK         IN        LDA                                                      MD059325
-     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD059325
-     C                   Z-ADD     903           DBASE                                      MD059325
-     C                   MOVEL     'CSD103'      DBKEY                                      MD059325
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD059325
+     C                   EVAL      DBASE  = 903                                             MD059325
+     C                   EVAL      DBKEY = 'CSD103'                                         MD059325
      C                   OUT       LDA                                                      MD059325
      C                   EXSR      *PSSR                                                    MD059325
      C                   ENDIF                                                              MD059325

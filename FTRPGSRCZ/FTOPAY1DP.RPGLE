@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033641           Date 08Apr15               *
       *                 MD027047           Date 19Aug14               *
       *                 CSF011A            Date 28Nov11               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022                                     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033641 - Remove unsupported keywords of HATS. (Recompile)  *
@@ -256,7 +258,8 @@
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)                     CFT007
       * Display file information data structure                                 CFT007
                                                                                 CFT007
-     D  FuncText       DS           105                                         CFT007
+     D**FuncText       DS           105                                                CFT007 CSW122
+     D  FuncText       DS           120                                                       CSW122
      D  F3F12text              1     19                                         CFT007
      D  F7text                20     27                                         CFT007
      D  F8text                28     35                                         CFT007
@@ -266,6 +269,7 @@
      D  F21text               71     84                                         CFT007
      D  F4text                85     94                                         CFT007
      D  F16text               95    105                                         CFT007
+     D  F22text              105    120                                                       CSW122
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -405,6 +409,7 @@
      C     @EINKV        COMP      'Y'                                    76
      C     @EINKD        COMP      'Y'                                    77    CFT007
      C     @EINKQ        COMP      'Y'                                    78    CFT007
+     C     @EINKW        COMP      'Y'                                    95                  CSW122
       *                                                                         CFT007
       * Set up function key footer text                                         CFT007
       *                                                                         CFT007
@@ -429,12 +434,36 @@
      C                   Eval      %SUBST(SCCMDTXT:61:11) = F10text             CFT007
      C                   Endif                                                  CFT007
      C                   If        @EINKD = 'Y'                                 CFT007
+     C                             AND (@EINKW <> 'Y')                                        CSW122
      C                   Eval      %SUBST(SCCMDTXT:61:9) = F4text               CFT007
      C                   Endif                                                  CFT007
      C                   If        @EINKQ = 'Y'                                 CFT007
+     C                             AND @EINKW <> 'Y'                                          CSW122
      C                   Eval      %SUBST(SCCMDTXT:70:11) = F16text             CFT007
      C                   Endif                                                  CFT007
       *                                                                         CFT007
+      ** If CSW122 is ON and either one of the folliwing is true, display F22=MX Element      CSW122
+      ** - Action Code is ENQUIRE                                                             CSW122
+      ** - Action Code is AMEND                                                               CSW122
+      ** - OPAY is link from FTMG menu                                                        CSW122
+      *                                                                                       CSW122
+     C                   IF        @EINKW = 'Y'                                               CSW122
+                                                                                              CSW122
+     C                   IF        SACTION = 'E'                                              CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:61:15) = F22text                           CSW122
+                                                                                              CSW122
+     C                   ELSEIF    SACTION = 'A'                                              CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:47:14) = F22text                           CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:62:9) = F4text                             CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:71:10) = F16text                           CSW122
+                                                                                              CSW122
+     C                   ELSEIF    @EINKG = 'N'                                               CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:32:15) = F22text                           CSW122
+     C                   EVAL      %SUBST(SCCMDTXT:61:9) = F4text                             CSW122
+     C                   Eval      %SUBST(SCCMDTXT:70:10) = F16text                           CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   ENDIF                                                                CSW122
       *
       * If action code 'I' and called from swift enquiry
       * Seton IN84 to display Notified delivery fields.
@@ -509,6 +538,12 @@
      C                   EXSR      ADDLINFO
      C                   END
  
+      ** If F22 is pressed, display MX Element Window                                         CSW122
+      *                                                                                       CSW122
+     C                   IF        *INKW = '1'                                                CSW122
+     C                   EXSR      SrMXElement                                                CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
       * Clear message subfile
       *
      C                   CALL      'ZA0250'
@@ -627,6 +662,29 @@
       *
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                  CSW122
+      *********************************************************************                   CSW122
+      *                                                                   *                   CSW122
+      * SrMXElement - MX Data Elememt Screen                              *                   CSW122
+      *                                                                   *                   CSW122
+      *********************************************************************                   CSW122
+     C     SrMXElement   BEGSR                                                                CSW122
+      *                                                                                       CSW122
+     C                   CALL      'FT020022DP'                                               CSW122
+     C                   PARM                    @MSGR                                        CSW122
+     C                   PARM                    SPREF                                        CSW122
+     C                   PARM      *BLANKS       PEXIT             1                          CSW122
+     C                   PARM      *BLANKS       PCANC             1                          CSW122
+      *                                                                                       CSW122
+     C                   EVAL      @INKW = *BLANKS                                            CSW122
+     C                   IF        PEXIT = 'Y'                                                CSW122
+     C                   MOVE      '1'           *INKC                                        CSW122
+     C                   ELSEIF    PCANC = 'Y'                                                CSW122
+     C                   MOVE      '1'           *INKL                                        CSW122
+     C                   MOVE      '1'           @INKW                                        CSW122
+     C                   ENDIF                                                                CSW122
+     C                   ENDSR                                                                CSW122
+      *********************************************************************                   CSW122
       */EJECT************                                                       CFT007
      C*****************************************************************         CFT007
      C******************                                              *         CFT007
@@ -722,6 +780,7 @@
      C                   PARM                    @EINKQ            1            CFT007
      C                   PARM                    @EINKS            1
      C                   PARM                    @EINKV            1
+     C                   PARM                    @EINKW            1                          CSW122
       *
       * SUCCESFUL INSERT TRANSACTION
      C                   PARM                    @SITR            15
@@ -749,6 +808,7 @@
      C                   PARM                    @INKQ             1            CFT007
      C                   PARM                    @INKS             1
      C                   PARM                    @INKV             1
+     C                   PARM                    @INKW             1                          CSW122
       *
       * Write screen with no read indicator
      C                   PARM                    WriteOnly         1
@@ -961,11 +1021,23 @@
      C                   PARM      *BLANKS       #MSTX2
      C*
      C                   MOVEL     #MSTX1        WM2519           28
+      *                                                                                       CSW122
+      ** If EINKW is Y, (CSW122 is ON and action is Enquire)                                  CSW122
+      ** Include function key F22=MX Element                                                  CSW122
+      ** Note that: F4 and F16 will only be displayed when action is not D and not E          CSW122
+      *                                                                                       CSW122
+     C                   IF        @EINKW = 'Y'                                               CSW122
+     C                   EVAL      #MSGID = 'FTM7139'                                         CSW122
+     C                   ELSE                                                                 CSW122
+     C                   EVAL      #MSGID = 'FTM2616'                                         CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
      C*                                                                         CFT007
      C** Retrieve the text for footer function keys using MEC1150               CFT007
      C*                                                                         CFT007
      C                   CALL      'MEC1150'                            9090    CFT007
-     C                   PARM      'FTM2616'     #MSGID                         CFT007
+     C**********         PARM      'FTM2616'     #MSGID                                CFT007 CSW122
+     C                   PARM                    #MSGID                                       CSW122
      C                   PARM      'FTUSRMSG'    #MsgFile                       CFT007
      C                   PARM                    #MSDTA                         CFT007
      C                   PARM      *BLANKS       #MSTX1                         CFT007

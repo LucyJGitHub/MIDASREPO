@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058498           Date 31Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. MD058498           Date 31Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 BUG7555            Date 16Feb21               *
       *                 AR921987           Date 23Mar12               *
       *                 AR928996A          Date 03May12               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022                                     *
       *  MD058498 - Two cover screens are not displayed in routed     *
       *             incoming payments. Jump to the end of subroutine  *
       *             EScrn_D if CSW209 is OFF so cover screens are     *
@@ -874,6 +876,7 @@
                                                                                               CSD015
       ** Switchable features                                                                  CSD015
      D CSD015          S              1A                                                      CSD015
+     D CSW122          S              1A                                                      CSW122
                                                                                               CSD015
       ** Compliance Watch switchable field                                                    CSD015
      D CCF001          S              1A                                                      CSD015
@@ -909,6 +912,7 @@
      D IA              S              2  0                                                    CER001
      D WAlloc          S              1                                                       CER001
      D WAllPref        S              1                                                       CER001
+     D WPMsgR          S              8S 0                                                    CSW122
                                                                                               CGL014
      D PRtty           S              5A                                                      CER030
      D PTtcd           S             10A                                                      CER030
@@ -2733,6 +2737,33 @@
      C                   EVAL      PEINKD = 'N'
      C                   EVAL      PEINKQ = 'N'
      C                   ENDIF
+      *                                                                                       CSW122
+      ** If feature CSW122 is ON, check whether F22=MX Element should be displayed            CSW122
+      *                                                                                       CSW122
+     C                   Z-ADD     *ZERO         WPMsgR                                       CSW122
+     C                   IF        CSW122 = 'Y'                                               CSW122
+      *                                                                                       CSW122
+      ** PParmLink = 'Y' - created from FTMG transaction                                      CSW122
+      ** PMSGR <> Zero - IPAY transaction is already created                                  CSW122
+      *                                                                                       CSW122
+     C                   IF        PParmLink = 'Y'                                            CSW122
+     C                   EVAL      WPMsgR = IPINMSGR                                          CSW122
+     C                   ELSEIF    INMSGR <> *ZERO AND DDACTN <> 'D'                          CSW122
+     C                   Z-ADD     INMSGR        WPMsgR                                       CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+      ** Enable F22=MX Element when action is Enquire, Amend and with                         CSW122
+      ** message Reference                                                                    CSW122
+      *                                                                                       CSW122
+     C                   IF        DDACTN = 'E' OR                                            CSW122
+     C                             DDACTN = 'A' OR                                            CSW122
+     C                             WPMsgr <> *ZERO                                            CSW122
+     C                   EVAL      PEINKW = 'Y'                                               CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   ELSE                                                                 CSW122
+     C                   EVAL      PEINKW = 'N'                                               CSW122
+     C                   ENDIF                                                                CSW122
       *
       ** Display Level 1 screen.
       *
@@ -2779,6 +2810,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD           1
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    WPMsgR                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -2798,6 +2832,7 @@
      C                   PARM                    PEINKQ            1
      C                   PARM                    PEINKS            1
      C                   PARM                    PEINKV            1
+     C                   PARM                    PEINKW            1                          CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -2877,6 +2912,7 @@
      C                   PARM                    PINKQ             1
      C                   PARM                    PINKS             1
      C                   PARM                    PINKV             1
+     C                   PARM                    PINKW             1                          CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -3076,11 +3112,18 @@
       ** linked maintenance/enquiry, terminate program.
       *
      C     PParmLink     IFEQ      'Y'
+     C     PINKW         ANDNE     'Y'                                                        CSW122
       *
      C                   MOVEL     '5'           PParmRtcd
      C                   MOVEL     'T'           WScrn
       *
      C                   ELSE
+      *                                                                                       CSW122
+      ** F12 is pressed from MX Element                                                       CSW122
+      *                                                                                       CSW122
+     C                   IF        PINKW = 'Y'                                                CSW122
+     C                   MOVEL     'P'           WScrn                                        CSW122
+     C                   ELSE                                                                 CSW122
       *
       ** Otherwise, display Initial screen with blank fields.
       ** Release all electronic messages that are reserved for
@@ -3147,6 +3190,7 @@
      C                   Eval      FirstTime = 'Y'                                            209067
      C                   ENDIF                                                                209067
       *                                                                                       209067
+     C                   ENDIF                                                                CSW122
      C                   ENDIF
       *
       ** F15 - build Browse.
@@ -6289,6 +6333,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    WPMsgR                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -6308,6 +6355,7 @@
      C                   PARM                    PEINKQ
      C                   PARM                    PEINKS
      C                   PARM                    PEINKV
+     C                   PARM                    PEINKW                                       CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -6387,6 +6435,7 @@
      C                   PARM                    PINKQ
      C                   PARM                    PINKS
      C                   PARM                    PINKV
+     C                   PARM                    PINKW                                        CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -6747,6 +6796,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM      'N'           PEDTFLD
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    WPMsgr                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -6766,6 +6818,7 @@
      C                   PARM      'N'           PEINKQ
      C                   PARM      'N'           PEINKS
      C                   PARM      'N'           PEINKV
+     C                   PARM      'N'           PEINKW                                       CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -6845,6 +6898,7 @@
      C                   PARM                    PINKQ
      C                   PARM                    PINKS
      C                   PARM                    PINKV
+     C                   PARM                    PINKW                                        CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -7049,6 +7103,9 @@
       ** Enable Detail Fields Indicator
      C                   PARM                    PEDTFLD
       *
+      ** Message Unique Ref to be used in MX Element display                                  CSW122
+     C                   PARM                    WPMsgr                                       CSW122
+      *                                                                                       CSW122
       ** Enable Function Keys
       ** KD = Command Key 04 = Prompt
       ** KE = Command Key 05 = Refresh
@@ -7068,6 +7125,7 @@
      C                   PARM                    PEINKQ
      C                   PARM                    PEINKS
      C                   PARM                    PEINKV
+     C                   PARM                    PEINKW                                       CSW122
       *
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    FTEIPY1
@@ -7147,6 +7205,7 @@
      C                   PARM                    PINKQ
      C                   PARM                    PINKS
      C                   PARM                    PINKV
+     C                   PARM                    PINKW                                        CSW122
       *
       ** Cursor position
      C                   PARM                    PRowCol
@@ -13759,6 +13818,31 @@
      C                   ELSE                                                                 CFT120
      C                   EVAL      CFT120 = 'N'                                               CFT120
      C                   ENDIF                                                                CFT120
+      *                                                                                       CSW122
+      ** Check if CSW122 is installed                                                         CSW122
+      *                                                                                       CSW122
+     C                   CALL      'AOSARDR0'                                                 CSW122
+     C                   PARM      *BLANKS       PRTCD                                        CSW122
+     C                   PARM      '*VERIFY'     POPTN                                        CSW122
+     C                   PARM      'CSW122'      PSARD                                        CSW122
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW122
+      *                                                                                       CSW122
+      ** An NRF (No Record Found) return code is valid.                                       CSW122
+      ** Issue database error only for error return codes.                                    CSW122
+      *                                                                                       CSW122
+     C                   IF        PRTCD <> *BLANKS AND                                       CSW122
+     C                             PRTCD <> '*NRF   '                                         CSW122
+     C                   EVAL      DBKEY = 'CSW122'                                           CSW122
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CSW122
+     C                   Z-ADD     906           DBASE                                        CSW122
+     C                   EXSR      *PSSR                                                      CSW122
+     C                   ENDIF                                                                CSW122
+      *                                                                                       CSW122
+     C                   IF        PRTCD = *BLANKS                                            CSW122
+     C                   EVAL      CSW122 = 'Y'                                               CSW122
+     C                   ELSE                                                                 CSW122
+     C                   EVAL      CSW122 = 'N'                                               CSW122
+     C                   ENDIF                                                                CSW122
       *
      C/COPY WNCPYSRC,FTH00270
      C                   ENDSR

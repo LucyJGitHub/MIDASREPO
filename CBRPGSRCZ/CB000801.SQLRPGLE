@@ -10,13 +10,17 @@
       *                                                               *
       *  CB000801 - Midas COB Generic Trailer Update Program          *
       *                                                               *
-      *  Last Amend No. MD056816           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059538           Date 10Feb22               *
+      *  Prev Amend No. MD056816           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD025467A          Date 17Mar14               *
       *                 MD025467 *CREATE   Date 28Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059538 - Component LEC06 10011 failed due to trailer       *
+      *             difference. Remove power() in SQL statement and   *
+      *             instead, compute the power equivalent manually.   *
       *  MD056816 - Deliverable Data Split for SDTRDHPD/SDTRDFPD      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025467A - Few records placed in SDTRDFPD for ACTIONFILE    *
@@ -80,6 +84,7 @@
       ** Should always be 1 digit longer than SumTotal
 
      D Idx             S              5I 0 INZ
+     D WrkPower        S              5P 0                                                  MD059538
 
       /EJECT
       *****************************************************************
@@ -555,15 +560,21 @@
      C                               ') as MERGEDTAB'
 
      C                   ELSEIF    NOT IntFldOnly AND MainTrlOnly
+     C                   EVAL      WrkPower = 10 ** A9LENDEC
      C                   EVAL      StrSQLStmt =
-     C                               'select sum(' + IntField + ' * power(10,' +
-     C                               %CHAR(A9LENDEC) + ') + ' + DecField + ') '+
+     C**********                     'select sum(' + IntField + ' * power(10,' +            MD059538
+     C**********                     %CHAR(A9LENDEC) + ') + ' + DecField + ') '+            MD059538
+     C                               'select sum(' + IntField + ' * '          +            MD059538
+     C                               %CHAR(WrkPower) + ' + ' + DecField + ') ' +            MD059538
      C                               'from ' + %TRIMR(PTrlFile) + StrSqlCond
 
      C                   ELSE
+     C                   EVAL      WrkPower = 10 ** A9LENDEC
      C                   EVAL      StrSQLStmt =
-     C                             'select sum(FLDX * power(10,'             +
-     C                               %CHAR(A9LENDEC) + ') + FLDY) from ('    +
+     C**********                   'select sum(FLDX * power(10,'             +              MD059538
+     C**********                     %CHAR(A9LENDEC) + ') + FLDY) from ('    +              MD059538
+     C                             'select sum(FLDX * '                      +              MD059538
+     C                               %CHAR(WrkPower) + ' + FLDY) from ('     +              MD059538
      C                             ' select ' + IntField + ' as FLDX, '      +
      C                                  DecField + ' as FLDY '               +
      C                             '  from ' + %TRIMR(PTrlFile) + StrSQLCond +

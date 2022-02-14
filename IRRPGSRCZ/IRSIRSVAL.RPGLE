@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059133           Date 10Nov21               *
-      *  Prev Amend No. MD059206           Date 09Nov21               *
+      *  Last Amend No. 227439             Date 14Feb22               *
+      *  Prev Amend No. MD059133           Date 10Nov21               *
+      *                 MD059206           Date 09Nov21               *
       *                 MD059064           Date 14Oct21               *
       *                 MD058999           Date 07Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -96,6 +97,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  227439 - THEIR Principal Amount is being overwritten by OUR  *
+      *           Principal amount during amendment.                  *
       *  MD059133 - Prohibit the use of backward looking rate if      *
       *             CIR020 is switched off                            *
       *  MD059206 - Error message for Their Base Rate Code - Their    *
@@ -4550,7 +4553,15 @@
      C                   MOVE      STIPFR        RSTIPFR
      C                   MOVE      SCAIN         RSCAIN                         CSW097
 
+      *                                                                                       227439
+      ** Only move OUR Principal Amount to THEIR Principal Amount if                          227439
+      ** they are not equal or if THEIR Principal Amount is zero.                             227439
+      *                                                                                       227439
+     C     RSUPAMT       IFEQ      RSTPAMT                                                    227439
+     C     RSUPAMT       ORNE      RSTPAMT                                                    227439
+     C     RSTPAMT       ANDEQ     0                                                          227439
      C                   Z-ADD     RSUPAMT       RSTPAMT
+     C                   ENDIF                                                                227439
      C                   Z-ADD     RSUBCXR       RSTBCXR
 
       ** Taxable Indicator - default 'N' to file if blank entered.

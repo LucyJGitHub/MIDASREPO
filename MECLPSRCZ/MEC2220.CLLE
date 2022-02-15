@@ -1,0 +1,120 @@
+000100220214/*********************************************************************/
+000200220214/*STD    CLPBASE                                                     */
+000300220214/*EXI *  TEXT('Midas Incoming MX Messages Purge Phase I of II')      */
+000400220214/*********************************************************************/
+000500220214/*                                                                   */
+000600220214/*       Midas     - Message Management Module                       */
+000700220214/*                                                                   */
+000800220214/*       MEC2220  - Incoming MX Purge Phase I of II                  */
+000900220214/*                                                                   */
+001000220214/*       (c) Finastra International Limited 2021                     */
+001100220214/*                                                                   */
+001200220214/*       Last Amend No. CSW122  *CREATE    Date 04Oct21              */
+001300220214/*                                                                   */
+001400220214/*********************************************************************/
+001500220214/*                                                                   */
+001600220214/*       CSW122 - SWIFT ISO20022 Changes                             */
+001700220214/*                                                                   */
+001800220214/*********************************************************************/
+001900220214
+002000220214             PGM        PARM(&COMP_NAME &COMP_SEQ)
+002100220214
+002200220214             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+002300220214                          International Limited 2021')
+002400220214
+002500220214/** Declare variables */
+002600220214
+002700220214             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
+002800220214             DCL        VAR(&COMP_NAME) TYPE(*CHAR) LEN(10)
+002900220214             DCL        VAR(&COMP_SEQ) TYPE(*DEC) LEN(5)
+003000220214             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
+003100220214             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+003200220214             DCL        VAR(&NBR_RCD) TYPE(*DEC) LEN(10 0)
+003300220214
+003400220214/** Global Monitor Message */
+003500220214
+003600220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
+003700220214
+003800220214/** Send Message to MRUNQ and standard processing parameters */
+003900220214
+004000220214             SNDPGMMSG  MSG('MEC2220 - Incoming MX Purge Phase I') TOMSGQ(MRUNQ)
+004100220214             CHGJOB     SWS(XXXXX000)
+004200220214             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+004300220214
+004400220214/** Start Commitment Control */
+004500220214
+004600220214
+004700220214             STRCMTCTL  LCKLVL(*ALL) CMTSCOPE(*JOB) /*CPK009*/
+004800220214
+004900220214/** Create data LDA in QTEMP  */
+005000220214
+005100220214             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+005200220214             MONMSG     MSGID(CPF1023)
+005300220214
+005400220214/** Get run status */
+005500220214
+005600220214             CHGVAR     VAR(&STATUS) VALUE(' ')
+005700220214             CALL       PGM(CB0160) PARM(&COMP_NAME &COMP_SEQ &STATUS)
+005800220214
+005900220214/** If status is active clear purge file and start again */
+006000220214
+006100220214             IF         COND(&STATUS *NE 'N') THEN(DO)
+006200220214                CLRPFM     FILE(MEMXINRMPD)
+006300220214             ENDDO
+006400220214
+006500220214/** Update status to Active */
+006600220214
+006700220214             CHGVAR     VAR(&STATUS) VALUE('Y')
+006800220214             CALL       PGM(CB0150) PARM(&COMP_NAME &COMP_SEQ &STATUS)
+006900220214
+007000220214/** Check to see if there are enough records to purge */
+007100220214
+007200220214             RTVMBRD    FILE(MEMXINRMPD) NBRCURRCD(&NBR_RCD)
+007300220214
+007400220214/** If live records less than 500 re-extract */
+007500220214/** Call purge ME2210 process */
+007600220214
+007700220214             IF         COND(&NBR_RCD *LE 500) THEN(DO)
+007800220214
+007900220214                CLRPFM     FILE(MEMXINRMPD)
+008000220214
+008100220214                CALL       PGM(ME2210) PARM(&RTN_CODE)
+008200220214                IF         COND(&RTN_CODE *NE '       ') THEN(GOTO CMDLBL(DBERR))
+008300220214
+008400220214             ENDDO
+008500220214
+008600220214/** Update status to Not Active - component finished */
+008700220214
+008800220214             CHGVAR     VAR(&STATUS) VALUE('N')
+008900220214             CALL       PGM(CB0150) PARM(&COMP_NAME &COMP_SEQ &STATUS)
+009000220214
+009100220214             GOTO       CMDLBL(ENDCLPGM)
+009200220214
+009300220214/** Report Database errors trapped by program */
+009400220214
+009500220214 DBERR:
+009600220214             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+009700220214             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+009800220214
+009900220214/** Abnormal termination processing                       */
+010000220214
+010100220214 ABNORMAL:
+010200220214             ROLLBACK
+010300220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+010400220214             CHGJOB     SWS(XXXXXX11)
+010500220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+010600220214             DMPCLPGM
+010700220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+010800220214
+010900220214             SNDPGMMSG  MSG('Program MEC2220 ended abnormally') TOMSGQ(MOPERQ MRUNQ)
+011000220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+011100220214             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program MEC2220 ended +
+011200220214                          abnormally') MSGTYPE(*ESCAPE)
+011300220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+011400220214
+011500220214 ENDCLPGM:   RCLRSC     LVL(*CALLER)
+011600220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+011700220214             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+011800220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+011900220214
+012000220214             ENDPGM

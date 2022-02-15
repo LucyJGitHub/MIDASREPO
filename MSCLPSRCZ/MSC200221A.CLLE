@@ -1,0 +1,174 @@
+000100220214/*********************************************************************/
+000200220214/*STD    CLPBASEBND                                                  */
+000300220214/*EXI *  TEXT('Midas MS Start/stop Midas/SWIFT MX: START')           */
+000400220214/*********************************************************************/
+000500220214/*                                                                   */
+000600220214/*       Midas - Midas SWIFT                                         */
+000700220214/*                                                                   */
+000800220214/*       MSC200221A - Midas/SWIFT MX communications : START          */
+000900220214/*                                                                   */
+001000220214/*       (c) Finastra International Limited 2021                     */
+001100220214/*                                                                   */
+001200220214/*    This source is centrally supported and must ONLY be            */
+001300220214/*    amended by Core Development Personnel                          */
+001400220214/*                                                                   */
+001500220214/*    /COPY, Client or Country amendments must not be                */
+001600220214/*    applied to this source.                                        */
+001700220214/*                                                                   */
+001800220214/*       Last Amend No. CSW122  *CREATE    Date 04Oct21              */
+001900220214/*                                                                   */
+002000220214/*-------------------------------------------------------------------*/
+002100220214/*                                                                   */
+002200220214/*       CSW122 - SWIFT ISO 20022 Changes                            */
+002300220214/*                                                                   */
+002400220214/*********************************************************************/
+002500220214
+002600220214             PGM        PARM(&MCID &IO &JNAM &ACCP &JOB &CJOB &CUSR &CNUM &CPFX +
+002700220214                          &SYS &OPERATION)
+002800220214
+002900220214             DCL        VAR(&MCID) TYPE(*CHAR) LEN(26)
+003000220214             DCL        VAR(&IO) TYPE(*CHAR) LEN(1)
+003100220214             DCL        VAR(&JNAM) TYPE(*CHAR) LEN(10)
+003200220214             DCL        VAR(&ACCP) TYPE(*CHAR) LEN(10)
+003300220214             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+003400220214             DCL        VAR(&CJOB) TYPE(*CHAR) LEN(10)
+003500220214             DCL        VAR(&CUSR) TYPE(*CHAR) LEN(10)
+003600220214             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+003700220214             DCL        VAR(&CPFX) TYPE(*CHAR) LEN(2)
+003800220214             DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)
+003900220214             DCL        VAR(&OPERATION) TYPE(*CHAR) LEN(9)
+004000220214
+004100220214             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+004200220214             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+004300220214             DCL        VAR(&JNAM1) TYPE(*CHAR) LEN(10)
+004400220214             DCL        VAR(&RTN_INFO) TYPE(*CHAR) LEN(512)
+004500220214             DCL        VAR(&ERR_INFO) TYPE(*CHAR) LEN(4) VALUE(X'00000000')
+004600220214             DCL        VAR(&RTN_BIN) TYPE(*CHAR) LEN(4)
+004700220214             DCL        VAR(&RETRY) TYPE(*CHAR) LEN(5)
+004800220214             DCL        VAR(&JSTAT) TYPE(*CHAR) LEN(10)
+004900220214             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
+005000220214             DCL        VAR(&INT_JOB_ID) TYPE(*CHAR) LEN(16) VALUE(' ')
+005100220214
+005200220214             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7) VALUE('       ')
+005300220214             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+005400220214             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+005500220214             DCL        VAR(&CSW122) TYPE(*CHAR) LEN(1)
+005600220214             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+005700220214
+005800220214             COPYRIGHT  TEXT('(c) Finastra International Limited 2021')
+005900220214
+006000220214/** Global monitor message */
+006100220214
+006200220214             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+006300220214
+006400220214/** Check whether session is associated with this Midas system. If */
+006500220214/** not send message to user and terminate.                        */
+006600220214
+006700220214             IF         COND(&CPFX *NE &SYS) THEN(DO)
+006800220214                SNDPGMMSG  MSGID(MEM6005) MSGF(MIDAS) MSGDTA(&SYS *CAT &CPFX) +
+006900220214                             TOPGMQ(*PRV (MS6130M)) MSGTYPE(*COMP)
+007000220214                GOTO       CMDLBL(END)
+007100220214             ENDDO
+007200220214
+007300220214/** Access the Switchable Features file to see if CSW122 is on. */
+007400220214
+007500220214             CHGVAR     VAR(&SARD) VALUE('CSW122')
+007600220214             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+007700220214             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+007800220214             IF         COND(&RTN *EQ '       ') THEN(DO)
+007900220214                CHGVAR     VAR(&CSW122) VALUE('Y')
+008000220214             ENDDO
+008100220214
+008200220214/** If CSW122 is off, end program */
+008300220214
+008400220214             IF         COND(&CSW122 *NE 'Y') THEN(DO)
+008500220214                SNDPGMMSG  MSGID(MX20222) MSGF(MEMSG) +
+008600220214                             TOPGMQ(*PRV (MS6130M)) MSGTYPE(*INFO)
+008700220214                GOTO       CMDLBL(END)
+008800220214             ENDDO
+008900220214
+009000220214/** Check if job currently active (if job not found set status */
+009100220214/** to *OUTQ).                                                 */
+009200220214
+009300220214             CHGVAR     VAR(&RTN_BIN) VALUE(X'00000200')
+009400220214             CHGVAR     VAR(&FORMAT) VALUE('JOBI0100')
+009500220214             CHGVAR     VAR(&RETRY) VALUE('FALSE')
+009600220214 RETRY:      CALL       PGM(QUSRJOBI) PARM(&RTN_INFO &RTN_BIN &FORMAT &JOB +
+009700220214                          &INT_JOB_ID)
+009800220214             MONMSG     MSGID(CPF3C53 CPF3C55 CPF3C54 CPF3C58) EXEC(DO)
+009900220214                RCVMSG     RMV(*NO) MSGDTA(&MSGDTA) MSGID(&MSGID)
+010000220214                IF         COND(&MSGID *EQ 'CPF3C54') THEN(DO)
+010100220214                   IF         COND(&RETRY *EQ 'FALSE') THEN(DO)
+010200220214                      CHGVAR     VAR(&RETRY) VALUE('TRUE ')
+010300220214                      DLYJOB     DLY(30)
+010400220214                      GOTO       CMDLBL(RETRY)
+010500220214                   ENDDO
+010600220214                   ELSE       CMD(DO)
+010700220214                      SNDPGMMSG  MSGID(CPF3C54) MSGF(QCPFMSG) MSGDTA(&MSGDTA) +
+010800220214                                   TOPGMQ(*PRV (MS6130M))
+010900220214                      GOTO       CMDLBL(ABNOR)
+011000220214                   ENDDO
+011100220214                ENDDO
+011200220214                CHGVAR     VAR(&JSTAT) VALUE('*OUTQ')
+011300220214                GOTO       TAG
+011400220214             ENDDO
+011500220214
+011600220214/** If job found, get status from API returned data */
+011700220214
+011800220214             CHGVAR     VAR(&JSTAT) VALUE(%SST(&RTN_INFO 51 10))
+011900220214
+012000220214/** If status is not *OUTQ, send message to user and terminate */
+012100220214
+012200220214 TAG:        IF         COND(&JSTAT *NE '*OUTQ') THEN(SNDPGMMSG MSGID(MEM6004) +
+012300220214                          MSGF(MIDAS) MSGDTA(&CJOB *CAT &JSTAT *CAT &MCID) +
+012400220214                          TOPGMQ(*PRV (MS6130M)) MSGTYPE(*COMP))
+012500220214             ELSE       CMD(DO)
+012600220214
+012700220214/** Otherwise, submit new job and collect details for return */
+012800220214
+012900220214                CHGVAR     VAR(&JNAM1) VALUE(&JNAM)
+013000220214                IF         COND(&JNAM1 *EQ ' ') THEN(DO)
+013100220214                   IF         COND(&IO *EQ 'I') THEN(CHGVAR VAR(&JNAM1) +
+013200220214                                VALUE('MS_MED2MID'))
+013300220214                   ELSE       CMD(CHGVAR VAR(&JNAM1) VALUE('MS_MID2MED'))
+013400220214                ENDDO
+013500220214
+013600220214                SBMJOB     CMD(CALL PGM(MSC200221B) PARM(&MCID &IO &ACCP +
+013700220214                             &OPERATION)) JOB(&JNAM1) JOBD(MBATCH) JOBQ(MSJOBQ) +
+013800220214                             USER(*JOBD) RTGDTA(MULTILANGUAGE) MSGQ(MOPERQ) +
+013900220214                             OUTQ(*JOBD)
+014000220214                RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) MSGID(&MSGID)
+014100220214
+014200220214/** If submit successful retrieve job information for return to RPG */
+014300220214
+014400220214                IF         COND(&MSGID *EQ 'CPC1221') THEN(DO)
+014500220214                   SNDPGMMSG  MSGID(&MSGID) MSGF(QCPFMSG) MSGDTA(&MSGDTA) +
+014600220214                                TOPGMQ(*PRV (MS6130M))
+014700220214                   CHGVAR     VAR(&CJOB) VALUE(%SST(&MSGDTA 1 10))
+014800220214                   CHGVAR     VAR(&CUSR) VALUE(%SST(&MSGDTA 11 10))
+014900220214                   CHGVAR     VAR(&CNUM) VALUE(%SST(&MSGDTA 21 6))
+015000220214                ENDDO
+015100220214                ELSE       CMD(DO)
+015200220214
+015300220214/** Else abnormal termination */
+015400220214
+015500220214                   GOTO       CMDLBL(ABNOR)
+015600220214                ENDDO
+015700220214             ENDDO
+015800220214
+015900220214/** Normal end */
+016000220214
+016100220214             GOTO       CMDLBL(END)
+016200220214
+016300220214/** Abnormal end */
+016400220214
+016500220214 ABNOR:
+016600220214             CHGJOB     SWS(XXXXXX11)
+016700220214             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('WRKMSMIF ended +
+016800220214                          abnormally - see job log') TOPGMQ(*PRV (MS6130M)) +
+016900220214                          TOMSGQ(MOPERQ)
+017000220214             MONMSG     MSGID(CPF0000 MCH0000)
+017100220214
+017200220214 END:
+017300220214
+017400220214             ENDPGM

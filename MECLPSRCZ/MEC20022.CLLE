@@ -1,0 +1,156 @@
+000100220214/*********************************************************************/
+000200220214/*STD    CLPBASEBND                                                  */
+000300220214/*EXI    TEXT('Midas ME Submit MS MX IMM extraction job')            */
+000400220214/*********************************************************************/
+000500220214/*                                                                   */
+000600220214/*       Midas - Message Management Module                           */
+000700220214/*                                                                   */
+000800220214/*       MEC20022 - Submit MS MX IMM Extraction job                  */
+000900220214/*                                                                   */
+001000220214/*       (c) Finastra International Limited 2021                     */
+001100220214/*                                                                   */
+001200220214/*       Last Amend No. CSW122 *CREATE     Date 04Oct21              */
+001300220214/*                                                                   */
+001400220214/*********************************************************************/
+001500220214/*                                                                   */
+001600220214/*       CSW122 - SWIFT ISO 20022                                    */
+001700220214/*                                                                   */
+001800220214/*********************************************************************/
+001900220214             PGM        PARM(&RTN_CODE)
+002000220214
+002100220214/** Copyright statement defination  */
+002200220214
+002300220214             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+002400220214                          Finastra International Limited +
+002500220214                          2021')
+002600220214
+002700220214/** Declare variables */
+002800220214
+002900220214             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
+003000220214             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+003100220214             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+003200220214             DCL        VAR(&TEMP) TYPE(*CHAR) LEN(10)
+003300220214             DCL        VAR(&JOB_INFO) TYPE(*CHAR) LEN(512)
+003400220214             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
+003500220214             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+003600220214             DCL        VAR(&INT_JOB_ID) TYPE(*CHAR) LEN(16)
+003700220214             DCL        VAR(&JOB1) TYPE(*CHAR) LEN(10)
+003800220214             DCL        VAR(&USER1) TYPE(*CHAR) LEN(10)
+003900220214             DCL        VAR(&JOBNBR1) TYPE(*CHAR) LEN(6)
+004000220214             DCL        VAR(&THIS_JOB) TYPE(*CHAR) LEN(26)
+004100220214
+004200220214/** Global Monitor Message */
+004300220214
+004400220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+004500220214                           EXEC(GOTO ABNORMAL)
+004600220214
+004700220214/**           Copyright statement definition - at runtime             */
+004800220214
+004900220214             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+005000220214                          Finastra International Limited')
+005100220214
+005200220214/** Send Message to MRUNQ */
+005300220214
+005400220214             SNDPGMMSG  MSG('MEC20022 - Submit MS MX IMM Extraction +
+005500220214                          Job') TOMSGQ(MRUNQ)
+005600220214             CHGJOB     LOG(4 0 *MSG) SWS(XXXXXX00)
+005700220214             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+005800220214
+005900220214/** Check activity of job submitted */
+006000220214
+006100220214             RTVJOBA    JOB(&JOB1) USER(&USER1) NBR(&JOBNBR1)
+006200220214             CHGVAR     VAR(&THIS_JOB) VALUE(&JOB1 *CAT &USER1 *CAT +
+006300220214                          &JOBNBR1)
+006400220214             RTVDTAARA  DTAARA(MEMXDTA  (9 10)) RTNVAR(&TEMP)
+006500220214             CHGVAR     VAR(%SST(&JOB 1 10)) VALUE(&TEMP)
+006600220214             RTVDTAARA  DTAARA(MEMXDTA  (19 10)) RTNVAR(&TEMP)
+006700220214             CHGVAR     VAR(%SST(&JOB 11 10)) VALUE(&TEMP)
+006800220214             RTVDTAARA  DTAARA(MEMXDTA  (29 6)) RTNVAR(&TEMP)
+006900220214             CHGVAR     VAR(%SST(&JOB 21 6)) VALUE(%SST(&TEMP 1 6))
+007000220214             CHGVAR     VAR(&FORMAT) VALUE('JOBI0200')
+007100220214             IF         COND((&JOB *NE ' ')    *AND +
+007200220214                             (&JOB *NE &THIS_JOB)) THEN(DO)
+007300220214             CALL       PGM(MEC1026) PARM(&RTN_CODE &JOB_INFO +
+007400220214                          &FORMAT &JOB &INT_JOB_ID)
+007500220214
+007600220214/** If active say so or on jobq say so */
+007700220214
+007800220214             IF         COND(&RTN_CODE *NE 'MIN0125') THEN(DO)
+007900220214             IF         COND((%SST(&JOB_INFO 51 10) *EQ '*ACTIVE') *OR +
+008000220214                             (%SST(&JOB_INFO 51 10) *EQ '*JOBQ  ') +
+008100220214                        ) THEN(DO)
+008200220214             CHGVAR     VAR(&RTN_CODE) VALUE('MIN0619')
+008300220214             RETURN
+008400220214             ENDDO
+008500220214             ENDDO
+008600220214             ENDDO
+008700220214
+008800220214/** Allocate data queue *EXCL to see if process active */
+008900220214
+009000220214             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+009100220214             ALCOBJ     OBJ((MSMXIMM *DTAQ *EXCL)) WAIT(60)
+009200220214             MONMSG     MSGID(CPF1002) EXEC(DO)
+009300220214
+009400220214/** Process already active */
+009500220214
+009600220214             CHGVAR     VAR(&RTN_CODE) VALUE('MIN0618')
+009700220214             GOTO       CMDLBL(ENDCLPGM)
+009800220214             ENDDO
+009900220214
+010000220214/** Change allocation to shared read */
+010100220214
+010200220214             ALCOBJ     OBJ((MSMXIMM *DTAQ *SHRUPD)) WAIT(0)
+010300220214             DLCOBJ     OBJ((MSMXIMM *DTAQ *EXCL))
+010400220214
+010500220214/** Remove messages to allow read of completion message */
+010600220214
+010700220214             RMVMSG     PGMQ(*SAME) CLEAR(*ALL)
+010800220214             SBMJOB     CMD(CALL PGM(MEC20022C)) JOB(MS_MX_IMM) +
+010900220214                          JOBD(MEJOBD) JOBQ(MEJOBQ) USER(*JOBD) +
+011000220214                          RTGDTA(MSMXIMM) INLLIBL(*JOBD) +
+011100220214                          MSGQ(MOPERQ) OUTQ(*JOBD)
+011200220214             RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) +
+011300220214                          MSGID(&MSGID)
+011400220214
+011500220214/** Retrieve job information and store on MEDTA */
+011600220214/** If no completion message then end in error */
+011700220214
+011800220214             IF         COND(&MSGID *EQ 'CPC1221') THEN(DO)
+011900220214             CHGDTAARA  DTAARA(MEMXDTA  (9 10)) VALUE(%SST(&MSGDTA 1 +
+012000220214                          10))
+012100220214             CHGDTAARA  DTAARA(MEMXDTA  (19 10)) VALUE(%SST(&MSGDTA 11 +
+012200220214                          10))
+012300220214             CHGDTAARA  DTAARA(MEMXDTA  (29 6)) VALUE(%SST(&MSGDTA 21 +
+012400220214                          6))
+012500220214             ENDDO
+012600220214             ELSE       CMD(DO)
+012700220214             GOTO       CMDLBL(ABNORMAL)
+012800220214             ENDDO
+012900220214
+013000220214             GOTO       CMDLBL(ENDCLPGM)
+013100220214
+013200220214/** Abnormal termination processing                       */
+013300220214/** Terminate with escape message */
+013400220214
+013500220214ABNORMAL:
+013600220214             CHGJOB     SWS(XXXXXX11)
+013700220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+013800220214
+013900220214             DLCOBJ     OBJ((MSMXIMM *DTAQ *EXCL))
+014000220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+014100220214             DLCOBJ     OBJ((MSMXIMM *DTAQ *SHRUPD))
+014200220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+014300220214
+014400220214             SNDPGMMSG  MSG('Program MEC20022 ended abnormally') +
+014500220214                          TOMSGQ(MOPERQ MRUNQ)
+014600220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+014700220214             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+014800220214                          MEC20022 ended abnormally') MSGTYPE(*ESCAPE)
+014900220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+015000220214
+015100220214 ENDCLPGM:   RCLRSC     LVL(*CALLER)
+015200220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+015300220214
+015400220214             DLCOBJ     OBJ((MSMXIMM *DTAQ *SHRUPD))
+015500220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+015600220214             ENDPGM

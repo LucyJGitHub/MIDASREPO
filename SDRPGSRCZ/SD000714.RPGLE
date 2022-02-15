@@ -380,7 +380,6 @@
       ** If Customer not found or deleted and LCD is 'D'                                    MD035923
       ** then read next record                                                              MD035923
      C                   IF        PRTCD = '*NRF'                                           MD035923
-     C                             AND FALCTP = 'D'                                         MD035923
      C                             OR PRTCD = '*CUSDEL'                                     MD035923
      C                             AND FALCTP = 'D'                                         MD035923
      C                   READ      SDFTCSL0                                                 MD035923

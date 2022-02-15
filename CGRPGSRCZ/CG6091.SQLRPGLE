@@ -234,7 +234,8 @@
      D W#PS13          C                   CONST('RISK P SL2')
      D W#PS14          C                   CONST('GUAR ISSUE')
 
-     D XINTA           S             13  0
+     D*XINTA***        S             13  7                                                  MD059552
+     D XINTA           S             13  0                                                  MD059552
      D XCINPDT         S              5  0
      D XALLINR         S             17p12                                                  MD059552
 
@@ -1238,13 +1239,15 @@
      C/EXEC SQL
      C+ SELECT INTA into :XINTA
      C+ from HISTSHP
-     C+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :BJRDNB
+     C**where*AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :XCINPDT + 1                        MD059552
+     C+ where AMTP = 'IN' and LNRF = :XXLNRF and VDAT = :BJRDNB                             MD059552
      C/END-EXEC
      C                   else
      C/EXEC SQL
      C+ SELECT INTA into :XINTA
      C+ from HISTSHP
-     C+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :BJRDNB
+     C**where*AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :XCINPDT + 1                        MD059552
+     C+ where AMTP = 'RE' and LNRF = :XXLNRF and VDAT = :BJRDNB                             MD059552
      C/END-EXEC
      C                   endif
      C                   endif
@@ -2634,7 +2637,8 @@
      C                   CLEAR                   R#DATA
      C                   CLEAR                   R#DEFN
      C                   CLEAR                   #@RDE
-     C                   MOVEL     'RSK FREE'    #@RDE
+     C**********         MOVEL     'RSK FRE '    #@RDE                                      MD059552
+     C                   MOVEL     'RSK FREE'    #@RDE                                      MD059552
      C                   MOVE      'RT'          #@RDE
      C     ##RDE         CAT       #@RDE:1       ##RDE
      C                   MOVEL     RFRR          ##DATA
@@ -2753,19 +2757,19 @@
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
-      **  Calculation Method
-     C*
-     C                   ADD       1             R1
-     C                   CLEAR                   R#DATA
-     C                   CLEAR                   R#DEFN
-     C                   CLEAR                   #@RDE
-     C                   MOVEL     'CALC MET'    #@RDE
-     C                   MOVE      'HD'          #@RDE
-     C     ##RDE         CAT       #@RDE:1       ##RDE
-     C                   MOVEL     CALM          R#DATA
-     C                   MOVEL     R#DATA        ##D(R1)
-     C                   MOVEL     R#DEFN        ##R(R1)
-
+      **  Calculation Method                                                                MD059552
+                                                                                            MD059552
+     C                   ADD       1             R1                                         MD059552
+     C                   CLEAR                   R#DATA                                     MD059552
+     C                   CLEAR                   R#DEFN                                     MD059552
+     C                   CLEAR                   #@RDE                                      MD059552
+     C                   MOVEL     'CALC MET'    #@RDE                                      MD059552
+     C                   MOVE      'HD'          #@RDE                                      MD059552
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059552
+     C                   MOVEL     CALM          R#DATA                                     MD059552
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059552
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059552
+                                                                                            MD059552
       **  Next Repayment Date.                                                              MD059564
                                                                                             MD059564
      C                   ADD       1             R1                                         MD059564

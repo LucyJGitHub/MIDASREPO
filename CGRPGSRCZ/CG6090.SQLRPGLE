@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059320 *CREATE   Date 06Dec2021             *
+      *  Last Amend No. MD059552           Date 08Feb22               *
+      *  Prev Amend No. MD059320 *CREATE   Date 06Dec2021             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059552 - For TAIC only, re-apply core version of program   *
       *  MD059320 - CLE172 - LIBOR Lending - Correspondence Manager   *
       *             Applied for MD059386                              *
       *                                                               *
@@ -37,6 +39,10 @@
      D XMDAT           S              5  0
      D XCINPDT         S              5  0
      D XCINPSD         S              5  0
+     D XCINPED         S              5  0
+     D XINTA           S             13  7
+     D XVDAT           S              5  0
+     D XREPT           S              1  0
      I/COPY CGCPYSRC,SRERRDLE
      I/COPY CGCPYSRC,CGAUDTDLE
      I*****************************************************************
@@ -93,7 +99,7 @@
       ** select loans having Backward Looking Rate = Y and Calculation Method not Manual
      C/EXEC SQL
      C+ declare ACursor insensitive scroll cursor for
-     C+ select LNRF, ADDI, MDAT from CLOANCL
+     C+ select LNRF, ADDI, MDAT, REPT from CLOANCL
      C+ where BLRT = 'Y' and CALM <> 'MANL'
      C/END-EXEC
 
@@ -102,45 +108,70 @@
      C/END-EXEC
 
      C/EXEC SQL
-     C+ fetch next from ACursor into :XLNRF, :XADDI, :XMDAT
+     C+ fetch next from ACursor into :XLNRF, :XADDI, :XMDAT, :XREPT
      C/END-EXEC
 
       **  Process until End of valid records.
 
      C     SQLCODE       DOWEQ     0
 
-      **  Call extract program if one of the 3 conditions (a or b or c) is satisfied
+      ** Check if an interest event created today exists in HISTSHP
+     C/EXEC SQL
+     C+ SELECT INTA, VDAT into :XINTA, :XVDAT
+     C+ from HISTSHP
+     C+ where AMTP = 'MA' and LNRF = :XLNRF and LCD = :BJRDNB
+     C+ or    AMTP = 'IN' and LNRF = :XLNRF and LCD = :BJRDNB
+     C+ or    AMTP = 'RE' and LNRF = :XLNRF and LCD = :BJRDNB and :XREPT <> 2
+     C/END-EXEC
+      **  If no interest if found, skip
+     C     SQLCODE       IFEQ      100
+     C                   else
 
+      ** Here below are the initial conditions for the extract...
+      ****Call extract program if one of the 3 conditions (a or b or c) is satisfied
+      **********
      C/exec SQL
-     C+ select CINPDT, CINPSD  into :XCINPDT, :XCINPSD
+     C+ select CINPDT, CINPSD, CINPED  into :XCINPDT, :XCINPSD, :XCINPED
      C+ from SDHSDRTD
      C+ where CMODID = 'LE' and CTRNID = :XLNRF
      C+ and (CINPDT + CINPDY - 1 = CINPED or CINPDT = CINPED)
      C+ ORDER BY CINPDT desc
      C+ fetch first row only
      C/end-exec
+      **********
+      ****a.*if*Additional Day Indicator = B and latest Interest Period Date = MDAT
+     C**********         if        SQLCODE = 0
+     C**********                   and XADDI = 'B'
+     C**********                   and XCINPDT = XMDAT
+      **********
+      ****b.*if*Additional Day Indicator <> B and latest Interest Period Date + 1 = MDAT
+     C**********                   or SQLCODE = 0
+     C**********                   and XADDI <> 'B'
+     C**********                   and XCINPDT + 1 = XMDAT
+      **********
+      ****c.*latest Interest Period Date + 1 < MDAT
+      *******and [latest Interest Period Date + 1 = rundate
+      **********  or
+      **********  latest Interest Period Date + 1 > rundate but < BJDNWD]
+      *******and Interest was found in HISTSHP
+     C**********                   or SQLCODE = 0
+     C**********                   and XCINPDT + 1 < XMDAT
+     C**********                   and XCINPDT + 1 = BJRDNB
+     C**********                   or SQLCODE = 0
+     C**********                   and XCINPDT + 1 < XMDAT
+     C**********                   and XCINPDT + 1 > BJRDNB
+     C**********                   and XCINPDT + 1 < BJDNWD
+     C**********                   and XCINPED + 1 = XVDAT
+     C**********                   or SQLCODE = 0
+     C**********                   and XCINPDT + 1 < XMDAT
+     C**********                   and XCINPDT + 1 > BJRDNB
+     C**********                   and XCINPDT + 1 < BJDNWD
+     C**********                   and XCINPED     = XVDAT
+      ** ... since the interest is retrieved now from HISTSHP, these can be simplified
 
-      **  a. if Additional Day Indicator = B and latest Interest Period Date = MDAT
-     C                   if        SQLCODE = 0
-     C                             and XADDI = 'B'
-     C                             and XCINPDT = XMDAT
-
-      **  b. if Additional Day Indicator <> B and latest Interest Period Date + 1 = MDAT
-     C                             or SQLCODE = 0
-     C                             and XADDI <> 'B'
-     C                             and XCINPDT + 1 = XMDAT
-
-      **  c. latest Interest Period Date + 1 < MDAT
-      **     and [latest Interest Period Date + 1 = rundate
-      **          or
-      **          latest Interest Period Date + 1 > rundate but < BJDNWD]
-     C                             or SQLCODE = 0
-     C                             and XCINPDT + 1 < XMDAT
-     C                             and XCINPDT + 1 = BJRDNB
-     C                             or SQLCODE = 0
-     C                             and XCINPDT + 1 < XMDAT
-     C                             and XCINPDT + 1 > BJRDNB
-     C                             and XCINPDT + 1 < BJDNWD
+     C                   If        SQLCODE = 0
+     C                   If        XCINPED + 1 = XVDAT
+     C                             or XCINPED = XVDAT
 
      C                   CALL      'CG6091'
      C                   PARM      *BLANKS       ##RTCD            7
@@ -163,8 +194,10 @@
 
      C                   Endif
 
+     C                   Endif
+     C                   Endif
      C/EXEC SQL
-     C+ fetch next from ACursor into :XLNRF, :XADDI, :XMDAT
+     C+ fetch next from ACursor into :XLNRF, :XADDI, :XMDAT, :XREPT
      C/END-EXEC
 
      C                   ENDDO

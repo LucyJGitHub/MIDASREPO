@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD058986             Date 11Oct21             *
-      *  Prev Amend No. MD058933A            Date 20Oct21             *
+      *  Last Amend No. MD059572             Date 14Feb22             *
+      *  Prev Amend No. MD058986             Date 11Oct21             *
+      *                 MD058933A            Date 20Oct21             *
       *                 MD056891             Date 21Aug21             *
       *                 MD058593             Date 20Aug21             *
       *                 MD054346             Date 18Jul21             *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059572 - Add qualified library name as tables may already  *
+      *             exist in the back up library                      *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD058933A - Same logic as in UP000701 needs to be applied    *
       *  MD056891 - Deliverable Data Split for T_WIPACT               *
@@ -279,7 +282,9 @@
 
       ** Update XTD file only if there is at least one filed to update                      MD054955
      C                   If        PINSERT <> *blanks                                       MD054955
-     C                   eval      SQLDynStmt = 'update ' + EXTINDEX +
+     C**********         eval      SQLDynStmt = 'update ' + EXTINDEX +                      MD059572
+     C                   eval      SQLDynStmt = 'update ' + %trimr(KMSCHEMA) +              MD059572
+     C                             '/' + %trimr(EXTINDEX) +                                 MD059572
      C                             ' B set (' + %trimr(PINSERT) +
      C                             ') = (select ' + %trimr(PSELECT) +
      C                             ' from ' + OLDFILE + ' A ' + %trimr(WHERE) +
@@ -441,7 +446,9 @@
      C                             XINDEX +  ' B ' + %trimr(WHERE) + '))'                   MD056891
      C                   else                                                               MD056891
                                                                                             MD056891
-     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +
+     C**********         eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD059572
+     C                   eval      SQLDynStmt = 'insert into ' +                            MD059572
+     C                             %trimr(KMSCHEMA) + '/' + %trimr(EXTINDEX) +              MD059572
      C                             ' (select ' +
      C                             %trimr(PSELECT) + ' from ' + OLDFILE +
      C                             ' A where not exists (select * from ' +
@@ -620,7 +627,9 @@
      C/end-exec
 
 
-     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +
+     C**********         eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD059572
+     C                   eval      SQLDynStmt = 'insert into ' +                            MD059572
+     C                             %trimr(KMSCHEMA) + '/' + %trimr(EXTINDEX) +              MD059572
      C                             ' (select ' +
      C                             %trimr(PSELECT) + ' from ' +
      C                             BINDEX  +

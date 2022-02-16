@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059600           Date 17Feb22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
@@ -78,6 +79,7 @@
      F*---------------------------------------------------------------*
      F*  AMENDMENT HISTORY                                            *
      F*                                                               *
+      *  MD059600 - Loan narratives fields are not extrated           *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -383,6 +385,11 @@
       ***Rename*NLRA*field*in*CLOANCKF*Format*in*file*CLOAN************              CLE005 BUG13004
      I***CLOANCKF                                                                    CLE005 BUG13004
      I*            NLRA                            NLRAK                             CLE005 BUG13004
+     ICLOANCKF                                                                              MD059600
+     I              NAR1                        ##NAR1                                      MD059600
+     I              NAR2                        ##NAR2                                      MD059600
+     I              NAR3                        ##NAR3                                      MD059600
+     I              NAR4                        ##NAR4                                      MD059600
       *****************************************************************              CLE005 BUG13004
      ICLOANCLF                                                                             AR1057175
       ** RENAME FIELDS ON CLOANCL                                                          AR1057175
@@ -1036,7 +1043,8 @@
      C                   MOVEL     'ZZNARR1 '    #@RDE                                        CER038
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CER038
      C**********           MOVEL##NAR1    R#DATA                                       CER038 CER059
-     C                   MOVEL     NAR1          R#DATA                                       CER059
+     C**********         MOVEL     NAR1          R#DATA                              CER059 MD059600
+     C                   MOVEL     ##NAR1        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CER038
      C                   MOVEL     R#DEFN        ##R(R1)                                      CER038
       *                                                                                       CER038
@@ -1049,7 +1057,8 @@
      C                   MOVEL     'ZZNARR2 '    #@RDE                                        CER038
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CER038
      C**********           MOVEL##NAR2    R#DATA                                       CER038 CER059
-     C                   MOVEL     NAR2          R#DATA                                       CER059
+     C**********         MOVEL     NAR2          R#DATA                              CER059 MD059600
+     C                   MOVEL     ##NAR2        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CER038
      C                   MOVEL     R#DEFN        ##R(R1)                                      CER038
       *                                                                                       CER038
@@ -1062,7 +1071,8 @@
      C                   MOVEL     'ZZNARR3 '    #@RDE                                        CER038
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CER038
      C**********           MOVEL##NAR3    R#DATA                                       CER038 CER059
-     C                   MOVEL     NAR3          R#DATA                                       CER059
+     C**********         MOVEL     NAR3          R#DATA                              CER059 MD059600
+     C                   MOVEL     ##NAR3        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CER038
      C                   MOVEL     R#DEFN        ##R(R1)                                      CER038
       *                                                                                       CER038
@@ -1075,7 +1085,8 @@
      C                   MOVEL     'ZZNARR4 '    #@RDE                                        CER038
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CER038
      C**********           MOVEL##NAR4    R#DATA                                       CER038 CER059
-     C                   MOVEL     NAR4          R#DATA                                       CER059
+     C**********         MOVEL     NAR4          R#DATA                              CER059 MD059600
+     C                   MOVEL     ##NAR4        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CER038
      C                   MOVEL     R#DEFN        ##R(R1)                                      CER038
       *                                                                                       CER038
@@ -1179,7 +1190,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_1'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR1          R#DATA                                       CCG019
+     C**********         MOVEL     NAR1          R#DATA                              CCG019 MD059600
+     C                   MOVEL     ##NAR1        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019
@@ -1191,7 +1203,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_2'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR2          R#DATA                                       CCG019
+     C**********         MOVEL     NAR2          R#DATA                              CCG019 MD059600
+     C                   MOVEL     ##NAR2        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019
@@ -1203,7 +1216,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_3'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR3          R#DATA                                       CCG019
+     C**********         MOVEL     NAR3          R#DATA                              CCG019 MD059600
+     C                   MOVEL     ##NAR3        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019
@@ -1215,7 +1229,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_4'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR4          R#DATA                                       CCG019
+     C**********         MOVEL     NAR4          R#DATA                              CCG019 MD059600
+     C                   MOVEL     ##NAR4        R#DATA                                     MD059600
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019

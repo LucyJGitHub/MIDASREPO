@@ -1,156 +1,156 @@
-000100220214/*********************************************************************/
-000200220214/*STD    CLPBASEBND                                                  */
-000300220214/*EXI *  TEXT('Midas MX IMM extraction control')                     */
-000400220214/*********************************************************************/
-000500220214/*                                                                   */
-000600220214/*       Midas     - Message Management Module                       */
-000700220214/*                                                                   */
-000800220214/*       MEC20022C - MS MX IMM Extraction Control - Batch process    */
-000900220214/*                                                                   */
-001000220214/*       (c) Finastra International Limited 2021                     */
-001100220214/*                                                                   */
-001200220214/*       Last Amend No. CSW122 *CREATE     Date 04Oct21              */
-001300220214/*                                                                   */
-001400220214/*********************************************************************/
-001500220214/*                                                                   */
-001600220214/*       CSW122 - SWIFT ISO 20022                                    */
-001700220214/*                                                                   */
-001800220214/*********************************************************************/
-001900220214             PGM
-002000220214
-002100220214/** Copyright statement defination  */
-002200220214
-002300220214             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-002400220214                          Finastra International Limited +
-002500220214                          2021')
-002600220214
-002700220214/** Declare variables */
-002800220214
-002900220214             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
-003000220214             DCL        VAR(&COUNT) TYPE(*DEC) LEN(5 0) VALUE(0)
-003100220214             DCL        VAR(&ENDSTS) TYPE(*CHAR) LEN(1)
-003200220214             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
-003300220214             DCL        VAR(&NXT_MSG) TYPE(*CHAR) LEN(8)
-003400220214
-003500220214/** Global Monitor Message */
-003600220214
-003700220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
-003800220214                           EXEC(GOTO ABNORMAL)
-003900220214
-004000220214/**           Copyright statement definition - at runtime             */
-004100220214
-004200220214             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-004300220214                          Finastra International Limited')
-004400220214
-004500220214/** Send Message to MRUNQ */
-004600220214
-004700220214             SNDPGMMSG  MSG('MEC20022C - MS MX IMM Control') +
-004800220214                          TOMSGQ(MRUNQ)
-004900220214             CHGJOB     SWS(XXXXXX00)
-005000220214
-005100220214/** Call data queue creation and allocation */
-005200220214
-005300220214             CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Start     ')
-005400220214
-005500220214/** Process already active or close down requested */
-005600220214
-005700220214             IF         COND(&RTN_CODE *EQ 'MIN0619') THEN(DO)
-005800220214             GOTO       CMDLBL(ENDCLPGM)
-005900220214             ENDDO
-006000220214
-006100220214/** Start Commitment Control */
-006200220214
-006300220214             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
-006400220214
-006500220214/** Loop calling  MS Extraction process */
-006600220214
-006700220214 LOOP:
-006800220214             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
-006900220214
-007000220214/** Check for Cancellation of process - look at end status */
-007100220214
-007200220214             RTVJOBA    ENDSTS(&ENDSTS)
-007300220214             IF         COND(&ENDSTS *EQ '1') THEN(DO)
-007400220214             GOTO       CMDLBL(ENDCLPGM)
-007500220214             ENDDO
-007600220214
-007700220214
-007800220214/** Check MEMXDTA positions 1 to 8 if spaces set to 1 */
-007900220214
-008000220214             RTVDTAARA  DTAARA(MEMXDTA (1 8)) RTNVAR(&NXT_MSG)
-008100220214             IF         COND(&NXT_MSG *EQ '        ') THEN(DO)
-008200220214             CHGDTAARA  DTAARA(MEMXDTA (1 8)) VALUE('00000001')
-008300220214             ENDDO
-008400220214
-008500220214/** Run ME20022 - MX Extraction */
-008600220214             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
-008700220214             CALL       PGM(ME20022) PARM(&RTN_CODE)
-008800220214
-008900220214/** Check for Database errors trapped by program */
-009000220214
-009100220214             IF         COND(%SWITCH(XXXXXX11) *OR +
-009200220214                             %SWITCH(XXXXXXX1) *OR +
-009300220214                             (&RTN_CODE *NE ' ')) THEN(DO)
-009400220214             GOTO       CMDLBL(ABNORMAL)
-009500220214             ENDDO
-009600220214/** Reset switches */
-009700220214
-009800220214             CHGJOB     SWS(XXXXXX00)
-009900220214
-010000220214/** If count less than 1000 then wait for next entry */
-010100220214
-010200220214             IF         COND(&COUNT *LE 1000) THEN(DO)
-010300220214
-010400220214/** Call data queue creation and allocation get next action */
-010500220214
-010600220214             CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Next      ')
-010700220214
-010800220214/** End of process requested */
-010900220214
-011000220214             IF         COND(&RTN_CODE *EQ 'MIN0128') THEN(DO)
-011100220214             GOTO       CMDLBL(ENDCLPGM)
-011200220214             ENDDO
-011300220214
-011400220214/** Re-run process */
-011500220214
-011600220214             GOTO       CMDLBL(LOOP)
-011700220214
-011800220214             ENDDO
-011900220214             ELSE       CMD(DO)
-012000220214
-012100220214/** Check for Cancellation of process - look at end status */
-012200220214
-012300220214             RTVJOBA    ENDSTS(&ENDSTS)
-012400220214             IF         COND(&ENDSTS *EQ '1') THEN(DO)
-012500220214             GOTO       CMDLBL(ENDCLPGM)
-012600220214             ENDDO
-012700220214
-012800220214
-012900220214/** Call data queue creation and allocation to end process */
-013000220214
-013100220214             CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Re-submit ')
-013200220214             ENDDO
-013300220214
-013400220214             GOTO       CMDLBL(ENDCLPGM)
-013500220214
-013600220214/** Abnormal termination processing                       */
-013700220214/** Terminate with escape message */
-013800220214
-013900220214ABNORMAL:
-014000220214             CHGJOB     SWS(XXXXXX11)
-014100220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-014200220214             ROLLBACK
-014300220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-014400220214
-014500220214             SNDPGMMSG  MSG('Program MEC20022C ended abnormally') +
-014600220214                          TOMSGQ(MOPERQ MRUNQ)
-014700220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-014800220214             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
-014900220214                          MEC20022C ended abnormally') MSGTYPE(*ESCAPE)
-015000220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-015100220214
-015200220214 ENDCLPGM:   RCLRSC     LVL(*CALLER)
-015300220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-015400220214             ENDCMTCTL
-015500220214             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-015600220214             ENDPGM
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas MX IMM extraction control')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Message Management Module                       */
+/*                                                                   */
+/*       MEC20022C - MS MX IMM Extraction Control - Batch process    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. CSW122 *CREATE     Date 04Oct21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW122 - SWIFT ISO 20022                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+/** Copyright statement defination  */
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2021')
+
+/** Declare variables */
+
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&ENDSTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NXT_MSG) TYPE(*CHAR) LEN(8)
+
+/** Global Monitor Message */
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+
+/**           Copyright statement definition - at runtime             */
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+/** Send Message to MRUNQ */
+
+             SNDPGMMSG  MSG('MEC20022C - MS MX IMM Control') +
+                          TOMSGQ(MRUNQ)
+             CHGJOB     SWS(XXXXXX00)
+
+/** Call data queue creation and allocation */
+
+             CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Start     ')
+
+/** Process already active or close down requested */
+
+             IF         COND(&RTN_CODE *EQ 'MIN0619') THEN(DO)
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+
+/** Start Commitment Control */
+
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+
+/** Loop calling  MS Extraction process */
+
+ LOOP:
+             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+
+/** Check for Cancellation of process - look at end status */
+
+             RTVJOBA    ENDSTS(&ENDSTS)
+             IF         COND(&ENDSTS *EQ '1') THEN(DO)
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+
+
+/** Check MEMXDTA positions 1 to 8 if spaces set to 1 */
+
+             RTVDTAARA  DTAARA(MEMXDTA (1 8)) RTNVAR(&NXT_MSG)
+             IF         COND(&NXT_MSG *EQ '        ') THEN(DO)
+             CHGDTAARA  DTAARA(MEMXDTA (1 8)) VALUE('00000001')
+             ENDDO
+
+/** Run ME20022 - MX Extraction */
+             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+             CALL       PGM(ME20022) PARM(&RTN_CODE)
+
+/** Check for Database errors trapped by program */
+
+             IF         COND(%SWITCH(XXXXXX11) *OR +
+                             %SWITCH(XXXXXXX1) *OR +
+                             (&RTN_CODE *NE ' ')) THEN(DO)
+             GOTO       CMDLBL(ABNORMAL)
+             ENDDO
+/** Reset switches */
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** If count less than 1000 then wait for next entry */
+
+             IF         COND(&COUNT *LE 1000) THEN(DO)
+
+/** Call data queue creation and allocation get next action */
+
+             CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Next      ')
+
+/** End of process requested */
+
+             IF         COND(&RTN_CODE *EQ 'MIN0128') THEN(DO)
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+
+/** Re-run process */
+
+             GOTO       CMDLBL(LOOP)
+
+             ENDDO
+             ELSE       CMD(DO)
+
+/** Check for Cancellation of process - look at end status */
+
+             RTVJOBA    ENDSTS(&ENDSTS)
+             IF         COND(&ENDSTS *EQ '1') THEN(DO)
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+
+
+/** Call data queue creation and allocation to end process */
+
+             CALL       PGM(MEC20022D) PARM(&RTN_CODE 'Re-submit ')
+             ENDDO
+
+             GOTO       CMDLBL(ENDCLPGM)
+
+/** Abnormal termination processing                       */
+/** Terminate with escape message */
+
+ABNORMAL:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             SNDPGMMSG  MSG('Program MEC20022C ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC20022C ended abnormally') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ ENDCLPGM:   RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDPGM

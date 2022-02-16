@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*       Last Amend No. MD059279           Date 07Feb22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031966           Date 27Jul15              */
 /*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
@@ -47,6 +48,10 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD059279 - During INSERT of journal batch, user gets error */
+/*                  that the batch is in use.                       */
+/*                - Clear XXJENXH0 to reuse the batch number in the */
+/*                  input cycle.                                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */
@@ -145,6 +150,15 @@
 /**/
              SNDPGMMSG  MSG(' General Ledger next day set up') +
                           TOMSGQ(MRUNQ)
+/** Clear file XXJENHX0 if LUC117 is ON*/                                               /*MD059279*/
+                                                                                        /*MD059279*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD059279*/
+             CHGVAR     VAR(&SAR) VALUE('LUC117')                                       /*MD059279*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR +
+                                           &FMT)                                        /*MD059279*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD059279*/
+             CLRPFM     FILE(XXJENHX0)                                                  /*MD059279*/
+             ENDDO                                                                      /*MD059279*/
                                                                                           /*CGL013*/
 /* Clear file GLBTNOPD */                                                                 /*236369*/
              CLRPFM     FILE(GLBTNOPD)                                                    /*236369*/

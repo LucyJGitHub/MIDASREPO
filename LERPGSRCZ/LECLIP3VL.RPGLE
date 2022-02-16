@@ -652,6 +652,13 @@
       ***  Reset variables updated by each module
       *
      C                   EXSR      RESETERRS
+      *                                                                                     AR804863
+      ** Skip validation process if action is reject.                                       AR804863
+      *                                                                                     AR804863
+     C     @ACTRV        IFEQ      'Y'                                                      AR804863
+     C                   EXSR      SRRSFD                                                   AR804863
+     C                   RETURN                                                             AR804863
+     C                   ENDIF                                                              AR804863
       *                                                                                       CLE123
       ***  Make sure ACOFF holds the account officer of the facility                          CLE123
       *                                                                                       CLE123
@@ -673,13 +680,6 @@ B1   C                   IF        CLE123 = 'Y'                                 
      C                   MOVE      ACOFF         DDACOF                                       CLE123
 E1   C                   ENDIF                                                                CLE123
       *                                                                                       CLE123
-      *                                                                                     AR804863
-      ** Skip validation process if action is reject.                                       AR804863
-      *                                                                                     AR804863
-     C     @ACTRV        IFEQ      'Y'                                                      AR804863
-     C                   EXSR      SRRSFD                                                   AR804863
-     C                   RETURN                                                             AR804863
-     C                   ENDIF                                                              AR804863
       *
       ***  Validate account officer
       *

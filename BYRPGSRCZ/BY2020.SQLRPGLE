@@ -54,7 +54,7 @@
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
-      *             Based from MD052690. (Recompile)                  *
+      *             Based from MD052690 (Recompile)                   *
       *  MD058068 - Deliverable Data Split for Bank of England        *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *

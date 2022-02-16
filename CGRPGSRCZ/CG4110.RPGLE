@@ -197,7 +197,7 @@
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
-      *             Based from MD052690. (Recompile)                  *
+      *             Based from MD052690 (Recompile)                   *
       *  MD058896 - CGC2050 Seq. No. 00007 failed during COB          *
       *             Changed the condition introduced by CSD103 to     *
       *             ensure that AOBSRTR0 is accessed if DABRTT is not *

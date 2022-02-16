@@ -3802,7 +3802,7 @@
      C** and not set WCPDRTFlag to 'Y'                                                      MD059418
      C** This fix works for TAIC as security details come from Kondor and there             MD059418
      C** is already a level of control on details sent to Midas.                            MD059418
-     C******             IF        WITLDFlag <> 'Y'   AND  WCPDRTFlag <> 'Y'      BUG10847R MD059418
+     C**********         IF        WITLDFlag <> 'Y'   AND  WCPDRTFlag <> 'Y'      BUG10847R MD059418
      C                   IF        WITLDFlag <> 'Y'                                         MD059418
      C                   Z-ADD     *ZEROS        PLCD                                       BUG10847
                                                                                             BUG10847
@@ -3865,7 +3865,7 @@
      C** and not set WCPDRTFlag to 'Y'                                                      MD059418
      C** This fix works for TAIC as security details come from Kondor and there             MD059418
      C** is already a level of control on details sent to Midas.                            MD059418
-     C*******            IF        WITLDFlag <> 'Y'   AND  WCPDRTFlag <> 'Y'      BUG10847R MD059418
+     C**********         IF        WITLDFlag <> 'Y'   AND  WCPDRTFlag <> 'Y'      BUG10847R MD059418
      C                   IF        WITLDFlag <> 'Y'                                         MD059418
                                                                                            BUG10847R
      C                   Z-ADD     *ZEROS        PNCD                                       BUG10847

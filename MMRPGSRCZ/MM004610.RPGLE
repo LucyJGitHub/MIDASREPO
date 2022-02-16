@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *    
       *                 CGL165             Date 17Feb15               *
@@ -45,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -211,6 +216,8 @@
      D ZZEND           S              5  0
      D ZZCALC          S              1
      D INT6DY          S             15  9                                                    242286
+     D ZZNLEAP         S              5  0 INZ(0)                                           MD058815
+     D ZZLEAP          S              5  0 INZ(0)                                           MD058815
 
       ** Parameters for ZAEIRCALC
 
@@ -937,6 +944,8 @@
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       242286
+     C                   PARM                    ZZNLEAP                                    MD058815
+     C                   PARM                    ZZLEAP                                     MD058815
                                                                                               CDL093
       ** Calculation type '9'                                                                 CDL093
                                                                                               CDL093

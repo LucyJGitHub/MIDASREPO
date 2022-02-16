@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR847818           Date 26Apr13               *
       *                 AR996895           Date 06Jul12               *
       *                 CLE148             Date 23Jul12               *
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *

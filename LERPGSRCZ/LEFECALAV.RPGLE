@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -785,6 +790,8 @@
      C                   PARM                    ZZCALC            1
      C**********         PARM                    INT6DY           15 7                 222373 242286
      C                   PARM                    INT6DY           15 9                        242286
+     C                   PARM                    ZNLEAP            5 0                      MD058815
+     C                   PARM                    ZLEAP             5 0                      MD058815
      C                   ENDSR
       *****************************************************************
       /SPACE 5

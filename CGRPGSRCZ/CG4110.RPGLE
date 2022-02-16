@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058896           Date 21Sep21               *
-      *  Prev Amend No. MD057942           Date 26Apr21               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD058896           Date 21Sep21               *
+      *                 MD057942           Date 26Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057008           Date 27Oct20               *
       *                 MD056543           Date 15Sep20               *
@@ -193,6 +194,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  MD058896 - CGC2050 Seq. No. 00007 failed during COB          *
       *             Changed the condition introduced by CSD103 to     *
       *             ensure that AOBSRTR0 is accessed if DABRTT is not *

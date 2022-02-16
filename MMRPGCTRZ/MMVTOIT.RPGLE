@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD057167           Date 10Nov20               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD057167           Date 10Nov20               *
       *                 MD047719           Date 24Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD025884           Date 19Aug14               *
@@ -32,6 +33,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD057167 - Serious Midas Error encountered during completion *
       *             of LDNI transaction                               *

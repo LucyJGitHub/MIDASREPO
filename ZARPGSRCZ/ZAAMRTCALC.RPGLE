@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 CDL093             Date 11Apr14               *
       *                 CLE148             Date 23Jul12               *
@@ -46,6 +47,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -207,6 +212,8 @@
      D PZCALC          S              1A
      D***PINT6DY*      S             15P 7                                                    242286
      D PINT6DY         S             15P 9                                                    242286
+     D PNLEAP          S              5P 0 inz(0)                                           MD058815
+     D PLEAP50         S              5P 0 inz(0)                                           MD058815
 
       ** Parameter for access object
      D PRtCd           S              7A
@@ -606,6 +613,8 @@
      C                   PARM                    PZEND
      C                   PARM                    PZCALC
      C                   PARM                    PINT6DY
+     C                   PARM                    PNLEAP                                     MD058815
+     C                   PARM                    PLEAP50                                    MD058815
 
      C                   IF        PIntCalcBasis = 9                                          CDL093
      C                   Z-ADD     ZZBEG9        @@DAYN            5 0                        CDL093

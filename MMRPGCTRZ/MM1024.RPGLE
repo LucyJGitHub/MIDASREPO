@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026986           Date 16May14               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026986           Date 16May14               *
       *                 CDL093             Date 07Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026986 - remove changes made by CDL093                     *
       *  CDL093 - MM Interest calculation type 9.                     *
@@ -123,6 +128,10 @@
  
       ** Adjusted number of interest days                                                     191870
      D INT6DY          S             15P 7                                                    191870
+      ** number of interest days - non leap year                                            MD058815
+     D ZZNLEAP         S              5P 0                                                  MD058815
+      ** number of interest days - leap year                                                MD058815
+     D ZZLEAP          S              5P 0                                                  MD058815
                                                                                               191870
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -178,6 +187,8 @@
       ** Calculation method (1A, from caller)
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       191870
+     C                   PARM                    ZZNLEAP                                    MD058815
+     C                   PARM                    ZZLEAP                                     MD058815
      C*
       **********                                                                     CDL093 MD026986
       ***ZZCALC*= 9 (MM Interest method Actual/Actual - AFB)                         CDL093 MD026986
@@ -221,7 +232,8 @@
      C                   END                                                     *** E 1
      C*
      C     ZZCALC        IFEQ      '6'                                           *** B 1       05609
-     C     @@AMT         DIV       36600         @@W155
+     C*****@@AMT         DIV       36600         @@W155                                     MD058815
+     C     @@AMT         DIV       1             @@W155                                     MD058815
      C                   END                                                     *** E 1
      C*
      C                   MULT      @@RATE        @@W155
@@ -229,7 +241,12 @@
      C     ZZCALC        IFEQ      '6'                                                        191870
      C*****ZZCALC*****   OREQ      '9'                                               CDL093 MD026986
      C*****#29Feb*****   ANDEQ     'Y'                                               CDL093 MD026986
-     C     @@W155        MULT(H)   INT6DY        @@W154                                       191870
+     C*****@@W155        MULT(H)   INT6DY        @@W154                              191870 MD058815
+     C     @@W155        MULT      ZZNLEAP       ZIWRK2           30 9                      MD058815
+     C     @@W155        MULT      ZZLEAP        ZIWRK3           30 9                      MD058815
+     C     ZIWRK2        DIV       36500         ZIWRK2                                     MD058815
+     C     ZIWRK3        DIV       36600         ZIWRK3                                     MD058815
+     C     ZIWRK2        ADD(H)    ZIWRK3        @@W154                                     MD058815
      C                   ELSE                                                                 191870
      C     @@W155        MULT(H)   ZZINDY        @@W154           15 4                         05609
      C                   END                                                                  191870

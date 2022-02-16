@@ -15,10 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059320 *CREATE   Date 06Dec2021             *
+      *  Last Amend No. MD059564           Date 14Feb22               *
+      *  Prev Amend No. MD059552           Date 08Feb22               *
+      *                 MD059320 *CREATE   Date 06Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059564 - Adding extract for Next Repay Date and Loan       *
+      *             Narrative fields                                  *
+      *             And correct error with AllInRate                  *
+      *  MD059552 - Adding extract for All-in-rate                    *
       *  MD059320 - CLE172 - LIBOR Lending - Correspondence Manager   *
       *                                                               *
       *****************************************************************
@@ -230,6 +236,7 @@
 
      D XINTA           S             13  0
      D XCINPDT         S              5  0
+     D XALLINR         S             17p12                                                  MD059552
 
      D ##UDCR        E DS                  EXTNAME(CGUDCRPD)
       **  External DS for incomplete reference
@@ -1648,6 +1655,40 @@
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
+      **  All-in-rate                                                                       MD059552
+      * If Floor rate is greater than Risk free rate, use Floor, else Risk Free rate        MD059552
+     C                   eval      XALLINR = 0                                              MD059552
+     C                   if        Flor > Dbrfr                                             MD059552
+     C                             and Flor <> 9999.9999999                                 MD059552
+     C                   eval      XALLINR = Flor                                           MD059552
+     C                   else                                                               MD059552
+     C                   eval      XALLINR = Dbrfr                                          MD059552
+     C                   endif                                                              MD059552
+                                                                                            MD059552
+      * then add the Spread                                                                 MD059552
+     C     ##SPIN        IFEQ      'A'                                                      MD059552
+     C                   eval      XALLINR = XALLINR + ##RTSP                               MD059552
+     C                   ELSE                                                               MD059552
+     C                   eval      XALLINR = XALLINR - ##RTSP                               MD059552
+     C                   END                                                                MD059552
+                                                                                            MD059552
+      * and finally add Benchmark                                                           MD059552
+     C                   eval      XALLINR = XALLINR + BADJ                                 MD059552
+                                                                                            MD059552
+     C                   ADD       1             R1                                         MD059552
+     C                   CLEAR                   R#DATA                                     MD059552
+     C                   CLEAR                   R#DEFN                                     MD059552
+     C                   CLEAR                   #@RDE                                      MD059552
+     C                   MOVEL     'ALLINRAT'    #@RDE                                      MD059552
+     C                   MOVE      'E '          #@RDE                                      MD059552
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059552
+     C                   MOVEL     XALLINR       ##DATA                                     MD059552
+     C                   MOVEL     'Rate  '      ##RDEC                                     MD059552
+     C                   MOVEL     'L'           ##RDET                                     MD059552
+     C                   MOVEL     '9'           ##DCPA                                     MD059552
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059552
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059552
+                                                                                            MD059552
       **  Accumulate RDEs and associated data and output to PF/CGUDTPD.
 
      C                   EXSR      SRADTA
@@ -2725,6 +2766,68 @@
      C                   MOVEL     R#DATA        ##D(R1)
      C                   MOVEL     R#DEFN        ##R(R1)
 
+      **  Next Repayment Date.                                                              MD059564
+                                                                                            MD059564
+     C                   ADD       1             R1                                         MD059564
+     C                   CLEAR                   R#DATA                                     MD059564
+     C                   CLEAR                   R#DEFN                                     MD059564
+     C                   CLEAR                   #@RDE                                      MD059564
+     C                   MOVEL     'NXT RPDA'    #@RDE                                      MD059564
+     C                   MOVE      'TE'          #@RDE                                      MD059564
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059564
+     C                   MOVEL     ##NRPD        ##DATA                                     MD059564
+     C                   MOVEL     'Date  '      ##RDEC                                     MD059564
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059564
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059564
+      *                                                                                     MD059564
+      ** Loan Narrative 1                                                                   MD059564
+      *                                                                                     MD059564
+     C                   ADD       1             R1                                         MD059564
+     C                   CLEAR                   R#DATA                                     MD059564
+     C                   CLEAR                   R#DEFN                                     MD059564
+     C                   CLEAR                   #@RDE                                      MD059564
+     C                   MOVEL(P)  'NARRAT_1'    #@RDE                                      MD059564
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059564
+     C                   MOVEL     ##NAR1        R#DATA                                     MD059564
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059564
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059564
+      *                                                                                     MD059564
+      ** Loan Narrative 2                                                                   MD059564
+      *                                                                                     MD059564
+     C                   ADD       1             R1                                         MD059564
+     C                   CLEAR                   R#DATA                                     MD059564
+     C                   CLEAR                   R#DEFN                                     MD059564
+     C                   CLEAR                   #@RDE                                      MD059564
+     C                   MOVEL(P)  'NARRAT_2'    #@RDE                                      MD059564
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059564
+     C                   MOVEL     ##NAR2        R#DATA                                     MD059564
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059564
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059564
+      *                                                                                     MD059564
+      ** Loan Narrative 3                                                                   MD059564
+      *                                                                                     MD059564
+     C                   ADD       1             R1                                         MD059564
+     C                   CLEAR                   R#DATA                                     MD059564
+     C                   CLEAR                   R#DEFN                                     MD059564
+     C                   CLEAR                   #@RDE                                      MD059564
+     C                   MOVEL(P)  'NARRAT_3'    #@RDE                                      MD059564
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059564
+     C                   MOVEL     ##NAR3        R#DATA                                     MD059564
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059564
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059564
+      *                                                                                     MD059564
+      ** Loan Narrative 4                                                                   MD059564
+      *                                                                                     MD059564
+     C                   ADD       1             R1                                         MD059564
+     C                   CLEAR                   R#DATA                                     MD059564
+     C                   CLEAR                   R#DEFN                                     MD059564
+     C                   CLEAR                   #@RDE                                      MD059564
+     C                   MOVEL(P)  'NARRAT_4'    #@RDE                                      MD059564
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                      MD059564
+     C                   MOVEL     ##NAR4        R#DATA                                     MD059564
+     C                   MOVEL     R#DATA        ##D(R1)                                    MD059564
+     C                   MOVEL     R#DEFN        ##R(R1)                                    MD059564
+      *                                                                                     MD059564
      C     KLOAM         KLIST
      C                   KFLD                    WPLON
      C                   KFLD                    WSDAT

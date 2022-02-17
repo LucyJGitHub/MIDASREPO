@@ -14,8 +14,9 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD027372           Date 06Nov19               *
+      *  Last Amend No. MD022741           Date 16Feb22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD027372           Date 06Nov19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD052425           Date 22Aug19               *
       *                 MD050457           Date 06Mar19               *
@@ -71,6 +72,7 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  MD022741 - Do not close customer if correspondent exists     *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD027372 - Allow customer to be closed if the only remaining *
       *             GTEES records are expired ones.                   *
@@ -200,6 +202,7 @@
      FLEFEEDL1IF  E           K        DISK                                                 MD050457
      F/COPY WNCPYSRC,SD0010UF01
       *
+     FCGCORRL4IF  E           K        DISK                                                 MD022741
      I*OANSCRF*****                                                       E23879
      I************* LSWS                            LSWSX                 E23879
       *
@@ -1619,6 +1622,33 @@
      C**********           ENDIF                                          S01522              201665
      C                     ENDIF                                          S01522
       *                                                                   S01522
+      *                                                                                     MD022741
+      ** If UDC is switched on check if the customer has an existing                        MD022741
+      ** UDC record.                                                                        MD022741
+      *                                                                                     MD022741
+     C           BGN1ST    IFEQ 'Y'                                                         MD022741
+      *                                                                                     MD022741
+     C                     MOVE NCNUM     CUST    6                                         MD022741
+      *                                                                                     MD022741
+     C           CUST      SETLLCGCORRL4             8181                                   MD022741
+     C  N81      CUST      READECGCORRL4                 81                                 MD022741
+     C           *IN81     DOWEQ'0'                                                         MD022741
+      *                                                                                     MD022741
+     C           RECI      IFEQ 'D'                                                         MD022741
+     C                     MOVEL'REJECT'  W0RTN                                             MD022741
+     C                     MOVE 'F'       WUD218                                            MD022741
+     C           QUIT      IFEQ 'Y'                                                         MD022741
+     C                     RETRN                                                            MD022741
+     C                     ENDIF                                                            MD022741
+     C                     GOTO ESC81                                                       MD022741
+     C                     ENDIF                                                            MD022741
+      *                                                                                     MD022741
+     C           CUST      READECGCORRL4                 81                                 MD022741
+      *                                                                                     MD022741
+     C                     ENDDO                                                            MD022741
+     C           ESC81     TAG                                                              MD022741
+     C                     ENDIF                                                            MD022741
+      *                                                                                     MD022741
      C                     ENDSR                                          S01522
      C********************************************************************S01522
       *                                                                                       246639

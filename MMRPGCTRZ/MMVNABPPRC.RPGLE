@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 262653             Date 16Jun19               *
-      *  Prev Amend No. CDL069             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. 262653             Date 16Jun19               *
+      *                 CDL069             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 13Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690. (Recompile)                  *
       *  262653 - Recompile due to changes in /COPY MM1008C           *
       *           (Replaced hard coded 360).                          *
       *  CDL069 - True Discount for Negotiable Assets.(Recompile)     *

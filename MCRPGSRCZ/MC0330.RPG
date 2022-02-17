@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058437           Date 09Jul21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD058437           Date 09Jul21               *
+      *                 CSD103             Date 10Aug20               *
       *                 224410             Date 10Mar20               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -56,6 +57,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD058437 - Change base rate code to alphanumeric             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -758,17 +763,25 @@
      C***                     No. of Days in Year * 100
      C*
      C           ZZCALC    IFEQ '6'                                       163136
-     C           GHCURB    MULT INT6DY    WSTOP                           163136
+     C********** GHCURB    MULT INT6DY    WSTOP                                      163136 MD058815
+     C           GHCURB    MULT NLEAP     WSTOP1 309                                        MD058815
+     C                     MULT WSCBSR    WSTOP1                                            MD058815
+     C           WSTOP     DIV  36500     WSINT1 309                                        MD058815
+     C           GHCURB    MULT LEAP50    WSTOP2 309                                        MD058815
+     C                     MULT WSCBSR    WSTOP2                                            MD058815
+     C           WSTOP     DIV  36600     WSINT2 309                                        MD058815
+     C           WSINT1    ADD  WSINT2    WSINT     H                                       MD058815
      C                     ELSE                                           163136
       *                                                                   163136
      C           GHCURB    MULT ZZINDY    WSTOP  309
       *                                                                   163136
-     C                     END                                            163136
+     C**********           END                                                       163136 MD058815
       *                                                                   163136
      C                     MULT WSCBSR    WSTOP
      C*
      C           @@DAYO    MULT 100       WSBOT   50
      C           WSTOP     DIV  WSBOT     WSINT     H
+     C                     ENDIF                                                            MD058815
      C*
      C**  Accumulate Interest and set next Start Date
      C*

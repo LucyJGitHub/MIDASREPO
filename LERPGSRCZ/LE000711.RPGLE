@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057538           Date 11Feb21               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057538           Date 11Feb21               *
       *                 MD055657           Date 14May20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
@@ -37,6 +38,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057538 - LEC000711 failed in COB due to WCPAM work variable*
       *             overflow. Loop to LEFCAMLA to read all relevant   *
@@ -263,6 +268,8 @@
      D***INT6DY*       S             15  7                                                    242286
      D INT6DY          S             15  9                                                    242286
      D WZZCALC         S              1  0
+     D ZZNLEAP         S              5  0 INZ(0)                                           MD058815
+     D ZZLEAP          S              5  0 INZ(0)                                           MD058815
 
       ** Parameter list for ZCONVZ1
      D ZAMTCI          S             15  0
@@ -1780,6 +1787,8 @@
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY
+     C                   PARM      *ZERO         ZZNLEAP                                    MD058815
+     C                   PARM      *ZERO         ZZLEAP                                     MD058815
 
      C                   ENDSR
       *****************************************************************

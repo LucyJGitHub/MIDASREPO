@@ -12,12 +12,19 @@
       *                                                               *
       *  (c) Finastra International Limited 1997                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LNL020             Date 15Jul02               *
+      *                 LNL020             Date 15Jul02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690 (Recompile)                   *
+      *           - Synchronized /copy sources ZNPVZ1 and ZCBDYSZ1    *
+      *             which are intrusively coded in the program.       *
       *  MD046248 - Finastra Rebranding                               *
       *  LNL020 - Upgrade source to Midas Release 4.                  *
       *                                                               *
@@ -49,6 +56,7 @@
       *
       ** Array containing Currency codes
      E                    CCY@      200  3
+     E/COPY ZSRSRC,ZDATE9Z1                                                                 MD058815
       *
       /SPACE 3
       *
@@ -79,6 +87,20 @@
       *
       * Second DS for access programs, long data structure
      IDSSDY     E DSDSSDY
+      ** Data structure for subroutine ZCBDYS                                               MD058815
+     I            DS                                                                        MD058815
+     I                                        1   80ZZDAT1                                  MD058815
+     I                                        1   40ZZYYA                                   MD058815
+     I                                        5   60ZZMMA                                   MD058815
+     I                                        7   80ZZDDA                                   MD058815
+      *                                                                                     MD058815
+     I            DS                                                                        MD058815
+     I                                        1   80ZZDAT2                                  MD058815
+     I                                        1   40ZZYYB                                   MD058815
+     I                                        5   60ZZMMB                                   MD058815
+     I                                        7   80ZZDDB                                   MD058815
+     I/COPY ZSRSRC,ZDATE9Z2                                                                 MD058815
+     I/COPY ZSRSRC,ZDAT10Z1                                                                 MD058815
       *
       *
       /EJECT
@@ -450,7 +472,8 @@
       ***  If this point has been reached, a record has been found with
       ***  a date greater than the one we want and it will probably be
       ***  necessary to use interpolation, so set up Far Date and Far
-      ***  Rate fields (for SR/ZINTPL).
+      *****Rate*fields*(for*SR/ZINTPL).********************************                     MD058815
+      ** Rate fields (for PGM/ZAINTPL).                                                     MD058815
       *
      C                     Z-ADDHWPRDN    ZIFDAT
      C           ZNPBOF    IFEQ 'B'
@@ -481,7 +504,15 @@
       ***  Set up Broken Date and interpolate the Rate.
       *
      C                     Z-ADDZNPFDT    ZIBDAT
-     C                     EXSR ZINTPL
+     C**********           EXSR ZINTPL                                                      MD058815
+     C                     Z-ADD0         ZIBRAT                                            MD058815
+     C                     CALL 'ZAINTPL'                                                   MD058815
+     C                     PARM           ZINDAT  50                                        MD058815
+     C                     PARM           ZIBDAT  50                                        MD058815
+     C                     PARM           ZIFDAT  50                                        MD058815
+     C                     PARM           ZINRAT 139                                        MD058815
+     C                     PARM           ZIFRAT 139                                        MD058815
+     C                     PARM           ZIBRAT 139                                        MD058815
      C                     Z-ADDZIBRAT    ZNPRAT
      C                     END
       *
@@ -503,11 +534,35 @@
      C                     Z-ADDZNPSDT    ZCBSDT
      C                     Z-ADDZNPFDT    ZCBEDT
      C                     EXSR ZCBDYS
+      *                                                                                     MD058815
+     C           ZCBCBS    IFEQ 6                                                           MD058815
+     C           ZCBCBS    OREQ 9                                                           MD058815
+     C           #29FEB    ANDEQ'Y'                                                         MD058815
+      *                                                                                     MD058815
+     C           ZCBCBS    IFEQ 6                                                           MD058815
+     C           ZNPRAT    MULT WNLEAP    ZNPXA                                             MD058815
+     C           ZNPXA     DIV  36500     ZNPXA     H                                       MD058815
+     C                     ADD  1         ZNPXA                                             MD058815
+     C           ZNPAMT    DIV  ZNPXA     ZNPOU1 309                                        MD058815
+     C           ZNPRAT    MULT WLEAP     ZNPXA                                             MD058815
+     C           ZNPXA     DIV  36600     ZNPXA     H                                       MD058815
+     C                     ADD  1         ZNPXA                                             MD058815
+     C           ZNPAMT    DIV  ZNPXA     ZNPOU2 309                                        MD058815
+     C           ZNPOU1    ADD  ZNPOU2    ZNPOUT    H                                       MD058815
+     C                     ELSE                                                             MD058815
+     C           ZNPRAT    MULT ZINT6     ZNPXA                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+     C                     ELSE                                                             MD058815
      C           ZNPRAT    MULT ZCBDAY    ZNPXA  189
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+     C           ZCBCBS    IFNE 6                                                           MD058815
      C           ZCBDIV    MULT 100       ZNPXB   50
      C           ZNPXA     DIV  ZNPXB     ZNPXA     H
      C                     ADD  1         ZNPXA
      C           ZNPAMT    DIV  ZNPXA     ZNPOUT    H
+     C                     ENDIF                                                            MD058815
       *
       *---------------------------------------------------------------*
       ***  CASE 2: The Future Date is more than one year ahead.       *
@@ -565,7 +620,8 @@
       ***  If this point has been reached, a record has been found with
       ***  a date greater than the one we want and it will probably be
       ***  necessary to use interpolation, so set up Far Date and Far
-      ***  Rate fields (for SR/ZINTPL).
+      *****Rate*fields*(for*SR/ZINTPL).********************************                     MD058815
+      ** Rate fields (for PGM/ZAINTPL).                                                     MD058815
       *
      C                     Z-ADDDFPRDN    ZIFDAT
      C           ZNPBOF    IFEQ 'B'
@@ -596,7 +652,15 @@
       ***  Set up Broken Date and interpolate the Factor
       *
      C                     Z-ADDZNPFDT    ZIBDAT
-     C                     EXSR ZINTPL
+     C**********           EXSR ZINTPL                                                      MD058815
+     C                     Z-ADD0         ZIBRAT                                            MD058815
+     C                     CALL 'ZAINTPL'                                                   MD058815
+     C                     PARM           ZINDAT  50                                        MD058815
+     C                     PARM           ZIBDAT  50                                        MD058815
+     C                     PARM           ZIFDAT  50                                        MD058815
+     C                     PARM           ZINRAT 139                                        MD058815
+     C                     PARM           ZIFRAT 139                                        MD058815
+     C                     PARM           ZIBRAT 139                                        MD058815
      C                     Z-ADDZIBRAT    ZNPDF
      C                     END
       *
@@ -748,6 +812,14 @@
      C                     Z-ADDZCBCBS    ZCBCBS  10
      C                     Z-ADD0         ZCBDAY  50
      C                     Z-ADD1         ZCBDIV  30
+     C                     Z-ADD0         ZINT6                                             MD058815
+     C                     Z-ADD0         W@NLP1                                            MD058815
+     C                     Z-ADD0         W@NLP2                                            MD058815
+     C                     MOVELWCALC6    WCALC6  1                                         MD035545
+      *                                                                                     MD058815
+      * Call access objects only once in a /COPY                                            MD058815
+      *                                                                                     MD058815
+     C           AORUN     IFEQ ' '                                                         MD058815
       *                                                                   CIR004
       ** Check if Dealing Calculation Method is installed                 CIR004
       *                                                                   CIR004
@@ -761,15 +833,79 @@
      C                     MOVE 'N'       CIR004                          CIR004
      C                     ENDIF                                          CIR004
      C                     MOVE *BLANKS   @RTCD                           CIR004
+      *                                                                                     MD058815
+      * Flag access objects as having been run                                              MD058815
+      *                                                                                     MD058815
+     C                     MOVE 'Y'       AORUN   1                                         MD058815
+      *                                                                                     MD058815
+     C                     ENDIF                                                            MD058815
       *
+     C           ZCBCBS    IFEQ 9                                                           MD058815
+     C                     Z-ADDZCBSDT    @@DAYN                                            MD058815
+     C                     EXSR ZDATE9                                                      MD058815
+     C                     Z-ADD@@VDT     ZZDAT1                                            MD058815
+     C*                                                                                     MD058815
+     C                     Z-ADDZCBEDT    @@DAYN                                            MD058815
+     C                     EXSR ZDATE9                                                      MD058815
+     C                     Z-ADD@@VDT     ZZDAT2                                            MD058815
+     C*                                                                                     MD058815
+     C* #29FEB - Flag to represent the existence of a 29th Feb. between                     MD058815
+     C*          the start and end dates                                                    MD058815
+     C                     MOVE 'N'       #29FEB  1                                         MD058815
+     C*                                                                                     MD058815
+     C* ZZYYA - start year from data structure over ZZDAT1 in ZCBDYSZ2                      MD058815
+     C* #29WKY = incremental year initially at start year                                   MD058815
+     C                     Z-ADDZZYYA     #29WKY  40                                        MD058815
+     C*                                                                                     MD058815
+     C* Move to subfields of @@VDT - data structure from ZDATE9Z2 - 8,0                     MD058815
+     C                     Z-ADDZZYYA     @@YR                                              MD058815
+     C                     Z-ADD2         @@Z71M                                            MD058815
+     C                     Z-ADD29        @@Z71D                                            MD058815
+     C* #29YA - 29/02/start year (fixed workfield)                                          MD058815
+     C                     Z-ADD@@VDT     #29YA   80                                        MD058815
+     C* ZZYYB - end year from data structure over ZZDAT2 in ZCBDYSZ2                        MD058815
+     C                     Z-ADDZZYYB     @@YR                                              MD058815
+     C* #29YB - 29/02/end year (fixed workfield)                                            MD058815
+     C                     Z-ADD@@VDT     #29YB   80                                        MD058815
+     C*                                                                                     MD058815
+      * Loop round incrementing the year from start to end                                  MD058815
+     C           #29WKY    DOUGTZZYYB                                                       MD058815
+     C* Check to see whether 29/02/xx is a valid date by checking                           MD058815
+     C* to see whether any of the years falling between the two dates                       MD058815
+     C* are leap years.                                                                     MD058815
+     C           ZZDAT1    IFLE #29YA                                                       MD058815
+     C           #29WKY    ANDEQZZYYA                                                       MD058815
+     C           ZZDAT2    ANDGE#29YA                                                       MD058815
+     C           #29WKY    ORGT ZZYYA                                                       MD058815
+     C           #29WKY    ANDLTZZYYB                                                       MD058815
+     C           ZZDAT2    ORGE #29YB                                                       MD058815
+     C           #29WKY    ANDEQZZYYB                                                       MD058815
+     C           ZZDAT1    ANDLE#29YB                                                       MD058815
+     C*                                                                                     MD058815
+     C           #29WKY    DIV  4         ZLYR30  30                                        MD058815
+     C                     MVR            ZLY     10                                        MD058815
+     C* Leap year                                                                           MD058815
+     C           ZLY       IFEQ 0                                                           MD058815
+     C                     MOVE 'Y'       #29FEB                                            MD058815
+     C                     LEAVE                                                            MD058815
+     C                     ENDIF                                                            MD058815
+     C                     ENDIF                                                            MD058815
+     C*                                                                                     MD058815
+     C                     ADD  1         #29WKY                                            MD058815
+     C                     ENDDO                                                            MD058815
+     C*                                                                                     MD058815
+     C                     ENDIF                                                            MD058815
       *---------------------------------------------------------------*
       ***   First define the Number of Days in the Year.              *
       *---------------------------------------------------------------*
       *
-      ***  365 Days - Calculation Basis = 1 or 4.
+      *****365*Days - Calculation*Basis = 1*or*4.**                                         MD058815
+      ***  365 Days - Calculation Basis = 1 or 4 or 9                                       MD058815
       *
      C           ZCBCBS    IFEQ 1
      C           ZCBCBS    OREQ 4
+     C           ZCBCBS    OREQ 9                                                           MD058815
+     C           #29FEB    ANDEQ'N'                                                         MD058815
      C                     Z-ADD365       ZCBDIV
      C                     END
       *
@@ -783,9 +919,12 @@
      C                     Z-ADD360       ZCBDIV
      C                     END
       *
-      ***  366 Days - Calculation Basis = 6.
+      *****366*Days - Calculation*Basis = 6.**                                              MD058815
+      ***  366 Days - Calculation Basis = 6 or 9                                            MD058815
       *
      C           ZCBCBS    IFEQ 6
+     C           ZCBCBS    OREQ 9                                                           MD058815
+     C           #29FEB    ANDEQ'Y'                                                         MD058815
      C                     Z-ADD366       ZCBDIV
      C                     END
       *
@@ -806,16 +945,214 @@
       *
      C           ZCBEDT    SUB  ZCBSDT    ZCBDAY
       *
-      ***  Calculation Bases 1, 2 and 6: Actual Number of Days.
+      *****Calculation*Bases*1,*2*and*6:*Actual*Number*of*Days.********                     MD058815
+      ***  Calculation Bases 1, and 2: Actual Number of Days.                               MD058815
       ***  ----------------------------------------------------
-      ***  For these three, ZCBDAY already contains the final result,
+      *****For*these*three,*ZCBDAY*already*contains*the*final*result,**                     MD058815
+      ***  For these two, ZCBDAY already contains the final result,                         MD058815
       ***  so no need for any further calculations.
       *
      C           ZCBCBS    IFEQ 1
      C           ZCBCBS    OREQ 2
-     C           ZCBCBS    OREQ 6
+     C***********ZCBCBS    OREQ 6                                                           MD058815
      C                     GOTO ZCBEND
      C                     END
+      *                                                                                     MD058815
+      ** Calculation Basis 6: Actual Number of Days.                                        MD058815
+      ** -------------------------------------------                                        MD058815
+      ** For calculation basis 6, take the number of days in year                           MD058815
+      ** to be equal to 366 days for leap years and 365 days for                            MD058815
+      ** non-leap years.                                                                    MD058815
+      *                                                                                     MD058815
+     C           ZCBCBS    IFEQ 6                                                           MD058815
+     C           ZCBCBS    OREQ 9                                                           MD058815
+     C           #29FEB    ANDEQ'Y'                                                         MD058815
+      *                                                                                     MD058815
+     C                     Z-ADDZCBSDT    @@DAYN  50                                        MD058815
+     C                     EXSR ZDATE9                                                      MD058815
+     C                     Z-ADD@@VDT     ZZDAT1                                            MD058815
+      *                                                                                     MD058815
+     C                     Z-ADDZCBEDT    @@DAYN                                            MD058815
+     C                     EXSR ZDATE9                                                      MD058815
+     C                     Z-ADD@@VDT     ZZDAT2                                            MD058815
+      *                                                                                     MD058815
+      ** Find the number of leap year and non-leap year days in the                         MD058815
+      ** interest period. The number of non-leap year days are then                         MD058815
+      ** adjusted by a factor of 366/365 to allow for a divisor of                          MD058815
+      ** 366. This figure is then added to the actual leap year days                        MD058815
+      ** to give a factored number of days in the interest period.                          MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD0         WLEAP   50                                        MD058815
+     C                     Z-ADD0         WNLEAP  50                                        MD058815
+      *                                                                                     MD058815
+      ** If the start and end date are in the same year, check if the                       MD058815
+      ** year is a leap year and add number of interest days to the                         MD058815
+      ** relevant total                                                                     MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD0         ZZWRK                                             MD058815
+     C           ZZYYA     IFEQ ZZYYB                                                       MD058815
+     C           ZZYYA     DIV  4         ZZWRK   80                                        MD058815
+     C                     MVR            ZZWRK                                             MD058815
+      *                                                                                     MD058815
+     C           ZZWRK     IFNE 0                                                           MD058815
+     C                     ADD  ZCBDAY    WNLEAP                                            MD058815
+     C                     ELSE                                                             MD058815
+     C                     ADD  ZCBDAY    WLEAP                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      ** else must break down the interest period into leap years                           MD058815
+      ** and non-leap years.                                                                MD058815
+      *                                                                                     MD058815
+     C                     ELSE                                                             MD058815
+      *                                                                                     MD058815
+      ** Save end date year value.                                                          MD058815
+      *                                                                                     MD058815
+     C                     Z-ADDZZDAT2    WZDAT2  80                                        MD058815
+     C                     Z-ADDZZYYB     WZZYYB  40                                        MD058815
+      *                                                                                     MD058815
+      ***Get*Midas*day*number*for*1st*Jan*of*year*after*start*date*****                     MD058815
+      ***when*accrue*on*last*day*is*'N';*get*midas*day*number*for*31***                     MD058815
+      ***dec*of*the*start*date*year*when*accrue*on*last*day*is*Y*******                     MD058815
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************                     MD058815
+      ** Get Midas Day Number for 31 Dec of the start date year when                        MD058815
+      ** LECalcBasis6LeapYear = 'Y'                                                         MD058815
+      *                                                                                     MD058815
+     C           WCALC6    IFEQ 'Y'                                                         MD058815
+     C                     Z-ADDZZYYA     ZZYYB                                             MD058815
+     C                     MOVE '12'      ZZMMB                                             MD058815
+     C                     MOVE '31'      ZZDDB                                             MD058815
+     C                     ELSE                                                             MD058815
+      *                                                                                     MD058815
+      ** Add one to starting year number.                                                   MD058815
+      *                                                                                     MD058815
+     C           ZZYYA     ADD  1         ZZYYB                                             MD058815
+      *                                                                                     MD058815
+      ** Get MIDAS day number for 1st Jan of year after start date.                         MD058815
+      *                                                                                     MD058815
+     C                     MOVE '01'      ZZMMB                                             MD058815
+     C                     MOVE '01'      ZZDDB                                             MD058815
+     C                     ENDIF                                                            MD058815
+     C                     MOVE ZZDAT2    ZZDTIN                                            MD058815
+     C                     EXSR ZDAT10                                                      MD058815
+     C                     Z-ADDZZMDNO    WENDDT  50                                        MD058815
+     C           WENDDT    SUB  ZCBSDT    ZCBDAY                                            MD058815
+      *                                                                                     MD058815
+      ** Check if current year is a leap year.                                              MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD0         ZZWRK                                             MD058815
+     C           ZZYYA     DIV  4         ZZWRK                                             MD058815
+     C                     MVR            ZZWRK                                             MD058815
+      *                                                                                     MD058815
+     C           ZZWRK     IFNE 0                                                           MD058815
+     C                     ADD  ZCBDAY    WNLEAP                                            MD058815
+     C                     ELSE                                                             MD058815
+     C                     ADD  ZCBDAY    WLEAP                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      ***Add*1*to*start*date*year*when*accrue*on*last*day*is*'Y'*since*                     MD058815
+      ***1st*period*is*already*computed.*When*accrue*on*last*day*is****                     MD058815
+      ***'N'*the*year*is*already*start*date*+*1.***********************                     MD058815
+      ** Add 1 to start date year since 1st period is already computed                      MD058815
+      ** when LECalcBasis6LeapYear = 'Y'                                                    MD058815
+      *                                                                                     MD058815
+     C           WCALC6    IFEQ 'Y'                                                         MD058815
+     C                     ADD  1         ZZYYB                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      ** Accumulate leap year and non-leap year days for complete                           MD058815
+      ** years in the interest period.                                                      MD058815
+      *                                                                                     MD058815
+     C           ZZYYB     DOWLTWZZYYB                                                      MD058815
+      *                                                                                     MD058815
+      ** Check if current year is a leap year.                                              MD058815
+      *                                                                                     MD058815
+C    C                     Z-ADD0         ZZWRK                                             MD058815
+     C           ZZYYB     DIV  4         ZZWRK                                             MD058815
+     C                     MVR            ZZWRK                                             MD058815
+      *                                                                                     MD058815
+     C           ZZWRK     IFNE 0                                                           MD058815
+     C                     ADD  365       WNLEAP                                            MD058815
+     C                     ELSE                                                             MD058815
+     C                     ADD  366       WLEAP                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      ** Add one to year number.                                                            MD058815
+      *                                                                                     MD058815
+     C                     ADD  1         ZZYYB                                             MD058815
+      *                                                                                     MD058815
+     C                     ENDDO                                                            MD058815
+      *                                                                                     MD058815
+      ** Finally calculate the days for the last part-year up to                            MD058815
+      ** the end date. Get MIDAS day number for 1st Jan of current year.                    MD058815
+      *                                                                                     MD058815
+      ***Get*Midas*day*number*for*1st*Jan*of*year*after*start*date*****                     MD058815
+      ***when*accrue*on*last*day*is*'N';*get*midas*day*number*for*31***                     MD058815
+      ***dec*of*the*start*date*year*when*accrue*on*last*day*is*Y*******                     MD058815
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************                     MD058815
+      ** Get Midas Day Number for 31 Dec of the start date year when                        MD058815
+      ** LECalcBasis6LeapYear = 'Y'                                                         MD058815
+      *                                                                                     MD058815
+     C           WCALC6    IFEQ 'Y'                                                         MD058815
+     C                     MOVE '12'      ZZMMB                                             MD058815
+     C                     MOVE '31'      ZZDDB                                             MD058815
+     C           ZZYYB     SUB  1         ZZYYB                                             MD058815
+     C                     ELSE                                                             MD058815
+     C                     MOVE '01'      ZZMMB                                             MD058815
+     C                     MOVE '01'      ZZDDB                                             MD058815
+     C                     ENDIF                                                            MD058815
+     C                     MOVE ZZDAT2    ZZDTIN                                            MD058815
+     C                     EXSR ZDAT10                                                      MD058815
+     C                     Z-ADDZZMDNO    ZCBSDT                                            MD058815
+     C           ZCBEDT    SUB  ZCBSDT    ZCBDAY                                            MD058815
+      *                                                                                     MD058815
+      ** Set the year back to current year since it was set to                              MD058815
+      ** previous year when LECalcBasis6LeapYear = 'Y'                                      MD058815
+      ***previous*year*when*accrue*on*last*indicator*=*'Y'*************                     MD058815
+      ***and*LECalcBasis6LeapYear*=*'Y'********************************                     MD058815
+      *                                                                                     MD058815
+     C           WCALC6    IFEQ 'Y'                                                         MD058815
+     C           ZZYYB     ADD  1         ZZYYB                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      ** Check if year is a leap year.                                                      MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD0         ZZWRK                                             MD058815
+     C           ZZYYB     DIV  4         ZZWRK                                             MD058815
+     C                     MVR            ZZWRK                                             MD058815
+      *                                                                                     MD058815
+     C           ZZWRK     IFNE 0                                                           MD058815
+     C                     ADD  ZCBDAY    WNLEAP                                            MD058815
+     C                     ELSE                                                             MD058815
+     C                     ADD  ZCBDAY    WLEAP                                             MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      * Factoring of non-leap year days is not required for method 9                        MD058815
+     C           ZCBCBS    IFEQ 9                                                           MD058815
+     C                     Z-ADDWNLEAP    W@NLP2                                            MD058815
+     C                     ELSE                                                             MD058815
+      *                                                                                     MD058815
+      ** Multiply non-leap year days by 366/365                                             MD058815
+      *                                                                                     MD058815
+     C           WNLEAP    MULT 366       W@NLP1 150                                        MD058815
+     C           W@NLP1    DIV  365       W@NLP2 159H                                       MD058815
+     C********** W@NLP1    DIV  365       W@NLP2 157H                                       MD058815
+      *                                                                                     MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+      ** Add the result to the number of leap year days to give                             MD058815
+      ** the total days in interest period.                                                 MD058815
+      *                                                                                     MD058815
+     C           WLEAP     ADD  W@NLP2    ZINT6  159H                                       MD058815
+     C********** WLEAP     ADD  W@NLP2    ZINT6  157H                                       MD058815
+      *                                                                                     MD058815
+      ** Return original value of ZZDAT2 and ZZYYB.                                         MD058815
+      *                                                                                     MD058815
+     C                     Z-ADDWZDAT2    ZZDAT2                                            MD058815
+     C                     Z-ADDWZZYYB    ZZYYB                                             MD058815
+     C                     GOTO ZCBEND                                                      MD058815
+     C                     ENDIF                                                            MD058815
       *
       ***  Calculation Bases 4 and 5: Actual Days, excluding 29th Feb.
       ***  -----------------------------------------------------------
@@ -827,6 +1164,8 @@
       *
      C           ZCBCBS    IFEQ 4
      C           ZCBCBS    OREQ 5
+     C           ZCBCBS    OREQ 9                                                           MD058815
+     C           #29FEB    ANDEQ'N'                                                         MD058815
      C                     Z-ADD1         ZS      20
      C                     Z-ADD0         ZI1     20
      C                     Z-ADD0         ZI2     20
@@ -1087,6 +1426,8 @@
      C**
      C********************************************************************
       *
+     C/COPY ZSRSRC,ZDATE9Z3                                                                 MD058815
+     C/COPY ZSRSRC,ZDAT10Z2                                                                 MD058815
       /EJECT
 **   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
 0006001521029820444305904073650882610287117481320914670161311759219053
@@ -1100,3 +1441,7 @@
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **  CPY@
 (c) Finastra International Limited 1997
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN                      MD058815
+00366007310109601461                                                                        MD058815
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                         MD058815
+00000000310005900090001200015100181002120024300273003040033400365                           MD058815

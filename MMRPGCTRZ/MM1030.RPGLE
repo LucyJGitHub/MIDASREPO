@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD049268           Date 02Aug18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD049268           Date 02Aug18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027087           Date 20May14               *
       *                 MD026986           Date 16May14               *
       *                 CDL093             Date 07Apr14               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD049268  - Enhanced interest calculation to be similar to   *
       *              S/R GLINTC.                                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -163,6 +168,10 @@
      D ZZEndDate       S              8S 0                                                  MD027087
      D @@Rtn           S              1A                                                    MD027087
      D #29Feb          S              1A                                                    MD027087
+      ** number of interest days - non leap year                                            MD058815
+     D ZZNLEAP         S              5P 0                                                  MD058815
+      ** number of interest days - leap year                                                MD058815
+     D ZZLEAP          S              5P 0                                                  MD058815
                                                                                               191870
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -217,6 +226,8 @@
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       191870
+     C                   PARM                    ZZNLEAP                                    MD058815
+     C                   PARM                    ZZLEAP                                     MD058815
       *
       ***********                                                                    CDL093 MD026986
       ** ZZCALC = 9 (MM Interest method Actual/Actual - AFB)                         CDL093 MD026986
@@ -289,9 +300,9 @@
      C                   Z-ADD     36500         @@YEAR
      C                   END
       *
-     C     ZZCALC        IFEQ      '6'
-     C                   Z-ADD     36600         @@YEAR
-     C                   END
+     C*****ZZCALC        IFEQ      '6'                                                      MD058815
+     C**********         Z-ADD     36600         @@YEAR                                     MD058815
+     C**********         END                                                                MD058815
      C     @@AMT         MULT      @@RATE        ZIWRK1           30 9                      MD049268
       *                                                                                       191870
      C     ZZCALC        IFEQ      '6'                                                        191870
@@ -300,7 +311,14 @@
      C     ZZCALC        OREQ      '9'                                                      MD027087
      C     #29Feb        ANDEQ     'Y'                                                      MD027087
      C*****INT6DY**      MULT      @@RATE        @@W157                              191870 MD049268
+     C     ZZCALC        IFEQ      '6'                                                      MD058815
+     C     ZIWRK1        MULT      ZZNLEAP       ZIWRK2           30 9                      MD058815
+     C     ZIWRK1        MULT      ZZLEAP        ZIWRK3           30 9                      MD058815
+     C     ZIWRK2        DIV       36500         ZIWRK2                                     MD058815
+     C     ZIWRK3        DIV       36600         ZIWRK3                                     MD058815
+     C                   ELSE                                                               MD058815
      C     INT6DY        MULT      ZIWRK1        ZIWRK2           30 9                      MD049268
+     C                   ENDIF                                                              MD058815
      C                   ELSE                                                                 191870
       *
      C*****ZZINDY        MULT      @@RATE        @@W157           15 7                        242286
@@ -311,6 +329,14 @@
       *
      C**  ROUND DOWN IF ROUND DOWN INDICATOR IS 'Y'
       *
+     C     ZZCALC        IFEQ      '6'                                                      MD058815
+     C     @@RDFC        IFEQ      'Y'                                                      MD058815
+     C     ZIWRK2        ADD       ZIWRK3        @@INTR                                     MD058815
+     C                   ELSE                                                               MD058815
+     C     ZIWRK2        ADD(H)    ZIWRK3        @@INTR                                     MD058815
+     C                   ENDIF                                                              MD058815
+     C                   ELSE                                                               MD058815
+
      C     @@RDFC        IFEQ      'Y'
      C*****@@W210**      DIV       @@YEAR        @@INTR                                     MD049268
      C     ZIWRK2        DIV       @@YEAR        @@INTR                                     MD049268
@@ -318,6 +344,7 @@
      C*****@@W210*       DIV(H)    @@YEAR        @@INTR           15 0                      MD049268
      C     ZIWRK2        DIV(H)    @@YEAR        @@INTR           15 0                      MD049268
      C                   END
+     C                   ENDIF                                                              MD058815
      C***/COPY WNCPYSRC,MM0089C077
      C*
  

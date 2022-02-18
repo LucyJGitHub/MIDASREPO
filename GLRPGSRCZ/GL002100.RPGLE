@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 252091             Date 19Aug14               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 252091             Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  252091 - Amended program to prevent calculation of discount  *
       *           amount to have a very large value that may cause    *
@@ -382,6 +387,8 @@
      D PINT6DY         S             15  9                                                    242286
      D PINTDY          S              5  0
      D RetCodeOut      S             10
+     D ZZNLEAP         S              5  0 INZ(0)                                           MD058815
+     D ZZLEAP          S              5  0 INZ(0)                                           MD058815
  
       *****************************************************************
       /EJECT
@@ -2721,6 +2728,8 @@
      C                   PARM                    WkMDAT
      C                   PARM                    #2CLBS
      C                   PARM      *ZEROS        PINT6DY
+     C                   PARM      *ZEROS        ZZNLEAP                                    MD058815
+     C                   PARM      *ZEROS        ZZLEAP                                     MD058815
  
      C                   ENDSR
       *****************************************************************

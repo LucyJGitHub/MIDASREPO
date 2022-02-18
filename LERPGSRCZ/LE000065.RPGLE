@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE123             Date 02Nov21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE124             Date 02Nov21               *      
+      *  Prev Amend No. CLE123             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27091           Date 04Mar10               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE124 - Commitment and Outstanding Report by Customer Name  *
+      *           (Recompile)                                         *
       *  CLE123 - Commitment and Outstanding Report by Account Officer*
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

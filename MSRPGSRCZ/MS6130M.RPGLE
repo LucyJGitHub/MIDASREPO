@@ -24,19 +24,21 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW122             Date 04Oct21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSW025             Date 15Apr02               *
+      *                 CSW025             Date 15Apr02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CSW017             Date 11Feb99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW122 - SWIFT ISO 20022 Changes                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW025 - Midas Message Manager                               *
       *         - Pass OPERATION parameter from command forward       *
@@ -47,6 +49,9 @@
      FMSMCIDL0  UF   E           K disk    infsr(srfile)
       /EJECT
       /COPY MSCPYSRC,SRERRD
+     D  MXInputJob     C                   const('MX_MMM2MID')                                CSW122
+      ** Constants for the MX Jobname                                                         CSW122
+      *                                                                                       CSW122
      D  sdstat       E DS                  extname(sdstat)
       ** SDSTAT for system prefix
       *
@@ -187,6 +192,25 @@
       ** Push subroutine
      C                   add       1             Q
      C                   movel     'sr_start'    @STK(Q)
+      *                                                                                       CSW122
+      ** Select action based on job needed to be called                                       CSW122
+      *                                                                                       CSW122
+     C                   select                                                               CSW122
+     C     MCJNAM        wheneq    MXInputJob                                                 CSW122
+     C                   call      'MSC200221A'                                               CSW122
+     C                   parm                    MCMCID                                       CSW122
+     C                   parm                    MCIPOP                                       CSW122
+     C                   parm                    MCJNAM                                       CSW122
+     C                   parm                    MCACCP                                       CSW122
+     C                   parm                    w@cjob                                       CSW122
+     C                   parm                    MCCJOB                                       CSW122
+     C                   parm                    MCCUSR                                       CSW122
+     C                   parm                    MCCNUM                                       CSW122
+     C                   parm                    MCSYTM                                       CSW122
+     C                   parm                    LIBR                                         CSW122
+     C                   parm                    p@oper                                       CSW122
+      *                                                                                       CSW122
+     C                   other                                                                CSW122
       *
       ** Call CL function to submit job. MSC6132 will send error message if
       ** job already active.
@@ -202,6 +226,8 @@
      C                   parm                    MCSYTM
      C                   parm                    LIBR
      C                   parm                    p@oper                                       CSW025
+      *                                                                                       CSW122
+     C                   endsl                                                                CSW122
       *
       ** Update communications job details
      C                   update    msmcidd0

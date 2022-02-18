@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 1998                      *
       *                                                               *
-      *  Last Amend No. MD058068           Date 11May21               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD058068           Date 11May21               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CSD027             Date 21Jan09               *
@@ -50,6 +51,10 @@
       *  Amendment History                                            *
       *  -----------------                                            *
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690 (Recompile)                   *
       *  MD058068 - Deliverable Data Split for Bank of England        *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *

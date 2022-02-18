@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -170,6 +175,8 @@
      d zzcalc          s              1                                                      BUG9393
      d***int6dy*       s             15  7                                            BUG9393 242286
      d int6dy          s             15  9                                                    242286
+     d zznleap         s              5  0                                                  MD058815
+     d zzleap50        s              5  0                                                  MD058815
                                                                                              BUG9393
      d wBasis          s              3  0                                                   BUG9393
      d wLoanPrd        s              8f                                                     BUG9393
@@ -1233,6 +1240,8 @@
      c                   parm      exmdat        zzend                                       BUG9393
      c                   parm                    zzcalc                                      BUG9393
      c                   parm      *zero         int6dy                                      BUG9393
+     c                   parm      *zero         zznleap                                    MD058815
+     c                   parm      *zero         zzleap50                                   MD058815
                                                                                              BUG9393
      c                   if        retCode10  <> *blanks                                     BUG9393
      c                   eval      wDbase      =  10                                         BUG9393

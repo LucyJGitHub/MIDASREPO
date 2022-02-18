@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 28Sep21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG13574           Date 19Mar07               *
+      *                 BUG13574           Date 19Mar07               *
       *                 BUG13288           Date 14Feb07               *
       *                 BUG13056A          Date 29Jan06               *
       *                 BUG13041           Date 16Jan06               *
@@ -29,6 +30,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Based from MD052690.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG13574 - Negative balance in the amount Unamortised posted *
       *             to date/Amortisation in excess of the original    *
@@ -255,6 +260,8 @@
      D***PINT6DY*      S             15  7                                                    242286
      D PINT6DY         S             15  9                                                    242286
      D PINTDY          S              5  0
+     D PNLEAP          S              5  0                                                  MD058815
+     D PLEAP           S              5  0                                                  MD058815
      D WNOREZ          S              5  0
      D WNORLZ          S              5  0
      D WTOTAZ          S             15P 0
@@ -1103,6 +1110,8 @@
      C                   PARM                    WEvtDat
      C                   PARM                    A1CLBS
      C                   PARM      *ZEROS        PINT6DY
+     C                   PARM      *ZEROS        PNLEAP                                     MD058815
+     C                   PARM      *ZEROS        PLEAP                                      MD058815
  
      C                   EVAL      WDays = PINTDY
  

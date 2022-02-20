@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058182           Date 25May21               *
-      *  Prev Amend No. MD058040A          Date 25May21               *
+      *  Last Amend No. MD059128           Date 18Feb22               *
+      *  Prev Amend No. MD058182           Date 25May21               *
+      *                 MD058040A          Date 25May21               *
       *                 MD058138           Date 18May21               *
       *                 MD058106           Date 18May21               *
       *                 MD058040           Date 11May21               *
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059128 - Also select backward looking loan with future     *
+      *             rollover date.                                    *
+      *           - Applied for MD059536                              *
       *  MD058182 - Missing BR event on LOAC despite calculator       *
       *             returned complete rates. Pass a Control Date to   *
       *             ZAGETCALRT (used in writing records on SDHSDRTD). *
@@ -402,7 +406,8 @@
      C+ where RECI = 'D' and VDAT < :BJDNWD
      C+   and BLRT = 'Y' and CALM <> 'MANL'
      C+   and PTYP in ( 61, 62, 64, 66, 68, 69, 70, 71, 72 )
-     C+   and RLDT = 0
+     C****and RLDT = 0                                                                      MD059128
+     C+   and (RLDT = 0 or RLDT >= :BJDNWD)                                                 MD059128
      C+ union all                                                                             CLE172
      C+ select 'LE',   LNRF,   CCY,    VDAT,   MDAT,                                          CLE172
      C+        NIDT,   NRPD,   REPT,   ADDI,   ROBLRT,                                        CLE172

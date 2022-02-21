@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR635013           Date 17Feb22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR635013 - Cannot enter Loan type/Subtype. For processing    *
+      *             70-72, do not include them in initialisation.     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -120,11 +123,17 @@
      C                   DOW       NOT %EOF(SDLOANL0)
      C                   EVAL      WCOUNT = WCOUNT + 1
 
+      *                                                                                     AR635013
       ** Set all blank AYACAI to 'N'
+      ** except processing types 70 - 72                                                    AR635013
+      *                                                                                     AR635013
      C                   IF        AYACAI = *BLANK
+     C                   IF        AYLNPT <> 70 and AYLNPT <> 71 and                        AR635013
+     C                             AYLNPT <> 72                                             AR635013
      C                   EVAL      AYACAI = 'N'
      C                   UPDATE    @AYRECK
      C                   EVAL      WPROCESSED = WPROCESSED + 1
+     C                   ENDIF                                                              AR635013
      C                   ENDIF
 
      C                   READ      SDLOANL0

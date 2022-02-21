@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD022741           Date 16Feb22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CRE026             Date 24May06              */
+/*                      CRE026             Date 24May06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CSD028             Date 22Aug04              */
 /*                      BUG3362            Date 28Jul04              */
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD022741 - Commitment definition *N not valid for open      */
+/*                  of SDCSSWL0.                                     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE026 - Consumer Banking                                   */
 /*       CSD028 - KYC (Standing Data Authorisations )                */
@@ -70,6 +73,7 @@ RUN:
              OVRDBF     FILE(SDPBDSLR) TOFILE(SDPBDSL0) SHARE(*NO)
              OVRDBF     FILE(SDTICSLR) TOFILE(SDTICSL0) SHARE(*NO)                       /*BUG3362*/
              OVRDBF     FILE(GPCUSTXLR) TOFILE(GPCUSTXL0) SHARE(*NO)                      /*CGP001*/
+             OVRDBF     FILE(SDCSSWL0) TOFILE(SDCSSWL0) SHARE(*NO)                      /*MD022741*/
              OVRDBF     FILE(SDCMRKLR) TOFILE(SDCMRKL1) SHARE(*NO)                        /*CRE026*/
              OVRDBF     FILE(SDACUSLR) TOFILE(SDACUSL1) SHARE(*NO)                        /*CRE026*/
              OVRDBF     FILE(SDCFCDLR) TOFILE(SDCFCDL1) SHARE(*NO)                        /*CRE026*/

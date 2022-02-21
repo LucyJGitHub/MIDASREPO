@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 250596             Date 03Oct07               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR569568           Date 22Nov12               *
       *                 CER059             Date 19Jul10               *
@@ -73,6 +74,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250596 - Fields retrieved in base rate subroutine not        *
+      *           properly initialized. Amend program to initialised  *
+      *           base rate fields that are used as parameter.        *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -1458,6 +1462,7 @@
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SRFRTE'
      C                   EVAL      MsgIDArr(Idx) = MSG1
+     C                   Z-ADD     0             BACBSR                                       250596
      C                   ENDIF
 
       ** Use the return code's value to set the field's OK flag

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR806147           Date 21May18               *
+      *  Last Amend No. MD059355           Date 09Feb22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059355 - SC Deal Amendment cannot be input for REPO        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR806147 - Pass Deal Number to MMVERLYMDT. (Child: AR806148) *
@@ -483,10 +485,12 @@
      C*                                                                         CSE006
      C** If CSE006 is on and this is a repo deal send error message             CSE006
      C                   IF        CSE006 = 'Y' and HKDRID <> *Blanks           CSE006
+     C                             AND DDMTYP <> 'SC'                                       MD059355
      C                                                                          CSE006
      C                   ADD       1             Idx                            CSE006
      C                   EVAL      FldNameArr(Idx) = 'DDDLNO'                   CSE006
-     C                   EVAL      MsgIdArr(Idx)   = 'MMA0793'                  CSE006
+     C**********         EVAL      MsgIdArr(Idx)   = 'MMA0793'                       CSE006 MD059355
+     C                   EVAL      MsgIdArr(Idx)   = 'MMA9001'                              MD059355
      C                   MOVE      'N'           DDDlnoOK                       CSE006
      C                   GOTO      EXITMODULE                                   CSE006
      C                   END                                                    CSE006

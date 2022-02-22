@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. AR806147           Date 21May18               *
+      *  Last Amend No. MD059355           Date 09Feb22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059355 - SC Deal Amendment cannot be input for REPO        *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR806147 - Value date of any deal amendment must be less     *
       *             than the Early Maturity date if deal has a live   *
@@ -994,12 +996,14 @@
      C**  If CSE006 is 'Y' and deal is not a Repo deal it is an error.          CSE006
      C*                                                                         CSE006
      C                   IF        CSE006 = 'Y' and HKDRID <> *Blanks           CSE006
+     C                             AND DDMTYP <> 'SC'                                       MD059355
      C                   MOVE      'N'           OKDLNO                         CSE006
      C                   MOVE      'N'           OKVDAT                         CSE006
      C                   MOVE      'N'           OKSEQN                         CSE006
      C                   ADD       1             Ix                             CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                 CSE006
-     C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                   CSE006
+     C**********         MOVEL     'MMA0793'     MsgIdArr(Ix)                        CSE006 MD059355
+     C                   MOVEL     'MMA9001'     MsgIdArr(Ix)                               MD059355
      C                   GOTO      EVALAE                                       CSE006
      C                   END                                                    CSE006
      C                   END
@@ -1099,12 +1103,14 @@ E2   C                   ENDDO
      C**  If CSE006 is 'Y' and deal is not a Repo deal it is an error.          CSE006
      C*                                                                         CSE006
      C                   IF        CSE006 = 'Y' and HKDRID <> *Blanks           CSE006
+     C                             AND DDMTYP <> 'SC'                                       MD059355
      C                   MOVE      'N'           OKDLNO                         CSE006
      C                   MOVE      'N'           OKVDAT                         CSE006
      C                   MOVE      'N'           OKSEQN                         CSE006
      C                   ADD       1             Ix                             CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                 CSE006
-     C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                   CSE006
+     C**********         MOVEL     'MMA0793'     MsgIdArr(Ix)                        CSE006 MD059355
+     C                   MOVEL     'MMA9001'     MsgIdArr(Ix)                               MD059355
      C                   GOTO      EVALAX                                       CSE006
      C                   END                                                    CSE006
      C                   END
@@ -1324,12 +1330,14 @@ E2   C                   ENDDO
      C**  If CSE006 is 'Y' and deal is not a Repo deal it is an error.           CSE006
      C*                                                                          CSE006
      C                   IF        CSE006 = 'Y' and HKDRID <> *Blanks            CSE006
+     C                             AND DDMTYP <> 'SC'                                       MD059355
      C                   MOVE      'N'           OKDLNO                          CSE006
      C                   MOVE      'N'           OKVDAT                          CSE006
      C                   MOVE      'N'           OKSEQN                          CSE006
      C                   ADD       1             Ix                              CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                  CSE006
-     C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                    CSE006
+     C**********         MOVEL     'MMA0793'     MsgIdArr(Ix)                        CSE006 MD059355
+     C                   MOVEL     'MMA9001'     MsgIdArr(Ix)                               MD059355
      C                   GOTO      EVALAI                                        CSE006
      C                   END                                                     CSE006
      C                   END
@@ -1579,12 +1587,14 @@ E2   C                   ENDDO
      C**  If CSE006 is 'Y' and deal is not a Repo deal it is an error.           CSE006
      C*                                                                          CSE006
      C                   IF        CSE006 = 'Y' and HKDRID <> *Blanks            CSE006
+     C                             AND DDMTYP <> 'SC'                                       MD059355
      C                   MOVE      'N'           OKDLNO                          CSE006
      C                   MOVE      'N'           OKVDAT                          CSE006
      C                   MOVE      'N'           OKSEQN                          CSE006
      C                   ADD       1             Ix                              CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                  CSE006
-     C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                    CSE006
+     C**********         MOVEL     'MMA0793'     MsgIdArr(Ix)                        CSE006 MD059355
+     C                   MOVEL     'MMA9001'     MsgIdArr(Ix)                               MD059355
      C                   GOTO      EVALAA                                        CSE006
      C                   END                                                     CSE006
      C                   END
@@ -1696,12 +1706,14 @@ E2   C                   ENDDO
      C**  If CSE006 is 'Y' and deal is not a Repo deal it is an error.          CSE006
      C*                                                                         CSE006
      C                   IF        CSE006 = 'Y' and HKDRID <> *Blanks           CSE006
+     C                             AND DDMTYP <> 'SC'                                       MD059355
      C                   MOVE      'N'           OKDLNO                         CSE006
      C                   MOVE      'N'           OKVDAT                         CSE006
      C                   MOVE      'N'           OKSEQN                         CSE006
      C                   ADD       1             Ix                             CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                 CSE006
-     C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                   CSE006
+     C**********         MOVEL     'MMA0793'     MsgIdArr(Ix)                        CSE006 MD059355
+     C                   MOVEL     'MMA9001'     MsgIdArr(Ix)                               MD059355
      C                   GOTO      EVALAD                                       CSE006
      C                   END                                                    CSE006
      C*

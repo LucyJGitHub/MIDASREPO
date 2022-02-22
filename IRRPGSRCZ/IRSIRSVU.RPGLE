@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. MD059183A          Date 21Dec21               *
+      *  Last Amend No. MD059314           Date 22Feb22               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 MD059183A          Date 21Dec21               *
       *                 MD059100           Date 28Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058492           Date 06Aug21               *
@@ -122,6 +123,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059314 - Error encountered on Principal Change Schedule    *
+      *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -4427,7 +4430,8 @@ RGC                                                                             
      C                   CALLB     'ZCHKH'                                      BUG4646
      C                   PARM                    PZDateIn          5 0          BUG4646
      C                   PARM      SUCUCY        PZCcy             3            BUG4646
-     C                   PARM      *BLANK        PZLoc             3            BUG4646
+     C**********         PARM      *BLANK        PZLoc             3                BUG4646 MD059314
+     C                   PARM      BJSLCD        PZLoc             3                        MD059314
      C                   PARM      *BLANK        PZHol             1            BUG4646
                                                                                 BUG4646
       ** Set a flag to be use in updating 'Confirmed Holiday' indicator         BUG4646
@@ -4461,7 +4465,8 @@ RGC                                                                             
      C                   CALLB     'ZCHKH'                                      BUG4646
      C                   PARM                    PZDateIn                       BUG4646
      C                   PARM                    PZCcy                          BUG4646
-     C                   PARM      *BLANK        PZLoc                          BUG4646
+     C**********         PARM      *BLANK        PZLoc                              BUG4646 MD059314
+     C                   PARM      BJSLCD        PZLoc                                      MD059314
      C                   PARM      *BLANK        PZHol                          BUG4646
      C                   IF        PZHol = 'H'                                  BUG4646
      C                   EVAL      WHoliday = 'Y'                               BUG4646
@@ -4477,7 +4482,8 @@ RGC                                                                             
      C                   CALLB     'ZCHKH'                                      BUG4646
      C                   PARM                    PZDateIn                       BUG4646
      C                   PARM      SUCUCY        PZCcy                          BUG4646
-     C                   PARM      *BLANK        PZLoc                          BUG4646
+     C**********         PARM      *BLANK        PZLoc                              BUG4646 MD059314
+     C                   PARM      BJSLCD        PZLoc                                      MD059314
      C                   PARM      *BLANK        PZHol                          BUG4646
                                                                                 BUG4646
      C                   IF        PZHol = 'H'                                  BUG4646

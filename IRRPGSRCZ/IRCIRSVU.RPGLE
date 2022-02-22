@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059100A          Date 23Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059314           Date 22Feb22               *
+      *  Prev Amend No. MD059100A          Date 23Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD058398           Date 20Aug21               *
       *                 MD058492           Date 06Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -113,6 +114,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059314 - Error encountered on Principal Change Schedule    *
+      *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059100A - Incorrect deal status on pre-confirmation        *
       *              page during Amend of SIRS. Realigned parameters  *
       *              for IRSIRSCVT. Applied for CIRS                  *
@@ -6079,7 +6082,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   CALLB     'ZCHKH'                                                   BUG5449
      C                   PARM                    PZDateIn          5 0                       BUG5449
      C                   PARM      SUCUCY        PZCcy             3                         BUG5449
-     C                   PARM      *BLANK        PZLoc             3                         BUG5449
+     C**********         PARM      *BLANK        PZLoc             3                BUG5449 MD059314
+     C                   PARM      BJSLCD        PZLoc             3                        MD059314
      C                   PARM      *BLANK        PZHol             1                         BUG5449
                                                                                              BUG5449
       ** Set a flag to be use in updating 'Confirmed Holiday' indicator                      BUG5449
@@ -6116,7 +6120,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   CALLB     'ZCHKH'                                                   BUG5449
      C                   PARM                    PZDateIn                                    BUG5449
      C                   PARM                    PZCcy                                       BUG5449
-     C                   PARM      *BLANK        PZLoc                                       BUG5449
+     C**********         PARM      *BLANK        PZLoc                              BUG5449 MD059314
+     C                   PARM      BJSLCD        PZLoc                                      MD059314
      C                   PARM      *BLANK        PZHol                                       BUG5449
      C                   IF        PZHol = 'H'                                               BUG5449
      C                   EVAL      WHoliday = 'Y'                                            BUG5449
@@ -6132,7 +6137,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   CALLB     'ZCHKH'                                                   BUG5449
      C                   PARM                    PZDateIn                                    BUG5449
      C                   PARM      SUCUCY        PZCcy                                       BUG5449
-     C                   PARM      *BLANK        PZLoc                                       BUG5449
+     C**********         PARM      *BLANK        PZLoc                              BUG5449 MD059314
+     C                   PARM      BJSLCD        PZLoc                                      MD059314
      C                   PARM      *BLANK        PZHol                                       BUG5449
                                                                                              BUG5449
      C                   IF        PZHol = 'H'                                               BUG5449

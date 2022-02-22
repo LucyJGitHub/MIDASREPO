@@ -4906,7 +4906,8 @@
       *                                                                                       CSD031
      C                   ENDIF
      C                   ELSE
-     C                   MOVE      *BLANKS       AYEACC
+     C**********         MOVE      *BLANKS       AYEACC                                     MD059608
+     C                   Z-ADD     0             AYEACC                                     MD059608
      C                   ENDIF
      C********** CAS009    IFEQ 'Y'                                                  CAS009 BUG12557
      C**********           MOVEL#1ACAI    AYACAI                                     CAS009 BUG12557

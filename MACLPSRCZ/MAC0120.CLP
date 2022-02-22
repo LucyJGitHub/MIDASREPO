@@ -9,7 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058733           Date 16Feb22              */
+/*       Last Amend No. MD058407           Date 16Feb22              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      251701             Date 08Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -22,10 +22,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD058733 - In download to STORQM, DOWNLOAD directory is not */
-/*                  recreated in IFS and DAT file authorities are    */
-/*                  wrong.                                           */
-/*                - Applied fix for MD-58407.                        */
+/*       MD058407 - Fusion Midas does not archive the contents of    */
+/*                  the OPTIC directory.                             */
 /*       MD046248 - Finastra Rebranding                              */
 /*  251701 - Emergency workaround to stop ORF download failure       */
 /*           at monthend - don't use QDLS                            */
@@ -165,10 +163,10 @@
              CPYF       FROMFILE(MAOPTDPD) TOFILE(&DPLIB/MAOPTSTMF) +
                           FROMMBR(&INPFILE) TOMBR(&INPFILE) +
                           MBROPT(*REPLACE) CRTFILE(*YES) FMTOPT(*NOCHK)                   /*251701*/
-/**********  CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) +      *********/            /*MD058733*/
-/**********               STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)  *********/ /*251701*/ /*MD058733*/
+/**********  CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) +      *********/            /*MD058407*/
+/**********               STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)  *********/ /*251701*/ /*MD058407*/
              CPYTOSTMF  FROMMBR(&FROMPATH) TOSTMF(&TOPATH) STMFOPT(*REPLACE) +
-                          AUT(*INDIR) STMFCODPAG(*PCASCII)                              /*MD058733*/
+                          AUT(*INDIR) STMFCODPAG(*PCASCII)                              /*MD058407*/
                                                                                           /*251701*/
              ENDDO                                                                        /*251701*/
 

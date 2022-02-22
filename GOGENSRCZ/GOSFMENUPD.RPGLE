@@ -27,7 +27,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059859 - Align the Source file library                     *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023266 - Dumps in CGL135 and CGL146 Switch-On (Recompile)  *

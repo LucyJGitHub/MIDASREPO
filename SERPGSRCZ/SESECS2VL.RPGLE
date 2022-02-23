@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059418           Date 14Feb22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056949           Date 13Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035962           Date 25May16               *
@@ -64,6 +65,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059418 - Next Coupon Date is missing.                      *
+      *           - Ensure that Next Coupon Date is updated if CSE005 *
+      *             is ON.                                            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
@@ -726,6 +730,7 @@
 
      C                   IF        CSE031 = 'Y'                                               CSE031
      C                             OR CSE071 = 'Y'                                            CSE071
+     C                             OR CSE005 = 'Y'                                          MD059418
      C                   IF        PPROT = '3' OR PPROT = '8'                                 CSE031
      C**************************** OR CSE071 = 'Y' AND (PPROT = '1' OR                CSE071 BUG8915
      C**************************** PPROT = '5' OR PPROT = '6' OR PPROT = '9')         CSE071 BUG8915

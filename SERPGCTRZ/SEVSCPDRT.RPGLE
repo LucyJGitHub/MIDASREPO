@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059418           Date 14Feb22               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056949           Date 13Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1077982          Date 28Jan13               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059418 - Next Coupon Date is missing.                      *
+      *           - Warning indicator was flagged as error.           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -298,12 +301,18 @@
       ** If an error has been found, set return code appropriately.
       ** Otherwise, update valid file fields.
       *
-     C                   IF        OKCD01 <> 'Y' OR OKCD02 <> 'Y' OR
-     C                             OKCD03 <> 'Y' OR OKCD04 <> 'Y' OR
-     C                             OKCD05 <> 'Y' OR OKCD06 <> 'Y' OR
-     C                             OKCD07 <> 'Y' OR OKCD08 <> 'Y' OR
-     C                             OKCD09 <> 'Y' OR OKCD10 <> 'Y' OR
-     C                             OKCD11 <> 'Y' OR OKCD12 <> 'Y' OR
+     C**********         IF        OKCD01 <> 'Y' OR OKCD02 <> 'Y' OR                        MD059418
+     C**********                   OKCD03 <> 'Y' OR OKCD04 <> 'Y' OR                        MD059418
+     C**********                   OKCD05 <> 'Y' OR OKCD06 <> 'Y' OR                        MD059418
+     C**********                   OKCD07 <> 'Y' OR OKCD08 <> 'Y' OR                        MD059418
+     C**********                   OKCD09 <> 'Y' OR OKCD10 <> 'Y' OR                        MD059418
+     C**********                   OKCD11 <> 'Y' OR OKCD12 <> 'Y' OR                        MD059418
+     C                   IF        OKCD01 = 'N' OR OKCD02 = 'N' OR                          MD059418
+     C                             OKCD03 = 'N' OR OKCD04 = 'N' OR                          MD059418
+     C                             OKCD05 = 'N' OR OKCD06 = 'N' OR                          MD059418
+     C                             OKCD07 = 'N' OR OKCD08 = 'N' OR                          MD059418
+     C                             OKCD09 = 'N' OR OKCD10 = 'N' OR                          MD059418
+     C                             OKCD11 = 'N' OR OKCD12 = 'N' OR                          MD059418
 
      C                             OKCR01 = 'N' OR OKCR02 = 'N' OR
      C                             OKCR03 = 'N' OR OKCR04 = 'N' OR

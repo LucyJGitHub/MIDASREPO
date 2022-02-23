@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *  Last Amend No. MD059273           Date 13Jan22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030847           Date 25Nov14               *
       *                 CIR017             Date 10Apr14               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059273 - IRS does not allow 0 Spread Rate to be input      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
@@ -551,6 +553,8 @@
      C**  Scale the 'Our Spread Rate'.
      C*
      C     URTSP         IFNE      *ZERO
+     C     URTSP         OREQ      *ZERO                                                    MD059273
+     C     UBRTT         ANDEQ     *BLANKS                                                  MD059273
      C                   Z-ADD     A6SCEX        @@SXP1
      C                   Z-ADD     0             @@SXP2
      C                   Z-ADD     URTSP         @@INRT
@@ -560,6 +564,8 @@
      C**  Format the rate, using 7 decimal places
      C*
      C     @@SCRT        IFNE      0
+     C     @@SCRT        OREQ      0                                                        MD059273
+     C     UBRTT         ANDEQ     *BLANKS                                                  MD059273
      C     @@SCRT        MULT      10000000      @@AMTW
      C                   Z-ADD     7             @@QECN
      C                   EXSR      FMTAMT
@@ -720,6 +726,8 @@
      C**  Scale the 'Their Spread Rate'.
      C*
      C     TRTSP         IFNE      *ZERO
+     C     TRTSP         OREQ      *ZERO                                                    MD059273
+     C     TBRTT         ANDEQ     *BLANKS                                                  MD059273
      C                   Z-ADD     A6SCEX        @@SXP1
      C                   Z-ADD     0             @@SXP2
      C                   Z-ADD     TRTSP         @@INRT
@@ -729,6 +737,8 @@
      C**  Format the rate, using 7 decimal places
      C*
      C     @@SCRT        IFNE      0
+     C     @@SCRT        OREQ      0                                                        MD059273
+     C     TBRTT         ANDEQ     *BLANKS                                                  MD059273
      C     @@SCRT        MULT      10000000      @@AMTW
      C                   Z-ADD     7             @@QECN
      C                   EXSR      FMTAMT

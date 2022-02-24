@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CIR018             Date 06Aug14               *
+      *  Last Amend No. MD059325           Date 11Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CIR018             Date 06Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059325 - IRS defaults Rate Fix Days to 2 even if RFR.      *
+      *           - Default Rate fix days to zero, if CSD103 and      *
+      *             Backward Looking Rate are ON.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR018 - Daily Rate Change Frequency for SIRS                *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -69,7 +73,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,82 +92,82 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **Decimal data length passed as a parameter to ZALIGN
      D   ZADEC         S              1  0
- 
+
       **Digital data length passed as a parameter to ZALIGN
      D   ZADIG         S              2  0
- 
+
       **Field Passed to ZALIGN on which the work is done
      D   ZFIELD        S             16A
- 
+
       **Indicator to show whether or not ZALIGN was successful
      D   ZALIGNok      S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **Error message passed back to calling programme
      D Msgid1          S                   LIKE(#msgid)
- 
+
       **Our/Their base rate code passed as a parameter from calling program
      D  STBRTT         S              2A
- 
+
       **Our/Their Rate Fix days passed as a parameter from calling p   rogramme
      D  STFRFD         S              2A
- 
+
       **Currency passed as a parameter from calling programme
      D   SUCUCY        S              3A
- 
+
       **Currency code passed as a parameter from calling programme
      D   BLCYCD        S              3A
- 
+
       **Local currency code passed as a parameter from calling programme
      D   BJLCCY        S              3A
- 
+
       **Entry validated through ZALIGN passed back to calling programme
      DRatFixDays       S              2S 0
- 
+
       ** Rate Change Frequency Code                                                           CIR007
      DPRAtChgFq        S              1A                                                      CIR007
                                                                                               CIR007
@@ -190,6 +194,9 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CIR011
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                   CIR011
       *                                                                                       CIR011
+     D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                                MD059325
+      ** EXTERNAL DS FOR BASE RATE DETAILS                                                  MD059325
+      *                                                                                     MD059325
      D CIR011          S              1A                                                      CIR011
      D PAJCD           S              3A                                                      CIR011
      D PNDADJ          S              1  0                                                    CIR011
@@ -197,7 +204,13 @@
                                                                                               CIR011
       ** Deal is cap, collar or floor                                                         CAP055
      D PDealCACF       S              1A                                                      CAP055
- 
+      ** PROGRAM VARIABLES FOR AOBSRTR0                                                     MD059325
+     D PRTCD           S              7A                                                    MD059325
+     D POPTN           S              7A                                                    MD059325
+     D PCCY            S              3A                                                    MD059325
+     D PBSRT           S              2A                                                    MD059325
+     D PBLRT           S              1A                                                    MD059325
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -205,7 +218,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -213,10 +226,29 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   Z-ADD     0             RatFixDays
+      ** Get Backward Looking Rate indicator                                                MD059325
+     C                   EVAL      PBLRT = *BLANKS                                          MD059325
+     C                   CALLB     'AOBSRTR0'                                               MD059325
+     C                   PARM      *BLANKS       PRTCD                                      MD059325
+     C                   PARM      '*KEY   '     POPTN                                      MD059325
+     C                   PARM      SUCUCY        PCCY                                       MD059325
+     C                   PARM      STBRTT        PBSRT                                      MD059325
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                      MD059325
+      *                                                                                     MD059325
+     C                   IF        PRTCD <> *BLANK                                          MD059325
+     C     *LOCK         IN        LDA                                                      MD059325
+     C                   EVAL      DBFILE = 'SDBSRTPD'                                      MD059325
+     C                   EVAL      DBASE  = 904                                             MD059325
+     C                   EVAL      DBKEY = PCCY + PBSRT                                     MD059325
+     C                   OUT       LDA                                                      MD059325
+     C                   EXSR      *PSSR                                                    MD059325
+     C                   ELSE                                                               MD059325
+     C                   EVAL      PBLRT = BABLRT                                           MD059325
+     C                   ENDIF                                                              MD059325
                                                                                               CAP055
       ** Check if deal is cap, collar or floor                                                CAP055
                                                                                               CAP055
@@ -254,7 +286,7 @@
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
      C                   ELSE                                                                 CIR007
- 
+
      C     STFRFD        IFNE      *BLANKS
      C     STBRTT        IFEQ      *BLANKS
      C     PDealCACF     ANDEQ     'N'                                                        CAP055
@@ -277,7 +309,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        RatFixDays
                                                                                               247210
@@ -307,7 +339,13 @@
      C                   MOVE      RatFixDays    STFRFD                                      BUG6283
       *                                                                                      BUG6283
      C                   ELSE
+      ** Override Rate Fix Days to 0                                                        MD059325
+     C                   IF        CSD103 ='Y'                                              MD059325
+     C                             AND PBLRT = 'Y'                                          MD059325
+     C                   EVAL      RatFixDays = 0                                           MD059325
+     C                   ELSE                                                               MD059325
      C                   Z-ADD     2             RatFixDays
+     C                   ENDIF                                                              MD059325
       *                                                                        163378
       * Move defaulted value to the screen field as well .                     163378
      C                   MOVE      RatFixDays    STFRFD                         163378
@@ -344,15 +382,15 @@
      C                   END                                                                  CIR011
                                                                                               CIR011
      C                   END                                                                  CIR011
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
- 
- 
+
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -364,9 +402,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -428,13 +466,37 @@
      C                   ELSE                                                                 CIR018
      C                   MOVEL     'N'           CIR018            1                          CIR018
      C                   ENDIF                                                                CIR018
- 
+      *                                                                                     MD059325
+      **  Access SAR details file to determine if CSD103 is on.                             MD059325
+      *                                                                                     MD059325
+     C                   CALL      'AOSARDR0'                                               MD059325
+     C                   PARM      *BLANKS       @RTCD                                      MD059325
+     C                   PARM      '*VERIFY'     @OPTN                                      MD059325
+     C                   PARM      'CSD103'      @SARD                                      MD059325
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059325
+      *                                                                                     MD059325
+     C     @RTCD         IFNE      *BLANKS                                                  MD059325
+     C     @RTCD         ANDNE     '*NRF   '                                                MD059325
+     C     *LOCK         IN        LDA                                                      MD059325
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD059325
+     C                   EVAL      DBASE  = 903                                             MD059325
+     C                   EVAL      DBKEY = 'CSD103'                                         MD059325
+     C                   OUT       LDA                                                      MD059325
+     C                   EXSR      *PSSR                                                    MD059325
+     C                   ENDIF                                                              MD059325
+      *                                                                                     MD059325
+     C     @RTCD         IFEQ      *BLANKS                                                  MD059325
+     C                   MOVEL     'Y'           CSD103                                     MD059325
+     C                   ELSE                                                               MD059325
+     C                   MOVEL     'N'           CSD103            1                        MD059325
+     C                   ENDIF                                                              MD059325
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *                                                                                     BUG13857
       *****************************************************************                     BUG13857
@@ -466,7 +528,7 @@
      C                   ENDIF                                                              BUG13857
                                                                                             BUG13857
      C                   ENDSR                                                              BUG13857
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

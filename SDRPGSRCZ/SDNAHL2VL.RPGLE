@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD054404           Date 12Feb20               *
-      *  Prev Amend No. MD052399           Date 05Dec18               *
+      *  Last Amend No. MD059341           Date 08Feb22               *
+      *  Prev Amend No. MD054404           Date 12Feb20               *
+      *                 MD052399           Date 05Dec18               *
       *                 MD044093           Date 18Apr17               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036274           Date 21Oct15               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059341 - Unable to leave country of citizenship blank.     *
+      *             Call SR/SDVCOCZ if CGL132 is switched ON.         *
       *  MD054404 - Additional changes needed for CER076              *
       *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
       *             State Code is mandatory (even CER054 is OFF) and  *
@@ -234,6 +237,7 @@
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
      D CER054          S              1A                                                      CER054
+     D CGL132          S              1A                                                    MD059341
      D PReturnCd       S              6A                                                      CER047
      D PFldNm          S             10A                                                      CER047
       *                                                                                       CER047
@@ -353,7 +357,8 @@
      C                   IF        OKCOLC <> 'N'                                            MD054404
      C                   EXSR      SRVcColC
      C                   ENDIF                                                              MD054404
-     C                   IF        OKCOCZ <> 'N'                                            MD054404
+     C**********         IF        OKCOCZ <> 'N'                                   MD054404 MD059341
+     C                   IF        OKCOCZ <> 'N' and CGL132 = 'Y'                           MD059341
      C                   EXSR      SRVcCocz                                                 MD054404
      C                   ENDIF                                                              MD054404
 
@@ -2258,6 +2263,29 @@
      C                   EXSR      *PSSR                                                      CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER054
+      *                                                                                     MD059341
+      ** Call AOSARDR0 to check for CGL132                                                  MD059341
+      *                                                                                     MD059341
+     C                   CALL      'AOSARDR0'                                               MD059341
+     C                   PARM      *BLANKS       PRtcd                                      MD059341
+     C                   PARM      '*VERIFY'     POptn                                      MD059341
+     C                   PARM      'CGL132'      PSard                                      MD059341
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059341
+      *                                                                                     MD059341
+     C                   EVAL      CGL132 = 'N'                                             MD059341
+     C                   IF        PRtcd = *BLANKS                                          MD059341
+     C                   EVAL      CGL132 = 'Y'                                             MD059341
+     C                   ELSE                                                               MD059341
+     C                   IF        ((PRtcd <> *BLANKS) AND                                  MD059341
+     C                             (PRtcd <> '*NRF   '))                                    MD059341
+     C     *LOCK         IN        LDA                                                      MD059341
+     C                   EVAL      DBase = 905                                              MD059341
+     C                   EVAL      DBkey = 'CGL132'                                         MD059341
+     C                   EVAL      DBfile = 'SCSARDPD'                                      MD059341
+     C                   OUT       LDA                                                      MD059341
+     C                   EXSR      *PSSR                                                    MD059341
+     C                   ENDIF                                                              MD059341
+     C                   ENDIF                                                              MD059341
 
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.

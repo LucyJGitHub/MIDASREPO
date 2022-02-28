@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD057859           Date 07Apr21               *
+      *  Last Amend No. MD059608           Date 18Feb22               *
+      *  Prev Amend No. AR635013           Date 17Feb22               *
+      *                 260748             Date 17Feb22               *
+      *                 MD056555           Date 31Aug20               *
+      *                 MD057859           Date 07Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055496           Date 18Mar20               *
       *                 MD046248           Date 27Oct17               *
@@ -100,6 +103,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059608 - Set numeric field AYEACC to zero if CSD042 is     *
+      *             off to prevent decimal data error.                *
+      *  AR635013 - Cannot enter Loan type/subtype for processing 70, *
+      *             71 and 72. Allow blank value for processing type  *
+      *             70-72.                                            *
+      *  260748 - Default the "Amortised Cost Accounting Ind" to 'N'  *
+      *           if CAS009 is on.                                    *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD057859 - Allow alphanumeric base rate code in the input    *
       *             of default principal and interest base rate.      *
@@ -1884,6 +1894,21 @@
      C                   END                                                    *FI
      C                   END                                                    *FI
      C                   ENDIF                                                                 CLE00
+      *                                                                                     AR635013
+      ** If no error in Loan processing type, and if                                        AR635013
+      ** amortised cost accounting indicator is blank,                                      AR635013
+      ** default to 'N' if Loan proc type not equal to 70-72                                AR635013
+      *                                                                                     AR635013
+     C     *IN99         IFEQ      '0'                                                      AR635013
+     C     *IN32         ANDEQ     '0'                                                      AR635013
+     C     #1ACAI        IFEQ      ' '                                                      AR635013
+     C     #1LNPT        IFNE      70                                                       AR635013
+     C     #1LNPT        ANDNE     71                                                       AR635013
+     C     #1LNPT        ANDNE     72                                                       AR635013
+     C                   MOVEL     'N'           #1ACAI                                     AR635013
+     C                   ENDIF                                                              AR635013
+     C                   ENDIF                                                              AR635013
+     C                   ENDIF                                                              AR635013
       * End of Fix S01117
       *                                                                                       CLE134
      C                   MOVEL     #1LNTY        #1LNT1
@@ -2568,6 +2593,7 @@
      C                   MOVE      #1LNST        KYSUTP
       *                                                                                       CAS009
      C     #1ACAI        IFNE      AYACAI
+     C     AYACAI        ANDNE     ' '                                                        260748
       *                                                                                       CAS009
      C     KLTST         CHAIN     CLOANL8                            92
       *                                                                                       CAS009
@@ -2587,13 +2613,21 @@
       *                                                                                       CAS009
      C     #1ACAI        IFNE      'Y'
      C     #1ACAI        ANDNE     'N'
-     C     #1ACAI        ANDNE     ' '
+     C*****#1ACAI        ANDNE     ' '                                                        260748
       *                                                                                       CAS009
+      ** Blank value for processing types 70-72 is accepted.                                AR635013
+      *                                                                                     AR635013
+     C     #DLPFF        IFNE      '70'                                                     AR635013
+     C     #DLPFF        ANDNE     '71'                                                     AR635013
+     C     #DLPFF        ANDNE     '72'                                                     AR635013
+      *                                                                                     AR635013
      C                   MOVE      *ON           *IN38
      C                   MOVE      *ON           *IN99
      C                   MOVEL     'USR9426'     ZAMSID
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   EXSR      ZASNMS
+     C                   ENDIF                                                              AR635013
+      *                                                                                     AR635013
      C                   ELSE
      C                   MOVE      *OFF          *IN37
       *                                                                                       CAS009
@@ -4212,7 +4246,9 @@
      C                   MOVE      *BLANKS       #1PRDC
      C                   MOVE      *BLANKS       #1INSC
      C     CAS009        IFEQ      'Y'
-     C                   MOVEL     *BLANK        #1ACAI
+     C**********         MOVEL     *BLANK        #1ACAI                                       260748
+     C**********         MOVEL     'N'           #1ACAI                              260748 AR635013
+     C                   MOVEL     *BLANK        #1ACAI                                     AR635013
      C                   ENDIF
       *                                                                                       CER047
      C     CER047        IFEQ      'Y'
@@ -4320,6 +4356,15 @@
      C                   ENDIF
      C     CAS009        IFEQ      'Y'
      C                   MOVE      AYACAI        #1ACAI
+      *                                                                                       260748
+     C     #1ACAI        IFEQ      ' '                                                        260748
+      *                                                                                     AR635013
+     C     #1LNPT        IFNE      70                                                       AR635013
+     C     #1LNPT        ANDNE     71                                                       AR635013
+     C     #1LNPT        ANDNE     72                                                       AR635013
+     C                   MOVE      'N'           #1ACAI                                       260748
+     C                   ENDIF                                                              AR635013
+     C                   ENDIF                                                                260748
      C                   ENDIF
       *                                                                                       CER047
      C     CER047        IFEQ      'Y'
@@ -4861,7 +4906,8 @@
       *                                                                                       CSD031
      C                   ENDIF
      C                   ELSE
-     C                   MOVE      *BLANKS       AYEACC
+     C**********         MOVE      *BLANKS       AYEACC                                     MD059608
+     C                   Z-ADD     0             AYEACC                                     MD059608
      C                   ENDIF
      C********** CAS009    IFEQ 'Y'                                                  CAS009 BUG12557
      C**********           MOVEL#1ACAI    AYACAI                                     CAS009 BUG12557
@@ -5736,10 +5782,11 @@
       *                                                                                       CSD031
      C                   ELSE
      C                   MOVE      #1ACZN        AYGPDT
-     C                   MOVEL     #1EFDT        DDATEC
-     C                   MOVE      DDATEN        ZDATE
-     C                   EXSR      SRDATE
-     C                   MOVE      ZDAYNO        AYEACC
+     C**********         MOVEL     #1EFDT        DDATEC                                     MD059608
+     C**********         MOVE      DDATEN        ZDATE                                      MD059608
+     C**********         EXSR      SRDATE                                                   MD059608
+     C**********         MOVE      ZDAYNO        AYEACC                                     MD059608
+     C                   Z-ADD     0             AYEACC                                     MD059608
      C                   ENDIF
      C********** CAS009    IFEQ 'Y'                                                  CAS009 BUG12557
      C**********           MOVEL#1ACAI    AYACAI                                     CAS009 BUG12557

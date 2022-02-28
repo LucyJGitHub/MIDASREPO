@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059563           Date 10Feb22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
@@ -78,6 +79,7 @@
      F*---------------------------------------------------------------*
      F*  AMENDMENT HISTORY                                            *
      F*                                                               *
+      *  MD059563 - LoanNarrative fields are not extracted            *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -290,6 +292,10 @@
      D  P3LNRF                 1      6
      D**  Cancel/Amend Field
      D  P3CNAM                 7      7
+     D  P3NAR1                 8     42                                                     MD059563
+     D  P3NAR2                43     77                                                     MD059563
+     D  P3NAR3                78    112                                                     MD059563
+     D  P3NAR4               113    147                                                     MD059563
      D*
      D**  Facility Details
      D*
@@ -1179,7 +1185,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_1'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR1          R#DATA                                       CCG019
+     C**********         MOVEL     NAR1          R#DATA                              CCG019 MD059563
+     C                   MOVEL     P3NAR1        R#DATA                                     MD059563
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019
@@ -1191,7 +1198,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_2'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR2          R#DATA                                       CCG019
+     C**********         MOVEL     NAR2          R#DATA                              CCG019 MD059563
+     C                   MOVEL     P3NAR2        R#DATA                                     MD059563
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019
@@ -1203,7 +1211,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_3'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR3          R#DATA                                       CCG019
+     C**********         MOVEL     NAR3          R#DATA                              CCG019 MD059563
+     C                   MOVEL     P3NAR3        R#DATA                                     MD059563
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019
@@ -1215,7 +1224,8 @@
      C                   CLEAR                   #@RDE                                        CCG019
      C                   MOVEL(P)  'NARRAT_4'    #@RDE                                        CCG019
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CCG019
-     C                   MOVEL     NAR4          R#DATA                                       CCG019
+     C**********         MOVEL     NAR4          R#DATA                              CCG019 MD059563
+     C                   MOVEL     P3NAR4        R#DATA                                     MD059563
      C                   MOVEL     R#DATA        ##D(R1)                                      CCG019
      C                   MOVEL     R#DEFN        ##R(R1)                                      CCG019
      **                                                                                       CCG019

@@ -103,8 +103,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059608 - Decimal Data Error encountered in                 *
-      *             Loan Type/Subtype Maintenance                     *
+      *  MD059608 - Set numeric field AYEACC to zero if CSD042 is     *
+      *             off to prevent decimal data error.                *
       *  AR635013 - Cannot enter Loan type/subtype for processing 70, *
       *             71 and 72. Allow blank value for processing type  *
       *             70-72.                                            *

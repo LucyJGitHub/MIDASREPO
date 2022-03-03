@@ -40,7 +40,7 @@
       *                                                               *
       *  MD059635 - Remove validation that won't allow Early Maturity *
       *             Date to be earlier than Next Interest Payment     *
-      *             Date                                              *
+      *             Date.                                             *
       *  AR806147A - Add validation so that an EM amendment with value*
       *              date = early maturity date can be authorised.    *
       *              (Child: AR806148)                                *

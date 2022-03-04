@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055785           Date 20May20               *
-      *  Prev Amend No. MD055784           Date 19May20               *
+      *  Last Amend No. AR700044           Date 03Mar22               *
+      *  Prev Amend No. MD055785           Date 20May20               *
+      *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
       *                 262263             Date 18Dec09               *
@@ -192,6 +193,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR700044 - GL-uncorrectly initialized field FEEPCT. Amended  *
+      *             program to correctly initialize this field by     *
+      *             placing '0' on position 52 to signify that this   *
+      *             field is numeric and not character.               *
+      *             (Child: AR700323)                                 *
+      *           - Applied for MD058198.                             *
       *  MD055785 - Initialise K24C for new GL account.               *
       *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
       *             in FusionMidas 2.1.                               *
@@ -1308,7 +1315,8 @@
      I                                332  351  ACKEY
      I                                352  352  FEEFLG
      I                             P  353  359 0FEEVAL
-     I                                360  364  FEEPCT
+     I**********                      360  364  FEEPCT                                      AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT
      I                                385  386  RORCTY
      I                                387  406  RORBNK
@@ -1360,7 +1368,8 @@
      I                                332  351  ACKEY
      I                                352  352  FEEFLG
      I                             P  353  359 0FEEVAL
-     I                                360  364  FEEPCT
+     I**********                      360  364  FEEPCT                                      AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT
      I                                385  386  RORCTY
      I                                387  406  RORBNK

@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD039670           Date 11Aug16               *
+      *  Last Amend No. MD059655           Date 02Mar22               *
+      *  Prev Amend No. MD039307           Date 02Mar22               *
+      *                 MD050212           Date 02Apr18               *
+      *                 MD039670           Date 11Aug16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041709           Date 28Sep16               *
       *                 MD027474           Date 11Jun14               *
@@ -27,6 +29,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059655 - Amendment to MD39670 while testing MD039307.      *
+      *             Used DSLDY instead of DSSDY when calling          *
+      *             AONAHOR0                                          *
+      *  MD039307 - CGL132 FATCA Phase I Default classification       *
+      *             expiries listed for deleted customers             *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD039670 - FATCA Housekeeping program                        *
       *  MD046248 - Finastra Rebranding                               *
@@ -72,22 +79,22 @@
       ** ¦ F-specs                              ¦                     *
       ** ¦ =======                              ¦                     *
       ** +--------------------------------------+                     *
- 
+
       ***Midas*SD*FATCA*Customer*Details*retrieval*index                                    MD025536
      F***SDFTCSL1  IF   E           K DISK                                                  MD025536
- 
+
       ***Midas*SD*Customer*Details*Ext*C*-*Keyed                                            MD025536
      F***SDCUSXL0  IF   E           K DISK                                                  MD025536
- 
+
       ***Midas*SD*FATCA*NAHO*Details*retrieval*index                                        MD025536
      F***SDFTNHL1  IF   E           K DISK                                                  MD025536
- 
+
       ***RTV:*Non*Account*Holder*File*Retrieval*Index                                       MD025536
      F***SDNAHOL1  IF   E           K DISK                                                  MD025536
- 
+
       ** Customer Details Master File Retrieval
      FSDCUSTL1  IF   E           K DISK
- 
+
       ** Midas SD FATCA Customer Details by Creation Date                                   MD025536
      FSDFTCSJ0  IF   E           K DISK                                                     MD025536
                                                                                             MD025536
@@ -99,15 +106,15 @@
      F                                     OFLIND(*IN05)
      F                                     USROPN
      F                                     INFDS(SPOOL)
- 
+
       ** RPT: Document Management Report Audit
      FSD000715AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -118,88 +125,90 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
-     D DSSDY         E DS                  EXTNAME(DSSDY)
-      ** Second DS for Aacces Programs, Long Data Structure
- 
+
+     D***DSSDY       E DS                  EXTNAME(DSSDY)                                   MD039655
+      ***Second*DS*for*Aacces*Programs,*Long*Data*Structure***********                      MD039655
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD039655
+      ** Third Data Structure used by Access Program                                        MD039655
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details Accessed via Access Program
- 
+
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD039670
       ** Data Structure for Non-A/C Holder                                                  MD039670
                                                                                             MD039670
      D  @JOB                 244    253
      D  @USER                254    263
      D                 DS
- 
+
      D SPOOL           DS
       ** SPOOL Information Data Structure for ZSFILE
- 
+
      D  SFILE                 83     92
      D  SFNUM                123    124B 0
      D  OflLn1               188    189B 0
      D  PrtLn1               367    368B 0
- 
+
      D SPOOLU          DS
       ** SPOOL Information Data Structure for ZSFILE - AU Report
- 
+
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
      D WCOMM           DS
      D  WCOM1                  1     64
      D  WCOM2                 65    128
      D  WCOM3                129    192
      D  WCOM4                193    256
- 
+
      D WDTMST          DS
      D  WWMn                   1      2
      D  WWDy                   3      4
      D  WWYr                   5      6
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRUN            S              1
      D***WCalcCust     S              5  0                                                  MD041709
      D***WCalcNaho     S              5  0                                                  MD041709
@@ -220,34 +229,34 @@
      D WExpiryDays     S              3  0
      D WNoticeDays     S              2  0
      D WPrintYN        S              1A
- 
+
       ** ZSFILE Parameters
      D ZSERR           S              1
      D ZSNUM           S              6  0
      D KCUST           S              6
- 
+
       ** ZDATE2 Parameters
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7
- 
+
       ** ZDATE10 Parameters
      D PDateIn         S              8S 0
      D PMDNO           S              5P 0
- 
+
       ** PLIST Parameters
      D PMode           S              1
      D PSeq            S              5
      D PEnty           S              3
      D PIntyp          S              1
- 
+
       ** AOCTRY Parameters
      D PRTCD           S              7
      D POPTN           S              7
      D PDCCD           S              2
      D PCTRY           S              2
      D PKEY1           S             10                                                     MD039670
- 
+
       ** Parameters for AOSVALR0
      D P@OP01          S             20A
      D P@OP02          S             20A
@@ -274,7 +283,7 @@
      D ZFIELD          S             16                                                     MD027483
      D ZADEC           S              1P 0                                                  MD027483
      D ZADIG           S              2P 0                                                  MD027483
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -282,30 +291,30 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Initial Processing
- 
+
      C                   EXSR      SRINIT
- 
+
       ** Main Processing
- 
+
      C                   EXSR      SRMAIN
- 
+
       ** Termination Processing
- 
+
      C                   EXSR      SRTERM
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -317,19 +326,19 @@
       * Called by: Main Routine                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMAIN        BEGSR
- 
+
       ** For customers
- 
+
      C                   EXSR      SRCUSTOMER
- 
+
       ** For non-account holders
- 
+
      C                   EXSR      SRNAHO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -342,11 +351,11 @@
       * Calls: SRCUSTEXT                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUSTOMER    BEGSR
- 
+
       ** Set report type to customers
- 
+
      C                   EVAL      WType = 'C'
       **********                                                                            MD025536
       ***Do*unit*end*of**SD*FATCA*Customer*Details*retrieval*index.                         MD025536
@@ -375,13 +384,13 @@
      C                   ENDIF                                                              MD025536
                                                                                             MD025536
      C                   ENDDO                                                              MD025536
- 
+
      ** Close Printer file if it is open and records have been printed.
- 
+
      C                   EXSR      SRCLOSEP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -403,7 +412,7 @@
      C**********         ENDIF                                                              MD025536
       **********                                                                            MD025536
      C**********         ENDSR                                                              MD025536
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -415,16 +424,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCLOSEP1     BEGSR
- 
+
      C                   IF        %OPEN (SD000715P1)
      C                   WRITE     SD0715R5
      C                   CLOSE     SD000715P1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -436,15 +445,15 @@
       * Calls: ZSFILE, SRNAHOEXT                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SROPENP1      BEGSR
- 
+
       ** open printer file and indicate that there is atleast one
       ** detail to report; ensure report spool file recorded by RCF
- 
+
      C                   IF        NOT %OPEN (SD000715P1)
      C                   OPEN      SD000715P1
- 
+
      C                   Z-ADD     SFNUM         ZSNUM
      C                   CALL      'ZSFILE'
      C                   PARM                    PSEQ
@@ -452,9 +461,9 @@
      C                   PARM                    SFILE
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** error during ZSFILE processing, return to calling program
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
@@ -462,9 +471,9 @@
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -478,9 +487,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRHEADER      BEGSR
- 
+
      C                   IF        WType = 'C'
      C                   EVAL      RRTYPE = 'CUSTOMERS EXPIRY DATE REPORT'
      C                   EVAL      RRLINE = '----------------------------'
@@ -492,17 +501,17 @@
      C                   ENDIF
      C                   EVAL      RFACLAC = WClassCode
      C                   WRITE     SD0715R0
- 
+
       ** Set-up Customer or NAHO Details Title
- 
+
      C                   IF        WType = 'C'
      C                   WRITE     SD0715R1
      C                   ELSE
      C                   WRITE     SD0715R3
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -515,9 +524,9 @@
       * Calls: SRCOMPDATE, *PSSR                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDETAILC     BEGSR
- 
+
      C     FACUST        CHAIN     SDCUSTL1                           16
      C                   IF        NOT %FOUND (SDCUSTL1)
      C                   EVAL      DBFILE = 'SDCUSTL1'
@@ -525,53 +534,54 @@
      C                   EVAL      DBKEY = '*FIRST'
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       ** Convert, compute and set-up date.
- 
+
      C                   EVAL      WInputDate = XCCRDT
      C                   EXSR      SRCOMPDATE
      C                   EVAL      RDDATE = ZADATE
- 
+
       ** Set-up other details
- 
+
      C                   EVAL      RDCUST = FACUST
      C                   EVAL      RDCSSN = BBCSSN
      C                   EVAL      RDCRNM = BBCRNM
      C                   EVAL      RDCRTN = BBCRTN
      C                   ENDIF
- 
+
      C                   IF        WPrintYN = 'Y'                                           MD027483
+     C                             AND (BBDTDL =  0)                                        MD039307
                                                                                             MD027483
       ** Open printer file if there are successful record.
- 
+
      C                   IF        WCustCnt = 1
      C                   EXSR      SROPENP1
      C                   ENDIF
- 
+
       ** Print Title if there is a record counted.
- 
+
      C                   IF        WCustCnt = 1
      C                   EXSR      SRHEADER
      C                   ENDIF
- 
+
       ** Print Details. Print Title if next page occurs
- 
+
      C**********         IF        WPrintYN = 'Y'                                           MD027483
- 
+
      C                   IF        PrtLn1 + 1 >= OflLn1
      C                   EXSR      SRHEADER
      C                   ENDIF
- 
+
      C                   IF        (PMode = 'A' AND BBLCD = BJRDNB)
      C                             OR PMode = 'L' OR PMode = ' '
      C                   EVAL      WCalcCust = WCalcCust + 1
      C                   WRITE     SD0715R2
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -584,11 +594,11 @@
       * Calls: SRNAHOEXT                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNAHO        BEGSR
- 
+
       ** Set report type to NAHO
- 
+
      C                   EVAL      WType = 'N'
       **********                                                                            MD025536
       **Do*until*end*of*SD*FATCA*Non-account*holders*retrieval*index.                       MD025536
@@ -617,7 +627,8 @@
      C                   PARM      *BLANKS       PRTCD                                      MD039670
      C                   PARM      '*KEY   '     POPTN                                      MD039670
      C                   PARM                    PKEY1                                      MD039670
-     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                             MD039670 MD059655
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD059655
                                                                                             MD039670
      C                   IF        PRTCD = '*NRF'                                           MD039670
      C                             OR NHCHTP = 'D'                                          MD039670
@@ -630,13 +641,13 @@
      C                   EXSR      SRNAHOEXT                                                MD025536
      C                   ENDIF                                                              MD025536
      C                   ENDDO                                                              MD025536
- 
+
       ** Close Printer file if it is open and records have been printed.
- 
+
      C                   EXSR      SRCLOSEP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -648,50 +659,51 @@
       * Calls: SRCLOSEP1, SROPENP1, SRHEADER, SRZDate10, *PSSR        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNAHOEXT     BEGSR
- 
+
      C*****FNNAHO        CHAIN     SDNAHOL1                           25                    MD025536
      C**********         IF        %FOUND (SDNAHOL1)                                        MD025536
- 
+
       ** Convert, compute and set-up date.
- 
+
      C                   EXSR      SRZDate10
      C                   EVAL      RDDATEN = ZADATE
      C                   EVAL      RDCUSTN = FNNAHO
      C                   EVAL      RDCRNMN = NHNARN
      C                   EVAL      RDCRTNN = NHNATW
- 
+
       ** Open printer file for NAHO if not yet open in customer routine.
- 
+
      C                   IF        WPrintYN = 'Y'                                           MD027483
+     C                             AND NHCHTP <> 'D'                                        MD039307
                                                                                             MD027483
      C                   IF        WNahoCnt = 1
      C                   EXSR      SROPENP1
      C                   ENDIF
- 
+
       ** Print Title if there is a record counted.
- 
+
      C                   IF        WNahoCnt = 1
      C                   EXSR      SRHEADER
      C                   ENDIF
- 
+
       ** Print Details. Print Title if next page occurs
- 
+
      C**********         IF        WPrintYN = 'Y'                                           MD027483
- 
+
      C                   IF        PrtLn1 + 1 >= OflLn1
      C                   EXSR      SRHEADER
      C                   ENDIF
- 
+
      C                   IF        (PMode = 'A' AND NHLCDT = BJRDNB)
      C                             OR PMode = 'L' OR PMode = ' '
      C                   EVAL      WCalcNaho = WCalcNaho + 1
      C                   WRITE     SD0715R4
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C**********         ELSE                                                               MD025536
      C**********         EVAL      DBFILE = 'SDNAHOL1'                                      MD025536
      C**********         EVAL      DBASE = 2                                                MD025536
@@ -699,7 +711,7 @@
      C**********         EXSR      *PSSR                                                    MD025536
      C**********         ENDIF                                                              MD025536
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ** Sub-routine for expiry date computation
@@ -714,44 +726,44 @@
       * Calls: SRZDate2                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCOMPDATE    BEGSR
- 
+
      C                   EVAL      WPrintYN = 'N'                                           MD027483
       ** Compute Expiry Date
      C                   IF        WInputDate > 0                                           MD027483
- 
+
      C                   EVAL      WExpiryDate = WInputDate +  WExpiryDays
- 
+
       ** Compute Start of Notice Days
- 
+
      C                   EVAL      WStrNotDate = WExpiryDate - WNoticeDays
- 
+
       ** Check if run date is with in the notice days
- 
+
      C                   IF        BJRDNB >= WStrNotDate
- 
+
      C                   EVAL      WPrintYN = 'Y'
- 
+
      C                   IF        WType = 'C'
      C                   EVAL      WCustCnt = WCustCnt + 1
      C                   ELSE
      C                   EVAL      WNahoCnt = WNahoCnt + 1
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WPrintYN = 'N'
- 
+
      C                   ENDIF
- 
+
       ** Convert Expiry date numeric format to ddMMMyy.
- 
+
      C                   EXSR      SRZDate2
- 
+
      C                   ENDIF                                                              MD027483
                                                                                             MD027483
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -763,18 +775,18 @@
       * Calls: ZDATE                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZDate2      BEGSR
- 
+
      C                   EVAL      ZDAYNO = WExpiryDate
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -786,21 +798,21 @@
       * Calls: ZDATE10, SRCOMPDATE                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZDate10     BEGSR
- 
+
      C                   MOVEL     NHCRDT        PDateIN
      C                   CALLB     'ZDATE10'
      C                   PARM                    PDateIN
      C                   PARM                    PMDNO
- 
+
       ** Set-up Input Date and call SRCOMPDATE routine
- 
+
      C                   EVAL      WInputDate = PMDNO
      C                   EXSR      SRCOMPDATE
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -812,32 +824,32 @@
       * Calls    : SRFCP - File Control Processing                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTERM        BEGSR
- 
+
       ** if database error has occured, output total report headings;
       ** print error message and exit program.
- 
+
      C                   IF        *IN80 = *ON
      C                   WRITE     CONTROL
      C                   WRITE     DBERROR
      C                   GOTO      TEND
      C                   ENDIF
- 
+
       ** produce standard totals report
- 
+
      C                   EXSR      SRFCP
- 
+
       ** if a database error has occured, bypass further processing
- 
+
      C     *INU7         CABEQ     *ON           TEND
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C     TEND          ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -848,26 +860,26 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFCP         BEGSR
- 
+
       ** set-up calculated number of records fields
- 
+
      C                   Z-ADD     WCalcCust     RRCUST
      C                   Z-ADD     WCalcNaho     RRNAHO
- 
+
       ** print standard totals report
- 
+
      C                   EVAL      *IN54 = *ON
      C                   IF        RRCUST = 0
      C                             AND RRNAHO =0
      C                   EVAL      *IN54 = *OFF
      C                   ENDIF
- 
+
      C                   WRITE     CONTROL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -879,15 +891,15 @@
       * Calls    : *PSSR  - Error handling subroutine                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINIT        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PMode
      C                   PARM                    PIntyp
      C                   PARM                    PSeq
      C                   PARM                    PEnty
- 
+
      C     NHKEY         KLIST                                                              MD025536
      C                   KFLD                    NHCRDT                                     MD025536
      C                   KFLD                    NHNAHO                                     MD025536
@@ -898,14 +910,14 @@
                                                                                             MD025536
       ** access installation control data
       ** access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** if access program fails call SR. *PSSR
- 
+
      C                   IF        PRTCD <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -914,33 +926,33 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** if fails goto END
- 
+
      C                   IF        *IN80 = *ON
      C                   GOTO      IEND
      C                   ENDIF
- 
+
       ** load printer file fields with date and title
- 
+
      C                   EVAL      RRTITL = BJURPT
      C                   EVAL      RRRUNA = BJMRDT
      C                   EVAL      DRUND  = BJRDNB
- 
+
      C                   EXSR      SRSVAL
- 
+
       ** set number of record count for title printing and tail.
- 
+
      C                   Z-ADD     0             WCustCnt
      C                   Z-ADD     0             WNahoCnt
- 
+
       ** set number of records read to Zero
- 
+
      C                   Z-ADD     0             WCalcCust
      C                   Z-ADD     0             WCalcNaho
- 
+
      C     IEND          ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -954,24 +966,24 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRUN  = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   EVAL      DBPGM = 'SD000715'
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
       ** set on database error indicator and dump
- 
+
      C                   EVAL      *IN80 = *ON
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -986,13 +998,13 @@
       * Calls    : *PSSR  - Error handling subroutine                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSVAL        BEGSR
- 
+
      C                   EVAL      P@OP01 = 'FATCADftCLsNewCustNH'
      C                   EVAL      P@OP02 = 'FATCAExpDayDftClsNew'
      C                   EVAL      P@OP03 = 'FATCANotDaysActRept'
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtcd             7
      C                   PARM                    P@OP01           20
@@ -1015,7 +1027,7 @@
      C                   PARM                    P@VL09          200
      C                   PARM                    P@OP10           20
      C                   PARM                    P@VL10          200
- 
+
      C                   IF        PRtcd <> *Blanks  AND
      C                             PRtcd <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -1039,7 +1051,7 @@
      C**********         MOVEL     P@VL02        WExpiryDays                                MD027483
      C**********         MOVEL     P@VL03        WNoticeDays                                MD027483
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT                                                                                MD027483
       *****************************************************************                     MD027483

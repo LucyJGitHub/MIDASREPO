@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059665           Date 07Mar22               *     
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -1346,7 +1347,8 @@
       ***For*Loans*and*Deposits*records,*check*spread*rate*and*base*rate*code          CAS005 227695
       ** For Loans and Deposits records, check liquidity premium                              227695
                                                                                               CAS005
-     C                   IF        RCDT = 'C'                                                 CAS005
+     C**********         IF        RCDT = 'C'                                        CAS005 MD059665
+     C                   IF        CDRCDT = 'C'                                             MD059665
      C**********         IF        CDRTSP <> 0 AND CDBRTT <> 0                         CAS005 227695
      C                   IF        CDFSLQPR <> 0                                              227695
      C                   EVAL      WkBase = 'Y'                                               CAS005
@@ -1355,7 +1357,8 @@
                                                                                               CAS005
       ** For Negotiable Assets Purchased records, check liquidity premium                     CAS005
                                                                                               CAS005
-     C                   IF        RCDT = 'D'                                                 CAS005
+     C**********         IF        RCDT = 'D'                                        CAS005 MD059665
+     C                   IF        CDRCDT = 'D'                                             MD059665
      C                   IF        CDFSLQPR <> 0                                              CAS005
      C                   EVAL      WkBase = 'Y'                                               CAS005
      C                   ENDIF                                                                CAS005
@@ -2408,6 +2411,7 @@
      C     SrNotaSum     BEGSR                                                                CAS006
                                                                                               CAS006
      C                   IF        WCounter = FSDPTS                                          CAS006
+     C                             and  FSDPTS <> *Zero                                     MD059665
      C                   EVAL      WSxy = *ZERO                                               CAS006
      C                   EVAL      WSxx = *ZERO                                               CAS006
      C                   EVAL      WSyy = *ZERO                                               CAS006

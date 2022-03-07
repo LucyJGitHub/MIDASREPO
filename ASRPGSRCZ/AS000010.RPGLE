@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059665           Date 07Mar22
+      *  Last Amend No. MD059665           Date 07Mar22               *
       *  Prev Amend No. CAS020             Date 02Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -55,6 +56,7 @@
       *  MD059665 - IAS Issues found during CAS020 Testing            *
       *  CAS020 - Use Profit Center of Derivative rather than Profit  *
       *           Center of Hedged or Hedging Item                    *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

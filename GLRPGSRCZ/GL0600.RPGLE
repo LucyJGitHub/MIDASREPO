@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR700044           Date 03Mar22               *
+      *  Last Amend No. AR700044           Date 04Mar22               *
       *  Prev Amend No. CGL077             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055785           Date 20May20               *
@@ -201,7 +201,7 @@
       *             field is numeric and not character.               *
       *             (Child: AR700323)                                 *
       *           - Applied for MD058198.                             *
-      
+
       *  CGL077 - Account opening date on Batch Posting.              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055785 - Initialise K24C for new GL account.               *

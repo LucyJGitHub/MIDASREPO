@@ -4079,7 +4079,7 @@
       ** override with Profit Centre of Derivative Transaction                                CAS020
                                                                                               CAS020
      C                   IF        CAS020 = 'Y'  AND                                          CAS020
-     C**********                   wkdhin = 'H'                                             MD059665
+     C**********                   wkdhin = 'H'                                      CAS020 MD059665
      C                             fsdhin = 'H'                                             MD059665
      C                   EXSR      SRDeriv                                                    CAS020
      C                   ENDIF                                                                CAS020

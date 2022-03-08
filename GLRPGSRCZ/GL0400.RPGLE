@@ -12,8 +12,10 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0010 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034502           Date 25May15               *
+      *  Last Amend No. AR700044           Date 04Mar22               *
+      *  Prev Amend No. MD058198           Date 04Mar22               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034502           Date 25May15               *
       *                 CGL049             Date 17Feb15               *
       *                 MD022412           Date 16Sep13               *
       *                 CGL120             Date 06Aug12               *
@@ -66,6 +68,14 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR700044 - GL-uncorrectly initialized field FEEPCT. Amended  *
+      *             program to correctly initialize this field by     *
+      *             placing '0' on position 52 to signify that this   *
+      *             field is numeric and not character.               *
+      *             (Child: AR700323)                                 *
+      *           - Applied for MD058198.                             *
+      *  MD058198 - EODPOPD - Data conversion or data mapping error.  *
+      *           - Patterned after AR7000044 fix.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034502 - FB Midas 2.1 SP8 Drop3 COB issues                 *
       *  CGL049   - Separate Out Processing of Spot Reval and FX Tfr  *
@@ -447,7 +457,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -503,7 +514,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -549,7 +561,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -598,6 +611,7 @@
 0069 I                                128  128  PRIN                            E15192
      I                                590  599 0ACOD                                          CGL029
      I                                600  620  OTRF                                          CGL029
+     I                                360  364 2FEEPCT                                      MD058189
 0092 I          NS  08    1 CT                                                  E15192
 0071 I                                  2    6 0NORE                            E15192
 0072 I                             P    7   14 0ZZINT                           E15192
@@ -638,7 +652,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -681,7 +696,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -737,7 +753,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -780,7 +797,8 @@
      I                                332  351  ACKEY                                         CGL020
      I                                352  352  FEEFLG                                        CGL020
      I                             P  353  359 0FEEVAL                                        CGL020
-     I                                360  364  FEEPCT                                        CGL020
+     I**********                      360  364  FEEPCT                               CGL020 AR700044
+     I                                360  364 2FEEPCT                                      AR700044
      I                                365  384  RORACT                                        CGL020
      I                                385  386  RORCTY                                        CGL020
      I                                387  406  RORBNK                                        CGL020
@@ -830,7 +848,8 @@
      I                                332  351  ACKEY                                         CGL049
      I                                352  352  FEEFLG                                        CGL049
      I                             P  353  359 0FEEVAL                                        CGL049
-     I                                360  364  FEEPCT                                        CGL049
+     I**********                      360  364  FEEPCT                               CGL049 MD058198
+     I                                360  364 2FEEPCT                                      MD058198
      I                                365  384  RORACT                                        CGL049
      I                                385  386  RORCTY                                        CGL049
      I                                387  406  RORBNK                                        CGL049
@@ -865,7 +884,8 @@
      I                                332  351  ACKEY                                         CGL049
      I                                352  352  FEEFLG                                        CGL049
      I                             P  353  359 0FEEVAL                                        CGL049
-     I                                360  364  FEEPCT                                        CGL049
+     I**********                      360  364  FEEPCT                               CGL049 MD058198
+     I                                360  364 2FEEPCT                                      MD058198
      I                                365  384  RORACT                                        CGL049
      I                                385  386  RORCTY                                        CGL049
      I                                387  406  RORBNK                                        CGL049

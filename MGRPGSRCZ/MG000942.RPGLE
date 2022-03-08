@@ -26,8 +26,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *  Last Amend No. MD022383           Date 03Feb22               *
+      *  Prev Amend No. 261775             Date 03Feb22               *
+      *                 CSD103             Date 10Aug20               *
+      *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
@@ -84,6 +86,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022383 - No field 86 generated for an MT942                *
+      *         - Applied for MD-59407                                *
+      *  261775 - No F86 defined for MT942s. Place :86 in every page. *
+      *         - Applied for MD-59407                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
@@ -368,6 +374,10 @@
      D  M              S              5U 0                                      Multi Occurence Idx
      D  P              S              5U 0                                      Previous Occure Idx
      D  L              S              5U 0                                      Last Occurence Idx
+     D  LA             S              5U 0                                                  MD022383
+     D  LP             S              5U 0                                                  MD022383
+     D  XS             S              5U 0                                                  MD022383
+     D  F86F           S              1A                                                    MD022383
 
      D***DsMsgRef      E DS                  OCCURS(100)                                    AR757762
      D DsMsgRef      E DS                  OCCURS(9999)                                     AR757762
@@ -662,6 +672,26 @@
       ** Format field :86:
 
      C                   EXSR      $FMT86
+      *                                                                                     261775
+     C                   IF        ED2FNI = 'Y'                                             261775
+     C                             AND NbItems = ED2NIM                                     261775
+      *                                                                                     MD022383
+      * The field 86 would not be added if the lenght of the message is more than allowed.  MD022383
+      * However there is still possibility that on the maximum                              MD022383
+      * allowed lines the creation of field 86 reaches maximum characters so on shift the   MD022383
+      * previous occurence the 86 would have to be refilled                                 MD022383
+      *                                                                                     MD022383
+     C                             OR CurLength > MaxLength                                 261775
+      *                                                                                     MD022383
+      * Save latest occurence before message specific field 86                              MD022383
+      *                                                                                     MD022383
+     C                   Eval      LP = M                                                   MD022383
+      *                                                                                     MD022383
+     C                   EXSR      $FMT86F                                                  261775
+      *                                                                                     MD022383
+     C                   Eval      LA = M                                                   MD022383
+      *                                                                                     MD022383
+     C                   ENDIF                                                              261775
 
       ** Check the maximum length.
 
@@ -670,6 +700,12 @@
       **   Save the Last number of occurence.
       **   Load M with the previous occurence.
 
+     C                   If        LA > LP                                                  MD022383
+     C                   Eval      F86F = 'Y'                                               MD022383
+     C                   Else                                                               MD022383
+     C                   Eval      F86F = 'N'                                               MD022383
+     C                   Endif                                                              MD022383
+      *                                                                                     MD022383
      C                   EVAL      L = M
      C                   EVAL      M = P
 
@@ -680,7 +716,29 @@
       **   Create Message Details.
 
      C                   EXSR      $CrtMsgDtl
-
+      *                                                                                     MD022383
+      * If the message was longer than max allowed the field 86 will have to be written     MD022383
+      * if data present                                                                     MD022383
+      *                                                                                     MD022383
+     C                   IF        F86F = 'Y' and LA > 0 and LA > LP                        MD022383
+                                                                                            MD022383
+      ** Unload multi-occurrence MULT in PF/MGOMSGPD.                                       MD022383
+                                                                                            MD022383
+     C     L             DO        LA            XS                                         MD022383
+                                                                                            MD022383
+                                                                                            MD022383
+     C     XS            OCCUR     MULT                                                     MD022383
+     C                   CLEAR                   MGOMSGD0                                   MD022383
+     C                   EVAL      MO_MTAG = MTAG                                           MD022383
+     C                   EVAL      MO_MFLD = MFLD                                           MD022383
+     C                   EVAL      MO_CTRC = CTRC                                           MD022383
+     C                   EVAL      MO_TRNO = CurTRNO                                        MD022383
+     C                   WRITE     MGOMSGD0                                                 MD022383
+     C                   CLEAR                   MULT                                       MD022383
+                                                                                            MD022383
+     C                   ENDDO                                                              MD022383
+                                                                                            MD022383
+     C                   Endif                                                              MD022383
       **   Load Master Messages Reference data structure.
 
      C                   EXSR      $LdMsgRef

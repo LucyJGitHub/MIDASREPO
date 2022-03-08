@@ -24,8 +24,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR806147A          Date 21May18               *
-      *  Prev Amend No. AR806147           Date 21May18               *
+      *  Last Amend No. MD059635           Date 01Mar22               *
+      *  Prev Amend No. AR806147A          Date 21May18               *
+      *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059635 - Remove validation that won't allow Early Maturity *
+      *             Date to be earlier than Next Interest Payment     *
+      *             Date                                              *
       *  AR806147A - Add validation so that an EM amendment with value*
       *              date = early maturity date can be authorised.    *
       *              (Child: AR806148)                                *
@@ -64,7 +68,7 @@
      FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)                                     AR806147
       *                                                                                     AR806147
      FMMLVDMLL  IF   E           K DISK    INFSR(*PSSR)                                     AR806147
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -83,47 +87,47 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for nostros file
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Define multibranch indicator field
      D RUNDAT          DS
      D  Rundate                8     10P 0
@@ -135,35 +139,35 @@
      D  @@YY                   1      4  0                                                  AR806147
      D  @@MM                   5      6  0                                                  AR806147
      D  @@DD                   7      8  0                                                  AR806147
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Parameters for ZDATE1
      D DateIn          S              6A
      D DayNoOut        S              5P 0
- 
+
       * Return code for ZAVDATE call
      D @RTCDE          S              1A
      D @KEYF           S              3A
      D @KEYG           S             10A
      D @KEYH           S              1A
      D @MDYNO          S              5  0
- 
+
       ** Deals file version of maturity date
      D IKMATD          S                   LIKE(@MDYNO)
      D BJDFIN          S              1A
      D BJLCCY          S              3A
      D BJSLCD          S              3A
      D BJRDNB          S              5  0
- 
+
       ** Deal type from screen
      D DDTYPE          S              2A
       ** Deal currency from screen
@@ -176,12 +180,12 @@
      D DDVdat          S              6A
       ** Early Maturity date is received as a parameter
      D IGEMDt          S              5P 0
- 
+
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
       ** Warning message code 1 received as a parameter
      D WMsgid1         S                   LIKE(#MsgID)
- 
+
       ** Payment error code
      D PMERCD          S            150A
       ** Our pay instructions
@@ -192,17 +196,17 @@
      D PMRONS          S             12A
       ** Receive settlement method
      D PMRSTM          S              2S 0
- 
+
       ** Early Maturity Date Work Field
      D W1EMDATE        S              5  0
       ** Value Date Work Field
      D W1VDATE         S              5  0
- 
+
       ** Location code for holiday checking
      D ZLOC            S              3A
       ** Holiday indicator
      D ZIND            S              1A
- 
+
       ** Deal Amendment Value Date in Midas Dayno. format                                   AR806147
      D DeamValDat      S              5P 0                                                  AR806147
       *                                                                                     AR806147
@@ -213,7 +217,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -221,28 +225,28 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   WarnFound
      C                   RESET                   Msgid1
      C                   RESET                   WMsgid1
- 
+
       **  Entry only valid for Deal Type 'EM'
      C     DDTYPE        IFNE      'EM'
      C     DDEMDT        ANDNE     *BLANKS
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0350'     Msgid1
      C                   ELSE
- 
+
      C     DDTYPE        IFEQ      'EM'
- 
+
       **  No Date Entered, this is an error.
      C     DDEMDT        IFEQ      *BLANKS
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0331'     Msgid1
      C                   ELSE
- 
+
       **  Validate that the early maturity date is valid as a date.
      C                   RESET                   ReturnCode
      C                   CALLB     'ZAVDATE'
@@ -250,18 +254,18 @@
      C                   PARM                    DDEMDT
      C                   PARM                    BJDfin
      C                   PARM                    @Mdyno
- 
+
       **  If date is invalid...
      C     ReturnCode    IFEQ      'Error'
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0128'     Msgid1
      C                   ELSE
- 
+
       ** Must be -  Earlier than current Maturity Date
       **            Later than Value Date
       **            Later than or Equal to Current Run Date
       ** (Convert Dates Into Midas Day Number if not already)
- 
+
      C                   MOVE      DDVDat        DateIn                         Value Date
      C                   CALLB     'ZDATE1'
      C                   PARM                    DateIn
@@ -269,7 +273,7 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFound
      C                   Z-ADD     DayNoOut      W1VDate
- 
+
      C                   MOVE      DDEMDT        DateIn                         Early Maturity Date
      C                   CALLB     'ZDATE1'
      C                   PARM                    DateIn
@@ -300,11 +304,11 @@
      C                   MOVE      DDDLNO        DealNum           6 0                      AR806147
      C     DealNum       CHAIN     MMDEALLL                           65                    AR806147
       *                                                                                     AR806147
-     C     *IN65         IFEQ      '0'                                                      AR806147
-     C     W1EMDate      ANDLE     HKNIPD                                                   AR806147
-     C                   EVAL      ErrorFound = 'Y'                                         AR806147
-     C                   MOVEL     'MMM4010'     Msgid1                                     AR806147
-     C                   ENDIF                                                              AR806147
+     C******IN65         IFEQ      '0'                                             AR806147 MD059635
+     C*****W1EMDate      ANDLE     HKNIPD                                          AR806147 MD059635
+     C**********         EVAL      ErrorFound = 'Y'                                AR806147 MD059635
+     C**********         MOVEL     'MMM4010'     Msgid1                            AR806147 MD059635
+     C**********         ENDIF                                                     AR806147 MD059635
       *                                                                                     AR806147
       ** Access the deal amendments file for the last amendment                             AR806147
       ** to the deal being processed.                                                       AR806147
@@ -366,21 +370,21 @@
      C                   EVAL      ErrorFound = 'Y'                                         AR806147
      C                   MOVEL     'MMM0136'     Msgid1                                     AR806147
      C                   ENDIF                                                              AR806147
- 
+
      C                   ENDIF
- 
+
      C     ErrorFound    IFNE      'Y'
- 
+
      C     PMPSTM        IFEQ      01
      C     PMPSTM        OREQ      07
      C     PMPSTM        OREQ      08
- 
+
       **  Find whether the date is a holiday in the deal currency
       **  at the pay nostro location.
       **  First find pay nostro location.
       *  (database error handling done in access program)
       * IF ERRORS OUTSTANDING IN SETTL.DETAILS, DON'T CALL ACCESS OBJ
- 
+
      C     PMERCD        IFEQ      *BLANKS
       *
      C                   CALLB     'AONOSTR0'
@@ -457,12 +461,12 @@
      C                   ELSE
      C                   Z-ADD     0             IGEMDT
      C                   ENDIF
- 
+
       ** Return code set in /COPY
      C/COPY ZACPYSRC,SETRETCDE
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -474,9 +478,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    MsgId1
@@ -490,19 +494,19 @@
      C                   PARM                    DDEMDT
      C                   PARM                    IGEMDT
      C                   PARM                    DDDLNO            6                        AR806147
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

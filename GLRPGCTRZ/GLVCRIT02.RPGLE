@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054211A          Date 02Oct19               *
+      *  Last Amend No. MD059652           Date 08Mar22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054211A          Date 02Oct19               *
       *                 MD054211           Date 18Sep19               *
       *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059652 - Correct the validation when changing the interest *
+      *             calculation type.                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054211A - Use OVRDBF for REIAC in GLVDBIT02.               *
       *  MD054211 - Confirm Authorize Insert in AMAD results in       *
@@ -259,6 +262,7 @@
       **                                                                                    MD053611
      C     CICT          IFEQ      1                                                        MD053611
      C     CICT          OREQ      2                                                        MD053611
+     C     CICT          OREQ      0                                                        MD059652
      C     DDCICT        IFEQ      '03'                                                     MD053611
      C     DDCICT        OREQ      '04'                                                     MD053611
      C                   MOVE      'N'           DDCICTOk                                   MD053611
@@ -273,6 +277,8 @@
      C                             +%TRIM(DDCICT)                                           MD053611
      C                   ENDIF                                                              MD053611
      C                   ELSE                                                               MD053611
+     C     CICT          IFEQ      3                                                        MD059652
+     C     CICT          OREQ      4                                                        MD059652
      C                   MOVE      'N'           DDCICTOk                                   MD053611
      C                   MOVE      'N'           DDCCSTOk                                   MD053611
      C                   ADD       1             WIx                                        MD053611
@@ -283,6 +289,7 @@
      C                   EVAL      BLen = %Len(%Trim(DDCICT))                               MD053611
      C                   EVAL      WMsgDtXAr(WIx) = %TRIM(MsgDtaTmp) + LenStr               MD053611
      C                             +%TRIM(DDCICT)                                           MD053611
+     C                   ENDIF                                                              MD059652
      C                   ENDIF                                                              MD053611
       **                                                                                    MD053611
      C                   ENDIF                                                              MD053611

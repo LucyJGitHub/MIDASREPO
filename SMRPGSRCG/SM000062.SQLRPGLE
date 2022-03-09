@@ -16,12 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD057599           Date 21Jan21               *
-      *  Prev Amend No. AR1092867          Date 01Mar13               *
+      *  Last Amend No. MD059671           Date 08Mar22               *
+      *  Prev Amend No. MD057599           Date 21Jan21               *
+      *                 AR1092867          Date 01Mar13               *
       *                 AR1085447*CREATE   Date 06Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059671 - Execute base rate conversion introduced by CSD103 *
       *  MD057599 - Deliverable Data Split for Bridge and Util files  *
       *  AR1092867 - Make sure that the SQL written via UTWRTSQL is   *
       *              complete.                                        *
@@ -64,6 +66,8 @@
      D SMC44Rtn        S              7
      D Write           S              7    INZ('*WRITE ')
      D ErrorMsg        S            100
+     D DDS             S              1                                                     MD059671
+     D X_FLD           S             10                                                     MD059671
       *
       ** Fields for storing field names
      D FromList        S          32767    Varying
@@ -165,6 +169,19 @@
      C                   EVAL      ObjName = FromObj
      C                   EVAL      ObjType = FromType
       *
+      * Check if SMFILUPD exists or not                                                     MD059671
+     C                   CALL      'UTCHKOBJ'                                               MD059671
+     C                   PARM      *blanks       ExistYN          10                        MD059671
+     C                   PARM      'SMFILUPD'    DFOBJ            10                        MD059671
+     C                   PARM      '*LIBL'       Library          10                        MD059671
+     C                   PARM      '*FILE'       DFTYPE           10                        MD059671
+     C                   PARM      *blanks       Member           10                        MD059671
+     C                   IF        ExistYN <> 'Exist'                                       MD059671
+     C                   eval      DDS = 'Y'                                                MD059671
+     C                   else                                                               MD059671
+     C                   eval      DDS = 'N'                                                MD059671
+     C                   ENDIF                                                              MD059671
+                                                                                            MD059671
       ** If ReRun is '*NO ', set all update flags to blank.
      C                   IF        ReRun  = '*NO '
      C/Exec SQL
@@ -193,9 +210,25 @@
      C/END-EXEC                                                                             MD057599
      C**********         IF        NOT %FOUND                                               MD057599
      C                   IF        SQLCODE = 100                                            MD057599
+      ** check if file is defined in SMFILUPD/SMFIUJW0                                      MD059671
+     C                   if        DDS = 'N'                                                MD059761
+     C/EXEC SQL                                                                             MD059761
+     C+ SELECT PFIELD into :X_FLD                                                           MD059761
+     C+ from SMFILUPD                                                                       MD059761
+     C+ where PFILE  = :ObjName                                                             MD059761
+     C/END-EXEC                                                                             MD059761
+     C                   else                                                               MD059671
+     C/EXEC SQL                                                                             MD059761
+     C+ SELECT PFIELD into :X_FLD                                                           MD059761
+     C+ from SMFIUJW0                                                                       MD059761
+     C+ where PFILE  = :ObjName                                                             MD059761
+     C/END-EXEC                                                                             MD059761
+     C                   endif                                                              MD059671
+     C                   IF        SQLCODE = 100                                            MD059671
      C                   EVAL      ReturnCode = '*NOTONLNRF'
      C                   EVAL      *INLR = *ON
      C                   RETURN
+     C                   ENDIF                                                              MD059671
      C                   ENDIF
       *
      C                   ELSE
@@ -215,7 +248,11 @@
      C/END-EXEC                                                                             MD057599
                                                                                             MD057599
      C                   ENDIF
+     C                   if        SingleMode <> 'Y'                                        MD059671
      C                   EVAL      ObjName = LNFILE
+     C                   else                                                               MD059671
+     C                   EVAL      LNFILE = ObjName                                         MD059671
+     C                   endif                                                              MD059671
      C                   EVAL      SQLFail = ' '
 
      C**********         DOU       %EOF or SingleMode = 'Y'                                 MD057599
@@ -284,7 +321,27 @@
      C                             WHFLDI + ' = 0 THEN '' '' ELSE DIGITS(' +
      C                             %TRIM(WHFLDI) + ') END'
      C                   ELSE
+      ** check if field is defined in SMFILUPD/SMFIUJW0                                     MD059671
+     C                   if        DDS = 'N'                                                MD059761
+     C/EXEC SQL                                                                             MD059761
+     C+ SELECT PFIELD into :X_FLD                                                           MD059761
+     C+ from SMFILUPD                                                                       MD059761
+     C+ where PFILE  = :ObjName and PFIELD = :FieldName                                     MD059761
+     C/END-EXEC                                                                             MD059761
+     C                   else                                                               MD059671
+     C/EXEC SQL                                                                             MD059761
+     C+ SELECT PFIELD into :X_FLD                                                           MD059761
+     C+ from SMFIUJW0                                                                       MD059761
+     C+ where PFILE  = :ObjName and PFIELD = :FieldName                                     MD059761
+     C/END-EXEC                                                                             MD059761
+     C                   endif                                                              MD059671
+     C                   IF        SQLCODE = 0                                              MD059671
+     C                   EVAL      FromList = %TRIM(FromList) + ', CASE WHEN ' +            MD059671
+     C                             WHFLDI + ' = 0 THEN '' '' ELSE DIGITS(' +                MD059671
+     C                             %TRIM(WHFLDI) + ') END'                                  MD059671
+     C                   ELSE                                                               MD059671
      C                   EVAL      FromList = %TRIM(FromList) + ',' + WHFLDI
+     C                   ENDIF                                                              MD059671
      C                   ENDIF
       *
      C                   EVAL      ToList = %TRIM(ToList) + ',' + WHFLDI

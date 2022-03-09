@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD059656           Date 04Mar22               *
-      *  Prev Amend No. CLE124             Date 02Nov21               *
+      *  Last Amend No. MD059660           Date 08Mar22               *
+      *  Prev Amend No. MD059656           Date 04Mar22               *
+      *                 CLE124             Date 02Nov21               *
       *                 CLE123             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059660 - Duplicate Dept in LE0723P3 and wrong Dept Code    *
+      *             in LE0723P1.                                      *
       *  MD059656 - Add new fields of CLE123 and CLE124 in Aggregate  *
       *             Facilities extract Files                          *
       *  CLE124 - Commitment and Outstanding Report by Customer Name  *
@@ -103,6 +106,9 @@
       ** Commitment/Facility Loan extract trailer file
      FFACEXT4   UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
+      ** Aggregate Facilities Detail table                                                  MD059660
+     FLEAGFCL4  IF   E           K DISK    INFSR(*PSSR)                                     MD059660
+     F                                     PREFIX(F1)                                       MD059660
 
       *****************************************************************
       /EJECT
@@ -305,6 +311,49 @@
      C                   EVAL      ANDPNM = AEDPNM                                          MD059656
      C                   ENDIF                                                              MD059656
      C                   ENDIF                                                              MD059656
+      *                                                                                     MD059660
+      ** Retrieve Loan's Facility Account Officer and Department                            MD059660
+      *                                                                                     MD059660
+     C                   EVAL      FAANFCOC = *BLANKS                                       MD059660
+     C                   EVAL      FAANFCON = *BLANKS                                       MD059660
+     C                   EVAL      FAANFPCD = *BLANKS                                       MD059660
+     C                   EVAL      FAANFPNM = *BLANKS                                       MD059660
+      *                                                                                     MD059660
+     C     KeyAGFC       KLIST                                                              MD059660
+     C                   KFLD                    FABRCA                                     MD059660
+     C                   KFLD                    KCusNum                                    MD059660
+     C                   KFLD                    KFacTyp                                    MD059660
+     C                   KFLD                    KFacSeq                                    MD059660
+     C     KeyAGFC       CHAIN     LEAGFCL4                                                 MD059660
+     C                   IF        %FOUND(LEAGFCL4)                                         MD059660
+     C                   EVAL      @ACOF = F1ACOF                                           MD059660
+      *                                                                                     MD059660
+     C                   CALL      'AOACOFR0'                                               MD059660
+     C                   PARM      *BLANKS       PRtCd                                      MD059660
+     C                   PARM      '*KEY   '     POptn                                      MD059660
+     C                   PARM                    @ACOF             2                        MD059660
+     C     SDACOF        PARM      SDACOF        DSFDY                                      MD059660
+      *                                                                                     MD059660
+     C                   IF        PRtCd = *BLANKS                                          MD059660
+     C                   EVAL      FAANFCOC = AZACOC                                        MD059660
+     C                   EVAL      FAANFCON = AZACON                                        MD059660
+      *                                                                                     MD059660
+     C                   EVAL      DPTKEY = AZDPCD                                          MD059660
+      *                                                                                     MD059660
+     C                   CALL      'AODEPTR0'                                               MD059660
+     C                   PARM      *BLANKS       PRtCd                                      MD059660
+     C                   PARM      '*KEY   '     POptn                                      MD059660
+     C                   PARM                    DPTKEY            3                        MD059660
+     C     SDDEPT        PARM      SDDEPT        DSFDY                                      MD059660
+      *                                                                                     MD059660
+     C                   IF        PRtCd = *BLANKS                                          MD059660
+     C                   EVAL      FAANFPCD = AEDPCD                                        MD059660
+     C                   EVAL      FAANFPNM = AEDPNM                                        MD059660
+     C                   ENDIF                                                              MD059660
+     C                   ENDIF                                                              MD059660
+      *                                                                                     MD059660
+     C                   ENDIF                                                              MD059660
+      *                                                                                     MD059660
      C                   ENDIF                                                              MD059656
       *                                                                                     MD059656
      C                   WRITE     AGCEXFAF

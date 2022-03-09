@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260173             Date 22May20               *      
-      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *  Last Amend No. HUT121             Date 07Feb22               *
+      *  Prev Amend No. 260173             Date 22May20               *
+      *                 MD039655           Date 03Sep19               *
       *                 AR994776           Date 04Apr19               *
       *                 MD054906           Date 15Jan20               *
       *                 CSD102             Date 08Jan19               *
@@ -84,9 +85,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  260173 - Introduce new parameter in DEAM API to be used in   *
       *           the validation of action code during reversal       *
-      *           authorization. Apply fix 258724.                    *      
+      *           authorization. Apply fix 258724.                    *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -1483,6 +1485,7 @@
      C                   EVAL      DDPBOK_In = %SUBST(TransID:25:2)                          BUG1057
      C                   EVAL      DDPPRT_In = %SUBST(TransID:27:2)                          BUG1057
      C                   EVAL      DDPTFR_In = %SUBST(TransID:29:4)                          BUG1057
+     C/COPY WNCPYSRC,HUT121_128                                                               HUT121
      C                                                                                       BUG1057
      C                   CALL      'SEPRCSR'                                                 BUG1057
      C                   PARM                    AuthComp                                    BUG1057
@@ -1494,6 +1497,7 @@
      C                   PARM                    DDPBOK_In         2                         BUG1057
      C                   PARM                    DDPPRT_In         2                         BUG1057
      C                   PARM                    DDPTFR_In         4                         BUG1057
+     C/COPY WNCPYSRC,HUT121_129                                                               HUT121
      C                   PARM                    Buffer                                      BUG1057
      C                   PARM                    FldNameArr                                  BUG1057
      C                   PARM                    MsgIDArr                                    BUG1057

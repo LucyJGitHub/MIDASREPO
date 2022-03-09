@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. HUT121             Date 07Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260464             Date 28May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  260464 - Recompile due to change in LF/GZPRICEL1.            *
@@ -37,9 +39,10 @@
       *  BUG10215 - Global replication needs a global interface       *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZPRICEL1 UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
+     F/COPY WNCPYSRC,HUT121_006                                                               HUT121
 O    FGZPRICED  O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     RENAME(PRICEDF     :W_PRICEDF      )
 O    F                                     USROPN
@@ -48,9 +51,10 @@ O    D Z_PRICED      E DS                  EXTNAME(GZPRICED  )
 O    D G_PRICED      E DS                  EXTNAME(GZPRICED  ) PREFIX(G_)
                                                                                             BUG10215
      D/COPY GPCPYSRCG,GPWRTALTDS                                                            BUG10215
- 
+     D/COPY WNCPYSRC,HUT121_007                                                               HUT121
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -68,15 +72,18 @@ O    C                   ELSE
 O    C                   MOVEL     I#AIMG        Z_PRICED
 O    C                   ENDIF
 Z    C                   MOVEL     I#ZONE        SEZONE
-O
+     C/COPY WNCPYSRC,HUT121_009                                                               HUT121
 O    C     K_GZPRICEL1   CHAIN     PRICEDF                            99
+     C/COPY WNCPYSRC,HUT121_010                                                               HUT121
                                                                                             BUG10215
      C/COPY GPCPYSRCG,GPWRTAL2PR                                                            BUG10215
 O
 O     * 'Before'
 O
 O    C     I#BFAF        IFEQ      'B'
+     C/COPY WNCPYSRC,HUT121_011                                                               HUT121
 O    C  N99              DELETE    PRICEDF
+     C/COPY WNCPYSRC,HUT121_012                                                               HUT121
 O    C                   ELSE
 O
 O     * 'After'
@@ -92,16 +99,18 @@ O    C                   PARM      G_PRICED      IO#BUFFER      4000
 O    C                   MOVEL     IO#BUFFER     G_PRICED
 O     * Update
 O    C     *IN99         IFEQ      *OFF
+     C/COPY WNCPYSRC,HUT121_013                                                               HUT121
 O    C                   UPDATE    PRICEDF
+     C/COPY WNCPYSRC,HUT121_014                                                               HUT121
 O    C                   ELSE
 O    C                   WRITE     W_PRICEDF
 O    C                   ENDIF
 O    C                   ENDIF
                                                                                             BUG10215
      C/COPY GPCPYSRCG,GPWRTALTPR                                                            BUG10215
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -113,6 +122,7 @@ O
 O    C                   CALL      'GPCOPN4COM'
 O    C                   PARM                    D_COM             1
 O    C                   OPEN      GZPRICEL1
+O    C/COPY WNCPYSRC,HUT121_015                                                               HUT121
 O    C                   OPEN      GZPRICED
 O
 O     * Key lists
@@ -126,7 +136,8 @@ O    C                   KFLD                    PBRA
 O    C                   KFLD                    PBOK
 O    C                   KFLD                    PPRT
 O    C                   KFLD                    PTFR
- 
+O    C/COPY WNCPYSRC,HUT121_008                                                               HUT121
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -134,15 +145,15 @@ O    C                   KFLD                    PTFR
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -157,10 +168,10 @@ O    C                   KFLD                    PTFR
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

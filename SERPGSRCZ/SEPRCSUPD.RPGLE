@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054998           Date 22Apr20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. HUT121             Date 07Feb22               *
+      *  Prev Amend No. MD054998           Date 22Apr20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043345           Date 05Jan17               *
       *                 AR1092524          Date 12Mar13               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  MD054998 - Security Prices sent to repair queue.             *
       *           - Specify 'N' (not locked) operation extender when  *
       *             reading file PRICEA and introduced new LF of      *
@@ -93,6 +95,9 @@
      FPRICE     UF A E           K DISK
      F                                     COMMIT
      F                                     INCLUDE(PRICEDF)
+      *                                                                                       HUT121
+     F/COPY WNCPYSRC,HUT121_038                                                               HUT121
+      *                                                                                       HUT121
      F***PRICEA UF A E             DISK                                                     MD054998
      F**********                           COMMIT                                           MD054998
      FPRICEA    IF   E             DISK                                                     MD054998
@@ -164,7 +169,9 @@
                                                                                               CAP060
      D B_PRICE       E DS                  EXTNAME(PRICE)                                     CAP060
      D                                     PREFIX(B_)                                         CAP060
-      **  Externally described DS for 'BEFORE UPDATE'                                         CAP060
+      *                                                                                       HUT121
+     D/COPY WNCPYSRC,HUT121_039                                                               HUT121
+      *                                                                                       HUT121
                                                                                               CAP060
       **  Externally described data structure for valid Price record                          CAP060
      D SEVPRC        E DS                  EXTNAME(SEVPRCSPD)
@@ -266,6 +273,11 @@
      D CAS006          S              1A                                                      CAS006
                                                                                               CAS006
      D/COPY WNCPYSRC,SEH00088
+                                                                                              HUT121
+      ** Holiday File Standard Subroutine Variables                                           HUT121
+     D/COPY ZSRSRC,ZHOLILE                                                                    HUT121
+     D/COPY ZSRSRC,ZHOLELE                                                                    HUT121
+                                                                                              HUT121
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -300,6 +312,9 @@
      C**********         MOVEL     *BLANKS       @PBRA                              CAP060 AR1092524
      C**********         MOVEL     *BLANKS       @PBOK                              CAP060 AR1092524
      C                   MOVEL     V_PRPPRT      @PPRT                                        CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_040                                                               HUT121
+      *                                                                                       HUT121
 
      C     BGPFMG        IFEQ      'Y'
      C                   MOVEL     '    '        @PTFR
@@ -307,7 +322,11 @@
      C*******************MOVEL     '9997'        @PTFR                                        191396
      C                   ENDIF
       *
+     C/COPY WNCPYSRC,HUT121_041                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICE                              99
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_042                                                               HUT121
       *                                                                                     BUG11512
      C     V_PRCHTP      IFEQ      'D'                                                      BUG11512
      C     *IN99         ANDEQ     '0'                                                      BUG11512
@@ -573,7 +592,12 @@
 
       * Write new Price record.
       *
+     C/COPY WNCPYSRC,HUT121_043                                                               HUT121
+      *                                                                                       HUT121
      C                   WRITE     PRICEDF
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_044                                                               HUT121
+      *                                                                                       HUT121
      C/COPY WNCPYSRC,SEH00090
       *
       * Get AUDIT Record.
@@ -1001,6 +1025,7 @@
      C                   MOVEL     V_PRPRFC      WPROFC            4                          CAP060
      C                   MOVEL     V_PRPPRT      WPRCTP            2                          CAP060
      C                   MOVEL     V_PRPTFR      WPORTRF           4                          CAP060
+     C/COPY WNCPYSRC,HUT121_136                                                               HUT121
      C                   MOVEL     V_PRPBRA      WBRNCH            3                          CAP060
      C                   IF        CAC005 = 'Y'                                               CAP060
      C                   MOVEL     V_PRPBCD      WBOOK             2                          CAP060
@@ -1060,6 +1085,7 @@
      C                   PARM                    WPROFC            4                          CAP060
      C                   PARM                    WPRCTP                                       CAP060
      C                   PARM                    WPORTRF                                      CAP060
+     C/COPY WNCPYSRC,HUT121_137                                                               HUT121
      C                   PARM                    BVEXOP                                       CAP060
       * OUTPUTS                                                                               CAP060
      C                   PARM                    CHKPRCSFMT                                   CAP060
@@ -1154,12 +1180,20 @@
      C                   MOVEL     V_PRPPRT      @PPRT                                        CAP060
      C                   MOVEL     V_PRPTFR      @PTFR                                        CAP060
                                                                                               CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_045                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICE                                                      CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_046                                                               HUT121
       *                                                                                       224448
       * Set indicator for insert over existing record                                         224448
       *                                                                                       224448
      C                   MOVE      ' '           Insert                                       224448
      C                   IF        NOT %FOUND(PRICE)                                          224448
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_047                                                               HUT121
+      *                                                                                       HUT121
      C                   MOVE      'Y'           Insert                                       224448
      C                   ELSE                                                                 224448
      C     RECI          IFEQ      '*'                                                        224448
@@ -1258,11 +1292,18 @@
       ** May be an update because the security may have been previously deleted by            CAP060
       ** putting a '*' on the RECID                                                           CAP060
                                                                                               CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_048                                                               HUT121
+      *                                                                                       HUT121
      C                   IF        NOT %FOUND(PRICE)                                          CAP060
      C                   WRITE     PRICEDF                                                    CAP060
      C                   ELSE                                                                 CAP060
      C                   UPDATE    PRICEDF                                                    CAP060
      C                   ENDIF                                                                CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_049                                                               HUT121
+      *                                                                                       HUT121
+     C*                                                                                       HUT121
      C/COPY WNCPYSRC,SEH00098
                                                                                               CAP060
       ** If CAC005 is installed, add the same record to SEPRICPD                              CAP060
@@ -1423,11 +1464,17 @@
      C                   MOVEL     V_PRPPRT      @PPRT                                        CAP060
      C                   MOVEL     V_PRPTFR      @PTFR                                        CAP060
                                                                                               CAP060
+     C/COPY WNCPYSRC,HUT121_050                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICE                                                      CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_051                                                               HUT121
                                                                                               CAP060
       ** Database error                                                                       CAP060
                                                                                               CAP060
      C                   IF        NOT %FOUND(PRICE)                                          CAP060
+     C/COPY WNCPYSRC,HUT121_052                                                               HUT121
+      *                                                                                       HUT121
      C                   MOVEL     V_PRPSSN      DBKEY                                        CAP060
      C                   MOVEL     'PRICED'      DBFILE                         ************  CAP060
      C                   MOVEL     '903'         DBASE                          * DBERR 903*  CAP060
@@ -1501,9 +1548,14 @@
      C/COPY WNCPYSRC,SEH00101
                                                                                               CAP060
       * Update Price record                                                                   CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_053                                                               HUT121
+      *                                                                                       HUT121
      C                   IF        %FOUND(PRICE)                                              CAP060
      C                   UPDATE    PRICEDF                                                    CAP060
      C                   ENDIF                                                                CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_054                                                               HUT121
                                                                                               CAP060
       *                                                                                       CAP060
       * Set indicator for insert over existing record                                         CAP060
@@ -1656,11 +1708,18 @@
      C                   MOVEL     V_PRPPRT      @PPRT                                        CAP060
      C                   MOVEL     V_PRPTFR      @PTFR                                        CAP060
                                                                                               CAP060
+     C/COPY WNCPYSRC,HUT121_055                                                               HUT121
+      *                                                                                       HUT121
      C     @PRICK        CHAIN     PRICE                                                      CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_056                                                               HUT121
                                                                                               CAP060
       ** Database error                                                                       CAP060
                                                                                               CAP060
      C                   IF        NOT %FOUND(PRICE)                                          CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_057                                                               HUT121
+      *                                                                                       HUT121
      C                   MOVEL     V_PRPSSN      DBKEY                                        CAP060
      C                   MOVEL     'PRICED'      DBFILE                         ************  CAP060
      C                   MOVEL     '904'         DBASE                          * DBERR 904*  CAP060
@@ -1687,11 +1746,17 @@
      C                   EVAL      EXVMESTMP = TimeStamp                                      CAP060
                                                                                               CAP060
       * Update Price record                                                                   CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_058                                                               HUT121
+      *                                                                                       HUT121
      C                   IF        %FOUND                                                     CAP060
      C/COPY WNCPYSRC,SEH00110
      C                   UPDATE    PRICEDF                                                    CAP060
      C/COPY WNCPYSRC,SEH00112
      C                   ENDIF                                                                CAP060
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_059                                                               HUT121
+      *                                                                                       HUT121
      C/COPY WNCPYSRC,SEH00117
       *                                                                                       CAP060
       * If CAC005 is installed, update record in SEPRICPD                                     CAP060
@@ -1853,6 +1918,8 @@
      C                   KFLD                    @PPRT             2
      C                   KFLD                    @PTFR             4
 
+     C/COPY WNCPYSRC,HUT121_155                                                               HUT121
+
      C     KSEPRC        KLIST
      C                   KFLD                    P_PSSN
      C                   KFLD                    P_PCNM
@@ -1992,6 +2059,8 @@
      C                   ELSE                                                                 CAS006
      C                   EVAL      CAS006 = 'N'                                               CAS006
      C                   ENDIF                                                                CAS006
+      *                                                                                       HUT121
+     C/COPY WNCPYSRC,HUT121_060                                                               HUT121
       *
      C                   EVAL      RECI2 = *BLANK                                            BUG8872
      C/COPY WNCPYSRC,SEH00113
@@ -2019,6 +2088,11 @@
      C                   ENDSR
      C****************************************************************
       /EJECT
+      *****************************************************************                       HUT121
+     C/COPY ZSRSRC,ZACCHLE                                                                    HUT121
+      /EJECT                                                                                  HUT121
+     C/COPY ZSRSRC,ZCHKHLE                                                                    HUT121
+      /EJECT                                                                                  HUT121
       *****************************************************************
       **--------------------------------------------------------------------------------------------
       ** The following /COPY contains the standard program status

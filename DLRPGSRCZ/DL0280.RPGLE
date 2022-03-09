@@ -9267,8 +9267,8 @@
      C                   IF        %FOUND(DAMBR2)                                          MD059512A
      C     TOTDMD        ADD       1             TOTDMD                                    MD059512A
      C     TOTDMS        ADD       1             TOTDMS                                    MD059512A
-     C                   ENDIF
-     C                   ENDIF
+     C                   ENDIF                                                             MD059512A
+     C                   ENDIF                                                             MD059512A
      C                   ENDIF                                                             MD059512A
      C                   TESTB     '7'           UDSTI                    61                MD059410
      C                   IF        *IN61 = '1'                                              MD059410

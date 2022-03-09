@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059613           Date 09Mar22               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -230,7 +231,7 @@
       ** Commitment Control Array                                                            BUG1625
                                                                                              BUG1625
      D SBMJOB          S             50    DIM(3)  CTDATA PERRCD(1)                         MD059613
-     D TEXT            S              1    DIM(65)                                          MD059613
+     D TXT             S              1    DIM(65)                                          MD059613
      D LEN             S             15S 5                                                  MD059613
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -722,9 +723,18 @@
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'USR0015'     MsgIdArr(1)
      C                   ELSE                                                               MD059613
+     C*                  MOVE      'DUMMYY'      SchTIMEA          6
+     C*                  MOVEA     SBMJOB(2)     TXT
+     C*                  MOVEA     SchTIMEA      TXT(44)
+     C*                  MOVEA     TXT           SBMJOB(2)
+     C                   EVAL      LEN = 180                                                MD059613
+     C*                  CALL      'QCMDEXC'                                                MD059613
+     C*                  PARM                    SBMJOB                                     MD059613
+     C*                  PARM                    LEN                                        MD059613
+
      C                   CALL      'QCMDEXC'                                                MD059613
      C                   PARM                    SBMJOB                                     MD059613
-     C                   PARM      150           LEN                                        MD059613
+     C                   PARM                    LEN                                        MD059613
 
      C                   EndIf
 

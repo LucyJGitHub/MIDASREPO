@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 24Jun20               *      
-      *  Prev Amend No. MD058137           Date 18May21               *
+      *  Last Amend No. MD059654           Date 07Mar22               *
+      *  Prev Amend No. MD041126           Date 24Jun20               *
+      *                 MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
@@ -84,8 +85,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059654 - Midas sends subsequent SWIFT messages with the    *
+      *             same Jms message id causing issues in FPM.        *
+      *             Reinstate MD-58137 fix                            *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line.   *
-      *           - Applied for MD055945.                             *      
+      *           - Applied for MD055945.                             *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *
       *             via MGOREF message generation                     *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *
@@ -484,7 +488,7 @@
      D MESLEN          S             10I 0                                                  MD041126
      D OPTS            S             10I 0                                                  MD041126
      D QMNAME          S             48A                                                    MD041126
-                                                                                            MD041126     
+                                                                                            MD041126
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
@@ -727,6 +731,7 @@
      C                   EVAL      MDFMT = FMSTR
      C/COPY WNCPYSRC,MS6110MC03
 
+     C                   Z-ADD     PMNMID        PMOPT                                      MD059654
       ** Send message
      C**********         Z-ADD     MQPUT         CID                                        MD041126
      C**********         CALL      'QMQM'                                                   MD041126

@@ -9243,6 +9243,8 @@
      C                             AND WDASN = DASNIR                                       MD059410
      C                   EVAL      W2CYCL = 'Y'                                             MD059326
      C                   EVAL      EVCD = BJRDNB - 1                                        MD059326
+     C     TOTDMD        ADD       1             TOTDMD                                    MD059512A
+     C     TOTDMS        ADD       1             TOTDMS                                    MD059512A
      C                   ENDIF                                                              MD059326
      C                   Z-ADD     3             WDASN                                      MD059326
      C     DMBRK2        CHAIN     DAMBR2                                                   MD059326
@@ -9250,7 +9252,24 @@
      C                             AND WDASN = DASNIR                                       MD059410
      C                   EVAL      W2CYCL = 'Y'                                             MD059326
      C                   EVAL      EVCD = BJRDNB - 1                                        MD059326
+     C     TOTDMD        ADD       1             TOTDMD                                    MD059512A
+     C     TOTDMS        ADD       1             TOTDMS                                    MD059512A
      C                   ENDIF                                                              MD059326
+     C                   IF        (TBLRT = 'Y'                                            MD059512A
+     C                             AND TCALM <> 'MANL')                                    MD059512A
+     C                             AND (UBLRT = 'Y'                                        MD059512A
+     C                             AND UCALM <> 'MANL')                                    MD059512A
+     C                   Z-ADD     1             WDASN                                     MD059512A
+     C     DMBRK2        CHAIN     DAMBR2                                                  MD059512A
+     C                   IF        %FOUND(DAMBR2)                                          MD059512A
+     C                   Z-ADD     2             WDASN                                     MD059512A
+     C     DMBRK2        CHAIN     DAMBR2                                                  MD059512A
+     C                   IF        %FOUND(DAMBR2)                                          MD059512A
+     C     TOTDMD        ADD       1             TOTDMD                                    MD059512A
+     C     TOTDMS        ADD       1             TOTDMS                                    MD059512A
+     C                   ENDIF                                                             MD059512A
+     C                   ENDIF                                                             MD059512A
+     C                   ENDIF                                                             MD059512A
      C                   TESTB     '7'           UDSTI                    61                MD059410
      C                   IF        *IN61 = '1'                                              MD059410
      C                   EVAL      W2CYCL = 'Y'                                             MD059410

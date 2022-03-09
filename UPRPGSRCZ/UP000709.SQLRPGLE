@@ -40,7 +40,7 @@
       ** +--------------------------------------+
 
       * Validation list entries maintenance display file.
-     F*SCPASSPD* IP   E             DISK                                                     MDPHSFI
+     F*SCPASSPD* IP   E             DISK                                                    MD059682
      FUPZPASPD  IP   E             DISK                                                     MD059682
       *
       *

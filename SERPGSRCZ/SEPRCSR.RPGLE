@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT121             Date 07Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG9475            Date 10Jan06               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE071             Date 19Jul05               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT121 -  Allow SE Price Input for Non-working day           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG9475 - Incorrect Net Treasury Price display format        *
@@ -37,16 +39,16 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Securities file
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(M)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -58,83 +60,83 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** SE Prices in screen format
      D NwPrcsScnFmt  E DS                  EXTNAME(SEPRCSPD)
- 
+
       ** SE Prices in file format
      D NwPrcsFilFmt  E DS                  EXTNAME(SEVPRCSPD)
      D                                     PREFIX(V)
      D CrPrcsFilFmt  E DS                  EXTNAME(PRICED)
- 
+
       ** Flags to indicate whether Price fields are valid
      D OKFlagsDS     E DS                  EXTNAME(SEEPRCSPD)
- 
+
       ** Externally described DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Externally described DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SLCD          E                     EXTFLD(LCD)
- 
+
       ** DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Security Trading Detail
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Parameters for access objects
      D PRtcd           S              7A
      D PSARd           S              6A
      D POptn           S              7A
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0 INZ(0)
      D WIdx            S              3P 0 INZ(0)
- 
+
       ** Collateralised Lending Switchable Feature
      D CSD010          S              1A
                                                                                               CGL031
@@ -147,13 +149,13 @@
                                                                                              BUG9475
      D  ZFIELD         S             16A                                                     BUG9475
      D  ZADEC          S              1  0                                                   BUG9475
- 
+
      D                 DS
      D  WDDFTS                 1     14A
      D  DDTSDT                 3      8A
      D  DDTSTM                 9     14A
      D  WDMKPN                       16A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -163,7 +165,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C     DDACTN        IFEQ      *BLANK
      C     AuthComp      IFEQ      'X'
      C                   MOVEL     'X'           DDACTN
@@ -171,7 +173,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -184,7 +186,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      SEPRCSRED
@@ -196,17 +198,18 @@
      C                   MOVEL     DDPBOK_In     DDPBOK
      C                   MOVEL     DDPPRT_In     DDPPRT
      C                   MOVEL     DDPTFR_In     DDPTFR
+     C/COPY WNCPYSRC,HUT121_130                                                               HUT121
      C                   ENDIF
- 
+
       ** If security shortname read and no error message returned
      C     @ERRMS        IFEQ      *BLANK
      C     DDPSSN        ANDNE     *BLANK
- 
+
       ** Retrieve security price
      C                   EXSR      SEPRCSRTV
- 
+
       ** Default Extel details
- 
+
      C                   IF        Idx = 0  AND
      C                             DDLPRI  = *BLANKS AND
      C                             DDUPRI  = *BLANKS AND
@@ -215,15 +218,15 @@
      C                             DDPSRC  = *BLANKS
      C                   EXSR      SRDFT
      C                   ENDIF
- 
+
       ** Convert to screeen format
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SEPRCSCVT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Also pass output fields
      C                   MOVEL     *BLANKS       WDMKPN
      C                   IF        Idx = 0
@@ -240,25 +243,25 @@
      C                   MOVE      ZFIELD        WDMKPN                                      BUG9475
                                                                                              BUG9475
      C                   ENDIF
- 
+
      C                   MOVEL     DDDFTS        WDDFTS
      C                   ENDIF
- 
+
      C                   IF        ReturnCode <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDPSSN'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       ** Build buffer with required output
- 
+
      C                   MOVE      PRTMST        @TimeStamp       26                         BUG4258
      C*************      EVAL      Buffer = NwPrcsScnFmt + WDMKPN + DDTSDT                   BUG4258
      C                   EVAL      Buffer = NwPrcsScnFmt                                     BUG4258
      C                                      + @TimeStamp                                     BUG4258
      C                                      + WDMKPN + DDTSDT                                BUG4258
      C                                 + DDTSTM
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
       *****************************************************************
@@ -267,11 +270,11 @@
       *  SEPRCSRED - ROLL BACKWARDS & FORWARDS THROUGH DEALS FILE
       *****************************************************************
      C     SEPRCSRED     BEGSR
- 
+
      C                   RESET                   RetCodeOut
- 
+
      C                   CALLB     'SEPRCSRED'
- 
+
       ** Input
       ** Return Code
      C                   PARM      *BLANK        RetCodeOut
@@ -283,22 +286,23 @@
      C                   PARM                    DDPRFC            4
      C                   PARM                    DDPPRT            2
      C                   PARM                    DDPTFR            4
- 
+     C/COPY WNCPYSRC,HUT121_131                                                               HUT121
+
       ** Read fwd
      C                   PARM                    @RDFWD            1
- 
+
       ** Read backwards
      C                   PARM                    @RDBCK            1
- 
+
       ** ICD
      C                   PARM                    CAC005            1
      C                   PARM                    BGN4ST            1
      C                   PARM                    FCR997            4
- 
+
       ** Output parameters
       ** Error message
      C                   PARM      *BLANK        @ERRMS            7
- 
+
       ** Security Read - Key fields
      C                   PARM                    @PSSN            10
      C                   PARM                    @PCNM            10
@@ -308,7 +312,7 @@
      C                   PARM                    @PRFC             4
      C                   PARM                    @PPRT             2
      C                   PARM                    @PTFR             4
- 
+
       ** Setup details
      C     @PSSN         IFNE      *BLANK
      C     @ERRMS        ANDEQ     *BLANK
@@ -321,29 +325,29 @@
      C                   MOVEL     @PPRT         DDPPRT
      C                   MOVEL     @PTFR         DDPTFR
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
       *  SEPRCSRTV  - RETRIEVE SECURITY
       *****************************************************************
      C     SEPRCSRTV     BEGSR
- 
+
      C                   RESET                   RetCodeOut
- 
+
      C                   CALLB     'SEPRCSRTV'
- 
+
       ** Inputs
       ** Return code
      C                   PARM      *BLANK        ReturnCode
- 
+
      C                   PARM      *BLANKS       ModeofOp          6
- 
+
       ** Response mode
      C                   PARM      'S'           RespMode          1
- 
+
       ** Front Office Id
      C                   PARM                    FOTRID           20
- 
+
       ** Action Code
      C                   PARM                    DDACTN            1
      C                   PARM                    DDPSSN           10
@@ -354,31 +358,32 @@
      C                   PARM                    DDPRFC            4
      C                   PARM                    DDPPRT            2
      C                   PARM                    DDPTFR            4
+     C/COPY WNCPYSRC,HUT121_132                                                               HUT121
       ** ICD
       ** Extel Indicator
      C                   PARM                    BVEXOP            1
- 
+
       ** Outputs
       ** (Current) securities prices in file format
- 
+
      C                   PARM                    CrPRCSFilFmt
- 
+
       ** If CAC005 is on, this is the book code the user entered on the screen
      C                   PARM                    PBCD              2
- 
+
       ** If CAC005 is on, this is the pseudo book
       ** If CAC005 is off, this is the book the user entered on the screen
      C                   PARM                    PBOK              2
- 
+
       ** Profit Centre, in file format
      C                   PARM                    PRFC              4
- 
+
       ** Customer number in file format
      C                   PARM                    PCNM
- 
+
       ** Current Price retrieved, depending on price type
      C                   PARM                    DDCURP           16
- 
+
       ** OK fields
      C                   PARM                    DDACTNOK
      C                   PARM                    DDSSNOK
@@ -389,22 +394,22 @@
      C                   PARM                    DDPRFCOK
      C                   PARM                    DDPRTOK
      C                   PARM                    DDPTFROK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Warnings
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         WIdx
      C                   PARM      FCR997        @CR997            4
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -412,7 +417,7 @@
       * SRDFT   - DEFAULTING FOR EXTEL DETAILS
       *****************************************************************
      C     SRDFT         BEGSR
- 
+
      C                   CALLB     'SEPRCSDFT'
       *
       * INPUTS
@@ -425,12 +430,12 @@
      C                   PARM                    DDPSSN           10
       ** Price Type
      C                   PARM                    DDPPRT            2
- 
+
       * Account in file format
      C                   PARM                    CrPrcsFilFmt
       * ICD
      C                   PARM                    BVEXOP
- 
+
       * OUTPUTS
       * Screen Output
       *
@@ -453,7 +458,7 @@
      C                   PARM                    Idx
       ** Security shortname OK flag
      C                   PARM                    DDSSNOK
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -461,39 +466,39 @@
       * SEPRCSCVT  - PUT A DEAL ON THE MAIN DETAILS SCREEN
       *****************************************************************
      C     SEPRCSCVT     BEGSR
- 
+
      C                   CALLB     'SEPRCSCVT'
- 
+
       ** Inputs
       ** Return Code
      C                   PARM                    DDSTS             8
      C                   PARM      *BLANK        ReturnCode
- 
+
       ** Securities Prices Transaction Details file format
      C                   PARM                    CrPrcsFilFmt
- 
+
       ** If CAC005 is on, this is the pseudo book ( the book stored on file on PRICED )
       ** If CAC005 is off, this is the book the user entered on the screen
- 
+
      C                   PARM                    PBOK
                                                                                               CGL031
       ** Taxation on Savings Income                                                           CGL031
                                                                                               CGL031
      C                   PARM                    CGL031                                       CGL031
- 
+
       ** Outputs
       ** Securities Prices Transaction Details screen format
      C                   PARM                    NwPrcsScnFmt
- 
+
       ** Current Price in file format
      C                   PARM                    HPPRC
- 
+
       ** Switchable feature CSD010 parameters
      C                   PARM                    HBDPR
      C                   PARM                    HOFPR
      C                   PARM                    HCLPR
      C                   PARM                    CSD010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -504,13 +509,13 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   MOVE      *ALL'Y'       OKFlagsDS
- 
+
      C                   CLEAR                   NwPrcsFilFmt
      C                   CLEAR                   NwPrcsScnFmt
      C                   CLEAR                   CrPrcsFilFmt
- 
+
       * Output only fields
      C                   EVAL      DDCURP = *BLANKS
      C                   EVAL      DDPSRC = *BLANKS
@@ -524,15 +529,15 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Entry parameters.
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
- 
+
       ** Key fields
      C                   PARM                    DDPSSN_In        10
      C                   PARM                    DDPCNM_In        10
@@ -541,59 +546,60 @@
      C                   PARM                    DDPBOK_In         2
      C                   PARM                    DDPPRT_In         2
      C                   PARM                    DDPTFR_In         4
- 
+     C/COPY WNCPYSRC,HUT121_133                                                               HUT121
+
      C                   PARM                    Buffer         6000
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
- 
+
      C                   EVAL      MsgFArray(1) = 'SEUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'
- 
+
       ** Access midas modules.
- 
+
      C                   CALLB     'AOMMODR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                   EVAL      DBKey = POptn
      C                   EVAL      DBFile = 'SDMMODPD'
      C                   Z-ADD     1             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CAC005 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CAC005'      PSARd
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CAC005 = 'Y'
      C                   ELSE
      C                   EVAL      CAC005 = 'N'
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CSD010 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSD010'      PSARd
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CSD010 = 'Y'
      C                   ELSE
@@ -624,18 +630,18 @@
      C                   ENDIF                                                                CGL031
                                                                                               CGL031
      C                   ENDIF                                                                CGL031
- 
+
       ** Check if EXTEL indicator is on, BVEXOP
- 
+
      C                   CALL      'AOSTRDR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDSTRD        PARM      SDSTRD        DSSDY
- 
+
      C                   EXSR      RESETCYCLE
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************

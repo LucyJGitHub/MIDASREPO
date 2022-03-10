@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058986           Date 11Oct21               *
-      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *  Last Amend No. MD059667           Date 09Mar22               *
+      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059667 - Inconsistent DHCMEF field in CBCMPXTD.            *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -147,6 +149,14 @@
      C                   ENDDO
       *
      C     ENDPGM        TAG
+      *                                                                                     MD059667
+      * Finally, update CBCMPXTD.DHCMEF flag (Mut.Exclusive Comps.Flag)                     MD059667
+      * for any component defined as mutually exclusive                                     MD059667
+     C/EXEC SQL                                                                             MD059667
+     C+ update CBCMPXTD set DHCMEF = 'Y'                                                    MD059667
+     C+ where DHCMEF = 'N' and DHCOTT concat DHCSEQ in                                      MD059667
+     C+ (select DKCOTT concat DKCSEQ from CBMEXCTD)                                         MD059667
+     C/END-EXEC                                                                             MD059667
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************

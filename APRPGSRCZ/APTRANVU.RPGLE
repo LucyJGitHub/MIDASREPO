@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058991           Date 06Oct21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amemd No. MD059539           Date 07Mar22               *
+      *  Prev Amend No. MD058991           Date 06Oct21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD058379           Date 01Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CLE172             Date 01Oct20               *
@@ -235,6 +236,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059539 - CER049 buffer issue.                              *
       *  MD058991 - Backward looking rate error encountered           *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -1423,7 +1425,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       1681          Bfp2                                MD038485 CER050
      C**********         ADD       1680          Bfp2                                CER050 MD054028
      C**********         ADD       1678          Bfp2                              MD054028 MD058379
-     C                   ADD       1728          Bfp2                                       MD058379
+     C**********         ADD       1728          Bfp2                              MD058379 MD059539
+     C                   ADD       1678          Bfp2                                       MD059539
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A

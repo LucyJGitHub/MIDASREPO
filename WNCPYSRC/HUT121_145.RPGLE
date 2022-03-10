@@ -9,7 +9,7 @@
       *  HUT121 -  Allow SE Price Input for Non-working day           *
       *                                                               *
       *****************************************************************
-     D HUT121          S              1                                         Feature HUT121
+     D HUT121          S              1                                         Feature       HUT121
       *                                                                                       HUT121
       *****************************************************************
       * End of /COPY HUT121_145                                       *

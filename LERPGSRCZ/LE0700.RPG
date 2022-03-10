@@ -216,7 +216,7 @@
      F*FACEXFA*O***F******80            DISK                                                  CLE042
      F***FACEXFA*O   F      84            DISK                                         CLE042 244459
      F*ACEXFA O   F     100            DISK                                            244459 CLE123
-     F***FACEXFA*O   F     185            DISK                                         CLE123 CLE124 
+     F***FACEXFA*O   F     185            DISK                                         CLE123 CLE124
      F***FACEXFA O   F     205            DISK                                       CLE124 MD059660
      FFACEXFA O   F     270            DISK                                                 MD059660
      F*ACEXFC O   F      80            DISK                               S01117
@@ -1238,7 +1238,7 @@
      C                     MOVE 'Y'       CLE124                                              CLE124
      C                     SETON                     52                                       CLE124
      C                     ENDIF                                                              CLE124
-      *                                                                                       CLE124 
+      *                                                                                       CLE124
      C/COPY WNCPYSRC,LE0700C002
 0663 C**
 0664 C                     SETON                     40
@@ -1283,6 +1283,10 @@
      C                     MOVE *BLANKS   ANACON 30                                           CLE123
      C                     MOVE *BLANKS   ANDPCD  3                                           CLE123
      C                     MOVE *BLANKS   ANDPNM 30                                           CLE123
+     C                     MOVE *BLANKS   ANFCOC  2                                         MD059660
+     C                     MOVE *BLANKS   ANFCON 30                                         MD059660
+     C                     MOVE *BLANKS   ANFPCD  3                                         MD059660
+     C                     MOVE *BLANKS   ANFPNM 30                                         MD059660
      C                     ENDIF                                                              CLE123
       *                                                                                       CLE123
      C   02      CLE123    IFEQ 'Y'                                                           CLE123
@@ -1321,11 +1325,6 @@
       *                                                                                     MD059660
       ** Retrieve Facility Account Officer and Department                                   MD059660
       *                                                                                     MD059660
-     C                     MOVE *BLANKS   ANFCOC  2                                         MD059660
-     C                     MOVE *BLANKS   ANFCON 30                                         MD059660
-     C                     MOVE *BLANKS   ANFPCD  3                                         MD059660
-     C                     MOVE *BLANKS   ANFPNM 30                                         MD059660
-      *                                                                                     MD059660
      C           FCKEY     KLIST                                                            MD059660
      C                     KFLD           BRCA                                              MD059660
      C                     KFLD           FCUS                                              MD059660
@@ -1333,15 +1332,32 @@
      C                     KFLD           FSEQ                                              MD059660
       *                                                                                     MD059660
      C           FCKEY     CHAINFCLTYL1              81                                     MD059660
-     C           *IN81     IFEQ '0'                                                         MD059660
+     C           *IN81     IFEQ '1'                                                         MD059660
+      *                                                                                     MD059660
+      ** If Loan's Facility does not exist use the Loan's Acct Officer and Dept Code        MD059660
+      *                                                                                     MD059660
+     C                     MOVE ANACOC    ANFCOC                                            MD059660
+     C                     MOVE ANACON    ANFCON                                            MD059660
+     C                     MOVE ANDPCD    ANFPCD                                            MD059660
+     C                     MOVE ANDPNM    ANFPNM                                            MD059660
+      *                                                                                     MD059660
+     C                     ELSE                                                             MD059660
      C                     MOVE ACOF      ACOKEY                                            MD059660
-     C                     ENDIF                                                            MD059660
+      *                                                                                     MD059660
+     C           ANACOC    IFEQ ACOF                                                        MD059660
+     C                     MOVE ANACOC    ANFCOC                                            MD059660
+     C                     MOVE ANACON    ANFCON                                            MD059660
+     C                     MOVE ANDPCD    ANFPCD                                            MD059660
+     C                     MOVE ANDPNM    ANFPNM                                            MD059660
+      *                                                                                     MD059660
+     C                     ELSE                                                             MD059660
       *                                                                                     MD059660
      C                     CALL 'AOACOFR0'                                                  MD059660
      C                     PARM '*BLANKS' @RTCD   7                                         MD059660
      C                     PARM '*KEY   ' @OPTN                                             MD059660
      C                     PARM           ACOKEY  2                                         MD059660
      C           SDACOF    PARM SDACOF    DSFDY                                             MD059660
+      *                                                                                     MD059660
      C           @RTCD     IFNE *BLANKS                                                     MD059660
      C                     SETON                     89                                     MD059660
      C                     ELSE                                                             MD059660
@@ -1361,6 +1377,8 @@
      C                     ELSE                                                             MD059660
      C                     MOVE AEDPCD    ANFPCD                                            MD059660
      C                     MOVE AEDPNM    ANFPNM                                            MD059660
+     C                     ENDIF                                                            MD059660
+     C                     ENDIF                                                            MD059660
      C                     ENDIF                                                            MD059660
      C                     ENDIF                                                            MD059660
       *                                                                                       CLE123

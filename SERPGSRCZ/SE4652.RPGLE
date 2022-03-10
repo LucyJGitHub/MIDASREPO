@@ -2119,7 +2119,7 @@
      C                   EVAL      CSE042 = 'Y'
      C                   ENDIF
 
-     C/COPY WNCPYSRC,HUT121_144
+     C/COPY WNCPYSRC,HUT121_144                                                               HUT121
       ** Access General Ledger details
 
      C**********         CALL      'AOGELRR0'                                                 CGL029

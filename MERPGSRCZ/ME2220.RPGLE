@@ -19,10 +19,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD059676           Date 09Mar22               *
+      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059676 - Program dump in job MS_MX_IMM due to duplicate    *
+      *             data (Recompile)                                  *
       *  CSW122 - SWIFT ISO20022 Changes                              *
       *                                                               *
       *****************************************************************

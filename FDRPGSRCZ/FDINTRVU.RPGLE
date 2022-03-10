@@ -231,8 +231,7 @@
       ** Commitment Control Array                                                            BUG1625
                                                                                              BUG1625
      D SBMJOB          S             50    DIM(3)  CTDATA PERRCD(1)                         MD059613
-     D TXT             S              1    DIM(65)                                          MD059613
-     D LEN             S             15S 5                                                  MD059613
+     D LEN             S             15  5 INZ(150)                                         MD059613
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -723,15 +722,6 @@
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'USR0015'     MsgIdArr(1)
      C                   ELSE                                                               MD059613
-     C*                  MOVE      'DUMMYY'      SchTIMEA          6
-     C*                  MOVEA     SBMJOB(2)     TXT
-     C*                  MOVEA     SchTIMEA      TXT(44)
-     C*                  MOVEA     TXT           SBMJOB(2)
-     C                   EVAL      LEN = 180                                                MD059613
-     C*                  CALL      'QCMDEXC'                                                MD059613
-     C*                  PARM                    SBMJOB                                     MD059613
-     C*                  PARM                    LEN                                        MD059613
-
      C                   CALL      'QCMDEXC'                                                MD059613
      C                   PARM                    SBMJOB                                     MD059613
      C                   PARM                    LEN                                        MD059613
@@ -752,6 +742,6 @@
 **  CPY@
 (c) Finastra International Limited 2004
 ** SBMJOB
-SBMJOB JOB(DLC1960) JOBD(MBATCH) USER(*JOBD)
+SBMJOB JOB(DLC1960) JOBD(MBATCH)  USER(*JOBD)
 RTGDTA(*JOBD) RQSDTA('CALL DLC1960')
 INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)

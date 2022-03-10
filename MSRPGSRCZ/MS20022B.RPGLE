@@ -17,10 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD59677            Date 10Mar22               *
+      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD59677 - Cleared correlation ID                             *
       *  CSW122 - SWIFT ISO 20022 Changes                             *
       *                                                               *
       *****************************************************************
@@ -370,6 +372,7 @@
       ** are processed in arrival/priority sequence
 
      C                   MOVEL     MINONE        MDMID
+     C                   MOVEL     CINONE        MDCID                                       MD59677
 
       ** Clear message buffer
 

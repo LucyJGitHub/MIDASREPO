@@ -2557,7 +2557,7 @@
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CSE015
      C                   ENDIF
-                                                                                              CSW207
+                                                                                              HUT121
      C/COPY WNCPYSRC,HUT121_152                                                               HUT121
                                                                                               CSW207
       ** Check if SWIFT 2007 is installed                                                     CSW207

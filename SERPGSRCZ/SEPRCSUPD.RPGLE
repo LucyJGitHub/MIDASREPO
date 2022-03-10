@@ -169,6 +169,7 @@
                                                                                               CAP060
      D B_PRICE       E DS                  EXTNAME(PRICE)                                     CAP060
      D                                     PREFIX(B_)                                         CAP060
+      **  Externally described DS for 'BEFORE UPDATE'                                         CAP060
       *                                                                                       HUT121
      D/COPY WNCPYSRC,HUT121_039                                                               HUT121
       *                                                                                       HUT121

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD059656           Date 04Mar22               *
-      *  Prev Amend No. CLE124             Date 02Nov21               *
+      *  Last Amend No. MD059660           Date 08Mar22               *
+      *  Prev Amend No. MD059656           Date 04Mar22               *
+      *                 CLE124             Date 02Nov21               *
       *                 CLE123             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059660 - Duplicate Dept in LE0723P3 and wrong Dept Code    *
+      *             in LE0723P1.                                      *
       *  MD059656 - Add new fields of CLE123 and CLE124 in Aggregate  *
       *             Facilities extract Files                          *
       *  CLE124 - Commitment and Outstanding Report by Customer Name  *
@@ -103,7 +106,7 @@
       ** Commitment/Facility Loan extract trailer file
      FFACEXT4   UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
-
+      
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -276,10 +279,18 @@
      C                   EVAL      ANDPCD = *BLANKS                                         MD059656
      C                   EVAL      ANDPNM = *BLANKS                                         MD059656
      C                   EVAL      ANCRNM = *BLANKS                                         MD059656
+     C                   EVAL      ANFCOC = *BLANKS                                         MD059660
+     C                   EVAL      ANFCON = *BLANKS                                         MD059660
+     C                   EVAL      ANFPCD = *BLANKS                                         MD059660
+     C                   EVAL      ANFPNM = *BLANKS                                         MD059660
       *                                                                                     MD059656
      C                   IF        CLE123 = 'Y'                                             MD059656
       *                                                                                     MD059656
      C                   EVAL      ANCRNM = BBCRNM                                          MD059656
+     C                   EVAL      ANFCOC = FAANACOC                                        MD059660
+     C                   EVAL      ANFCON = FAANACON                                        MD059660
+     C                   EVAL      ANFPCD = FAANDPCD                                        MD059660
+     C                   EVAL      ANFPNM = FAANDPNM                                        MD059660
       *                                                                                     MD059656
      C                   EVAL      @ACOF = FAANACOC                                         MD059656
      C                   CALL      'AOACOFR0'                                               MD059656

@@ -5,13 +5,20 @@
 /*                                                                  */
 /*     MIDAS - EUROPEAN REPORTING                                   */
 /*                                                                  */
-/*     XXCL0701- EUROPEAN REPORTING                                 */
-/*               INTERFACE TO FRS MAIN COMPONENT                    */
+/******XXCL0701-*EUROPEAN*REPORTING**********************************/                  /*MD059459*/
+/****************INTERFACE*TO*FRS*MAIN*COMPONENT*********************/                  /*MD059459*/
+/*     XXCL0701- MIDAS EUROPEAN RETURNS MAIN COMPONENT - ITALY      */                  /*MD059459*/ 
+/*                                                                  */                  /*MD059459*/
+/*     NOTE: THIS IS A VERSION OF THE CORE COMPONENT ERC0701        */                  /*MD059459*/
+/*     UPDATED TO MEET SPECIFIC ITALIAN REPORTING REQUIREMENTS      */                  /*MD059459*/
+/*     ITS CHANGES SHOULD BE MERGED INTO ERC0701 IN CASE OF         */                  /*MD059459*/
+/*     CORE INCORPORATION                                           */                  /*MD059459*/
 /*                                                                  */
 /*     COPYRIGHT BIS BANKING SYSTEMS 1992.  COMPANY CONFIDENTIAL    */
 /*                                                                  */
-/*     Last Amend No. MD058100           Date 20May21               */
-/*     Prev Amend No. LUC139 *Update     Date  10May21              */
+/*       Last Amend No. MD059459           Date 13Jan22              */
+/*       Prev Amend No. MD058100           Date 20May21              */
+/*                      LUC139 *Update     Date  10May21             */
 /*                    LUC139             Date 08Jan21               */
 /*                    MMI137             Date  13Jul09              */
 /*                    MBV005             Date  10May07              */
@@ -32,6 +39,12 @@
 /*                    ER1004             DATE  03NOV92         ThL  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD059459 - Upgrade Italian Returns to FM 2021.B             */
+/*                - Embed the contents of ERC0702 as they are        */
+/*                  specific to Italian Returns                      */
+/*                - Avoid calling AOSARDR0 since the CADREPORT batch */
+/*                  job does not have all the necessary logical files*/
+/*                  files in its library list.                       */
 /*  MD058100 - Rollup of additional BoI onsite fixes at FbMidas     */
 /*  LUC139 - Remove F7SEVAL1. Delete GPCSECL1 version in xxERDLIB   */
 /*  LUC139 - Upgrade UCI Italian Returns                            */
@@ -362,12 +375,75 @@
              CHGDTAARA  DTAARA(ERCTLD (&ERPGMPOS 10)) VALUE(&ERPGM)
 
              OVRDBF     FILE(EREXTRL0) SEQONLY(*YES)
-             CHGVAR     VAR(&RETURN) VALUE('N')                     /* ERL414 */
-             CALL       PGM(ERC0702) PARM(&ERPGM &BJMRDT &BJURPT +
-                          &VDICNA &RETURN)                          /* ERL414 */
-/*                                                                     ERL414 */
-             IF         COND(&RETURN *EQ 'Y') THEN(GOTO CMDLBL(EOJ))/* ERL414 */
-/*                                                                     ERL414 */
+/**********  CHGVAR     VAR(&RETURN) VALUE('N')                      */          /*ERL414 MD059459*/
+/**********  CALL       PGM(ERC0702) PARM(&ERPGM &BJMRDT &BJURPT     */                 /*MD059459*/
+/**********               &VDICNA &RETURN)                           */          /*ERL414 MD059459*/
+                                                                                        /*MD059459*/
+/** Send 'started' message                                           */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('XXCL0701 -' *BCAT &VDICNA *TCAT ' +
+                          Reporting Interface to FRS starts') +
+                          TOMSGQ(ERMSGQ)                                                /*MD059459*/
+                                                                                        /*MD059459*/
+/** Fidi Plurimi - assign RIPA codes                                 */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('ERIT57 - Assign RIPA Codes') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)                                 /*MD059459*/
+             CALL       PGM(ERIT57)                                                     /*MD059459*/
+                                                                                        /*MD059459*/
+/** Numbers calculation                                              */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             CLRPFM     FILE(ERNUMEPD)                                                  /*MD059459*/
+             SNDPGMMSG  MSG('ERIT58 - Loan Numbers Calculation') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)                                 /*MD059459*/
+             CALL       PGM(ERIT58)                                                     /*MD059459*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('ERIT59 - Account Numbers calculation') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)                                 /*MD059459*/
+             CALL       PGM(ERIT59)                                                     /*MD059459*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                /*MD059459*/
+                                                                                        /*MD059459*/
+/** Main extract                                          */                            /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('ERIT60 - Main Extract') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)                                 /*MD059459*/
+             CALL       PGM(&ERPGM) PARM(&BJMRDT &BJURPT &LASTSQ)                       /*MD059459*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                /*MD059459*/
+                                                                                        /*MD059459*/
+/** GUARANTEES GENERATION - PROVISIONS UPDATE                        */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('ERIT75 - Guarantees generation') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)                                 /*MD059459*/
+             RCLRSC     LVL(*)                                                          /*MD059459*/
+             CALL       PGM(ERIT75)                                                     /*MD059459*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                /*MD059459*/
+                                                                                        /*MD059459*/
+/** LENDING REPAYMENTS                                               */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('ERIT79 - Lending Repayments') +
+                          TOMSGQ(ERMSGQ) MSGTYPE(*INFO)                                 /*MD059459*/
+             RCLRSC     LVL(*)                                                          /*MD059459*/
+             CALL       PGM(ERIT79)                                                     /*MD059459*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                /*MD059459*/
+                                                                                        /*MD059459*/
+/** BASE DATI W                                                      */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             SNDPGMMSG  MSG('ERIT94 - Base Dati W') TOMSGQ(ERMSGQ) +
+                          MSGTYPE(*INFO)                                                /*MD059459*/
+             RCLRSC     LVL(*)                                                          /*MD059459*/
+             CALL       PGM(ERIT94)                                                     /*MD059459*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                /*MD059459*/
+                                                                                        /*MD059459*/
+/**********                                                          */          /*ERL414 MD059459*/
+/**********  IF         COND(&RETURN *EQ 'Y') THEN(GOTO CMDLBL(EOJ)) */          /*ERL414 MD059459*/
+/**********                                                          */          /*ERL414 MD059459*/
              CHGDTAARA  DTAARA(ERCTLD (&FLAGPOS 1)) VALUE('Y')
 
 
@@ -389,21 +465,36 @@
 /*                                                                 */ /*MMI033*/
              CALL       PGM(IRC1000)                                  /*MMI033*/
 
-             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'MMI033' +
-                          &DSFDY)                                     /*MMI033*/
-             IF         COND(&RTCD *EQ ' ') THEN(DO)                  /*MMI033*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'MMI033' +*/                 /*MD059459*/
+/**********               &DSFDY)                                    */          /*MMI033 MD059459*/
+/**********  IF         COND(&RTCD *EQ ' ') THEN(DO)                 */          /*MMI033 MD059459*/
+                                                                                        /*MD059459*/
+/** Check if IRMIHOPD exists in ERDLIB. If yes this means that MMI033*/                 /*MD059459*/
+/** is active.                                                       */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             CHKOBJ     OBJ(&XXERDLIB/IRMIHOPD) OBJTYPE(*FILE)                          /*MD059459*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SKIPMMI033))                    /*MD059459*/
+                                                                                        /*MD059459*/
              CALL       PGM(ERC4110)                                  /*MMI100*/
              CALL       PGM(ERC4130)                                  /*MMI100*/
              IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                           CMDLBL(ERROR))                              /*MMI033*/
-             ENDDO                                                    /*MMI033*/
+/**********  ENDDO                                                   */          /*MMI033 MD059459*/
+SKIPMMI033:                                                                             /*MD059459*/
 
 /*                                                                 */ /*MMI059*/
 /* OASI INTERFACE                                                  */ /*MMI059*/
 /*                                                                 */ /*MMI059*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'MMI059' +
-                          &DSFDY)                                     /*MMI059*/
-             IF         COND(&RTCD *EQ ' ') THEN(DO)                  /*MMI059*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'MMI059' +*/                 /*MD059459*/
+/**********               &DSFDY)                                    */          /*MMI059 MD059459*/
+/**********  IF         COND(&RTCD *EQ ' ') THEN(DO)                             /*MMI059 MD059459*/
+                                                                                        /*MD059459*/
+/** Check if IRTABEPD exists in ERDLIB. If yes this means that MMI059*/                 /*MD059459*/
+/** is active.                                                       */                 /*MD059459*/
+                                                                                        /*MD059459*/
+             CHKOBJ     OBJ(&XXERDLIB/IRTABEPD) OBJTYPE(*FILE)                          /*MD059459*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SKIPMMI059))                    /*MD059459*/
+                                                                                        /*MD059459*/
              CLRPFM     FILE(IRTABEPD)                                /*MMI059*/
              CALL       PGM(IR1500)                                   /*MMI059*/
              IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
@@ -457,7 +548,8 @@
 
              ENDDO                                                    /*MMI092*/
 
-             ENDDO                                                    /*MMI059*/
+/**********  ENDDO                                                               /*MMI059 MD059459*/
+SKIPMMI059:                                                                             /*MD059459*/
 
              CHGVAR     VAR(&FLAGPOS) VALUE(&FLAGPOS + 1)
              CHGVAR     VAR(&ERPGMPOS) VALUE(&ERPGMPOS +10)
@@ -482,8 +574,10 @@
 
              CHGDTAARA  DTAARA(ERCTLD (39 1)) VALUE('Y')
 
-             SNDPGMMSG  MSG('ERC0701 -  Reporting Interface to FRS +
-                          terminates.') TOMSGQ(ERMSGQ) /* ER0126 */
+/**********  SNDPGMMSG  MSG('ERC0701 -  Reporting Interface to FRS + */                 /*MD059459*/
+/**********               terminates.') TOMSGQ(ERMSGQ)               */          /*ER0126 MD059459*/
+             SNDPGMMSG  MSG('XXCL0701 -  Reporting Interface to FRS +
+                          terminates.') TOMSGQ(ERMSGQ)                                  /*MD059459*/
 
              GOTO       CMDLBL(EOJ) /* Normal Completion */
 
@@ -507,14 +601,17 @@
                                                                       /*MMI100*/
              DLTF       FILE(&XXERDLIB/MUSER)                         /*MMI100*/
              MONMSG     MSGID(CPF2105)                                /*MMI100*/
-             DLTF       FILE(&XXERDLIB/SCCSECL1)                      /*MMI100*/
-             MONMSG     MSGID(CPF2105)                                /*MMI100*/
-             DLTF       FILE(&XXERDLIB/SCSARDL1)                      /*MMI100*/
-             MONMSG     MSGID(CPF2105)                                /*MMI100*/
-             DLTF       FILE(&XXERDLIB/SCSARSL1)                      /*MMI100*/
-             MONMSG     MSGID(CPF2105)                                /*MMI100*/
-             DLTF       FILE(&XXERDLIB/GPCSECL1)                      /*LUC139*/
-             MONMSG     MSGID(CPF2105)                                /*LUC139*/
+/**********  DLTF       FILE(&XXERDLIB/SCCSECL1)                     */          /*MMI100 MD059459*/
+/**********  MONMSG     MSGID(CPF2105)                               */          /*MMI100 MD059459*/
+/**********  DLTF       FILE(&XXERDLIB/SCSARDL1)                     */          /*MMI100 MD059459*/
+/**********  MONMSG     MSGID(CPF2105)                               */          /*MMI100 MD059459*/
+/**********  DLTF       FILE(&XXERDLIB/SCSARSL1)                     */          /*MMI100 MD059459*/
+/**********  MONMSG     MSGID(CPF2105)                               */          /*MMI100 MD059459*/
+/**********  DLTF       FILE(&XXERDLIB/GPCSECL1)                     */          /*LUC139 MD059459*/
+/**********  MONMSG     MSGID(CPF2105)                               */          /*LUC139 MD059459*/
+                                                                                        /*MD059459*/
+             RCLRSC     LVL(*)                                                          /*MD059459*/
+             DLTOVR     FILE(*ALL)                                                      /*MD059459*/
                                                                /* ERL414 */
              SNDMSG     MSG('CADREPORT Job finished') TOMSGQ(MOPERQ +
                           MRUNQ)                               /* 50314 */

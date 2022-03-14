@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059459           Date 17Jan22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*       Prev Amend No. BG18886            Date 26May08              */
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059459 - Upgrade Italian Returns to FM 2021.B             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
@@ -42,7 +44,8 @@
 LOOP: +
  /*  RCVMSG MSGQ(ERMSGQ) RMV(*NO) MSG(&MSG) SENDER(&SENDER)            ULX004*/
 /****RCVMSG*MSGQ(CADMSGQ)*RMV(*NO)*MSG(&MSG)*SENDER(&SENDER)              */       /*ULX004 CER001*/
-     RCVMSG MSGQ(MOPERQ) RMV(*NO) MSG(&MSG) SENDER(&SENDER)                               /*CER001*/
+/****RCVMSG MSGQ(MOPERQ) RMV(*NO) MSG(&MSG) SENDER(&SENDER)          */          /*CER001 MD059459*/
+     RCVMSG MSGQ(ERMSGQ) RMV(*NO) MSG(&MSG) SENDER(&SENDER)                             /*MD059459*/
 /****IF COND(&MSG *= ' ') THEN(DO)                                   */                  /*BG18886*/
      IF COND(&MSG *NE ' ') THEN(DO)                                                      /*BG18886*/
      CHGVAR VAR(&MTIME) VALUE(%SUBSTRING(&SENDER 50 6))

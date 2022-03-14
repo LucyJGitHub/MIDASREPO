@@ -1,0 +1,1201 @@
+     H        1   Y
+      *****************************************************************   USW004
+/*STD *  RPGBASE                                                      *   USW004
+/*EXI *  TEXT('Midas ER Extract program - GL & RE Accounts')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERIT72 - ER Extract program - GL & RE Accounts               *
+      *                                                               *
+      *  (c) Copyright Midas-Kapiti International 1992, 1996.         *
+      *                                                               *
+      *  Last Amend No. MD059459 REDUNDANT Date 14Mar22               *
+      *  Prev Amend No. MD058100           Date 20May21               *
+      *                 LUC139             Date 04Jan21               *
+      *                 MMI094             Date 24Apr02               *
+      *                 197061             Date 29Aug01               *
+      *                 MMI075             Date 09AUG00               *
+      *                 MMI033    CREATE        02APR99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD059459 - Source made redundant at FM2021.B                 *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  MMI094 - Identify Interest Capitalisation movements through  *
+      *           table 'CAP'                                         *
+      *  197061 - Last day of month not included in numbers.          *
+      *           Interest capitalisations not picked up.             *
+      *  MMI075 - Midas Italy Puma/2 : re-writed                      *
+      *  MMI033 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+     FREHISDL IF  E           K        DISK
+     F* Retail History Amount
+     F*
+     FAPOSTL1 IF  E           K        DISK
+     F* Postings
+     F*
+     FERCURRL1IF  E           K        DISK
+      * VR - Currency Codes table
+      *
+     FERICDRL0IF  E           K        DISK
+      * VD - ER I.C.D.
+     FIRFXTBL1IF  E           K        DISK                               MMI094
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     FQSYSPRT O   F     132            PRINTER
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   .. *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49      *
+     F**      *           53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   .. *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * ..   82   83   84   85   86   87   ..   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E*
+     E                    NAR        20 30                                MMI094
+     I** DATA STRUCTURE FOR TRANSACTION REFERENCE
+     I            DS
+     I                                        1   6 KCNUM
+     I                                        7   9 KCCY
+     I                                       10  190KACOD
+     I                                       20  210KACSQ
+     I                                        1  21 WWTREF
+     I            DS
+     I                                        1   80WWPRDD
+     I                                        3   40WYEAR
+     I                                        5   60WMONTH
+     I                                        7   80WDAY
+     I            DS
+     I                                        1   60XWENDD
+     I                                        1   20XDAY
+     I                                        3   40XMONTH
+     I                                        5   60XYEAR
+     I            DS
+     I                                        1   60YWSTRD
+     I                                        1   20YDAY
+     I                                        3   40YMONTH
+     I                                        5   60YYEAR
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*                    M A I N
+     C*****************************************************************
+     C*
+     C                     EXSR #INIT
+     C*
+     C  NLR                DO
+     C                     EXSR ELAB
+     C  N60                EXCPTPLUTO
+     C                     EXSR ELABC
+     C  N60                EXCPTPLUTOC
+     C           PERIOD    IFEQ 'M'
+     C                     EXSR ELABL
+     C  N60                EXCPTPLUTOL
+     C                     END
+     C                     EXSR TOTAL
+     C*****                SETON                     LR
+     C                     RETRN
+     C                     ENDDO
+     C*
+     C**************************************************************************
+     C* W001 - SUBROUTINE TO WRITE A RECORD IN EREXTRPD OUTPUT FILE
+     C**************************************************************************
+     C*
+     C           ELAB      BEGSR
+     C*
+     C                     SETOF                     50
+     C                     Z-ADDEXSTRD    STRD    50
+     C                     Z-ADDEXSTRD    LSTD    50
+     C                     Z-ADDEXENDD    ENDD    50
+     C                     Z-ADDEXENDD    ENDD1   50
+     C                     SUB  1         ENDD1   50
+     C                     Z-ADD0         NUMDEB 150
+     C                     Z-ADD0         NUMCRE 150
+     C                     Z-ADD0         NUMDEC 150
+     C                     Z-ADD0         NUMCRC 150
+     C                     Z-ADD0         INTDEB 150
+     C                     Z-ADD0         INTCRE 150
+     C                     Z-ADD0         MACAMT 150
+     C                     Z-ADD0         MLCAMT 150
+     C                     Z-ADD0         WCONP   50
+     C*
+     C                     SETOF                     21
+     C           KACXC     SETLLREHISDL
+     C           *IN21     DOWEQ'0'
+     C           KACXC     READEREHISDL                  21
+     C           *IN21     IFEQ '0'
+      *
+     C                     Z-ADDHISB      INAMNT
+     C                     EXSR CONV
+     C                     Z-ADDAMTITL    PROVA  153
+      *
+     C           HISD      IFLT STRD
+     C********             Z-ADDHISB      LSTB   150
+     C**********           Z-ADDPROVA     LSTB   153                      197061
+     C                     Z-ADDHISB      LSTB   153                      197061
+     C                     Z-ADDCRIR      LSTCR  117
+     C                     Z-ADDDRIR      LSTDR  117
+     C                     END
+     C           HISD      IFGE STRD
+     C           HISD      ANDLTENDD
+     C                     EXSR ELAB1
+     C                     END
+     C           HISD      IFGE ENDD
+     C           LSTD      ANDLEENDD1
+     C                     Z-ADDENDD      HISD
+     C                     Z-ADDLSTB      HISB
+     C                     EXSR ELAB1
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C********** LSTD      IFLT ENDD1                                     197061
+     C           LSTD      IFLE ENDD1                                     197061
+     C                     Z-ADDENDD      HISD
+     C                     Z-ADDLSTB      HISB
+     C                     Z-ADDLSTCR     CRIR
+     C                     Z-ADDLSTDR     DRIR
+     C                     EXSR ELAB1
+     C*
+     C                     END
+     C*
+     C                     Z-ADDENDD      DIFDAT
+     C                     SUB  STRD      DIFDAT
+     C           NUMDEB    DIV  DIFDAT    ALPAMT 150
+     C           NUMCRE    DIV  DIFDAT    ACPAMT 150
+     C*
+     C                     SUB  NUMDEC    NUMDEB
+     C                     SUB  NUMCRC    NUMCRE
+     C*
+     C           HISB      IFGE 0
+     C                     Z-ADDHISB      MACAMT 150
+     C                     ELSE
+     C                     Z-ADDHISB      MLCAMT 150
+     C                     END
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           ELAB1     BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C                     Z-ADD0         $INTC  150
+     C                     Z-ADDHISD      DIFDAT  50
+     C                     SUB  LSTD      DIFDAT  50
+     C           LSTB      MULT DIFDAT    NUMMP  180
+     C*
+     C           EXLCID    IFGE LSTD
+     C           NUMMP     ANDLT0
+     C                     Z-SUBNUMMP     NUMMP1 180
+     C                     ADD  NUMMP1    NUMCRC
+     C                     END
+     C*
+     C           EXLDID    IFGE LSTD
+     C           NUMMP     ANDGT0
+     C                     ADD  NUMMP     NUMDEC
+     C                     END
+     C*
+     C           NUMMP     IFLT 0
+     C                     MULT -1        NUMMP
+     C                     ADD  NUMMP     NUMCRE
+     C                     ELSE
+     C                     ADD  NUMMP     NUMDEB
+     C                     END
+     C*
+     C                     EXSR ELAB2
+     C*
+     C  N60                EXCPTPIPPO
+     C                     Z-ADDHISD      LSTD
+     C                     Z-ADDHISB      LSTB
+     C                     Z-ADDDRIR      LSTDR
+     C                     Z-ADDCRIR      LSTCR
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           ELAB2     BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C           LSTB      IFGT 0
+     C           LSTB      MULT DIFDAT    $INTC
+     C           $INTC     MULT LSTDR     $INTC
+     C           $INTC     DIV  36500     $INTC     H
+     C                     MULT -1        $INTC     H
+     C                     ADD  $INTC     INTDEB
+     C                     ELSE
+     C           LSTB      MULT DIFDAT    $INTC  150
+     C           $INTC     MULT LSTCR     $INTC
+     C           $INTC     DIV  36500     $INTC     H
+     C                     ADD  $INTC     INTCRE
+     C                     END
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C* ELABC- SUBROUTINE TO READ HISTORY POSTINGS
+     C**************************************************************************
+     C*
+     C           ELABC     BEGSR
+     C*
+     C                     SETOF                     505152
+     C                     Z-ADDEXSTRD    STRD    50
+     C                     Z-ADDEXSTRD    LSTD    50
+     C                     Z-ADDEXENDD    ENDD    50
+     C                     Z-ADD0         CUMDEB 150
+     C                     Z-ADD0         CUMCRE 150
+     C                     Z-ADD0         NOPDR   50
+     C                     Z-ADD0         NOPCR   50
+     C                     Z-ADD0         AOPDR  150
+     C                     Z-ADD0         AOPCR  150
+     C                     Z-ADD0         AOPCD  150
+     C                     Z-ADD0         AOPCC  150
+     C                     Z-ADD0         WCONP   50
+     C*
+     C                     SETOF                     21
+     C           KACXC     SETLLGLACPHPF
+     C           *IN21     DOWEQ'0'
+     C           KACXC     READEGLACPHPF                 21
+     C           *IN21     IFEQ '0'
+     C                     MULT -1        SDLB
+     C           PSTD      IFLT STRD
+     C                     Z-ADDSDLB      LSTB   153
+     C                     END
+     C           PSTD      IFGE STRD
+     C           WCONP     ANDEQ0
+     C                     ADD  1         WCONP
+     C                     Z-ADDSDLB      LSTB   153
+     C                     END
+     C           PSTD      IFGE STRD
+     C           PSTD      ANDLTENDD
+     C* N52                Z-ADDSDLB      INAMNT
+     C* N52                EXSR CONV
+     C* N52                Z-ADDAMTITL    SDLB
+     C* N52                Z-ADDSDLB      LSTB   153
+     C* N52                SETON                     52
+     C                     EXSR ELAB1C
+     C                     END
+     C           PSTD      IFGE ENDD
+     C           LSTD      ANDLTENDD
+     C                     Z-ADDENDD      PSTD
+     C                     Z-ADDLSTB      SDLB
+     C                     EXSR ELAB1C
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           LSTD      IFLT ENDD
+     C                     EXSR ELAB0C
+     C                     END
+     C*
+     C                     Z-ADDENDD      DIFDAT
+     C                     SUB  STRD      DIFDAT
+     C*
+     C           NOPDR     IFEQ 0
+     C           NOPCR     ANDEQ0
+     C                     MOVE EXAMNT    $XAMNT 160
+     C                     SELEC                           Decimal places
+     C           CONBDP    WHEQ 0
+     C                     DIV  1000      $XAMNT
+     C           CONBDP    WHEQ 1
+     C                     DIV  100       $XAMNT
+     C           CONBDP    WHEQ 2
+     C                     DIV  10        $XAMNT
+     C                     ENDSL
+      *
+     C           EXDRCR    IFEQ 1
+     C           $XAMNT    MULT DIFDAT    CUMDEB
+     C                     ELSE
+     C           $XAMNT    MULT DIFDAT    CUMCRE
+     C                     END
+     C                     END
+     C*
+     C           CUMDEB    DIV  DIFDAT    CLPAMT 150
+     C           CUMCRE    DIV  DIFDAT    CCPAMT 150
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C* ELAB0C SUBROUTINE TO READ NO HISTORY POSTINGS
+     C**************************************************************************
+     C*
+     C           ELAB0C    BEGSR
+     C*
+     C                     SETOF                     21
+     C                     Z-ADD0         WCONP   50
+     C           KACXC     SETLLAPOSTPDF
+     C           *IN21     DOWEQ'0'
+     C           KACXC     READEAPOSTPDF                 21
+     C           *IN21     IFEQ '0'
+     C                     MULT -1        SDLB
+     C******               MOVE EXTREF    WACSQ   20
+     C*******    PSTD      IFLT STRD
+     C           PSTD      IFLT STRD
+     C*                    Z-ADDSDLB      INAMNT
+     C*                    EXSR CONV
+     C*                    Z-ADDAMTITL    SDLB
+     C                     Z-ADDSDLB      LSTB   153
+     C                     END
+     C           PSTD      IFGE STRD
+     C           WCONP     ANDEQ0
+     C                     ADD  1         WCONP
+     C*                    Z-ADDSDLB      INAMNT
+     C*                    EXSR CONV
+     C*                    Z-ADDAMTITL    SDLB
+     C                     Z-ADDSDLB      LSTB   153
+     C                     END
+     C           PSTD      IFGE STRD
+     C           PSTD      ANDLEENDD
+     C                     EXSR ELAB1C
+     C*******              Z-ADDHISB      LSTB
+     C                     END
+     C           PSTD      IFGE ENDD
+     C           LSTD      ANDLTENDD
+     C                     Z-ADDENDD      PSTD
+     C                     Z-ADDLSTB      SDLB
+     C                     EXSR ELAB1C
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           LSTD      IFLT ENDD
+     C                     SETON                         51
+     C                     Z-ADDENDD      PSTD
+     C                     Z-ADDLSTB      SDLB
+     C                     Z-ADD0         PSTA
+     C                     EXSR ELAB1C
+     C*
+     C                     END
+     C*
+     C                     SETON                         51
+     C                     Z-ADDENDD      PSTD
+     C                     Z-ADDLSTB      SDLB
+     C                     Z-ADD0         PSTA
+     C                     EXSR ELAB1C
+     C*
+     C                     Z-ADDENDD      DIFDAT
+     C                     SUB  STRD      DIFDAT
+     C           CUMDEB    DIV  DIFDAT    CLPAMT 150
+     C           CUMCRE    DIV  DIFDAT    CCPAMT 150
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           ELAB1C    BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C                     Z-ADD0         $INTC  150
+     C                     Z-ADDPSTD      DIFDAT  50
+     C                     SUB  LSTD      DIFDAT  50
+     C           LSTB      MULT DIFDAT    NUMMP  180
+     C*
+     C                     EXSR LASTP
+     C*
+     C********   NUMMP     IFLT 0
+     C           NUMMP     IFLT 0
+     C                     MULT -1        NUMMP
+     C********             ADD  NUMMP     CUMDEB
+     C                     ADD  NUMMP     CUMCRE
+     C                     ELSE
+     C*********            ADD  NUMMP     CUMCRE
+     C                     ADD  NUMMP     CUMDEB
+     C                     END
+     C*
+     C  N51                EXSR ELAB2C
+     C  N60                EXCPTPIPPOC
+     C*
+     C                     Z-ADDPSTD      LSTD
+     C******               Z-ADDSDLB      LSTD
+     C*                    Z-ADDPSTA      INAMNT
+     C*                    EXSR CONV
+     C*                    Z-ADDAMTITL    PSTA
+      *
+     C*******    DRCR      IFEQ 0
+     C           DRCR      IFEQ 1
+     C                     ADD  PSTA      LSTB
+     C                     ELSE
+     C                     SUB  PSTA      LSTB
+     C                     END
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           ELAB2C    BEGSR
+     C*
+     C                     MOVELPNAR      WPNAR   5
+     C***********          MOVELSPOS      WSPOS   7                       MMI094
+     C*
+     C           PSTD      IFLE ENDD1
+     C***********                                                         MMI094
+     C***********WPNAR     IFEQ 'INTER'                                   MMI094
+     C***********WSPOS     ANDEQ'  GE-IC'                                 MMI094
+     C***********WPNAR     OREQ 'Inter'                             197061MMI094
+     C***********WSPOS     ANDEQ'  GE-IC'                           197061MMI094
+     C           SPOS      IFEQ '  GE-IC'                                 MMI094
+     C           PNAR      LOKUPNAR                      59               MMI094
+     C           *IN59     IFEQ *ON                                       MMI094
+     C           WPNAR     OREQ 'INTER'                                   MMI094
+     C           WPNAR     OREQ 'Inter'                             1     MMI094
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      AOPCD
+     C                     ELSE
+     C                     ADD  PSTA      AOPCC
+     C                     END
+     C                     END
+     C                     END                                            MMI094
+     C*******    DRCR      IFEQ 0
+     C           DRCR      IFEQ 0
+     C                     ADD  1         NOPDR
+     C                     ADD  PSTA      AOPDR
+     C                     ELSE
+     C                     ADD  1         NOPCR
+     C                     ADD  PSTA      AOPCR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C* ELABl- SUBROUTINE TO READ HISTORY POSTINGS
+     C**************************************************************************
+     C*
+     C           ELABL     BEGSR
+     C*
+     C                     SETOF                     505152
+     C                     Z-ADDEXSTRD    STRD    50
+     C                     Z-ADDEXSTRD    LSTD    50
+     C                     Z-ADDEXENDD    ENDD    50
+     C                     Z-ADD0         LUMDEB 150
+     C                     Z-ADD0         LUMCRE 150
+     C                     Z-ADD0         WCONP   50
+     C*
+     C                     SETOF                     21
+     C           KACXC     SETLLAPOSTPDF
+     C           *IN21     DOWEQ'0'
+     C           KACXC     READEAPOSTPDF                 21
+     C           *IN21     IFEQ '0'
+     C                     MULT -1        SDCB
+     C           PSTD      IFGT STRD
+     C                     Z-ADDSDCB      LSTB   153
+     C                     END
+     C           PSTD      IFGT LSTD
+     C                     Z-ADD0         WCONP
+     C                     END
+     C           PSTD      IFGT LSTD
+     C           PSTD      ANDLEENDD
+     C           WCONP     ANDEQ0
+     C                     ADD  1         WCONP
+     C                     Z-ADDSDCB      LSTB   153
+     C                     Z-ADDPSTD      DIFDAT  50
+     C                     SUB  LSTD      DIFDAT  50
+     C                     EXSR ELAB1L
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDENDD      DIFDAT  50
+     C                     SUB  LSTD      DIFDAT  50
+     C                     Z-SUBHISB      LSTB   153
+     C                     EXSR ELAB1L
+     C*
+     C                     Z-ADDENDD      DIFDAT
+     C                     SUB  STRD      DIFDAT
+     C*
+     C           LUMDEB    DIV  DIFDAT    LLPAMT 150
+     C           LUMCRE    DIV  DIFDAT    LCPAMT 150
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           ELAB1L    BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C           LSTB      MULT DIFDAT    NUMMP  180
+     C*
+     C                     EXSR LASTP
+     C*
+     C           NUMMP     IFLT 0
+     C                     MULT -1        NUMMP
+     C                     ADD  NUMMP     LUMCRE
+     C                     ELSE
+     C                     ADD  NUMMP     LUMDEB
+     C                     END
+     C*
+     C  N60                EXCPTPIPPOL
+     C*
+     C                     Z-ADDPSTD      LSTD
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C** LAST POSTING DATE                                                AG0001
+     C**=================================================================
+     C           LASTP     BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C           PSTA      IFNE 0
+     C           PSTD      ANDLEENDD1
+     C*                                                                   AG0001
+     C                     MOVEL'D'       #SDFMT                          AG0001
+     C                     Z-ADDPSTD      #SDAYN                          AG0001
+     C                     CALL 'ZA0140'                                  AG0001
+     C                     PARM           #SDAYN  50                      AG0001
+     C                     PARM           #SDFMT  1                       AG0001
+     C                     PARM           #SDATE  60                      AG0001
+     C                     PARM           #SDATA  7                       AG0001
+     C                     PARM           #SRTN   1                       AG0001
+     C                     PARM           #SDAT8  80                      AG0001
+     C                     MOVEL#SDAT8    ICLSTM                          AG0001
+     C*                                                                   AG0001
+     C                     END
+     C*
+     C                     ENDSR
+     C**=================================================================
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C** STORE START DATE ACCOUNT                                         AG0001
+     C*
+     C           *ENTRY    PLIST
+     C*  Input Parameters
+     C                     PARM           PERIOD  1        Transaction reference
+     C                     PARM           EXTREF 15        Transaction reference
+     C                     PARM           EXBRCD  3        Branch code
+     C                     PARM           EXOPND  50       OPEN DATE
+     C                     PARM           EXPRDA  80       END DATE
+     C                     PARM           EXLDID  50       LAST DEB. CAP. DATE
+     C                     PARM           EXLCID  50       LAST CRE. CAP. DATE
+     C*  Output Parameters
+     C                     PARM           ICLSTM  80       221  Y         MKI033
+     C                     PARM           ICNCDL 160       612  M         MKI033
+     C                     PARM           ICNCCL 160       613  M         MKI033
+     C                     PARM           ICCPDL 160       614  M         MKI033
+     C                     PARM           ICCPCL 160       615  M         MKI033
+     C                     PARM           ICQNCD 160       635  Q         MKI033
+     C                     PARM           ICQNCC 160       636  Q         MKI033
+     C                     PARM           ICQCPD 160       637  Q         MKI033
+     C                     PARM           ICQCPC 160       638  Q         MKI033
+     C                     PARM           ICQMVD 160       639  Q         MKI033
+     C                     PARM           ICQMVC 160       640  Q         MKI033
+     C                     PARM           ICAALR 160       661  M         MKI033
+     C                     PARM           ICLALR 160       662  M         MKI033
+     C                     PARM           ICAACL 160       663  M         MKI033
+     C                     PARM           ICLACL 160       664  M         MKI033
+     C                     PARM           ICAAFX 160       761  M         MKI033
+     C                     PARM           ICLAFX 160       762  M         MKI033
+     C                     PARM           ICAACF 160       763  M         MKI033
+     C                     PARM           ICLACF 160       764  M         MKI033
+     C                     PARM           ICACLR 160       665  M         MKI033
+     C                     PARM           ICLCLR 160       666  M         MKI033
+     C                     PARM           ICACFX 160       765  M         MKI033
+     C                     PARM           ICLCFX 160       766  M         MKI033
+     C                     PARM           EXAMNT 160       700  M         MKI033
+     C                     PARM           EXDRCR  10                      MKI033
+      *
+     C*  Input Parameters
+     C*                    MOVEL'001574IT'EXTREF 15        Transaction reference
+     C*                    MOVE 'L304901' EXTREF 15        Transaction reference
+     C*                    MOVE '831'     EXBRCD  3        Branch code
+     C*                    Z-ADD9863      EXSTRD  50       Branch code
+     C*                    Z-ADD9952      EXENDD  50       Branch code
+     C*                    Z-ADD9952      EXLDID  50       Branch code
+     C*                    Z-ADD9862      EXLCID  50       Branch code
+     C*
+     C                     MOVELEXTREF    WWTREF
+     C*
+     C           KACXC     KLIST
+     C                     KFLD           EXBRCD
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C*                                                    *****************
+      ***  Read ER ICD : RETRIEVE LOCAL CCY
+      *
+     C           'IT'      CHAINERICDRL0             80
+      *
+      ***  Access Italian ER currency defintion : retrieve Rate /vs base CCY
+      *
+     C           VDCCYC    CHAINERCURRL1             80
+      *
+     C                     Z-ADDVRSPRT    @@RAT2 138       Spot rate
+     C                     MOVE VRMDIN    @@MDI2  1        Mult/Div Ind
+     C                     Z-ADDVRNBDP    CUNBDP  10       Dec places
+      *
+     C           KCCY      CHAINERCURRL1             80
+      *
+     C                     MOVELVRCYCD    RTCYCD  2        CCY CODE
+     C                     Z-ADDVRNBDP    CONBDP  10       Dec places
+     C                     Z-ADDVRSPRT    @@RAT1 138
+     C                     MOVE VRMDIN    @@MDI1  1
+     C                     EXSR ZA0900                     Cross X-rate
+      *
+     C                     Z-ADDEXPRDA    WWPRDD
+     C                     Z-ADDWYEAR     XYEAR
+     C                     Z-ADDWMONTH    XMONTH
+     C                     Z-ADDWDAY      XDAY
+      *
+     C                     Z-ADDXWENDD    YWSTRD
+     C                     Z-ADD01        YDAY
+      *
+     C                     SETOF                     616263
+     C           PERIOD    IFEQ 'M'
+     C                     SETON                         61
+     C                     END
+      *
+     C           PERIOD    IFEQ 'F'
+     C                     SETON                         LR
+     C                     END
+      *
+     C           PERIOD    IFEQ 'Q'
+     C                     SETON                         62
+     C                     END
+      *
+     C           PERIOD    IFEQ 'Y'
+     C                     SETON                         63
+     C                     END
+      *
+     C  N60                EXCPTPERIO
+     C           PERIOD    IFEQ 'Q'
+     C           YMONTH    IFLE 3
+     C                     Z-ADD01        YMONTH
+     C                     END
+     C           YMONTH    IFGE 4
+     C           YMONTH    ANDLE6
+     C                     Z-ADD04        YMONTH
+     C                     END
+     C           YMONTH    IFGE 7
+     C           YMONTH    ANDLE9
+     C                     Z-ADD07        YMONTH
+     C                     END
+     C           YMONTH    IFGE 10
+     C           YMONTH    ANDLE12
+     C                     Z-ADD010       YMONTH
+     C                     END
+     C                     END
+     C*                                                    *****************
+     C           PERIOD    IFEQ 'Y'
+     C                     Z-ADD1         YMONTH
+     C                     END
+     C*                                                    *****************
+     C                     Z-ADDXWENDD    #SDATE
+     C                     MOVEL'D'       #SDTFM
+     C                     MOVEL*BLANKS   #SRTRN
+     C                     Z-ADD*ZEROS    #SDGIM
+     C*
+     C                     CALL 'ZA0270'
+     C                     PARM           #SDATE  60
+     C                     PARM           #SDTFM  1
+     C                     PARM           #SRTRN  1
+     C                     PARM           #SDGIM  50
+     C                     Z-ADD#SDGIM    EXENDD  50
+     C                     ADD  1         EXENDD  50
+     C*
+     C*                                                    *****************
+     C                     Z-ADDYWSTRD    #SDATE
+     C                     MOVEL'D'       #SDTFM
+     C                     MOVEL*BLANKS   #SRTRN
+     C                     Z-ADD*ZEROS    #SDGIM
+     C*
+     C                     CALL 'ZA0270'
+     C                     PARM           #SDATE  60
+     C                     PARM           #SDTFM  1
+     C                     PARM           #SRTRN  1
+     C                     PARM           #SDGIM  50
+     C                     Z-ADD#SDGIM    EXSTRD  50
+     C           EXOPND    IFGT EXSTRD
+     C                     Z-ADDEXOPND    EXSTRD  50
+     C                     END
+     C*
+      *
+     C                     SETON                         60
+     C*                                                                   MMI094
+     C* Setup array of Posting Narratives that will be used to            MMI094
+     C* identify Interest Capitalisations                                 MMI094
+     C*                                                                   MMI094
+     C                     Z-ADD0         X       20                      MMI094
+     C           'CAP'     CHAINIRFXTBL1             59                   MMI094
+     C           *IN59     DOWEQ*OFF                                      MMI094
+     C                     MOVELF0PNAR    XNAR   30                       MMI094
+     C           XNAR      LOKUPNAR                      26               MMI094
+     C  N26                ADD  1         X                               MMI094
+     C  N26                MOVELXNAR      NAR,X                           MMI094
+     C           'CAP'     READEIRFXTBL1                 59               MMI094
+     C                     ENDDO                                          MMI094
+     C*
+     C                     ENDSR
+      **=================================================================
+     C*  ZA0900 - THIS SUBROUTINE CALCULATES THE CROSS EXCHANGE RATE  *
+     C*                                                               *
+     C* CALLED BY :  MAIN                                             *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* INPUT  : @@MDI1  FIRST MULTIPLY/DIVIDE INDICATOR              *
+     C*          @@MDI2  SECOND MULTIPLY/DIVIDE INDICATOR             *
+     C*          @@RAT1  FIRST RATE (SIZE : 13,8)                     *
+     C*          @@RAT2  SECOND RATE (SIZE : 13,8)                    *
+     C*                                                               *
+     C* OUTPUT : @@CSRT  CROSS RATE  (SIZE : 13,8)                    *
+     C*          @@FCMD  FIRST CCY MULTIPLY/DIVIDE INDICATOR          *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0900    BEGSR
+     C*
+     C           @@RAT1    IFEQ *ZERO                      B1
+     C                     Z-ADD1         @@RAT1
+     C                     END                             E1
+     C*
+     C           @@RAT2    IFEQ *ZERO                      B1
+     C                     Z-ADD1         @@RAT2           *1
+     C                     END                             E1
+     C*
+     C**  IF THE FIRST RATE M/D INDICATOR IS 'M' MULTIPLY,
+     C**             ELSE DIVIDE
+     C*
+     C           @@MDI1    IFEQ 'M'                        B1
+     C                     Z-ADD@@RAT1    @@CSRT 159       *1
+     C                     ELSE                            X1
+     C           1         DIV  @@RAT1    @@CSRT    H      *1
+     C                     END                             E1
+     C*
+     C**  IF THE SECOND RATE M/D INDICATOR IS 'D' MULTIPLY,
+     C**             ELSE DIVIDE
+     C*
+     C           @@MDI2    IFEQ 'D'                        B1
+     C           @@CSRT    MULT @@RAT2    @@CSRT    H      *1
+     C                     ELSE                            X1
+     C           @@CSRT    DIV  @@RAT2    @@CSRT    H      *1
+     C                     END                             E1
+     C*
+     C*
+     C**  SET FIRST CCY MULTIPLY/DIVIDE *IN TO MULTIPLY
+     C                     MOVE 'M'       @@FCMD  1
+     C*
+     C           ZA0909    ENDSR                           **ZA0909 TAG**
+      *-----------------------------------------------------------
+     C           CONV      BEGSR
+     C*
+     C                     EXSR CALCON
+      *
+     C                     SELEC                           Decimal places
+     C           CONBDP    WHEQ 0
+     C                     Z-ADDOUTAMT    AMTITL 183
+     C           CONBDP    WHEQ 1
+     C           OUTAMT    DIV  10        AMTITL
+     C           CONBDP    WHEQ 2
+     C           OUTAMT    DIV  100       AMTITL
+     C           CONBDP    WHEQ 3
+     C           OUTAMT    DIV  1000      AMTITL
+     C                     ENDSL
+      *
+     C*
+     C                     ENDSR                           **ZA0909 TAG**
+      *-----------------------------------------------------------
+     C* WRITE OUTPUT PARAMETERS
+      *-----------------------------------------------------------
+     C           TOTAL     BEGSR
+      *
+     C******               MOVEL@@MDI1    @@MDI0  1
+     C******               MOVEL@@MDI2    @@MDI1
+     C******               MOVEL@@MDI0    @@MDI2
+      *
+     C*                    Z-ADDNUMDEB    ICNCDL           612  M
+     C*                    Z-ADDNUMDEB    OUTAMT           612  Q
+     C*                    EXSR CONV1
+     C*                    Z-ADDAMTITL    ICNCDL           612  Q
+     C                     Z-ADDNUMDEB    INAMNT           612  Q
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICNCDL           612  Q
+     C                     EXSR CONV2
+     C                     Z-ADDAMTITL    ICNCDL           612  Q
+     C********             Z-ADDNUMCRE    ICNCCL           613  M
+     C                     Z-ADDNUMCRE    INAMNT           613  Q
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICNCCL           613  Q
+     C                     EXSR CONV2
+     C                     Z-ADDAMTITL    ICNCCL           613  Q
+     C*                    Z-ADDNUMDEC    ICCPDL           614  M
+     C                     Z-ADDNUMDEC    INAMNT           614  Q
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICCPDL           614  Q
+     C                     Z-ADDICCPDL    OUTAMT           614  Q
+     C                     EXSR CONV2
+     C                     Z-ADDAMTITL    ICCPDL           614  Q
+     C*********            Z-ADDNUMCRC    ICCPCL           615  Q
+     C                     Z-ADDNUMCRC    INAMNT           615  Q
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICCPCL           615  Q
+     C                     Z-ADDICCPCL    OUTAMT           615  Q
+     C                     EXSR CONV2
+     C                     Z-ADDAMTITL    ICCPCL           615  Q
+      *
+     C*                    Z-ADDAOPDR     INAMNT           635  Q
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICQNCD           635  Q
+     C*                    Z-ADDAOPCR     INAMNT           636  Q
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICQNCC           636  Q
+     C*                    Z-ADDAOPCD     INAMNT           637  Q
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICQCPD           637  Q
+     C*                    Z-ADDAOPCC     INAMNT           638  Q
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICQCPC           638  Q
+     C                     Z-ADDAOPDR     ICQNCD           635  Q
+     C                     Z-ADDAOPCR     ICQNCC           636  Q
+     C                     Z-ADDAOPCD     ICQCPD           637  Q
+     C                     Z-ADDAOPCC     ICQCPC           638  Q
+     C*
+     C*                    Z-ADDAOPDR     INAMNT           635  Q
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICQNCD           635  Q
+     C                     Z-ADDICQNCD    OUTAMT           635  Q
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    ICQNCD           635  Q
+     C*                    Z-ADDAOPCR     INAMNT           636  Q
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICQNCC           636  Q
+     C                     Z-ADDICQNCC    OUTAMT           636  Q
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    ICQNCC           636  Q
+     C                     Z-ADDAOPCD     OUTAMT           637  Q
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    ICQCPD           637  Q
+     C                     Z-ADDAOPCC     OUTAMT           638  Q
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    ICQCPC           638  Q
+     C                     Z-ADDNOPDR     ICQMVD           639  Q
+     C                     Z-ADDNOPCR     ICQMVC           640  Q
+     C                     Z-ADDCCPAMT    OUTAMT           761  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    CCPAMT           761  M
+     C                     Z-ADDCCPAMT    ICAAFX           761
+     C                     Z-ADDCCPAMT    INAMNT           661  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICAALR           661  M
+     C                     Z-ADDCLPAMT    OUTAMT           762  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    CLPAMT           762  M
+     C                     Z-ADDCLPAMT    ICLAFX           762
+     C                     Z-ADDCLPAMT    INAMNT           662  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICLALR           662  M
+     C                     Z-ADDALPAMT    OUTAMT           763  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    ALPAMT           763  M
+     C                     Z-ADDALPAMT    ICAACF           763
+     C                     Z-ADDALPAMT    INAMNT           663  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICAACL           663  Q
+     C                     Z-ADDACPAMT    OUTAMT           764  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    ACPAMT           764  M
+     C                     Z-ADDACPAMT    ICLACF           764
+     C                     Z-ADDACPAMT    INAMNT           664  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICLACL           664  Q
+     C*****                Z-ADDMACAMT    OUTAMT           765  M
+     C                     Z-ADDLCPAMT    OUTAMT           765  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    LCPAMT           765  M
+     C                     Z-ADDLCPAMT    ICACFX           765
+     C                     Z-ADDLCPAMT    INAMNT           665  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICACLR           665  M
+     C                     Z-ADDMLCAMT    OUTAMT           766  M
+     C                     EXSR CONV1
+     C                     Z-ADDAMTITL    MLCAMT           766  M
+     C                     Z-ADDMLCAMT    ICLCFX           766  M
+     C                     Z-ADDMLCAMT    INAMNT           666  M
+     C                     EXSR CALCON
+     C                     Z-ADDOUTAMT    ICLCLR           666  M
+      *
+     C*                    Z-ADDICAALR    INAMNT
+     C*                    EXSR CALCON
+      *
+     C*                    Z-ADDICLALR    INAMNT
+     C*                    EXSR CALCON
+      *
+     C*                    Z-ADDICAACL    INAMNT
+     C*                    EXSR CALCON
+      *
+     C*                    Z-ADDICLACL    INAMNT
+     C*                    EXSR CALCON
+      *
+     C*                    Z-ADDICLCLR    INAMNT
+     C*                    EXSR CALCON
+      *
+     C*                    Z-ADDICACLR    INAMNT
+     C*                    EXSR CALCON
+     C*                    Z-ADDOUTAMT    ICACFX           765
+      *
+     C  N60                EXCPTRISULT
+     C                     ENDSR                           **ZA0909 TAG**
+      *-----------------------------------------------------------
+      ***  All Amounts will be filled out with 2 decimal places (Italy)  ***
+      *-----------------------------------------------------------
+     C           CONV1     BEGSR
+      *-----------------------------------------------------------
+      *
+      *
+     C                     Z-ADDOUTAMT    $OUTAM 183
+      *
+     C                     SELEC                           Decimal places
+     C           CONBDP    WHEQ 0
+     C           OUTAMT    MULT 100       AMTITL 183
+     C           CONBDP    WHEQ 1
+     C           OUTAMT    MULT 10        AMTITL
+     C           CONBDP    WHEQ 2
+     C                     Z-ADDOUTAMT    AMTITL
+     C           CONBDP    WHEQ 3
+     C           OUTAMT    DIV  10        AMTITL
+     C                     ENDSL
+      *
+     C                     Z-ADDAMTITL    INAMNT
+     C* N60                EXCPTDSPCON
+      *
+     C                     ENDSR                           **ZA0909 TAG**
+      *****************************************************************
+      *-----------------------------------------------------------
+     C           CONV2     BEGSR
+      *-----------------------------------------------------------
+      *
+      ** Initialize fields
+      *
+     C                     Z-ADDOUTAMT    $OUTAM 183
+      *
+     C                     SELEC                           Decimal places
+     C           CONBDP    WHEQ 0
+     C                     Z-ADDOUTAMT    AMTITL
+     C           CONBDP    WHEQ 1
+     C           OUTAMT    DIV  10        AMTITL
+     C           CONBDP    WHEQ 2
+     C           OUTAMT    DIV  100       AMTITL
+     C           CONBDP    WHEQ 3
+     C           OUTAMT    MULT 10        AMTITL
+     C                     ENDSL
+      *
+     C                     Z-ADDAMTITL    INAMNT
+      *
+      *
+      *
+     C                     ENDSR                           **ZA0909 TAG**
+      *****************************************************************
+      *-----------------------------------------------------------
+     C           CALCON    BEGSR
+      *-----------------------------------------------------------
+      *
+      ** Initialize fields
+     C                     Z-ADDINAMNT    INAMNT 160
+     C                     Z-ADD0         OUTAMT 160
+      **
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'D'
+     C           @@RAT1    MULT @@RAT2    WWRAT  138
+     C           INAMNT    MULT WWRAT     OUTAMT    H
+     C                     END
+      **
+     C           @@MDI1    IFEQ 'M'
+     C           @@MDI2    ANDEQ'M'
+     C           INAMNT    MULT @@RAT1    OUTAMT
+     C           OUTAMT    DIV  @@RAT2    OUTAMT    H
+     C                     END
+      **
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'D'
+     C           INAMNT    MULT @@RAT2    OUTAMT
+     C           OUTAMT    DIV  @@RAT1    OUTAMT    H
+     C                     END
+      **
+     C           @@MDI1    IFEQ 'D'
+     C           @@MDI2    ANDEQ'M'
+     C           @@RAT1    MULT @@RAT2    WWRAT
+     C           INAMNT    DIV  WWRAT     OUTAMT    H
+     C                     END
+     C                     Z-ADD0         WKOUTA 160
+     C           OUTAMT    DIV  10        WKOUTA    H
+     C           WKOUTA    MULT 10        OUTAMT
+      **
+     C                     ENDSR
+      *
+      ********************************************************************ER0317
+     OQSYSPRT E  1             PERIO
+     O                       61          10 'MESE      '
+     O                       62          10 'TRIMESTRE '
+     O                       63          10 'ANNO      '
+     O        E  1             PIPPO
+     O                         WWTREF    21
+     O                         STRD    +001
+     O                         LSTD    +001
+     O                         HISD    +001
+     O                         DIFDAT2 +001
+     O                         LSTB  K +001
+     O                         NUMMP K +001
+     O                         $INTC K +001
+     O        E  1             PLUTO
+     O                                   12 'NUM DEB NCAP'
+     O                         NUMDEB2   35
+     O                                   65 'NUM CRE NCAP'
+     O                         NUMCRE2   80
+     O        E  1             PLUTO
+     O                                   12 'NUM DEB CAP '
+     O                         NUMDEC2   35
+     O                                   60 'NUM CRE CAP '
+     O                         NUMCRC2   80
+     O        E  1             PLUTO
+     O                                   17 'SALDO MED.PASSIVO'
+     O                         ALPAMT2   35
+     O                                   65 'SALDO MED.ATTIVO '
+     O                         ACPAMT2   80
+     O        E  1             PLUTO
+     O                                   17 'INTER. PASSIVI   '
+     O                         INTDEB2   35
+     O                                   65 'INTER. ATTIVI    '
+     O                         INTCRE2   80
+     O                         EXLDID    90
+     O                         EXLCID   100
+     O        E  1             PLUTO
+     O                                   17 'SALDO lIQUIDO    '
+     O                         HISB  2   35
+     O        E  1             PIPPOC
+     O                         WWTREF    21
+     O******                   STRD    +001
+     O                         LSTD    +001
+     O                         PSTD    +001
+     O                         DIFDAT2 +001
+     O                         LSTB  K +001
+     O****++++                 HISB  2 +001
+     O                         PSTA  2 +001
+     O                         DRCR  2 +001
+     O                         PNAR    +001
+     O        E  1             PLUTOC
+     O                                   12 'NUMERI DEB. '
+     O                         CUMDEB2   35
+     O                                   65 'NUMERI CRE. '
+     O                         CUMCRE2   80
+     O        E  1             PLUTOC
+     O                                   17 'SALDO MED.PASSIVO'
+     O                         CLPAMT2   35
+     O                                   65 'SALDO MED.ATTIVO '
+     O                         CCPAMT2   80
+     O        E  1             PLUTOC
+     O                                   17 'N OP. DARE       '
+     O                         NOPDR 2   35
+     O                                   65 'N OP AVERE       '
+     O                         NOPCR 2   80
+     O        E  1             PLUTOC
+     O                                   17 'IMP. DARE        '
+     O                         AOPDR 2   35
+     O                                   65 'IMP. AVERE       '
+     O                         AOPCR 2   80
+     O        E  1             PLUTOC
+     O                                   17 'MOV. DARE CAP.   '
+     O                         AOPCD 2   35
+     O                                   65 'MOV. AVERE CAP.  '
+     O                         AOPCC 2   80
+     O        E  1             PLUTOC
+     O                                   17 'Data ultima op.  '
+     O                         ICLSTM    35 '    /  /  '
+     O        E  1             PIPPOL
+     O                         WWTREF    21
+     O******                   STRD    +001
+     O                         VALD    +001
+     O                         PSTD    +001
+     O                         ICLSTM  +001
+     O                         DIFDAT2 +001
+     O                         LSTB  K +001
+     O****++++                 HISB  2 +001
+     O                         PSTA  2 +001
+     O                         DRCR  2 +001
+     O                         PNAR    +001
+     O        E  1             PLUTOL
+     O                                   12 'NUMERI DEB. '
+     O                         LUMDEB2   35
+     O                                   65 'NUMERI CRE. '
+     O                         LUMCRE2   80
+     O        E  1             PLUTOL
+     O                                   17 'SLD L.MED.PASSIVO'
+     O                         LLPAMT2   35
+     O                                   65 'SLD L.MED.ATTIVO '
+     O                         LCPAMT2   80
+     O        E  1     63      RISULT
+     O                         WWTREF    21
+     O                         PERIOD  +001
+     O                         ICNCDL2 +001
+     O                                 +001 '612'
+     O                         ICNCCL2 +001
+     O                                 +001 '613'
+     O                         ICCPDL2 +001
+     O                                 +001 '614'
+     O                         ICCPCL2 +001
+     O                                 +001 '615'
+     O        E  1     62      RISULT
+     O                         WWTREF    21
+     O                                 +001 ' '
+     O                         ICQNCD2 +001
+     O                                 +001 '635'
+     O                         ICQNCC2 +001
+     O                                 +001 '636'
+     O                         ICQCPD2 +001
+     O                                 +001 '637'
+     O                         ICQCPC2 +001
+     O                                 +001 '638'
+     O        E  1     62      RISULT
+     O                         WWTREF    21
+     O                                 +001 ' '
+     O                         ICQMVD2 +001
+     O                                 +001 '639'
+     O                         ICQMVC2 +001
+     O                                 +001 '640'
+     O        E  1     61      RISULT
+     O                         WWTREF    21
+     O                                 +001 ' '
+     O                         ICAAFX2 +001
+     O                                 +001 '761'
+     O                         ICLAFX2 +001
+     O                                 +001 '762'
+     O                         ICAACF2 +001
+     O                                 +001 '763'
+     O        E  1     61      RISULT
+     O                         WWTREF    21
+     O                                 +001 ' '
+     O                         ICAALR2 +001
+     O                                 +001 '661'
+     O                         ICLALR2 +001
+     O                                 +001 '662'
+     O                         ICAACL2 +001
+     O                                 +001 '663'
+     O        E  1     61      RISULT
+     O                         WWTREF    21
+     O                                 +001 ' '
+     O                         ICAACF2 +001
+     O                                 +001 '763'
+     O                         ICLACF2 +001
+     O                                 +001 '764'
+     O                         ICACFX2 +001
+     O                                 +001 '765'
+     O                         ICLCFX2 +001
+     O                                 +001 '766'
+     O        E  1     61      RISULT
+     O                         WWTREF    21
+     O                                 +001 ' '
+     O                         ICAACL2 +001
+     O                                 +001 '663'
+     O                         ICLACL2 +001
+     O                                 +001 '664'
+     O                         ICACLR2 +001
+     O                                 +001 '665'
+     O                         ICLCLR2 +001
+     O                                 +001 '666'
+     O*       E  1             DSPCON
+     O*                        WWTREF    21
+     O*                        $OUTAM2 +001
+     O*                        AMTITL2 +001
+     O*                        CUNBDP2 +001

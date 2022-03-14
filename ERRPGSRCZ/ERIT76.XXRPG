@@ -1,0 +1,258 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER ITaly Specific Provisions Management')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module - Italy                    *
+      *                                                               *
+      *  ERIT76   - ER ITaly Specific Provisions Management           *
+      *                                                               *
+      *  (phase(s)) Call during Close of Business                     *
+      *                                                               *
+      *  Called By: CLP/ERC0702 - ER Interface to FRS Component       *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. MD059459 REDUNDANT Date 14Mar22               *
+      *  Prev Amend No. MD058100           Date 20May21               *
+      *                 LUC139             Date 04Jan21               *
+      *                 UIT021             Date 19Feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD059459 - Source made redundant at FM2021.B                 *
+      *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
+      *  LUC139 - Upgrade UCI Italian Returns                         *
+      *  UIT021 - Bank of Italy Monthly Reporting                     *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      * BJ - ER Bank Details
+     FERBNKXPDIF  E                    DISK
+     F                                              KINFSR *PSSR
+      *
+      * ER Italy Specific Provisions Extract File
+     FERGUEXL4IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * ER Italy Production Extract Work file
+     FERITWKPDUF  E           K        DISK
+     F                                              KINFSR *PSSR
+      * Audit List
+      *
+     FERIT76AUO   E                    PRINTER
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Local data area for database errors
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      **  DS for compilation  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** Origin Application Id
+     I            DS
+     I                                        1  35 ICORAP
+     I                                        1   4 ICRIND
+     I                                        6  20 ICTREF
+     I                                        6  11 WWNUMB
+     I                                       12  16 WWFCLT
+     I                                       21  23 ICBRCD
+      *
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *                                                                *****
+     C           *ENTRY    PLIST
+     C                     PARM           BJMRDT  7        Run date
+     C                     PARM           BJURPT 53        Rpt Title
+      *
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVELPGM       DBPGM
+     C                     MOVE '0'       *INU7
+      *
+      **  Read Bank Details rcd to retrieve Run Date
+     C                     READ SDBANKD0                 80
+      **   If record not found:
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'761'     DBASE            ******************
+     C                     MOVEL'ERBANKPD'DBFILE           ** DB ERROR 761 **
+     C                     MOVEL'*NONE '  DBKEY            ******************
+     C                     EXSR #DBERR
+     C                     END                             - E1
+      *
+      **   Key Fields
+     C           KEY1      KLIST
+     C                     KFLD           KRCUS   6
+     C                     KFLD           KUTSI   1
+     C                     KFLD           KUTSR  24
+      *
+      ** Initialise Record Sequence
+     C                     Z-ADD*ZEROS    UPD     60       Rcds Updated
+     C                     Z-ADD*ZEROS    RCD     60       Rcds Read
+      *
+      ** Read first record from File.
+     C                     READ ERITWKPD                 89
+      *
+      ** Do while not End of File.
+     C           *IN89     DOWEQ'0'                        - B1
+      *
+     C                     ADD  1         RCD     60       Rcds Read
+      *
+     C           ICRIND    IFEQ 'GLAC'                     - B2
+     C           ICRIND    OREQ 'MMDL'
+     C           ICRIND    OREQ 'LECL'
+     C           ICRIND    OREQ 'FCLT'
+      *
+      ** Setup 'Receiving Customer'
+     C                     MOVELICCOMP    KRCUS
+      *
+      ** Setup 'Used to Secure Indicator' according to the 4 first positions
+      ** of the origin apllication id.
+      ** Setup 'Used to Secure Reference'
+     C           ICRIND    IFEQ 'GLAC'                     - B3
+     C                     MOVE 'G'       KUTSI
+     C                     MOVELICTREF    KUTSR
+     C                     MOVE ICBRCD    KUTSR
+     C                     ELSE                            - X3
+     C           ICRIND    IFEQ 'MMDL'                     - B4
+     C                     MOVE 'D'       KUTSI
+     C                     MOVELWWNUMB    KUTSR
+     C                     ELSE                            - X4
+     C           ICRIND    IFEQ 'LECL'                     - B5
+     C                     MOVE 'L'       KUTSI
+     C                     MOVELWWNUMB    KUTSR
+     C                     ELSE                            - X5
+     C           ICRIND    IFEQ 'FCLT'                     - B6
+     C                     MOVE 'F'       KUTSI
+     C                     MOVELWWFCLT    KUTSR
+     C                     END                             - E6
+     C                     END                             - E5
+     C                     END                             - E4
+     C                     END                             - E3
+      *
+      ** Access Specific Provisions Extract File
+     C           KEY1      CHAINERGUEXL4             88
+      *
+      ** If record is not found with 'G' as 'Used to Secure Indicator',
+      ** try to access the file with a 'R'
+     C           *IN88     IFEQ '1'                        - B3
+     C           KUTSI     ANDEQ'G'
+     C                     MOVE 'R'       KUTSI
+      *
+      ** Access Specific Provisions Extract File
+     C           KEY1      CHAINERGUEXL4             88
+     C                     END                             - E3
+      *
+      ** If record is found
+      ** and if Next Working Day greater than Start Date
+     C           *IN88     IFEQ '0'                        - B3
+     C           BJDNWD    ANDGTRTSTDT
+     C           ICBVLR    MULT RTGCPE    WWBVLR 190
+     C           WWBVLR    DIV  100       ICPROV           Provisions
+      *
+      ** Update record with calculated Provisions
+     C                     UPDATERITTRD0
+     C                     ADD  1         UPD              Rcds Updated
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      ** Read next record.
+     C                     READ ERITWKPD                 89
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     EXSR #AUDIT
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBLOT     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/#AUDIT
+      *****************************************************************
+      *                                                               *
+      *  #AUDIT - Audit Report                                        *
+      *                                                               *
+      *****************************************************************
+     C           #AUDIT    BEGSR                                      *
+      **
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERAU
+     C                     END
+      *
+     C                     WRITETRLRAU
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/#DBERR
+      *****************************************************************
+      *                                                               *
+      *  #DBERR - Monitored Error                                     *
+      *                                                               *
+      *****************************************************************
+     C           #DBERR    BEGSR
+      **
+     C                     OUT  WLDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     EXSR #AUDIT
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(C) Copyright Midas-Kapiti International Ltd. 1997

@@ -88,11 +88,11 @@
 
     IF     COND(&MBIN = 'Y') THEN(DO)
 
-/* Get System Value for MultiBranchALL */                                                 /*250674*/
+/* Get System Value for MultiBranchALL and GenerateMT100Report*/                          /*250674*/
 
               CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
                          'MultiBranchALL' &SVAL1 +
-                         ' ' &SVAL2 +
+                         'GenerateMT100Report' &SVAL2 +
                          ' ' &SVAL3 +
                          ' ' &SVAL4 +
                          ' ' &SVAL5 +
@@ -106,7 +106,8 @@
                             CMDLBL(ERR))                                                  /*250674*/
 
              IF     COND(&SVAL1 = 'Y') THEN(DO)                                           /*250674*/
-/* Call MEC0810 (Outgoing message details report - System level) */
+/**Call*MEC0810*(Outgoing*message*details*report*-*System*level)**/                       /*250674*/
+/* Call MEC0810 (Outgoing message details report - Branch level) */                       /*250674*/
              CALL       PGM(MEC0810) PARM('   ' 'B' 'ALL' &PARM)
 
 /* If database error detected recover data from LDA and send message */
@@ -118,12 +119,16 @@
              ENDDO
              ENDDO                                                                        /*250674*/
     ENDDO
+
+             IF     COND(&SVAL2 = 'Y') THEN(DO)                                           /*250674*/
+/* Call MEC0810 (Outgoing message details report - System level/MT100 Only) */            /*250674*/
              CHGVAR     VAR(%SST(&PARM 15 3)) VALUE('100')                                /*250674*/
              CALL       PGM(MEC0810) PARM('   ' 'S' '   ' &PARM)                          /*250674*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*250674*/
                  RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                             /*250674*/
                  SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
                               TOMSGQ(MOPERQ)                                              /*250674*/
+             ENDDO                                                                        /*250674*/
              ENDDO                                                                        /*250674*/
 
              GOTO END

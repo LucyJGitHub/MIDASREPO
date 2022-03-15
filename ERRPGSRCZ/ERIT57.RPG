@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Copyright MISYS 2008                                     *
       *                                                               *
-      *  Last Amend No. MD058799           Date 22Sep21               *
-      *  Prev Amend No. MD058100           Date 20May21               *
+      *  Last Amend No. LUC143             Date 13Jan22               *
+      *  Prev Amend No. MD058799           Date 22Sep21               *
+      *                 MD058100           Date 20May21               *
       *                 LUC139             Date 04Jan21               *
       *                 MMI137   *Rewrite  Date 08Jul09               *
       *                 HVBMIL             Date 06Feb09               *
@@ -19,6 +20,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC143 - Italian Returns changes for Unicredit               *
       *  MD058799 - Rename EREXTRL5 to EREXTRL6                       *
       *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
       *  LUC139 - Upgrade UCI Italian Returns                         *
@@ -56,7 +58,8 @@
      I            DS
      I                                        1  21 NWTREF
      I                                        1   6 NWFCUS
-     I                                        7   90EXFACT
+     I**********                              7   90EXFACT                                    LUC143
+     I                                        7   90NWFACT                                    LUC143
      I                                       10  110NWFCNO
       *
      I            DS
@@ -81,7 +84,7 @@
      C           EXLOTD    OREQ 'PPU'
       *
      C           EXFCUS    IFNE *BLANKS
-     C           EXFCUS    ANDNEEXCUST
+     C*********  EXFCUS    ANDNEEXCUST                                                        LUC143
      C           EXFACT    ANDNE*ZERO
      C           EXFCNO    ANDNE*ZERO
      C           EXAMNT    ANDNE*ZERO
@@ -109,14 +112,36 @@
      C           KFAC      CHAINFCLTYFMF             01
      C           KFAC      CHAINXXFCT1L0             02
       *
-      * If the Facility is defined as Multicustomer and is a Pool
-      * Facility (field 109 is 1) then process utilisation.
+      **If*the*Facility*is*defined*as*Multicustomer*and*is*a*Pool***                          LUC143
+      **Facility*(field*109*is*1)*then*process*utilisation.*********                          LUC143
       *
      C           *IN01     IFEQ *OFF
      C           *IN02     ANDEQ*OFF
+      *                                                                                       LUC143
+      ** If field 109 is 1 or 3 and field 6006 is not zero output an                          LUC143
+      ** extra facility for each loan.                                                        LUC143
+      *                                                                                       LUC143
+     C                     MOVE ' '       LEVEL   1                                           LUC143
+      *                                                                                       LUC143
+     C           PRLNTP    IFEQ '1'                                                           LUC143
+     C           PREXPO    ANDNE*ZERO                                                         LUC143
+     C           PRLNTP    OREQ '3'                                                           LUC143
+     C           PREXPO    ANDNE*ZERO                                                         LUC143
+     C                     MOVE 'L'       LEVEL                                               LUC143
+     C                     ENDIF                                                              LUC143
+      *                                                                                       LUC143
+      ** If facility is defined as Multicustomer and field 109 is 1                           LUC143
+      ** output an extra facility for each customer.                                          LUC143
+      *                                                                                       LUC143
+     C           LEVEL     IFEQ ' '                                                           LUC143
+     C           PRLNTP    ANDEQ'1'                                                           LUC143
      C           MCSI      ANDEQ'Y'
+     C           EXFCUS    ANDNEEXCUST                                                        LUC143
+     C                     MOVE 'C'       LEVEL                                               LUC143
+     C                     ENDIF                                                              LUC143
       *
-     C           PRLNTP    IFEQ '1'
+     C*********  PRLNTP    IFEQ '1'                                                           LUC143
+     C           LEVEL     IFNE ' '                                                           LUC143
      C                     EXSR PROCES
       *
       * If the Facility is defined as Multicustomer and is not a
@@ -126,6 +151,8 @@
      C                     ELSE
       *
      C           WRIPA     IFEQ *BLANKS
+     C           MCSI      ANDEQ'Y'                                                           LUC143
+     C           EXFCUS    ANDNEEXCUST                                                        LUC143
       *
      C                     ADD  1         PROG
      C                     MOVE PROG      WRIPA
@@ -199,46 +226,89 @@
       * Save key fields of original facility
       *
      C                     MOVE EXFCUS    SVFCUS  6
+     C                     MOVE EXFACT    SVFACT  30                                          LUC143
      C                     MOVE EXFCNO    SVFCNO  20
       *
       * Determine dummy facility to be reported under the name of
       * the loan counterparty.
       *
+      ** Level is Loan: find the next available facility type/seq                             LUC143
+      ** combination, taking into account dummy facilities already                            LUC143
+      ** created                                                                              LUC143
+      *                                                                                       LUC143
+     C           LEVEL     IFEQ 'L'                                                           LUC143
+      *                                                                                       LUC143
+     C                     MOVE EXCUST    PRCNUM                                              LUC143
+     C           KFAC      CHAINXXFCT1L0             02                                       LUC143
+     C           *IN02     IFEQ *OFF                                                          LUC143
+     C           PRLNSC    ANDNE9                                                             LUC143
+     C                     MOVE *ON       *IN02                                               LUC143
+     C                     Z-ADD9         PRLNSC                                              LUC143
+     C                     UPDATLEFCT1D0                                                      LUC143
+     C                     ENDIF                                                              LUC143
+     C           *IN02     DOWEQ*OFF                                                          LUC143
+     C           PRFCNO    IFEQ 99                                                            LUC143
+     C           PRFACT    IFEQ 999                                                           LUC143
+     C                     Z-ADD1         PRFACT                                              LUC143
+     C                     ELSE                                                               LUC143
+     C                     ADD  1         PRFACT                                              LUC143
+     C                     ENDIF                                                              LUC143
+     C                     Z-ADD1         PRFCNO                                              LUC143
+     C                     ELSE                                                               LUC143
+     C                     ADD  1         PRFCNO                                              LUC143
+     C                     ENDIF                                                              LUC143
+     C           KFAC      CHAINXXFCT1L0             02                                       LUC143
+     C                     ENDDO                                                              LUC143
+     C                     ENDIF                                                              LUC143
+      *                                                                                       LUC143
+      ** Level is Customer: find the next available facility sequence                         LUC143
+      *                                                                                       LUC143
+     C           LEVEL     IFEQ 'C'                                                           LUC143
+      *                                                                                       LUC143
      C                     MOVE EXCUST    PRCNUM
      C           KFAC      CHAINFCLTYFMF             01
      C           *IN01     DOWEQ*OFF
      C                     ADD  1         PRFCNO
      C           KFAC      CHAINFCLTYFMF             01
      C                     ENDDO
+     C                     ENDIF                                                              LUC143
+      *                                                                                       LUC143
      C                     MOVE PRCNUM    NWFCUS  6
+     C                     MOVE PRFACT    NWFACT  30                                          LUC143
      C                     MOVE PRFCNO    NWFCNO  20
       *
       * Amend loan details to refer to the dummy facility.
       *
      C                     MOVE NWFCUS    EXFCUS
+     C                     MOVE NWFACT    EXFACT                                              LUC143
      C                     MOVE NWFCNO    EXFCNO
      C                     UPDATEREXTRF0
       *
       * Retrieve original facility on ER extract file.
       *
      C                     MOVE SVFCUS    EXFCUS
+     C                     MOVE SVFACT    EXFACT                                              LUC143
      C                     MOVE SVFCNO    EXFCNO
      C********** KEREX     CHAINEREXTRF5             01                                     MD058799
      C           KEREX     CHAINEREXTRF6             01                                     MD058799
       *
       * Reduce granted amount by amount of loan.
+      ** Output Level to ensure that ERIT60 will set the FT to 9541.10                        LUC143
+      ** when Level is L                                                                      LUC143
       *
      C           *IN01     IFEQ *OFF
      C                     SUB  CPAMFC    EXAMNT    H
+     C                     MOVE LEVEL     EXLEVL                                              LUC143
      C**********           UPDATEREXTRF5                                                    MD058799
      C                     UPDATEREXTRF6                                                    MD058799
-     C                     ENDIF
+     C**********           ENDIF                                                              LUC143
       *
       * Write the dummy facility to the ER extract file - if not
       * already present - with same details as original facility
       * except for customer-related fields and granted amount.
       *
      C                     MOVE NWFCUS    EXFCUS
+     C                     MOVE NWFACT    EXFACT                                              LUC143
      C                     MOVE NWFCNO    EXFCNO
      C                     MOVE NWTREF    EXTREF
      C********** KEREX     CHAINEREXTRF5             01                                     MD058799
@@ -272,23 +342,30 @@
       *
      C                     ELSE
      C                     ADD  CPAMFC    EXAMNT    H
+     C                     MOVE LEVEL     EXLEVL                                              LUC143
      C**********           UPDATEREXTRF5                                                    MD058799
      C                     UPDATEREXTRF6                                                    MD058799
      C                     ENDIF
+     C                     ENDIF                                                              LUC143
       *
       * Update other banks share on original facility extension file.
       *
      C           PSAMFC    IFNE *ZERO
      C                     MOVE SVFCUS    PRCNUM
+     C                     MOVE SVFACT    PRFACT                                              LUC143
      C                     MOVE SVFCNO    PRFCNO
+     C           KFAC      CHAINXXFCT1L0             02                                       LUC143
+     C           *IN02     IFEQ *OFF                                                          LUC143
      C                     SUB  PSAMFC    PREXPO    H
      C                     UPDATLEFCT1D0
      C                     ENDIF
+     C                     ENDIF                                                              LUC143
       *
       * Write the dummy facility to the extension file. If already
       * present, increase its other banks share amount.
       *
      C                     MOVE NWFCUS    PRCNUM
+     C                     MOVE NWFACT    PRFACT                                              LUC143
      C                     MOVE NWFCNO    PRFCNO
      C           KFAC      CHAINXXFCT1L0             02
       *

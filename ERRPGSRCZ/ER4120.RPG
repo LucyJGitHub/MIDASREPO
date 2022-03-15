@@ -12,8 +12,9 @@
       *                                                               *
       *  (C) Copyright Midas-Kapiti International Ltd. 1998           *
       *                                                               *
-      *  Last Amend No. LUC139             Date 04Jan21               *
-      *  Prev Amend No. MMI140             Date 28Feb11               *
+      *  Last Amend No. LUC143             Date 18Jan22               *
+      *  Prev Amend No. LUC139             Date 04Jan21               *
+      *                 MMI140             Date 28Feb11               *
       *                 MMI138             Date 24Mar10               *
       *                 MBV002             Date 09Oct07               *
       *                 MMI136             Date 19Dec08               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC143 - Italian Returns changes for Unicredit               *
       *  LUC139 - Upgrade UCI Italian Returns                         *
       *  MMI140 - PUMA Changes February 2011 - Recompiled             *
       *  MMI138 - PUMA Changes March 2010    - Recompiled             *
@@ -80,6 +82,8 @@
      E                    COD      9999  5 0                              MMI132
      E                    DA       9999  5 0                              MMI132
      E                    LUN      9999  5 0                              MMI132
+     E                    AN     36  36  1                                                    LUC143
+     E                    AL     26  36  1                                                    LUC143
       *
      IDSPUMA    E DSIRPUMAPD
       *
@@ -98,6 +102,10 @@
      I                                        1   4 WK0104                MBV002
      I                                        3  17 WK0317                MBV002
      I                                        6  20 WK0620                MBV002
+     I                                       12  14 NWFACT                                    LUC143
+     I                                       15  16 NWFCNO                                    LUC143
+     I                                       28  30 ORFACT                                    LUC143
+     I                                        7  16 WRK058                                    LUC143
       *
       *****************************************************************
       *               M   A   I   N       L   I   N   E               *
@@ -127,6 +135,25 @@
       *
       * Write Header
      C                     EXCPTTESTA
+      *                                                                                       LUC143
+      ** If Facility Type was overridden by ERIT57 then convert Facility                      LUC143
+      ** Sequence to alphanumeric and restore Facility Type                                   LUC143
+      *                                                                                       LUC143
+     C                     MOVE 'N'       CVTSQ   1                                           LUC143
+     C           MK001     IFEQ 9541                                                          LUC143
+     C           MK002     ANDEQ10                                                            LUC143
+     C           NWFACT    ANDNEORFACT                                                        LUC143
+     C                     EXSR CVTSEQ                                                        LUC143
+     C           NEWSEQ    IFNE NWFCNO                                                        LUC143
+     C                     MOVE 'Y'       CVTSQ                                               LUC143
+     C                     Z-ADDOLDTYP    MK029                                               LUC143
+     C                     MOVE ORFACT    NWFACT                                              LUC143
+     C                     MOVE NEWSEQ    NWFCNO                                              LUC143
+     C                     MOVE WRK204    MK204                                               LUC143
+     C                     MOVEA*BLANKS   SC1                                                 LUC143
+     C                     MOVEADSPUMA    SC1,1                                               LUC143
+     C                     ENDIF                                                              LUC143
+     C                     ENDIF                                                              LUC143
       * Write a record for each required field
       *
      C           KIRMIT    CHAINIRMITT               01
@@ -189,6 +216,15 @@
      C                     ENDIF                                          MBV002
      C                     MOVE BLK45     M1VALC                          MBV002
      C                     ENDIF                                          MBV002
+      *                                                                                       LUC143
+      ** If field 058 has been reworked by CVTSEQ subroutine output the                       LUC143
+      ** new value - which might contain letters                                              LUC143
+      *                                                                                       LUC143
+     C           PTCAMP    IFEQ 58                                                            LUC143
+     C           CVTSQ     ANDEQ'Y'                                                           LUC143
+     C                     MOVE *BLANKS   M1VALC                                              LUC143
+     C                     MOVELWRK058    M1VALC                                              LUC143
+     C                     ENDIF                                                              LUC143
       *
       * Output field
      C           OUTFLD    IFEQ 'Y'
@@ -257,6 +293,49 @@
      C                     ENDDO
       *
      C                     ENDSR
+      *                                                                                       LUC143
+      *****************************************************************                       LUC143
+      * CVTSEQ - CONVERT FACILITY SEQUENCE TO ALPHANUMERIC            *                       LUC143
+      *****************************************************************                       LUC143
+      *                                                                                       LUC143
+     C           CVTSEQ    BEGSR                                                              LUC143
+      *                                                                                       LUC143
+      ** Calculate an internal sequence number considering that each                          LUC143
+      ** unit added to the facility type corresponds to 100 units                             LUC143
+      ** in the sequence number                                                               LUC143
+      *                                                                                       LUC143
+     C                     MOVE ORFACT    OLDTYP  30                                          LUC143
+     C                     MOVE NWFACT    NEWTYP  30                                          LUC143
+     C                     MOVE NWFCNO    OLDSEQ  20                                          LUC143
+     C                     MOVE NWFCNO    NEWSEQ  2                                           LUC143
+     C           NEWTYP    SUB  OLDTYP    DIFF    50                                          LUC143
+     C           DIFF      IFLT *ZERO                                                         LUC143
+     C                     ADD  1000      DIFF                                                LUC143
+     C                     ENDIF                                                              LUC143
+     C                     SUB  1         DIFF                                                LUC143
+     C           99        MULT DIFF      WRKSEQ  50                                          LUC143
+     C                     ADD  OLDSEQ    WRKSEQ                                              LUC143
+     C                     SUB  1         WRKSEQ                                              LUC143
+      *                                                                                       LUC143
+      **  Convert the internal sequence number to a 2-char                                    LUC143
+      **  alphanumeric sequence. The first character must be                                  LUC143
+      **  a letter while the second can be a letter or a digit.                               LUC143
+      **  This can cover up to 936 combinations.                                              LUC143
+      *                                                                                       LUC143
+     C           WRKSEQ    DIV  36        B1      30                                          LUC143
+     C                     MVR            B2      20                                          LUC143
+     C                     ADD  1         B1                                                  LUC143
+     C                     ADD  1         B2                                                  LUC143
+     C           B1        IFGE 1                                                             LUC143
+     C           B1        ANDLE26                                                            LUC143
+     C           B2        ANDGE1                                                             LUC143
+     C           B2        ANDLE36                                                            LUC143
+     C                     MOVELAL,B1     NEWSEQ                                              LUC143
+     C                     MOVE AN,B2     NEWSEQ                                              LUC143
+     C                     ENDIF                                                              LUC143
+      *                                                                                       LUC143
+     C                     ENDSR                                                              LUC143
+      *                                                                                       LUC143
       *****************************************************************
       * *INZSR * OPERAZIONI INIZIALI                                  *
       *****************************************************************
@@ -391,3 +470,7 @@
      O                         MKUIA      3                               MMI117
      O                                    9 '05310'                       MMI117
      O                         IG310     26                               MMI117
+**                                                                                            LUC143
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ
+**                                                                                            LUC143
+ABCDEFGHIJKLMNOPQRSTUVWXYZ

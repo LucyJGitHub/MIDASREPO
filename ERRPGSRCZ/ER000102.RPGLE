@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD052779           Date 21Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059438           Date 14Mar22               *      
+      *  Prev Amend No. MD052779           Date 21Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 262700             Date 03Dec09               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059438 - File name of @24 KWG file should be system value  *
+      *             'BankName' - not 1st 4 chars of SystemProvider    *
       *  MD052779 - Recompiled to fix buffer issue on ERCRCTPD file   *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
@@ -149,7 +152,8 @@
      D WVal05          C                   'VendorID'
      D WVal06          C                   'InterfaceVersion'
      D***WVal07*         C                   'Serviceprovider'                              BUG22632
-     D WVal07          C                   'ServiceProvider'                                BUG22632
+     D*WVal07***       C                   'ServiceProvider'                       BUG22632 MD059438
+     D WVal07          C                   'BankName'                                       MD059438 
      D WVal08          C                   'DataFormat'
      D WVal09          C                   'TransFileFolder'
       *

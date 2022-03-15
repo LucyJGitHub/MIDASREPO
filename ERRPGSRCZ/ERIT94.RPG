@@ -10,8 +10,9 @@
       *                                                               *
       *  (C) Copyright Midas-Kapiti International Ltd. 1997.          *
       *                                                               *
-      *  Last Amend No. MD058100           Date 20May21               *
-      *  Prev Amend No. LUC139             Date 28Apr21               *
+      *  Last Amend No. MD059459           Date 11Jan22               *
+      *  Prev Amend No. MD058100           Date 20May21               *
+      *                 LUC139             Date 28Apr21               *
       *                 206388             Date 07Jun02               *
       *                 204013             Date 18Mar02               *
       *                 MMI089                  05Oct01               *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059459 - Upgrade UCI Italian Returns to FM2021.B           *
+      *             Remove ERCURRL1 and use SDCURRL1                  *
       *  MD058100 - Rollup of additional BoI onsite fixes at FbMidas  *
       *  LUC139 - Upgrade UCI Italian Returns                         *
       *  206388 - Only process branches that are included in Bank of  *
@@ -50,13 +53,14 @@
      F                                              KINFSR *PSSR
      FERICDRPDIF  E           K        DISK
      F                                              KINFSR *PSSR
-     FSDCURRPDIF  E                    DISK
-     F                                              KINFSR *PSSR
+     F***SDCURRPDIF**E*                   DISK                                              MD059459
+     F**********                                    KINFSR *PSSR                            MD059459
      FERITACL1IF  E           K        DISK
      F                                              KINFSR *PSSR
      FSDCUSTL1IF  E           K        DISK
      F                                              KINFSR *PSSR
-     FERCURRL1IF  E           K        DISK
+     F***ERCURRL1IF**E*          K        DISK                                              MD059459
+     FSDCURRL1IF  E           K        DISK                                                 MD059459
      F                                              KINFSR *PSSR
      FEREXTRL3IF  E           K        DISK
      F                                              KINFSR *PSSR
@@ -359,11 +363,15 @@
       *
       * Currency conversion
      C           EXAMNT    DIV  1000      IMPO   153
-     C           CCY       CHAINERCURRL1             80
-     C           VRMDIN    IFEQ 'M'
-     C           IMPO      MULT VRSPRT    IMPO2     H
+     C********** CCY       CHAINERCURRL1             80                                     MD059459
+     C           CCY       CHAINSDCURRL1             80                                     MD059459
+     C********** VRMDIN    IFEQ 'M'                                                         MD059459
+     C           A6MDIN    IFEQ 'M'                                                         MD059459
+     C********** IMPO      MULT VRSPRT    IMPO2     H                                       MD059459
+     C           IMPO      MULT A6SPRT    IMPO2     H                                       MD059459
      C                     ELSE
-     C           IMPO      DIV  VRSPRT    IMPO2     H
+     C********** IMPO      DIV  VRSPRT    IMPO2     H                                       MD059459
+     C           IMPO      DIV  A6SPRT    IMPO2     H                                       MD059459
      C                     END
       *
       * Set up credit/debit
@@ -907,7 +915,8 @@
       *
       * Load currency information into array
       *
-     C                     READ SDCURRPD                 30
+     C**********           READ SDCURRPD                 30                                 MD059459
+     C                     READ SDCURRL1                 30                                 MD059459
       *
      C                     Z-ADD0         X       40
       *
@@ -930,7 +939,8 @@
      C                     EXSR *PSSR                      ***************
      C                     ENDIF
       *
-     C                     READ SDCURRPD                 30
+     C**********           READ SDCURRPD                 30                                 MD059459
+     C                     READ SDCURRL1                 30                                 MD059459
       *
      C                     END
       *                                                                   206388
@@ -968,10 +978,12 @@
       *
       * Determine Divisor for Base Currency
       *
-     C           BJCYCD    CHAINERCURRL1             80
+     C********** BJCYCD    CHAINERCURRL1             80                                     MD059459
+     C           BJCYCD    CHAINSDCURRL1             80                                     MD059459
      C                     Z-ADD1         DIVBC   40
-     C***********          DO   A6NBDP                                    204013
-     C                     DO   VRNBDP                                    204013
+     C**********           DO   A6NBDP                                    204013
+     C**********           DO   VRNBDP                                               204013 MD059459
+     C                     DO   A6NBDP                                                      MD059459
      C                     MULT 10        DIVBC
      C                     ENDDO
       *

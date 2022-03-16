@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059665           Date 07Mar22               * 
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059665 - IAS Issues found during CAS020 Testing            *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -1071,14 +1073,16 @@
      C     KLNKDN        CHAIN     DLDLBBL1                                                   212432
                                                                                               212432
      C                   IF        NOT %FOUND(DLDLBBL1)                                       212432
-     C     *LOCK         IN        LDA                                                        212432
-     C                   EVAL      DBFILE = 'DLDLBBL1'                                        212432
-     C                   EVAL      DBASE = 3                                                  212432
-     C                   MOVEL     KLNKDN        DBKEY                                        212432
-     C                   OUT       LDA                                                        212432
-     C                   EXSR      *PSSR                                                      212432
-     C                   ENDIF                                                                212432
+     C**** *LOCK         IN        LDA                                               212432 MD059665
+     C**********         EVAL      DBFILE = 'DLDLBBL1'                               212432 MD059665
+     C**********         EVAL      DBASE = 3                                         212432 MD059665
+     C**********         MOVEL     KLNKDN        DBKEY                               212432 MD059665
+     C**********         OUT       LDA                                               212432 MD059665
+     C**********         EXSR      *PSSR                                             212432 MD059665
+     C**********         ENDIF                                                       212432 MD059665
+     C                   ELSE                                                               MD059665
      C                   EVAL      KLNKDN = BLNKDN                                            212432
+     C                   ENDIF                                                              MD059665
      C                   ENDIF                                                                212432
                                                                                               212432
      C     KLNKDN        CHAIN     DLDLHCL1                                                   212432

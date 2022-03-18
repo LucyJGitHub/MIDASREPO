@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059660           Date 08Mar22               *
-      *  Prev Amend No. CLE124             Date 02Nov21               *
+      *  Last Amend No. MD059660A          Date 17Mar22               *
+      *  Prev Amend No. MD059660           Date 08Mar22               *
+      *                 CLE124             Date 02Nov21               *
       *                 AR628535           Date 02Nov21               *
       *                 258424             Date 02Nov21               *
       *                 254270             Date 02Nov21               *
@@ -79,6 +80,9 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD059660A - Use FAACOF to compare with loan ACOF. Get the    *
+      *              facility account officer details to populate     *
+      *              CLE123 fields for MFU output in FACEXFA.         *
       *  MD059660 - Duplicate Dept in LE0723P3 and wrong Dept Code    *
       *             in LE0723P1.                                      *
       *  CLE124 - Commitment and Outstanding Report by Customer Name  *
@@ -1393,7 +1397,8 @@
      C           *IN81     IFEQ '0'                                                         MD059660
      C                     MOVE FAACOF    ACOKEY                                            MD059660
       *                                                                                     MD059660
-     C           ANACOC    IFEQ ACOF                                                        MD059660
+     C********** ANACOC    IFEQ ACOF                                              MD059660 MD059660A
+     C           ANACOC    IFEQ FAACOF                                                     MD059660A
      C                     MOVE ANACOC    ANFCOC                                            MD059660
      C                     MOVE ANACON    ANFCON                                            MD059660
      C                     MOVE ANDPCD    ANFPCD                                            MD059660
@@ -2227,6 +2232,51 @@
      C                     EXSR CUSCHN                                                        190571
       *                                                                                       190571
      C                     MOVELFACRSK    CRSK                                              MD059660
+     C                     MOVE *BLANKS   ANACOC                                           MD059660A
+     C                     MOVE *BLANKS   ANACON                                           MD059660A
+     C                     MOVE *BLANKS   ANDPCD                                           MD059660A
+     C                     MOVE *BLANKS   ANDPNM                                           MD059660A
+     C                     MOVE *BLANKS   ANCRNM                                           MD059660A
+      *                                                                                    MD059660A
+      ** If CLE123 is on get the Facility Account Officer                                  MD059660A
+      *                                                                                    MD059660A
+     C           CLE123    IFEQ 'Y'                                                        MD059660A
+     C                     MOVE FAACOF    ACOKEY                                           MD059660A
+     C                     MOVE CRNM      ANCRNM                                           MD059660A
+      *                                                                                    MD059660A
+     C                     CALL 'AOACOFR0'                                                 MD059660A
+     C                     PARM '*BLANKS' @RTCD                                            MD059660A
+     C                     PARM '*KEY   ' @OPTN                                            MD059660A
+     C                     PARM           ACOKEY                                           MD059660A
+     C           SDACOF    PARM SDACOF    DSFDY                                            MD059660A
+      *                                                                                    MD059660A
+     C           @RTCD     IFNE *BLANKS                                                    MD059660A
+     C                     SETON                     89                                    MD059660A
+     C                     MOVE *BLANKS   ANACOC                                           MD059660A
+     C                     MOVE *BLANKS   ANACON                                           MD059660A
+     C                     ELSE                                                            MD059660A
+     C                     MOVE AZACOC    ANACOC                                           MD059660A
+     C                     MOVE AZACON    ANACON                                           MD059660A
+      *                                                                                    MD059660A
+      ** Obtain the Department Name                                                        MD059660A
+     C                     MOVELAZDPCD    DPTKEY                                           MD059660A
+      *                                                                                    MD059660A
+     C                     CALL 'AODEPTR0'                                                 MD059660A
+     C                     PARM '*BLANKS' @RTCD                                            MD059660A
+     C                     PARM '*KEY   ' @OPTN                                            MD059660A
+     C                     PARM           DPTKEY                                           MD059660A
+     C           SDDEPT    PARM SDDEPT    DSFDY                                            MD059660A
+     C           @RTCD     IFNE *BLANKS                                                    MD059660A
+     C                     SETON                     89                                    MD059660A
+     C                     MOVE *BLANKS   ANDPCD                                           MD059660A
+     C                     MOVE *BLANKS   ANDPNM                                           MD059660A
+     C                     ELSE                                                            MD059660A
+     C                     MOVE AEDPCD    ANDPCD                                           MD059660A
+     C                     MOVE AEDPNM    ANDPNM                                           MD059660A
+     C                     ENDIF                                                           MD059660A
+     C                     ENDIF                                                           MD059660A
+     C                     ENDIF                                                           MD059660A
+      *                                                                                    MD059660A
      C                     EXCPTEXMFU                                                         190571
       *                                                                                       190571
      C                     ENDSR                           ** EXTMFU **                       190571
@@ -2357,7 +2407,8 @@
      O                         CNUMM     16                                                   190571
      O                         FACTM     19                                                   190571
      O                         FCNOM     21                                                   190571
-     O                                   22 ' '                                               190571
+     O**********                         22 ' '                                     190571 MD059660A
+     O                                   22 '0'                                            MD059660A
      O                                   23 'M'                                               190571
      O                         UCCY      26                                                   190571
      O                         UAMT      33P                                                  190571
@@ -2373,6 +2424,16 @@
      O**********                         80 '   '                                    190571 AR674226
      O                         SQNO      78                                                 AR674226
      O                                   80 '  '                                            AR674226
+     O                         ANACOC   102                                                MD059660A
+     O                         ANACON   132                                                MD059660A
+     O                         ANDPCD   135                                                MD059660A
+     O                         ANDPNM   165                                                MD059660A
+     O                         ANCRNM   185                                                MD059660A
+     O                 52      CRNM     205                                                MD059660A
+     O                         ANACOC   207                                                MD059660A
+     O                         ANACON   237                                                MD059660A
+     O                         ANDPCD   240                                                MD059660A
+     O                         ANDPNM   270                                                MD059660A
      O*                                                                   S01408
      O/COPY WNCPYSRC,LE0700OOPG                                           S01408
      O*                                                                   S01408

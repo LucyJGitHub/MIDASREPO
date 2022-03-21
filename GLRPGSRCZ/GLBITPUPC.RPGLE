@@ -12,6 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
       *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CER059             Date 19Jul10               *
       *                 BUG23742           Date 09May09               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23742 - Improper handling of Ext Narr from Batch          *
@@ -339,6 +341,9 @@
       ** MT94x Messages Generation                                                            246418
      C                   PARM                    CGL013                                       246418
       *
+      ** Journal Entry User Audit                                                             CGL082
+     C                   PARM                    CGL082                                       CGL082
+      *                                                                                       CGL082
       ** Valid JE Item (DS) - for file update
      C                   PARM                    PVBITP
                                                                                               246418
@@ -740,6 +745,30 @@
      C     KKEY1         KLIST                                                                CER001
      C                   KFLD                    B2FRNT                                       CER001
       *
+      *                                                                                       CGL082
+     C                   CALLB     'AOSARDR0'                                                 CGL082
+     C                   PARM      *BLANKS       PRTCD                                        CGL082
+     C                   PARM      '*VERIFY'     POPTN             7                          CGL082
+     C                   PARM      'CGL082'      PSARD             6                          CGL082
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL082
+      *                                                                                       CGL082
+      ** An NRF (No Record Found) return code is valid.  Issue database error                 CGL082
+      ** only for error return codes.                                                         CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFNE      *BLANKS                                                    CGL082
+     C     PRTCD         ANDNE     '*NRF   '                                                  CGL082
+     C                   MOVEL     'CGL082'      DBKEY                                        CGL082
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CGL082
+     C                   Z-ADD     005           DBASE                                        CGL082
+     C                   EXSR      *PSSR                                                      CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFEQ      *BLANK                                                     CGL082
+     C                   MOVE      'Y'           CGL082            1                          CGL082
+     C                   ELSE                                                                 CGL082
+     C                   MOVE      'N'           CGL082                                       CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
      C                   ENDSR
       *
       *****************************************************************

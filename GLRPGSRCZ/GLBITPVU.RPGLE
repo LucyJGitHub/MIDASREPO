@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058466           Date 09Aug21               *
-      *  Prev Amend No. AR574704           Date 01Jun20               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. MD058466           Date 09Aug21               *
+      *                 AR574704           Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056412           Date 11Aug20               *
       *                 MD052075           Date 07Jun19               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  MD058466 - Batch item processed before Batch header          *
       *             Delay and check again before issuing error msg.   *
       *  AR574704 - Cannot delete item if account is invalid. Neglect *
@@ -1143,6 +1145,9 @@
       *                                                                                       TCA102
       ** Cheque book processing feature                                                       TCA102
      C                   PARM                    CRE019                                       TCA102
+      *                                                                                       CGL082
+      ** Journal Entry User Audit                                                             CGL082
+     C                   PARM                    CGL082            1                          CGL082
       *                                                                                       246418
       ** Cheque book processing feature                                                       246418
      C                   PARM                    CGL013                                       246418
@@ -1924,6 +1929,33 @@
      C                   MOVE      'Y'           CAP209            1                        MD039859
      C                   ENDIF                                                                CSC054
       *                                                                                       CSC054
+      *                                                                                       CGL082
+      ** Access SAR details file to determine if CGL082                                       CGL082
+      ** (Journal Entry User Audit)                                                           CGL082
+      *                                                                                       CGL082
+     C                   CALLB     'AOSARDR0'                                                 CGL082
+     C                   PARM      *BLANKS       PRTCD                                        CGL082
+     C                   PARM      '*VERIFY'     POPTN                                        CGL082
+     C                   PARM      'CGL082'      PSARD                                        CGL082
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL082
+      *                                                                                       CGL082
+      ** An NRF (No Record Found) return code is valid.  Issue database error                 CGL082
+      ** only for error return codes.                                                         CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFNE      *BLANKS                                                    CGL082
+     C     PRTCD         ANDNE     '*NRF   '                                                  CGL082
+     C                   MOVEL     'CGL082'      DBKEY                                        CGL082
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CGL082
+     C                   Z-ADD     013           DBASE                                        CGL082
+     C                   EXSR      *PSSR                                                      CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFEQ      *BLANK                                                     CGL082
+     C                   MOVEL     'Y'           CGL082            1                          CGL082
+     C                   ELSE                                                                 CGL082
+     C                   MOVEL     'N'           CGL082                                       CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
      C     KBITP         KLIST                                                                249585
      C                   KFLD                    WBTNB                                        249585
      C                   KFLD                    WBINB                                        249585

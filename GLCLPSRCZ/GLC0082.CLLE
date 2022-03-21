@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Journal Entry Audit Report')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas  - General Ledger                                     */
+/*                                                                   */
+/*          GLC0082 - Journal Entry Audit Report                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. CGL082   *Create      DATE 02Nov21           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*    CGL082 - Journal Entry User Audit                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT)
+
+/**/
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                         Finastra International Limited 2021')
+             DCL        VAR(&RSEQ)   TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT)   TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PHASE)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CGL082) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+/**/
+/*  Catch Global Errors */
+/**/
+
+             MONMSG     MSGID(MCH0000 CPF0000 TCP0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/**/
+/*  Clear switches */
+/**/
+
+             CHGJOB     SWS(00000000)
+
+/**/
+/** Check if SAR CGL082 is installed */
+/**/
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CGL082')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+/**/
+/** If CGL082 is installed */
+/**/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CGL082) VALUE('Y'))
+                   SNDPGMMSG  MSG('Journal Entry User Audit') +
+                                  TOMSGQ(MRUNQ)
+             IF         COND(&CGL082 *NE 'Y') THEN(GOTO CMDLBL(END))
+
+/*  Obtain MPHAS    */
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASE)
+/**/
+/*  Produce Report */
+/**/
+
+             CALL       PGM(GL0082) PARM(&RSEQ &RENT &PHASE)
+
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/* If the program fails                                            */
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+                GOTO END
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination - batch job */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC0082 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+
+
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2021 ')
+
+             ENDPGM
+

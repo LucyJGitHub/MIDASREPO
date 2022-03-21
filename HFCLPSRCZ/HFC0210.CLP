@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 252421             Date 01Jun20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR706798           Date 21Mar22              */
+/*       Prev Amend No. 252421             Date 01Jun20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR706798 - Fix purging and reorganizing files problem.      */
+/*                  (Child: AR706799)                                */
 /*       252421 - HAF multi membered files contains deleted records  */
 /*                but never reorganize to release space causing      */
 /*                unwanted disk consumption.                         */
@@ -61,7 +64,8 @@
 /* */
 /* Get the date */
 /* */
-             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&DAT)
+/**********  RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&DAT) */                                   /*AR706798*/
+             RTVJOBA    DATE(&DAT)                                                      /*AR706798*/
 
 /* */
 /* Read all records from HFFILEPD */

@@ -1,0 +1,128 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MS write to IFS for AFT transmission')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas/SWIFT Direct Link Module                              */
+/*                                                                   */
+/*       MSCM3202 - Midas MS write to IFS for AFT transmission       */
+/*                                                                   */
+/*       Function : This program reads messages from MQ queue and    */
+/*                  and write to IFS for AFT transmission.           */
+/*                                                                   */
+/*       Called By: MSC3200 - Automated transmission                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. CSW052 *CREATE     Date 02Nov21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW052 - Send SWIFT messages to AFT via MQ queues           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&MSGS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRACE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CSW052) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&IFSFILE) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&DATAFILE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MSGCOUNT) TYPE(*DEC) LEN(5 0)
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2021')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Set off all switches */
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Change outq to audit */
+
+             CHGJOB     OUTQ(MPRINTAU)
+
+/* Set on tracing if necessary */
+
+             RTVDTAARA  DTAARA(MSSTAT (21 1)) RTNVAR(&TRACE)
+             IF         COND(&TRACE *EQ 'T') THEN(CHGJOB LOG(4 00 +
+                          *SECLVL) LOGCLPGM(*YES))
+             ELSE       CMD(CHGJOB LOG(0 30 *NOLIST) LOGCLPGM(*NO))
+
+/* Set initial count of messages to zero */
+
+             CHGVAR     VAR(&MSGCOUNT) VALUE(0)
+
+/* Start copying to IFS one by one */
+
+ LOOP:       CLRPFM     FILE(MSIFSOPD)
+             CLRPFM     FILE(MSOSTMFD)
+
+/* Get the messages from the queue and output to MSIFSOPD */
+
+             CALL MSM3202 (&MSGS &IFSFILE &DATAFILE &MSGCOUNT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                   ROLLBACK
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* If a message was found then convert it to a stream file and copy */
+/* it to the specified location on the IFS and convert from EBCDIC  */
+/* to ASCII in the process. */
+
+             IF         COND(&MSGS = 'Y') THEN(DO)
+
+              CPYF       FROMFILE(MSIFSOPD) TOFILE(MSOSTMFD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+              CPYTOSTMF  FROMMBR(&DATAFILE) TOSTMF(&IFSFILE) +
+                          STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)
+
+/* If copy was successful then commit. If not the, message will */
+/* roll back onto the queue. */
+
+              COMMIT
+
+/* Grant Public *ALL authority so the file can be picked up */
+
+              CHGAUT     OBJ(&IFSFILE) USER(*PUBLIC) DTAAUT(*RWX) +
+                          OBJAUT(*ALL)
+
+/* If trace facility is enabled print message content */
+
+              IF         COND(&TRACE *EQ 'T') THEN(DO)
+              CPYF       FROMFILE(MSOSTMFD) TOFILE(*PRINT)
+              ENDDO
+
+             ENDDO
+
+/* If a message was found, there may be more to process. */
+/* Loop again to check. */
+
+             IF         COND(&MSGS = 'Y') THEN(GOTO CMDLBL(LOOP))
+
+/* Otherwise commit and end program. */
+
+             ELSE       CMD(DO)
+             GOTO CMDLBL(END)
+             ENDDO
+
+/* Abnormal termination */
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG CPF8350
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MSC3200 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+
+             ENDPGM

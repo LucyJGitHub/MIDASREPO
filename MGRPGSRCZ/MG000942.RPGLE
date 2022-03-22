@@ -26,8 +26,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD022383           Date 03Feb22               *
-      *  Prev Amend No. 261775             Date 03Feb22               *
+      *  Last Amend No. MD022383           Date 17Mar22               *
+      *  Prev Amend No. 261775             Date 17Mar22               *
       *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
@@ -87,7 +87,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD022383 - No field 86 generated for an MT942                *
-      *         - Applied for MD-59407                                *
+      *           - Applied for MD-59407                              *
       *  261775 - No F86 defined for MT942s. Place :86 in every page. *
       *         - Applied for MD-59407                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

@@ -13,8 +13,9 @@
       *                                                               *                       CAS005
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. 250743             Date 19Mar22               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -110,6 +111,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  250743 - Remove 193718, causes difference between MidasPlus  *
+      *           Midas R4.                                           *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -623,7 +626,33 @@
       **********                                                                       101662 193718
      C**********           ENDIF                                                       101662 193718
       **********                                                                       101662 193718
-     C                     Z-ADDCFSLIP    ##SLIP  50                                          193718
+      *  Check if the interest accrual control date is greater than                           250743
+      *    the period start date. If it is, calculate the accrued                             250743
+      *    interest to control date and start SR/DETAMT from this date.                       250743
+      ***                                                                                     250743
+     C           CFOTIN    IFEQ 'U'                                                           250743
+      *                                                                                       250743
+     C           UIACD     IFGT CFSLIP                                                        250743
+     C                     Z-ADDUIACD     ##SLIP  50                                          250743
+     C           UAITC     SUB  UIPRD     ##TOTI 150                                          250743
+     C                     ELSE                                                               250743
+     C                     Z-ADDCFSLIP    ##SLIP                                              250743
+     C                     Z-ADD*ZERO     ##TOTI                                              250743
+     C                     ENDIF                                                              250743
+      *                                                                                       250743
+     C                     ELSE                                                               250743
+      *                                                                                       250743
+     C           TIACD     IFGT CFSLIP                                                        250743
+     C                     Z-ADDTIACD     ##SLIP                                              250743
+     C           TAITC     SUB  TIPRD     ##TOTI                                              250743
+     C                     ELSE                                                               250743
+     C                     Z-ADDCFSLIP    ##SLIP                                              250743
+     C                     Z-ADD*ZERO     ##TOTI                                              250743
+     C                     ENDIF                                                              250743
+      *                                                                                       250743
+     C                     ENDIF                                                              250743
+      *                                                                                       250743
+     C**********           Z-ADDCFSLIP    ##SLIP  50                                   193718 250743
      C                     Z-ADDCFNIPD    ##INED  50                      100284
      C                     MOVEL*BLANK    ##CSHF  3
      C                     EXSR DETAMT
@@ -1257,7 +1286,7 @@
      C** RESET TOTAL INTEREST
      C*
      C**********           Z-ADD*ZERO     ##TOTI 150                      101662
-     C                     Z-ADD*ZERO     ##TOTI 150                                          193718
+     C**********           Z-ADD*ZERO     ##TOTI 150                                   193718 250743
      C*
      C** REPOSITION POINTER TO AFTER RECORD JUST READ
      C*
@@ -3113,6 +3142,7 @@
      C                     ENDIF                                          100284
       *                                                                   100284
      C**********           Z-ADD*ZERO     ##TOTI                                       101662 193718
+     C                     Z-ADD*ZERO     ##TOTI                                              250743
      C                     EXSR DETAMT                                    100284
      C                     ADD  CFAMNT    ##UACR                          100284
      C                     Z-ADD0         CFAMNT                          100284
@@ -3175,6 +3205,7 @@
      C                     ENDIF                                          100284
       *                                                                   100284
      C**********           Z-ADD*ZERO     ##TOTI                                       101662 193718
+     C                     Z-ADD*ZERO     ##TOTI                                              250743
      C                     EXSR DETAMT                                    100284
      C                     ADD  CFAMNT    ##TACR                          100284
      C                     Z-ADD0         CFAMNT                          100284

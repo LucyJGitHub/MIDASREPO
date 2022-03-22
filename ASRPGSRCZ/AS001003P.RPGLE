@@ -17,9 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 250730             Date 28Feb22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
-      *                 CSD103             Date 10Aug20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -59,8 +58,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  250730 - Remove 224214 and part of 225293 as results do not  *
-      *           match R4 report.                                    *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -1280,8 +1277,7 @@
      C                   IF        CAS005 = 'Y'                                               CAS005
      C     DLNO          CHAIN     MMNPVLL0                                                   CAS005
      C**********         IF        NOT %EOF(MMNPVLL0)                                  CAS005 224214
-     C**********         IF        %FOUND(MMNPVLL0)                                    224214 250730
-     C                   IF        NOT %EOF(MMNPVLL0)                                         250730
+     C                   IF        %FOUND(MMNPVLL0)                                           224214
      C                   EVAL      URPL = MMURPL                                              CAS005
      C                   EVAL      YUPL = MMYUPL                                              CAS005
      C                   ENDIF                                                                CAS005

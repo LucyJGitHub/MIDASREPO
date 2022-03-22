@@ -11,25 +11,28 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD021813           Date 28Aug13               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD021813           Date 28Aug13               *
       *                 AR1086546 *CREATE  Date 14Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records.                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD021813 - BankFusion_FX Netting:CDL025 Missing Menu Options *
       *  AR1086546 - Upgrade of CDL025 to MP1.4 (Child: AR1086547).   *
       *              Applied for MD021813                             *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FSDCTNML1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -41,116 +44,124 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Transaction Details in screen format
      D TrnDets       E DS                  EXTNAME(SDCCTNPD)
- 
+
       ** Transaction Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(SDECTNMPD)
- 
+
       ** Valid Transaction Details layout
      D ValidCTNM     E DS                  EXTNAME(SDVCTNMPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Currency Details file
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D ZMUSER          DS            17
      D  USRBCH                11     13
- 
+
      D DSTime          DS
      D  W#Hrs                         2
      D  W#Mns                         2
- 
+
       ** CTNM Currency 1 Array
-     D Ccy1_Arr        S              3    DIM(10)
- 
+     D***Ccy1_Arr        S              3    DIM(10)                                        MD059520
+     D Ccy1_Arr        S              3    DIM(30)                                          MD059520
+
       ** CTNM Currency 2 Array
-     D Ccy2_Arr        S              3    DIM(10)
- 
+     D***Ccy2_Arr        S              3    DIM(10)                                        MD059520
+     D Ccy2_Arr        S              3    DIM(30)                                          MD059520
+
       ** CTNM Time Array
-     D Time_Arr        S              4    DIM(10)
- 
+     D***Time_Arr        S              4    DIM(10)                                        MD059520
+     D Time_Arr        S              4    DIM(30)                                          MD059520
+
       ** CTNM Release Notes Array
-     D RNTD_Arr        S              1  0 DIM(10)
- 
+     D***RNTD_Arr        S              1  0 DIM(10)                                        MD059520
+     D RNTD_Arr        S              1  0 DIM(30)                                          MD059520
+
       ** Array of TIME for validation
      D ARTime          S              1A   DIM(5)
- 
+
       ** array for CCY1 OK
-     D DDCCY1_OKA      S              1    DIM(10)
-     D DDCCY2_OKA      S              1    DIM(10)
-     D DDTIME_OKA      S              1    DIM(10)
-     D DDRNTD_OKA      S              1    DIM(10)
- 
- 
+     D*DDCCY1_OKA      S              1    DIM(10)                                          MD059520
+     D DDCCY1_OKA      S              1    DIM(30)                                          MD059520
+     D*DDCCY2_OKA      S              1    DIM(10)                                          MD059520
+     D DDCCY2_OKA      S              1    DIM(30)                                          MD059520
+     D*DDTIME_OKA      S              1    DIM(10)                                          MD059520
+     D DDTIME_OKA      S              1    DIM(30)                                          MD059520
+     D*DDRNTD_OKA      S              1    DIM(10)                                          MD059520
+     D DDRNTD_OKA      S              1    DIM(30)                                          MD059520
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Work fields for bank data
      D WKDFIN          S                   LIKE(BJDFIN)
      D WKRDNB          S                   LIKE(BJRDNB)
      D WKCYCD          S                   LIKE(BJCYCD)
- 
+
       ** Define Work Fields
      D W#Cnt           S              5S 0
      D W#LRcd          S              4S 0
@@ -167,92 +178,92 @@
      D W#RSF           S              1
      D W#Eror          S              1
      D W#Error         S              1
- 
+
       ** Define Key Fields
      D K#LCUST         S                   Like(LCUST)
      D K#LCCY1         S                   Like(LCCY1)
      D K#LCCY2         S                   Like(LCCY2)
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
      D Ctr             S              3P 0
      D Z               S              3P 0
      D Idx1            S              3P 0
      D I               S              3P 0
- 
+
       ** Entry parameters
      D RespMode        S              1A
- 
+
      D CDL025          S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Clear all arrays
- 
+
      C                   EXSR      Clear_Arr
- 
+
       ** Populate Currency and Time Netting Arrays
- 
+
      C                   EXSR      Pop_CtnSet
- 
+
       ** Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
- 
+
       ** Validate Currency/Time Netting Array details
- 
+
      C                   Eval      Ctr = 1
      C                   Eval      Idx1 = 0
      C                   DOW       Ccy1_Arr(Ctr)<>*BLANKS AND Ctr < 11
- 
+
      C                   EVAL      SLCCY1=Ccy1_Arr(Ctr)
      C                   EVAL      SLCCY2=Ccy2_Arr(Ctr)
      C                   EVAL      SLRNTD=RNTD_Arr(Ctr)
      C                   EVAL      SLTIME=Time_Arr(Ctr)
- 
+
      C                   EXSR      SRValidate
- 
+
      C                   Eval      Ctr = Ctr + 1
- 
+
      C                   If        Ctr = 11
      C                   Leave
      C                   EndIf
- 
+
      C                   ENDDO
- 
+
      C                   IF        Idx>0
      C                   EXSR      UPDATERRS
      C                   EndIf
- 
+
       ** Populate OK fields from the arrays
- 
+
      C                   EXSR      Pop_CtnSetOK
- 
+
      C                   RETURN
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -261,17 +272,17 @@
       *                                                               *
       *****************************************************************
      C     SRValidate    BEGSR
- 
+
      C                   Z-ADD     Ctr           Z
- 
+
       ** Validate Currency Code 1
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      '       '     PRTCD             7
      C                   Parm      '*KEY   '     POPTN             7
      C                   Parm      SLCCY1        @CRKEY            3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        PRTCD <> *BLANKS
      C                   MOVE      'N'           DDCCY1_OKA(Z)
      C                   ADD       1             Idx
@@ -280,19 +291,19 @@
      C                   Else
      C                   Z-ADD     A6TXND        W#TXND
      C                   EndIf
- 
+
       ** Validate Currency Code 2
- 
+
      C                   If        SLCCY2 <> *BLANKS
- 
+
       ** Validate Currency Code 2
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      '       '     PRTCD             7
      C                   Parm      '*KEY   '     POPTN             7
      C                   Parm      SLCCY2        @CRKEY            3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        PRTCD <> *BLANKS
      C                   MOVE      'N'           DDCCY2_OKA(Z)
      C                   ADD       1             Idx
@@ -300,10 +311,10 @@
      C                   MOVEL     'USR0235'     MsgIdXAr(Idx)
      C                   EndIf
      C                   EndIf
- 
+
       ** Validate Notice Days
       ** Valid Value 0-9
- 
+
      C     SLRNTD        IFLT      0
      C     SLRNTD        ORGT      9
      C                   MOVE      'N'           DDRNTD_OKA(Z)
@@ -312,9 +323,9 @@
      C**********         MOVEL     'USR4596'     MsgIdXAr(Idx)                              MD021813
      C                   MOVEL     '5046098'     MsgIdXAr(Idx)                              MD021813
      C                   EndIf
- 
+
       ** Notice days must be < Telex days
- 
+
      C     SLRNTD        IFGT      W#TXND
      C                   MOVE      'N'           DDRNTD_OKA(Z)
      C                   ADD       1             Idx
@@ -322,7 +333,7 @@
      C***********        MOVEL     'USR4596'     MsgIdXAr(Idx)                              MD021813
      C                   MOVEL     '5046098'     MsgIdXAr(Idx)                              MD021813
      C                   EndIf
- 
+
       ** Validate Time
       *** Blanks is Valid 'Catch All' for COB
       *
@@ -336,26 +347,26 @@
      C                   Select
       ** InValid - Ok If 3rd char and a colon
      C                   When      X = 3 and ARTIME(X) = ':'
- 
+
       ** If its 5th char is Blank and 3rd is not : Ok
      C                   When      X = 5 and
      C                             ARTIME(3) <> ':' and ARTIME(5) = ' '
- 
+
      C                   Other
      C                   Eval      W#Error = 'Y'
      C                   Leave
- 
+
      C                   EndSl
      C                   EndIf
      C                   EndDo
- 
+
      C                   If        W#Error = 'N' and
      C                             ARTIME(3) <> ':' and ARTIME(5) <> ' '
      C                   Eval      W#Error = 'Y'
      C                   EndIF
- 
+
       ** Set up time fields for file
- 
+
      C                   If        W#Error <> 'Y'
      C                   Eval      W#Hrs = ARTime(1) + ARTime(2)
      C                   If        ARTime(3) <> ':'
@@ -363,28 +374,28 @@
      C                   Else
      C                   Eval      W#Mns = ARTime(4) + ARTime(5)
      C                   Endif
- 
+
       ** Valid Hours ?
- 
+
      C                   Move      W#Hrs         W#2S0
      C                   If        W#2S0 < 7 or W#2S0 > 19
      C                   Eval      W#Error = 'Y'
      C                   Endif
      C                   Endif
- 
+
       ** Valid Mins ?
- 
+
      C                   If        W#Error <> 'Y' and
      C                             W#Mns <> '00' and W#Mns <> '30'
      C                   Eval      W#Error = 'Y'
      C                   Endif
- 
+
       ** Valid time
- 
+
      C                   If        W#Hrs = '19' and W#Mns <> '00'
      C                   Eval      W#Error = 'Y'
      C                   Endif
- 
+
      C                   If        W#Error = 'Y'
      C                   MOVE      'N'           DDTIME_OKA(Z)
      C                   ADD       1             Idx
@@ -392,22 +403,22 @@
      C**********         MOVEL     'USR4597'     MsgIdXAr(Idx)                              MD021813
      C                   MOVEL     '5046101'     MsgIdXAr(Idx)                              MD021813
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDCCY1_OKA(Z) ANDEQ     'Y'
      C     DDCCY2_OKA(Z) ANDEQ     'Y'
      C     DDRNTD_OKA(Z) ANDEQ     'Y'
      C     DDTIME_OKA(Z) ANDEQ     'Y'
- 
+
       ** Access Currency/Time of Netting Details
       ** Check for duplicate primary key
- 
+
      C                   Eval      K#LCUST = DDCUST
      C                   Eval      K#LCCY1 = SLCCY1
      C                   Eval      K#LCCY2 = SLCCY2
- 
+
      C     CTKEY         CHAIN     SDCTNML1                           99
      C                   IF        *IN99 = *OFF
      C                   MOVE      'N'           DDCCY1_OKA(Z)
@@ -416,9 +427,9 @@
      C**********         MOVEL     'USR4598'     MsgIdXAr(Idx)                              MD021813
      C                   MOVEL     '5046104'     MsgIdXAr(Idx)                              MD021813
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -429,18 +440,18 @@
       *                                                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** Reset error & warning fields/message IDs/message data (arrays)
- 
+
      C                   EVAL      FldNamXAr = *BLANK
      C                   EVAL      MsgIDXAr  = *BLANK
      C                   EVAL      MsgDtaXAr = *BLANK
      C                   EVAL      WFldNmXAr = *BLANK
      C                   EVAL      WMsgIDXAr = *BLANK
      C                   EVAL      WMsgDtXAr = *BLANK
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -451,9 +462,9 @@
       *                                                               *
       *****************************************************************
      C     UPDATERRS     BEGSR
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C                   IF        *IN99 = *ON
@@ -461,9 +472,9 @@
      C                   MOVEA     MsgIDXAr      MsgIdArr(I)
      C                   MOVEA     MsgDtaXAr     MsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Update warning fields/message IDs/message data (arrays)
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C                   IF        *IN99 = *ON
@@ -471,13 +482,13 @@
      C                   MOVEA     WMsgIDXAr     WMsgIDArr(I)
      C                   MOVEA     WMsgDtXAr     WMsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Set Warning Index
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C     I             SUB       1             WIdx
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -487,7 +498,7 @@
       *                                                               *
       *****************************************************************
      C     Clear_Arr     BEGSR
- 
+
      C                   Clear                   Ccy1_Arr
      C                   Clear                   Ccy2_Arr
      C                   Clear                   Time_Arr
@@ -496,7 +507,7 @@
      C                   MOVE      *ALL'Y'       DDCCY2_OKA
      C                   MOVE      *ALL'Y'       DDTIME_OKA
      C                   MOVE      *ALL'Y'       DDRNTD_OKA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -506,11 +517,11 @@
       *                                                               *
       *****************************************************************
      C     Pop_CtnSet    BEGSR
- 
+
      C                   Eval      Ccy1_Arr(1) = DDCCY1_1
      C                   Eval      Ccy2_Arr(1) = DDCCY2_1
      C                   Eval      Time_Arr(1) = DDTIME_1
-     C                   Eval      Rntd_Arr(1) = DDRNTD_1
+     C                   Eval      RNTD_Arr(1) = DDRNTD_1
      C                   Eval      Ccy1_Arr(2) = DDCCY1_2
      C                   Eval      Ccy2_Arr(2) = DDCCY2_2
      C                   Eval      Time_Arr(2) = DDTIME_2
@@ -547,7 +558,87 @@
      C                   Eval      Ccy2_Arr(10) = DDCCY2_10
      C                   Eval      Time_Arr(10) = DDTIME_10
      C                   Eval      Rntd_Arr(10) = DDRNTD_10
- 
+     C                   Eval      Ccy1_Arr(11) = DDCCY1_11                                 MD059520
+     C                   Eval      Ccy2_Arr(11) = DDCCY2_11                                 MD059520
+     C                   Eval      Time_Arr(11) = DDTIME_11                                 MD059520
+     C                   Eval      Rntd_Arr(11) = DDRNTD_11                                 MD059520
+     C                   Eval      Ccy1_Arr(12) = DDCCY1_12                                 MD059520
+     C                   Eval      Ccy2_Arr(12) = DDCCY2_12                                 MD059520
+     C                   Eval      Time_Arr(12) = DDTIME_12                                 MD059520
+     C                   Eval      Rntd_Arr(12) = DDRNTD_12                                 MD059520
+     C                   Eval      Ccy1_Arr(13) = DDCCY1_13                                 MD059520
+     C                   Eval      Ccy2_Arr(13) = DDCCY2_13                                 MD059520
+     C                   Eval      Time_Arr(13) = DDTIME_13                                 MD059520
+     C                   Eval      Rntd_Arr(13) = DDRNTD_13                                 MD059520
+     C                   Eval      Ccy1_Arr(14) = DDCCY1_14                                 MD059520
+     C                   Eval      Ccy2_Arr(14) = DDCCY2_14                                 MD059520
+     C                   Eval      Time_Arr(14) = DDTIME_14                                 MD059520
+     C                   Eval      Rntd_Arr(14) = DDRNTD_14                                 MD059520
+     C                   Eval      Ccy1_Arr(15) = DDCCY1_15                                 MD059520
+     C                   Eval      Ccy2_Arr(15) = DDCCY2_15                                 MD059520
+     C                   Eval      Time_Arr(15) = DDTIME_15                                 MD059520
+     C                   Eval      Rntd_Arr(15) = DDRNTD_15                                 MD059520
+     C                   Eval      Ccy1_Arr(16) = DDCCY1_16                                 MD059520
+     C                   Eval      Ccy2_Arr(16) = DDCCY2_16                                 MD059520
+     C                   Eval      Time_Arr(16) = DDTIME_16                                 MD059520
+     C                   Eval      Rntd_Arr(16) = DDRNTD_16                                 MD059520
+     C                   Eval      Ccy1_Arr(17) = DDCCY1_17                                 MD059520
+     C                   Eval      Ccy2_Arr(17) = DDCCY2_17                                 MD059520
+     C                   Eval      Time_Arr(17) = DDTIME_17                                 MD059520
+     C                   Eval      Rntd_Arr(17) = DDRNTD_17                                 MD059520
+     C                   Eval      Ccy1_Arr(18) = DDCCY1_18                                 MD059520
+     C                   Eval      Ccy2_Arr(18) = DDCCY2_18                                 MD059520
+     C                   Eval      Time_Arr(18) = DDTIME_18                                 MD059520
+     C                   Eval      Rntd_Arr(18) = DDRNTD_18                                 MD059520
+     C                   Eval      Ccy1_Arr(19) = DDCCY1_19                                 MD059520
+     C                   Eval      Ccy2_Arr(19) = DDCCY2_19                                 MD059520
+     C                   Eval      Time_Arr(19) = DDTIME_19                                 MD059520
+     C                   Eval      Rntd_Arr(19) = DDRNTD_19                                 MD059520
+     C                   Eval      Ccy1_Arr(20) = DDCCY1_20                                 MD059520
+     C                   Eval      Ccy2_Arr(20) = DDCCY2_20                                 MD059520
+     C                   Eval      Time_Arr(20) = DDTIME_20                                 MD059520
+     C                   Eval      Rntd_Arr(20) = DDRNTD_20                                 MD059520
+     C                   Eval      Ccy1_Arr(21) = DDCCY1_21                                 MD059520
+     C                   Eval      Ccy2_Arr(21) = DDCCY2_21                                 MD059520
+     C                   Eval      Time_Arr(21) = DDTIME_21                                 MD059520
+     C                   Eval      Rntd_Arr(21) = DDRNTD_21                                 MD059520
+     C                   Eval      Ccy1_Arr(22) = DDCCY1_22                                 MD059520
+     C                   Eval      Ccy2_Arr(22) = DDCCY2_22                                 MD059520
+     C                   Eval      Time_Arr(22) = DDTIME_22                                 MD059520
+     C                   Eval      Rntd_Arr(22) = DDRNTD_22                                 MD059520
+     C                   Eval      Ccy1_Arr(23) = DDCCY1_23                                 MD059520
+     C                   Eval      Ccy2_Arr(23) = DDCCY2_23                                 MD059520
+     C                   Eval      Time_Arr(23) = DDTIME_23                                 MD059520
+     C                   Eval      Rntd_Arr(23) = DDRNTD_23                                 MD059520
+     C                   Eval      Ccy1_Arr(24) = DDCCY1_24                                 MD059520
+     C                   Eval      Ccy2_Arr(24) = DDCCY2_24                                 MD059520
+     C                   Eval      Time_Arr(24) = DDTIME_24                                 MD059520
+     C                   Eval      Rntd_Arr(24) = DDRNTD_24                                 MD059520
+     C                   Eval      Ccy1_Arr(25) = DDCCY1_25                                 MD059520
+     C                   Eval      Ccy2_Arr(25) = DDCCY2_25                                 MD059520
+     C                   Eval      Time_Arr(25) = DDTIME_25                                 MD059520
+     C                   Eval      Rntd_Arr(25) = DDRNTD_25                                 MD059520
+     C                   Eval      Ccy1_Arr(26) = DDCCY1_26                                 MD059520
+     C                   Eval      Ccy2_Arr(26) = DDCCY2_26                                 MD059520
+     C                   Eval      Time_Arr(26) = DDTIME_26                                 MD059520
+     C                   Eval      Rntd_Arr(26) = DDRNTD_26                                 MD059520
+     C                   Eval      Ccy1_Arr(27) = DDCCY1_27                                 MD059520
+     C                   Eval      Ccy2_Arr(27) = DDCCY2_27                                 MD059520
+     C                   Eval      Time_Arr(27) = DDTIME_27                                 MD059520
+     C                   Eval      Rntd_Arr(27) = DDRNTD_27                                 MD059520
+     C                   Eval      Ccy1_Arr(28) = DDCCY1_28                                 MD059520
+     C                   Eval      Ccy2_Arr(28) = DDCCY2_28                                 MD059520
+     C                   Eval      Time_Arr(28) = DDTIME_28                                 MD059520
+     C                   Eval      Rntd_Arr(28) = DDRNTD_28                                 MD059520
+     C                   Eval      Ccy1_Arr(29) = DDCCY1_29                                 MD059520
+     C                   Eval      Ccy2_Arr(29) = DDCCY2_29                                 MD059520
+     C                   Eval      Time_Arr(29) = DDTIME_29                                 MD059520
+     C                   Eval      Rntd_Arr(29) = DDRNTD_29                                 MD059520
+     C                   Eval      Ccy1_Arr(30) = DDCCY1_30                                 MD059520
+     C                   Eval      Ccy2_Arr(30) = DDCCY2_30                                 MD059520
+     C                   Eval      Time_Arr(30) = DDTIME_30                                 MD059520
+     C                   Eval      Rntd_Arr(30) = DDRNTD_30                                 MD059520
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -557,7 +648,7 @@
       *                                                               *
       *****************************************************************
      C     Pop_CtnSetOK  BEGSR
- 
+
      C                   Eval      DDCCY1_1OK = DDCCY1_OKA(1)
      C                   Eval      DDCCY2_1OK = DDCCY2_OKA(1)
      C                   Eval      DDTIME_1OK = DDTIME_OKA(1)
@@ -598,7 +689,86 @@
      C                   Eval      DDCCY210OK = DDCCY2_OKA(10)
      C                   Eval      DDTIME10OK = DDTIME_OKA(10)
      C                   Eval      DDRNTD10OK = DDRNTD_OKA(10)
- 
+     C                   Eval      DDCCY111OK = DDCCY1_OKA(11)                              MD059520
+     C                   Eval      DDCCY211OK = DDCCY2_OKA(11)                              MD059520
+     C                   Eval      DDTIME11OK = DDTIME_OKA(11)                              MD059520
+     C                   Eval      DDRNTD11OK = DDRNTD_OKA(11)                              MD059520
+     C                   Eval      DDCCY112OK = DDCCY1_OKA(12)                              MD059520
+     C                   Eval      DDCCY212OK = DDCCY2_OKA(12)                              MD059520
+     C                   Eval      DDTIME12OK = DDTIME_OKA(12)                              MD059520
+     C                   Eval      DDRNTD12OK = DDRNTD_OKA(12)                              MD059520
+     C                   Eval      DDCCY113OK = DDCCY1_OKA(13)                              MD059520
+     C                   Eval      DDCCY213OK = DDCCY2_OKA(13)                              MD059520
+     C                   Eval      DDTIME13OK = DDTIME_OKA(13)                              MD059520
+     C                   Eval      DDRNTD13OK = DDRNTD_OKA(13)                              MD059520
+     C                   Eval      DDCCY114OK = DDCCY1_OKA(14)                              MD059520
+     C                   Eval      DDCCY214OK = DDCCY2_OKA(14)                              MD059520
+     C                   Eval      DDTIME14OK = DDTIME_OKA(14)                              MD059520
+     C                   Eval      DDRNTD14OK = DDRNTD_OKA(14)                              MD059520
+     C                   Eval      DDCCY115OK = DDCCY1_OKA(15)                              MD059520
+     C                   Eval      DDCCY215OK = DDCCY2_OKA(15)                              MD059520
+     C                   Eval      DDTIME15OK = DDTIME_OKA(15)                              MD059520
+     C                   Eval      DDRNTD15OK = DDRNTD_OKA(15)                              MD059520
+     C                   Eval      DDCCY116OK = DDCCY1_OKA(16)                              MD059520
+     C                   Eval      DDCCY216OK = DDCCY2_OKA(16)                              MD059520
+     C                   Eval      DDTIME16OK = DDTIME_OKA(16)                              MD059520
+     C                   Eval      DDRNTD16OK = DDRNTD_OKA(16)                              MD059520
+     C                   Eval      DDCCY117OK = DDCCY1_OKA(17)                              MD059520
+     C                   Eval      DDCCY217OK = DDCCY2_OKA(17)                              MD059520
+     C                   Eval      DDTIME17OK = DDTIME_OKA(17)                              MD059520
+     C                   Eval      DDRNTD17OK = DDRNTD_OKA(17)                              MD059520
+     C                   Eval      DDCCY118OK = DDCCY1_OKA(18)                              MD059520
+     C                   Eval      DDCCY218OK = DDCCY2_OKA(18)                              MD059520
+     C                   Eval      DDTIME18OK = DDTIME_OKA(18)                              MD059520
+     C                   Eval      DDRNTD18OK = DDRNTD_OKA(18)                              MD059520
+     C                   Eval      DDCCY119OK = DDCCY1_OKA(19)                              MD059520
+     C                   Eval      DDCCY219OK = DDCCY2_OKA(19)                              MD059520
+     C                   Eval      DDTIME19OK = DDTIME_OKA(19)                              MD059520
+     C                   Eval      DDRNTD19OK = DDRNTD_OKA(19)                              MD059520
+     C                   Eval      DDCCY120OK = DDCCY1_OKA(20)                              MD059520
+     C                   Eval      DDCCY220OK = DDCCY2_OKA(20)                              MD059520
+     C                   Eval      DDTIME20OK = DDTIME_OKA(20)                              MD059520
+     C                   Eval      DDRNTD20OK = DDRNTD_OKA(20)                              MD059520
+     C                   Eval      DDCCY121OK = DDCCY1_OKA(21)                              MD059520
+     C                   Eval      DDCCY221OK = DDCCY2_OKA(21)                              MD059520
+     C                   Eval      DDTIME21OK = DDTIME_OKA(21)                              MD059520
+     C                   Eval      DDRNTD21OK = DDRNTD_OKA(21)                              MD059520
+     C                   Eval      DDCCY122OK = DDCCY1_OKA(22)                              MD059520
+     C                   Eval      DDCCY222OK = DDCCY2_OKA(22)                              MD059520
+     C                   Eval      DDTIME22OK = DDTIME_OKA(22)                              MD059520
+     C                   Eval      DDRNTD22OK = DDRNTD_OKA(22)                              MD059520
+     C                   Eval      DDCCY123OK = DDCCY1_OKA(23)                              MD059520
+     C                   Eval      DDCCY223OK = DDCCY2_OKA(23)                              MD059520
+     C                   Eval      DDTIME23OK = DDTIME_OKA(23)                              MD059520
+     C                   Eval      DDRNTD23OK = DDRNTD_OKA(23)                              MD059520
+     C                   Eval      DDCCY124OK = DDCCY1_OKA(24)                              MD059520
+     C                   Eval      DDCCY224OK = DDCCY2_OKA(24)                              MD059520
+     C                   Eval      DDTIME24OK = DDTIME_OKA(24)                              MD059520
+     C                   Eval      DDRNTD24OK = DDRNTD_OKA(24)                              MD059520
+     C                   Eval      DDCCY125OK = DDCCY1_OKA(25)                              MD059520
+     C                   Eval      DDCCY225OK = DDCCY2_OKA(25)                              MD059520
+     C                   Eval      DDTIME25OK = DDTIME_OKA(25)                              MD059520
+     C                   Eval      DDRNTD25OK = DDRNTD_OKA(25)                              MD059520
+     C                   Eval      DDCCY126OK = DDCCY1_OKA(26)                              MD059520
+     C                   Eval      DDCCY226OK = DDCCY2_OKA(26)                              MD059520
+     C                   Eval      DDTIME26OK = DDTIME_OKA(26)                              MD059520
+     C                   Eval      DDRNTD26OK = DDRNTD_OKA(26)                              MD059520
+     C                   Eval      DDCCY127OK = DDCCY1_OKA(27)                              MD059520
+     C                   Eval      DDCCY227OK = DDCCY2_OKA(27)                              MD059520
+     C                   Eval      DDTIME27OK = DDTIME_OKA(27)                              MD059520
+     C                   Eval      DDRNTD27OK = DDRNTD_OKA(27)                              MD059520
+     C                   Eval      DDCCY128OK = DDCCY1_OKA(28)                              MD059520
+     C                   Eval      DDCCY228OK = DDCCY2_OKA(28)                              MD059520
+     C                   Eval      DDTIME28OK = DDTIME_OKA(28)                              MD059520
+     C                   Eval      DDRNTD28OK = DDRNTD_OKA(28)                              MD059520
+     C                   Eval      DDCCY129OK = DDCCY1_OKA(29)                              MD059520
+     C                   Eval      DDCCY229OK = DDCCY2_OKA(29)                              MD059520
+     C                   Eval      DDTIME29OK = DDTIME_OKA(29)                              MD059520
+     C                   Eval      DDRNTD29OK = DDRNTD_OKA(29)                              MD059520
+     C                   Eval      DDCCY130OK = DDCCY1_OKA(30)                              MD059520
+     C                   Eval      DDCCY230OK = DDCCY2_OKA(30)                              MD059520
+     C                   Eval      DDTIME30OK = DDTIME_OKA(30)                              MD059520
+     C                   Eval      DDRNTD30OK = DDRNTD_OKA(30)                              MD059520
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -608,57 +778,57 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Inputs
       ** Response mode
- 
+
      C                   PARM                    RespMode
- 
+
       ** Currency/Time of Netting Details
- 
+
      C                   PARM                    TrnDets
- 
+
       ** Outputs
       ** Currency/Time of Netting Details OK inds
- 
+
      C                   PARM                    OKTrnDets
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    Idx
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to
       ** caller
- 
+
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    WIdx
- 
+
       ** Valid Currency/Time of Nettingd details layout (DS) from/to caller
- 
+
      C                   PARM                    ValidCTNM
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  =  900
@@ -669,17 +839,17 @@
      C                   EVAL      WKRDNB = BJRDNB
      C                   EVAL      WKCYCD = BJCYCD
      C                   ENDIF
- 
+
       ** Check if switchable feature CDL025 is switched on.
       ** Currency/Time of Netting Maintenance
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CDL025'      @SARD
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS AND
      C                             @RTCD <> '*NRF   '
      C                   EVAL      DBKEY  = 'CDL025'
@@ -687,7 +857,7 @@
      C                   EVAL      DBASE  =  902
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANK
      C                   MOVE      'Y'           CDL025
      C                   ELSE
@@ -706,7 +876,7 @@
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **------------------------------------------------------------------
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT

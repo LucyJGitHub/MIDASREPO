@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. 252069             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
@@ -158,6 +159,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records. (Recompile)      *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

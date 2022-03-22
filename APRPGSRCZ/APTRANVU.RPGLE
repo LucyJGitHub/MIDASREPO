@@ -1,4 +1,5 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
+     H DEBUG
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas AP Validate and update')                         *
@@ -13,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
       *                 MD044553           Date 08May17               *
@@ -231,6 +233,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records.                  *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -7490,12 +7494,26 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                       CGL157
      C                   EVAL      TransCRS11 = %SUBST(BufferEx4:Bfp:CRS11Ln)                 CGL157
      C                   ADD       CRS11Ln       Bfp                                          CGL157
+      *                                                                                     MD059520
+      ** Buffer Pointer is equal to 9681, adjust pointer                                    MD059520
+      ** until end of field length.                                                         MD059520
       *                                                                                       CGL157
-     C                   EVAL      TransCRS12 = %SUBST(BufferEx4:Bfp:CRS12Ln)                 CGL157
-     C                   ADD       CRS12Ln       Bfp                                          CGL157
+     C**********         EVAL      TransCRS12 = %SUBST(BufferEx4:Bfp:CRS12Ln)        CGL157 MD059520
+     C                   EVAL      TransCRS12 = %SUBST(BufferEx4:Bfp:318)                   MD059520
+     C**********         ADD       CRS12Ln       Bfp                                 CGL157 MD059520
+     C                   ADD       318           Bfp                                        MD059520
+      *                                                                                     MD059520
+      ** Get remaining field length for CRS12Ln.                                            MD059520
+      *                                                                                     MD059520
+     C                   SUB       318           CRS12Ln                                    MD059520
+     C                   EVAL      TransCRS12 = %SUBST(TransCRS12:Bfp2:318) +               MD059520
+     C                                          %SUBST(BufferEx5:Bfp2:CRS12Ln)              MD059520
+     C                   ADD       CRS12Ln       Bfp2                                       MD059520
       *                                                                                       CGL157
-     C                   EVAL      TransCRS13 = %SUBST(BufferEx4:Bfp:CRS13Ln)                 CGL157
-     C                   ADD       CRS13Ln       Bfp                                          CGL157
+     C**********         EVAL      TransCRS13 = %SUBST(BufferEx4:Bfp:CRS13Ln)        CGL157 MD059520
+     C                   EVAL      TransCRS13 = %SUBST(BufferEx5:Bfp2:CRS13Ln)              MD059520
+     C**********         ADD       CRS13Ln       Bfp                                 CGL157 MD059520
+     C                   ADD       CRS13Ln       Bfp2                                       MD059520
       *                                                                                       CGL157
      C                   EVAL      TransCRDD1 = TransCRS01 + TransCRS02                       CGL157
      C                                        + TransCRS03 + TransCRS04                       CGL157
@@ -7519,18 +7537,26 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CGL157
      C                   EVAL      Bfp = 1                                                    CGL157
                                                                                               CGL157
-     C                   EVAL      TransCRS14 = %SUBST(BufferEx5:Bfp:CRS14Ln)                 CGL157
-     C                   ADD       CRS14Ln       Bfp                                          CGL157
+     C**********         EVAL      TransCRS14 = %SUBST(BufferEx5:Bfp:CRS14Ln)        CGL157 MD059520
+     C                   EVAL      TransCRS14 = %SUBST(BufferEx5:Bfp2:CRS14Ln)              MD059520
+     C**********         ADD       CRS14Ln       Bfp                                 CGL157 MD059520
+     C                   ADD       CRS14Ln       Bfp2                                       MD059520
                                                                                               CGL157
-     C                   EVAL      TransCRS15 = %SUBST(BufferEx5:Bfp:CRS15Ln)                 CGL157
-     C                   ADD       CRS15Ln       Bfp                                          CGL157
+     C**********         EVAL      TransCRS15 = %SUBST(BufferEx5:Bfp:CRS15Ln)        CGL157 MD059520
+     C                   EVAL      TransCRS15 = %SUBST(BufferEx5:Bfp2:CRS15Ln)              MD059520
+     C**********         ADD       CRS15Ln       Bfp                                 CGL157 MD059520
+     C                   ADD       CRS15Ln       Bfp2                                       MD059520
                                                                                               CGL157
      C                   EVAL      TransCRDD2 = TransCRS14 + TransCRS15                       CGL157
                                                                                               CGL157
-     C                   EVAL      ExtData   = %SUBST(BufferEx5:Bfp:SDEXLn)                   CGL157
-     C                   ADD       SDEXLn        Bfp                                          CGL157
+     C**********         EVAL      ExtData   = %SUBST(BufferEx5:Bfp:SDEXLn)          CGL157 MD059520
+     C                   EVAL      ExtData   = %SUBST(BufferEx5:Bfp2:SDEXLn)                MD059520
+     C**********         ADD       SDEXLn        Bfp                                          CGL157
+     C                   ADD       SDEXLn        Bfp2                                       MD059520
                                                                                               CGL157
-     C                   EVAL      BFEx5Ln -= Bfp                                             CGL157
+     C**********         EVAL      BFEx5Ln -= Bfp                                    CGL157 MD059520
+     C                   EVAL      BFEx5Ln -= Bfp2                                          MD059520
+     C                   EVAL      Bfp2 = 1                                                 MD059520
                                                                                               CGL157
      C                   ENDSR                                                                CGL157
       *****************************************************************                       BG0505

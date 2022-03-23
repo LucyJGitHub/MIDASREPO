@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 05Feb18              */
-/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*       Last Amend No. MD059435           Date 16Feb22              */
+/*       Prev Amend No. MD046248           Date 05Feb18              */
+/*                      MD045731           Date 27Sep17              */
 /*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -61,6 +62,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD059435 - STP Batch entered Midas as held with an error    */
+/*                  in the header record                             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Restart MT94x batch job.                         */
 /*       CSD083 - Watch List Compliance Upgrade                      */
@@ -525,6 +528,10 @@ CGLABL:                                                               /*CGL004*/
 /* Submit the Technical Platform background jobs */
 
              IF         COND(&MODULE *EQ 'TP') THEN(DO)
+/**/                                                                                    /*MD059435*/
+/* Submit Batch Monitor job */                                                          /*MD059435*/
+/**/                                                                                    /*MD059435*/
+             CALL       PGM(GLC998001)                                                  /*MD059435*/
 /**/                                                                                     /*BUG2381*/
 /* Start the APIs Confirmations job                                                      /*BUG2381*/
 /**/                                                                                     /*BUG2381*/

@@ -673,14 +673,14 @@
      C                   IF        ED2FNI = 'Y'                                               261775
      C                             AND NbItems = ED2NIM                                       261775
       *                                                                                     MD022383
-      * The field 86 would not be added if the lenght of the message is more than allowed.  MD022383
-      * However there is still possibility that on the maximum                              MD022383
-      * allowed lines the creation of field 86 reaches maximum characters so on shift the   MD022383
-      * previous occurence the 86 would have to be refilled                                 MD022383
+      ** The field 86 would not be added if the lenght of the message is more than allowed. MD022383
+      ** However there is still possibility that on the maximum                             MD022383
+      ** allowed lines the creation of field 86 reaches maximum characters so on shift the  MD022383
+      ** previous occurence the 86 would have to be refilled                                MD022383
       *                                                                                     MD022383
      C                             OR CurLength > MaxLength                                   261775
       *                                                                                     MD022383
-      * Save latest occurence before message specific field 86                              MD022383
+      ** Save latest occurence before message specific field 86                             MD022383
       *                                                                                     MD022383
      C                   Eval      LP = M                                                   MD022383
       *                                                                                     MD022383
@@ -714,13 +714,13 @@
 
      C                   EXSR      $CrtMsgDtl
       *                                                                                     MD022383
-      * If the message was longer than max allowed the field 86 will have to be written     MD022383
-      * if data present                                                                     MD022383
+      ** If the message was longer than max allowed the field 86 will have to be written    MD022383
+      ** if data present                                                                    MD022383
       *                                                                                     MD022383
      C                   IF        F86F = 'Y' and LA > 0 and LA > LP                        MD022383
-                                                                                            MD022383
+      *                                                                                     MD022383
       ** Unload multi-occurrence MULT in PF/MGOMSGPD.                                       MD022383
-                                                                                            MD022383
+      *                                                                                     MD022383
      C     L             DO        LA            XS                                         MD022383
                                                                                             MD022383
                                                                                             MD022383

@@ -669,26 +669,26 @@
       ** Format field :86:
 
      C                   EXSR      $FMT86
-      *                                                                                     261775
-     C                   IF        ED2FNI = 'Y'                                             261775
-     C                             AND NbItems = ED2NIM                                     261775
+      *                                                                                       261775
+     C                   IF        ED2FNI = 'Y'                                               261775
+     C                             AND NbItems = ED2NIM                                       261775
       *                                                                                     MD022383
       * The field 86 would not be added if the lenght of the message is more than allowed.  MD022383
       * However there is still possibility that on the maximum                              MD022383
       * allowed lines the creation of field 86 reaches maximum characters so on shift the   MD022383
       * previous occurence the 86 would have to be refilled                                 MD022383
       *                                                                                     MD022383
-     C                             OR CurLength > MaxLength                                 261775
+     C                             OR CurLength > MaxLength                                   261775
       *                                                                                     MD022383
       * Save latest occurence before message specific field 86                              MD022383
       *                                                                                     MD022383
      C                   Eval      LP = M                                                   MD022383
       *                                                                                     MD022383
-     C                   EXSR      $FMT86F                                                  261775
+     C                   EXSR      $FMT86F                                                    261775
       *                                                                                     MD022383
      C                   Eval      LA = M                                                   MD022383
       *                                                                                     MD022383
-     C                   ENDIF                                                              261775
+     C                   ENDIF                                                                261775
 
       ** Check the maximum length.
 

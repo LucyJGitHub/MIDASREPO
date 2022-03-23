@@ -9,27 +9,29 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD059571           Date 09Mar22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6474            Date 19Apr05              */
+/*                      BUG6474            Date 19Apr05              */
 /*                      CDL012  *CREATE    Date 12Aug03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD059571 - Component DLC0766 looping in EOY COB             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG6474 (00041016) - Commitment definition not valid.       */
 /*       CDL012 - Interest Statements for Call/Time Deposits.        */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
@@ -80,10 +82,10 @@
                           THEN(GOTO CMDLBL(END))
 /**/
              RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
- 
+
 /* If either position is blank, this is an error */
              IF         COND(%SST(&SDSTAT 6 2) *EQ ' ') THEN(DO)
- 
+
 /* If it is, send message and terminate */
              CHGVAR     VAR(&MESSAGE) VALUE(' ')
              CHGVAR     VAR(&MESSAGE) VALUE('The Midas System Prefix +
@@ -91,7 +93,7 @@
              SNDMSG     MSG(&MESSAGE) TOMSGQ(MOPERQ)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Access Midas Modules File */
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*FIRST ')
@@ -123,7 +125,7 @@
              CHGVAR     VAR(&RSEQ) VALUE(' ')
              CHGVAR     VAR(&RLEV) VALUE('S')
              CHGVAR     VAR(&RENT) VALUE(' ')
- 
+
 /* If Correspondence Manager is installed */
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
                 CLRPFM     FILE(CGTCSTPD)
@@ -133,25 +135,26 @@
              ENDDO
 /**/
              CALL       PGM(DL0767) PARM(&RSEQ &RLEV &RENT &RDATA)
+             RCLRSC     LVL(*CALLER)                                                    /*MD059571*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              CHGVAR     VAR(&MESSAGE) VALUE('Error in printing +
                           year-end statements for Time/Call deposits')
              SNDMSG     MSG(&MESSAGE) TOMSGQ(MOPERQ)
              ENDDO
- 
+
 /* If Correspondence Manager is installed */
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
 /** Call Extract File Instance Management */
              CHGVAR     VAR(&ACTION) VALUE('*PREPARE')
              CALL       PGM(CGC3605) PARM(&ACTION)
- 
+
 /** Call Extract Program                  */
 /**********  CALL       PGM(CG4530) PARM(&W0RTN &W0CMT)                                  /*BUG6474*/
              CALL       PGM(CG4530) PARM(&W0RTN &W0CMT &PARENT &RDATA)                   /*BUG6474*/
- 
+
 /** Reclaim resource                      */
              RCLRSC
- 
+
 /** Error in extract program              */
              IF         COND(&W0RTN *NE '       ') THEN(DO)
                 SNDPGMMSG  MSG('CG4530-User Defined Correspondence Extract +
@@ -161,33 +164,34 @@
                 MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                /*BUG6474*/
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /** Call Custom Defined Data Extract pgm */
              CALL       PGM(CGC3604)
+             CHGJOB     SWS(XXXXXX11)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              ENDDO
- 
+
 /* SKIP abnormal processing  */
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
 /* UDC module must be on in order to call a Correspondence Manager program */
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')
                 CALL       PGM(CGC3605) PARM(&ACTION)
              ENDDO
- 
+
              DMPCLPGM                                                                    /*BUG6474*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG6474*/
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG6474*/
- 
+
 /* Abnormal termination - batch job */
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           DLC0766 ended abnormally - see job log') +
@@ -195,7 +199,7 @@ ABNOR:
              MONMSG     MSGID(CPF0000 MCH0000)
              ROLLBACK                                                                    /*BUG6474*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*BUG6474*/
- 
+
 /**/
 END:
              ENDCMTCTL                                                                   /*BUG6474*/

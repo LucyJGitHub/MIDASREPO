@@ -167,7 +167,6 @@
 
 /** Call Custom Defined Data Extract pgm */
              CALL       PGM(CGC3604)
-             CHGJOB     SWS(XXXXXX11)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +

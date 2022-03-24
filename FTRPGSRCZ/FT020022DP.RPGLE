@@ -10,10 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD059739           Date 23Mar22               *
+      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059739 - Use only the UETR field to link MX and FT         *
+      *             transaction                                       *
       *  CSW122 - SWIFT ISO 20022                                     *
       *                                                               *
       *****************************************************************
@@ -21,7 +24,8 @@
      FFT020022DFCF   E             WORKSTN INFSR(*PSSR)
      F                                     INFDS(INFDS1)
      F                                     SFILE(FT020022S0:S0RRN)
-     FMEISOML1  IF   E           K DISK    INFSR(*PSSR)
+     F***MEISOML1  IF   E           K DISK    INFSR(*PSSR)                                  MD059739
+     FMEISOML2  IF   E           K DISK    INFSR(*PSSR)                                     MD059739
      FMEDESCL1  IF   E           K DISK    INFSR(*PSSR)
      FMEISODL1  IF   E           K DISK    INFSR(*PSSR)
      FMEINDTL0  IF   E           K DISK    INFSR(*PSSR)
@@ -64,7 +68,7 @@
       *
       ** Work Variables
      D PMTAG1          S              5A
-     D PMTAG2          S              5A
+     D***PMTAG2          S              5A                                                  MD059739
      D PMSGRF          S              8S 0
      D PREF            S             15A
      D PEXIT           S              1A
@@ -153,17 +157,17 @@
 
       ** Get MX Message Reference
 
-     C     KMEISOM       CHAIN     MEISOML1
-     C                   IF        %FOUND(MEISOML1)
-     C                   EVAL      WMXRef = OMMSGR
+     C*****KMEISOM       CHAIN     MEISOML1                                                 MD059739
+     C**********         IF        %FOUND(MEISOML1)                                         MD059739
+     C**********         EVAL      WMXRef = OMMSGR                                          MD059739
      C                   Z-ADD     1             WSeqNo
      C     KMEISOD       SETLL     MEISODL1
      C     KMEISOD       READE     MEISODL1                               32
      C                   EVAL      WrkENAM = MEENAM
-     C                   ELSE
-     C                   EVAL      WMXRef = *ZERO
-     C                   EVAL      WFound = 'N'
-     C                   ENDIF
+     C**********         ELSE                                                               MD059739
+     C**********         EVAL      WMXRef = *ZERO                                           MD059739
+     C**********         EVAL      WFound = 'N'                                             MD059739
+     C**********         ENDIF                                                              MD059739
 
      C                   ENDIF
       *
@@ -318,12 +322,12 @@
      C                   KFLD                    PMSGRF
      C                   KFLD                    PMTAG1
 
-     C     KMEIN35       KLIST
-     C                   KFLD                    PMSGRF
-     C                   KFLD                    PMTAG2
+     C*****KMEIN35       KLIST                                                              MD059739
+     C**********         KFLD                    PMSGRF                                     MD059739
+     C**********         KFLD                    PMTAG2                                     MD059739
 
      C     KMEISOM       KLIST
-     C                   KFLD                    WrkF20
+     C**********         KFLD                    WrkF20                                     MD059739
      C                   KFLD                    WrkUETR
 
      C     KMEISOD       KLIST
@@ -369,7 +373,7 @@
      C                   MOVEL     PREF          SPREF
 
      C                   EVAL      PMTAG1 = '121:'
-     C                   EVAL      PMTAG2 = ':20:'
+     C**********         EVAL      PMTAG2 = ':20:'                                          MD059739
 
      C     KMEINDT       CHAIN     MEINDTL0
      C                   IF        %FOUND(MEINDTL0)
@@ -378,11 +382,19 @@
      C                   EVAL      *IN77 = *ON
      C                   EVAL      SUETR = DTMFLD
 
-     C     KMEIN35       CHAIN     MEIN35L0
-     C                   IF        %FOUND(MEIN35L0)
-     C                   EVAL      WrkF20 = DSMF35
-     C                   EVAL      SMSGID = DSMF35
-     C                   ENDIF
+     C*****KMEIN35       CHAIN     MEIN35L0                                                 MD059739
+     C**********         IF        %FOUND(MEIN35L0)                                         MD059739
+     C**********         EVAL      WrkF20 = DSMF35                                          MD059739
+     C**********         EVAL      SMSGID = DSMF35                                          MD059739
+     C**********         ENDIF                                                              MD059739
+     C     KMEISOM       CHAIN     MEISOML2                                                 MD059739
+     C                   IF        %FOUND(MEISOML2)                                         MD059739
+     C                   EVAL      SMSGID = OMMSID                                          MD059739
+     C                   EVAL      WMXRef = OMMSGR                                          MD059739
+     C                   ELSE                                                               MD059739
+     C                   EVAL      WMXRef = *ZERO                                           MD059739
+     C                   EVAL      WFound = 'N'                                             MD059739
+     C                   ENDIF                                                              MD059739
 
      C                   ELSE
      c                   EVAL      WFound = 'N'

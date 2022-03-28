@@ -15,7 +15,12 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amemd No. MD059539           Date 07Mar22               *
+      *                 MD058991           Date 06Oct21               *
+      *                 CIR020             Date 02Aug21               *
+      *                 MD058379           Date 01Jul21               *
+      *                 CDL102             Date 01Jun21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD039655           Date 03Sep19               *
@@ -235,6 +240,12 @@
       *                                                               *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records.                  *
+      *  MD059539 - CER049 buffer issue.                              *
+      *  MD058991 - Backward looking rate error encountered           *
+      *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of refereNce rate field             *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
@@ -820,6 +831,7 @@
      D BufferEx7       S           9999                                                      BUG4646
      D BufferEx8       S           9999                                                      BUG4646
      D BufferEx9       S           9999                                                      BUG4646
+     D InCIR020        S            100                                                       CIR020
      D****** MsgArrOUT       S           2000                                                 BG1105
      D MsgArrOUT       S           9999                                                       BG1105
      D APIRetC         S              1
@@ -1416,6 +1428,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       1467          Bfp2                                CSF011 MD038485
      C**********         ADD       1681          Bfp2                                MD038485 CER050
      C**********         ADD       1680          Bfp2                                CER050 MD054028
+     C**********         ADD       1678          Bfp2                              MD054028 MD058379
+     C**********         ADD       1728          Bfp2                              MD058379 MD059539
      C                   ADD       1678          Bfp2                                       MD054028
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
@@ -2311,6 +2325,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C     DAIFLn        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       DAIFLn        Bfp
      C     DAEXLn        SUBST     BUFFER:Bfp    ExtData
+     C                   ADD       DAEXLn        Bfp                                          CDL102
+     C                                                                                        CDL102
+      *** Backward-Looking Rate Fields (CDL102)                                               CDL102
+     C     DLBLRTLn      SUBST     BUFFER:Bfp    DLBLRDta         49                          CDL102
+     C                   EVAL      ExtData = %SUBST(ExtData:1:DAEXLn) + DLBLRDta              CDL102
+                                                                                              CDL102
 
      C                   CALL      'MMDEAMVU'
       * Common header information (DS) from source system
@@ -3269,6 +3289,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       26            Bfp                               MD044553 MD056546
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
+     C                   ADD       RPIFln        Bfp                                          CIR020
+     C                   ADD       1             Bfp                                          CIR020
+     C                   EVAL      InCIR020    = %SUBST(BufferTotal:Bfp:100)                  CIR020
      C                   CALL      'IRCIRSVU'
 
       * Common header information (DS) from source system
@@ -3287,6 +3310,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                     BUG6671
      C                   PARM                    ExtData
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    InCIR020                                     CIR020
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -4122,6 +4146,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       20            Bfp                                          261140
      C     20            SUBST     BUFFER:Bfp    AFRT                                         261140
      C                   ADD       20            Bfp                                          261140
+      ** Backward-Looking Rate Fields (CDL102)                                                CDL102
+     C     DLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           50                          CDL102
+     C                   EVAL      ExtData = %SUBST(ExtData:1:FUEXLn) + BSRDta                CDL102
+     C                   ADD       DLBSRTLn      Bfp                                          CDL102
+                                                                                              CDL102
 
      C                   CALL      'ABFUNDVU'
      C                   PARM                    HeadIn
@@ -5195,6 +5224,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD05654
      C**********         ADD       26            Bfp                                MD044553 MD05654
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
+     C                   ADD       RPIFln        Bfp                                        MD058991
+     C                   ADD       1             Bfp                                          CIR020
+     C     100           SUBST     BUFFER:Bfp    InCIR020                                     CIR020
                                                                                              BUG6671
 
      C**********         ENDSL                                                               BUG4646
@@ -5216,6 +5248,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                     BUG6671
      C                   PARM                    ExtData                                     BUG6671
      C                   PARM                    InSwift2013                                  CSW213
+     C                   PARM                    InCIR020                                     CIR020
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -5920,6 +5953,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'MMDAEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DAEXLn            4 0
+      *                                                                                       CDL102
+     C                   Z-ADD     49            DLBLRTLn          4 0                        CDL102
 
      C                   MOVEL     'SDCUCUPD'    FileName                                     CER043
      C                   EXSR      GETRCDLN                                                   CER043
@@ -6776,6 +6811,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CAP191
      C                   Z-ADD     RecordLen     FUEXLn            4 0                        CAP191
                                                                                               CAP191
+     C                   Z-ADD     50            DLBSRTLn          4 0                        CDL102
      C                   ENDSR
       *****************************************************************
       /SPACE 5

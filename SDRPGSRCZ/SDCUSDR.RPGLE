@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055373           Date 14Jul20               *
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No. MD055373           Date 14Jul20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records.                  *
       *  MD055373 - Audit trail not available                         *
       *           - Added DDIUSR and DDAUSR fields in the buffer.     *
       *  MD055446 - There are parties and fields missing from the BRT *	
@@ -341,10 +344,12 @@
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
-     D FillerBufEx4    S           6039A                                                    MD044880
+     D FillerBufEx4    S           6039A                                         MD044880 MD059520
+     D*FillerBufEx4    S           6259A                                                    MD059520
      D Filler65        S             65A                                                    MD051299
      D NewCuCtnm1      S              8A                                                    MD041996
-     D NewCuCtnm2      S            110A                                                    MD041996
+     D***NewCuCtnm2      S            110A                                         MD041996 MD059520
+     D NewCuCtnm2      S            330A                                                    MD059520
 
       ** Stamp Tax details                                                                    CER049
      DTranStamp        S             31A                                                      CER049

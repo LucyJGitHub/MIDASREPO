@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  MD055446           Date 04Apr20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD059520           Date 21Feb22               *
+      *  Prev Amend No  MD055446           Date 04Apr20               *
+      *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -72,6 +73,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
+      *             netting tab not showing records.                  *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -4242,6 +4245,86 @@
      C                   EVAL      DDCCY2_10 = TNCCY2_10                                   AR1086546
      C                   EVAL      DDTIME_10 = TNTIME_10                                   AR1086546
      C                   EVAL      DDRNTD_10 = TNRNTD_10                                   AR1086546
+     C                   EVAL      DDCCY1_11 = TNCCY1_11                                    MD059520
+     C                   EVAL      DDCCY2_11 = TNCCY2_11                                    MD059520
+     C                   EVAL      DDTIME_11 = TNTIME_11                                    MD059520
+     C                   EVAL      DDRNTD_11 = TNRNTD_11                                    MD059520
+     C                   EVAL      DDCCY1_12 = TNCCY1_12                                    MD059520
+     C                   EVAL      DDCCY2_12 = TNCCY2_12                                    MD059520
+     C                   EVAL      DDTIME_12 = TNTIME_12                                    MD059520
+     C                   EVAL      DDRNTD_12 = TNRNTD_12                                    MD059520
+     C                   EVAL      DDCCY1_13 = TNCCY1_13                                    MD059520
+     C                   EVAL      DDCCY2_13 = TNCCY2_13                                    MD059520
+     C                   EVAL      DDTIME_13 = TNTIME_13                                    MD059520
+     C                   EVAL      DDRNTD_13 = TNRNTD_13                                    MD059520
+     C                   EVAL      DDCCY1_14 = TNCCY1_14                                    MD059520
+     C                   EVAL      DDCCY2_14 = TNCCY2_14                                    MD059520
+     C                   EVAL      DDTIME_14 = TNTIME_14                                    MD059520
+     C                   EVAL      DDRNTD_14 = TNRNTD_14                                    MD059520
+     C                   EVAL      DDCCY1_15 = TNCCY1_15                                    MD059520
+     C                   EVAL      DDCCY2_15 = TNCCY2_15                                    MD059520
+     C                   EVAL      DDTIME_15 = TNTIME_15                                    MD059520
+     C                   EVAL      DDRNTD_15 = TNRNTD_15                                    MD059520
+     C                   EVAL      DDCCY1_16 = TNCCY1_16                                    MD059520
+     C                   EVAL      DDCCY2_16 = TNCCY2_16                                    MD059520
+     C                   EVAL      DDTIME_16 = TNTIME_16                                    MD059520
+     C                   EVAL      DDRNTD_16 = TNRNTD_16                                    MD059520
+     C                   EVAL      DDCCY1_17 = TNCCY1_17                                    MD059520
+     C                   EVAL      DDCCY2_17 = TNCCY2_17                                    MD059520
+     C                   EVAL      DDTIME_17 = TNTIME_17                                    MD059520
+     C                   EVAL      DDRNTD_17 = TNRNTD_17                                    MD059520
+     C                   EVAL      DDCCY1_18 = TNCCY1_18                                    MD059520
+     C                   EVAL      DDCCY2_18 = TNCCY2_18                                    MD059520
+     C                   EVAL      DDTIME_18 = TNTIME_18                                    MD059520
+     C                   EVAL      DDRNTD_18 = TNRNTD_18                                    MD059520
+     C                   EVAL      DDCCY1_19 = TNCCY1_19                                    MD059520
+     C                   EVAL      DDCCY2_19 = TNCCY2_19                                    MD059520
+     C                   EVAL      DDTIME_19 = TNTIME_19                                    MD059520
+     C                   EVAL      DDRNTD_19 = TNRNTD_19                                    MD059520
+     C                   EVAL      DDCCY1_20 = TNCCY1_20                                    MD059520
+     C                   EVAL      DDCCY2_20 = TNCCY2_20                                    MD059520
+     C                   EVAL      DDTIME_20 = TNTIME_20                                    MD059520
+     C                   EVAL      DDRNTD_20 = TNRNTD_20                                    MD059520
+     C                   EVAL      DDCCY1_21 = TNCCY1_21                                    MD059520
+     C                   EVAL      DDCCY2_21 = TNCCY2_21                                    MD059520
+     C                   EVAL      DDTIME_21 = TNTIME_21                                    MD059520
+     C                   EVAL      DDRNTD_21 = TNRNTD_21                                    MD059520
+     C                   EVAL      DDCCY1_22 = TNCCY1_22                                    MD059520
+     C                   EVAL      DDCCY2_22 = TNCCY2_22                                    MD059520
+     C                   EVAL      DDTIME_22 = TNTIME_22                                    MD059520
+     C                   EVAL      DDRNTD_22 = TNRNTD_22                                    MD059520
+     C                   EVAL      DDCCY1_23 = TNCCY1_23                                    MD059520
+     C                   EVAL      DDCCY2_23 = TNCCY2_23                                    MD059520
+     C                   EVAL      DDTIME_23 = TNTIME_23                                    MD059520
+     C                   EVAL      DDRNTD_23 = TNRNTD_23                                    MD059520
+     C                   EVAL      DDCCY1_24 = TNCCY1_24                                    MD059520
+     C                   EVAL      DDCCY2_24 = TNCCY2_24                                    MD059520
+     C                   EVAL      DDTIME_24 = TNTIME_24                                    MD059520
+     C                   EVAL      DDRNTD_24 = TNRNTD_24                                    MD059520
+     C                   EVAL      DDCCY1_25 = TNCCY1_25                                    MD059520
+     C                   EVAL      DDCCY2_25 = TNCCY2_25                                    MD059520
+     C                   EVAL      DDTIME_25 = TNTIME_25                                    MD059520
+     C                   EVAL      DDRNTD_25 = TNRNTD_25                                    MD059520
+     C                   EVAL      DDCCY1_26 = TNCCY1_26                                    MD059520
+     C                   EVAL      DDCCY2_26 = TNCCY2_26                                    MD059520
+     C                   EVAL      DDTIME_26 = TNTIME_26                                    MD059520
+     C                   EVAL      DDRNTD_26 = TNRNTD_26                                    MD059520
+     C                   EVAL      DDCCY1_27 = TNCCY1_27                                    MD059520
+     C                   EVAL      DDCCY2_27 = TNCCY2_27                                    MD059520
+     C                   EVAL      DDTIME_27 = TNTIME_27                                    MD059520
+     C                   EVAL      DDRNTD_27 = TNRNTD_27                                    MD059520
+     C                   EVAL      DDCCY1_28 = TNCCY1_28                                    MD059520
+     C                   EVAL      DDCCY2_28 = TNCCY2_28                                    MD059520
+     C                   EVAL      DDTIME_28 = TNTIME_28                                    MD059520
+     C                   EVAL      DDRNTD_28 = TNRNTD_28                                    MD059520
+     C                   EVAL      DDCCY1_29 = TNCCY1_29                                    MD059520
+     C                   EVAL      DDCCY2_29 = TNCCY2_29                                    MD059520
+     C                   EVAL      DDTIME_29 = TNTIME_29                                    MD059520
+     C                   EVAL      DDRNTD_29 = TNRNTD_29                                    MD059520
+     C                   EVAL      DDCCY1_30 = TNCCY1_30                                    MD059520
+     C                   EVAL      DDCCY2_30 = TNCCY2_30                                    MD059520
+     C                   EVAL      DDTIME_30 = TNTIME_30                                    MD059520
+     C                   EVAL      DDRNTD_30 = TNRNTD_30                                    MD059520
                                                                                            AR1086546
      C                   ENDSR                                                             AR1086546
       *****************************************************************                    AR1086546

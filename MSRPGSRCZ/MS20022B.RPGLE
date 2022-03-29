@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059677           Date 10Mar22               *
-      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD059755           Date 28Mar22               *
+      *  Prev Amend No. MD059677           Date 10Mar22               *
+      *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059755 - Various records in MSIXISOPD and MSMXISOPD  have  *
+      *             no value date                                     *
       *  MD059677 - Cleared correlation ID                            *
       *  CSW122 - SWIFT ISO 20022 Changes                             *
       *                                                               *
@@ -56,12 +59,14 @@
 
       ** Array containing the recognized tags
 
-     D  mxTags         S            100A   dim(8) ctdata perrcd(1)
+     D***mxTags         S            100A   dim(8) ctdata perrcd(1)                         MD059755
+     D  mxTags         S            100A   DIM(11) CTDATA PERRCD(1)                         MD059755
 
       ** Constant for tag array size
       ** If a new element on the mxTags array is added, this must also be updated
 
-     D  arraySize      C                   const(8)
+     D***arraySize      C                   const(8)                                        MD059755
+     D  arraySize      C                   CONST(11)                                        MD059755
 
      D  cancelMsg      S             20A   varying
 
@@ -93,7 +98,8 @@
 
       ** Tag array index controller
 
-     D  x              S              1S 0 inz(1)
+     D***x              S              1S 0 inz(1)                                          MD059755
+     D  x              S              2S 0 inz(1)                                           MD059755
 
       ** Write records buffer controller
 
@@ -674,6 +680,15 @@
      C                   when      mxTags(x) = 'IntrBkSttlmDt'
      C                   eval      SVDT = tagVal
 
+     C                   WHEN      mxTags(x) = 'OrgnlIntrBkSttlmDt'                         MD059755
+     C                   eval      SVDT = tagVal                                            MD059755
+                                                                                            MD059755
+     C                   WHEN      mxTags(x) = 'XpctdValDt'                                 MD059755
+     C                   EVAL      SVDT = tagVal                                            MD059755
+                                                                                            MD059755
+     C                   WHEN      mxTags(x) = 'ReqdExctnDt_Dt'                             MD059755
+     C                   EVAL      SVDT = tagVal                                            MD059755
+                                                                                            MD059755
       ** Extract Message ID
 
      C                   when      mxTags(x) = 'GrpHdr_MsgId'
@@ -1116,7 +1131,10 @@ PmtId_UETR
 MsgDefIdr
 IntrBkSttlmAmt
 IntrBkSttlmAmt_Ccy
+OrgnlIntrBkSttlmDt
 IntrBkSttlmDt
 GrpHdr_MsgId
 GrpHdr_CreDtTm
 BizMsgIdr
+XpctdValDt
+ReqdExctnDt_Dt

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD057670             Date 02Mar21             *
-      *  Prev Amend No. MD056556             Date 31Aug20             *
+      *  Last Amend No. MD058593             Date 20Aug21             *
+      *  Prev Amend No. MD057670             Date 02Mar21             *
+      *                 MD056556             Date 31Aug20             *
       *                 MD056608             Date 08Sep20             *
       *                 MD056696             Date 09Sep20             *
       *                 MD055681             Date 31Jul20             *
@@ -22,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058593 - GZSCSAREPD was made redundant. Remove it from BTD *
+      *           - Applied for MD-59746.                             *
       *  MD057670 - Deliverable Data Split for APNDCONPD              *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD056608 Deliverable Data Split for APFUNCPD                 *
@@ -398,6 +401,12 @@
      C/EXEC SQL                                                                             MD056556
      C+ delete from GPGLFXTD where GFGPF ='GZREAPWDPD'                                      MD056556
      C/END-EXEC                                                                             MD056556
+     C/EXEC SQL                                                                             MD058593
+     C+ delete from GPGLFBTD where GFGPF ='GZSCSAREPD'                                      MD058593
+     C/END-EXEC                                                                             MD058593
+     C/EXEC SQL                                                                             MD058593
+     C+ delete from GPGLFXTD where GFGPF ='GZSCSAREPD'                                      MD058593
+     C/END-EXEC                                                                             MD058593
      C                   Endif                                                              MD056556
                                                                                             MD056556
      C                   If        XINDEX = 'APNDCCTD'                                      MD057670

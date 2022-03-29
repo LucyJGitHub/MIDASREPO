@@ -678,17 +678,11 @@
       ** Extract Value Date
 
      C                   when      mxTags(x) = 'IntrBkSttlmDt'
+     C                             OR mxTags(x) = 'OrgnlIntrBkSttlmDt'                      MD059755
+     C                             OR mxTags(x) = 'XpctdValDt'                              MD059755
+     C                             OR mxTags(x) = 'ReqdExctnDt_Dt'                          MD059755
      C                   eval      SVDT = tagVal
 
-     C                   WHEN      mxTags(x) = 'OrgnlIntrBkSttlmDt'                         MD059755
-     C                   eval      SVDT = tagVal                                            MD059755
-                                                                                            MD059755
-     C                   WHEN      mxTags(x) = 'XpctdValDt'                                 MD059755
-     C                   EVAL      SVDT = tagVal                                            MD059755
-                                                                                            MD059755
-     C                   WHEN      mxTags(x) = 'ReqdExctnDt_Dt'                             MD059755
-     C                   EVAL      SVDT = tagVal                                            MD059755
-                                                                                            MD059755
       ** Extract Message ID
 
      C                   when      mxTags(x) = 'GrpHdr_MsgId'

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030884           Date 08Oct14               *
+      *  Last Amend No. AR844906           Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030884           Date 08Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR844906 - Disallow deletion if class is associated with     *
+      *             a facility type (CLE138)                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030884 - Invalid Characters / Script are rendered in input *
       *             fields.                                           *
@@ -50,6 +53,8 @@
      F                                              KINFSR *PSSR
       * RTV : Midas SD Midas module flags retrieval
      F/COPY WNCPYSRC,SDH00146
+     FSDFACTL3IF  E           K        DISK                                                 AR844906
+     F                                              KINFSR *PSSR                            AR844906
      E********************************************************************
      E                    CPY@    1   1 80               Copyright
      I*
@@ -557,6 +562,7 @@
       * If delete request, bypass validation
      C           #1SEL     IFEQ 'D'
      C/COPY WNCPYSRC,SDH00147
+     C           CLE138    ANDNE'Y'                                                         AR844906
      C                     GOTO DCEXIT
      C                     END
       * Validate subfile record
@@ -583,6 +589,19 @@
       *================================================================
       *
      C/COPY WNCPYSRC,SDH00148
+     C           #1SEL     IFEQ 'D'                                                         AR844906
+     C           CLE138    ANDEQ'Y'                                                         AR844906
+     C           #1CLAS    SETLLSDFACTL3                                                    AR844906
+     C           #1CLAS    READESDFACTL3                 70                                 AR844906
+     C           *IN70     IFEQ *OFF                                                        AR844906
+     C                     SETON                     9833  *                                AR844906
+      *                                                                                     AR844906
+      ** Send message 'Class is associated to a facility type - cannot be deleted'          AR844906
+      *                                                                                     AR844906
+     C                     MOVEL'CLE1393' ZAMSID                                            AR844906
+     C                     EXSR ZASNMS                                                      AR844906
+     C                     ENDIF                                                            AR844906
+     C                     ELSE                                                             AR844906
       * USER: Validate subfile record fields
       * CASE: PGM.*Program mode is *ADD
      C           W0PMD     IFEQ 'ADD'                      *IF
@@ -656,6 +675,7 @@
      C                     EXSR ZASNMS
      C                     END                             FI
      C/COPY WNCPYSRC,SDH00149
+     C                     ENDIF                                                            AR844906
       *================================================================
      CSR         DEEXIT    ENDSR
       /EJECT
@@ -1389,6 +1409,17 @@
      C                     MOVE DFF       WUDFF            DTE FMT FLAG
      C                     MOVE MBIN      WUMBIN           MULTI BR. IND
      C/COPY WNCPYSRC,SDH00150
+     C                     CALL 'AOSARDR0'                                                  AR844906
+     C                     PARM '       ' @RTCD   7                                         AR844906
+     C                     PARM '*VERIFY' @OPTN   7                                         AR844906
+     C                     PARM 'CLE138'  @SARD   6                                         AR844906
+      *                                                                                     AR844906
+     C           @RTCD     IFEQ *BLANK                                                      AR844906
+     C                     MOVE 'Y'       CLE138  1                                         AR844906
+     C                     ELSE                                                             AR844906
+     C                     MOVE 'N'       CLE138                                            AR844906
+     C                     ENDIF                                                            AR844906
+      *                                                                                     AR844906
       * get practically everythin - MIDAS Modules  *
      C                     EXSR SGRVGN
       * Initialise subfile control

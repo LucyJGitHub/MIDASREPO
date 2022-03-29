@@ -2,17 +2,18 @@
       *****************************************************************
 /*STD *  RPGBASE                                                      *
 /*EXI *  TEXT('Midas SD Facility Type Aud/Req Report')                *
-     H/TITLE Facility Type Request Rep Print file
-     F********************************************************************
-     F*                                                                  *
-     F*  Midas - STANDING DATA MODULES
-     F*                                                                  *
-     F*   SD0270P - FACILITY TYPES Aud/Req Report                        *
-     F*                                                                  *
+     H/TITLE Facility Type Request Rep Print file                     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - STANDING DATA MODULES                                *
+     F*                                                               *
+     F*   SD0270P - FACILITY TYPES Aud/Req Report                     *
+     F*                                                               *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+     F*                                                               *
+      *  Last Amend no. CLE138             Date 02Nov21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -24,10 +25,11 @@
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 S01408             Date 07Sep95               *
      F*                 S01117             Date 03May90               *S01117
-     F*                    S01117             DATE 19APR90               *S01117
-     F*                                                                  *
-     F********************************************************************
-     F*                                                                  *S01117
+     F*                    S01117             DATE 19APR90            *S01117
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *S01117
+      *  CLE138 - Class Code for Facilities                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -86,6 +88,9 @@
       * PRT: Facility Type Request Rep Print file
       *
      F/COPY WNCPYSRC,SDH00053
+      *                                                                                       CLE138
+     E                    ACL        16  8               CLASS ARRAY                          CLE138
+      *                                                                                       CLE138
      E                    UAR        53  1
      E                    ULN        53  1
      E                    UARRAY  1   2 26
@@ -315,6 +320,52 @@
       * Print detail line.
      C                     WRITEZZDTLRCD
      C/COPY WNCPYSRC,SDH00050
+      *                                                                                       CLE138
+     C           CLE138    IFEQ 'Y'                                                           CLE138
+      *                                                                                       CLE138
+     C                     CLEARACL                                                           CLE138
+      *                                                                                       CLE138
+      ** RTV all Class CodeS for Facility                                                     CLE138
+      *                                                                                       CLE138
+     C           XRFCTY    SETLLSDFACTL1                                                      CLE138
+     C           XRFCTY    READESDFACTL1                 72                                   CLE138
+      *                                                                                       CLE138
+      ** If NO classes found                                                                  CLE138
+     C           *IN72     IFEQ *ON                                                           CLE138
+     C                     WRITEZHCLE138                                                      CLE138
+      *
+     C                     ELSE
+     C                     WRITEZHCLE138
+     C                     Z-ADD1         C       30
+      *
+      ** Process facility type classes
+     C           *IN72     DOWEQ*OFF
+      *
+     C                     MOVE AMCLAS    ACL,C
+     C                     ADD  1         C
+      *
+      ** Write classes to report and reset fields
+     C           C         IFGT 16
+     C                     MOVEAACL       XRCLAS
+     C                     WRITEZDCLE138
+     C                     CLEARACL
+     C                     Z-ADD1         C       30
+     C                     ENDIF
+      *
+     C           XRFCTY    READESDFACTL1                 72
+     C                     ENDDO
+      *
+      ** Write to report remaining unwritten classes if any
+     C           C         IFGT 1
+     C                     MOVEAACL       XRCLAS
+     C                     WRITEZDCLE138
+     C                     CLEARACL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
      C                     END
       *================================================================
      CSR         CAEXIT    ENDSR
@@ -842,6 +893,30 @@
      C                     END                                            S01117
      C*                                                                   S01117
      C/COPY WNCPYSRC,SDH00052
+      *                                                                                       CLE138
+     C                     MOVE 'N'       CLE138  1                                           CLE138
+      *                                                                                       CLE138
+     C                     CALL 'AOSARDR0'                                                    CLE138
+     C                     PARM '       ' @RTCD   7                                           CLE138
+     C                     PARM '*VERIFY' @OPTN   7                                           CLE138
+     C                     PARM 'CLE138'  @SARD   6                                           CLE138
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFEQ *BLANKS                                                       CLE138
+     C                     MOVE 'Y'       CLE138                                              CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
+     C           @RTCD     IFNE *BLANKS                                                       CLE138
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE138
+     C           *LOCK     IN   LDA                                                           CLE138
+     C                     MOVEL'SD0270P 'DBPGM                                               CLE138
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE138
+     C                     Z-ADD2         DBASE                                               CLE138
+     C                     MOVEL'CLE138'  DBKEY                                               CLE138
+     C                     OUT  LDA                                                           CLE138
+     C                     EXSR *PSSR                                                         CLE138
+     C                     ENDIF                                                              CLE138
+      *                                                                                       CLE138
       *                                                                                       CER001
       **  Determine if ULX004 is installed                                                    CER001
       *                                                                                       CER001

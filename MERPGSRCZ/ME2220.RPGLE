@@ -19,11 +19,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059676           Date 09Mar22               *
-      *  Prev Amend No. CSW122  *CREATE    Date 04Oct21               *
+      *  Last Amend No. MD059755           Date 29Mar22               *
+      *  Prev Amend No. MD059676           Date 09Mar22               *
+      *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059755 - Various records in MSIXISOPD and MSMXISOPD have   *
+      *             no value date                                     *
       *  MD059676 - Program dump in job MS_MX_IMM due to duplicate    *
       *             data (Recompile)                                  *
       *  CSW122 - SWIFT ISO20022 Changes                              *
@@ -95,7 +98,8 @@
 
       ** Working field for date conversion
 
-     D w@date          S              5S 0
+     D***w@date          S              5S 0                                                MD059755
+     D W@Date          S              6S 0                                                  MD059755
 
       ** Fields for getting system value
 

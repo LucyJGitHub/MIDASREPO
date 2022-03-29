@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 26Jan22               *
-      *  Prev Amend No. MD059321           Date 21Dec21               *
+      *  Last Amend No. MD057529           Date 28Jan21               *
+      *  Prev Amend N0. AR926400           Date 19Jun13               *      
+      *                 MD059304           Date 26Jan22               *
+      *                 MD059321           Date 21Dec21               *
       *                 MD059368           Date 17Dec21               *
       *                 MD058975           Date 20Oct21               *
       *                 MD058379           Date 12Jul21               *
@@ -148,6 +150,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057529 - Redeliver of the correct version of the program   *
+      *             that was missed during SP24 + compatibility patch *
+      *  AR926400 - Unable to update Front Office ID. Allow changes   *
+      *             on HKFRNT. (Child: AR926403)                      *      
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -2194,6 +2200,17 @@
 
      C     ValidateAc    BEGSR
 
+      *                                                                                     AR926400
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)                       AR926400
+      ** Otherwise                                                                          AR926400
+      ** Set retrieve mode to blank (Access using Midas transaction ID)                     AR926400
+      *                                                                                     AR926400
+     C     DDFOID        IFNE      *BLANKS                                                  AR926400
+     C                   MOVEL     '*FRONT'      ModeofOp                                   AR926400
+     C                   ELSE                                                               AR926400
+     C                   MOVEL     '      '      ModeofOp                                   AR926400
+     C                   ENDIF                                                              AR926400
+      *                                                                                     AR926400
       * Validate action code versus transaction IDs supplied
       * This function will set the Midas deal number and the Midas
       * associated deal number.
@@ -2208,7 +2225,8 @@
 
       * Mode = '*FRONT' (Front Office transaction interface)
       * Mode = '      ' (Not Front Office transaction interface)
-     C                   PARM      '      '      ModeofOp          6
+     C**********         PARM      '      '      ModeofOp          6                        AR926400
+     C                   PARM                    ModeofOp          6                        AR926400
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE

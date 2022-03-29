@@ -28,8 +28,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059314           Date 22Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD058556           Date 16Aug21               *
+      *  Prev Amend No. MD049574           Date 07Feb18               *
+      *                 MD047859           Date 19Sep17               *      
+      *                 AR933170           Date 19Jun13               *      
+      *                 MD059314           Date 22Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
@@ -89,6 +93,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
+      *             behavior.                                         *
+      *           - Recompile all objects affected by AR933170.       *
+      *  MD049574 - Correct buffer positions for Principal Change     *
+      *             schedule fields                                   *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *           - DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *      
       *  MD059314 - Error encountered on Principal Change Schedule    *
       *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -466,6 +479,7 @@
      D SFEBO           S             10    DIM(10) PERRCD(1) CTDATA
      D #0FEBO          S             10    DIM(10) ALT(SFEBO)
      D LETT            S              1    DIM(7) CTDATA PERRCD(7)              BUG5403
+     D DDFOID          S             20A                                                    AR933170
 
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -879,6 +893,7 @@
      C                   EVAL      STINFD=%SUBST(Buffer:2079)                               MD031861
      C                   EVAL      #1STAT=%SUBST(Buffer:2085)                               MD031861
      C                   EVAL      FORMULAOPC=%SUBST(Buffer:2109)                           MD031861
+     C                   EVAL      DDFOID=%SUBST(Buffer:2134)                               MD047859     
                                                                                               CIR020
       ** Backward-Looking Rate Fields                                                         CIR020
      C                   EVAL      InTranBlrt = %SUBST(Buffer:4268:50 )                       CIR020
@@ -887,9 +902,14 @@
      C**********                   BufferEx2                                         MD031861 CSW216
      C**********         EVAL      PCSAST=%SUBST(Buffer:4268) + Buffer2 +              CSW216 CIR020
      C**********                   BufferEx2                                           CSW216 CIR020
-     C                   EVAL      PCSAST=%SUBST(Buffer:4318) + Buffer2 +                     CIR020
-     C                             BufferEx2                                                  CIR020
+     C**********         EVAL      PCSAST=%SUBST(Buffer:4318) + Buffer2 +            CIR020 MD049574
+     C**********                   BufferEx2                                         CIR020 MD049574
+     C                   EVAL      PCSAST=%SUBST(Buffer:4338) + Buffer2 +                   MD049574
+     C                             BufferEx2                                                MD049574
+      
+     
      C
+     C                   EVAL      APFOTranID = DDFOID                                      AR933170
      C                   MOVEA     PCSAST        PCSA                           BUG5403
 
       * If CAP041 is installed, move Fees/Buy-Outs fields to one DS for
@@ -1098,6 +1118,7 @@
      C                                  + SUINFD + STINFD + #1STAT                           BUG5871
      C**********                        + FORMULAOPC + PCSAST                         BUG5871 CSW213
      C                                  + FORMULAOPC                                          CSW213
+     C                                  + DDFOID                                            AR933170
      C                                  + OutSwift2013                                        CSW213
      C                                  + InTranBlrt                                          CIR020
      C                                  + PCSAST                                              CSW213
@@ -1121,8 +1142,12 @@
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5983)                     CSW214 MD031861
      C**********         EVAL      Buffer2=%SUBST(PCSAST:1774)                         CSW214 CSW216
      C**********         EVAL      BufferEx2=%SUBST(PCSAST:5773)                       CSW214 CSW216
-     C                   EVAL      Buffer2=%SUBST(PCSAST:1734)                                CSW216
-     C                   EVAL      BufferEx2=%SUBST(PCSAST:5733)                              CSW216
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1734)                       CSW216 MD047859
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5733)                     CSW216 MD047859
+     C**********         EVAL      Buffer2=%SUBST(PCSAST:1754)                     MD047859 MD049574
+     C**********         EVAL      BufferEx2=%SUBST(PCSAST:5753)                   MD047859 MD049574
+     C                   EVAL      Buffer2=%SUBST(PCSAST:1714)                              MD049574
+     C                   EVAL      BufferEx2=%SUBST(PCSAST:5713)                            MD049574
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -1325,6 +1350,16 @@
       *                                                               *
       *****************************************************************
      C     SrValActCde   BEGSR
+      *                                                                                     AR933170
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)                       AR933170
+      ** Otherwise                                                                          AR933170
+      ** Set retrieve mode to blank (Access using Midas transaction ID)                     AR933170
+      *                                                                                     AR933170
+     C     DDFOID        IFNE      *BLANKS                                                  AR933170
+     C                   MOVEL     '*FRONT'      ModeofOp                                   AR933170
+     C                   ELSE                                                               AR933170
+     C                   MOVEL     '      '      ModeofOp                                   AR933170
+     C                   ENDIF                                                              AR933170
 
       ** Validate Action code versus Deal number supplied
 

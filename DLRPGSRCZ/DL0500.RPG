@@ -13,8 +13,10 @@
       *  NOTE: Check DL5110 for changes that may apply to it if there *                       CAS005
       *        are amendments done to this program.                   *                       CAS005
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *      
+      *                 MD058815           Date 28Sep21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD051152           Date 02Aug18               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -122,6 +124,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *       
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -1543,6 +1549,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+     C                     MOVE WCALC6    SCALC6  1                                         MD051554
      C*                                                                   CIR001
      C           KCFSC     KLIST                                          CIR001
      C                     KFLD           DLNO                            CIR001
@@ -1600,6 +1607,22 @@
      C                     EXSR ##ADDB                                                        CSC042
      C                     END                                            S01117
      C                     END                             *** E10                            CSC042
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C           DTYP      IFEQ 'FR'                                                        MD051554
+     C           DTYP      OREQ 'RS'                                                        MD051554
+     C           DTYP      OREQ 'RX'                                                        MD051554
+     C           DTYP      OREQ 'RR'                                                        MD051554
+     C           DTYP      OREQ 'RP'                                                        MD051554
+     C           DTYP      OREQ 'RF'                                                        MD051554
+     C                     MOVE 'N'       WCALC6                                            MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVE SCALC6    WCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
 *    C***41***             SETON                     U7U8LR               S01194
 *    C***41***             GOTO TOTAL                                     S01194
 0382 C   02                GOTO TAG2

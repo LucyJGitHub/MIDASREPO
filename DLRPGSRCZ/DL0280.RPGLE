@@ -23,7 +23,7 @@
       /COPY DLCPYSRC,DL0280FHD2
       /COPY WNCPYSRC,DL0280F001
       ** Comment to commit source to git                                                    MD056644
-      *****************************************************************
+      ******************************************************************
      FDLOPOSPD  O  A E             DISK
      FCLINT     IF   E           K DISK                                         S01383
      FSDBRTDL1  IF   E           K DISK                                         S01383

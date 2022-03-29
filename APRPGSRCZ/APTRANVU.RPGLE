@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amemd No. MD059539           Date 07Mar22               *
-      *  Prev Amend No. MD058991           Date 06Oct21               *
+      *  Last Amend No. MD039064           Date 31May16               *       
+      *  Prev Amend No. MD059539           Date 07Mar22               *
+      *                 MD058991           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058379           Date 01Jul21               *
       *                 CDL102             Date 01Jun21               *
@@ -236,6 +237,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039064 - Incorrect mapping for RPIF details                *      
       *  MD059539 - CER049 buffer issue.                              *
       *  MD058991 - Backward looking rate error encountered           *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
@@ -3282,6 +3284,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       168           Bfp                                        MD030454
      C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                          MD044553 MD056546
      C**********         ADD       26            Bfp                               MD044553 MD056546
+     C                   ADD       20            Bfp                                        MD039064
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
      C                   ADD       RPIFln        Bfp                                          CIR020
      C                   ADD       1             Bfp                                          CIR020
@@ -4004,6 +4007,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     CFEXLn        SUBST     BUFFER:Bfp    ExtData
      C                   ADD       CFEXLn        Bfp                                          CSW213
      C                   ADD       61            Bfp                                          CSW213
+     C                   ADD       20            Bfp                                        MD039064
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
 
      C                   CALL      'IRCACFVU'
@@ -5218,6 +5222,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       168           Bfp                                          CSW213
      C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD05654
      C**********         ADD       26            Bfp                                MD044553 MD05654
+     C                   ADD       20            Bfp                                        MD039064
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
      C                   ADD       RPIFln        Bfp                                        MD058991
      C                   ADD       1             Bfp                                          CIR020

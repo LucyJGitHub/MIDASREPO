@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD058221           Date 25Jun21               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *       
+      *                 MD058815           Date 28Sep21               *
+      *                 MD058221           Date 25Jun21               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -51,6 +53,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *       
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -269,45 +275,46 @@
      C**********         EXSR      SRERR                                           MD035545 MD047993
      C**********         ENDIF                                                     MD035545 MD047993
       *                                                                                     MD035545
-      ** Retrieve system value setting                                                      MD035545
+      ***Retrieve*system*value*setting*******************                          MD035545 MD051554
+      **********                                                                   MD035545 MD051554
+     C**********         MOVEL     WPARML        P@OP01                            MD035545 MD051554
+     C**********         CALL      'AOSVALR0'                                      MD035545 MD051554
+     C**********         PARM      *BLANKS       W0RTCD            7               MD035545 MD051554
+     C**********         PARM                    P@OP01           20               MD035545 MD051554
+     C**********         PARM                    P@VL01          200               MD035545 MD051554
+     C**********         PARM                    P@OP02           20               MD035545 MD051554
+     C**********         PARM                    P@VL02          200               MD035545 MD051554
+     C**********         PARM                    P@OP03           20               MD035545 MD051554
+     C**********         PARM                    P@VL03          200               MD035545 MD051554
+     C**********         PARM                    P@OP04           20               MD035545 MD051554
+     C**********         PARM                    P@VL04          200               MD035545 MD051554
+     C**********         PARM                    P@OP05           20               MD035545 MD051554
+     C**********         PARM                    P@VL05          200               MD035545 MD051554
+     C**********         PARM                    P@OP06           20               MD035545 MD051554
+     C**********         PARM                    P@VL06          200               MD035545 MD051554
+     C**********         PARM                    P@OP07           20               MD035545 MD051554
+     C**********         PARM                    P@VL07          200               MD035545 MD051554
+     C**********         PARM                    P@OP08           20               MD035545 MD051554
+     C**********         PARM                    P@VL08          200               MD035545 MD051554
+     C**********         PARM                    P@OP09           20               MD035545 MD051554
+     C**********         PARM                    P@VL09          200               MD035545 MD051554
+     C**********         PARM                    P@OP10           20               MD035545 MD051554
+     C**********         PARM                    P@VL10          200               MD035545 MD051554
+      **********                                                                   MD035545 MD051554
       *                                                                                     MD035545
-     C                   MOVEL     WPARML        P@OP01                                     MD035545
-     C                   CALL      'AOSVALR0'                                               MD035545
-     C                   PARM      *BLANKS       W0RTCD            7                        MD035545
-     C                   PARM                    P@OP01           20                        MD035545
-     C                   PARM                    P@VL01          200                        MD035545
-     C                   PARM                    P@OP02           20                        MD035545
-     C                   PARM                    P@VL02          200                        MD035545
-     C                   PARM                    P@OP03           20                        MD035545
-     C                   PARM                    P@VL03          200                        MD035545
-     C                   PARM                    P@OP04           20                        MD035545
-     C                   PARM                    P@VL04          200                        MD035545
-     C                   PARM                    P@OP05           20                        MD035545
-     C                   PARM                    P@VL05          200                        MD035545
-     C                   PARM                    P@OP06           20                        MD035545
-     C                   PARM                    P@VL06          200                        MD035545
-     C                   PARM                    P@OP07           20                        MD035545
-     C                   PARM                    P@VL07          200                        MD035545
-     C                   PARM                    P@OP08           20                        MD035545
-     C                   PARM                    P@VL08          200                        MD035545
-     C                   PARM                    P@OP09           20                        MD035545
-     C                   PARM                    P@VL09          200                        MD035545
-     C                   PARM                    P@OP10           20                        MD035545
-     C                   PARM                    P@VL10          200                        MD035545
-      *                                                                                     MD035545
-      ** If system value is not found then default value to 'N'                             MD035545
-      *                                                                                     MD035545
-     C     W0RTCD        IFNE      '       '                                                MD035545
-     C                   MOVE      'N'           WCALC6                                     MD035545
-     C                   ELSE                                                               MD035545
-     C                   MOVEL     P@VL01        WCALC6                                     MD035545
+      ***If*system value is not found then default value to 'N'                    MD035545 MD051554
+      **********                                                                   MD035545 MD051554
+     C*****W0RTCD        IFNE      '       '                                       MD035545 MD051554
+     C**********         MOVE      'N'           WCALC6                            MD035545 MD051554
+     C**********         ELSE                                                      MD035545 MD051554
+     C**********         MOVEL     P@VL01        WCALC6                            MD035545 MD051554
      C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993
      C*****BKALDI        ANDEQ     'Y'                                             MD035545 MD047993
      C**********         MOVE      'Y'           WCALC6                            MD035545 MD047993
      C**********         ELSE                                                      MD035545 MD047993
      C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
      C**********         ENDIF                                                     MD035545 MD047993
-     C                   ENDIF                                                              MD035545
+     C**********         ENDIF                                                     MD035545 MD051554
       *
      C                   ENDSR
       *****************************************************************

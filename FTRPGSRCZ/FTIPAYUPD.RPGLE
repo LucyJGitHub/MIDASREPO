@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058914           Date 06Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *      
+      *  Prev Amend No. MD058914           Date 06Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
       *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *      
       *  MD058914 - FT payments customer information on listviews     *
       *             is blank. Amend to add routine to retrieve        *
       *             Customer and Branch for INPAYDQD/OTPAYDQD.        *

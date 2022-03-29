@@ -13,9 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059183A          Date 21Dec21               *
-      *  Last Amend No. MD059183           Date 11Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD058556           Date 16Aug21               *
+      *  Prev Amend No. MD049387           Date 19Jan18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 19Jun13               *      
+      *                 MD059183A          Date 21Dec21               *
+      *                 MD059183           Date 11Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
       *                 MD044553           Date 08May17               *
@@ -70,6 +74,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
+      *             behavior.                                         *
+      *           - Recompile all objects affected by AR933170.       *
+      *  MD049387 - Principal Change Schedule values not accepted     *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *             DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *      
       *  MD059183A- Values entered in Our/Their Int Payment           *
       *             Schedule tab were not saved after authorisation.  *
       *  MD059183 - Freq is irregular and values entered are missing  *
@@ -396,6 +408,7 @@
      D BufferEx8       S           9999                                         BUG4646
      D BufferEx9       S           9999                                         BUG4646
      D APIRetc         S              1A
+     D DDFOID          S             20                                                     AR933170
 
      D ModeOfOp        S              6A
      D PRtCd           S              7A
@@ -637,6 +650,7 @@
      C                                      FORMULAOC + FORMULATC +             BUG4646
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
+     C                                      DDFOID +                                        AR933170
      C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
      C**********                            @WIPTmst +                             MD044553 MD056546
      C                                      InSwift2013 + ACTRJ +                           MD053400
@@ -797,24 +811,33 @@
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12456)+PCSAST          MD044553 MD056546
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9255)                   MD044553 MD056546
      C**********         EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST         MD056546 MD059183
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:786)                            MD059183
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:786)                   MD059183 MD053400
      C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST        MD056546 MD059183
      C**********         EVAL      BufferEx2 = %SUBST(ORDATEAST:4787) +           MD059183 MD059183A
-     C                   EVAL      BufferEx2 = %SUBST(ORDATEAST:4786) +                    MD059183A
-     C                                         OPDATEAST +TRDATEAST                         MD059183
-     C                                         +TPDATEAST                                   MD056546
+     C**********         EVAL      BufferEx2 = %SUBST(ORDATEAST:4786) +           MD059183A MD053400
+     C**********                               OPDATEAST +TRDATEAST                MD059183 MD053400
+     C**********                               +TPDATEAST                          MD056546 MD053400
      C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST         MD056546 MD059183
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:386)+OCFSAST                  MD059183
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:386)+OCFSAST         MD059183 MD053400
      C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST          MD056546 MD059183
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5586) +                         MD059183
-     C                             TCFSAST                                                  MD059183
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5586) +                MD059183 MD053400
+     C**********                   TCFSAST                                         MD059183 MD053400
      C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2483)                  MD056546 MD059183
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2385) +                         MD059183
-     C                             TCFSAST                                                  MD059183
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2385) +                MD059183 MD053400
+     C**********                   TCFSAST                                         MD059183 MD053400
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST          MD056546 MD059183
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12382)+PCSAST                   MD059183
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12382)+PCSAST          MD059183 MD053400
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9281)                   MD056546 MD059183
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9183)                            MD059183
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9183)                   MD059183 MD053400
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:766)                            MD053400   
+     C                   EVAL      BufferEx2 = %SUBST(ORDATEAST:4766) +                     MD053400
+     C                                         OPDATEAST +TRDATEAST                         MD053400
+     C                                         +TPDATEAST                                   MD053400     
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:366)+OCFSAST                  MD053400
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5566)+TCFSAST                   MD053400
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2365)                           MD053400
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12362)+PCSAST                   MD053400
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9163)                            MD053400     
      C                   ENDIF
 
      C                   EVAL      *INLR = *ON
@@ -937,6 +960,8 @@
      C                   PARM                    CurrScnBlrt2                                 CIR020
      C                   PARM                    DDSTS                                       BUG5871
 
+     C                   EVAL      DDFOID = RSFRNT                                          AR933170
+      *                                                                                     AR933170
      C     ESrSIRSCVT    ENDSR
       *****************************************************************
       /EJECT

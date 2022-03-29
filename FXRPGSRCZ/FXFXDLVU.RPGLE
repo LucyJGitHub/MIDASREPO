@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. MD057285           Date 17Feb21               *
+      *  Last Amend No. AR926404           Date 16Jan13               *      
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 MD057285           Date 17Feb21               *
       *                 AR818539           Date 12Mar20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
@@ -119,6 +120,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR926404 - Unable to update Front Office ID. Allow changes   *
+      *             on FHFRNT. (Child: AR926405)                      *       
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -1337,9 +1340,9 @@
      C                   PARM                    InCDL099                                     CDL099
      C/COPY WNCPYSRC,FXFXDLXC03
       *                                                                                       CTI004
-     C                   If        DDFOID <> *blanks                                          CTI004
+     C**********         If        DDFOID <> *blanks                                 CTI004 AR926404
      C                   Eval      F3FRNT = DDFOID                                            CTI004
-     C                   EndIf                                                                CTI004
+     C**********         EndIf                                                       CTI004 AR926404
       *                                                                                       254420
      C     Idx           IFNE      0                                                          254420
      C                   GOTO      INVALID                                                    254420

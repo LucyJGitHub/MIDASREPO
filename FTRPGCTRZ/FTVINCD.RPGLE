@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -43,6 +44,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -275,6 +279,7 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
                                                                                             MD000091
+     D PMode           S              6A                                                    MD021318
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -373,10 +378,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SICD1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKICD1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SICD1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKICD1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SICD1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        AD#2 = 'Y'
@@ -384,10 +396,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SICD2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKICD2                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SICD2'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKICD2                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SICD2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        AD#3 = 'Y'
@@ -395,10 +414,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SICD3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKICD3                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SICD3'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKICD3                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SICD3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        AD#4 = 'Y'
@@ -406,10 +432,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SICD4'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKICD4                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SICD4'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKICD4                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SICD4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        AD#5 = 'Y'
@@ -417,10 +450,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SICD5'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKICD5                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SICD5'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKICD5                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SICD5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
       ** Entry not allowed when the bank operation code is 'SSTD' or 'SPAY'
@@ -1487,6 +1527,7 @@
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
      C                   PARM                    CSW201                                       CSW201
+     C                   PARM                    PMode                                      MD021318
  
                                                                                               CSW202
       ** Check if switchable feature CSW202 is switched on                                    CSW202

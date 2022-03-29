@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD052296           Date 26Nov18               *
-      *  Prev Amend No. MD048216           Date 30Oct17               *
+      *  Last Amend No. ERZ252             Date 11Feb21               *
+      *  Prev Amend No. MD052296           Date 26Nov18               *
+      *                 MD048216           Date 30Oct17               *
       *                 MD036674           Date 26Nov15               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -23,6 +24,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  ERZ252 - Use External Account Balance in PDP                 *
+      *           Hooks: ERZ252_001, ERZ252_002, ERZ252_003,          *
+      *                  ERZ252_005, ERZ252_006, ERZ252_007,          *
+      *                  ERZ252_008, ERZ252_009, ERZ252_010,          *
+      *                  ZFRPEDZ1LE, ZFRPEDZ2LE                       *
       *  MD052296 - Problems caused by use of special characters      *
       *  MD048216 - Fee- system in COB did not see the Credit account *
       *              at the time of processing and created PDCL ZZ    *
@@ -39,6 +45,7 @@
       *                                                               *
       *****************************************************************
 
+     F/COPY WNCPYSRC,ERZ252_001                                                               ERZ252
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
@@ -109,6 +116,8 @@
      D    pSARD                       6A                                                      CLE168
      D    pDSSDY                    200A                                                      CLE168
 
+     D/COPY WNCPYSRC,ERZ252_002                                                               ERZ252
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -136,6 +145,7 @@
      D                                     dim(1000)
      D SCSARD        e ds                  extname(SCSARDPD)                                  CLE168
      D BankruptExrt  e ds                  extname(LEFCBKPP)                                  CLE168
+     D/COPY WNCPYSRC,ERZ252_003                                                               ERZ252
 
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
@@ -186,6 +196,7 @@
      D pOption         s              7A                                                      CLE168
      D pSARD           s              6A                                                      CLE168
      D pDSSDY          s            200A                                                      CLE168
+     D/COPY WNCPYSRC,ERZ252_004                                                               ERZ252
 
      D sortSequence    s           2000a   inz(*blanks)
      D wSqlStr         s           2000a   inz(*blanks)
@@ -210,6 +221,8 @@
      D  MessageID      S              7A   INZ(*BLANKS)
      D  CommandStr     S            200A   INZ(*BLANKS)
 
+     D/COPY ZSRSRC,ZFRPEDZ1LE                                                                 ERZ252
+                                                                                              ERZ252
       ** +--------------------------------------+
       ** ¦ Array declaration                    ¦
       ** ¦ ==================                   ¦
@@ -259,6 +272,8 @@
                    else;
                       MAX_ARRAY = 1000;
                    endif;
+                                                                                            //ERZ252
+       /COPY WNCPYSRC,ERZ252_005                                                            //ERZ252
 
       //          exsr prepareAdjTable;                                                     MD036674
 
@@ -280,6 +295,8 @@
                    exsr processCustomerBalances;
 
                    exsr processAvailableBalance;
+
+       /COPY WNCPYSRC,ERZ252_006                                                            //ERZ252
 
        // Loop through all extract tables and extract available
        // amount column from LEXTRCTD, this will be use to update
@@ -890,6 +907,8 @@
                          CustomerDS(i).SEC205 = wCAP205;
                          CustomerDS(i).SEABCF = wABCFlag;
 
+       /COPY WNCPYSRC,ERZ252_007                                                            //ERZ252
+                                                                                            //ERZ252
        // Set current balance to Available amount as retrieved from
        // current settlement account. Overdraft amount is added if
        // overdraft flag of transaction is set to 'Y'
@@ -1571,6 +1590,8 @@
                       CLE168 = 'Y';                                                         //CLE168
                    endif;                                                                   //CLE168
                                                                                             //CLE168
+       /COPY WNCPYSRC,ERZ252_008                                                            //ERZ252
+
        endsr;
 
        //*************************************************************
@@ -1594,8 +1615,12 @@
                    return;
        endsr;
 
+       /COPY WNCPYSRC,ERZ252_009                                                            //ERZ252
+
       /end-free
 
+      /COPY WNCPYSRC,ERZ252_010                                                               ERZ252
+                                                                                              ERZ252
       *****************************************************************
       /EJECT
       *****************************************************************

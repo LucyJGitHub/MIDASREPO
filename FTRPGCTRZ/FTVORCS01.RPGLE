@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259576             Date 02Apr14               *      
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 15May13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -70,6 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *      
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -925,16 +928,16 @@
       *                                                                                       221776
       ** Inactive                                                                             221776
       *                                                                                       221776
-     C                   TESTB     '4'           WRETB                    48                  221776
-     C                   If        *IN48 = '1'                                                221776
-     C                   Eval      WIx              =   WIx + 1                               221776
-     C                   Eval      RetCodeIn        =   'Error'                               221776
-     C                   Eval      WMsgIdXAr(WIx)   =   'FTM0017'                             221776
-     C                   Eval      WFldNmXAr(WIx)   =   DDSName                               221776
-     C                   If        OKTOC1 <> 'N'                                              221774
-     C                   Eval      OKTOC1 = 'W'                                               221776
-     C                   Endif                                                                221774
-     C                   Endif                                                                221776
+     C**********         TESTB     '4'           WRETB                    48           221776 259576
+     C**********         If        *IN48 = '1'                                         221776 259576
+     C**********         Eval      WIx              =   WIx + 1                        221776 259576
+     C**********         Eval      RetCodeIn        =   'Error'                        221776 259576
+     C**********         Eval      WMsgIdXAr(WIx)   =   'FTM0017'                      221776 259576
+     C**********         Eval      WFldNmXAr(WIx)   =   DDSName                        221776 259576
+     C**********         If        OKTOC1 <> 'N'                                       221774 259576
+     C**********         Eval      OKTOC1 = 'W'                                        221776 259576
+     C**********         Endif                                                         221774 259576
+     C**********         Endif                                                         221776 259576
       *                                                                                       221776
       ** Referred Debit                                                                       221776
       *                                                                                       221776

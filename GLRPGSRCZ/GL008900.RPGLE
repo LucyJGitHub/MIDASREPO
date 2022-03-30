@@ -39,9 +39,6 @@
       *             CDL087_103.                                       *
       *          Applied for MD059723.                                *
       *  AR1093845 - Incorporate CDL087 Changes                       *
-      *          Applied for MD059723.                                *
-      *  CDL087 - Multi Base CCY Spot and Forward Revaluation         *
-      *          (Upgrade IPL039 to BFM)                              *
       *          Hooks added CDL087_099, CDL087_100, CDL087_101,      *
       *          CDL087_102, CDL087_103, CDL087_104                   *
       *          Applied for MD059723.                                *

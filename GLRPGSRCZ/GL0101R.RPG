@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1016396          Date 29Apr21             *
-      *  Prev Amend No. MD057760           Date 01Apr21               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. AR1016396          Date 29Apr21               *
+      *                 MD057760           Date 01Apr21               *
       *                 MD056890           Date 11Oct20               *
       *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -85,6 +86,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  AR1016396 - Error message for locked journal batch displays  *
       *              the job name instead of the user ID. Use user ID *
       *              to indicate lock. (Child: AR1016397)             *
@@ -212,6 +214,9 @@
      FREADVCL1O   E                    DISK         KCOMIT            UC                      CRE020
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
       *                                                                                       CRE020
+      ** USER AUDIT FILE                                                                      CGL082
+     FGLJEAUL0IF  E           K        DISK                           UC                      CGL082
+      *                                                                                       CGL082
      E                    CPY@    1   1 80               Copyright array
      E/COPY WNCPYSRC,GL0101RE01
      E                    STAMP   1   1 26                                                    CPK014
@@ -1679,6 +1684,17 @@
      C                     MOVEL'Y2U0004' W0RTN   7
      C                     ELSE
      C/COPY WNCPYSRC,GL0101RC06
+      *                                                                                       CGL082
+      ** Write has been successful therefore call GL0081 to update                            CGL082
+      ** journal extension file as a batch has been input.                                    CGL082
+      *                                                                                       CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'I'       LACTN   1                                           CGL082
+     C                     END                                                                CGL082
+      *                                                                                       CGL082
       * DBF write successful
      C           CSC011    IFEQ 'Y'                                                           CSC011
      C           LIBR      ANDEQS1SUPP                                                        CSC011
@@ -2104,6 +2120,17 @@
      C           WUEXTO    IFEQ 'A'                        *IF
      C                     MOVEL'A'       WUBTSF           Batch status fl
      C/COPY WNCPYSRC,GL0101RC61
+      *
+      ** Batch has been accepted therefore call GL0081 to update                              CGL082
+      ** journal extension file.                                                              CGL082
+      *                                                                                       CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'X'       LACTN   1                                           CGL082
+     C                     END                                                                CGL082
+      *                                                                                       CGL082
      C                     ELSE
       * CASE: *OTHERWISE
      C*                                                                   S01408
@@ -2418,6 +2445,37 @@
       *                                                                                       CSC011
       * Update saved record image
      C/COPY WNCPYSRC,GL0101RC62
+      *                                                                                       CGL082
+      ** UPDAT has been successful therefore call GL0081 to update                            CGL082
+      ** journal extension file as a batch has been amended. If already                       CGL082
+      ** amended on this action then do not call GL0081.                                      CGL082
+      ** If this program has been called by the INterface Journal                             CGL082
+      ** program then check that a record exists on extension file.                           CGL082
+      ** if a record does not exist then do not write record as we have                       CGL082
+      ** not yet written an Insert record.                                                    CGL082
+      *                                                                                       CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     MOVE *IN88     IN88    1                                           CGL082
+     C                     MOVE *OFF      *IN88                                               CGL082
+     C           P2BICP    IFEQ 'I'                                                           CGL082
+     C                     OPEN GLJEAUL0                                                      CGL082
+     C           BRBTNB    CHAINGLJEAUD0             88                                       CGL082
+     C                     CLOSEGLJEAUL0                                                      CGL082
+     C                     ENDIF                                                              CGL082
+      *                                                                                       CGL082
+     C           *IN88     IFEQ *OFF                                                          CGL082
+     C           LEXUPD    IFEQ 'N'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'A'       LACTN   1                                           CGL082
+      *                                                                                       CGL082
+     C                     MOVE 'Y'       LEXUPD                                              CGL082
+     C                     ENDIF                                                              CGL082
+     C                     ENDIF                                                              CGL082
+     C                     MOVE IN88      *IN88                                               CGL082
+     C                     END                                                                CGL082
+      *                                                                                       CGL082
      C                     MOVEL@1DBRC    #1DBRC
       * USER: Processing after DBF update
       * Start of SAR S01234
@@ -2824,6 +2882,16 @@
      C           WUEXTO    IFEQ 'A'                        *IF
      C                     MOVEL'A'       WUBTSF           Batch status fl
      C/COPY WNCPYSRC,GL0101RC63
+      *                                                                                       CGL082
+      ** Batch has been accepted therefore call GL0081 to update                              CGL082
+      ** journal extension file.                                                              CGL082
+      *                                                                                       CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'X'       LACTN   1                                           CGL082
+     C                     END                                                                CGL082
      C                     ELSE
       * CASE: *OTHERWISE
      C*                                                                   S01408
@@ -3251,6 +3319,17 @@
       * Call to program ended in error
      C                     MOVEL'Y2U0021' W0RTN   7
      C/COPY WNCPYSRC,GL0101RC26
+      *                                                                                       CGL082
+      ** Batch is being added from Interface Batch so update                                  CGL082
+      ** journal extension file that the batch has been input.                                CGL082
+      *                                                                                       CGL082
+     C                     ELSE                                                               CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'I'       LACTN   1                                           CGL082
+     C                     END                                                                CGL082
      C                     END
       *
      C                     END                             *FI
@@ -3896,6 +3975,11 @@
      C                     ENDIF                                                              CRE020
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0101RCP5                                           S01408
+      *
+      ** Initialise flag for to show Journal Extension file has been   *                      CGL082
+      ** Updated.                                                                             CGL082
+      *                                                                                       CGL082
+     C                     MOVE 'N'       LEXUPD  1                                           CGL082
      C*                                                                   S01408
       * Select initial mode
      C           @1NROP    IFEQ *ZERO
@@ -3983,6 +4067,20 @@
      C           KYHSIF    KLIST                                                              CGL028
      C                     KFLD           KYRDNO  50                                          CGL028
      C                     KFLD           KYIFBN  3                                           CGL028
+      *                                                                                       CGL082
+      ** Check if CGL082 is on                                                                CGL082
+      *                                                                                       CGL082
+     C                     CALL 'AOSARDR0'                                                    CGL082
+     C                     PARM *BLANKS   @RTCD   7                                           CGL082
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL082
+     C                     PARM 'CGL082'  @SARD   6                                           CGL082
+      *                                                                                       CGL082
+     C           @RTCD     IFEQ *BLANK                                                        CGL082
+     C                     MOVE 'Y'       CGL082  1                                           CGL082
+     C                     ELSE                                                               CGL082
+     C                     MOVE 'N'       CGL082                                              CGL082
+     C                     ENDIF                                                              CGL082
+      *                                                                                       CGL082
      C/COPY WNCPYSRC,GL0101RC32
       *================================================================
      CSR         ZZEXIT    ENDSR

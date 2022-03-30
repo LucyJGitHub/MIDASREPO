@@ -34,8 +34,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD052641           Date 03Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. MD052641           Date 03Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL130             Date 28Sep12               *
       *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -81,6 +82,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  MD052641 - Journal Entries were amended even if the status   *
       *             is already ACCEPTED.                              *
       *             Retrieve the current batch status before process- *
@@ -1927,6 +1929,16 @@
       * CASE: PGM.*Return code is Batch Deleted
      C           W0RTN     IFEQ '*DELBCH'                  *IF
      C/COPY WNCPYSRC,GL0140DC14
+      *                                                                                       CGL082
+      ** Batch has been deleted so call GL0081 passing 'D'                                    CGL082
+      *                                                                                       CGL082
+     C           CGL082    IFEQ 'Y'                                                           CGL082
+     C                     CALL 'GL0081'                                                      CGL082
+     C                     PARM           BRBTNB                                              CGL082
+     C                     PARM           BRBCDA                                              CGL082
+     C                     PARM 'D'       LACTN   1                                           CGL082
+     C                     END                                                                CGL082
+      *                                                                                       CGL082
       * Setup message data for message
      C                     MOVELWUBTNB    ZA0020           Batch number
       * Send message 'Batch Deleted'
@@ -3165,6 +3177,19 @@
      C                     MOVE 'Y'       CGL130                                              CGL130
      C                     ENDIF                                                              CGL130
       *                                                                                       CGL130
+      **  Access SAR details file to see if CGL082 SAR is installed.                          CGL082
+      *                                                                                       CGL082
+     C                     CALL 'AOSARDR0'                                                    CGL082
+     C                     PARM *BLANKS   @RTCD   7                                           CGL082
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL082
+     C                     PARM 'CGL082'  @KEY    6                                           CGL082
+      *                                                                                       CGL082
+     C           @RTCD     IFEQ *BLANK                                                        CGL082
+     C                     MOVE 'Y'       CGL082  1                                           CGL082
+     C                     ELSE                                                               CGL082
+     C                     MOVE ' '       CGL082                                              CGL082
+     C                     ENDIF                                                              CGL082
+      *                                                                                       CGL082
       *================================================================
      CSR         ZZEXIT    ENDSR
       *****************************************************************   CGL008

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL118             Date 02Nov21               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. CGL082             Date 02Nov21               *
+      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
@@ -80,9 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
-      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -319,7 +321,7 @@
       *
       ** Timestamp for the transaction
      D PTimeStamp      S               Z
- 
+
      D DBerrUpd        C                   CONST('DB error in BITH API update')
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
@@ -482,9 +484,9 @@
      C                   ELSE
      C                   EVAL      B1VALI = 'Y'
      C                   ENDIF
- 
+
       *  Write to database
- 
+
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
@@ -495,9 +497,9 @@
      C                                           + PEAHeader                                  CSC054
      C                                           + PInfData + PExtData                        CAP086
      C                                           + DDSHPI                                   MD054696
- 
+
      C                   SETON                                        LR
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -685,12 +687,12 @@
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -699,7 +701,7 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       ** Update JE Headers file.
@@ -714,6 +716,9 @@
       *
       ** Security on Journal Entry
      C                   PARM                    CGL008
+      *                                                                                       CGL082
+      ** Journal Entry User Audit                                                             CGL082
+     C                   PARM                    CGL082                                       CGL082
       *
       ** Valid JE Headers (DS) - for file update
      C                   PARM                    PVBITH
@@ -747,12 +752,12 @@
       *
       ** If update not done due to record being updated by another
       *  workstation send message to screen.
- 
+
      C     PRTCD         IFEQ      '*RECUPD'
- 
+
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     DBerrUpd      MsgIdArr(1)
- 
+
      C                   END
       *
       ** If update not done due to user not been authorised (CGL008) send message
@@ -787,11 +792,11 @@
      C                   ADD       1             Idx
      C                   ENDIF
      C**********         ENDIF                                                               BUG1898
- 
+
       ** Batch Number to pass back to APTRANVU on insert mode
- 
+
      C                   EVAL                    DDBTNB = B1BTNB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -954,12 +959,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLBITH02
       *
@@ -1227,6 +1232,33 @@
       *                                                                                       CGL118
      C                   MOVE      *BLANKS       PRTCD                                       BUG9713
                                                                                              BUG9713
+      *                                                                                       CGL082
+      ** Access SAR file to determine if CGL082 (Journal Entry User Audit)                    CGL082
+      ** is installed.                                                                        CGL082
+      *                                                                                       CGL082
+     C                   CALLB     'AOSARDR0'                                                 CGL082
+     C                   PARM      *BLANKS       PRTCD                                        CGL082
+     C                   PARM      '*VERIFY'     POPTN                                        CGL082
+     C                   PARM      'CGL082'      PSARD             6                          CGL082
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL082
+      *                                                                                       CGL082
+      ** An NRF (No Record Found) return code is valid.  Issue database error                 CGL082
+      ** only for error return codes.                                                         CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFNE      *BLANKS                                                    CGL082
+     C     PRTCD         ANDNE     '*NRF   '                                                  CGL082
+     C                   MOVEL     'CGL082'      DBKEY                                        CGL082
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CGL082
+     C                   Z-ADD     005           DBASE                                        CGL082
+     C                   EXSR      *PSSR                                                      CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
+     C     PRTCD         IFEQ      *BLANK                                                     CGL082
+     C                   MOVE      'Y'           CGL082            1                          CGL082
+     C                   ELSE                                                                 CGL082
+     C                   MOVE      'N'           CGL082                                       CGL082
+     C                   ENDIF                                                                CGL082
+      *                                                                                       CGL082
      C/COPY WNCPYSRC,GLBITH05                                                                 GOC001
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

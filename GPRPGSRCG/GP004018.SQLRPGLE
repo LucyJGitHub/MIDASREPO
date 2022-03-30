@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD050405           Date 03Jun20               *
-      *  Prev Amend No. MD053451A          Date 19May20               *
+      *  Last Amend No. MD053451B          Date 21Mar22               *
+      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *                 MD053451A          Date 19May20               *
       *                 MD042109           Date 26Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053451B - BFTC Audit Reports were not generated.           *
+      *            - Use BFEVTGRPA instead of BFEVTGRP fields.        *
       *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
       *  MD053451A - BFTC Audit Reports were not generated.           *
       *  MD042109 - Updates, amendments and deletes do not show on    *
@@ -159,10 +162,20 @@
      D  BFGRPDSP                     62A
      D  BFRCRTONB                    26A                                                   MD053451A
      D  BFAPRDATB                    26A                                                   MD053451A
+     D  BFRAPRBYB                    32A                                                   MD053451B
+     D  BFCRTDBYB                    32A                                                   MD053451B
+      *                                                                                    MD053451B
+     D AssocRoleDS     DS                                                                  MD053451B
+     D  RoleGrpID                   102A                                                   MD053451B
+     D  RoleCrtBy                    32A                                                   MD053451B
+     D  RoleCrtOn                    26A                                                   MD053451B
+     D  RoleAppBy                    32A                                                   MD053451B
+     D  RoleAppDt                    26A                                                   MD053451B
 
      D***NullIndDs       S              5I 0 DIM(10)                                          CBF023
      D*NullIndDs       S              5I 0 DIM(11)                                  CBF023 MD053451A
-     D NullIndDs       S              5I 0 DIM(13)                                         MD053451A
+     D*NullIndDs       S              5I 0 DIM(13)                               MD053451A MD053451B
+     D NullIndDs       S              5I 0 DIM(15)                                         MD053451B
 
       ** Input Parameter for ZDATEO
      D                 DS
@@ -220,6 +233,7 @@
      D***DatNum04***     S              8S 0                                               AR1036892
 
      D CBF023          S              1A                                                      CBF023
+     D DefTimeStamp    S             26A   INZ('1900-01-01-00.00.00.000000')               MD053451B
       ** +--------------------------------------+
       ** ¦ Declared Constants                   ¦
       ** ¦ ==================                   ¦
@@ -252,7 +266,14 @@
      C****C.BFGROUPDISPLAYNAME****************************************                     MD053451A
      C+   C.BFGROUPDISPLAYNAME,                                                            MD053451A
      C+   B.BFRECCREATEDON,                                                                MD053451A
-     C+   B.BFRECAPPROVEDDATE                                                              MD053451A
+     C****B.BFRECAPPROVEDDATE*****************************************           MD053451A MD053451B
+     C+   CASE WHEN B.BFRECAPPROVEDDATE IS NULL                                            MD053451B
+     C+   THEN '1900-01-01'                                                                MD053451B
+     C+   ELSE B.BFRECAPPROVEDDATE END,                                                    MD053451B
+     C+   CASE WHEN B.BFRECAPPROVEDBY IS NULL                                              MD053451B
+     C+   THEN ''                                                                          MD053451B
+     C+   ELSE B.BFRECAPPROVEDBY END,                                                      MD053451B
+     C+   B.BFRECCREATEDBY                                                                 MD053451B
      C+
      C***from*MIVW_EGAS*A**********************************************                    AR1029808
      C****left*outer*join*MIVW_EVGP*B*on*B.BFEVENTGROUPIDPK*=*A.BFEVENTGROUPID             AR1029808
@@ -299,6 +320,7 @@
      C                   IF        BFEGRPID <> wEGrpId
      C                   EVAL      wFlag  = ' '
      C                   EVAL      WnoRec = WnoReC+ 1
+     C                   EXSR      GetAssocRole                                            MD053451B
      C                   EXSR      SrPrint
      C                   ELSE
      C                   EVAL      wFlag =  'Y'
@@ -335,6 +357,120 @@
      C/end-exec
 
      C                   ENDSR
+      *****************************************************************                    MD053451B
+      /EJECT                                                                               MD053451B
+      *****************************************************************                    MD053451B
+      *                                                               *                    MD053451B
+      * Getetch2- Subroutine to Fetch Record from File                *                    MD053451B
+      *                                                               *                    MD053451B
+      *****************************************************************                    MD053451B
+     C     GetAssocRole  BEGSR                                                             MD053451B
+                                                                                           MD053451B
+     C                   IF        NullIndDs(13) = 0                                       MD053451B
+     C                             AND BFAPRDATB <> DefTimeStamp                           MD053451B
+     C                             AND BFAPRDATB <> *BLANKS                                MD053451B
+      ** 4-eyes                                                                            MD053451B
+     C/exec sql                                                                            MD053451B
+     C+ declare mainCursor2 Cursor                                                         MD053451B
+     C+  for select                                                                        MD053451B
+     C+   D.BFEVENTGROUPID,                                                                MD053451B
+     C+   D.BFRECCREATEDBY,                                                                MD053451B
+     C+   D.BFRECCREATEDON,                                                                MD053451B
+     C+   CASE WHEN D.BFRECAPPROVEDBY IS NULL                                              MD053451B
+     C+   THEN ''                                                                          MD053451B
+     C+   ELSE D.BFRECAPPROVEDBY END,                                                      MD053451B
+     C+   CASE WHEN D.BFRECAPPROVEDDATE IS NULL                                            MD053451B
+     C+   THEN '1900-01-01'                                                                MD053451B
+     C+   ELSE D.BFRECAPPROVEDDATE END                                                     MD053451B
+     C+                                                                                    MD053451B
+     C+  from BFTEVTGRPA D                                                                 MD053451B
+     C+                                                                                    MD053451B
+     C+  where                                                                             MD053451B
+     C+   D.BFEVENTGROUPID = :BFEGRPID                                                     MD053451B
+     C+                                                                                    MD053451B
+     C+  order by                                                                          MD053451B
+     C+  D.BFRECAPPROVEDDATE DESC                                                          MD053451B
+      ** Approve date is set to descending order                                           MD053451B
+      ** to get the latest change                                                          MD053451B
+     C/end-exec                                                                            MD053451B
+                                                                                           MD053451B
+     C/exec sql                                                                            MD053451B
+     C+ open mainCursor2                                                                   MD053451B
+     C/end-exec                                                                            MD053451B
+     C                   EXSR      SrFetch2                                                MD053451B
+     C/exec sql                                                                            MD053451B
+     C+ close mainCursor2                                                                  MD053451B
+     C/end-exec                                                                            MD053451B
+     C                   ELSE                                                              MD053451B
+      ** 2-eyes                                                                            MD053451B
+     C                   IF        NullIndDs(12) = 0                                       MD053451B
+     C/exec sql                                                                            MD053451B
+     C+ declare mainCursor3 Cursor                                                         MD053451B
+     C+  for select                                                                        MD053451B
+     C+   D.BFEVENTGROUPID,                                                                MD053451B
+     C+   D.BFRECCREATEDBY,                                                                MD053451B
+     C+   D.BFRECCREATEDON,                                                                MD053451B
+     C+   CASE WHEN D.BFRECAPPROVEDBY IS NULL                                              MD053451B
+     C+   THEN ''                                                                          MD053451B
+     C+   ELSE D.BFRECAPPROVEDBY END,                                                      MD053451B
+     C+   CASE WHEN D.BFRECAPPROVEDDATE IS NULL                                            MD053451B
+     C+   THEN '1900-01-01'                                                                MD053451B
+     C+   ELSE D.BFRECAPPROVEDDATE END                                                     MD053451B
+     C+                                                                                    MD053451B
+     C+  from BFTEVTGRPA D                                                                 MD053451B
+     C+                                                                                    MD053451B
+     C+  where                                                                             MD053451B
+     C+   D.BFEVENTGROUPID = :BFEGRPID                                                     MD053451B
+     C+                                                                                    MD053451B
+     C+  order by                                                                          MD053451B
+     C+  D.BFRECCREATEDON DESC                                                             MD053451B
+      ** Created on date is set to descending order                                        MD053451B
+      ** to get the latest change                                                          MD053451B
+     C/end-exec                                                                            MD053451B
+                                                                                           MD053451B
+     C/exec sql                                                                            MD053451B
+     C+ open mainCursor3                                                                   MD053451B
+     C/end-exec                                                                            MD053451B
+     C                   EXSR      SrFetch3                                                MD053451B
+     C/exec sql                                                                            MD053451B
+     C+ close mainCursor3                                                                  MD053451B
+     C/end-exec                                                                            MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ENDIF                                                             MD053451B
+                                                                                           MD053451B
+     C                   ENDSR                                                             MD053451B
+      *****************************************************************                    MD053451B
+      /EJECT                                                                               MD053451B
+      *****************************************************************                    MD053451B
+      *                                                               *                    MD053451B
+      * SrFetch2- Subroutine to Fetch Record from File                *                    MD053451B
+      *                                                               *                    MD053451B
+      *****************************************************************                    MD053451B
+     C     SrFetch2      BEGSR                                                             MD053451B
+                                                                                           MD053451B
+     C/exec sql                                                                            MD053451B
+     C+  fetch next                                                                        MD053451B
+     C+   from mainCursor2                                                                 MD053451B
+     C+  into :AssocRoleDs indicator :NULLINDDS                                            MD053451B
+     C/end-exec                                                                            MD053451B
+                                                                                           MD053451B
+     C                   ENDSR                                                             MD053451B
+      *****************************************************************                    MD053451B
+      /EJECT                                                                               MD053451B
+      *****************************************************************                    MD053451B
+      *                                                               *                    MD053451B
+      * SrFetch3- Subroutine to Fetch Record from File                *                    MD053451B
+      *                                                               *                    MD053451B
+      *****************************************************************                    MD053451B
+     C     SrFetch3      BEGSR                                                             MD053451B
+                                                                                           MD053451B
+     C/exec sql                                                                            MD053451B
+     C+  fetch next                                                                        MD053451B
+     C+   from mainCursor3                                                                 MD053451B
+     C+  into :AssocRoleDs indicator :NULLINDDS                                            MD053451B
+     C/end-exec                                                                            MD053451B
+                                                                                           MD053451B
+     C                   ENDSR                                                             MD053451B
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -371,11 +507,11 @@
 
       ** Last Change User
 
-     C                   IF        BFMODDBY <> *BLANKS
-     C                   EVAL      RUSER  = BFMODDBY
-     C                   ELSE
-     C                   EVAL      RUSER  = BFCRTDBY
-     C                   ENDIF
+     C**********         IF        BFMODDBY <> *BLANKS                                     MD053451B
+     C**********         EVAL      RUSER  = BFMODDBY                                       MD053451B
+     C**********         ELSE                                                              MD053451B
+     C**********         EVAL      RUSER  = BFCRTDBY                                       MD053451B
+     C**********         ENDIF                                                             MD053451B
 
       ** Change Date
 
@@ -391,28 +527,98 @@
      C                   ENDIF                                                                CBF023
      C                   ELSE                                                                 CBF023
                                                                                               CBF023
-     C                   IF        BFLSTMOD <> *BLANKS                                     AR1030958
-     C                   IF        NullIndDs(5) = 0                                        AR1030958
-     C                   EVAL      RCDAT = BFLSTMOD                                        AR1030958
-     C                   ELSE                                                              AR1032571
-     C                   IF        NullIndDs(12) = 0                                       MD053451A
-     C                   EVAL      RCDAT = BFRCRTONB                                       MD053451A
-     C                   ELSE                                                              MD053451A
-     C                   IF        NullIndDs(6) = 0                                        AR1032571
-     C                   EVAL      RCDAT = BFRCRTON                                        AR1032571
-     C                   ENDIF                                                             AR1032571
-     C                   ENDIF                                                             AR1030958
-     C                   ENDIF                                                             MD053451A
-     C                   ELSE                                                              AR1030958
-     C                   IF        NullIndDs(12) = 0                                       MD053451A
-     C                   EVAL      RCDAT = BFRCRTONB                                       MD053451A
-     C                   ELSE                                                              MD053451A
-     C                   IF        NullIndDs(6) = 0
-     C                   EVAL      RCDAT = BFRCRTON
-     C                   ENDIF
-     C                   ENDIF                                                             MD053451A
+     C**********         IF        BFLSTMOD <> *BLANKS                           AR1030958 MD053451B
+     C**********         IF        NullIndDs(5) = 0                              AR1030958 MD053451B
+     C**********         EVAL      RCDAT = BFLSTMOD                              AR1030958 MD053451B
+     C**********         ELSE                                                    AR1032571 MD053451B
+     C**********         IF        NullIndDs(12) = 0                             MD053451A MD053451B
+     C**********         EVAL      RCDAT = BFRCRTONB                             MD053451A MD053451B
+     C**********         ELSE                                                    MD053451A MD053451B
+     C**********         IF        NullIndDs(6) = 0                              AR1032571 MD053451B
+     C**********         EVAL      RCDAT = BFRCRTON                              AR1032571 MD053451B
+     C**********         ENDIF                                                   AR1032571 MD053451B
+     C**********         ENDIF                                                   AR1030958 MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
+     C**********         ELSE                                                    AR1030958 MD053451B
+     C**********         IF        NullIndDs(12) = 0                             MD053451A MD053451B
+     C**********         EVAL      RCDAT = BFRCRTONB                             MD053451A MD053451B
+     C**********         ELSE                                                    MD053451A MD053451B
+     C**********         IF        NullIndDs(6) = 0                                        MD053451B
+     C**********         EVAL      RCDAT = BFRCRTON                                        MD053451B
+     C**********         ENDIF                                                             MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
      C**********         ENDIF                                                             AR1029191
-     C                   ENDIF                                                             AR1030958
+     C**********         ENDIF                                                   AR1030958 MD053451B
+      *                                                                                    MD053451B
+      ** Last Modified Date is not populated (2 or 4 eyes)                                 MD053451B
+      ** Use approve and created fields of MIVW_EGAS                                       MD053451B
+      *                                                                                    MD053451B
+      ** Initialize below fields to set as blanks instead of                               MD053451B
+      ** default('0001-01-01-00.00.00.000000') for 2-eyes set up                           MD053451B
+      *                                                                                    MD053451B
+     C                   EVAL      RAUDT = *BLANKS                                         MD053451B
+     C                   EVAL      RAUTH = *BLANKS                                         MD053451B
+     C                   EVAL      RATIM = *BLANKS                                         MD053451B
+      *                                                                                    MD053451B
+      ** If RoleAppDt is populated, set-up is 4-eyes                                       MD053451B
+      *                                                                                    MD053451B
+     C                   IF        NullIndDs(13) = 0                                       MD053451B
+      *                                                                                    MD053451B
+      ** RoleAppDt is defaulted to '1900-01-01' for 2-eyes set up                          MD053451B
+      *                                                                                    MD053451B
+     C                             AND RoleAppDt <> DefTimeStamp                           MD053451B
+      *                                                                                    MD053451B
+      ** RoleAppDt is blanks, if event group has no records in MIVW_EGAS                   MD053451B
+      *                                                                                    MD053451B
+     C                             AND RoleAppDt <> *BLANKS                                MD053451B
+     C                   EVAL      RAUDT = RoleAppDt                                       MD053451B
+     C                   EVAL      RAUTH = RoleAppBy                                       MD053451B
+     C                   EVAL      RATIM = RoleAppDt                                       MD053451B
+     C                   IF        NullIndDs(12) = 0                                       MD053451B
+     C                   EVAL      RUSER = RoleCrtBy                                       MD053451B
+     C                   EVAL      RCDAT = RoleCrtOn                                       MD053451B
+     C                   EVAL      RTIME = RoleCrtOn                                       MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ELSE                                                              MD053451B
+      *                                                                                    MD053451B
+      ** Role Create On is populated, set-up is 2-eyes                                     MD053451B
+      *                                                                                    MD053451B
+     C                   IF        NullIndDs(12) = 0                                       MD053451B
+     C                   EVAL      RUSER = RoleCrtBy                                       MD053451B
+     C                   EVAL      RCDAT = RoleCrtOn                                       MD053451B
+     C                   EVAL      RTIME = RoleCrtOn                                       MD053451B
+     C                   ELSE                                                              MD053451B
+      *                                                                                    MD053451B
+      ** Below codes are for Event Group that has no role associated                       MD053451B
+      ** If Last Modified fields are populated                                             MD053451B
+      *                                                                                    MD053451B
+     C                   IF        NullIndDs(5) = 0                                        MD053451B
+     C                   EVAL      RUSER = BFMODDBY                                        MD053451B
+     C                   EVAL      RCDAT = BFLSTMOD                                        MD053451B
+     C                   EVAL      RTIME = BFLSTMOD                                        MD053451B
+      ** If Approved By/Date fields are populated                                          MD053451B
+     C                   IF        NullIndDs(7) = 0                                        MD053451B
+     C                   EVAL      RAUDT = BFAPRDAT                                        MD053451B
+     C                   EVAL      RAUTH = BFRAPRBY                                        MD053451B
+     C                   EVAL      RATIM = BFAPRDAT                                        MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ELSE                                                              MD053451B
+      ** If Created On/By fields are populated                                             MD053451B
+     C                   IF        NullIndDs(6) = 0                                        MD053451B
+     C                   EVAL      RUSER = BFCRTDBY                                        MD053451B
+     C                   EVAL      RCDAT = BFRCRTON                                        MD053451B
+     C                   EVAL      RTIME = BFRCRTON                                        MD053451B
+      ** If Approved By/Date fields are populated                                          MD053451B
+     C                   IF        NullIndDs(7) = 0                                        MD053451B
+     C                   EVAL      RAUDT = BFAPRDAT                                        MD053451B
+     C                   EVAL      RAUTH = BFRAPRBY                                        MD053451B
+     C                   EVAL      RATIM = BFAPRDAT                                        MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ENDIF                                                             MD053451B
+     C                   ENDIF                                                             MD053451B
+      *                                                                                    MD053451B
                                                                                               CBF023
      C                   ENDIF                                                                CBF023
 
@@ -423,36 +629,36 @@
      C**********         EVAL      RTIME = BFLSTMOD                                        AR1029191
      C**********         ENDIF                                                   AR1029156 AR1029191
      C**********         ELSE                                                              AR1029191
-     C                   IF        BFDELDAT <> '0'                                            CBF023
-     C                             AND CBF023 = 'Y'                                           CBF023
-     C                   IF        NullIndDs(5) = 0                                           CBF023
-     C                   EVAL      RTIME = BFLSTMOD                                           CBF023
-     C                   ENDIF                                                                CBF023
-     C                   ELSE                                                                 CBF023
+     C**********         IF        BFDELDAT <> '0'                                  CBF023 MD053451B
+     C**********                   AND CBF023 = 'Y'                                 CBF023 MD053451B
+     C**********         IF        NullIndDs(5) = 0                                 CBF023 MD053451B
+     C**********         EVAL      RTIME = BFLSTMOD                                 CBF023 MD053451B
+     C**********         ENDIF                                                      CBF023 MD053451B
+     C**********         ELSE                                                       CBF023 MD053451B
                                                                                               CBF023
-     C                   IF        BFLSTMOD <> *BLANKS                                     AR1030958
-     C                   IF        NullIndDs(5) = 0                                        AR1030958
-     C                   EVAL      RTIME = BFLSTMOD                                        AR1030958
-     C                   ELSE                                                              AR1032571
-     C                   IF        NullIndDs(12) = 0                                       MD053451A
-     C                   EVAL      RTIME = BFRCRTONB                                       MD053451A
-     C                   ELSE                                                              MD053451A
-     C                   IF        NullIndDs(6) = 0                                        AR1032571
-     C                   EVAL      RTIME = BFRCRTON                                        AR1032571
-     C                   ENDIF                                                             AR1032571
-     C                   ENDIF                                                             MD053451A
-     C                   ENDIF                                                             AR1030958
-     C                   ELSE                                                              AR1030958
-     C                   IF        NullIndDs(12) = 0                                       MD053451A
-     C                   EVAL      RTIME = BFRCRTONB                                       MD053451A
-     C                   ELSE                                                              MD053451A
-     C                   IF        NullIndDs(6) = 0                                        AR1029156
-     C                   EVAL      RTIME = BFRCRTON
-     C                   ENDIF                                                             AR1029156
+     C**********         IF        BFLSTMOD <> *BLANKS                           AR1030958 MD053451B
+     C**********         IF        NullIndDs(5) = 0                              AR1030958 MD053451B
+     C**********         EVAL      RTIME = BFLSTMOD                              AR1030958 MD053451B
+     C**********         ELSE                                                    AR1032571 MD053451B
+     C**********         IF        NullIndDs(12) = 0                             MD053451A MD053451B
+     C**********         EVAL      RTIME = BFRCRTONB                             MD053451A MD053451B
+     C**********         ELSE                                                    MD053451A MD053451B
+     C**********         IF        NullIndDs(6) = 0                              AR1032571 MD053451B
+     C**********         EVAL      RTIME = BFRCRTON                              AR1032571 MD053451B
+     C**********         ENDIF                                                   AR1032571 MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
+     C**********         ENDIF                                                   AR1030958 MD053451B
+     C**********         ELSE                                                    AR1030958 MD053451B
+     C**********         IF        NullIndDs(12) = 0                             MD053451A MD053451B
+     C**********         EVAL      RTIME = BFRCRTONB                             MD053451A MD053451B
+     C**********         ELSE                                                    MD053451A MD053451B
+     C**********         IF        NullIndDs(6) = 0                              AR1029156 MD053451B
+     C**********         EVAL      RTIME = BFRCRTON                                        MD053451B
+     C**********         ENDIF                                                   AR1029156 MD053451B
      C**********         ENDIF                                                             AR1029191
-     C                   ENDIF                                                             AR1030958
-     C                   ENDIF                                                             MD053451A
-     C                   ENDIF                                                             MD053451A
+     C**********         ENDIF                                                   AR1030958 MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
 
       ** Last Change Action
 
@@ -469,29 +675,29 @@
 
       ** Last Authorising User
 
-     C                   EVAL      RAUTH = BFRAPRBY
+     C**********         EVAL      RAUTH = BFRAPRBY                                        MD053451B
 
       ** Authorisation Date
 
      C**********         IF        NullIndDs(11) = 0                                       AR1029808
-     C                   IF        NullIndDs(13) = 0                                       MD053451A
-     C                   EVAL      RAUDT = BFAPRDATB                                       MD053451A
-     C                   ELSE                                                              MD053451A
-     C                   IF        NullIndDs(8) = 0                                        AR1029808
-     C                   EVAL      RAUDT = BFAPRDAT
-     C                   ENDIF                                                             MD053451A
-     C                   ENDIF
+     C**********         IF        NullIndDs(13) = 0                             MD053451A MD053451B
+     C**********         EVAL      RAUDT = BFAPRDATB                             MD053451A MD053451B
+     C**********         ELSE                                                    MD053451A MD053451B
+     C**********         IF        NullIndDs(8) = 0                              AR1029808 MD053451B
+     C**********         EVAL      RAUDT = BFAPRDAT                                        MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
+     C**********         ENDIF                                                             MD053451B
 
       ** Authorisation Timestamp
 
      C**********         IF        NullIndDs(11) = 0                             AR1028208 AR1029808
-     C                   IF        NullIndDs(13) = 0                                       MD053451A
-     C                   EVAL      RATIM = BFAPRDATB                                       MD053451A
-     C                   ELSE                                                              MD053451A
-     C                   IF        NullIndDs(8) = 0                              AR1028208 AR1029808
-     C                   EVAL      RATIM = BFAPRDAT
-     C                   ENDIF                                                             MD053451A
-     C                   ENDIF                                                             AR1028208
+     C**********         IF        NullIndDs(13) = 0                             MD053451A MD053451B
+     C**********         EVAL      RATIM = BFAPRDATB                             MD053451A MD053451B
+     C**********         ELSE                                                    MD053451A MD053451B
+     C**********         IF        NullIndDs(8) = 0                    AR1028208 AR1029808 MD053451B
+     C**********         EVAL      RATIM = BFAPRDAT                                        MD053451B
+     C**********         ENDIF                                                   MD053451A MD053451B
+     C**********         ENDIF                                                   AR1028208 MD053451B
 
       ** Event Group
 
@@ -638,9 +844,16 @@
      C**********         IF        NullIndDs(5) = 0                                        AR1036892
      C**********         EVAL      TmpDat03 = %DATE(%SUBST(BFLSTMOD:1:10):*ISO)            AR1036892
      C                   EVAL      TmpDat03 = *LOVAL                                        MD042109
+      *                                                                                    MD053451B
+      ** Modified by and date are not populated in BFTEVTGRPA                              MD053451B
+      ** via add o delete associate role                                                   MD053451B
+      *                                                                                    MD053451B
+      ** Check approved date is populated  (4 eyes)                                        MD053451B
      C                   IF        NullIndDs(13) = 0                                       MD053451A
+     C                             AND BFAPRDATB <> DefTimeStamp                           MD053451B
      C                   EVAL      TmpDat03 = %DATE(%SUBST(BFAPRDATB:1:10):*ISO)           MD053451A
      C                   ELSE                                                              MD053451A
+      ** Check created on date is populated                                                MD053451B
      C                   IF        NullIndDs(12) = 0                                       MD053451A
      C                   EVAL      TmpDat03 = %DATE(%SUBST(BFRCRTONB:1:10):*ISO)           MD053451A
      C                   ELSE                                                              MD053451A

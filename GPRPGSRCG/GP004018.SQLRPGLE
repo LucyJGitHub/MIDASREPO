@@ -369,7 +369,9 @@
      C                   IF        NullIndDs(13) = 0                                       MD053451B
      C                             AND BFAPRDATB <> DefTimeStamp                           MD053451B
      C                             AND BFAPRDATB <> *BLANKS                                MD053451B
+      *                                                                                    MD053451B
       ** 4-eyes                                                                            MD053451B
+      *                                                                                    MD053451B
      C/exec sql                                                                            MD053451B
      C+ declare mainCursor2 Cursor                                                         MD053451B
      C+  for select                                                                        MD053451B
@@ -402,7 +404,9 @@
      C+ close mainCursor2                                                                  MD053451B
      C/end-exec                                                                            MD053451B
      C                   ELSE                                                              MD053451B
+      *                                                                                    MD053451B
       ** 2-eyes                                                                            MD053451B
+      *                                                                                    MD053451B
      C                   IF        NullIndDs(12) = 0                                       MD053451B
      C/exec sql                                                                            MD053451B
      C+ declare mainCursor3 Cursor                                                         MD053451B
@@ -424,8 +428,10 @@
      C+                                                                                    MD053451B
      C+  order by                                                                          MD053451B
      C+  D.BFRECCREATEDON DESC                                                             MD053451B
+      *                                                                                    MD053451B
       ** Created on date is set to descending order                                        MD053451B
       ** to get the latest change                                                          MD053451B
+      *                                                                                    MD053451B
      C/end-exec                                                                            MD053451B
                                                                                            MD053451B
      C/exec sql                                                                            MD053451B
@@ -596,19 +602,25 @@
      C                   EVAL      RUSER = BFMODDBY                                        MD053451B
      C                   EVAL      RCDAT = BFLSTMOD                                        MD053451B
      C                   EVAL      RTIME = BFLSTMOD                                        MD053451B
+      *                                                                                    MD053451B
       ** If Approved By/Date fields are populated                                          MD053451B
+      *                                                                                    MD053451B
      C                   IF        NullIndDs(7) = 0                                        MD053451B
      C                   EVAL      RAUDT = BFAPRDAT                                        MD053451B
      C                   EVAL      RAUTH = BFRAPRBY                                        MD053451B
      C                   EVAL      RATIM = BFAPRDAT                                        MD053451B
      C                   ENDIF                                                             MD053451B
      C                   ELSE                                                              MD053451B
+      *                                                                                    MD053451B
       ** If Created On/By fields are populated                                             MD053451B
+      *                                                                                    MD053451B
      C                   IF        NullIndDs(6) = 0                                        MD053451B
      C                   EVAL      RUSER = BFCRTDBY                                        MD053451B
      C                   EVAL      RCDAT = BFRCRTON                                        MD053451B
      C                   EVAL      RTIME = BFRCRTON                                        MD053451B
+      *                                                                                    MD053451B
       ** If Approved By/Date fields are populated                                          MD053451B
+      *                                                                                    MD053451B
      C                   IF        NullIndDs(7) = 0                                        MD053451B
      C                   EVAL      RAUDT = BFAPRDAT                                        MD053451B
      C                   EVAL      RAUTH = BFRAPRBY                                        MD053451B
@@ -849,11 +861,14 @@
       ** via add o delete associate role                                                   MD053451B
       *                                                                                    MD053451B
       ** Check approved date is populated  (4 eyes)                                        MD053451B
+      *                                                                                    MD053451B
      C                   IF        NullIndDs(13) = 0                                       MD053451A
      C                             AND BFAPRDATB <> DefTimeStamp                           MD053451B
      C                   EVAL      TmpDat03 = %DATE(%SUBST(BFAPRDATB:1:10):*ISO)           MD053451A
      C                   ELSE                                                              MD053451A
+      *                                                                                    MD053451B
       ** Check created on date is populated                                                MD053451B
+      *                                                                                    MD053451B
      C                   IF        NullIndDs(12) = 0                                       MD053451A
      C                   EVAL      TmpDat03 = %DATE(%SUBST(BFRCRTONB:1:10):*ISO)           MD053451A
      C                   ELSE                                                              MD053451A

@@ -48,7 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059640  - Cannot change IBAN                               *
+      *  MD059640  - Cannot change IBAN. Move validation to GLVIBAC.  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043086 - IBAN should be non-amendable but gets cleared by  *

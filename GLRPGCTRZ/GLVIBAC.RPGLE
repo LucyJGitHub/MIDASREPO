@@ -49,7 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059640  - Cannot change IBAN                               *
+      *  MD059640  - Cannot change IBAN. Change RE72034 to be a       *
+      *               warning message.                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

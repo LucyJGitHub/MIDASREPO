@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD059640           Date 21Mar22               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037025           Date 10Feb16               *
       *                 MD029037           Date 25Jul14               *
       *                 AR816838           Date 17Jul14               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059640  - Cannot change IBAN                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -347,7 +349,8 @@
      C*****DDBRCA        Andne     *BLANKS                                         BUG17361 AR582286
      C*****DDATYP        Andne     *BLANKS                                         BUG17361 AR582286
      C*****DDACNO        Andne     *BLANKS                                         BUG17361 AR582286
-     C     DDACTN        Andeq     'I'                                                      MD029037
+     C*****DDACTN        Andeq     'I'                                             MD029037 MD059640
+     C     DDACTN        Andne     'D'                                                      MD059640
       *                                                                                       198980
       * Check if IBAN is changed                                                              198980
       *                                                                                       198980
@@ -384,10 +387,13 @@
      C     DDIBAN        Andne     @INOBL                                                     225488
      C*****DDACTN        ANDEQ     'I'                                             AR740293 AR816838
      C     DDACTN        ANDNE     'I'                                                      AR816838
-     C                   Move      'N'           DDIBANOk
-     C                   Add       1             Idx
-     C                   Movel     'DDIBAN'      FldNamXAr(Idx)
-     C                   Movel     'RE72034'     MsgIDXAr(Idx)
+     C**********         Move      'N'           DDIBANOk                                   MD059640
+     C**********         Add       1             Idx                                        MD059640
+     C**********         Movel     'DDIBAN'      FldNamXAr(Idx)                             MD059640
+     C**********         Movel     'RE72034'     MsgIDXAr(Idx)                              MD059640
+     C                   Add       1             WIx                                        MD059640
+     C                   Movel     'DDIBAN'      WFldNmXAr(WIx)                             MD059640
+     C                   Movel     'RE72034'     WMsgIDXAr(WIx)                             MD059640
      C                   Else
      C*
      C** If action code is not Insert, need to set screen field to
@@ -460,6 +466,13 @@
       *** If IBAN generation method is equal to 1, validate IBAN field
       *
      C     A8GENM        IfEQ      '1'
+     C     DDIBAN        IFNE      IBANFL                                                   MD059640
+     C     DDACTN        ANDNE     'I'                                                      MD059640
+     C                   Move      'W'           DDIBANOk                                   MD059640
+     C                   Add       1             WIx                                        MD059640
+     C                   Movel     'DDIBAN'      WFldNmXAr(WIx)                             MD059640
+     C                   Movel     'RE72034'     WMsgIDXAr(WIx)                             MD059640
+     C                   ENDIF                                                              MD059640
       *                                                                                       224639
       ** IBAN canot be amended if incoming funds transfer records exists                      224639
       ** (CFT004 must be on)                                                                  224639

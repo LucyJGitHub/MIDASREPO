@@ -1296,8 +1296,7 @@
      C                   IF        CAS005 = 'Y'                                               CAS005
      C     DLNO          CHAIN     MMNPVLL0                                                   CAS005
      C**********         IF        NOT %EOF(MMNPVLL0)                                  CAS005 224214
-     C**********         IF        %FOUND(MMNPVLL0)                                    224214 250730
-     C                   IF        NOT %EOF(MMNPVLL0)                                         250730
+     C                   IF        %FOUND(MMNPVLL0)                                           224214
      C                   EVAL      URPL = MMURPL                                              CAS005
      C                   EVAL      YUPL = MMYUPL                                              CAS005
      C                   ENDIF                                                                CAS005
@@ -1469,8 +1468,7 @@
      C                   IF        CAS005 = 'Y'                                               CAS005
      C     FSDLNO        CHAIN     LENPVLL0                                                   CAS005
      C**********         IF        NOT %EOF(LENPVLL0)                                  CAS005 224214
-     C**********         IF        %FOUND(LENPVLL0)                                    224214 250730
-     C                   IF        NOT %EOF(LENPVLL0)                                         250730
+     C                   IF        %FOUND(LENPVLL0)                                           224214
      C                   EVAL      URPL = LEURPL                                              CAS005
      C                   EVAL      YUPL = LEYUPL                                              CAS005
      C                   ENDIF                                                                CAS005
@@ -2597,18 +2595,18 @@
      C                   EVAL      *IN66 = *OFF
      C                   ENDIF
                                                                                               225293
-     C***************    EVAL      OLASDT = WLASDT                                     225293 250730
-     C***************    EVAL      *IN28 = *OFF                                        225293 250730
-     C***************    IF        FSLASD = 0                                          225293 250730
-     C***************    EVAL      OLASDT = *BLANKS                                    225293 250730
-     C***************    EVAL      OCHGPC = *BLANKS                                    225293 250730
-     C***************    EVAL      OPNARR = *BLANKS                                    228011 250730
-     C***************    MOVE      'NEW'         OCHGPC                                229801 250730
-     C***************    EVAL      PDate = FSSTDT                                      225293 250730
-     C***************    EXSR      SRDATE                                              225293 250730
-     C***************    EVAL      OLASDT = ZADATE                                     225293 250730
-     C***************    EVAL      *IN28 = *ON                                         225293 250730
-     C***************    ENDIF                                                         225293 250730
+     C                   EVAL      OLASDT = WLASDT                                            225293
+     C                   EVAL      *IN28 = *OFF                                               225293
+     C                   IF        FSLASD = 0                                                 225293
+     C                   EVAL      OLASDT = *BLANKS                                           225293
+     C                   EVAL      OCHGPC = *BLANKS                                           225293
+     C                   EVAL      OPNARR = *BLANKS                                           228011
+     C                   MOVE      'NEW'         OCHGPC                                       229801
+     C                   EVAL      PDate = FSSTDT                                             225293
+     C                   EXSR      SRDATE                                                     225293
+     C                   EVAL      OLASDT = ZADATE                                            225293
+     C                   EVAL      *IN28 = *ON                                                225293
+     C                   ENDIF                                                                225293
                                                                                               225293
      C                   WRITE     PERCENT1
 

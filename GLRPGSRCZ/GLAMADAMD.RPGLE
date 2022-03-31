@@ -887,4 +887,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 20011
+(c) Finastra International Limited 2001

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD048076           Date 29Mar22               *
-      *  Prev Amend No. AR1093845 (CDL087) Date 29Mar22               *
+      *  Last Amend No. MD059723           Date 29Mar22               *
+      *  Prev Amend No. MD048076           Date 29Mar22               *
+      *                 AR1093845 (CDL087) Date 29Mar22               *
       *                 MD059370           Date 13Dec21               *
       *                 MD058711           Date 16Sep21               *
       *                 MD050216           Date 15Nov18               *
@@ -34,14 +35,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059723 - Changes for FM 2.1 upgrade.                       *
       *  MD048076 - Incorrect Spot Trade Equivalent Account is used   *
       *             for foreign ccy. Recompile due to changes in /COPY*
       *             CDL087_103.                                       *
-      *          Applied for MD059723.                                *
+      *             Applied for MD059723.                             *
       *  AR1093845 - Incorporate CDL087 Changes                       *
-      *          Hooks added CDL087_099, CDL087_100, CDL087_101,      *
-      *          CDL087_102, CDL087_103, CDL087_104                   *
-      *          Applied for MD059723.                                *
+      *             Hooks added CDL087_099, CDL087_100, CDL087_101,   *
+      *             CDL087_102, CDL087_103, CDL087_104                *
+      *             Applied for MD059723.                             *
       *  MD059370 - Component GLC008900 fails in COB with blank DBASE *
       *             error when CSC054 is OFF and PEASystemPrefix is   *
       *             blank. Checking of system value PEASystemPrefix   *

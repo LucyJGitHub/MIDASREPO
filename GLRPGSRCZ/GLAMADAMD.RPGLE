@@ -281,12 +281,12 @@
      C*-----------------------------------------*                                           MD043086
      C** The IBAN field is not amendable                                                    MD043086
      C*                                                                                     MD043086
-     C*****DDIBAN        IFNE      @DDIBAN                                   MD059640       MD043086
-     C**********         ADD       1             Idx                                        MD043086
-     C**********         EVAL      FldNameArr(Idx) = 'DDIBAN'                               MD043086
-     C**********         EVAL      MsgIDArr(Idx)   = 'RE72034'                              MD043086
-     C**********         EVAL      DDIBANOK        = 'N'                                    MD043086
-     C**********         ENDIF                                                              MD043086
+     C*****DDIBAN        IFNE      @DDIBAN                                         MD043086 MD059640
+     C**********         ADD       1             Idx                               MD043086 MD059640
+     C**********         EVAL      FldNameArr(Idx) = 'DDIBAN'                      MD043086 MD059640
+     C**********         EVAL      MsgIDArr(Idx)   = 'RE72034'                     MD043086 MD059640
+     C**********         EVAL      DDIBANOK        = 'N'                           MD043086 MD059640
+     C**********         ENDIF                                                     MD043086 MD059640
      C*                                                                                     MD043086
      C*-----------------------------------------*
      C* Number of Copies                        *

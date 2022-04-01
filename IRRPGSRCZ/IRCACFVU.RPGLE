@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD059314           Date 22Feb22               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
       *                 MD054117           Date 12Sep19               *
@@ -88,6 +89,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059314 - Error encountered on Principal Change Schedule    *
+      *             even when Confirmed Holiday Indicator is ticked   *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -2593,7 +2596,8 @@
      C                   CALLB     'ZCHKH'                                      BUG5403
      C                   PARM                    PZDateIn          5 0          BUG5403
      C                   PARM      #0CUCY        PZCcy             3            BUG5403
-     C                   PARM      *BLANK        PZLoc             3            BUG5403
+     C**********         PARM      *BLANK        PZLoc             3                BUG5403 MD059314
+     C                   PARM      BJSLCD        PZLoc             3                        MD059314
      C                   PARM      *BLANK        PZHol             1            BUG5403
                                                                                 BUG5403
       ** Set a flag to be use in updating 'Confirmed Holiday' indicator         BUG5403
@@ -2621,7 +2625,8 @@
      C                   CALLB     'ZCHKH'                                      BUG5403
      C                   PARM                    PZDateIn                       BUG5403
      C                   PARM      #0CUCY        PZCcy                          BUG5403
-     C                   PARM      *BLANK        PZLoc                          BUG5403
+     C**********         PARM      *BLANK        PZLoc                              BUG5403 MD059314
+     C                   PARM      BJSLCD        PZLoc                                      MD059314
      C                   PARM      *BLANK        PZHol                          BUG5403
                                                                                 BUG5403
      C                   IF        PZHol = 'H'                                  BUG5403

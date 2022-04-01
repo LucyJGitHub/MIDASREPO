@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD059369           Date 24Dec21               *
-      *  Prev Amend No. MD059367           Date 24Dec21               *
+      *  Last Amend No. MD059690           Date 14Mar22               *
+      *  Prev Amend No. MD059369           Date 24Dec21               *
+      *                 MD059367           Date 24Dec21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057051           Date 28Oct20               *
       *                 MD056543           Date 15Sep20               *
@@ -171,6 +172,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD059369 - LIBOR fields must be extracted for both sides     *
       *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -544,8 +546,10 @@
      D**********          ##GRP   1 481 10   ##RDEA 22                               MD030644 CER050
      D*##GRP****       S             10    DIM(482) CTDATA PERRCD(1)                 CER050 MD059369
      D*##RDEA***       S             22    DIM(482) ALT(##GRP)                       CER050 MD059369
-     D ##GRP           S             10    DIM(492) CTDATA PERRCD(1)                        MD059369
-     D ##RDEA          S             22    DIM(492) ALT(##GRP)                              MD059369
+     D*##GRP****       S             10    DIM(492) CTDATA PERRCD(1)               MD059369 MD059690
+     D*##RDEA***       S             22    DIM(492) ALT(##GRP)                     MD059369 MD059690
+     D ##GRP           S             10    DIM(512) CTDATA PERRCD(1)                        MD059690
+     D ##RDEA          S             22    DIM(512) ALT(##GRP)                              MD059690
      D*                                                                                       S01408
      D/COPY WNCPYSRC,CG4010EEP1                                                               S01408
      D*                                                                                       S01408
@@ -4682,6 +4686,36 @@
       ** Precious Metal Indicator                                                             086780
      C                   MOVEL     A6PMRT        ##D(9)                                       086780
       *
+      **  Benchmark Adjustment                                                              MD059690
+     C                   MOVEL     UBADJ         ##D(10)                                    MD059690
+      *                                                                                     MD059690
+      **  Day Basis for Average                                                             MD059690
+     C                   MOVEL     UDBAV         ##D(11)                                    MD059690
+      *                                                                                     MD059690
+      **  Floor                                                                             MD059690
+     C                   MOVEL     UFLOR         ##D(12)                                    MD059690
+      *                                                                                     MD059690
+      **  Lockout days                                                                      MD059690
+     C                   MOVEL     ULODY         ##D(13)                                    MD059690
+                                                                                            MD059690
+      **  Lookback days                                                                     MD059690
+     C                   MOVEL     ULBDY         ##D(14)                                    MD059690
+      *                                                                                     MD059690
+      **  Observation Period Shift                                                          MD059690
+     C                   MOVEL     UOPSH         ##D(15)                                    MD059690
+      *                                                                                     MD059690
+      **  Risk Free Rate                                                                    MD059690
+     C                   MOVEL     URFRR         ##D(16)                                    MD059690
+      *                                                                                     MD059690
+      **  Rates Known Indicator                                                             MD059690
+     C                   MOVEL     URTKN         ##D(17)                                    MD059690
+      *                                                                                     MD059690
+      **  Rate rounding decimals                                                            MD059690
+     C                   MOVEL     URRDP         ##D(18)                                    MD059690
+      *                                                                                     MD059690
+      **  Calculation Method                                                                MD059690
+     C                   MOVEL     UCALM         ##D(19)                                    MD059690
+      *                                                                                     MD059690
      C/COPY WNCPYSRC,CG4010C059
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -4801,6 +4835,36 @@
       ** Precious Metal Indicator                                                             086780
      C                   MOVEL     A6PMRT        ##D(9)                                       086780
       *
+      **  Benchmark Adjustment                                                              MD059690
+     C                   MOVEL     TBADJ         ##D(10)                                    MD059690
+      *                                                                                     MD059690
+      **  Day Basis for Average                                                             MD059690
+     C                   MOVEL     TDBAV         ##D(11)                                    MD059690
+      *                                                                                     MD059690
+      **  Floor                                                                             MD059690
+     C                   MOVEL     TFLOR         ##D(12)                                    MD059690
+      *                                                                                     MD059690
+      **  Lockout days                                                                      MD059690
+     C                   MOVEL     TLODY         ##D(13)                                    MD059690
+                                                                                            MD059690
+      **  Lookback days                                                                     MD059690
+     C                   MOVEL     TLBDY         ##D(14)                                    MD059690
+      *                                                                                     MD059690
+      **  Observation Period Shift                                                          MD059690
+     C                   MOVEL     TOPSH         ##D(15)                                    MD059690
+      *                                                                                     MD059690
+      **  Risk Free Rate                                                                    MD059690
+     C                   MOVEL     TRFRR         ##D(16)                                    MD059690
+      *                                                                                     MD059690
+      **  Rates Known Indicator                                                             MD059690
+     C                   MOVEL     TRTKN         ##D(17)                                    MD059690
+      *                                                                                     MD059690
+      **  Rate rounding decimals                                                            MD059690
+     C                   MOVEL     TRRDP         ##D(18)                                    MD059690
+      *                                                                                     MD059690
+      **  Calculation Method                                                                MD059690
+     C                   MOVEL     TCALM         ##D(19)                                    MD059690
+      *                                                                                     MD059690
      C/COPY WNCPYSRC,CG4010C060
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -8165,9 +8229,10 @@
       *                                                                                       CDL019
       ** Extract LIBOR static fields for IRS                                                MD059369
      C     CIR020        IFEQ      'Y'                                                      MD059369
-     C     DTYP          IFEQ      'RS'                                                     MD059369
-     C     DTYP          OREQ      'RX'                                                     MD059369
-     C     DTYP          OREQ      'RP'                                                     MD059369
+     C*****DTYP          IFEQ      'RS'                                            MD059369 MD059690
+     C*****DTYP          OREQ      'RX'                                            MD059369 MD059690
+     C*****DTYP          OREQ      'RP'                                            MD059369 MD059690
+     C     DTYP          IFEQ      'RP'                                                     MD059690
      C     DTYP          OREQ      'RF'                                                     MD059369
      C     DTYP          OREQ      'RR'                                                     MD059369
      C     OURTHR        IFEQ      'OUR'                                                    MD059369
@@ -15512,6 +15577,16 @@ D_IRSO0006 OUR SPREAD Rate  L7
 D_IRSO0007 OUR_CALC_B                                                     084929
 D_IRSO0008 OUR CCYDSC                                                     086780
 D_IRSO0009 PREC_METIN                                                     086780
+D_IRSO0010 BENCH ADJ  Rate  L7                                                              MD059690
+D_IRSO0011 DAYS B AVG                                                                       MD059690
+D_IRSO0012 FLOOR                                                                            MD059690
+D_IRSO0013 LOCK OUT D                                                                       MD059690
+D_IRSO0014 LOOK BACK                                                                        MD059690
+D_IRSO0015 OBS PER SH                                                                       MD059690
+D_IRSO0016 RSK FREERT                                                                       MD059690
+D_IRSO0017 RT KNW IND                                                                       MD059690
+D_IRSO0018 RT RDNG DC                                                                       MD059690
+D_IRSO0019 CALC METHD                                                                       MD059690
 D_IRST0001 THR CCY
 D_IRST0002 THR PRIN   AmountL
 D_IRST0003 THR BASTYP
@@ -15521,6 +15596,16 @@ D_IRST0006 THR SPREAD Rate  L7
 D_IRST0007 THR_CALC_B                                                     084929
 D_IRST0008 THR CCYDSC                                                     086780
 D_IRST0009 PREC_METIN                                                     086780
+D_IRST0010 BENCH ADJ  Rate  L7                                                              MD059690
+D_IRST0011 DAYS B AVG                                                                       MD059690
+D_IRST0012 FLOOR                                                                            MD059690
+D_IRST0013 LOCK OUT D                                                                       MD059690
+D_IRST0014 LOOK BACK                                                                        MD059690
+D_IRST0015 OBS PER SH                                                                       MD059690
+D_IRST0016 RSK FREERT                                                                       MD059690
+D_IRST0017 RT KNW IND                                                                       MD059690
+D_IRST0018 RT RDNG DC                                                                       MD059690
+D_IRST0019 CALC METHD                                                                       MD059690
 D_ISSD0001 ISSUER
 D_ISSD0002 ISSUER NAM
 D_ISSD0003 ISSUER TWN

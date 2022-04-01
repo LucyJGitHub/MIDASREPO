@@ -2,7 +2,7 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
-/*XBIF*  OVRDBF FILE(SCPASSPD) TOFILE(UPZPASPD)                       *
+/******  OVRDBF FILE(SCPASSPD) TOFILE(UPZPASPD)                       *                     MD059682
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Zone password migration')
       *****************************************************************
@@ -17,10 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD054346 *CREATE   Date 18Jul21               *
+      *  Last Amend No. MD059682           Date 07Mar22               *
+      *  Prev Amend No. MD054346 *CREATE   Date 18Jul21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059682- use UPZPASPD to avoid Undefined record type        *
       *  MD054346 - Switchable Features Password Encryption           *
       *                                                               *
       *****************************************************************
@@ -38,7 +40,8 @@
       ** +--------------------------------------+
 
       * Validation list entries maintenance display file.
-     FSCPASSPD  IP   E             DISK
+     F*SCPASSPD* IP   E             DISK                                                    MD059682
+     FUPZPASPD  IP   E             DISK                                                     MD059682
       *
       *
       /EJECT

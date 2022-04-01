@@ -16,19 +16,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL120 *CREATE     Date 06Aug12               *
+      *  Last Amend No. MD059610           Date 22Feb22               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL120 *CREATE     Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059610 - COB Component GLC3320T4 00010 failed in COB run.  *
+      *             Recompiled due to changes in ABEXZY.              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL120 - GL COB Components Task Split                        *
       *                                                               *
       *****************************************************************
- 
+
      FABEXHH    IF A E           K DISK    INFSR(*PSSR)
      FABEXZY    IF A E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -43,39 +46,39 @@
       *****************************************************************
       /SPACE 3
       *****************************************************************
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
- 
+
      D PSDS           SDS
       ** Program Status Data Structure
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * Main
       *****************************************************************
- 
+
       ** Update Header File
- 
+
      C                   READ      ABEXHHF                                99
      C     *IN99         IFEQ      *ON
      C                   MOVE      'H'           RECI
      C                   WRITE     ABEXHHF
      C                   ENDIF
- 
+
       ** Update Trailer File
- 
+
      C                   READ      ABEXZYF                                99
      C     *IN99         IFEQ      *ON
      C                   MOVE      'T'           RECI
      C                   Z-ADD     2             NORE
      C                   WRITE     ABEXZYF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************
@@ -90,9 +93,9 @@
       * Calls: None                                                   *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   SETON                                        U7U8LR
      C                   DUMP
      C                   RETURN
- 
+
      C                   ENDSR

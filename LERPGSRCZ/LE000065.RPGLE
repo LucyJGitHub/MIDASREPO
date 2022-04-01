@@ -12,8 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD059660           Date 08Mar22               *
+      *  Prev Amend No. MD059656           Date 04Mar22               *
+      *                 CLE124             Date 02Nov21               *
+      *                 CLE123             Date 02Nov21               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27091           Date 04Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +30,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059660 - Duplicate Dept in LE0723P3 and wrong Dept Code    *
+      *             in LE0723P1.                                      *
+      *  MD059656 - Add new fields of CLE123 and CLE124 in Aggregate  *
+      *             Facilities extract Files                          *
+      *  CLE124 - Commitment and Outstanding Report by Customer Name  *
+      *           (Recompile)                                         *
+      *  CLE123 - Commitment and Outstanding Report by Account Officer*
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  BUG27091 - LEC08 Seq. 10001 and 10002 DBerr at 013 ;         *
@@ -66,35 +78,35 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Commitment/Facility Loan detail extract file
      FFACEXFA   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(FA)
- 
+
       ** Tranche-Aggregate Facilities Relationship
      FLETRAGL0  IF A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(L0:2)
- 
+
       ** Aggregate Facility Commitment/Facility Loan detail extract
      FLEAGCEPD  UF A E             DISK    INFSR(*PSSR)
      F                                     RENAME(FACEXFAF:AGCEXFAF)
      F                                     COMMIT
- 
+
       ** Aggregate Facilities Detail table
      FLEAGFYJ0  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(L4)
- 
+
       ** Facility Group file
      FLEFCGRL1  IF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Aggregate Facilities extract table
      FLEAGFEPD  IF A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Commitment/Facility Loan extract trailer file
      FFACEXT4   UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+      
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -104,48 +116,57 @@
       ** +--------------------------------------+
       ** Array containing Copyright statement
      D WCPY@           S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFAC1      E                     EXTFLD(QQDFAC)
- 
+
+      ** External DS for Account Officer                                                    MD059656
+     D SDACOF        E DS                  EXTNAME(SDACOFPD)                                MD059656
+                                                                                            MD059656
+      ** External DS for Department Code                                                    MD059656
+     D SDDEPT        E DS                  EXTNAME(SDDEPTPD)                                MD059656
+                                                                                            MD059656
+      ** External DS for switchable details                                                 MD059656
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD059656
+                                                                                            MD059656
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Data Structure for Aggregate Facility Reference Number
      D KeyAGRN         DS            14
      D  WkBRCA                 1      3
      D  WkCNUM                 4      9
      D  WkFACT                10     12
      D  WkFCNO                13     14
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7
      D POptn           S              7
      D PCust           S             10
      D PKyst           S              7
- 
+
       ** Parameters for ZZADD
      D PzAmt           S             15P 3
      D PzToyI          S             15P 0
      D PzTotD          S              3P 0
- 
+
       ** Other work fields
      D WBIS@           S             80
      D WDUMP           S              1
- 
+
      D WkTmp4N         S              4S 0
      D WkTmp5N         S              5S 0
      D WkInclude       S              1
@@ -153,7 +174,10 @@
      D WkValLnRec      S             15S 0
      D WkNoFR          S              3S 0
      D WkValFcRec      S             15S 0
- 
+     D CLE123          S              1                                                     MD059656
+     D PSard           S              6                                                     MD059656
+     D CLE124          S              1                                                     MD059656
+
      ******************************************************************
       /EJECT
       *****************************************************************
@@ -161,23 +185,23 @@
       * MAIN - Main Processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Initialisation
- 
+
      C                   EXSR      SrInit
- 
+
       ** Process Commitment/Facility Loan detail extract file(FACEXFA)
- 
+
      C                   EXSR      SrFacExtD
- 
+
       ** Process Aggregate Facilities detail file(LEAGFMPD/LEAGFNPD)
- 
+
      C                   EXSR      SrAggFclty
- 
+
       ** Update Commitment/Facility Loan extract trailer file(FACEXT4)
- 
+
      C                   EXSR      SrFacExtT
- 
+
      C                   COMMIT
      C                   EVAL      *INLR = *ON
       *****************************************************************
@@ -193,10 +217,10 @@
       *                                                               *
       *****************************************************************
      C     SrFacExtD     BEGSR
- 
+
      C                   READ      FACEXFA
      C                   DOW       NOT %EOF(FACEXFA)
- 
+
      C                   EVAL      KCusNum = FACNUM
      C                   EVAL      WkTmp4N = *ZERO
      C                   MOVEL     FACFNO        WkTmp4N
@@ -205,7 +229,7 @@
      C     KeyTRAG       CHAIN     LETRAGL0
      C                   DOW       %FOUND(LETRAGL0) AND
      C                             NOT %EOF(LETRAGL0)
- 
+
      C                   EVAL      RECI = 'D'
      C                   EVAL      BRCA = FABRCA
      C**********         EVAL      PNUM = *ZERO                                               CSD027
@@ -220,18 +244,24 @@
      C                   EVAL      DDCY = FADDCY
      C                   EVAL      AMNT = FAAMNT
      C                   EVAL      CRSK = FACRSK
- 
+
       ** Get customer details
- 
+
      C                   MOVEL     L0AGNM        PCust
      C                   EXSR      SrCustDet
      C                   EVAL      CLOC = BBCOLC
      C                   EVAL      MDAT = FAMDAT
      C                   EVAL      FCLB = L0AGBR
      C                   EVAL      ZZ016 = *BLANKS
- 
+      *                                                                                     MD059656
+     C                   IF        CLE124 = 'Y'                                             MD059656
+     C                   EVAL      CRNM = BBCRNM                                            MD059656
+     C                   ELSE                                                               MD059656
+     C                   EVAL      CRNM = *BLANKS                                           MD059656
+     C                   ENDIF                                                              MD059656
+
       ** Get branch details
- 
+
      C                   EVAL      PBrca = L0AGBR
      C                   EXSR      SrBrchDet
      C                   EVAL      CMPYM = A8CMCD
@@ -241,17 +271,63 @@
      C                   EVAL      CLAS = FACLAS                                              CLE042
      C                   EVAL      ORGL = FAORGL
      C                   EVAL      DDRF = FADDRF
- 
+
+      ** Get Account Officer details and Department Name                                    MD059656
+                                                                                            MD059656
+     C                   EVAL      ANACOC = *BLANKS                                         MD059656
+     C                   EVAL      ANACON = *BLANKS                                         MD059656
+     C                   EVAL      ANDPCD = *BLANKS                                         MD059656
+     C                   EVAL      ANDPNM = *BLANKS                                         MD059656
+     C                   EVAL      ANCRNM = *BLANKS                                         MD059656
+     C                   EVAL      ANFCOC = *BLANKS                                         MD059660
+     C                   EVAL      ANFCON = *BLANKS                                         MD059660
+     C                   EVAL      ANFPCD = *BLANKS                                         MD059660
+     C                   EVAL      ANFPNM = *BLANKS                                         MD059660
+      *                                                                                     MD059656
+     C                   IF        CLE123 = 'Y'                                             MD059656
+      *                                                                                     MD059656
+     C                   EVAL      ANCRNM = BBCRNM                                          MD059656
+     C                   EVAL      ANFCOC = FAANACOC                                        MD059660
+     C                   EVAL      ANFCON = FAANACON                                        MD059660
+     C                   EVAL      ANFPCD = FAANDPCD                                        MD059660
+     C                   EVAL      ANFPNM = FAANDPNM                                        MD059660
+      *                                                                                     MD059656
+     C                   EVAL      @ACOF = FAANACOC                                         MD059656
+     C                   CALL      'AOACOFR0'                                               MD059656
+     C                   PARM      *BLANKS       PRtCd                                      MD059656
+     C                   PARM      '*KEY   '     POptn                                      MD059656
+     C                   PARM                    @ACOF             2                        MD059656
+     C     SDACOF        PARM      SDACOF        DSFDY                                      MD059656
+      *                                                                                     MD059656
+     C                   IF        PRtCd = *BLANKS                                          MD059656
+     C                   EVAL      ANACOC = AZACOC                                          MD059656
+     C                   EVAL      ANACON = AZACON                                          MD059656
+      *                                                                                     MD059656
+     C                   EVAL      DPTKEY = AZDPCD                                          MD059656
+      *                                                                                     MD059656
+     C                   CALL      'AODEPTR0'                                               MD059656
+     C                   PARM      *BLANKS       PRtCd                                      MD059656
+     C                   PARM      '*KEY   '     POptn                                      MD059656
+     C                   PARM                    DPTKEY            3                        MD059656
+     C     SDDEPT        PARM      SDDEPT        DSFDY                                      MD059656
+      *                                                                                     MD059656
+     C                   IF        PRtCd = *BLANKS                                          MD059656
+     C                   EVAL      ANDPCD = AEDPCD                                          MD059656
+     C                   EVAL      ANDPNM = AEDPNM                                          MD059656
+     C                   ENDIF                                                              MD059656
+     C                   ENDIF                                                              MD059656
+     C                   ENDIF                                                              MD059656
+      *                                                                                     MD059656
      C                   WRITE     AGCEXFAF
- 
+
      C                   EVAL      WkNoLR = WkNoLR + 1
      C                   EVAL      WkValLnRec = WkValLnRec + FAAMNT
      C     KeyTRAG       READE     LETRAGL0
      C                   ENDDO
- 
+
      C                   READ      FACEXFA
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -266,40 +342,40 @@
       *                                                               *
       *****************************************************************
      C     SrAggFclty    BEGSR
- 
+
      C     *LOVAL        SETLL     LEAGFYJ0
      C                   READ      LEAGFYJ0
      C                   DOW       NOT %EOF(LEAGFYJ0)
      C                   EVAL      WkInclude = 'Y'
- 
+
      C                   IF        L4RECI = 'E'
      C                   EVAL      WkBRCA = L4BRCA
      C                   MOVE      L4CNUM        WkCNUM
      C                   MOVE      L4FACT        WkFACT
      C                   MOVE      L4FCNO        WkFCNO
- 
+
      C     KeyAGRN       CHAIN     LEFCGRL1
      C                   IF        NOT %FOUND(LEFCGRL1)
      C                   EVAL      WkInclude = 'N'
      C                   ENDIF
- 
+
      C                   IF        WkInclude = 'Y'
      C                   EVAL      RECI = 'D'
      C                   EVAL      BRCA = L4BRCA
- 
+
       ** Get customer details
- 
+
      C                   MOVEL     L4CNUM        PCust
      C                   EXSR      SrCustDet
      C                   MOVEL     BBPCNB        PNUM
      C                   EVAL      CNUM = L4CNUM
- 
+
      C                   EVAL      WkTmp5N = *ZERO
      C                   MOVEL     L4FACT        WkTmp5N
      C                   MOVE      L4FCNO        WkTmp5N
      C**********         EVAL      CFNO = WkTmp5N                                           BUG27091
      C                   MOVEL     WkTmp5N       CFNO                                       BUG27091
- 
+
      C                   EVAL      RCDT = 'F'
      C                   EVAL      CMCY = L4FCCY
      C                   EVAL      RECIF = L4RECI
@@ -310,27 +386,62 @@
      C                   EVAL      FATP = L4FCTI
      C                   EVAL      CFTA = L4FAMT
      C                   EVAL      CNAM = BBCRNM
- 
+
       ** Get branch details
- 
+
      C                   EVAL      PBrca = L4BRCA
      C                   EXSR      SrBrchDet
      C                   EVAL      CMPYM = A8CMCD
      C                   EVAL      FCLB =  L4BRCA
      C                   EVAL      ZZ016 = *BLANKS
      C                   EVAL      PRTR = *BLANKS
- 
+
+      ** Get Account Officer details and Department Name                                    MD059656
+                                                                                            MD059656
+     C                   EVAL      ANACOC = *BLANKS                                         MD059656
+     C                   EVAL      ANACON = *BLANKS                                         MD059656
+     C                   EVAL      ANDPCD = *BLANKS                                         MD059656
+     C                   EVAL      ANDPNM = *BLANKS                                         MD059656
+      *                                                                                     MD059656
+     C                   IF        CLE123 = 'Y'                                             MD059656
+      *                                                                                     MD059656
+     C                   EVAL      @ACOF = L4ACOF                                           MD059656
+     C                   CALL      'AOACOFR0'                                               MD059656
+     C                   PARM      *BLANKS       PRtCd                                      MD059656
+     C                   PARM      '*KEY   '     POptn                                      MD059656
+     C                   PARM                    @ACOF             2                        MD059656
+     C     SDACOF        PARM      SDACOF        DSFDY                                      MD059656
+      *                                                                                     MD059656
+     C                   IF        PRtCd = *BLANKS                                          MD059656
+     C                   EVAL      ANACOC = AZACOC                                          MD059656
+     C                   EVAL      ANACON = AZACON                                          MD059656
+      *                                                                                     MD059656
+     C                   EVAL      DPTKEY = AZDPCD                                          MD059656
+      *                                                                                     MD059656
+     C                   CALL      'AODEPTR0'                                               MD059656
+     C                   PARM      *BLANKS       PRtCd                                      MD059656
+     C                   PARM      '*KEY   '     POptn                                      MD059656
+     C                   PARM                    DPTKEY            3                        MD059656
+     C     SDDEPT        PARM      SDDEPT        DSFDY                                      MD059656
+      *                                                                                     MD059656
+     C                   IF        PRtCd = *BLANKS                                          MD059656
+     C                   EVAL      ANDPCD = AEDPCD                                          MD059656
+     C                   EVAL      ANDPNM = AEDPNM                                          MD059656
+     C                   ENDIF                                                              MD059656
+     C                   ENDIF                                                              MD059656
+     C                   ENDIF                                                              MD059656
+      *                                                                                     MD059656
      C                   WRITE     FACEXFCF
- 
+
      C                   EVAL      WkNoFR = WkNoFR + 1
      C                   EVAL      WkValFcRec = WkValFcRec + L4PEXP
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LEAGFYJ0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -345,10 +456,10 @@
       *                                                               *
       *****************************************************************
      C     SrFacExtT     BEGSR
- 
+
      C                   READ      FACEXT4
      C                   IF        NOT %EOF(FACEXT4)
- 
+
      C                   EVAL      NOLR = NOLR + WkNoLR
      C                   EVAL      PzAmt = *ZERO
      C                   MOVE      WkValLnRec    PzAmt
@@ -357,7 +468,7 @@
      C                   EXSR      SrZZADD
      C                   EVAL      HLDW = PzToyI
      C                   EVAL      HLDC = PzTotD
- 
+
      C                   EVAL      NOFR = NOFR + WkNoFR
      C                   EVAL      PzAmt = *ZERO
      C                   MOVE      WkValFcRec    PzAmt
@@ -366,28 +477,28 @@
      C                   EXSR      SrZZADD
      C                   EVAL      HFDW = PzToyI
      C                   EVAL      HFDC = PzTotD
- 
+
      C                   UPDATE    FACEXT4F
- 
+
      C                   ELSE
- 
+
      C                   EVAL      NOLR = WkNoLR
      C                   EVAL      PzAmt = *ZERO
      C                   MOVE      WkValLnRec    PzAmt
      C                   Z-ADD     PzAmt         HLDW
      C                   MOVE      WkValLnRec    HLDC
- 
+
      C                   EVAL      NOFR = WkNoFR
      C                   EVAL      PzAmt = *ZERO
      C                   MOVE      WkValFcRec    PzAmt
      C                   Z-ADD     PzAmt         HFDW
      C                   MOVE      WkValFcRec    HFDC
- 
+
      C                   EVAL      ZZ053 = *BLANKS
      C                   WRITE     FACEXT4F
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -401,16 +512,16 @@
       *                                                               *
       *****************************************************************
      C     SrCustDet     BEGSR
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCUSTPD'
@@ -419,7 +530,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -433,15 +544,15 @@
       *                                                               *
       *****************************************************************
      C     SrBrchDet     BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY    '    POptn
      C                   PARM                    PBrca
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDBRCHPD'
@@ -450,7 +561,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -464,12 +575,12 @@
       *                                                               *
       *****************************************************************
      C     SrZZADD       BEGSR
- 
+
      C                   CALLB     'ZZADD'
      C                   PARM                    PzAmt
      C                   PARM                    PzToyI
      C                   PARM                    PzTotD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -483,14 +594,14 @@
       *                                                               *
       *****************************************************************
      C     SrInit        BEGSR
- 
+
       ** Initialise counters
- 
+
      C                   EVAL      WkNoLR = *ZERO
      C                   EVAL      WkValLnRec = *ZERO
      C                   EVAL      WkNoFR = *ZERO
      C                   EVAL      WkValFcRec = *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -504,11 +615,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     WCPY@         WBIS@
- 
+
       ** Set up Local Data Area (LDA)
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = *BLANKS
@@ -517,9 +628,9 @@
      C                   EVAL      DBPgm = 'LE000065'
      C                   EVAL      DBase = *ZERO
      C                   OUT       LDA
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
@@ -532,19 +643,68 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
+      *                                                                                     MD059656
+      ** Check if CLE123 is switched *ON                                                    MD059656
+      *                                                                                     MD059656
+     C                   CALL      'AOSARDR0'                                               MD059656
+     C                   PARM      *BLANKS       PRtCd                                      MD059656
+     C                   PARM      '*VERIFY'     POptn                                      MD059656
+     C                   PARM      'CLE123'      PSard                                      MD059656
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059656
+                                                                                            MD059656
+     C                   IF        PRtCd <> *BLANKS  AND                                    MD059656
+     C                             PRtCd <> '*NRF   '                                       MD059656
+     C     *LOCK         IN        LDA                                                      MD059656
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD059656
+     C                   EVAL      DBKEY  = PSard                                           MD059656
+     C                   EVAL      DBase = 4                                                MD059656
+     C                   OUT       LDA                                                      MD059656
+     C                   EXSR      *PSSR                                                    MD059656
+     C                   ENDIF                                                              MD059656
+                                                                                            MD059656
+     C                   IF        PRtCd = *BLANKS                                          MD059656
+     C                   EVAL      CLE123 = 'Y'                                             MD059656
+     C                   ELSE                                                               MD059656
+     C                   EVAL      CLE123 = 'N'                                             MD059656
+     C                   ENDIF                                                              MD059656
+      *                                                                                     MD059656
+      ** Check if CLE124 is switched *ON                                                    MD059656
+      *                                                                                     MD059656
+     C                   CALL      'AOSARDR0'                                               MD059656
+     C                   PARM      *BLANKS       PRtCd                                      MD059656
+     C                   PARM      '*VERIFY'     POptn                                      MD059656
+     C                   PARM      'CLE124'      PSard                                      MD059656
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD059656
+                                                                                            MD059656
+     C                   IF        PRtCd <> *BLANKS  AND                                    MD059656
+     C                             PRtCd <> '*NRF   '                                       MD059656
+     C     *LOCK         IN        LDA                                                      MD059656
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD059656
+     C                   EVAL      DBKEY  = PSard                                           MD059656
+     C                   EVAL      DBase = 5                                                MD059656
+     C                   OUT       LDA                                                      MD059656
+     C                   EXSR      *PSSR                                                    MD059656
+     C                   ENDIF                                                              MD059656
+                                                                                            MD059656
+     C                   IF        PRtCd = *BLANKS                                          MD059656
+     C                   EVAL      CLE124 = 'Y'                                             MD059656
+     C                   ELSE                                                               MD059656
+     C                   EVAL      CLE124 = 'N'                                             MD059656
+     C                   ENDIF                                                              MD059656
+
       ** Define working varibles
- 
+
      C     *LIKE         DEFINE    L0AGBR        PBrca
      C     *LIKE         DEFINE    L0TRNM        KCusNum
      C     *LIKE         DEFINE    L0TRFT        KFacTyp
      C     *LIKE         DEFINE    L0TRFN        KFacSeq
- 
+
      C     KeyTRAG       KLIST
      C                   KFLD                    KCusNum
      C                   KFLD                    KFacTyp
      C                   KFLD                    KFacSeq
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -558,7 +718,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WDUMP = *BLANKS
      C                   EVAL      WDUMP = 'Y'
      C                   EVAL      *INU7 = *ON
@@ -567,7 +727,7 @@
      C                   DUMP
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
 ** WCPY@

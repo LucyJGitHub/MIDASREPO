@@ -1,0 +1,77 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Commitment and Outstanding by Acc Offcr')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC0720 - LE Additional Commitment and Facility Reports     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. CLE123 *CREATE     Date 02Nov21              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE123 - Commitment and Outstanding Rpt by Account Officer  */
+/*                                                                   */
+/*********************************************************************/
+             PGM PARM(&RSEQ &RLEV &RENT)
+
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2021')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/*  Check if feature CLE123 is switched on  */
+
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CLE123')
+
+/* Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('LEC0720 - Commitment and Outstanding Report +
+             by Account Officer') TOMSGQ(MRUNQ)
+
+/* Check if feature CLE123 is switched on */
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(LE0723)  PARM(&RSEQ &RENT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            LEC0720 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+
+ENDPGM:
+             ENDPGM

@@ -15,14 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR1086546 *CREATE  Date 19Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1086546 *CREATE  Date 19Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
-      *             netting tab not showing records. (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1086546 - Upgrade of CDL025 to MP1.4 (Child: AR1086547).   *
       *              Applied for MD021813                             *

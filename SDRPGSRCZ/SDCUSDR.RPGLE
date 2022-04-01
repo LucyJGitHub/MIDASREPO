@@ -344,8 +344,7 @@
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
-     D FillerBufEx4    S           6039A                                         MD044880 MD059520
-     D*FillerBufEx4    S           6259A                                                    MD059520
+     D FillerBufEx4    S           6039A                                                    MD044880
      D Filler65        S             65A                                                    MD051299
      D NewCuCtnm1      S              8A                                                    MD041996
      D***NewCuCtnm2      S            110A                                         MD041996 MD059520

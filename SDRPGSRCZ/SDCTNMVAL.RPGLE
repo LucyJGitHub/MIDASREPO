@@ -237,7 +237,11 @@
 
      C                   Eval      Ctr = 1
      C                   Eval      Idx1 = 0
-     C                   DOW       Ccy1_Arr(Ctr)<>*BLANKS AND Ctr < 11
+                                                                                            MD059520
+      ** Increase Counter to 30.                                                            MD059520
+                                                                                            MD059520
+     C**********         DOW       Ccy1_Arr(Ctr)<>*BLANKS AND Ctr < 11                      MD059520
+     C                   DOW       Ccy1_Arr(Ctr)<>*BLANKS AND Ctr < 31                      MD059520
 
      C                   EVAL      SLCCY1=Ccy1_Arr(Ctr)
      C                   EVAL      SLCCY2=Ccy2_Arr(Ctr)
@@ -247,8 +251,11 @@
      C                   EXSR      SRValidate
 
      C                   Eval      Ctr = Ctr + 1
-
-     C                   If        Ctr = 11
+                                                                                            MD059520
+      ** Increase Counter to 30.                                                            MD059520
+                                                                                            MD059520
+     C**********         If        Ctr = 11                                                 MD059520
+     C                   If        Ctr = 31                                                 MD059520
      C                   Leave
      C                   EndIf
 

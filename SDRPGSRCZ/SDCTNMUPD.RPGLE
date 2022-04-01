@@ -308,8 +308,11 @@
      C                   Clear                   RNot_Arr
      C                   EXSR      SRPop_CodSet
      C                   Eval      Ctr = 1
-
-     C                   DOW       Ctr < 11
+                                                                                            MD059520
+      ** Increase Counter to 30.                                                            MD059520
+                                                                                            MD059520
+     C**********         DOW       Ctr < 11                                                 MD059520
+     C                   DOW       Ctr < 31                                                 MD059520
 
       ** Store Old fields for comparisons
 
@@ -398,7 +401,11 @@
      C                   MOVEL     A_TNTYLC      LTYLC
      C                   MOVEL     A_TNLCD       LLCD
 
-     C                   DOW       Ctr < 11
+                                                                                            MD059520
+      ** Increase Counter to 30.                                                            MD059520
+                                                                                            MD059520
+     C**********         DOW       Ctr < 11                                                 MD059520
+     C                   DOW       Ctr < 31                                                 MD059520
 
      C                   IF        Ccy1_Arr(Ctr)<>*BLANKS
 
